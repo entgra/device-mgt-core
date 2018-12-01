@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class QueryBuilderImpl implements QueryBuilder {
 
@@ -40,8 +41,6 @@ public class QueryBuilderImpl implements QueryBuilder {
     private static final Log log = LogFactory.getLog(QueryBuilderImpl.class);
     private final String WILDCARD_OPERATOR = "%";
     private final String OR_OPERATOR = "OR";
-    private String current_username;
-    private boolean isDeviceAdminUser;
 
     @Override
     public Map<String, List<QueryHolder>> buildQueries(List<Condition> conditions) throws InvalidOperatorException {
@@ -118,10 +117,10 @@ public class QueryBuilderImpl implements QueryBuilder {
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("General Query : " + queries.get(Constants.GENERAL));
-            log.debug("Property with AND Query : " + queries.get(Constants.PROP_AND));
-            log.debug("Property with OR Query : " + queries.get(Constants.PROP_OR));
-            log.debug("Location related Query : " + queries.get(Constants.LOCATION));
+            log.debug("General Query : " + printQueries(queries.get(Constants.GENERAL)));
+            log.debug("Property with AND Query : " + printQueries(queries.get(Constants.PROP_AND)));
+            log.debug("Property with OR Query : " + printQueries(queries.get(Constants.PROP_OR)));
+            log.debug("Location related Query : " + printQueries(queries.get(Constants.LOCATION)));
         }
         return queries;
     }
@@ -324,19 +323,60 @@ public class QueryBuilderImpl implements QueryBuilder {
 
     private String getGenericQueryPart(ValueType[] valueTypeArray) throws InvalidOperatorException {
         try {
-            String query = "SELECT D.ID, D.DESCRIPTION, D.NAME,  \n" +
-                    "D.DEVICE_TYPE_ID, D.DEVICE_IDENTIFICATION,  DT.ID AS DEVICE_TYPE_ID, \n" +
-                    "DT.NAME AS DEVICE_TYPE_NAME, DD.DEVICE_ID, DD.DEVICE_MODEL, DD.VENDOR, \n" +
-                    "DD.OS_VERSION, DD.OS_BUILD_DATE, DD.BATTERY_LEVEL, DD.INTERNAL_TOTAL_MEMORY, DD.INTERNAL_AVAILABLE_MEMORY,\n" +
-                    "DD.EXTERNAL_TOTAL_MEMORY, DD.EXTERNAL_AVAILABLE_MEMORY, DD.CONNECTION_TYPE, \n" +
-                    "DD.SSID, DD.CPU_USAGE, DD.TOTAL_RAM_MEMORY, DD.AVAILABLE_RAM_MEMORY, \n" +
-                    "DD.PLUGGED_IN, DD.UPDATE_TIMESTAMP, DL.LATITUDE, DL.LONGITUDE, DL.STREET1, DL.STREET2, DL.CITY, DL.ZIP, \n" +
-                    "DL.STATE, DL.COUNTRY, DL.UPDATE_TIMESTAMP AS DL_UPDATED_TIMESTAMP, DE.OWNER, DE.OWNERSHIP, DE.STATUS " +
-                    "AS DE_STATUS FROM DM_DEVICE_DETAIL DD INNER JOIN DM_DEVICE D ON D.ID=DD.DEVICE_ID\n" +
-                    "LEFT JOIN DM_DEVICE_LOCATION DL ON DL.DEVICE_ID=D.ID \n" +
-                    "INNER JOIN DM_DEVICE_TYPE DT ON DT.ID=D.DEVICE_TYPE_ID\n" +
-                    "INNER JOIN DM_ENROLMENT DE ON D.ID=DE.DEVICE_ID\n" +
-                    "WHERE D.TENANT_ID = ? ";
+            String query = "SELECT" +
+                    "  D.ID," +
+                    "  D.DESCRIPTION," +
+                    "  D.NAME," +
+                    "  D.DEVICE_TYPE_ID," +
+                    "  D.DEVICE_IDENTIFICATION," +
+                    "  DT.ID AS DEVICE_TYPE_ID," +
+                    "  DT.NAME AS DEVICE_TYPE_NAME," +
+                    "  DD.DEVICE_ID," +
+                    "  DD.DEVICE_MODEL," +
+                    "  DD.VENDOR," +
+                    "  DD.OS_VERSION," +
+                    "  DD.OS_BUILD_DATE," +
+                    "  DD.BATTERY_LEVEL," +
+                    "  DD.INTERNAL_TOTAL_MEMORY," +
+                    "  DD.INTERNAL_AVAILABLE_MEMORY," +
+                    "  DD.EXTERNAL_TOTAL_MEMORY," +
+                    "  DD.EXTERNAL_AVAILABLE_MEMORY," +
+                    "  DD.CONNECTION_TYPE," +
+                    "  DD.SSID," +
+                    "  DD.CPU_USAGE," +
+                    "  DD.TOTAL_RAM_MEMORY," +
+                    "  DD.AVAILABLE_RAM_MEMORY," +
+                    "  DD.PLUGGED_IN," +
+                    "  DD.UPDATE_TIMESTAMP," +
+                    "  DL.LATITUDE," +
+                    "  DL.LONGITUDE," +
+                    "  DL.STREET1," +
+                    "  DL.STREET2," +
+                    "  DL.CITY," +
+                    "  DL.ZIP," +
+                    "  DL.STATE," +
+                    "  DL.COUNTRY," +
+                    "  DL.UPDATE_TIMESTAMP AS DL_UPDATED_TIMESTAMP," +
+                    "  DE.ID AS ENROLLMENT_ID," +
+                    "  DE.OWNER," +
+                    "  DE.OWNERSHIP," +
+                    "  DE.STATUS AS DE_STATUS " +
+                    "FROM" +
+                    "  DM_DEVICE_DETAIL DD " +
+                    "  INNER JOIN" +
+                    "    DM_DEVICE D " +
+                    "    ON D.ID = DD.DEVICE_ID " +
+                    "  LEFT JOIN" +
+                    "    DM_DEVICE_LOCATION DL " +
+                    "    ON DL.DEVICE_ID = D.ID " +
+                    "  INNER JOIN" +
+                    "    DM_DEVICE_TYPE DT " +
+                    "    ON DT.ID = D.DEVICE_TYPE_ID " +
+                    "  INNER JOIN" +
+                    "    DM_ENROLMENT DE " +
+                    "    ON D.ID = DE.DEVICE_ID " +
+                    "WHERE" +
+                    "  D.TENANT_ID = ?";
 
             ValueType type = new ValueType();
             type.setIntValue(PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId());
@@ -351,21 +391,65 @@ public class QueryBuilderImpl implements QueryBuilder {
 
     private String getPropertyQueryPart(ValueType[] valueTypeArray) throws InvalidOperatorException {
         try {
-            String query = "SELECT D.ID, D.DESCRIPTION, D.NAME,  \n" +
-                    "D.DEVICE_TYPE_ID, D.DEVICE_IDENTIFICATION,  DT.ID AS DEVICE_TYPE_ID, \n" +
-                    "DT.NAME AS DEVICE_TYPE_NAME, DD.DEVICE_ID, DD.DEVICE_MODEL, DD.VENDOR, \n" +
-                    "DD.OS_VERSION, DD.OS_BUILD_DATE, DD.BATTERY_LEVEL, DD.INTERNAL_TOTAL_MEMORY, DD.INTERNAL_AVAILABLE_MEMORY,\n" +
-                    "DD.EXTERNAL_TOTAL_MEMORY, DD.EXTERNAL_AVAILABLE_MEMORY, DD.CONNECTION_TYPE, \n" +
-                    "DD.SSID, DD.CPU_USAGE, DD.TOTAL_RAM_MEMORY, DD.AVAILABLE_RAM_MEMORY, \n" +
-                    "DD.PLUGGED_IN, DD.UPDATE_TIMESTAMP, DL.LATITUDE, DL.LONGITUDE, DL.STREET1, DL.STREET2, DL.CITY, DL.ZIP, \n" +
-                    "DL.STATE, DL.COUNTRY, DL.UPDATE_TIMESTAMP AS DL_UPDATED_TIMESTAMP, DI.KEY_FIELD, DI.VALUE_FIELD, \n" +
-                    "DE.OWNER, DE.OWNERSHIP, DE.STATUS AS DE_STATUS " +
-                    "FROM DM_DEVICE_DETAIL DD INNER JOIN DM_DEVICE D ON  D.ID=DD.DEVICE_ID\n" +
-                    "LEFT JOIN DM_DEVICE_LOCATION DL ON DL.DEVICE_ID=D.ID  \n" +
-                    "INNER JOIN DM_DEVICE_TYPE DT ON DT.ID=D.DEVICE_TYPE_ID\n" +
-                    "INNER JOIN DM_ENROLMENT DE ON D.ID=DE.DEVICE_ID\n" +
-                    "LEFT JOIN DM_DEVICE_INFO DI ON DI.DEVICE_ID=D.ID\n" +
-                    "WHERE D.TENANT_ID = ? ";
+            String query = "SELECT" +
+                    "  D.ID," +
+                    "  D.DESCRIPTION," +
+                    "  D.NAME," +
+                    "  D.DEVICE_TYPE_ID," +
+                    "  D.DEVICE_IDENTIFICATION," +
+                    "  DT.ID AS DEVICE_TYPE_ID," +
+                    "  DT.NAME AS DEVICE_TYPE_NAME," +
+                    "  DD.DEVICE_ID," +
+                    "  DD.DEVICE_MODEL," +
+                    "  DD.VENDOR," +
+                    "  DD.OS_VERSION," +
+                    "  DD.OS_BUILD_DATE," +
+                    "  DD.BATTERY_LEVEL," +
+                    "  DD.INTERNAL_TOTAL_MEMORY," +
+                    "  DD.INTERNAL_AVAILABLE_MEMORY," +
+                    "  DD.EXTERNAL_TOTAL_MEMORY," +
+                    "  DD.EXTERNAL_AVAILABLE_MEMORY," +
+                    "  DD.CONNECTION_TYPE," +
+                    "  DD.SSID," +
+                    "  DD.CPU_USAGE," +
+                    "  DD.TOTAL_RAM_MEMORY," +
+                    "  DD.AVAILABLE_RAM_MEMORY," +
+                    "  DD.PLUGGED_IN," +
+                    "  DD.UPDATE_TIMESTAMP," +
+                    "  DL.LATITUDE," +
+                    "  DL.LONGITUDE," +
+                    "  DL.STREET1," +
+                    "  DL.STREET2," +
+                    "  DL.CITY," +
+                    "  DL.ZIP," +
+                    "  DL.STATE," +
+                    "  DL.COUNTRY," +
+                    "  DL.UPDATE_TIMESTAMP AS DL_UPDATED_TIMESTAMP," +
+                    "  DI.KEY_FIELD," +
+                    "  DI.VALUE_FIELD," +
+                    "  DE.ID AS ENROLLMENT_ID," +
+                    "  DE.OWNER," +
+                    "  DE.OWNERSHIP," +
+                    "  DE.STATUS AS DE_STATUS " +
+                    "FROM" +
+                    "  DM_DEVICE_DETAIL DD " +
+                    "  INNER JOIN" +
+                    "    DM_DEVICE D " +
+                    "    ON D.ID = DD.DEVICE_ID " +
+                    "  LEFT JOIN" +
+                    "    DM_DEVICE_LOCATION DL " +
+                    "    ON DL.DEVICE_ID = D.ID " +
+                    "  INNER JOIN" +
+                    "    DM_DEVICE_TYPE DT " +
+                    "    ON DT.ID = D.DEVICE_TYPE_ID " +
+                    "  INNER JOIN" +
+                    "    DM_ENROLMENT DE " +
+                    "    ON D.ID = DE.DEVICE_ID " +
+                    "  LEFT JOIN" +
+                    "    DM_DEVICE_INFO DI " +
+                    "    ON DI.DEVICE_ID = D.ID " +
+                    "WHERE" +
+                    "  D.TENANT_ID = ?";
 
             ValueType type = new ValueType();
             type.setIntValue(PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId());
@@ -382,7 +466,7 @@ public class QueryBuilderImpl implements QueryBuilder {
      * Returns a Value type based on the Condition data.
      *
      * @param con : The condition that passed.
-     * @re
+     * @return value type
      */
     private ValueType getValueType(Condition con) {
         ValueType type = new ValueType();
@@ -407,5 +491,19 @@ public class QueryBuilderImpl implements QueryBuilder {
         }
 
         return type;
+    }
+
+    /**
+     * Print thee query for debugging purposes.
+     *
+     * @param queryHolderList list of {@link QueryHolder}
+     * @return string concatenation of {@code QueryHolder::getQuery}
+     */
+    private String printQueries(List<QueryHolder> queryHolderList) {
+        if (queryHolderList != null) {
+            return queryHolderList.stream().map(QueryHolder::getQuery).collect(Collectors.joining("\n"));
+        }
+
+        return null;
     }
 }

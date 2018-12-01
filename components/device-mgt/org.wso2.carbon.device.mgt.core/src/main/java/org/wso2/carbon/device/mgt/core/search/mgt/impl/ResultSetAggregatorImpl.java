@@ -19,16 +19,27 @@
 
 package org.wso2.carbon.device.mgt.core.search.mgt.impl;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.device.mgt.common.Device;
+import org.wso2.carbon.device.mgt.core.internal.DeviceManagementDataHolder;
+import org.wso2.carbon.device.mgt.core.permission.mgt.PermissionUtils;
 import org.wso2.carbon.device.mgt.core.search.mgt.Constants;
 import org.wso2.carbon.device.mgt.core.search.mgt.ResultSetAggregator;
+import org.wso2.carbon.user.api.UserRealm;
+import org.wso2.carbon.user.api.UserStoreException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ResultSetAggregatorImpl implements ResultSetAggregator {
+    private static Log log = LogFactory.getLog(ResultSetAggregatorImpl.class);
+    private final static String ANY_DEVICE_PERMISSION = "/device-mgt/devices/any-device";
+    private static final String UI_EXECUTE = "ui.execute";
 
     @Override
     public List<Device> aggregate(Map<String, List<Device>> devices) {
@@ -70,7 +81,18 @@ public class ResultSetAggregatorImpl implements ResultSetAggregator {
             }
         }
 
-        return finalResult;
+        String username = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
+
+        try {
+            if (isPermittedToViewAnyDevice(username)) {
+                return finalResult;
+            }
+        } catch (UserStoreException e) {
+            log.error("Unable to check permissions of the user: " + username, e);
+        }
+
+        return finalResult.stream().filter(device -> username.equals(device.getEnrolmentInfo().getOwner()))
+                .collect(Collectors.toList());
     }
 
     private Map<Integer, Device> convertToMap(List<Device> devices) {
@@ -79,7 +101,7 @@ public class ResultSetAggregatorImpl implements ResultSetAggregator {
         }
         Map<Integer, Device> deviceWrapperMap = new HashMap<>();
         for (Device device : devices) {
-            deviceWrapperMap.put(device.getId(), device);
+            deviceWrapperMap.put(device.getEnrolmentInfo().getId(), device);
         }
         return deviceWrapperMap;
     }
@@ -92,4 +114,18 @@ public class ResultSetAggregatorImpl implements ResultSetAggregator {
         return list;
     }
 
+    /**
+     * Checks if the user has permissions to view all devices.
+     *
+     * @param username username
+     * @return {@code true} if user is permitted
+     * @throws UserStoreException If unable to check user permissions
+     */
+    private boolean isPermittedToViewAnyDevice(String username) throws UserStoreException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        UserRealm userRealm = DeviceManagementDataHolder.getInstance().getRealmService().getTenantUserRealm(tenantId);
+        return userRealm != null && userRealm.getAuthorizationManager() != null &&
+                userRealm.getAuthorizationManager().isUserAuthorized(username,
+                        PermissionUtils.getAbsolutePermissionPath(ANY_DEVICE_PERMISSION), UI_EXECUTE);
+    }
 }
