@@ -495,7 +495,7 @@ body {
   font-size: 14px;
   line-height: 1.42857;
   color: #333333;
-  background-color: #fff;
+  background-color: rgb(240,242,243);
 }
 
 input,
@@ -2783,7 +2783,7 @@ header a,
 header a:hover,
 header a:visited,
 header a:focus {
-  color: #fff;
+  color: rgba(0,0,0, 0.65) !important;
   text-decoration: none;
 }
 header .brand {
@@ -2810,7 +2810,7 @@ header .nav > li > a {
   height: 50px;
 }
 header .nav > li > a:hover {
-  background: #262626;
+  background: #FFFFFF;
 }
 header .nav > li > a:focus {
   color: #fff;
@@ -2819,7 +2819,7 @@ header .nav > li > a:focus {
 header .nav .open > a,
 header .nav .open > a:hover,
 header .nav .open > a:focus {
-  background: black;
+  background: #FFFFFF;
 }
 header .nav .dropdown-menu {
   background: black;
@@ -2828,7 +2828,8 @@ header .nav .dropdown-menu {
   top:50px;
 }
 header .nav .dropdown-menu a {
-  color: #fff;
+  color: rgba(0,0,0, 0.65) !important;
+  background-color: white;
 }
 header .fw-inverse, header .fa-inverse {
   color: #191919;
@@ -2838,7 +2839,7 @@ footer {
   width: 100%;
   min-height: 40px;
   overflow: hidden;
-  color: #cbcbcb;
+  color: rgba(0,0,0, 0.65);
   background: #222222;
 }
 footer > .container, footer > .container-fluid {
@@ -7044,6 +7045,7 @@ body.inverse .fade-edge:after {
  * navbar styles
  * ======================================================================== */
 .navbar-wrapper {
+  box-shadow: 0 1px 4px 3px rgba(0,21,41,.08);
   min-height: 40px;
 }
 
@@ -7108,15 +7110,15 @@ body.inverse .fade-edge:after {
   padding: 0 8px;
   line-height: 40px;
   font-size: 18px;
-  background: #F47415;
-  color: #ffffff;
+  background: #FFFFFF;
+  color: rgba(0,0,0, 0.65);
 }
 .navbar-menu-toggle:hover, .navbar-menu-toggle:focus, .navbar-menu-toggle:active {
   color: #ffffff;
-  background: #D56613;
+  background: #008cc4;
 }
 .navbar-menu-toggle[aria-expanded=true] {
-  background: #D56613;
+  background: #008cc4;
 }
 .navbar-menu-toggle .icon {
   line-height: 40px;
@@ -7137,12 +7139,12 @@ body.inverse .fade-edge:after {
   padding: 0 15px;
   line-height: 40px;
   text-transform: uppercase;
-  background: #010F1F;
+  background: #FFFFFF;
 }
 
 .navbar > .container .navbar-brand a,
 .navbar > .container-fluid .navbar-brand a {
-  color: #ffffff;
+  color: rgba(0,0,0, 0.65);
   font-size: 16px;
 }
 
@@ -7151,7 +7153,7 @@ body.inverse .fade-edge:after {
 }
 
 .navbar-default .navbar-nav > li > a {
-  color: #ffffff;
+  color: rgba(0,0,0, 0.65);
   text-transform: uppercase;
   padding: 0 15px;
   line-height: 40px;
@@ -7160,10 +7162,11 @@ body.inverse .fade-edge:after {
 
 .navbar-default .navbar-nav > li a:hover, .navbar-default .navbar-nav > li a:focus, .navbar-default .navbar-nav > li a:active {
   background: #0065a8;
-  color: #ffffff;
+  color: #008cc4;
 }
 .navbar-default .navbar-nav > li a:hover {
   background: #798EA5;
+  color: #FFFFFF;
 }
 
 .navbar-default .navbar-nav > .active > a, .navbar-default .navbar-nav > .active > a:hover, .navbar-default .navbar-nav > .active > a:focus, .navbar-default .navbar-nav > .active > a:active {
@@ -7218,7 +7221,8 @@ body.inverse .fade-edge:after {
 }
 
 .navbar-collapse.tiles ul.nav li a:hover {
-  background: #133e67;
+  background: #FFFFFF;
+  color: #008cc4
 }
 
 .navbar-collapse.tiles ul.nav li li a:hover {
@@ -7348,11 +7352,12 @@ body.inverse .fade-edge:after {
   width: 350px;
   height: 100%;
   overflow-y: auto;
-  background: #222;
+  background: #FFFFFF;
   color: #ffffff;
   -webkit-transition: all 0.5s ease;
   -o-transition: all 0.5s ease;
   transition: all 0.5s ease;
+  box-shadow: 15px 15px 15px 10px rgba(0,21,41,.8);
 }
 
 .sidebar-wrapper.affix {
