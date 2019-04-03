@@ -847,7 +847,7 @@ header .fw-user:before {
 }
 
 .navbar {
-    background: #526A84;
+    background: #008cc4;
     border: none;
     margin-bottom: 0;
     min-height: 50px;
@@ -1006,7 +1006,7 @@ header .fw-user:before {
 }
 
 .navbar-collapse.tiles ul.nav li li a {
-    background: #526A84;
+    background: #008cc4;
 }
 
 .navbar-collapse.tiles ul.nav li a:hover {
@@ -1032,7 +1032,7 @@ header .fw-user:before {
 .navbar-collapse.tiles ul.nav li.has-sub > a:after {
     width: 7px;
     height: 120px;
-    background: #526a84;
+    background: #008cc4;
     display: inline-block;
     content: " ";
     top: 0;
@@ -1879,7 +1879,7 @@ a.btn:hover, .btn:hover {
 }
 
 .btn-primary {
-    background-color: #008cc4;
+    background-color: #008cc4 !important;
 }
 
 .btn-bordered, .btn-bordered:focus, .btn-bordered:hover {
@@ -2706,7 +2706,7 @@ a.list-group-item:hover {
 }
 
 .checkbox > input[type=checkbox] :not(:disabled) + .helper:before {
-    border-color: #526A84;
+    border-color: #008cc4;
 }
 
 .checkbox .helper {
@@ -2797,7 +2797,7 @@ a.ast-type-item {
 }
 
 a.ast-type-item:hover {
-    background: #526A84;
+    background: #008cc4;
     cursor: pointer;
 }
 
@@ -2810,7 +2810,7 @@ a.ast-type-item:hover {
 }
 
 .wr-action-btn-bar .page-title {
-    background-color: #526A84;
+    background-color: #008cc4;
     margin: 0;
     font-weight: 400;
 }
@@ -2906,7 +2906,7 @@ a.ast-type-item:hover {
     font-size: 12px;
     text-decoration: none;
     margin-right: 10px;
-    /*color: #526A84;*/
+    /*color: #008cc4;*/
     color: #333;
     min-width: 70px;
     background: #fafafa;
@@ -3054,7 +3054,7 @@ a.ast-type-item:hover {
 
 .ctrl-wr-asset.selected {
     background: #E4E4E4;
-    border-bottom: 4px solid #526A84;
+    border-bottom: 4px solid #008cc4;
 }
 
 .ctrl-wr-asset:hover {
@@ -3083,7 +3083,7 @@ a.ast-type-item:hover {
 }
 
 .itm-ast:hover h3, .itm-ast:hover .ast-auth {
-    color: #526A84;
+    color: #008cc4;
 }
 
 .ast-img {
@@ -3166,7 +3166,7 @@ h3.ast-name {
 .ast-auth {
     font-weight: 300;
     font-size: 13px;
-    color: #526A84;
+    color: #008cc4;
     display: block;
     margin-bottom: 12px;
     white-space: nowrap;
@@ -3465,7 +3465,7 @@ span.ico-sort-desc {
 }
 
 .wr-asset-type-switcher ul li:hover {
-    background: #526A84;
+    background: #008cc4;
     cursor: pointer;
 }
 
@@ -3502,7 +3502,7 @@ span.ico-sort-desc {
 }
 
 #asset-selected .selected li {
-    background: #526A84;
+    background: #008cc4;
     color: #ffffff;
 }
 
@@ -3585,7 +3585,7 @@ span.ico-sort-desc {
 }
 
 .wr-search-tags span:hover {
-    background: #526A84;
+    background: #008cc4;
     color: #ffffff;
 }
 
@@ -3743,15 +3743,15 @@ a.btn-operations {
 }
 
 .wr-side-panel::-webkit-scrollbar-thumb {
-    background: #526A84;
+    background: #008cc4;
 }
 
 .wr-side-panel::-webkit-scrollbar-thumb:hover {
-    background: #526A84;
+    background: #008cc4;
 }
 
 .wr-side-panel::-webkit-scrollbar-thumb:active {
-    background: #526A84;
+    background: #008cc4;
 }
 
 .wr-notification-bar.toggled, .wr-side-panel.toggled {
@@ -3830,7 +3830,7 @@ a.wr-side-panel-toggle-btn.selected {
 }
 
 .wr-panel-notes .wr-input-control.checkbox .helper:before {
-    border-color: #526A84;
+    border-color: #008cc4;
 }
 
 .wr-panel-notes .add-btn {
@@ -3882,7 +3882,7 @@ a.wr-side-panel-toggle-btn.selected {
 
 .wr-panel-msg {
     background: #fff;
-    border-right: 2px solid #526A84;
+    border-right: 2px solid #008cc4;
     padding: 8px 35px 8px 10px;
     margin-left: 35px;
     margin-bottom: 5px;
@@ -3891,7 +3891,7 @@ a.wr-side-panel-toggle-btn.selected {
 }
 
 .wr-panel-msg .dropdown-menu {
-    background: #526A84;
+    background: #008cc4;
     color: #fff;
     left: -167px;
     top: -2px;
@@ -3923,7 +3923,7 @@ a.wr-side-panel-toggle-btn.selected {
 
 .wr-panel-msg .msg-options .btn.dropdown-toggle:hover, .wr-panel-msg .msg-options .btn.dropdown-toggle[aria-expanded="true"] {
     color: #fff;
-    background-color: #526A84;
+    background-color: #008cc4;
 }
 
 .wr-panel-msg-visibility {
@@ -4257,7 +4257,7 @@ a.wr-side-panel-toggle-btn.selected {
     /*outline: 2px #a6a6a6 solid;*/
     border: 1px #fff solid;
     cursor: pointer;
-    /*background: #526A84;*/
+    /*background: #008cc4;*/
     background: #a6a6a6;
     /*margin-left: 2px;*/
     z-index: 1;
@@ -4273,9 +4273,9 @@ a.wr-side-panel-toggle-btn.selected {
     width: 24px;
     height: 24px;
     /*outline: 2px #333 solid;*/
-    border: 1px #526A84 solid;
+    border: 1px #008cc4 solid;
     cursor: pointer;
-    background: #526A84;
+    background: #008cc4;
     z-index: 2;
     border-radius: 12px;
     /*box-shadow: 0 1px 2px #888888;*/
@@ -4414,7 +4414,7 @@ a.wr-side-panel-toggle-btn.selected {
 }
 
 .wr-input-control.checkbox input[type="checkbox"]:checked + .helper:before {
-    border: 2px #526A84 solid;
+    border: 2px #008cc4 solid;
 }
 
 .wr-input-control.checkbox input[type="checkbox"]:checked + .helper:after {
@@ -4431,7 +4431,7 @@ a.wr-side-panel-toggle-btn.selected {
     left: 2px;
     margin-left: 0;
     text-align: center;
-    background: #526A84;
+    background: #008cc4;
     color: #fff;
     font-family: font-wso2;
 }
@@ -4450,11 +4450,11 @@ a.wr-side-panel-toggle-btn.selected {
 }
 
 .wr-input-control.checkbox:hover input:not(:disabled) + .helper:before {
-    border-color: #526A84;
+    border-color: #008cc4;
 }
 
 .wr-input-control.checkbox:active input:not(:disabled) + .helper:before {
-    border-color: #526A84;
+    border-color: #008cc4;
 }
 
 /* list group styles */
@@ -4510,7 +4510,7 @@ a.wr-side-panel-toggle-btn.selected {
 .wr-list-email, .wr-list-email:hover {
     font-weight: 300;
     font-size: 13px;
-    color: #526A84;
+    color: #008cc4;
 }
 
 .wr-sortable .list-group-item, tbody.wr-sortable td {
@@ -4529,7 +4529,7 @@ a.wr-side-panel-toggle-btn.selected {
     width: 50px;
     height: 50px;
     line-height: 42px;
-    background: #526A84;
+    background: #008cc4;
     color: #fff;
     font-size: 28px;
     text-align: center;
@@ -4616,7 +4616,7 @@ a.wr-side-panel-toggle-btn.selected {
 }
 
 .wr-list-group .wr-desc-list-configs b {
-    color: #526A84;
+    color: #008cc4;
 }
 
 .panel-title a .fw-stack {
@@ -4672,7 +4672,7 @@ a.wr-side-panel-toggle-btn.selected {
 }
 
 .wr-hidden-nav ul li a:hover {
-    background: #526A84;
+    background: #008cc4;
 }
 
 .wr-hidden-nav ul li a i {
@@ -4712,7 +4712,7 @@ a.wr-side-panel-toggle-btn.selected {
     margin: 5px;
     border: 1px solid #e8e8e8;
     background: #ffffff;
-    color: #526A84;
+    color: #008cc4;
     padding: 10px;
     text-decoration: none;
     font-size: 16px;
@@ -4767,7 +4767,7 @@ a.wr-side-panel-toggle-btn.selected {
 
 .wr-advance-operations .wr-hidden-operations-nav a.selected, .wr-hidden-operations .wr-hidden-operations-nav a.selected:hover {
     color: #ffffff;
-    background: #526A84;
+    background: #008cc4;
 }
 
 .wr-hidden-operations {
@@ -4919,7 +4919,7 @@ a.show-operations-btn {
 }
 
 a.show-operations-btn.selected {
-    background: #526A84;
+    background: #008cc4;
     color: #fff;
 }
 
@@ -5144,7 +5144,7 @@ a.cu-btn-inner.inverse {
 }
 
 a.cu-btn-inner.inverse:hover {
-    background: #526A84;
+    background: #008cc4;
 }
 
 .wiz-lbl {
@@ -5185,7 +5185,7 @@ a.cu-btn-inner.inverse:hover {
 }
 
 .wizard-head > li a:hover {
-    color: #526A84;
+    color: #008cc4;
 }
 
 .wizard-head > li.active, .wizard-head > li.active a {
@@ -5361,7 +5361,7 @@ a.grid-input-add {
     margin-top: 10px;
     margin-bottom: 10px;
     font-size: 14px;
-    border: 1px solid #526A84;
+    border: 1px solid #008cc4;
 }
 
 a.grid-input-add:hover, a.grid-input-add:active, a.grid-input-add:focus {
@@ -6553,7 +6553,7 @@ ul.tiles .icon {
     font-size: 12px;
     text-decoration: none;
     margin-right: 10px;
-    color: #526A84;
+    color: #008cc4;
     width: 100px;
     background: #fafafa;
     padding: 2px 10px 10px 10px;
@@ -6698,7 +6698,7 @@ ul.tiles .icon {
 }
 
 .navbar-default .navbar-nav > li a > .fw-stack > .fw-stack > .fw-circle:not(.fw-stroke) {
-    color: #526A84;
+    color: #008cc4;
 }
 
 .navbar-default .navbar-nav > li:hover a > .fw-stack > .fw-stack > .fw-circle:not(.fw-stroke) {
