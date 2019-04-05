@@ -7174,7 +7174,7 @@ body.inverse .fade-edge:after {
   color: #ffffff;
 }
 .navbar-default .navbar-nav > .active > a:hover {
-  background: #424958;
+  background: #0280b3;
 }
 
 .navbar-collapse.dropdown {
@@ -8915,8 +8915,8 @@ a.list-group-item:hover {
 
   .data-container .btn-primary {
     color: #ffffff;
-    background-color: #231F20;
-    border: 1px solid #231F20;
+    background-color: #008cc4;
+    border: 1px solid #008cc4;
     width: 100%;
   }
 

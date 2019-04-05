@@ -1863,8 +1863,9 @@ a.btn:hover, .btn:hover {
 }
 
 .btn-default:hover {
-    background-color: #e6e6e6;
-    border-color: #ffffff;
+    color: #FFFFFF;
+    background-color: #0280b3;
+    border-color: #0280b3;
 }
 
 .btn-primary, .btn-primary:focus {
@@ -3693,7 +3694,7 @@ a.btn-operations {
     font-weight: normal;
     font-size: 13px;
     color: #fff;
-    background: #2f6292;
+    background: #008cc4;
     padding: 5px 20px;
     display: inline-block;
     margin-right: 2px;
@@ -4138,7 +4139,7 @@ a.wr-side-panel-toggle-btn.selected {
 }
 
 .tile-stats-free a {
-    color: #b2b2b2;
+    color: rgba(0,0,0, 0.65);
     font-weight: 500;
     text-decoration: none;
     display: inline-block;
@@ -6273,7 +6274,7 @@ body.inverse .fade-edge:after {
 .thumbnail.icon {
     border: none;
     margin: 0;
-    background: #638bb1 !important;
+    background: #008cc4 !important;
     color: #fff;
     text-align: center;
     position: relative;
@@ -7031,5 +7032,5 @@ header .brand img.logo {
 }
 
 try-device-image {
-    background: #638bb1 !important;
+    background: #008cc4 !important;
 }
