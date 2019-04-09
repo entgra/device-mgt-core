@@ -2776,7 +2776,7 @@ header {
   position: relative;
 }
 header.header-default {
-  background: #11375b;
+  background: #008cc4;
   color: #fff;
 }
 header a,
@@ -4462,7 +4462,7 @@ a.thumbnail.active {
 .thumbnail.icon {
   border: none;
   margin: 0;
-  background: #11375b;
+  background: #008cc4;
   color: #fff;
   text-align: center;
   overflow: hidden;
@@ -6365,7 +6365,7 @@ button.close {
     display: block !important;
   }
 
-  table.visible-print {
+  table.visible-print {.nav > li > a:hover, .nav > li > a:focus
     display: table !important;
   }
 
@@ -7799,8 +7799,8 @@ ul.sidebar-messages > li {
 }
 
 .pagination > .active > a, .pagination > .active > a:focus, .pagination > .active > a:hover, .pagination > .active > span, .pagination > .active > span:focus, .pagination > .active > span:hover {
-  background: #004675;
-  border-color: #004675;
+  background: #008cc4;
+  border-color: #008cc4;
 }
 
 .pagination > .disabled > a, .pagination > .disabled > a:focus, .pagination > .disabled > a:hover, .pagination > .disabled > span, .pagination > .disabled > span:focus, .pagination > .disabled > span:hover {
@@ -7985,7 +7985,7 @@ ul.tiles .icon {
 }
 @media only screen and (min-width: 1280px) {
   .modal-dialog {
-    width: 1000px;
+    width: 785px;
   }
 }
 /* ========================================================================
@@ -8054,7 +8054,7 @@ a.list-group-item:hover {
 .tree-view li > .icon {
   font-family: "font-wso2";
   font-style: normal;
-  background: #004675;
+  background: #008cc4;
   color: #ffffff;
   height: 20px;
   width: 20px;

@@ -767,7 +767,7 @@ body.inverse .fade-edge:after {
  * header styles
  * ======================================================================== */
 header {
-    background: #11375B;
+    background: #008cc4;
     min-height: 50px;
     position: relative;
 }
@@ -1072,8 +1072,8 @@ header .fw-user:before {
 
 .nav-pills > li.active > a, .nav-pills > li.active > a:focus, .nav-pills > li.active > a:hover {
     color: #ffffff;
-    background: #11375B;
-    border-color: #11375B;
+    background: #008cc4;
+    border-color: #008cc4;
 }
 
 /* ========================================================================
@@ -2347,8 +2347,8 @@ a.list-group-item:hover {
 
 .list-group-item.active, .list-group-item.active:focus, .list-group-item.active:hover, .active > .list-group-item, .active > .list-group-item:focus, .active > .list-group-item:hover {
     color: #ffffff;
-    background: #11375B;
-    border-color: #11375B;
+    background: #008cc4;
+    border-color: #008cc4;
 }
 
 .list-group-item.active a {
@@ -2773,7 +2773,7 @@ a.ctrl-asset-type-switcher:hover {
     margin-right: 0;
     display: inline-block;
     text-align: center;
-    background: #11375B;
+    background: #008cc4;
     line-height: 49px;
 }
 
@@ -2841,7 +2841,6 @@ a.ast-type-item:hover {
 
 /* device board */
 .wr-device-board {
-    background: #fafafa;
     padding: 10px 0;
     font-size: 20px;
     margin-bottom: 10px;
@@ -3572,7 +3571,7 @@ span.ico-sort-desc {
 
 .wr-search-tags span {
     color: #ffffff;
-    background: #11375B;
+    background: #008cc4;
     font-size: 11px;
     display: inline-block;
     cursor: pointer;
@@ -3786,14 +3785,14 @@ a.wr-notification-toggle-btn.selected {
 }
 
 a.wr-side-panel-toggle-btn.selected {
-    background-color: #11375B;
+    background-color: #008cc4;
     color: #fff;
 }
 
 .wr-side-panel .panel-title a {
     display: block;
     padding: 10px;
-    background: #11375B;
+    background: #008cc4;
     color: #fff;
     border-bottom: 1px solid #e4e4e4;
 }
@@ -4105,7 +4104,7 @@ a.wr-side-panel-toggle-btn.selected {
 }
 
 .tile-bg {
-    background: #11375B;
+    background: #008cc4;
     color: #fff;
 }
 
@@ -4207,7 +4206,7 @@ a.wr-side-panel-toggle-btn.selected {
 .wr-form .wr-operation-icon {
     font-size: 32px;
     margin-right: 10px;
-    color: #11375B;
+    color: #008cc4;
 }
 
 .wr-form .user-select {
@@ -4608,16 +4607,16 @@ a.wr-side-panel-toggle-btn.selected {
 /*}*/
 
 .wr-list-group .wr-desc-list-configs.highlight {
-    background: #14212E;
+    background: #008cc4;
     color: #fff;
 }
 
 .wr-list-group .wr-desc-list-configs.highlight2 {
-    background: #CDCDCD;
+    background: #008cc4;
 }
 
 .wr-list-group .wr-desc-list-configs b {
-    color: #008cc4;
+    color: rgba(0,0,0, 0.65);
 }
 
 .panel-title a .fw-stack {
@@ -5140,7 +5139,7 @@ a.show-operations-btn .btn-text:before {
 }
 
 a.cu-btn-inner.inverse {
-    background: #11375B;
+    background: #008cc4;
     color: #fff;
 }
 
@@ -5200,7 +5199,7 @@ a.cu-btn-inner.inverse:hover {
 
 .wizard-head .wizard-home-icon {
     font-size: 30px;
-    color: #11375b;
+    color: #008cc4;
     margin-top: -6px;
     margin-right: 20px;
 }
@@ -5255,7 +5254,7 @@ a.cu-btn-inner.inverse:hover {
     margin-bottom: 1px;
     text-decoration: none;
     display: block;
-    color: #11375b;
+    color: #008cc4;
 }
 
 .multi-view .nav > ul li li a {
@@ -5263,7 +5262,7 @@ a.cu-btn-inner.inverse:hover {
 }
 
 .multi-view .nav > ul li a:hover, .multi-view .nav > ul li a.active {
-    background: #11375b;
+    background: #008cc4;
     color: #fff;
 }
 
@@ -5293,7 +5292,7 @@ a.cu-btn-inner.inverse:hover {
 }
 
 .multi-view .content {
-    border-left: 2px solid #11375b;
+    border-left: 2px solid #008cc4;
 }
 
 .multi-view .content ul, .multi-view .content ul li {
@@ -6349,8 +6348,8 @@ body.inverse .fade-edge:after {
 .pagination > .active > span,
 .pagination > .active > span:focus,
 .pagination > .active > span:hover {
-    background: #11375B;
-    border-color: #11375B;
+    background: #008cc4;
+    border-color: #008cc4;
 }
 
 .pagination > .disabled > a,
@@ -6423,7 +6422,7 @@ ul.tiles .icon {
  * ======================================================================== */
 .asset-image {
     max-width: 150px;
-    background: #11375B;
+    background: #008cc4;
     float: none !important;
 }
 
@@ -6466,8 +6465,8 @@ ul.tiles .icon {
 .list-group-item.active,
 .list-group-item.active:focus,
 .list-group-item.active:hover {
-    background: #11375B;
-    border-color: #11375B;
+    background: #008cc4;
+    border-color: #008cc4;
     color: #fff;
 }
 
@@ -6750,7 +6749,7 @@ ul.tiles .icon {
 }
 
 .media .panel.active .panel-heading.visible-xs {
-    background: #11375b;
+    background: #008cc4;
     color: #fff;
 }
 
@@ -6927,7 +6926,7 @@ select > option:hover {
 .device-type-img.fw {
     font-size: 250px;
     color: white;
-    background: #11375b;
+    background: #008cc4;
     padding: 35px;
 }
 
