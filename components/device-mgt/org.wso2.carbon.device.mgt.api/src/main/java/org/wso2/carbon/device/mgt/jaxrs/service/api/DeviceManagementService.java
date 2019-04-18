@@ -143,11 +143,11 @@ import java.util.List;
                         permissions = {"/device-mgt/devices/owning-device/view"}
                 ),
                 @Scope(
-                name = "Change device status.",
-                description = "Change device status.",
-                key = "perm:devices:change-status",
-                permissions = {"/device-mgt/devices/change-status"}
-        ),
+                        name = "Change device status.",
+                        description = "Change device status.",
+                        key = "perm:devices:change-status",
+                        permissions = {"/device-mgt/devices/change-status"}
+                ),
         }
 )
 @Path("/devices")
@@ -165,10 +165,10 @@ public interface DeviceManagementService {
             notes = "Provides details of all the devices enrolled with WSO2 IoT Server.",
             tags = "Device Management",
             extensions = {
-            @Extension(properties = {
-                    @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
-            })
-    }
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                    })
+            }
     )
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK. \n Successfully fetched the list of devices.",
@@ -212,14 +212,14 @@ public interface DeviceManagementService {
                     value = "The device name. For example, Nexus devices can have names, suhc as shamu, bullhead or angler.",
                     required = false)
             @Size(max = 45)
-            String name,
+                    String name,
             @ApiParam(
                     name = "type",
                     value = "The device type, such as ios, android, or windows.",
                     required = false)
             @QueryParam("type")
             @Size(max = 45)
-            String type,
+                    String type,
             @ApiParam(
                     name = "user",
                     value = "The username of the owner of the device.",
@@ -248,14 +248,14 @@ public interface DeviceManagementService {
                     required = false)
             @QueryParam("ownership")
             @Size(max = 45)
-            String ownership,
+                    String ownership,
             @ApiParam(
                     name = "status",
                     value = "Provide the device status details, such as active or inactive.",
                     required = false)
             @QueryParam("status")
             @Size(max = 45)
-            String status,
+                    String status,
             @ApiParam(
                     name = "groupId",
                     value = "Id of the group which device belongs",
@@ -269,7 +269,7 @@ public interface DeviceManagementService {
                             "Example: Mon, 05 Jan 2014 15:10:00 +0200",
                     required = false)
             @QueryParam("since")
-            String since,
+                    String since,
             @ApiParam(
                     name = "If-Modified-Since",
                     value = "Checks if the requested variant was modified, since the specified date-time.\n" +
@@ -277,7 +277,7 @@ public interface DeviceManagementService {
                             "Example: Mon, 05 Jan 2014 15:10:00 +0200",
                     required = false)
             @HeaderParam("If-Modified-Since")
-            String timestamp,
+                    String timestamp,
             @ApiParam(
                     name = "requireDeviceInfo",
                     value = "Boolean flag indicating whether to include device-info (location, application list etc) \n" +
@@ -291,14 +291,14 @@ public interface DeviceManagementService {
                     required = false,
                     defaultValue = "0")
             @QueryParam("offset")
-            int offset,
+                    int offset,
             @ApiParam(
                     name = "limit",
                     value = "Provide how many device details you require from the starting pagination index/offset.",
                     required = false,
                     defaultValue = "5")
             @QueryParam("limit")
-            int limit);
+                    int limit);
 
     @GET
     @ApiOperation(
@@ -323,16 +323,16 @@ public interface DeviceManagementService {
                             @ResponseHeader(
                                     name = "ETag",
                                     description = "Entity Tag of the response resource.\n" +
-                                                  "Used by caches, or in conditional requests."),
+                                            "Used by caches, or in conditional requests."),
                             @ResponseHeader(
                                     name = "Last-Modified",
                                     description = "Date and time the resource was last modified.\n" +
-                                                  "Used by caches, or in conditional requests."),
+                                            "Used by caches, or in conditional requests."),
                     }),
             @ApiResponse(
                     code = 304,
                     message = "Not Modified. \n Empty body because the client already has the latest version of " +
-                              "the requested resource.\n"),
+                            "the requested resource.\n"),
             @ApiResponse(
                     code = 400,
                     message = "The incoming request has more than one selection criteria defined via the query parameters.",
@@ -383,9 +383,9 @@ public interface DeviceManagementService {
                     "the owner.",
             tags = "Device Management",
             extensions = {
-                @Extension(properties = {
-                        @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:details")
-                })
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:details")
+                    })
             }
     )
     @ApiResponses(
@@ -446,13 +446,89 @@ public interface DeviceManagementService {
                     required = false)
             @QueryParam("owner")
             @Size(max = 100)
-            String owner,
+                    String owner,
             @ApiParam(
-            name = "If-Modified-Since",
-            value = "Checks if the requested variant was modified, since the specified date-time. \n" +
-                    "Provide the value in the following format: EEE, d MMM yyyy HH:mm:ss Z. \n" +
-                    "Example: Mon, 05 Jan 2014 15:10:00 +0200",
-            required = false)
+                    name = "If-Modified-Since",
+                    value = "Checks if the requested variant was modified, since the specified date-time. \n" +
+                            "Provide the value in the following format: EEE, d MMM yyyy HH:mm:ss Z. \n" +
+                            "Example: Mon, 05 Jan 2014 15:10:00 +0200",
+                    required = false)
+            @HeaderParam("If-Modified-Since")
+                    String ifModifiedSince);
+
+    @GET
+    @Path("/{id}")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Getting Details of a Device",
+            notes = "Get the details of a device by specifying the device identifier and optionally " +
+                    "the owner.",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:details")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully fetched the details of the device.",
+                            response = Device.class,
+                            responseHeaders = {
+                                    @ResponseHeader(
+                                            name = "Content-Type",
+                                            description = "The content type of the body"),
+                                    @ResponseHeader(
+                                            name = "ETag",
+                                            description = "Entity Tag of the response resource.\n" +
+                                                    "Used by caches, or in conditional requests."),
+                                    @ResponseHeader(
+                                            name = "Last-Modified",
+                                            description = "Date and time the resource was last modified.\n" +
+                                                    "Used by caches, or in conditional requests."),
+                            }),
+                    @ApiResponse(
+                            code = 304,
+                            message = "Not Modified. Empty body because the client already has the latest version" +
+                                    " of the requested resource.\n"),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. \n Invalid request or validation error.",
+                            response = ErrorResponse.class),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. \n A device with the specified device type and id was not found.",
+                            response = ErrorResponse.class),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n " +
+                                    "Server error occurred while retrieving the device details.",
+                            response = ErrorResponse.class)
+            })
+    Response getDeviceByID(
+            @ApiParam(
+                    name = "id",
+                    value = "The device identifier of the device you want ot get details.",
+                    required = true)
+            @PathParam("id")
+            @Size(max = 45)
+                    String id,
+            @ApiParam(
+                    name = "owner",
+                    value = "The owner of the device you want ot get details.",
+                    required = false)
+            @QueryParam("owner")
+            @Size(max = 100)
+                    String owner,
+            @ApiParam(
+                    name = "If-Modified-Since",
+                    value = "Checks if the requested variant was modified, since the specified date-time. \n" +
+                            "Provide the value in the following format: EEE, d MMM yyyy HH:mm:ss Z. \n" +
+                            "Example: Mon, 05 Jan 2014 15:10:00 +0200",
+                    required = false)
             @HeaderParam("If-Modified-Since")
                     String ifModifiedSince);
 
@@ -587,7 +663,6 @@ public interface DeviceManagementService {
                     String ifModifiedSince);
 
 
-
     @GET
     @Path("/{type}/{id}/info")
     @ApiOperation(
@@ -646,14 +721,14 @@ public interface DeviceManagementService {
                     required = true)
             @PathParam("type")
             @Size(max = 45)
-            String type,
+                    String type,
             @ApiParam(
                     name = "id",
                     value = "The device identifier of the device you want ot get details.",
                     required = true)
             @PathParam("id")
             @Size(max = 45)
-            String id,
+                    String id,
             @ApiParam(
                     name = "If-Modified-Since",
                     value = "Checks if the requested variant was modified, since the specified date-time. \n" +
@@ -661,7 +736,7 @@ public interface DeviceManagementService {
                             "Example: Mon, 05 Jan 2014 15:10:00 +0200",
                     required = false)
             @HeaderParam("If-Modified-Since")
-            String ifModifiedSince);
+                    String ifModifiedSince);
 
     //device rename request would looks like follows
     //POST devices/type/virtual_firealarm/id/us06ww93auzp/rename
@@ -820,10 +895,10 @@ public interface DeviceManagementService {
                     " such as iOS, Android or Windows.",
             tags = "Device Management",
             extensions = {
-            @Extension(properties = {
-                    @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:features")
-            })
-    }
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:features")
+                    })
+            }
     )
     @ApiResponses(
             value = {
@@ -880,7 +955,7 @@ public interface DeviceManagementService {
                     required = true)
             @PathParam("type")
             @Size(max = 45)
-            String type,
+                    String type,
             @ApiParam(
                     name = "id",
                     value = "The device identifier of the device.\n" +
@@ -888,7 +963,7 @@ public interface DeviceManagementService {
                     required = true)
             @PathParam("id")
             @Size(max = 45)
-            String id,
+                    String id,
             @ApiParam(
                     name = "If-Modified-Since",
                     value = "Checks if the requested variant was modified, since the specified date-time. \n" +
@@ -896,7 +971,7 @@ public interface DeviceManagementService {
                             "Example: Mon, 05 Jan 2014 15:10:00 +0200",
                     required = false)
             @HeaderParam("If-Modified-Since")
-            String ifModifiedSince);
+                    String ifModifiedSince);
 
     @POST
     @Path("/search-devices")
@@ -908,9 +983,9 @@ public interface DeviceManagementService {
             notes = "Search for devices by filtering the search result through the specified search terms.",
             tags = "Device Management",
             extensions = {
-                @Extension(properties = {
-                        @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:search")
-                })
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:search")
+                    })
             }
     )
     @ApiResponses(
@@ -962,19 +1037,19 @@ public interface DeviceManagementService {
                     required = false,
                     defaultValue = "0")
             @QueryParam("offset")
-            int offset,
+                    int offset,
             @ApiParam(
                     name = "limit",
                     value = "Provide how many activity details you require from the starting pagination index/offset.",
                     required = false,
                     defaultValue = "5")
             @QueryParam("limit")
-            int limit,
+                    int limit,
             @ApiParam(
                     name = "searchContext",
                     value = "The properties to advanced search devices.",
                     required = true)
-            SearchContext searchContext);
+                    SearchContext searchContext);
 
     @GET
     @Path("/{type}/{id}/applications")
@@ -985,11 +1060,11 @@ public interface DeviceManagementService {
             notes = "Get the list of applications subscribed to by a device.",
             tags = "Device Management",
             extensions = {
-            @Extension(properties = {
-                    @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:applications")
-            })
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:applications")
+                    })
 
-    }
+            }
     )
     @ApiResponses(
             value = {
@@ -1046,14 +1121,14 @@ public interface DeviceManagementService {
                     required = true)
             @PathParam("type")
             @Size(max = 45)
-            String type,
+                    String type,
             @ApiParam(
                     name = "id",
                     value = "The device identifier of the device.",
                     required = true)
             @PathParam("id")
             @Size(max = 45)
-            String id,
+                    String id,
             @ApiParam(
                     name = "If-Modified-Since",
                     value = "Checks if the requested variant was modified, since the specified date-time. \n" +
@@ -1061,21 +1136,21 @@ public interface DeviceManagementService {
                             "Example: Mon, 05 Jan 2014 15:10:00 +0200",
                     required = false)
             @HeaderParam("If-Modified-Since")
-            String ifModifiedSince,
+                    String ifModifiedSince,
             @ApiParam(
                     name = "offset",
                     value = "The starting pagination index for the complete list of qualified items.",
                     required = false,
                     defaultValue = "0")
             @QueryParam("offset")
-            int offset,
+                    int offset,
             @ApiParam(
                     name = "limit",
                     value = "Provide how many application details you require from the starting pagination index/offset.",
                     required = false,
                     defaultValue = "5")
             @QueryParam("limit")
-            int limit);
+                    int limit);
 
 
     @GET
@@ -1087,10 +1162,10 @@ public interface DeviceManagementService {
             notes = "Get the details of operations carried out on a selected device.",
             tags = "Device Management",
             extensions = {
-            @Extension(properties = {
-                    @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:operations")
-            })
-    }
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:operations")
+                    })
+            }
     )
     @ApiResponses(
             value = {
@@ -1147,7 +1222,7 @@ public interface DeviceManagementService {
                     required = true)
             @PathParam("type")
             @Size(max = 45)
-            String type,
+                    String type,
             @ApiParam(
                     name = "id",
                     value = "The device identifier of the device you wish to get details.\n" +
@@ -1155,7 +1230,7 @@ public interface DeviceManagementService {
                     required = true)
             @PathParam("id")
             @Size(max = 45)
-            String id,
+                    String id,
             @ApiParam(
                     name = "If-Modified-Since",
                     value = "Checks if the requested variant was modified, since the specified date-time. \n" +
@@ -1163,21 +1238,21 @@ public interface DeviceManagementService {
                             "Example: Mon, 05 Jan 2014 15:10:00 +0200",
                     required = false)
             @HeaderParam("If-Modified-Since")
-            String ifModifiedSince,
+                    String ifModifiedSince,
             @ApiParam(
                     name = "offset",
                     value = "The starting pagination index for the complete list of qualified items.",
                     required = false,
                     defaultValue = "0")
             @QueryParam("offset")
-            int offset,
+                    int offset,
             @ApiParam(
                     name = "limit",
                     value = "Provide how many activity details you require from the starting pagination index/offset.",
                     required = false,
                     defaultValue = "5")
             @QueryParam("limit")
-            int limit,
+                    int limit,
             @ApiParam(
                     name = "owner",
                     value = "Provides the owner of the required device.",
@@ -1197,10 +1272,10 @@ public interface DeviceManagementService {
                     "the device ownership type, the user role or name and finally, the policy that matches these filters will be enforced on the device.",
             tags = "Device Management",
             extensions = {
-            @Extension(properties = {
-                    @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:effective-policy")
-            })
-    }
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:effective-policy")
+                    })
+            }
     )
     @ApiResponses(
             value = {
@@ -1257,14 +1332,14 @@ public interface DeviceManagementService {
                     required = true)
             @PathParam("type")
             @Size(max = 45)
-            String type,
+                    String type,
             @ApiParam(
                     name = "id",
                     value = "The device ID.",
                     required = true)
             @PathParam("id")
             @Size(max = 45)
-            String id,
+                    String id,
             @ApiParam(
                     name = "If-Modified-Since",
                     value = "Checks if the requested variant was modified, since the specified date-time. \n" +
@@ -1272,7 +1347,7 @@ public interface DeviceManagementService {
                             "Example: Mon, 05 Jan 2014 15:10:00 +0200",
                     required = false)
             @HeaderParam("If-Modified-Since")
-            String ifModifiedSince);
+                    String ifModifiedSince);
 
 
     @GET
@@ -1285,9 +1360,9 @@ public interface DeviceManagementService {
                     "The server checks if the settings in the device comply with the policy that is enforced on the device using this REST API.",
             tags = "Device Management",
             extensions = {
-                @Extension(properties = {
-                        @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:compliance-data")
-                })
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:compliance-data")
+                    })
             }
     )
     @ApiResponses(
@@ -1313,14 +1388,14 @@ public interface DeviceManagementService {
                     required = true)
             @PathParam("type")
             @Size(max = 45)
-            String type,
+                    String type,
             @ApiParam(
                     name = "id",
                     value = "Device Identifier",
                     required = true)
             @PathParam("id")
             @Size(max = 45)
-            String id);
+                    String id);
 
     @PUT
     @Path("/{type}/{id}/changestatus")

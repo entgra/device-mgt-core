@@ -446,6 +446,11 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
         return Response.status(Response.Status.OK).entity(device).build();
     }
 
+    @Override
+    public Response getDeviceByID(String id, String owner, String ifModifiedSince) {
+        return null;
+    }
+
     @GET
     @Path("/{type}/{id}/location")
     @Override
@@ -490,7 +495,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             deviceInfo = informationManager.getDeviceInfo(deviceIdentifier);
 
         } catch (DeviceDetailsMgtException e) {
-            String msg = "Error occurred while getting the device information of id : " + id + " type : " + type ;
+            String msg = "Error occurred while getting the device information of id : " + id + " type : " + type;
             log.error(msg, e);
             return Response.serverError().entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
@@ -676,8 +681,8 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
     /**
      * Change device status.
      *
-     * @param type Device type
-     * @param id Device id
+     * @param type       Device type
+     * @param id         Device id
      * @param newsStatus Device new status
      * @return {@link Response} object
      */
@@ -761,7 +766,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                 String date = new SimpleDateFormat(DATE_FORMAT_NOW).format(new Date());
                 operation.setCreatedTimeStamp(date);
                 Activity activity = DeviceMgtAPIUtils.getDeviceManagementService().addOperation(type, operation,
-                                                                                       deviceIdentifiers);
+                        deviceIdentifiers);
                 return Response.status(Response.Status.CREATED).entity(activity).build();
             } else {
                 String message = "Only Command and Config operation is supported through this api";
