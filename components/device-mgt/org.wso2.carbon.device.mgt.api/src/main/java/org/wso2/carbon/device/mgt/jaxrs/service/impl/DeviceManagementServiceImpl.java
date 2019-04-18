@@ -455,14 +455,14 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             @HeaderParam("If-Modified-Since") String ifModifiedSince) {
         Device device = null;
         try {
-            RequestValidationUtil.validateDeviceIdentifier(type, id);
+            RequestValidationUtil.validateDeviceIdentifier("any", id);
             DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
             DeviceAccessAuthorizationService deviceAccessAuthorizationService =
                     DeviceMgtAPIUtils.getDeviceAccessAuthorizationService();
 
             // this is the user who initiates the request
             String authorizedUser = CarbonContext.getThreadLocalCarbonContext().getUsername();
-            DeviceIdentifier deviceIdentifier = new DeviceIdentifier(id, type);
+            DeviceIdentifier deviceIdentifier = new DeviceIdentifier(id, null);
             // check whether the user is authorized
             if (!deviceAccessAuthorizationService.isUserAuthorized(deviceIdentifier, authorizedUser)) {
                 String msg = "User '" + authorizedUser + "' is not authorized to retrieve the given device id '" + id + "'";
@@ -486,13 +486,13 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             if (!StringUtils.isEmpty(owner)) {
                 if (authorizedUser.equalsIgnoreCase(owner) || deviceAccessAuthorizationService.isDeviceAdminUser()) {
                     if (sinceDate != null) {
-                        device = dms.getDevice(new DeviceIdentifier(id, type), owner, sinceDate, true);
+                        device = dms.getDevice(new DeviceIdentifier(id, null), owner, sinceDate, true);
                         if (device == null) {
                             return Response.status(Response.Status.NOT_MODIFIED).entity("No device is modified " +
                                     "after the timestamp provided in 'If-Modified-Since' header").build();
                         }
                     } else {
-                        device = dms.getDevice(new DeviceIdentifier(id, type), owner, true);
+                        device = dms.getDevice(new DeviceIdentifier(id, null), owner, true);
                     }
                 } else {
                     String msg = "User '" + authorizedUser + "' is not authorized to retrieve the given device id '" + id +
@@ -503,24 +503,24 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                 }
             } else if (deviceAccessAuthorizationService.isDeviceAdminUser()) {
                 if (sinceDate != null) {
-                    device = dms.getDevice(new DeviceIdentifier(id, type), sinceDate);
+                    device = dms.getDevice(new DeviceIdentifier(id, null), sinceDate);
                     if (device == null) {
                         return Response.status(Response.Status.NOT_MODIFIED).entity("No device is modified " +
                                 "after the timestamp provided in 'If-Modified-Since' header").build();
                     }
                 } else {
-                    device = dms.getDevice(new DeviceIdentifier(id, type));
+                    device = dms.getDevice(new DeviceIdentifier(id, null));
                 }
             } else {
                 owner = authorizedUser;
                 if (sinceDate != null) {
-                    device = dms.getDevice(new DeviceIdentifier(id, type), owner, sinceDate, true);
+                    device = dms.getDevice(new DeviceIdentifier(id, null), owner, sinceDate, true);
                     if (device == null) {
                         return Response.status(Response.Status.NOT_MODIFIED).entity("No device is modified " +
                                 "after the timestamp provided in 'If-Modified-Since' header").build();
                     }
                 } else {
-                    device = dms.getDevice(new DeviceIdentifier(id, type), owner, true);
+                    device = dms.getDevice(new DeviceIdentifier(id, null), owner, true);
                 }
             }
         } catch (DeviceManagementException e) {
@@ -536,8 +536,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
         }
         if (device == null) {
             return Response.status(Response.Status.NOT_FOUND).entity(
-                    new ErrorResponse.ErrorResponseBuilder().setCode(404l).setMessage("Requested device of type '" +
-                            type + "', which carries id '" + id + "' does not exist").build()).build();
+                    new ErrorResponse.ErrorResponseBuilder().setCode(404l).setMessage("Requested device id '" + id + "' does not exist").build()).build();
         }
         return Response.status(Response.Status.OK).entity(device).build();
     }
