@@ -462,14 +462,6 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
 
             // this is the user who initiates the request
             String authorizedUser = CarbonContext.getThreadLocalCarbonContext().getUsername();
-            DeviceIdentifier deviceIdentifier = new DeviceIdentifier(id, null);
-            // check whether the user is authorized
-            if (!deviceAccessAuthorizationService.isUserAuthorized(deviceIdentifier, authorizedUser)) {
-                String msg = "User '" + authorizedUser + "' is not authorized to retrieve the given device id '" + id + "'";
-                log.error(msg);
-                return Response.status(Response.Status.UNAUTHORIZED).entity(
-                        new ErrorResponse.ErrorResponseBuilder().setCode(401l).setMessage(msg).build()).build();
-            }
 
             Date sinceDate = null;
             if (ifModifiedSince != null && !ifModifiedSince.isEmpty()) {
@@ -486,13 +478,13 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             if (!StringUtils.isEmpty(owner)) {
                 if (authorizedUser.equalsIgnoreCase(owner) || deviceAccessAuthorizationService.isDeviceAdminUser()) {
                     if (sinceDate != null) {
-                        device = dms.getDevice(new DeviceIdentifier(id, null), owner, sinceDate, true);
+                        device = dms.getDevice(id, owner, sinceDate, true);
                         if (device == null) {
                             return Response.status(Response.Status.NOT_MODIFIED).entity("No device is modified " +
                                     "after the timestamp provided in 'If-Modified-Since' header").build();
                         }
                     } else {
-                        device = dms.getDevice(new DeviceIdentifier(id, null), owner, true);
+                        device = dms.getDevice(id, owner, true);
                     }
                 } else {
                     String msg = "User '" + authorizedUser + "' is not authorized to retrieve the given device id '" + id +
@@ -503,26 +495,36 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                 }
             } else if (deviceAccessAuthorizationService.isDeviceAdminUser()) {
                 if (sinceDate != null) {
-                    device = dms.getDevice(new DeviceIdentifier(id, null), sinceDate);
+                    device = dms.getDevice(id, sinceDate);
                     if (device == null) {
                         return Response.status(Response.Status.NOT_MODIFIED).entity("No device is modified " +
                                 "after the timestamp provided in 'If-Modified-Since' header").build();
                     }
                 } else {
-                    device = dms.getDevice(new DeviceIdentifier(id, null));
+                    device = dms.getDevice(id);
                 }
             } else {
                 owner = authorizedUser;
                 if (sinceDate != null) {
-                    device = dms.getDevice(new DeviceIdentifier(id, null), owner, sinceDate, true);
+                    device = dms.getDevice(id, owner, sinceDate, true);
                     if (device == null) {
                         return Response.status(Response.Status.NOT_MODIFIED).entity("No device is modified " +
                                 "after the timestamp provided in 'If-Modified-Since' header").build();
                     }
                 } else {
-                    device = dms.getDevice(new DeviceIdentifier(id, null), owner, true);
+                    device = dms.getDevice(id, owner, true);
                 }
             }
+
+            DeviceIdentifier deviceIdentifier = new DeviceIdentifier(id, device.getType());
+            // check whether the user is authorized
+            if (!deviceAccessAuthorizationService.isUserAuthorized(deviceIdentifier, authorizedUser)) {
+                String msg = "User '" + authorizedUser + "' is not authorized to retrieve the given device id '" + id + "'";
+                log.error(msg);
+                return Response.status(Response.Status.UNAUTHORIZED).entity(
+                        new ErrorResponse.ErrorResponseBuilder().setCode(401l).setMessage(msg).build()).build();
+            }
+
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while fetching the device information.";
             log.error(msg, e);

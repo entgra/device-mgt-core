@@ -158,6 +158,15 @@ public interface DeviceManagementProviderService {
      */
     Device getDevice(DeviceIdentifier deviceId) throws DeviceManagementException;
 
+  /**
+     * Returns the device of specified id.
+     *
+     * @param deviceId device Id
+     * @return Device returns null when device is not available.
+     * @throws DeviceManagementException
+     */
+    Device getDevice(String deviceId) throws DeviceManagementException;
+
     /**
      * Returns the device of specified id.
      *
@@ -179,6 +188,17 @@ public interface DeviceManagementProviderService {
     Device getDevice(DeviceIdentifier deviceId, boolean requireDeviceInfo) throws DeviceManagementException;
 
     /**
+     * Returns the device of specified id.
+     *
+     * @param deviceId device Id
+     * @param requireDeviceInfo - A boolean indicating whether the device-info (location, app-info etc) is also required
+     *                          along with the device data.
+     * @return Device returns null when device is not available.
+     * @throws DeviceManagementException
+     */
+    Device getDevice(String deviceId, boolean requireDeviceInfo) throws DeviceManagementException;
+
+    /**
      * Returns the device of specified id owned by user with given username.
      *
      * @param deviceId - Device Id
@@ -190,6 +210,17 @@ public interface DeviceManagementProviderService {
      */
     Device getDevice(DeviceIdentifier deviceId, String owner, boolean requireDeviceInfo) throws DeviceManagementException;
 
+    /**
+     * Returns the device of specified id owned by user with given username.
+     *
+     * @param deviceId - Device Id
+     * @param owner - Username of the owner
+     * @param requireDeviceInfo - A boolean indicating whether the device-info (location, app-info etc) is also required
+     *                          along with the device data.
+     * @return Device returns null when device is not available.
+     * @throws DeviceManagementException
+     */
+    Device getDevice(String deviceId, String owner, boolean requireDeviceInfo) throws DeviceManagementException;
 
     /**
      * Returns the device of specified id.
@@ -200,6 +231,16 @@ public interface DeviceManagementProviderService {
      * @throws DeviceManagementException
      */
     Device getDevice(DeviceIdentifier deviceId, Date since) throws DeviceManagementException;
+
+    /**
+     * Returns the device of specified id.
+     *
+     * @param deviceId device Id
+     * @param since - Date value where the resource was last modified
+     * @return Device returns null when device is not available.
+     * @throws DeviceManagementException
+     */
+    Device getDevice(String deviceId, Date since) throws DeviceManagementException;
 
     /**
      * Returns the device of specified id.
@@ -225,6 +266,20 @@ public interface DeviceManagementProviderService {
      * @throws DeviceManagementException
      */
     Device getDevice(DeviceIdentifier deviceId, String owner, Date since, boolean requireDeviceInfo)
+            throws DeviceManagementException;
+
+    /**
+     * Returns the device of specified id and owned by user with given username.
+     *
+     * @param deviceId - Device Id
+     * @param owner - Username of the owner
+     * @param since - Date value where the resource was last modified
+     * @param requireDeviceInfo - A boolean indicating whether the device-info (location, app-info etc) is also required
+     *                          along with the device data.
+     * @return Device returns null when device is not available.
+     * @throws DeviceManagementException
+     */
+    Device getDevice(String deviceId, String owner, Date since, boolean requireDeviceInfo)
             throws DeviceManagementException;
 
     /**

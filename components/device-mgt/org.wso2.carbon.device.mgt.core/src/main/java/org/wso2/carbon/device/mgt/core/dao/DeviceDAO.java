@@ -128,6 +128,17 @@ public interface DeviceDAO {
      */
     Device getDevice(DeviceIdentifier deviceIdentifier, int tenantId) throws DeviceManagementDAOException;
 
+
+    /**
+     * This method is used to retrieve a device of a given device-identifier and tenant-id.
+     *
+     * @param deviceIdentifier device id.
+     * @param tenantId tenant id.
+     * @return returns the device object.
+     * @throws DeviceManagementDAOException
+     */
+    Device getDevice(String deviceIdentifier, int tenantId) throws DeviceManagementDAOException;
+
     /**
      * This method is used to retrieve a device of a given device-identifier and owner and tenant-id.
      *
@@ -138,6 +149,17 @@ public interface DeviceDAO {
      * @throws DeviceManagementDAOException
      */
     Device getDevice(DeviceIdentifier deviceIdentifier, String owner, int tenantId) throws DeviceManagementDAOException;
+
+    /**
+     * This method is used to retrieve a device of a given device-identifier and owner and tenant-id.
+     *
+     * @param deviceIdentifier device id.
+     * @param owner username of the owner.
+     * @param tenantId tenant id.
+     * @return returns the device object.
+     * @throws DeviceManagementDAOException
+     */
+    Device getDevice(String deviceIdentifier, String owner, int tenantId) throws DeviceManagementDAOException;
 
     /**
      * This method is used to retrieve a device of a given device-identifier and tenant-id which modified
@@ -164,6 +186,20 @@ public interface DeviceDAO {
      * @throws DeviceManagementDAOException
      */
     Device getDevice(DeviceIdentifier deviceIdentifier, String owner, Date ifModifiedSince, int tenantId) throws
+            DeviceManagementDAOException;
+
+    /**
+     * This method is used to retrieve a device of a given device-identifier and owner and tenant-id which modified
+     * later than the ifModifiedSince param.
+     *
+     * @param deviceIdentifier device id.
+     * @param owner username of the owner.
+     * @param ifModifiedSince last modified time.
+     * @param tenantId tenant id.
+     * @return returns the device object.
+     * @throws DeviceManagementDAOException
+     */
+    Device getDevice(String deviceIdentifier, String owner, Date ifModifiedSince, int tenantId) throws
             DeviceManagementDAOException;
 
     /**
