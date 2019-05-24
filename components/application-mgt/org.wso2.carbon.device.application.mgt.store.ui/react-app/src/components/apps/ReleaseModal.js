@@ -65,7 +65,7 @@ class ConnectedReleaseModal extends React.Component {
                             <List.Item>
                                 <List.Item.Meta
                                     avatar={<Avatar src={release.iconPath} />}
-                                    title={<Link to={"/store/apps/releases/"+release.uuid}>{release.version}</Link>}
+                                    title={<Link to={"/store/apps/"+release.uuid}>{release.version}</Link>}
                                     description={release.description}
                                 />
                             </List.Item>

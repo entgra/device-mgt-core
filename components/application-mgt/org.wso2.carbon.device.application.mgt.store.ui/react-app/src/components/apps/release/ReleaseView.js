@@ -1,5 +1,5 @@
 import React from "react";
-import {Divider, Row, Col, Typography, Button} from "antd";
+import {Divider, Row, Col, Typography, Button,Rate} from "antd";
 import "../../../App.css";
 
 const {Title, Text, Paragraph} = Typography;
@@ -17,14 +17,14 @@ class ReleaseView extends React.Component {
                         </Col>
                         <Col xl={10} sm={11} className="release-title">
                             <Title level={2}>App Name</Title>
-                            <Text>{release.version}</Text><br/>
-                            <Text type="secondary">{release.description}</Text><br/>
+                            <Text>Version : {release.version}</Text><br/>
+                            <Rate disabled allowHalf defaultValue={release.rating} />
                         </Col>
                         <Col xl={8} md={10} sm={24} xs={24} style={{float: "right"}}>
                             <div>
                                 <Button.Group style={{float: "right"}}>
-                                    <Button htmlType="button" icon="edit">edit</Button>
-                                    <Button htmlType="button" type="primary" icon="shop" disabled={release.currentStatus !== "PUBLISHED"}>Open in store</Button>
+                                    <Button htmlType="button" icon="usergroup-add">Enterprise Install</Button>
+                                    <Button htmlType="button" type="primary" icon="download">Install</Button>
                                 </Button.Group>
                             </div>
                         </Col>
@@ -41,12 +41,7 @@ class ReleaseView extends React.Component {
                     </Row>
                     <Divider />
                     <Paragraph type="secondary" ellipsis={{ rows: 3, expandable: true }}>
-                        Ant Design, a design language for background applications, is refined by Ant UED Team. Ant
-                        Design, a design language for background applications, is refined by Ant UED Team. Ant Design,
-                        a design language for background applications, is refined by Ant UED Team. Ant Design, a
-                        design language for background applications, is refined by Ant UED Team. Ant Design, a design
-                        language for background applications, is refined by Ant UED Team. Ant Design, a design
-                        language for background applications, is refined by Ant UED Team.
+                        {release.description}
                     </Paragraph>
                 </div>
             </div>

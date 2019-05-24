@@ -1,6 +1,7 @@
 import React from "react";
 import {Divider, Row, Col, Typography, Button} from "antd";
 import "../../../App.css";
+import config from "../../../../public/conf/config.json";
 
 const {Title, Text, Paragraph} = Typography;
 
@@ -24,12 +25,20 @@ class ReleaseView extends React.Component {
                             <div>
                                 <Button.Group style={{float: "right"}}>
                                     <Button htmlType="button" icon="edit">edit</Button>
-                                    <Button htmlType="button" type="primary" icon="shop" disabled={release.currentStatus !== "PUBLISHED"}>Open in store</Button>
+                                    <Button htmlType="button"
+                                            type="primary"
+                                            icon="shop"
+                                            disabled={release.currentStatus !== "PUBLISHED"}
+                                            onClick={() => {
+                                                window.open("https://"+ config.serverConfig.hostname + ':' + config.serverConfig.httpsPort+"/store/apps/"+release.uuid)
+                                            }}>
+                                        Open in store
+                                    </Button>
                                 </Button.Group>
                             </div>
                         </Col>
                     </Row>
-                    <Divider />
+                    <Divider/>
                     <Row>
                         {release.screenshots.map((screenshotUrl) => {
                             return (
@@ -39,8 +48,8 @@ class ReleaseView extends React.Component {
                             )
                         })}
                     </Row>
-                    <Divider />
-                    <Paragraph type="secondary" ellipsis={{ rows: 3, expandable: true }}>
+                    <Divider/>
+                    <Paragraph type="secondary" ellipsis={{rows: 3, expandable: true}}>
                         Ant Design, a design language for background applications, is refined by Ant UED Team. Ant
                         Design, a design language for background applications, is refined by Ant UED Team. Ant Design,
                         a design language for background applications, is refined by Ant UED Team. Ant Design, a

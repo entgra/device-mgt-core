@@ -1,13 +1,13 @@
 import {
-    Skeleton, Switch, Card, Icon, Avatar, Typography
+    Skeleton, Switch, Card, Icon, Avatar, Typography, Col, Row, Rate
 } from 'antd';
 import React from "react";
-import config from "../../../public/conf/config.json";
 import {openReleasesModal} from "../../js/actions";
 import {connect} from "react-redux";
+import {Link} from "react-router-dom";
 
 const { Meta } = Card;
-const { Text } = Typography;
+const { Text, Title } = Typography;
 
 const mapDispatchToProps = dispatch => ({
     openReleasesModal: (app) => dispatch(openReleasesModal(app))
@@ -24,30 +24,29 @@ class ConnectedAppCard extends React.Component {
         this.props.openReleasesModal(this.props.app);
     }
 
-
     render() {
-        const defaultPlatformIcons = config.defaultPlatformIcons;
-        let icon = defaultPlatformIcons.default;
-        if(defaultPlatformIcons.hasOwnProperty(this.props.platform)){
-            icon = defaultPlatformIcons[this.props.platform];
-        }
-        let descriptionText = this.props.description;
-        if(descriptionText.length>50){
-            descriptionText = descriptionText.substring(0,50)+"...";
-        }
+        const app = this.props.app;
+        const release = this.props.app.applicationReleases[0];
+        console.log(this.props);
+
         const description = (
-            <div>
-                <p>{descriptionText}</p>
-                <Text code>{this.props.type}</Text>
-                <Text> {this.props.subType}</Text>
-            </div>
+            <Link to={"/store/apps/"+release.uuid}>
+                <Row>
+                    <Col span={8}>
+                        <Avatar shape="square" size={64} src={release.iconPath} />
+                    </Col>
+                    <Col span={16}>
+                        <Text strong level={4}>{app.name}</Text><br/>
+                        <Text type="secondary" level={4}>{app.deviceType}</Text><br/>
+                        <Rate disabled allowHalf defaultValue={app.rating} />
+                    </Col>
+                </Row>
+            </Link>
         );
 
         return (
-                <Card style={{marginTop: 16 }}  actions={[<Icon type="edit" />, <Icon type="delete" />, <Icon type="appstore" theme="twoTone" onClick={this.handleReleasesClick} />]}>
+                <Card style={{marginTop: 16 }} >
                     <Meta
-                        avatar={<Avatar src={icon} />}
-                        title={this.props.name}
                         description={description}
                     />
                 </Card>

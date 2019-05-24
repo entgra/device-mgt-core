@@ -34,7 +34,7 @@ const routes = [
                 exact: true
             },
             {
-                path: '/store/apps/releases/:uuid',
+                path: '/store/apps/:uuid',
                 exact: true,
                 component: Release
             }

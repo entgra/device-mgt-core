@@ -1,12 +1,10 @@
 import React from "react";
 import '../../../../App.css';
-import {PageHeader, Typography, Input, Button, Row, Col, Avatar, Card} from "antd";
+import {PageHeader, Typography, Row, Col, Card} from "antd";
 import {connect} from "react-redux";
 import ReleaseView from "../../../../components/apps/release/ReleaseView";
 import {getRelease} from "../../../../js/actions";
-import LifeCycle from "../../../../components/apps/release/LifeCycle";
 
-const Search = Input.Search;
 const {Title} = Typography;
 
 const routes = [
@@ -60,19 +58,17 @@ class ConnectedRelease extends React.Component {
         //todo remove uppercase
         return (
             <div>
-                <PageHeader
-                    breadcrumb={{routes}}
-                />
+                {/*<PageHeader*/}
+                    {/*breadcrumb={{routes}}*/}
+                {/*/>*/}
                 <div className="main-container">
                     <Row style={{padding: 10}}>
+                        <Col lg={4}>
+
+                        </Col>
                         <Col lg={16} md={24} style={{padding: 3}}>
                             <Card>
                                 <ReleaseView release={release}/>
-                            </Card>
-                        </Col>
-                        <Col lg={8} md={24} style={{padding: 3}}>
-                            <Card lg={8} md={24}>
-                                <LifeCycle currentStatus={release.currentStatus.toUpperCase()}/>
                             </Card>
                         </Col>
                     </Row>
