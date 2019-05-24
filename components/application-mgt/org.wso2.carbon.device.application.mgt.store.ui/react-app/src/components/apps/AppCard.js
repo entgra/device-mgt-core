@@ -5,9 +5,11 @@ import React from "react";
 import {openReleasesModal} from "../../js/actions";
 import {connect} from "react-redux";
 import {Link} from "react-router-dom";
+import "../../App.css";
+import StarRatings from 'react-star-ratings';
 
-const { Meta } = Card;
-const { Text, Title } = Typography;
+const {Meta} = Card;
+const {Text, Title} = Typography;
 
 const mapDispatchToProps = dispatch => ({
     openReleasesModal: (app) => dispatch(openReleasesModal(app))
@@ -15,12 +17,12 @@ const mapDispatchToProps = dispatch => ({
 
 class ConnectedAppCard extends React.Component {
 
-    constructor(props){
+    constructor(props) {
         super(props);
         this.handleReleasesClick = this.handleReleasesClick.bind(this);
     }
 
-    handleReleasesClick(){
+    handleReleasesClick() {
         this.props.openReleasesModal(this.props.app);
     }
 
@@ -30,30 +32,50 @@ class ConnectedAppCard extends React.Component {
         console.log(this.props);
 
         const description = (
-            <Link to={"/store/apps/"+release.uuid}>
-                <Row>
-                    <Col span={8}>
-                        <Avatar shape="square" size={64} src={release.iconPath} />
-                    </Col>
-                    <Col span={16}>
-                        <Text strong level={4}>{app.name}</Text><br/>
-                        <Text type="secondary" level={4}>{app.deviceType}</Text><br/>
-                        <Rate disabled allowHalf defaultValue={app.rating} />
-                    </Col>
-                </Row>
-            </Link>
+            <div className="appCard">
+                <Link to={"/store/apps/" + release.uuid}>
+                    {/*<Row>*/}
+                    {/*<Col span={8}>*/}
+                    {/*<Avatar shape="square" size={64} src={release.iconPath} />*/}
+                    {/*</Col>*/}
+                    {/*<Col span={16}>*/}
+                    {/*<Text strong level={4}>{app.name}</Text><br/>*/}
+                    {/*<Text type="secondary" level={4}>{app.deviceType}</Text><br/>*/}
+                    {/*<Rate disabled allowHalf defaultValue={app.rating} />*/}
+                    {/*</Col>*/}
+                    {/*</Row>*/}
+                    <Row className="release">
+                        <Col span={24} className="release-icon">
+                            <img src={release.iconPath} alt="icon"/>
+                            {/*<Avatar shape="square" size={128} src={release.iconPath} />*/}
+                        </Col>
+                        <Col span={24}>
+                            <Text strong level={4}>{app.name}</Text><br/>
+                            <Text type="secondary" level={4}>{app.deviceType}</Text><br/>
+                            <StarRatings
+                                rating={app.rating}
+                                starRatedColor="#777"
+                                starDimension = "12px"
+                                starSpacing = "0"
+                                numberOfStars={5}
+                                name='rating'
+                            />
+                        </Col>
+                    </Row>
+                </Link>
+            </div>
         );
 
         return (
-                <Card style={{marginTop: 16 }} >
-                    <Meta
-                        description={description}
-                    />
-                </Card>
+            <Card style={{marginTop: 16}}>
+                <Meta
+                    description={description}
+                />
+            </Card>
         );
     }
 }
 
-const AppCard = connect(null,mapDispatchToProps)(ConnectedAppCard);
+const AppCard = connect(null, mapDispatchToProps)(ConnectedAppCard);
 
 export default AppCard;

@@ -22,14 +22,10 @@ class ConnectedAppList extends React.Component {
         return (
             <Row gutter={16}>
                 {this.props.apps.map(app => (
-                    <Col key={app.id} xs={24} sm={12} md={6} lg={6}>
+                    <Col key={app.id} xs={12} sm={6} md={6} lg={4} xl={3}>
                         <AppCard key={app.id}
                                  app = {app}
-                                 name={app.name}
-                                 platform={app.deviceType}
-                                 type={app.type}
-                                 subType={app.subType}
-                                 description={app.description}/>
+                                 />
                     </Col>
                 ))}
             </Row>

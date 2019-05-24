@@ -2,15 +2,16 @@
   height: 170px;
 }
 
-.release .release-icon{
-  margin-right: 15px;
-}
-
-.release .release-icon img{
+.release-icon img{
   width: 100%;
   border-radius: 28%;
 }
-
+.release .release-icon{
+  margin-right: 15px;
+}
+.appCard .release-icon{
+  margin-bottom: 10px;
+}
 .release .release-title{
   margin-left: 15px;
 }
