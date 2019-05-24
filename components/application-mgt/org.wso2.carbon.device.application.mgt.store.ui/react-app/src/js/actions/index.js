@@ -33,11 +33,24 @@ export const getRelease = (uuid) => dispatch => {
     ).then(res => {
         if (res.status === 200) {
             let release = res.data.data.applicationReleases[0];
-            dispatch({type: ActionTypes.GET_RELEASE, payload: release});
+            dispatch({
+                type: ActionTypes.GET_RELEASE,
+                payload: {
+                    release: release,
+                    releaseLoading: false
+                }
+            });
         }
     }).catch(function (error) {
         if (error.response.status === 401) {
             window.location.href = 'https://localhost:9443/store/login';
+        }else if(error.response.status===404){
+            dispatch({
+                type: ActionTypes.GET_RELEASE,
+                payload: {
+                    release: null,
+                    releaseLoading: false
+                }});
         }
     });
 
@@ -66,6 +79,15 @@ export const openLifecycleModal = (nextState) => dispatch => {
 export const closeLifecycleModal = () => dispatch => {
     dispatch({
         type: ActionTypes.CLOSE_LIFECYCLE_MODAL
+    });
+};
+
+export const setLoading = (stateToLoad) => dispatch => {
+    dispatch({
+        type: ActionTypes.SET_LOADING_STATE,
+        payload: {
+            stateToLoad: stateToLoad
+        }
     });
 };
 
