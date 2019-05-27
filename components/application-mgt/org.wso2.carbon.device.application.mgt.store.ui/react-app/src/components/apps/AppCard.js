@@ -34,16 +34,6 @@ class ConnectedAppCard extends React.Component {
         const description = (
             <div className="appCard">
                 <Link to={"/store/apps/" + release.uuid}>
-                    {/*<Row>*/}
-                    {/*<Col span={8}>*/}
-                    {/*<Avatar shape="square" size={64} src={release.iconPath} />*/}
-                    {/*</Col>*/}
-                    {/*<Col span={16}>*/}
-                    {/*<Text strong level={4}>{app.name}</Text><br/>*/}
-                    {/*<Text type="secondary" level={4}>{app.deviceType}</Text><br/>*/}
-                    {/*<Rate disabled allowHalf defaultValue={app.rating} />*/}
-                    {/*</Col>*/}
-                    {/*</Row>*/}
                     <Row className="release">
                         <Col span={24} className="release-icon">
                             <img src={release.iconPath} alt="icon"/>
