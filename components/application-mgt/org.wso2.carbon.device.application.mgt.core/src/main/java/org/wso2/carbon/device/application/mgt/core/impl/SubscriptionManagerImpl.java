@@ -100,6 +100,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
         List<DeviceIdentifier> errorDeviceIdentifiers = filteredDeviceHolder.getErrorDeviceIdList();
         List<Device> filteredDeviceObjs = new ArrayList<>();
 
+        //getting device objects by using device identifiers
         for (DeviceIdentifier deviceIdentifier : filteredDeviceHolder.getValidDeviceIDList()) {
             try {
                 Device device = deviceManagementProviderService.getDevice(deviceIdentifier, false);

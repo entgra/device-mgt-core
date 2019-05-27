@@ -487,6 +487,12 @@ public class ReviewManagerImpl implements ReviewManager {
                     ratingVariety.put(ratingVal, 1);
                 }
             }
+
+            for (int i = 1; i <= Constants.MAX_RATING; i++) {
+                if (!ratingVariety.containsKey(i)) {
+                    ratingVariety.put(i, 0);
+                }
+            }
             rating.setRatingVariety(ratingVariety);
             return rating;
         } catch (ApplicationManagementDAOException e) {
