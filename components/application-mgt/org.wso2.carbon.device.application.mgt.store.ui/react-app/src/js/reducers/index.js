@@ -14,7 +14,9 @@ const initialState = {
     },
     loadingState: {
         release: true
-    }
+    },
+    detailedRating: null
+
 };
 
 function rootReducer(state = initialState, action) {
@@ -68,7 +70,12 @@ function rootReducer(state = initialState, action) {
         return Object.assign({}, state, {
             loadingState: loadingState
         });
+    } else if (action.type === ActionTypes.GET_DETAILED_RATING) {
+        return Object.assign({}, state, {
+            detailedRating: action.payload
+        });
     }
+
     return state;
 }
 

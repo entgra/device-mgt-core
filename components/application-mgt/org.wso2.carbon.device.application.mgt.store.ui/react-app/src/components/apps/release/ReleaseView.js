@@ -27,7 +27,6 @@ class ReleaseView extends React.Component {
                                 numberOfStars={5}
                                 name='rating'
                             />
-                            {/*<Rate disabled allowHalf defaultValue={release.rating}/>*/}
                         </Col>
                         <Col xl={8} md={10} sm={24} xs={24} style={{float: "right"}}>
                             <div>

@@ -1,11 +1,29 @@
 import React from "react";
-import {Row, Col, Typography, Icon} from "antd";
+import {Row, Typography, Icon} from "antd";
 import StarRatings from "react-star-ratings";
 import "./DetailedRating.css";
+import {connect} from "react-redux";
+import {getDetailedRating} from "../../../js/actions";
 
 const { Text } = Typography;
 
-class DetailedRating extends React.Component{
+// connecting state. with the component
+const mapStateToProps= state => {
+    return {detailedRating : state.detailedRating}
+};
+
+const mapDispatchToProps = dispatch => ({
+    getDetailedRating: (uuid) => dispatch(getDetailedRating(uuid))
+});
+
+
+
+class ConnectedDetailedRating extends React.Component{
+
+    componentDidMount() {
+        this.props.getDetailedRating(this.props.uuid);
+    }
+
     render() {
         return (
             <Row className="d-rating">
@@ -48,5 +66,7 @@ class DetailedRating extends React.Component{
         );
     }
 }
+
+const DetailedRating = connect(mapStateToProps,mapDispatchToProps)(ConnectedDetailedRating);
 
 export default DetailedRating;
