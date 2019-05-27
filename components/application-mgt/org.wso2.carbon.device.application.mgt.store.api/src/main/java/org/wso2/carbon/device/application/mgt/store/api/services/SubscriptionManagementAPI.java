@@ -28,6 +28,8 @@ import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.annotations.Tag;
 import org.wso2.carbon.apimgt.annotations.api.Scopes;
+import org.wso2.carbon.device.application.mgt.common.ErrorResponse;
+import org.wso2.carbon.device.application.mgt.common.PaginationResult;
 import org.wso2.carbon.device.application.mgt.common.dto.ApplicationDTO;
 import org.wso2.carbon.device.application.mgt.common.ApplicationInstallResponseTmp;
 import org.wso2.carbon.device.application.mgt.common.EnterpriseInstallationDetails;
@@ -127,6 +129,48 @@ public interface SubscriptionManagementAPI {
     );
 
     @POST
+    @Path("/install/{uuid}/{subType}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            consumes = MediaType.APPLICATION_JSON,
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "POST",
+            value = "Install an application for subscription type.",
+            notes = "This will install an application to a given subscription type and this is bulk app installation.",
+            tags = "Subscription Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = SCOPE, value = "perm:app:subscription:install")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+
+            })
+    Response addBulkAppInstalltion(
+            @ApiParam(
+                    name = "uuid",
+                    value = "The application release UUID",
+                    required = true
+            )
+            @PathParam("uuid") String uuid,
+            @ApiParam(
+                    name = "subType",
+                    value = "Subscription type of the app installing operation.",
+                    required = true
+            )
+            @PathParam("subType") String subType,
+            @ApiParam(
+                    name = "subscribers",
+                    value = "Subscriber list of the application release.",
+                    required = true
+            )
+            @Valid List<String> subscribers
+    );
+
+    @POST
     @Path("/install/{uuid}/devices")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -181,6 +225,26 @@ public interface SubscriptionManagementAPI {
     )
     @ApiResponses(
             value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully add an operation to install application for user devices..",
+                            response = PaginationResult.class,
+                            responseContainer = "PaginationResult"),
+                    @ApiResponse(
+                            code = 400,
+                            message =
+                                    "Bad Request. \n Found invalid payload with the request."),
+                    @ApiResponse(
+                            code = 403,
+                            message = "Don't have permission to install application release."),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. \n Not found an application release for requested UUID."),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n Error occurred while adding operation to install "
+                                    + "application for users.",
+                            response = ErrorResponse.class)
 
             })
     Response installApplicationForRoles (
@@ -380,238 +444,4 @@ public interface SubscriptionManagementAPI {
             )
             @Valid List<String> groups
     );
-
-
-
-
-
-
-
-
-
-//    ----------------------------------------------
-
-    @POST
-    @Path("/install-application")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @ApiOperation(
-            consumes = MediaType.APPLICATION_JSON,
-            produces = MediaType.APPLICATION_JSON,
-            httpMethod = "POST",
-            value = "Install an application",
-            notes = "This will install an application to a given list of devices",
-            tags = "Subscription Management",
-            extensions = {
-                    @Extension(properties = {
-                            @ExtensionProperty(name = SCOPE, value = "perm:subscription:install")
-                    })
-            }
-    )
-    @ApiResponses(
-            value = {
-                    @ApiResponse(
-                            code = 200,
-                            message = "OK. \n Successfully sent the install application operation.",
-                            response = ApplicationInstallResponseTmp.class
-                    ),
-                    @ApiResponse(
-                            code = 304,
-                            message = "Not Modified. \n Empty body because the application is already installed."
-                    ),
-                    @ApiResponse(
-                            code = 404,
-                            message = "Not Found. \n ApplicationDTO cannot be found to install."
-                    ),
-                    @ApiResponse(
-                            code = 500,
-                            message = "Internal Server Error. \n Error occurred while installing the application."
-                    )
-            })
-    Response installApplication(
-            @ApiParam(
-                    name = "installationDetails",
-                    value = "The application ID and list of devices/users/roles",
-                    required = true
-            )
-            @Valid InstallationDetails installationDetails);
-
-    @POST
-    @Path("/enterprise-install-application")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @ApiOperation(
-            consumes = MediaType.APPLICATION_JSON,
-            produces = MediaType.APPLICATION_JSON,
-            httpMethod = "POST",
-            value = "Install an application to the devices belong to an enterprise entity",
-            notes = "This will install an application to a given list of groups/users/roles",
-            tags = "Subscription Management",
-            extensions = {
-                    @Extension(properties = {
-                            @ExtensionProperty(name = SCOPE, value = "perm:subscription:install")
-                    })
-            }
-    )
-    @ApiResponses(
-            value = {
-                    @ApiResponse(
-                            code = 200,
-                            message = "OK. \n Successfully sent the install application operation.",
-                            response = ApplicationInstallResponseTmp.class
-                    ),
-                    @ApiResponse(
-                            code = 304,
-                            message = "Not Modified. \n Empty body because the application is already installed."
-                    ),
-                    @ApiResponse(
-                            code = 404,
-                            message = "Not Found. \n ApplicationDTO cannot be found to install."
-                    ),
-                    @ApiResponse(
-                            code = 500,
-                            message = "Internal Server Error. \n Error occurred while installing the application."
-                    )
-            })
-    Response enterpriseInstallApplication(
-            @ApiParam(
-                    name = "enterpriseInstallationDetails",
-                    value = "The application ID and list of devices/users/roles",
-                    required = true)
-            @Valid EnterpriseInstallationDetails enterpriseInstallationDetails);
-
-    @POST
-    @Path("/uninstall-application")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @ApiOperation(
-            consumes = MediaType.APPLICATION_JSON,
-            produces = MediaType.APPLICATION_JSON,
-            httpMethod = "POST",
-            value = "Uninstall an application",
-            notes = "This will uninstall an application from given list of devices",
-            tags = "Subscription Management",
-            extensions = {
-                    @Extension(properties = {
-                            @ExtensionProperty(name = SCOPE, value = "perm:subscription:uninstall")
-                    })
-            }
-    )
-    @ApiResponses(
-            value = {
-                    @ApiResponse(
-                            code = 200,
-                            message = "OK. \n Successfully uninstalled the application.",
-                            response = ApplicationDTO.class
-                    ),
-                    @ApiResponse(
-                            code = 304,
-                            message = "Not Modified. \n Empty body because the application is already uninstalled."
-                    ),
-                    @ApiResponse(
-                            code = 404,
-                            message = "Not Found. \n ApplicationDTO cannot be found to uninstall."
-                    ),
-                    @ApiResponse(
-                            code = 500,
-                            message = "Internal Server Error. \n Error occurred while uninstalling the application."
-                    )
-            })
-    Response uninstallApplication(
-            @ApiParam(
-                    name = "installationDetails",
-                    value = "The application ID and list of devices",
-                    required = true)
-            @Valid InstallationDetails installationDetails);
-
-    @POST
-    @Path("/enterprise-uninstall-application")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @ApiOperation(
-            consumes = MediaType.APPLICATION_JSON,
-            produces = MediaType.APPLICATION_JSON,
-            httpMethod = "POST",
-            value = "Uninstall an application from the devices belong to an enterprise entity",
-            notes = "This will uninstall an application from devices belong to given list of groups/users/roles",
-            tags = "Subscription Management",
-            extensions = {
-                    @Extension(properties = {
-                            @ExtensionProperty(name = SCOPE, value = "perm:subscription:uninstall")
-                    })
-            }
-    )
-    @ApiResponses(
-            value = {
-                    @ApiResponse(
-                            code = 200,
-                            message = "OK. \n Successfully uninstalled the application.",
-                            response = ApplicationDTO.class
-                    ),
-                    @ApiResponse(
-                            code = 304,
-                            message = "Not Modified. \n Empty body because the application is already uninstalled."
-                    ),
-                    @ApiResponse(
-                            code = 404,
-                            message = "Not Found. \n ApplicationDTO cannot be found to uninstall."
-                    ),
-                    @ApiResponse(
-                            code = 500,
-                            message = "Internal Server Error. \n Error occurred while uninstalling the application."
-                    )
-            })
-    Response enterpriseUninstallApplication(
-            @ApiParam(
-                    name = "enterpriseInstallationDetails",
-                    value = "The application ID and list of groups/users/roles",
-                    required = true
-            )
-            @Valid EnterpriseInstallationDetails enterpriseInstallationDetails);
-
-    @GET
-    @Path("/application/{applicationUUID}/device/{deviceId}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @ApiOperation(
-            consumes = MediaType.APPLICATION_JSON,
-            produces = MediaType.APPLICATION_JSON,
-            httpMethod = "GET",
-            value = "Get an application",
-            notes = "This will return an application to a given valid token",
-            tags = "Subscription Management",
-            extensions = {
-                    @Extension(properties = {
-                            @ExtensionProperty(name = SCOPE, value = "perm:subscription:getApplication")
-                    })
-            }
-    )
-    @ApiResponses(
-            value = {
-                    @ApiResponse(
-                            code = 200,
-                            message = "OK. \n Successfully installed the application.",
-                            response = ApplicationDTO.class
-                    ),
-                    @ApiResponse(
-                            code = 304,
-                            message = "Not Modified. \n " +
-                                    "Empty body because the application is already installed."
-                    ),
-                    @ApiResponse(
-                            code = 500,
-                            message = "Internal Server Error. \n Error occurred while fetching the application."
-                    )
-            })
-    Response getApplication(
-            @ApiParam(
-                    name = "applicationUUID",
-                    value = "ApplicationDTO ID"
-            )
-            @QueryParam("applicationUUID") String applicationUUID,
-            @ApiParam(
-                    name = "deviceId",
-                    value = "The device ID"
-            )
-            @QueryParam("deviceId") String deviceId);
 }
