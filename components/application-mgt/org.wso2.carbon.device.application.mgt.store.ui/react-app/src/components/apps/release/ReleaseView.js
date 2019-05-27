@@ -3,12 +3,12 @@ import {Divider, Row, Col, Typography, Button, Rate} from "antd";
 import "../../../App.css";
 import ImgViewer from "../../apps/release/images/ImgViewer";
 import StarRatings from "react-star-ratings";
+import DetailedRating from "./DetailedRating";
 const {Title, Text, Paragraph} = Typography;
 
 class ReleaseView extends React.Component {
     render() {
         const release = this.props.release;
-        console.log(release);
         return (
             <div>
                 <div className="release">
@@ -46,6 +46,13 @@ class ReleaseView extends React.Component {
                     <Paragraph type="secondary" ellipsis={{rows: 3, expandable: true}}>
                         {release.description}
                     </Paragraph>
+                    <Divider/>
+                    <Text>REVIEWS</Text>
+                    <Row>
+                        <Col lg={18}>
+                            <DetailedRating uuid={release.uuid}/>
+                        </Col>
+                    </Row>
                 </div>
             </div>
         );
