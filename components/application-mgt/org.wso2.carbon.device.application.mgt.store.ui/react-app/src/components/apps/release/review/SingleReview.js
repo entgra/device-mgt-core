@@ -4,7 +4,7 @@ import {List,Typography} from "antd";
 import StarRatings from "react-star-ratings";
 
 const {Text, Paragraph} = Typography;
-const colorList = ['#f56a00', '#7265e6', '#ffbf00', '#00a2ae'];
+const colorList = ['#f6e58d', '#ffbe76', '#ff7979', '#badc58'];
 
 class SingleReview extends React.Component {
 
