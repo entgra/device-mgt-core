@@ -147,13 +147,10 @@ export const updateLifecycleState = (uuid, nextState, reason) => dispatch => {
 export const getDetailedRating = (uuid) => dispatch => {
     const request = "method=get&content-type=application/json&payload={}&api-endpoint=/application-mgt-store/v1.0/reviews/"+uuid+"/rating";
 
-    console.log(request);
-
     return axios.post('https://' + config.serverConfig.hostname + ':' + config.serverConfig.httpsPort + config.serverConfig.invokerUri, request
     ).then(res => {
         if (res.status === 200) {
             let detailedRating = res.data.data;
-            console.log(detailedRating);
             dispatch({type: ActionTypes.GET_DETAILED_RATING, payload: detailedRating});
         }
 
