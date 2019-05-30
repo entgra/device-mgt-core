@@ -38,7 +38,9 @@ class Reviews extends React.Component {
         }).catch(function (error) {
             if (error.response.status === 401) {
                 window.location.href = 'https://localhost:9443/store/login';
+            }else{
                 message.warning('Something went wrong');
+
             }
         });
     };
