@@ -92,8 +92,8 @@ class Reviews extends React.Component {
             rating: 4,
             replies: []
         };
-        console.log(this.state.loadMore);
-        console.log(this.state.data.length);
+        // console.log(this.state.loadMore);
+        // console.log(this.state.data.length);
         return (
             <div className="demo-infinite-container">
                 <InfiniteScroll
