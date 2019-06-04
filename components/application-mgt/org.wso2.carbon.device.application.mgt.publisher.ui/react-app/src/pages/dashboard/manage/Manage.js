@@ -2,6 +2,7 @@ import React from "react";
 import "antd/dist/antd.css";
 import {PageHeader, Typography, Input, Button, Row, Col} from "antd";
 import ManageCategories from "../../../components/manage/categories/ManageCategories";
+import ManageTags from "../../../components/manage/categories/ManageTags";
 
 const {Paragraph} = Typography;
 
@@ -47,6 +48,9 @@ class Manage extends React.Component {
                 </PageHeader>
                 <div style={{background: '#f0f2f5', padding: 24, minHeight: 780}}>
                     <ManageCategories/>
+                    <br/>
+                    <ManageTags/>
+
                 </div>
 
             </div>

@@ -5,7 +5,7 @@ import config from "../../../../public/conf/config.json";
 import {TweenOneGroup} from 'rc-tween-one';
 
 
-class ManageCategories extends React.Component {
+class ManageTags extends React.Component {
     state = {
         loading: false,
         searchText: '',
@@ -20,7 +20,7 @@ class ManageCategories extends React.Component {
     };
 
     componentDidMount() {
-        const request = "method=get&content-type=application/json&payload={}&api-endpoint=/application-mgt-publisher/v1.0/applications/categories";
+        const request = "method=get&content-type=application/json&payload={}&api-endpoint=/application-mgt-publisher/v1.0/applications/tags";
         axios.post('https://' + config.serverConfig.hostname + ':' + config.serverConfig.httpsPort + config.serverConfig.invokerUri, request
         ).then(res => {
             if (res.status === 200) {
@@ -92,10 +92,10 @@ class ManageCategories extends React.Component {
     };
 
     renderElement = (category) => {
-        const categoryName = category.categoryName;
+        const categoryName = category.tagName;
         const tagElem = (
             <Tag
-                color="blue"
+                color="gold"
             >
                 {categoryName}
                 <Divider type="vertical"/>
@@ -109,7 +109,7 @@ class ManageCategories extends React.Component {
                     <Popconfirm
                         title="Are you sure delete this category?"
                         onConfirm={() => {
-                            if (category.isCategoryDeletable) {
+                            if (category.isTagDeletable) {
                                 this.deleteCategory(categoryName);
                             } else {
                                 notification["error"]({
@@ -128,7 +128,7 @@ class ManageCategories extends React.Component {
             </Tag>
         );
         return (
-            <span key={category.categoryName} style={{display: 'inline-block'}}>
+            <span key={category.tagName} style={{display: 'inline-block'}}>
                 {tagElem}
             </span>
         );
@@ -174,7 +174,7 @@ class ManageCategories extends React.Component {
         let {tempElements} = this.state;
         if (inputValue) {
             if ((categories.findIndex(i => i.categoryName === inputValue) === -1) && (tempElements.findIndex(i => i.categoryName === inputValue) === -1)) {
-                tempElements = [...tempElements, {categoryName: inputValue, isCategoryDeletable: true}];
+                tempElements = [...tempElements, {categoryName: inputValue, isTagDeletable: true}];
             } else {
                 message.warning('Category already exists');
             }
@@ -303,7 +303,7 @@ class ManageCategories extends React.Component {
         const temporaryElements = tempElements.map(this.renderTempElement);
         return (
             <div>
-                <Card title="Categories">
+                <Card title="Tags">
                     <Spin tip="Working on it..." spinning={this.state.loading}>
                         {!isAddNewVisible &&
                         <Button
@@ -313,7 +313,7 @@ class ManageCategories extends React.Component {
                                     isAddNewVisible: true,
                                     inputVisible: true
                                 }, () => this.input.focus())
-                            }} htmlType="button">Add Categories
+                            }} htmlType="button">Add Tags
                         </Button>
                         }
                         {isAddNewVisible &&
@@ -404,4 +404,4 @@ class ManageCategories extends React.Component {
     }
 }
 
-export default ManageCategories;
+export default ManageTags;
