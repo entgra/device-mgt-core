@@ -1,9 +1,9 @@
 import React from "react";
 import {Avatar, Card, Col, Row, Table, Typography, Tag, Icon, message} from "antd";
 import {connect} from "react-redux";
-import {getApps} from "../../js/actions";
+import {getApps} from "../../../js/actions";
 import axios from "axios";
-import config from "../../../public/conf/config.json";
+import config from "../../../../public/conf/config.json";
 
 const {Title} = Typography;
 
@@ -99,7 +99,6 @@ class ConnectedAppsTable extends React.Component {
     };
 
     fetch = (params = {}) => {
-        console.log('params:', params);
         this.setState({loading: true});
 
         const extraParams = {
@@ -150,7 +149,7 @@ class ConnectedAppsTable extends React.Component {
     };
 
     render() {
-        console.log(this.props.apps);
+        console.log("rendered");
         return (
 
             <Table
