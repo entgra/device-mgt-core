@@ -16,12 +16,16 @@ const columns = [
     {
         title: '',
         dataIndex: 'name',
-        render: name => {
+        render: (name, row) => {
             return (
                 <div>
                     <Avatar shape="square" size="large"
-                            style={{marginRight: 20}}
-                            src="https://gw.alipayobjects.com/zos/rmsportal/zOsKZmFRdUtvpqCImOVY.png"
+                            style={{
+                                marginRight: 20,
+                                borderRadius: "28%",
+                                border: "1px solid #ddd"
+                            }}
+                            src={row.applicationReleases[0].iconPath}
                     />
                     {name}
                 </div>);
@@ -158,6 +162,13 @@ class ConnectedAppsTable extends React.Component {
                 columns={columns}
                 pagination={this.state.pagination}
                 onChange={this.handleTableChange}
+                onRow={(record, rowIndex) => {
+                    return {
+                        onClick: event => {
+                            this.props.showDrawer(record);
+                        },
+                    };
+                }}
             />
 
         );

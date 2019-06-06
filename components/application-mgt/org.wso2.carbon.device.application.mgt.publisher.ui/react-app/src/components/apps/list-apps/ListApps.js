@@ -4,6 +4,7 @@ import {connect} from "react-redux";
 import {getApps} from "../../../js/actions";
 import AppsTable from "./AppsTable";
 import Filters from "./Filters";
+import AppDetailsDrawer from "./AppDetailsDrawer";
 
 const {Option} = Select;
 const {Title, Text} = Typography;
@@ -18,11 +19,29 @@ class ConnectedListApps extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            count: 1
+            isDrawerVisible: false,
+            selectedApp: null
         }
     }
 
+   //handler to show app drawer
+    showDrawer = (app) => {
+        console.log(app);
+        this.setState({
+            isDrawerVisible: true,
+            selectedApp: app
+        });
+    };
+
+    // handler to close the app drawer
+    closeDrawer = () => {
+        this.setState({
+            isDrawerVisible: false
+        })
+    };
+
     render() {
+        const {isDrawerVisible} = this.state;
         return (
             <Row gutter={28}>
                 <Col md={6}>
@@ -43,7 +62,8 @@ class ConnectedListApps extends React.Component {
                             </Col>
                         </Row>
                         <Divider dashed={true}/>
-                        <AppsTable/>
+                        <AppsTable showDrawer={this.showDrawer} />
+                        <AppDetailsDrawer visible={isDrawerVisible} onClose={this.closeDrawer} app={this.state.selectedApp}/>
                     </Card>
                 </Col>
             </Row>
