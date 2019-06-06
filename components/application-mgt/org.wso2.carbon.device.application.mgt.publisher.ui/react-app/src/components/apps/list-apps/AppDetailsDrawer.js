@@ -1,6 +1,7 @@
 import React from 'react';
 import {Drawer, Row, Col, Typography, Divider, Tag, Avatar, List} from 'antd';
 import "../../../App.css";
+import DetailedRating from "../detailed-rating/DetailedRating";
 
 const {Text, Title, Paragraph} = Typography;
 
@@ -72,7 +73,7 @@ class AppDetailsDrawer extends React.Component {
                         renderItem={release => (
                             <List.Item>
                                 <List.Item.Meta
-                                    title={<a href="https://ant.design">{release.version}</a>}
+                                    title={<a href={"apps/releases/"+release.uuid}>{release.version}</a>}
                                     description={
                                         <div>
                                             Status : <Tag>{release.currentStatus}</Tag> Release Type <Tag color="green">{release.releaseType}</Tag>
@@ -82,6 +83,9 @@ class AppDetailsDrawer extends React.Component {
                             </List.Item>
                         )}
                     />
+                    <Divider dashed={true}/>
+
+                    <DetailedRating uuid={app.applicationReleases[0].uuid}/>
                 </Drawer>
             </div>
         );
