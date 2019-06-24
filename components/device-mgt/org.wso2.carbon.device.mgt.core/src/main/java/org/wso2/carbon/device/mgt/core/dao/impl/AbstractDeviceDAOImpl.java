@@ -1409,97 +1409,97 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
     }
     
     public void deleteDevice(DeviceIdentifier deviceIdentifier, int tenantId) throws DeviceManagementDAOException {
+        String deviceIdentifierId = deviceIdentifier.getId();
+        String deviceType = deviceIdentifier.getType();
         Connection conn;
         try {
             conn = this.getConnection();
             int deviceId = getDeviceId(conn, deviceIdentifier, tenantId);
             if (deviceId == -1) {
-                String msg = "Device " + deviceIdentifier.getId() + " of type " + deviceIdentifier.getType() +
-                             " is not found";
+                String msg = "Device " + deviceIdentifierId + " of type " + deviceType + " is not found";
                 log.error(msg);
                 throw new DeviceManagementDAOException(msg);
             } else {
                 List<Integer> enrollmentIds = getEnrollmentIds(conn, deviceId, tenantId);
                 if (enrollmentIds == null || enrollmentIds.isEmpty()) {
-                    String msg = "Enrollments not found for the device " + deviceIdentifier.getId() + " of type " +
-                                 deviceIdentifier.getType();
+                    String msg = "Enrollments not found for the device " + deviceIdentifierId + " of type "
+                                 + deviceType;
                     log.error(msg);
                     throw new DeviceManagementDAOException(msg);
                 } else {
                     removeDeviceDetail(conn, deviceId);
                     if (log.isDebugEnabled()) {
-                        log.debug("Successfully removed device detail data");
+                        log.debug("Successfully removed device detail data of device " + deviceIdentifierId
+                                  + " of type " + deviceType);
                     }
                     removeDeviceLocation(conn, deviceId);
                     if (log.isDebugEnabled()) {
-                        log.debug("Successfully removed device location data");
+                        log.debug("Successfully removed device location data of device " + deviceIdentifierId
+                                  + " of type " + deviceType);
                     }
                     removeDeviceInfo(conn, deviceId);
                     if (log.isDebugEnabled()) {
-                        log.debug("Successfully removed device info data");
+                        log.debug("Successfully removed device info data of device " + deviceIdentifierId
+                                  + " of type " + deviceType);
                     }
                     removeDeviceNotification(conn, deviceId);
                     if (log.isDebugEnabled()) {
-                        log.debug("Successfully removed device notification data");
+                        log.debug("Successfully removed device notification data of device " + deviceIdentifierId
+                                  + " of type " + deviceType);
                     }
                     removeDeviceApplicationMapping(conn, deviceId);
                     if (log.isDebugEnabled()) {
-                        log.debug("Successfully removed device application mapping data");
+                        log.debug("Successfully removed device application mapping data of device "
+                                  + deviceIdentifierId + " of type " + deviceType);
                     }
                     removeDevicePolicyApplied(conn, deviceId);
                     if (log.isDebugEnabled()) {
-                        log.debug("Successfully removed device applied policy data");
+                        log.debug("Successfully removed device applied policy data of device " + deviceIdentifierId
+                                  + " of type " + deviceType);
                     }
                     removeDevicePolicy(conn, deviceId);
                     if (log.isDebugEnabled()) {
-                        log.debug("Successfully removed device policy data");
+                        log.debug("Successfully removed device policy data of device " + deviceIdentifierId
+                                  + " of type " + deviceType);
                     }
                     if (log.isDebugEnabled()) {
-                        log.debug("Starting to remove " + enrollmentIds.size() + " enrollment data related " +
-                                  "to device");
+                        log.debug("Starting to remove " + enrollmentIds.size() + " enrollment data of device "
+                                  + deviceIdentifierId + " of type " + deviceType);
                     }
                     for (Integer enrollmentId : enrollmentIds) {
                         removeEnrollmentDeviceDetail(conn, enrollmentId);
-                        if (log.isDebugEnabled()) {
-                            log.debug("Successfully removed enrollment device detail data");
-                        }
                         removeEnrollmentDeviceLocation(conn, enrollmentId);
-                        if (log.isDebugEnabled()) {
-                            log.debug("Successfully removed enrollment device location data");
-                        }
                         removeEnrollmentDeviceInfo(conn, enrollmentId);
-                        if (log.isDebugEnabled()) {
-                            log.debug("Successfully removed enrollment device info data");
-                        }
                         removeEnrollmentDeviceApplicationMapping(conn, enrollmentId);
-                        if (log.isDebugEnabled()) {
-                            log.debug("Successfully removed enrollment device application mapping data");
-                        }
                         removeDeviceOperationResponse(conn, enrollmentId);
-                        if (log.isDebugEnabled()) {
-                            log.debug("Successfully removed device operation response data");
-                        }
                         removeEnrollmentOperationMapping(conn, enrollmentId);
-                        if (log.isDebugEnabled()) {
-                            log.debug("Successfully removed enrollment operation mapping data");
-                        }
+                    }
+                    if (log.isDebugEnabled()) {
+                        log.debug("Successfully removed enrollment device details, enrollment device location, " +
+                                  "enrollment device info, enrollment device application mapping, " +
+                                  "enrollment device operation response, enrollment operation mapping data of device "
+                                  + deviceIdentifierId + " of type " + deviceType);
                     }
                     removeDeviceEnrollment(conn, deviceId);
                     if (log.isDebugEnabled()) {
-                        log.debug("Successfully removed device enrollment data");
+                        log.debug("Successfully removed device enrollment data of device " + deviceIdentifierId
+                                  + " of type " + deviceType);
                     }
                     removeDeviceGroupMapping(conn, deviceId);
                     if (log.isDebugEnabled()) {
-                        log.debug("Successfully removed device group mapping data");
+                        log.debug("Successfully removed device group mapping data of device " + deviceIdentifierId
+                                  + " of type " + deviceType);
                     }
                     removeDevice(conn, deviceId);
                     if (log.isDebugEnabled()) {
-                        log.debug("Successfully permanently deleted the device");
+                        log.debug("Successfully permanently deleted the device of device " + deviceIdentifierId
+                                  + " of type " + deviceType);
                     }
                 }
             }
         } catch (SQLException e) {
-            throw new DeviceManagementDAOException("Error occurred while deleting the device", e);
+            throw new DeviceManagementDAOException("Error occurred while deleting the device " + deviceIdentifierId
+                                                   + " of type " + deviceType, e);
         }
     }
 
