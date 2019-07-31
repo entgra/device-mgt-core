@@ -19,9 +19,13 @@
 
 package org.wso2.carbon.device.mgt.core.device.details.mgt;
 
+import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
+import org.wso2.carbon.device.mgt.common.DeviceManagementException;
+import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceInfo;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceLocation;
+import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOException;
 
 import java.util.List;
 
@@ -80,6 +84,13 @@ public interface DeviceInformationManager {
      * @throws DeviceDetailsMgtException
      */
     List<DeviceLocation> getDeviceLocations(List<DeviceIdentifier> deviceIdentifiers) throws DeviceDetailsMgtException;
+
+    /**
+     * This method will manage storing the device location history along with the device information
+     * @param device
+     * @param deviceLocation
+     */
+    void addDeviceLocationHistory(Device device, DeviceLocation deviceLocation) throws DeviceDetailsMgtException;
 
 //    /**
 //     * This method will manage the storing of device application list.

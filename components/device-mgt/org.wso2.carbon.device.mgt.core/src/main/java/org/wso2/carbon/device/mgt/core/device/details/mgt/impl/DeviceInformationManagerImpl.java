@@ -23,10 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.device.mgt.analytics.data.publisher.exception.DataPublisherConfigurationException;
-import org.wso2.carbon.device.mgt.common.Device;
-import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
-import org.wso2.carbon.device.mgt.common.DeviceManagementException;
-import org.wso2.carbon.device.mgt.common.TransactionManagementException;
+import org.wso2.carbon.device.mgt.common.*;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceInfo;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceLocation;
 import org.wso2.carbon.device.mgt.core.dao.DeviceDAO;
@@ -212,6 +209,7 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
             deviceLocation.setDeviceId(device.getId());
             DeviceManagementDAOFactory.beginTransaction();
             deviceDAO.updateDevice(device, CarbonContext.getThreadLocalCarbonContext().getTenantId());
+            addDeviceLocationHistory(device, deviceLocation);
             deviceDetailsDAO.deleteDeviceLocation(deviceLocation.getDeviceId(), device.getEnrolmentInfo().getId());
             deviceDetailsDAO.addDeviceLocation(deviceLocation, device.getEnrolmentInfo().getId());
             if (DeviceManagerUtil.isPublishLocationResponseEnabled()) {
@@ -307,6 +305,17 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
         }
     }
 
+    @Override
+    public void addDeviceLocationHistory(Device device, DeviceLocation deviceLocation) throws DeviceDetailsMgtException {
+        try {
+            deviceDetailsDAO.addDeviceLocationHistory(device, deviceLocation);
+
+        } catch (DeviceDetailsMgtDAOException e) {
+            DeviceManagementDAOFactory.rollbackTransaction();
+            throw new DeviceDetailsMgtException("Error occurred while adding the device location history information.", e);
+        }
+    }
+    
     private DeviceInfo processDeviceInfo(DeviceInfo previousDeviceInfo, DeviceInfo newDeviceInfo) {
         if (newDeviceInfo.getDeviceModel().isEmpty()) {
             newDeviceInfo.setDeviceModel(previousDeviceInfo.getDeviceModel());
