@@ -21,6 +21,8 @@ package org.wso2.carbon.device.mgt.core.device.details.mgt.dao.impl;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.device.mgt.common.Device;
+import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceInfo;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceLocation;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOFactory;
@@ -312,6 +314,37 @@ public class DeviceDetailsDAOImpl implements DeviceDetailsDAO {
 
         } catch (SQLException e) {
             throw new DeviceDetailsMgtDAOException("Error occurred while deleting the device location from the data base.", e);
+        } finally {
+            DeviceManagementDAOUtil.cleanupResources(stmt, null);
+        }
+    }
+
+    @Override
+    public void addDeviceLocationHistory(Device device, DeviceLocation deviceLocation) throws DeviceDetailsMgtDAOException {
+        Connection conn;
+        PreparedStatement stmt = null;
+
+        try {
+            conn = this.getConnection();
+            stmt = conn.prepareStatement("INSERT INTO DM_DEVICE_HISTORY_LAST_SEVEN_DAYS (DEVICE_ID, DEVICE_ID_NAME, ENROLMENT_ID," +
+                    "DEVICE_TYPE_NAME, LATITUDE, LONGITUDE, SPEED, HEADING, TIMESTAMP, GEO_HASH, DEVICE_OWNER) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+            stmt.setInt(1, device.getId());
+            stmt.setString(2, device.getDeviceIdentifier());
+            stmt.setInt(3, device.getEnrolmentInfo().getId());
+            stmt.setString(4, device.getType());
+            stmt.setDouble(5, deviceLocation.getLatitude());
+            stmt.setDouble(6, deviceLocation.getLongitude());
+            stmt.setFloat(7, 0.0f);
+            stmt.setFloat(8, 0.0f);
+            stmt.setLong(9, System.currentTimeMillis());
+            stmt.setString(10, GeoHashGenerator.encodeGeohash(deviceLocation));
+            stmt.setString(11, device.getEnrolmentInfo().getOwner());
+            stmt.execute();
+
+        } catch (SQLException e) {
+            throw new DeviceDetailsMgtDAOException("Error occurred while updating the device location history to database.", e);
         } finally {
             DeviceManagementDAOUtil.cleanupResources(stmt, null);
         }
