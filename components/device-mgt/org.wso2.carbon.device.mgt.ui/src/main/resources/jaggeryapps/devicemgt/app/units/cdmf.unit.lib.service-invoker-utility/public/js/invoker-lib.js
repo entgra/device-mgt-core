@@ -21,11 +21,13 @@ var invokerUtil = function () {
     var publicMethods = {};
     var privateMethods = {};
 
-    privateMethods.execute = function (requestMethod, requestURL, requestPayload, successCallback, errorCallback, contentType, acceptType, isSynchronous) {
+    privateMethods.execute = function (requestMethod, requestURL, requestPayload, successCallback, errorCallback, contentType, acceptType, isSynchronous, externalToken) {
+
         var restAPIRequestDetails = {};
         restAPIRequestDetails["requestMethod"] = requestMethod;
         restAPIRequestDetails["requestURL"] = requestURL;
         restAPIRequestDetails["requestPayload"] = requestPayload;
+        restAPIRequestDetails["externalToken"] = externalToken;
 
         var appContext = $("#app-context").data("app-context");
         var contentTypeValue = "application/json";
@@ -83,6 +85,11 @@ var invokerUtil = function () {
     publicMethods.delete = function (requestURL, successCallback, errorCallback, contentType, acceptType, isSynchronous) {
         var requestPayload = null;
         privateMethods.execute("DELETE", requestURL, requestPayload, successCallback, errorCallback, contentType, acceptType, isSynchronous);
+    };
+
+    publicMethods.postExternal = function (requestURL, requestPayload, successCallback, errorCallback, contentType, acceptType, isSynchronous, externalToken) {
+            privateMethods.execute("POST", requestURL, requestPayload, successCallback, errorCallback, contentType,
+            acceptType, isSynchronous, externalToken);
     };
 
     return publicMethods;
