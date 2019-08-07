@@ -240,8 +240,8 @@ public class DeviceDetailsDAOImpl implements DeviceDetailsDAO {
         try {
             conn = this.getConnection();
             stmt = conn.prepareStatement("INSERT INTO DM_DEVICE_LOCATION (DEVICE_ID, LATITUDE, LONGITUDE, STREET1, " +
-                    "STREET2, CITY, ZIP, STATE, COUNTRY, GEO_HASH, UPDATE_TIMESTAMP, ENROLMENT_ID) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    "STREET2, CITY, ZIP, STATE, COUNTRY, GEO_HASH, UPDATE_TIMESTAMP, ENROLMENT_ID, ALTITUDE, SPEED, BEARING) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             stmt.setInt(1, deviceLocation.getDeviceId());
             stmt.setDouble(2, deviceLocation.getLatitude());
             stmt.setDouble(3, deviceLocation.getLongitude());
@@ -254,6 +254,9 @@ public class DeviceDetailsDAOImpl implements DeviceDetailsDAO {
             stmt.setString(10, GeoHashGenerator.encodeGeohash(deviceLocation));
             stmt.setLong(11, System.currentTimeMillis());
             stmt.setInt(12, enrollmentId);
+            stmt.setDouble(13, deviceLocation.getAltitude());
+            stmt.setFloat(14, deviceLocation.getSpeed());
+            stmt.setFloat(15, deviceLocation.getBearing());
             stmt.execute();
         } catch (SQLException e) {
             throw new DeviceDetailsMgtDAOException("Error occurred while adding the device location to database.", e);
@@ -327,8 +330,8 @@ public class DeviceDetailsDAOImpl implements DeviceDetailsDAO {
         try {
             conn = this.getConnection();
             stmt = conn.prepareStatement("INSERT INTO DM_DEVICE_HISTORY_LAST_SEVEN_DAYS (DEVICE_ID, DEVICE_ID_NAME, ENROLMENT_ID," +
-                    "DEVICE_TYPE_NAME, LATITUDE, LONGITUDE, SPEED, HEADING, TIMESTAMP, GEO_HASH, DEVICE_OWNER) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    "DEVICE_TYPE_NAME, LATITUDE, LONGITUDE, SPEED, HEADING, TIMESTAMP, GEO_HASH, DEVICE_OWNER, DEVICE_ALTITUDE) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
             stmt.setInt(1, device.getId());
             stmt.setString(2, device.getDeviceIdentifier());
@@ -336,11 +339,12 @@ public class DeviceDetailsDAOImpl implements DeviceDetailsDAO {
             stmt.setString(4, device.getType());
             stmt.setDouble(5, deviceLocation.getLatitude());
             stmt.setDouble(6, deviceLocation.getLongitude());
-            stmt.setFloat(7, 0.0f);
-            stmt.setFloat(8, 0.0f);
+            stmt.setFloat(7, deviceLocation.getSpeed());
+            stmt.setFloat(8, deviceLocation.getBearing());
             stmt.setLong(9, System.currentTimeMillis());
             stmt.setString(10, GeoHashGenerator.encodeGeohash(deviceLocation));
             stmt.setString(11, device.getEnrolmentInfo().getOwner());
+            stmt.setDouble(12, deviceLocation.getAltitude());
             stmt.execute();
 
         } catch (SQLException e) {
