@@ -50,6 +50,7 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
     private static final Log log = LogFactory.getLog(DeviceInformationManagerImpl.class);
     private static final String LOCATION_EVENT_STREAM_DEFINITION = "org.wso2.iot.LocationStream";
     private static final String DEVICE_INFO_EVENT_STREAM_DEFINITION = "org.wso2.iot.DeviceInfoStream";
+    private static float speed;
 
 
     public DeviceInformationManagerImpl() {
@@ -217,7 +218,10 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
                 Object[] payload = new Object[]{
                         deviceLocation.getUpdatedTime().getTime(),
                         deviceLocation.getLatitude(),
-                        deviceLocation.getLongitude()
+                        deviceLocation.getLongitude(),
+                        deviceLocation.getAltitude(),
+                        deviceLocation.getSpeed(),
+                        deviceLocation.getBearing()
                 };
                 DeviceManagerUtil.getEventPublisherService().publishEvent(
                         LOCATION_EVENT_STREAM_DEFINITION, "1.0.0", metaData, new Object[0], payload
@@ -315,7 +319,7 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
             throw new DeviceDetailsMgtException("Error occurred while adding the device location history information.", e);
         }
     }
-    
+
     private DeviceInfo processDeviceInfo(DeviceInfo previousDeviceInfo, DeviceInfo newDeviceInfo) {
         if (newDeviceInfo.getDeviceModel().isEmpty()) {
             newDeviceInfo.setDeviceModel(previousDeviceInfo.getDeviceModel());
