@@ -3135,6 +3135,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             String altitude = null;
             String speed = null;
             String bearing = null;
+            String distance = null;
             for (Device.Property p : properties) {
                 if (p.getName().equalsIgnoreCase("latitude")) {
                     latitude = p.getValue();
@@ -3151,6 +3152,9 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                 if (p.getName().equalsIgnoreCase("bearing")) {
                     bearing = p.getValue();
                 }
+                if (p.getName().equalsIgnoreCase("distance")) {
+                    distance = p.getValue();
+                }
             }
             if (latitude != null && longitude != null && !latitude.isEmpty() && !longitude.isEmpty() &&
                     !altitude.isEmpty() && !altitude.isEmpty()) {
@@ -3162,6 +3166,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                     deviceLocation.setAltitude(Double.parseDouble(altitude));
                     deviceLocation.setLatitude(Double.parseDouble(latitude));
                     deviceLocation.setLongitude(Double.parseDouble(longitude));
+                    deviceLocation.setDistance(Double.parseDouble(distance));
                     deviceLocation.setSpeed(Float.parseFloat(speed));
                     deviceLocation.setBearing(Float.parseFloat(bearing));
                     DeviceInformationManager deviceInformationManager = new DeviceInformationManagerImpl();
@@ -3172,7 +3177,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                     log.warn("Error occurred while trying to add '" + device.getType() + "' device '" +
                             device.getDeviceIdentifier() + "' (id:'" + device.getId() + "') location (lat:" + latitude +
                             ", lon:" + longitude + ", altitude: "+altitude +
-                            ", speed: " + speed + ", bearing" + bearing+") due to:" + e.getMessage());
+                            ", speed: " + speed + ", bearing:" + bearing+", distance: "+distance+") due to:" + e.getMessage());
                 }
             }
         }

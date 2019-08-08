@@ -53,8 +53,6 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
     private static final Log log = LogFactory.getLog(DeviceInformationManagerImpl.class);
     private static final String LOCATION_EVENT_STREAM_DEFINITION = "org.wso2.iot.LocationStream";
     private static final String DEVICE_INFO_EVENT_STREAM_DEFINITION = "org.wso2.iot.DeviceInfoStream";
-    private static float speed;
-
 
     public DeviceInformationManagerImpl() {
         this.deviceDAO = DeviceManagementDAOFactory.getDeviceDAO();
@@ -224,7 +222,8 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
                         deviceLocation.getLongitude(),
                         deviceLocation.getAltitude(),
                         deviceLocation.getSpeed(),
-                        deviceLocation.getBearing()
+                        deviceLocation.getBearing(),
+                        deviceLocation.getDistance()
                 };
                 DeviceManagerUtil.getEventPublisherService().publishEvent(
                         LOCATION_EVENT_STREAM_DEFINITION, "1.0.0", metaData, new Object[0], payload

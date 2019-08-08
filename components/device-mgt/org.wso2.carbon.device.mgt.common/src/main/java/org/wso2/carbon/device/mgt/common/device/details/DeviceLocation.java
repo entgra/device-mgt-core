@@ -61,6 +61,16 @@ public class DeviceLocation implements Serializable {
     private Float speed;
     @ApiModelProperty(name = "bearing", value = "Device bearing.", required = true)
     private Float bearing;
+    @ApiModelProperty(name = "distance", value = "Device distance.", required = true)
+    private Double distance;
+
+    public Double getDistance() {
+        return distance;
+    }
+
+    public void setDistance(Double distance) {
+        this.distance = distance;
+    }
 
     public Double getAltitude() {
         return altitude;
