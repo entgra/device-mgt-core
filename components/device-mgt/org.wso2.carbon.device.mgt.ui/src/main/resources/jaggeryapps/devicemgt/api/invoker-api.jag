@@ -40,7 +40,6 @@ if (uriMatcher.match("/{context}/api/invoker/execute/")) {
     var requestMethod = restAPIRequestDetails["requestMethod"];
     var requestURL = restAPIRequestDetails["requestURL"];
     var requestPayload = restAPIRequestDetails["requestPayload"];
-    var externalToken = restAPIRequestDetails["externalToken"];
 
     if (!requestMethod) {
         requestMethod = parse(restAPIRequestDetails)["requestMethod"];
@@ -55,11 +54,6 @@ if (uriMatcher.match("/{context}/api/invoker/execute/")) {
     }
 
     var restAPIEndpoint = devicemgtProps["httpsURL"] + requestURL;
-    if (externalToken) {
-        var clientBearer = "Bearer " + externalToken;
-        requestHeaders.push({"name": "Authorization", "value" : clientBearer});
-        restAPIEndpoint = requestURL;
-    }
 
     try {
         switch (requestMethod) {

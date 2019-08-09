@@ -76,14 +76,8 @@ var invokers = function () {
 
         var contentTypeFound = false;
         var acceptTypeFound = false;
-        var authorizationHeaderFound = false;
-
         for (var i in headers) {
             xmlHttpRequest.setRequestHeader(headers[i].name, headers[i].value);
-            if (headers[i].name == "Authorization") {
-                authorizationHeaderFound = true;
-            }
-
             if(constants["CONTENT_TYPE_IDENTIFIER"] == headers[i].name){
                 contentTypeFound = true;
             }
@@ -107,10 +101,8 @@ var invokers = function () {
                     response.sendRedirect(devicemgtProps["appContext"] + "login");
                 });
             } else {
-                if (!authorizationHeaderFound) {
-                    xmlHttpRequest.setRequestHeader(constants["AUTHORIZATION_HEADER"], constants["BEARER_PREFIX"]
-                    + accessToken);
-                }
+                xmlHttpRequest.setRequestHeader(constants["AUTHORIZATION_HEADER"],
+                                                constants["BEARER_PREFIX"] + accessToken);
             }
         }
 
