@@ -308,6 +308,7 @@ function loadDevices(searchType, searchParam) {
             data: 'status',
             class: 'remove-padding-top viewEnabledIcon',
             render: function (status, type, row, meta) {
+                debugger;
                 var html;
                 switch (status) {
                     case 'ACTIVE' :
@@ -354,18 +355,20 @@ function loadDevices(searchType, searchParam) {
             data: 'action-buttons',
             class: 'text-right content-fill text-left-on-grid-view no-wrap tooltip-overflow-fix',
             render: function (status, type, row, meta) {
+                debugger;
                 var deviceType = row.deviceType;
                 var deviceIdentifier = row.deviceIdentifier;
                 var html = '<span></span>';
                 var portalUrl = $("#device-listing").data("portal-url");
                 var serverUrl = $("#device-listing").data("server-url");
                 var userDomain = $("#device-listing").data("userDomain");
+                var statusCode = row.status;
+                var userType = row.userPattern;
                 var statURL;
-                if (status != 'REMOVED') {
+                if (statusCode != 'REMOVED') {
                     html = '';
 
                     if (analyticsEnabled(row.deviceType)) {
-
                         // redirecting to respective analytics view depending on device configs
                         switch (getAnalyticsView(deviceType)) {
                             case "DAS" : { statURL =portalUrl + "/portal/t/"+ userDomain+ "/dashboards/android-iot/battery?owner=" +currentUser+"&deviceId=";break;}
@@ -415,6 +418,22 @@ function loadDevices(searchType, searchParam) {
                             + '<i class="fw fw-delete fw-stack-1x"></i></span>'
                             + '<span class="hidden-xs hidden-on-grid-view">Delete</span>';
                     }
+                }else if(statusCode == 'REMOVED' && userType == 'admin'){
+                    debugger;
+                    html +=
+                        '<a href="#" data-click-event="remove-form" class="btn padding-reduce-on-grid-view edit-device-link" '
+                        + 'data-deviceid="' + deviceIdentifier + '" data-devicetype="' + deviceType
+                        + '" data-devicename="' + row.name + '" data-placement="top" data-toggle="tooltip" data-original-title="Edit">'
+                        + '<span class="fw-stack"><i class="fw fw-circle-outline fw-stack-2x"></i>'
+                        + '<i class="fw fw-edit fw-stack-1x"></i></span>'
+                        + '<span class="hidden-xs hidden-on-grid-view">Edit</span></a>';
+                    html +=
+                        '<a href="#" data-click-event="remove-form" class="btn padding-reduce-on-grid-view delete-device-link" '
+                        + 'data-deviceid="' + deviceIdentifier + '" data-devicetype="' + deviceType
+                        + '" data-devicename="' + row.name + '" data-placement="top" data-toggle="tooltip" data-original-title="Delete">'
+                        + '<span class="fw-stack"><i class="fw fw-circle-outline fw-stack-2x"></i>'
+                        + '<i class="fw fw-delete fw-stack-1x"></i></span>'
+                        + '<span class="hidden-xs hidden-on-grid-view">Delete</span>';
                 }
                 return html;
             }
@@ -748,6 +767,7 @@ function attachDeviceEvents() {
      * on Device Management page in WSO2 MDM Console.
      */
     $("a.remove-device-link").click(function () {
+        debugger;
         var deviceIdentifiers = [];
         var deviceId = $(this).data("deviceid");
         var deviceType = $(this).data("devicetype");
@@ -788,6 +808,44 @@ function attachDeviceEvents() {
         });
 
         $("a#remove-device-cancel-link").click(function () {
+            hidePopup();
+        });
+    });
+
+    /**
+     * Following click function would execute
+     * when a user clicks on "Delete" link
+     * on Device Management page in WSO2 MDM Console.
+     */
+    $("a.delete-device-link").click(function () {
+        debugger;
+        var deviceIdentifiers = [];
+        var deviceId = $(this).data("deviceid");
+        var deviceType = $(this).data("devicetype");
+
+        if (deviceId && deviceType) {
+            deviceIdentifiers = [{"id": deviceId, "type": deviceType}];
+        } else {
+            deviceIdentifiers = getSelectedDevices();
+        }
+
+        if (deviceIdentifiers.length == 0) {
+            $(modalPopupContent).html($('#no-device-selected').html());
+            $("a#no-device-selected-link").click(function () {
+                hidePopup();
+            });
+            showPopup();
+            return;
+        }
+
+        $(modalPopupContent).html($('#delete-device-modal-content').html());
+        showPopup();
+
+        $("a#delete-device-yes-link").click(function () {
+            deleteDevices(deviceIdentifiers);
+        });
+
+        $("a#delete-device-cancel-link").click(function () {
             hidePopup();
         });
     });
@@ -1095,6 +1153,25 @@ function removeDevices(deviceIdentifiers) {
             removeDevices(deviceIdentifiers);
         } else {
             $(modalPopupContent).html($('#remove-device-200-content').html());
+            setTimeout(function () {
+                hidePopup();
+                location.reload(false);
+            }, 2000);
+        }
+    }, function (jqXHR) {
+        displayDeviceErrors(jqXHR);
+    });
+}
+
+function deleteDevices(deviceIdentifiers) {
+debugger;
+    var serviceURL = "/api/device-mgt/v1.0/devices/type/" + deviceIdentifiers[0].type + "/id/" + deviceIdentifiers[0].id + "?permanentDelete=true";
+    invokerUtil.delete(serviceURL, function (message) {
+        if (deviceIdentifiers.length > 1) {
+            deviceIdentifiers.shift();
+            deleteDevices(deviceIdentifiers);
+        } else {
+            $(modalPopupContent).html($('#delete-device-200-content').html());
             setTimeout(function () {
                 hidePopup();
                 location.reload(false);
