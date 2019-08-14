@@ -70,7 +70,7 @@ function InitiateViewOption(url) {
 var deviceCheckbox = "#ast-container .ctrl-wr-asset .itm-select input[type='checkbox']";
 var assetContainer = "#ast-container";
 
-var deviceListing, currentUser, groupId;
+var deviceListing, currentUser, groupId, isAdmin;
 
 /*
  * DOM ready functions.
@@ -87,8 +87,8 @@ $(document).ready(function () {
     };
 
     deviceListing = $("#device-listing");
+    isAdmin = ($("#roles").data("roles-list")['content'][0] == 'admin') ? true : false;
     currentUser = deviceListing.data("current-user");
-
     groupId = getParameterByName("groupId");
 
     /* Adding selected class for selected devices */
@@ -415,17 +415,22 @@ function loadDevices(searchType, searchParam) {
                             + '<i class="fw fw-disabled fw-stack-1x"></i></span>'
                             + '<span class="hidden-xs hidden-on-grid-view">Delete</span>';
                     }
-                }else if(statusCode == 'REMOVED' && currentUser == 'admin'){
+                } else if (statusCode == 'REMOVED' && isAdmin) {
                     html = '';
 
                     if (analyticsEnabled(row.deviceType)) {
                         // redirecting to respective analytics view depending on device configs
                         switch (getAnalyticsView(deviceType)) {
-                            case "DAS" : { statURL =portalUrl + "/portal/t/"+ userDomain+ "/dashboards/android-iot/battery?owner=" +currentUser+"&deviceId=";break;}
-                            default : {statURL=context+ "/device/" + row.deviceType +"/analytics?deviceId="}
+                            case "DAS" : {
+                                statURL = portalUrl + "/portal/t/" + userDomain + "/dashboards/android-iot/battery?owner=" + currentUser + "&deviceId=";
+                                break;
+                            }
+                            default : {
+                                statURL = context + "/device/" + row.deviceType + "/analytics?deviceId="
+                            }
                         }
 
-                        html += '<a href="' + statURL  +
+                        html += '<a href="' + statURL +
                             deviceIdentifier + '&deviceName=' + row.name + '" ' + 'data-click-event="remove-form"' +
                             ' class="btn padding-reduce-on-grid-view" data-placement="top" data-toggle="tooltip" data-original-title="Analytics"><span class="fw-stack">' +
                             '<i class="fw fw-circle-outline fw-stack-2x"></i><i class="fw fw-statistics fw-stack-1x"></i></span>' +
