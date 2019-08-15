@@ -325,20 +325,20 @@ public class DeviceDetailsDAOImpl implements DeviceDetailsDAO {
     }
 
     @Override
-    public void addDeviceLocationHistory(Device device, DeviceLocation deviceLocation) throws DeviceDetailsMgtDAOException {
+    public void addDeviceLocationHistory(Device device, DeviceLocation deviceLocation, int tenantId) throws DeviceDetailsMgtDAOException {
         Connection conn;
         PreparedStatement stmt = null;
 
         try {
             conn = this.getConnection();
-            stmt = conn.prepareStatement("INSERT INTO DM_DEVICE_HISTORY_LAST_SEVEN_DAYS (DEVICE_ID, DEVICE_ID_NAME, ENROLMENT_ID," +
+            stmt = conn.prepareStatement("INSERT INTO DM_DEVICE_HISTORY_LAST_SEVEN_DAYS (DEVICE_ID, DEVICE_ID_NAME, TENANT_ID," +
                     "DEVICE_TYPE_NAME, LATITUDE, LONGITUDE, SPEED, HEADING, TIMESTAMP, GEO_HASH, DEVICE_OWNER, DEVICE_ALTITUDE, " +
                     "DISTANCE) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
             stmt.setInt(1, device.getId());
             stmt.setString(2, device.getDeviceIdentifier());
-            stmt.setInt(3, device.getEnrolmentInfo().getId());
+            stmt.setInt(3, tenantId);
             stmt.setString(4, device.getType());
             stmt.setDouble(5, deviceLocation.getLatitude());
             stmt.setDouble(6, deviceLocation.getLongitude());
@@ -357,6 +357,7 @@ public class DeviceDetailsDAOImpl implements DeviceDetailsDAO {
             DeviceManagementDAOUtil.cleanupResources(stmt, null);
         }
     }
+
 
     private Connection getConnection() throws SQLException {
         return DeviceManagementDAOFactory.getConnection();

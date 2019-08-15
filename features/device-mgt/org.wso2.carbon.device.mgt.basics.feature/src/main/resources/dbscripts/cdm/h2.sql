@@ -497,7 +497,7 @@ CREATE TABLE IF NOT EXISTS DM_DEVICE_HISTORY_LAST_SEVEN_DAYS
     ID               INTEGER AUTO_INCREMENT NOT NULL,
     DEVICE_ID        INT                    NOT NULL,
     DEVICE_ID_NAME   VARCHAR(255)           NOT NULL,
-    ENROLMENT_ID     INT                    NOT NULL,
+    TENANT_ID     INT                    NOT NULL,
     DEVICE_TYPE_NAME VARCHAR(45)            NOT NULL,
     LATITUDE         DOUBLE                 NULL,
     LONGITUDE        DOUBLE                 NULL,
