@@ -108,7 +108,8 @@ public interface DeviceDetailsDAO {
      * @param deviceLocation
      * @throws DeviceDetailsMgtDAOException
      */
-    void addDeviceLocationHistory(Device device, DeviceLocation deviceLocation) throws DeviceDetailsMgtDAOException;
+    void addDeviceLocationHistory(Device device, DeviceLocation deviceLocation, int tenantId) throws DeviceDetailsMgtDAOException;
+
 //    /**
 //     * This method will add device application to database.
 //     * @param deviceApplication - Device application
