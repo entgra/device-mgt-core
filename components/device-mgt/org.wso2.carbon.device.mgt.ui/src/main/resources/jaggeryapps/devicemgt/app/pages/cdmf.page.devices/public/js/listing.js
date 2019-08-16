@@ -564,7 +564,7 @@ function loadDevices(searchType, searchParam) {
 
     $('#device-grid').datatables_extended_serverside_paging(
         null,
-        serviceURL,
+        "/api/device-mgt/v1.0/devices/",
         dataFilter,
         columns,
         fnCreatedRow,
@@ -583,7 +583,8 @@ function loadDevices(searchType, searchParam) {
 
         }, {
             "placeholder": "Top-Device-Name-Search",
-            "searchKey": "namePattern"
+            "searchKey": "namePattern",
+            "groupId": groupId
         }
     );
 
