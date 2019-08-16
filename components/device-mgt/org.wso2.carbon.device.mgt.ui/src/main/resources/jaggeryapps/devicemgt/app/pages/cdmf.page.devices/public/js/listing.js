@@ -70,7 +70,7 @@ function InitiateViewOption(url) {
 var deviceCheckbox = "#ast-container .ctrl-wr-asset .itm-select input[type='checkbox']";
 var assetContainer = "#ast-container";
 
-var deviceListing, currentUser, groupId, isAdmin;
+var deviceListing, currentUser, groupId, hasDeletePermission;
 
 /*
  * DOM ready functions.
@@ -87,7 +87,7 @@ $(document).ready(function () {
     };
 
     deviceListing = $("#device-listing");
-    isAdmin = ($("#roles").data("roles-list")['content'][0] == 'admin') ? true : false;
+    hasDeletePermission = $("#permission").data("permission")['PERMANENT_DELETE'];
     currentUser = deviceListing.data("current-user");
     groupId = getParameterByName("groupId");
 
@@ -415,7 +415,7 @@ function loadDevices(searchType, searchParam) {
                             + '<i class="fw fw-disabled fw-stack-1x"></i></span>'
                             + '<span class="hidden-xs hidden-on-grid-view">Delete</span>';
                     }
-                } else if (statusCode == 'REMOVED' && isAdmin) {
+                } else if (statusCode == 'REMOVED' && hasDeletePermission) {
                     html = '';
 
                     if (analyticsEnabled(row.deviceType)) {
@@ -1201,7 +1201,7 @@ function removeDevices(deviceIdentifiers) {
 }
 
 function deleteDevices(deviceIdentifiers) {
-    var serviceURL = "/api/device-mgt/v1.0/devices/type/" + deviceIdentifiers[0].type + "/id/" + deviceIdentifiers[0].id + "?permanentDelete=true";
+    var serviceURL = "/api/device-mgt/v1.0/devices/type/" + deviceIdentifiers[0].type + "/id/" + deviceIdentifiers[0].id;
     invokerUtil.delete(serviceURL, function (message) {
         if (deviceIdentifiers.length > 1) {
             deviceIdentifiers.shift();

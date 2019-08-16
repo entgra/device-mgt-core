@@ -40,9 +40,6 @@ function onRequest(context) {
         viewModel.permissions = {};
         var uiPermissions = userModule.getUIPermissions();
         viewModel.permissions.list = stringify(uiPermissions);
-        viewModel.roles={};
-        var roles = userModule.getRolesByUsername(currentUser.username);
-        viewModel.roles.list = stringify(roles);
         if (uiPermissions.ADD_DEVICE) {
             viewModel.permissions.enroll = true;
         }
