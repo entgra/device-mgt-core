@@ -473,6 +473,46 @@ function loadDevices(searchType, searchParam) {
                             + '<i class="fw fw-delete fw-stack-1x"></i></span>'
                             + '<span class="hidden-xs hidden-on-grid-view">Delete</span>';
                     }
+                } else {
+                    html = '';
+
+                    if (analyticsEnabled(row.deviceType)) {
+                        // redirecting to respective analytics view depending on device configs
+                        switch (getAnalyticsView(deviceType)) {
+                            case "DAS" : {
+                                statURL = portalUrl + "/portal/t/" + userDomain + "/dashboards/android-iot/battery?owner=" + currentUser + "&deviceId=";
+                                break;
+                            }
+                            default : {
+                                statURL = context + "/device/" + row.deviceType + "/analytics?deviceId="
+                            }
+                        }
+
+                        html += '<a href="' + statURL +
+                            deviceIdentifier + '&deviceName=' + row.name + '" ' + 'data-click-event="remove-form"' +
+                            ' class="btn padding-reduce-on-grid-view" data-placement="top" data-toggle="tooltip" data-original-title="Analytics"><span class="fw-stack">' +
+                            '<i class="fw fw-circle-outline fw-stack-2x"></i><i class="fw fw-statistics fw-stack-1x"></i></span>' +
+                            '<span class="hidden-xs hidden-on-grid-view">Analytics</span>';
+                    }
+
+                    if (!groupId && groupingEnabled(row.deviceType)) {
+                        html +=
+                            '<a href="#" data-click-event="remove-form" class="btn padding-reduce-on-grid-view group-device-link" '
+                            +
+                            'data-deviceid="' + deviceIdentifier + '" data-devicetype="' + deviceType
+                            + '" data-devicename="' +
+                            row.name + '" data-placement="top" data-toggle="tooltip" data-original-title="Group"><span class="fw-stack"><i class="fw fw-circle-outline fw-stack-2x"></i>' +
+                            '<i class="fw fw-group fw-stack-1x"></i></span>' +
+                            '<span class="hidden-xs hidden-on-grid-view">Group</span></a>';
+                    }
+
+                    html +=
+                        '<a href="#" data-click-event="remove-form" class="btn padding-reduce-on-grid-view edit-device-link" '
+                        + 'data-deviceid="' + deviceIdentifier + '" data-devicetype="' + deviceType
+                        + '" data-devicename="' + row.name + '" data-placement="top" data-toggle="tooltip" data-original-title="Edit">'
+                        + '<span class="fw-stack"><i class="fw fw-circle-outline fw-stack-2x"></i>'
+                        + '<i class="fw fw-edit fw-stack-1x"></i></span>'
+                        + '<span class="hidden-xs hidden-on-grid-view">Edit</span></a>';
                 }
                 return html;
             }
