@@ -262,7 +262,7 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
 
             // Created new Public App
             Application application = applicationManager.createPublicApp(publicAppWrapper,
-                    constructApplicationArtifact(null, iconFile, bannerFile, attachmentList));
+                    constructApplicationArtifact(null, iconFile, bannerFile, attachmentList), false);
             if (application != null) {
                 return Response.status(Response.Status.CREATED).entity(application).build();
             } else {
