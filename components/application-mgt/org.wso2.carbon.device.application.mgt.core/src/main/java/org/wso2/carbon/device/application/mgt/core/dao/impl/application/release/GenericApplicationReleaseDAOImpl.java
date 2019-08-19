@@ -278,9 +278,15 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
                     + "APP_HASH_VALUE = ?, "
                     + "SHARED_WITH_ALL_TENANTS = ?, "
                     + "APP_META_INFO = ?, "
-                    + "SUPPORTED_OS_VERSIONS = ?, "
-                    + "CURRENT_STATE =  ? "
-                + "WHERE ID = ? AND TENANT_ID = ? ";
+                    + "SUPPORTED_OS_VERSIONS = ?";
+
+        if (applicationReleaseDTO.getCurrentState() != null) {
+            sql += ", CURRENT_STATE =  ? ";
+        }
+
+        sql +=  " WHERE ID = ? AND TENANT_ID = ? ";
+
+        int x = 17;
         try {
             Connection connection = this.getDBConnection();
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -300,9 +306,12 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
                 statement.setBoolean(14, applicationReleaseDTO.getIsSharedWithAllTenants());
                 statement.setString(15, applicationReleaseDTO.getMetaData());
                 statement.setString(16, applicationReleaseDTO.getSupportedOsVersions());
-                statement.setString(17, applicationReleaseDTO.getCurrentState().toUpperCase());
-                statement.setInt(18, applicationReleaseDTO.getId());
-                statement.setInt(19, tenantId);
+
+                if (applicationReleaseDTO.getCurrentState() != null) {
+                    statement.setString(x++, applicationReleaseDTO.getCurrentState().toUpperCase());
+                }
+                statement.setInt(x++, applicationReleaseDTO.getId());
+                statement.setInt(x++, tenantId);
                 if (statement.executeUpdate() == 0) {
                     return null;
                 }
