@@ -191,7 +191,8 @@ public class ApplicationManagerImpl implements ApplicationManager {
     }
 
     @Override
-    public Application createPublicApp(PublicAppWrapper publicAppWrapper, ApplicationArtifact applicationArtifact)
+    public Application createPublicApp(PublicAppWrapper publicAppWrapper, ApplicationArtifact applicationArtifact,
+                                       boolean updateReleaseIfExist)
             throws ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         String userName = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
@@ -209,7 +210,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             throw new BadRequestException(msg);
         }
 
-        if (DeviceTypes.ANDROID.toString().equals(publicAppWrapper.getDeviceType())) {
+        if (DeviceTypes.ANDROID.toString().toLowerCase().equals(publicAppWrapper.getDeviceType())) {
             publicAppStorePath = Constants.GOOGLE_PLAY_STORE_URL;
         } else if (DeviceTypes.IOS.toString().equals(publicAppWrapper.getDeviceType())) {
             publicAppStorePath = Constants.APPLE_STORE_URL;
@@ -236,8 +237,43 @@ public class ApplicationManagerImpl implements ApplicationManager {
             throw new ApplicationManagementException(msg, e);
         }
 
-        //insert application data into database
-        return addAppDataIntoDB(applicationDTO, tenantId);
+        if (updateReleaseIfExist) {
+            ConnectionManagerUtil.openDBConnection();
+            ApplicationReleaseDTO releaseDTO = applicationDTO.getApplicationReleaseDTOs().get(0);
+            Boolean isReleaseExist = false;
+            try {
+                isReleaseExist = applicationReleaseDAO.isActiveReleaseExisitForPackageName(releaseDTO.getPackageName(),
+                        tenantId, lifecycleStateManager.getEndState());
+            } catch (ApplicationManagementDAOException e) {
+                e.printStackTrace();
+            } finally {
+                ConnectionManagerUtil.closeDBConnection();
+            }
+
+                if (isReleaseExist) {
+                    try {
+                        ConnectionManagerUtil.beginDBTransaction();
+                        applicationReleaseDAO.updateRelease(releaseDTO, tenantId);
+                        ConnectionManagerUtil.commitDBTransaction();
+                        return APIUtil.appDtoToAppResponse(applicationDTO);
+                    } catch (ApplicationManagementDAOException e) {
+                        ConnectionManagerUtil.rollbackDBTransaction();
+                        String msg = "Error Occurred when updating public app: " + publicAppWrapper.getName();
+                        log.error(msg);
+                        throw new ApplicationManagementException(msg, e);
+                    } finally {
+
+                        ConnectionManagerUtil.closeDBConnection();
+
+                    }
+                } else {
+                    return addAppDataIntoDB(applicationDTO, tenantId);
+                }
+
+        } else {
+            //insert application data into database
+            return addAppDataIntoDB(applicationDTO, tenantId);
+        }
     }
 
 
