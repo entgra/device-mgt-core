@@ -2939,4 +2939,24 @@ public class ApplicationManagerImpl implements ApplicationManager {
             ConnectionManagerUtil.closeDBConnection();
         }
     }
+
+    @Override
+    public List<ApplicationReleaseDTO> getReleaseByPackageNames(List<String> packageIds) throws ApplicationManagementException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        try {
+            ConnectionManagerUtil.openDBConnection();
+            return this.applicationReleaseDAO.getReleaseByPackages(packageIds, tenantId);
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the database connection for getting application for the " +
+                    "packages";
+            log.error(msg);
+            throw new ApplicationManagementException(msg, e);
+        } catch (ApplicationManagementDAOException e) {
+            String msg = "Error occurred while getting application data for packages";
+            log.error(msg);
+            throw new ApplicationManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+    }
 }
