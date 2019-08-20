@@ -559,4 +559,71 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
             throw new ApplicationManagementDAOException(msg, e);
         }
     }
+
+    @Override
+    public List<ApplicationReleaseDTO> getReleaseByPackages(List<String> packages, int tenantId) throws
+            ApplicationManagementDAOException {
+
+        String sql = "SELECT "
+                + "AR.ID AS RELEASE_ID, "
+                + "AR.DESCRIPTION AS RELEASE_DESCRIPTION, "
+                + "AR.VERSION AS RELEASE_VERSION, "
+                + "AR.UUID AS RELEASE_UUID, "
+                + "AR.RELEASE_TYPE AS RELEASE_TYPE, "
+                + "AR.INSTALLER_LOCATION AS AP_RELEASE_STORED_LOC, "
+                + "AR.ICON_LOCATION AS AP_RELEASE_ICON_LOC, "
+                + "AR.BANNER_LOCATION AS AP_RELEASE_BANNER_LOC, "
+                + "AR.SC_1_LOCATION AS AP_RELEASE_SC1, "
+                + "AR.SC_2_LOCATION AS AP_RELEASE_SC2, "
+                + "AR.SC_3_LOCATION AS AP_RELEASE_SC3, "
+                + "AR.APP_HASH_VALUE AS RELEASE_HASH_VALUE, "
+                + "AR.APP_PRICE AS RELEASE_PRICE, "
+                + "AR.APP_META_INFO AS RELEASE_META_INFO, "
+                + "AR.PACKAGE_NAME AS PACKAGE_NAME, "
+                + "AR.SUPPORTED_OS_VERSIONS AS RELEASE_SUP_OS_VERSIONS, "
+                + "AR.RATING AS RELEASE_RATING, "
+                + "AR.CURRENT_STATE AS RELEASE_CURRENT_STATE, "
+                + "AR.RATED_USERS AS RATED_USER_COUNT "
+                + "FROM AP_APP_RELEASE AS AR "
+                + "WHERE AR.TENANT_ID = ? AND AR.PACKAGE_NAME IN (";
+
+
+        for (int x = 0; x < packages.size(); x++) {
+            if (x == 0) {
+                sql += "?";
+            } else {
+                sql += ", ?";
+            }
+        }
+        sql += ")";
+
+        try {
+            Connection connection = this.getDBConnection();
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setInt(1, tenantId);
+                for (int y = 0; y < packages.size(); y++) {
+                    // y +2 because tenantId parameter is 1 and the counter is starting at o for y
+                    statement.setString(y+2, packages.get(y));
+                }
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    List<ApplicationReleaseDTO> releaseDTOs = new ArrayList<>();
+                    while (resultSet.next()) {
+                        releaseDTOs.add(DAOUtil.constructAppReleaseDTO(resultSet));
+                    }
+                    return releaseDTOs;
+                }
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Database connection error occurred while trying to get application release details which has "
+                    + "packages: " + String.join(", ", packages);
+            log.error(msg);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg =
+                    "Error while getting application release details which has packages: " + String.join(", ", packages)
+                            + " , while executing the query " + sql;
+            log.error(msg);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+    }
 }
