@@ -18,13 +18,11 @@
 
 import React from "react";
 import {PageHeader, Typography, Breadcrumb, Row, Col, Icon} from "antd";
-import ManageCategories from "../../../components/manage/categories/ManageCategories";
-import ManageTags from "../../../components/manage/categories/ManageTags";
 import {Link} from "react-router-dom";
 
 const {Paragraph} = Typography;
 
-class Manage extends React.Component {
+class ManageAndroidEnterprise extends React.Component {
     routes;
 
     constructor(props) {
@@ -44,23 +42,13 @@ class Manage extends React.Component {
                         <Breadcrumb.Item>
                             Manage
                         </Breadcrumb.Item>
-                        <Breadcrumb.Item>General</Breadcrumb.Item>
+                        <Breadcrumb.Item>Android Enterprise</Breadcrumb.Item>
                     </Breadcrumb>
                     <div className="wrap">
-                        <h3>Manage General Settings</h3>
-                        <Paragraph>Maintain and manage categories and tags here..</Paragraph>
+                        <h3>Manage Android Enterprise</h3>
+                        <Paragraph>Lorem ipsum</Paragraph>
                     </div>
                 </PageHeader>
-                <div style={{background: '#f0f2f5', padding: 24, minHeight: 780}}>
-                    <Row gutter={16}>
-                        <Col sm={24} md={12}>
-                            <ManageCategories/>
-                        </Col>
-                        <Col sm={24} md={12}>
-                            <ManageTags/>
-                        </Col>
-                    </Row>
-                </div>
 
             </div>
 
@@ -68,4 +56,4 @@ class Manage extends React.Component {
     }
 }
 
-export default Manage;
+export default ManageAndroidEnterprise;

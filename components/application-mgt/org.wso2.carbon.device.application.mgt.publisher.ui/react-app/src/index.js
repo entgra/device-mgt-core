@@ -30,6 +30,7 @@ import './index.css';
 import AddNewPublicApp from "./pages/dashboard/add-new-app/AddNewPublicApp";
 import AddNewWebClip from "./pages/dashboard/add-new-app/AddNewWebClip";
 import AddNewRelease from "./pages/dashboard/add-new-release/AddNewRelease";
+import ManageAndroidEnterprise from "./pages/dashboard/android-enterprise/ManageAndroidEnterprise";
 
 
 const routes = [
@@ -76,6 +77,11 @@ const routes = [
             {
                 path: '/publisher/manage',
                 component: Mange,
+                exact: true
+            },
+            {
+                path: '/publisher/manage/android-enterprise',
+                component: ManageAndroidEnterprise,
                 exact: true
             }
         ]

@@ -52,7 +52,8 @@ class Dashboard extends React.Component {
                             defaultSelectedKeys={['1']}
                             style={{lineHeight: '64px'}}
                         >
-                            <Menu.Item key="1"><Link to="/publisher/apps"><Icon type="appstore"/>Apps</Link></Menu.Item>
+                            <Menu.Item key="apps"><Link to="/publisher/apps"><Icon type="appstore"/>Apps</Link></Menu.Item>
+
                             <SubMenu
                                 title={
                                     <span className="submenu-title-wrapper">
@@ -61,27 +62,52 @@ class Dashboard extends React.Component {
                                      </span>
                                 }
                             >
-                                <Menu.Item key="setting:1"><Link to="/publisher/add-new-app/public">Public
-                                    APP</Link></Menu.Item>
-                                <Menu.Item key="setting:2"><Link to="/publisher/add-new-app/enterprise">Enterprise
-                                    APP</Link></Menu.Item>
-                                <Menu.Item key="setting:3"><Link to="/publisher/add-new-app/web-clip">Web
-                                    Clip</Link></Menu.Item>
+                                <Menu.Item key="add-new-public-app">
+                                    <Link to="/publisher/add-new-app/public">
+                                        Public APP
+                                    </Link>
+                                </Menu.Item>
+                                <Menu.Item key="add-new-enterprise-app">
+                                    <Link to="/publisher/add-new-app/enterprise">
+                                        Enterprise APP
+                                    </Link>
+                                </Menu.Item>
+                                <Menu.Item key="add-new-web-clip">
+                                    <Link to="/publisher/add-new-app/web-clip">
+                                        Web Clip
+                                    </Link>
+                                </Menu.Item>
                             </SubMenu>
-                            <Menu.Item key="2"><Link to="/publisher/manage"><Icon
-                                type="control"/>Manage</Link></Menu.Item>
+
+                            <SubMenu
+                                title={
+                                    <span className="submenu-title-wrapper">
+                                     <Icon type="control"/>
+                                         Manage
+                                     </span>
+                                }
+                            >
+                                <Menu.Item key="manage">
+                                    <Link to="/publisher/manage">
+                                        <Icon type="setting"/> General
+                                    </Link>
+                                </Menu.Item>
+                                <Menu.Item key="manage-android-enterprise">
+                                    <Link to="/publisher/manage/android-enterprise">
+                                        <Icon type="android" theme="filled"/> Android Enterprise
+                                    </Link>
+                                </Menu.Item>
+                            </SubMenu>
 
                             <SubMenu className="profile"
                                      title={
                                          <span className="submenu-title-wrapper">
-                                     <Icon type="user"/>
-                                         Profile
-                                     </span>
+                                            <Icon type="user"/> Profile
+                                         </span>
                                      }
                             >
                                 <Logout/>
                             </SubMenu>
-
                         </Menu>
 
                     </Header>
