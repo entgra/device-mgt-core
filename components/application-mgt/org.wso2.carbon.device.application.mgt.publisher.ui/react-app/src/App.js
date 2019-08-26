@@ -69,10 +69,6 @@ class App extends React.Component {
         ).then(res => {
             const config = res.data;
 
-            this.setState({
-                config
-            });
-
             this.getAndroidEnterpriseToken(config);
 
         }).catch((error) => {
@@ -89,14 +85,16 @@ class App extends React.Component {
             "&searchEnabled=true&isPrivateAppsEnabled=true&isWebAppEnabled=true&isOrganizeAppPageVisible=true" +
             "&host=https://localhost:9443",
         ).then(res => {
-            console.log(res);
+            config.androidEnterpriseToken = res.data.data.token;
             this.setState({
                 loading: false,
-                // config: res.data
-            })
+                config: config
+            });
         }).catch((error) => {
+            config.androidEnterpriseToken = null;
             this.setState({
-                loading: false
+                loading: false,
+                config: config
             })
         });
     };

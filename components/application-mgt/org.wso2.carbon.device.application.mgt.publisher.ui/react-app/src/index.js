@@ -30,7 +30,7 @@ import './index.css';
 import AddNewPublicApp from "./pages/dashboard/add-new-app/AddNewPublicApp";
 import AddNewWebClip from "./pages/dashboard/add-new-app/AddNewWebClip";
 import AddNewRelease from "./pages/dashboard/add-new-release/AddNewRelease";
-import ManageAndroidEnterprise from "./pages/dashboard/android-enterprise/ManageAndroidEnterprise";
+import ManageAndroidEnterprise from "./pages/dashboard/manage/android-enterprise/ManageAndroidEnterprise";
 
 
 const routes = [

@@ -17,8 +17,11 @@
  */
 
 import React from "react";
-import {PageHeader, Typography, Breadcrumb, Row, Col, Icon} from "antd";
+import {PageHeader, Typography, Breadcrumb, Statistic, Button, Icon} from "antd";
 import {Link} from "react-router-dom";
+import SyncAndroidApps from "../../../../components/manage/android-enterprise/SyncAndroidApps";
+import {withConfigContext} from "../../../../context/ConfigContext";
+import GooglePlayIframe from "../../../../components/manage/android-enterprise/GooglePlayIframe";
 
 const {Paragraph} = Typography;
 
@@ -28,7 +31,7 @@ class ManageAndroidEnterprise extends React.Component {
     constructor(props) {
         super(props);
         this.routes = props.routes;
-
+        this.config = this.props.context;
     }
 
     render() {
@@ -49,11 +52,14 @@ class ManageAndroidEnterprise extends React.Component {
                         <Paragraph>Lorem ipsum</Paragraph>
                     </div>
                 </PageHeader>
-
+                <div style={{background: '#f0f2f5', padding: 24, minHeight: 720}}>
+                   <SyncAndroidApps/>
+                   <GooglePlayIframe/>
+                </div>
             </div>
 
         );
     }
 }
 
-export default ManageAndroidEnterprise;
+export default withConfigContext(ManageAndroidEnterprise);

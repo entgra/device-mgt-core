@@ -34,8 +34,8 @@ class Dashboard extends React.Component {
         this.state = {
             routes: props.routes
         };
-        const config = this.props.context;
-        this.Logo = config.theme.logo;
+        this.config = this.props.context;
+        this.Logo = this.config.theme.logo;
     }
 
     render() {
@@ -52,7 +52,8 @@ class Dashboard extends React.Component {
                             defaultSelectedKeys={['1']}
                             style={{lineHeight: '64px'}}
                         >
-                            <Menu.Item key="apps"><Link to="/publisher/apps"><Icon type="appstore"/>Apps</Link></Menu.Item>
+                            <Menu.Item key="apps"><Link to="/publisher/apps"><Icon
+                                type="appstore"/>Apps</Link></Menu.Item>
 
                             <SubMenu
                                 title={
@@ -92,11 +93,13 @@ class Dashboard extends React.Component {
                                         <Icon type="setting"/> General
                                     </Link>
                                 </Menu.Item>
-                                <Menu.Item key="manage-android-enterprise">
-                                    <Link to="/publisher/manage/android-enterprise">
-                                        <Icon type="android" theme="filled"/> Android Enterprise
-                                    </Link>
-                                </Menu.Item>
+                                {this.config.androidEnterpriseToken != null && (
+                                    <Menu.Item key="manage-android-enterprise">
+                                        <Link to="/publisher/manage/android-enterprise">
+                                            <Icon type="android" theme="filled"/> Android Enterprise
+                                        </Link>
+                                    </Menu.Item>
+                                )}
                             </SubMenu>
 
                             <SubMenu className="profile"
