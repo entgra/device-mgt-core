@@ -191,8 +191,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
     }
 
     @Override
-    public Application createPublicApp(PublicAppWrapper publicAppWrapper, ApplicationArtifact applicationArtifact,
-                                       boolean updateReleaseIfExist)
+    public Application createPublicApp(PublicAppWrapper publicAppWrapper, ApplicationArtifact applicationArtifact)
             throws ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         String userName = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
@@ -226,57 +225,59 @@ public class ApplicationManagerImpl implements ApplicationManager {
         applicationReleaseDTO.setUuid(uuid);
         applicationReleaseDTO.setAppHashValue(md5);
 
-        //uploading application artifacts
+        ConnectionManagerUtil.openDBConnection();
+        List<ApplicationReleaseDTO> exitingRelease;
         try {
-            applicationDTO.getApplicationReleaseDTOs().clear();
-            applicationDTO.getApplicationReleaseDTOs()
-                    .add(addImageArtifacts(applicationReleaseDTO, applicationArtifact));
-        } catch (ResourceManagementException e) {
-            String msg = "Error Occured when uploading artifacts of the public app: " + publicAppWrapper.getName();
+            exitingRelease = applicationReleaseDAO.getReleaseByPackages(Arrays.asList(applicationReleaseDTO.getPackageName())
+                    , tenantId);
+        } catch (ApplicationManagementDAOException e) {
+            String msg = "Error Occured when fetching release: " + publicAppWrapper.getName();
             log.error(msg);
             throw new ApplicationManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
         }
 
-        if (updateReleaseIfExist) {
-            ConnectionManagerUtil.openDBConnection();
-            ApplicationReleaseDTO releaseDTO = applicationDTO.getApplicationReleaseDTOs().get(0);
-            Boolean isReleaseExist = false;
+        if (exitingRelease != null && exitingRelease.size() > 0) {
+            applicationDTO.getApplicationReleaseDTOs().clear();
+            applicationReleaseDTO.setUuid(exitingRelease.get(0).getUuid());
+            applicationReleaseDTO.setCurrentState(exitingRelease.get(0).getCurrentState());
+
             try {
-                isReleaseExist = applicationReleaseDAO.isActiveReleaseExisitForPackageName(releaseDTO.getPackageName(),
-                        tenantId, lifecycleStateManager.getEndState());
+                applicationReleaseDTO = addImageArtifacts(applicationReleaseDTO, applicationArtifact);
+                applicationDTO.getApplicationReleaseDTOs().add(applicationReleaseDTO);
+                ConnectionManagerUtil.beginDBTransaction();
+                applicationReleaseDAO.updateRelease(applicationReleaseDTO, tenantId);
+                ConnectionManagerUtil.commitDBTransaction();
+                return APIUtil.appDtoToAppResponse(applicationDTO);
             } catch (ApplicationManagementDAOException e) {
-                e.printStackTrace();
+                ConnectionManagerUtil.rollbackDBTransaction();
+                String msg = "Error occurred when updating public app: " + publicAppWrapper.getName();
+                log.error(msg);
+                throw new ApplicationManagementException(msg, e);
+            } catch (ResourceManagementException e) {
+                String msg = "Error occurred when adding artifacts of release: " + publicAppWrapper.getName();
+                log.error(msg);
+                throw new ApplicationManagementException(msg, e);
             } finally {
+
                 ConnectionManagerUtil.closeDBConnection();
+
             }
-
-                if (isReleaseExist) {
-                    try {
-                        ConnectionManagerUtil.beginDBTransaction();
-                        applicationReleaseDAO.updateRelease(releaseDTO, tenantId);
-                        ConnectionManagerUtil.commitDBTransaction();
-                        return APIUtil.appDtoToAppResponse(applicationDTO);
-                    } catch (ApplicationManagementDAOException e) {
-                        ConnectionManagerUtil.rollbackDBTransaction();
-                        String msg = "Error Occurred when updating public app: " + publicAppWrapper.getName();
-                        log.error(msg);
-                        throw new ApplicationManagementException(msg, e);
-                    } finally {
-
-                        ConnectionManagerUtil.closeDBConnection();
-
-                    }
-                } else {
-                    return addAppDataIntoDB(applicationDTO, tenantId);
-                }
-
         } else {
-            //insert application data into database
+            //uploading application artifacts
+            try {
+                applicationReleaseDTO = addImageArtifacts(applicationReleaseDTO, applicationArtifact);
+                applicationDTO.getApplicationReleaseDTOs().clear();
+                applicationDTO.getApplicationReleaseDTOs().add(applicationReleaseDTO);
+            } catch (ResourceManagementException e) {
+                String msg = "Error Occured when uploading artifacts of the public app: " + publicAppWrapper.getName();
+                log.error(msg);
+                throw new ApplicationManagementException(msg, e);
+            }
             return addAppDataIntoDB(applicationDTO, tenantId);
         }
     }
-
-
 
     private void deleteApplicationArtifacts(List<String> directoryPaths) throws ApplicationManagementException {
         ApplicationStorageManager applicationStorageManager = DAOUtil.getApplicationStorageManager();

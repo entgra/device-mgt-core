@@ -60,7 +60,7 @@ public interface ApplicationManager {
     Application createWebClip(WebAppWrapper webAppWrapper, ApplicationArtifact applicationArtifact)
             throws ApplicationManagementException;
 
-    Application createPublicApp(PublicAppWrapper publicAppWrapper, ApplicationArtifact applicationArtifact, boolean updateReleaseIfExist)
+    Application createPublicApp(PublicAppWrapper publicAppWrapper, ApplicationArtifact applicationArtifact)
             throws ApplicationManagementException;
 
     /**
