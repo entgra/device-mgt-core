@@ -477,6 +477,76 @@ public interface DeviceManagementService {
                     String ifModifiedSince);
 
     @GET
+    @Path("/{deviceType}/{deviceId}/location-history")
+    @ApiOperation(
+            consumes = "application/json",
+            produces = "application/json",
+            httpMethod = "GET",
+            value = "Getting the Location Details of a Device",
+            notes = "Get the location details of a device during a define time period.",
+            response = Response.class,
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:details")
+                    })
+            }
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    code = 200,
+                    message = "OK.",
+                    response = Response.class,
+                    responseHeaders = {
+                            @ResponseHeader(
+                                    name = "Content-Type",
+                                    description = "The content type of the body"),
+                            @ResponseHeader(
+                                    name = "ETag",
+                                    description = "Entity Tag of the response resource.\n" +
+                                            "Used by caches, or in conditional requests."),
+                            @ResponseHeader(
+                                    name = "Last-Modified",
+                                    description = "Date and time the resource was last modified.\n" +
+                                            "Used by caches, or in conditional requests."),
+                    }),
+            @ApiResponse(
+                    code = 400,
+                    message = "Bad Request. \n Invalid Device Identifiers found.",
+                    response = Response.class),
+            @ApiResponse(
+                    code = 401,
+                    message = "Unauthorized. \n Unauthorized request."),
+            @ApiResponse(
+                    code = 500,
+                    message = "Internal Server Error. \n Error on retrieving stats",
+                    response = Response.class)
+    })
+    Response getGeoDeviceHistory(
+            @ApiParam(
+                    name = "device-type",
+                    value = "The device type, such as ios, android, or windows.",
+                    required = true)
+            @PathParam("deviceType")
+            @Size(max = 45)
+                    String deviceType,
+            @ApiParam(
+                    name = "deviceId",
+                    value = "The device ID.",
+                    required = true)
+            @PathParam("deviceId") String deviceId,
+            @ApiParam(
+                    name = "from",
+                    value = "Define the time to start getting the geo location history of the device in the Epoch or UNIX format.",
+                    required = true)
+            @QueryParam("from") long from,
+            @ApiParam(
+                    name = "to",
+                    value = "Define the time to finish getting the geo location history of the device in the Epoch or UNIX format.",
+                    required = true)
+            @QueryParam("to") long to);
+
+    @GET
     @Path("/type/any/id/{id}")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,

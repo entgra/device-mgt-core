@@ -73,6 +73,7 @@ import org.wso2.carbon.device.mgt.common.configuration.mgt.ConfigurationManageme
 import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceInfo;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceLocation;
+import org.wso2.carbon.device.mgt.common.device.details.DeviceLocationHistory;
 import org.wso2.carbon.device.mgt.common.enrollment.notification.EnrollmentNotificationConfiguration;
 import org.wso2.carbon.device.mgt.common.enrollment.notification.EnrollmentNotifier;
 import org.wso2.carbon.device.mgt.common.enrollment.notification.EnrollmentNotifierException;
@@ -2787,6 +2788,42 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         } finally {
             DeviceManagementDAOFactory.closeConnection();
         }
+    }
+
+    @Override
+    public List<DeviceLocationHistory> getDeviceLocationInfo(String deviceType, String deviceId, long from, long to)
+            throws DeviceManagementException {
+
+        List<DeviceLocationHistory> deviceLocationHistory = new ArrayList<>();
+
+        if (log.isDebugEnabled()) {
+            log.debug("Get device types");
+        }
+        if (deviceId == null || deviceType == null) {
+            String msg = "Device type or deviceId is empty for method getAllDevices";
+            log.error(msg);
+            throw new DeviceManagementException(msg);
+        }
+
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            deviceLocationHistory = deviceDAO.getDeviceLocationInfo(deviceType, deviceId, from, to);
+            if (deviceLocationHistory == null) {
+                if (log.isDebugEnabled()) {
+                    log.debug("No device is found upon the type '" + deviceType + "'");
+                }
+                return null;
+            }
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred in getDeviceLocationInfo";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source";
+            log.error(msg, e);
+        }
+
+        return deviceLocationHistory;
     }
 
     @Override

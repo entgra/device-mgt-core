@@ -42,6 +42,7 @@ import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo.Status;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
+import org.wso2.carbon.device.mgt.common.device.details.DeviceLocationHistory;
 import org.wso2.carbon.device.mgt.core.dao.DeviceDAO;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOException;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOFactory;
@@ -1510,6 +1511,43 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             throw new DeviceManagementDAOException("Error occurred while obtaining the DB connection when adding tags",
                     e);
         }
+    }
+
+    @Override
+    public List<DeviceLocationHistory> getDeviceLocationInfo(String deviceType, String deviceId, long from, long to)
+            throws DeviceManagementDAOException {
+
+        Connection conn;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        List<DeviceLocationHistory> deviceLocationHistories = new ArrayList<>();
+        try {
+            conn = this.getConnection();
+
+            String sql = "SELECT DEVICE_ID, TENANT_ID, DEVICE_ID_NAME, DEVICE_TYPE_NAME, LATITUDE, LONGITUDE, " +
+                    "SPEED, HEADING, TIMESTAMP, GEO_HASH, DEVICE_OWNER, DEVICE_ALTITUDE, DISTANCE " +
+                    "FROM " +
+                    "DM_DEVICE_HISTORY_LAST_SEVEN_DAYS " +
+                    "WHERE " +
+                    "DEVICE_ID_NAME = ? AND DEVICE_TYPE_NAME = ? AND TIMESTAMP >= ? AND TIMESTAMP <= ?";
+
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, deviceId);
+            stmt.setString(2, deviceType);
+            stmt.setLong(3, from);
+            stmt.setLong(4, to);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                deviceLocationHistories.add(DeviceManagementDAOUtil.loadDeviceLocation(rs));
+            }
+        } catch (SQLException e) {
+            throw new DeviceManagementDAOException("Error occurred while retrieving location details of " +
+                    "registered devices.", e);
+        } finally {
+            DeviceManagementDAOUtil.cleanupResources(stmt, rs);
+        }
+        return deviceLocationHistories;
     }
     
     public void deleteDevice(DeviceIdentifier deviceIdentifier, int tenantId) throws DeviceManagementDAOException {

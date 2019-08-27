@@ -40,6 +40,7 @@ import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo.Status;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
+import org.wso2.carbon.device.mgt.common.device.details.DeviceLocationHistory;
 import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.geo.GeoCluster;
 import org.wso2.carbon.device.mgt.core.geo.geoHash.GeoCoordinate;
@@ -507,5 +508,13 @@ public interface DeviceDAO {
      * @throws DeviceManagementDAOException
      */
     void deleteDevice(DeviceIdentifier deviceIdentifier, int tenantId) throws DeviceManagementDAOException;
+
+    /**
+     *
+     * @return Device's historical location list
+     * @throws DeviceManagementDAOException
+     */
+    List<DeviceLocationHistory> getDeviceLocationInfo(String deviceType, String deviceId, long from, long to)
+            throws DeviceManagementDAOException;
 }
 

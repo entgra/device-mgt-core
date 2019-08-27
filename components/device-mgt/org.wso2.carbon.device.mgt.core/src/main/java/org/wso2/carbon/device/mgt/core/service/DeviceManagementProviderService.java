@@ -50,6 +50,7 @@ import org.wso2.carbon.device.mgt.common.StartupOperationConfig;
 import org.wso2.carbon.device.mgt.common.UserNotFoundException;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.ConfigurationManagementException;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration;
+import org.wso2.carbon.device.mgt.common.device.details.DeviceLocationHistory;
 import org.wso2.carbon.device.mgt.common.license.mgt.License;
 import org.wso2.carbon.device.mgt.common.operation.mgt.Activity;
 import org.wso2.carbon.device.mgt.common.operation.mgt.Operation;
@@ -708,6 +709,13 @@ public interface DeviceManagementProviderService {
      * @throws DeviceManagementException
      */
     List<DeviceType> getDeviceTypes() throws DeviceManagementException;
+
+    /**
+     * This retrieves the device location histories
+     * @throws DeviceManagementException
+     * @return list of device's location histories
+     */
+    List<DeviceLocationHistory> getDeviceLocationInfo(String deviceType, String deviceId, long from, long to) throws DeviceManagementException;
 
     /**
      * This retrieves the device pull notification payload and passes to device type pull notification subscriber.
