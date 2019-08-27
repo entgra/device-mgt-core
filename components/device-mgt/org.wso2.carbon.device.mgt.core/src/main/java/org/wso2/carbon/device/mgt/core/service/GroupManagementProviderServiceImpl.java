@@ -25,11 +25,11 @@ import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
-import org.wso2.carbon.device.mgt.common.DeviceManagementException;
-import org.wso2.carbon.device.mgt.common.DeviceNotFoundException;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceNotFoundException;
 import org.wso2.carbon.device.mgt.common.GroupPaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
-import org.wso2.carbon.device.mgt.common.TransactionManagementException;
+import org.wso2.carbon.device.mgt.common.exceptions.TransactionManagementException;
 import org.wso2.carbon.device.mgt.common.group.mgt.DeviceGroup;
 import org.wso2.carbon.device.mgt.common.group.mgt.DeviceGroupConstants;
 import org.wso2.carbon.device.mgt.common.group.mgt.GroupAlreadyExistException;
@@ -611,6 +611,30 @@ public class GroupManagementProviderServiceImpl implements GroupManagementProvid
             throw new GroupManagementException(msg, e);
         } catch (Exception e) {
             String msg = "Error occurred in getDevices for groupId: " + groupId;
+            log.error(msg, e);
+            throw new GroupManagementException(msg, e);
+        } finally {
+            GroupManagementDAOFactory.closeConnection();
+        }
+        return devices;
+    }
+
+    public List<Device> getAllDevicesOfGroup(String groupName) throws GroupManagementException {
+
+        if (log.isDebugEnabled()) {
+            log.debug("Group devices of group: " + groupName);
+        }
+        int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
+        List<Device> devices;
+        try {
+            GroupManagementDAOFactory.openConnection();
+            devices = this.groupDAO.getAllDevicesOfGroup(groupName, tenantId);
+        } catch (GroupManagementDAOException | SQLException e) {
+            String msg = "Error occurred while getting devices in group.";
+            log.error(msg, e);
+            throw new GroupManagementException(msg, e);
+        } catch (Exception e) {
+            String msg = "Error occurred in getDevices for group name: " + groupName;
             log.error(msg, e);
             throw new GroupManagementException(msg, e);
         } finally {
