@@ -211,7 +211,7 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
             deviceLocation.setDeviceId(device.getId());
             DeviceManagementDAOFactory.beginTransaction();
             deviceDAO.updateDevice(device, CarbonContext.getThreadLocalCarbonContext().getTenantId());
-            addDeviceLocationHistory(device, deviceLocation, CarbonContext.getThreadLocalCarbonContext().getTenantId());
+            deviceDetailsDAO.addDeviceLocationHistory(device, deviceLocation, CarbonContext.getThreadLocalCarbonContext().getTenantId());
             deviceDetailsDAO.deleteDeviceLocation(deviceLocation.getDeviceId(), device.getEnrolmentInfo().getId());
             deviceDetailsDAO.addDeviceLocation(deviceLocation, device.getEnrolmentInfo().getId());
             if (DeviceManagerUtil.isPublishLocationResponseEnabled()) {
@@ -308,17 +308,6 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
             throw new DeviceDetailsMgtException("Exception occurred while retrieving device locations.", e);
         } finally{
             DeviceManagementDAOFactory.closeConnection();
-        }
-    }
-
-    @Override
-    public void addDeviceLocationHistory(Device device, DeviceLocation deviceLocation, int tenantId) throws DeviceDetailsMgtException {
-        try {
-            deviceDetailsDAO.addDeviceLocationHistory(device, deviceLocation, tenantId);
-
-        } catch (DeviceDetailsMgtDAOException e) {
-            DeviceManagementDAOFactory.rollbackTransaction();
-            throw new DeviceDetailsMgtException("Error occurred while adding the device location history information.", e);
         }
     }
 
