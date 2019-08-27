@@ -106,7 +106,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 @Path("/devices")
 @Produces(MediaType.APPLICATION_JSON)
@@ -327,8 +326,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
     @Override
     @Path("/type/{device-type}/id/{device-id}")
     public Response deleteDevice(@PathParam("device-type") String deviceType,
-                                 @PathParam("device-id") String deviceId,
-                                 @QueryParam("permanentDelete") boolean permanentDelete) {
+                                 @PathParam("device-id") String deviceId) {
         DeviceManagementProviderService deviceManagementProviderService =
                 DeviceMgtAPIUtils.getDeviceManagementService();
         try {
@@ -337,16 +335,8 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             if (persistedDevice == null) {
                 return Response.status(Response.Status.NOT_FOUND).build();
             }
-
-            boolean response;
-
-            if (permanentDelete) {
-                response = deviceManagementProviderService.deleteDevice(deviceIdentifier);
-            } else {
-                response = deviceManagementProviderService.disenrollDevice(deviceIdentifier);
-            }
+            boolean response = deviceManagementProviderService.disenrollDevice(deviceIdentifier);
             return Response.status(Response.Status.OK).entity(response).build();
-
         } catch (DeviceManagementException e) {
             String msg = "Error encountered while deleting device of type : " + deviceType + " and " +
                     "ID : " + deviceId;

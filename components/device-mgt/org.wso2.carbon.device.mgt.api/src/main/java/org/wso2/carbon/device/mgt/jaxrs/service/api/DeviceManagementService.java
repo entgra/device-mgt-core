@@ -971,12 +971,7 @@ public interface DeviceManagementService {
                     required = true)
             @PathParam("device-id")
             @Size(max = 45)
-                    String deviceId,
-            @ApiParam(
-            name = "permanentDelete",
-            value = "Boolean flag indicating whether to permanently delete the device.",
-            required = false)
-            @QueryParam("permanentDelete") boolean permanentDelete);
+                    String deviceId);
 
     @GET
     @Path("/{type}/{id}/features")
