@@ -57,6 +57,7 @@ import org.wso2.carbon.device.mgt.common.authorization.DeviceAccessAuthorization
 import org.wso2.carbon.device.mgt.common.authorization.DeviceAccessAuthorizationService;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceInfo;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceLocation;
+import org.wso2.carbon.device.mgt.common.device.details.DeviceLocationHistory;
 import org.wso2.carbon.device.mgt.common.operation.mgt.Activity;
 import org.wso2.carbon.device.mgt.common.operation.mgt.Operation;
 import org.wso2.carbon.device.mgt.common.operation.mgt.OperationManagementException;
@@ -463,6 +464,54 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                             type + "', which carries id '" + id + "' does not exist").build()).build();
         }
         return Response.status(Response.Status.OK).entity(device).build();
+    }
+
+    @Path("/{deviceType}/{deviceId}/location-history")
+    @GET
+    @Consumes("application/json")
+    @Produces("application/json")
+    public Response getGeoDeviceHistory(@PathParam("deviceType") String deviceType,
+                                        @PathParam("deviceId") String deviceId,
+                                        @QueryParam("from") long from, @QueryParam("to") long to) {
+
+        List<DeviceLocationHistory> deviceLocationHistory;
+        try {
+
+            RequestValidationUtil.validateDeviceIdentifier(deviceType, deviceId);
+            DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
+            DeviceAccessAuthorizationService deviceAccessAuthorizationService =
+                    DeviceMgtAPIUtils.getDeviceAccessAuthorizationService();
+
+            if (deviceAccessAuthorizationService == null) {
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
+                        new ErrorResponse.ErrorResponseBuilder().setMessage("Device access authorization service is " +
+                                "failed").build()).build();
+            }
+
+            String authorizedUser = CarbonContext.getThreadLocalCarbonContext().getUsername();
+            DeviceIdentifier deviceIdentifier = new DeviceIdentifier(deviceId, deviceType);
+
+            if (!deviceAccessAuthorizationService.isUserAuthorized(deviceIdentifier, authorizedUser)) {
+                String msg = "User '" + authorizedUser + "' is not authorized to retrieve the given device id '" + deviceId + "'";
+                log.error(msg);
+                return Response.status(Response.Status.UNAUTHORIZED).entity(
+                        new ErrorResponse.ErrorResponseBuilder().setCode(401l).setMessage(msg).build()).build();
+            }
+
+            deviceLocationHistory = dms.getDeviceLocationInfo(deviceType, deviceId, from, to);
+
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while fetching the device information.";
+            log.error(msg, e);
+            return Response.serverError().entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        } catch (DeviceAccessAuthorizationException e) {
+            String msg = "Error occurred while checking the device authorization.";
+            log.error(msg, e);
+            return Response.serverError().entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        }
+        return Response.status(Response.Status.OK).entity(deviceLocationHistory).build();
     }
 
     @GET

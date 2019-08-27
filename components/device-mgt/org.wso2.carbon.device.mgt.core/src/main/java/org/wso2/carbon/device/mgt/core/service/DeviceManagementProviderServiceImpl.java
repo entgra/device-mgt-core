@@ -73,6 +73,7 @@ import org.wso2.carbon.device.mgt.common.configuration.mgt.ConfigurationManageme
 import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceInfo;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceLocation;
+import org.wso2.carbon.device.mgt.common.device.details.DeviceLocationHistory;
 import org.wso2.carbon.device.mgt.common.enrollment.notification.EnrollmentNotificationConfiguration;
 import org.wso2.carbon.device.mgt.common.enrollment.notification.EnrollmentNotifier;
 import org.wso2.carbon.device.mgt.common.enrollment.notification.EnrollmentNotifierException;
@@ -2798,6 +2799,42 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
+    public List<DeviceLocationHistory> getDeviceLocationInfo(String deviceType, String deviceId, long from, long to)
+            throws DeviceManagementException {
+
+        List<DeviceLocationHistory> deviceLocationHistory = new ArrayList<>();
+
+        if (log.isDebugEnabled()) {
+            log.debug("Get device types");
+        }
+        if (deviceId == null || deviceType == null) {
+            String msg = "Device type or deviceId is empty for method getAllDevices";
+            log.error(msg);
+            throw new DeviceManagementException(msg);
+        }
+
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            deviceLocationHistory = deviceDAO.getDeviceLocationInfo(deviceType, deviceId, from, to);
+            if (deviceLocationHistory == null) {
+                if (log.isDebugEnabled()) {
+                    log.debug("No device is found upon the type '" + deviceType + "'");
+                }
+                return null;
+            }
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred in getDeviceLocationInfo";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source";
+            log.error(msg, e);
+        }
+
+        return deviceLocationHistory;
+    }
+
+    @Override
     public void notifyPullNotificationSubscriber(DeviceIdentifier deviceIdentifier, Operation operation)
             throws PullNotificationExecutionFailedException {
         if (log.isDebugEnabled()) {
@@ -3132,12 +3169,28 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         if (properties != null) {
             String latitude = null;
             String longitude = null;
+            String altitude = null;
+            String speed = null;
+            String bearing = null;
+            String distance = null;
             for (Device.Property p : properties) {
                 if (p.getName().equalsIgnoreCase("latitude")) {
                     latitude = p.getValue();
                 }
                 if (p.getName().equalsIgnoreCase("longitude")) {
                     longitude = p.getValue();
+                }
+                if (p.getName().equalsIgnoreCase("altitude")) {
+                    altitude = p.getValue();
+                }
+                if (p.getName().equalsIgnoreCase("speed")) {
+                    speed = p.getValue();
+                }
+                if (p.getName().equalsIgnoreCase("bearing")) {
+                    bearing = p.getValue();
+                }
+                if (p.getName().equalsIgnoreCase("distance")) {
+                    distance = p.getValue();
                 }
             }
             if (latitude != null && longitude != null && !latitude.isEmpty() && !longitude.isEmpty()) {
@@ -3146,8 +3199,12 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                 deviceLocation.setDeviceIdentifier(new DeviceIdentifier(device.getDeviceIdentifier(),
                         device.getType()));
                 try {
+                    deviceLocation.setAltitude(Double.parseDouble(altitude));
                     deviceLocation.setLatitude(Double.parseDouble(latitude));
                     deviceLocation.setLongitude(Double.parseDouble(longitude));
+                    deviceLocation.setDistance(Double.parseDouble(distance));
+                    deviceLocation.setSpeed(Float.parseFloat(speed));
+                    deviceLocation.setBearing(Float.parseFloat(bearing));
                     DeviceInformationManager deviceInformationManager = new DeviceInformationManagerImpl();
                     deviceInformationManager.addDeviceLocation(deviceLocation);
                 } catch (Exception e) {
@@ -3155,7 +3212,8 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                     // a warning for reference.
                     log.warn("Error occurred while trying to add '" + device.getType() + "' device '" +
                             device.getDeviceIdentifier() + "' (id:'" + device.getId() + "') location (lat:" + latitude +
-                            ", lon:" + longitude + ") due to:" + e.getMessage());
+                            ", lon:" + longitude + ", altitude: "+altitude +
+                            ", speed: " + speed + ", bearing:" + bearing+", distance: "+distance+") due to:" + e.getMessage());
                 }
             }
         }
