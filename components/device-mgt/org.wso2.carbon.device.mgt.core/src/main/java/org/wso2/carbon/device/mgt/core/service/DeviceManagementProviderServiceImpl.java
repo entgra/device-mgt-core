@@ -3189,8 +3189,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                     distance = p.getValue();
                 }
             }
-            if (latitude != null && longitude != null && !latitude.isEmpty() && !longitude.isEmpty() &&
-                    !altitude.isEmpty() && !altitude.isEmpty()) {
+            if (latitude != null && longitude != null && !latitude.isEmpty() && !longitude.isEmpty()) {
                 DeviceLocation deviceLocation = new DeviceLocation();
                 deviceLocation.setDeviceId(device.getId());
                 deviceLocation.setDeviceIdentifier(new DeviceIdentifier(device.getDeviceIdentifier(),

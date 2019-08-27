@@ -85,13 +85,6 @@ public interface DeviceInformationManager {
      */
     List<DeviceLocation> getDeviceLocations(List<DeviceIdentifier> deviceIdentifiers) throws DeviceDetailsMgtException;
 
-    /**
-     * This method will manage storing the device location history along with the device information
-     * @param device
-     * @param deviceLocation
-     */
-    void addDeviceLocationHistory(Device device, DeviceLocation deviceLocation, int tenantId) throws DeviceDetailsMgtException;
-
 //    /**
 //     * This method will manage the storing of device application list.
 //     * @param deviceApplication - Device application list.
