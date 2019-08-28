@@ -17,11 +17,12 @@
  */
 
 import React from "react";
-import {PageHeader, Typography, Breadcrumb, Statistic, Button, Icon} from "antd";
+import {PageHeader, Typography, Breadcrumb, Divider, Button, Icon} from "antd";
 import {Link} from "react-router-dom";
 import SyncAndroidApps from "../../../../components/manage/android-enterprise/SyncAndroidApps";
 import {withConfigContext} from "../../../../context/ConfigContext";
 import GooglePlayIframe from "../../../../components/manage/android-enterprise/GooglePlayIframe";
+import Pages from "../../../../components/manage/android-enterprise/Pages/Pages";
 
 const {Paragraph} = Typography;
 
@@ -55,6 +56,8 @@ class ManageAndroidEnterprise extends React.Component {
                 <div style={{background: '#f0f2f5', padding: 24, minHeight: 720}}>
                    <SyncAndroidApps/>
                    <GooglePlayIframe/>
+                   <Divider/>
+                   <Pages/>
                 </div>
             </div>
 

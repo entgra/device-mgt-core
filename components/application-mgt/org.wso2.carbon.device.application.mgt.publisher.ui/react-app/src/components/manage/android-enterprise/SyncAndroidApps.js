@@ -51,7 +51,6 @@ class SyncAndroidApps extends React.Component {
                 loading: false
             });
         }).catch((error) => {
-            this.config.androidEnterpriseToken = null;
             notification["error"]({
                 message: "There was a problem",
                 duration: 0,

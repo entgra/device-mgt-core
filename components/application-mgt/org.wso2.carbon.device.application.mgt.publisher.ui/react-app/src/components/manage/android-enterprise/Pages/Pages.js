@@ -1,0 +1,254 @@
+/*
+ * Copyright (c) 2019, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
+ *
+ * Entgra (pvt) Ltd. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import React from "react";
+import axios from "axios";
+import {Tag, message, notification, Table, Typography, Divider, Icon, Popconfirm, Button} from "antd";
+
+import {withConfigContext} from "../../../../context/ConfigContext";
+import "./Pages.css";
+import {Link} from "react-router-dom";
+
+const {Text, Title} = Typography;
+
+let config = null;
+
+
+class Pages extends React.Component {
+    constructor(props) {
+        super(props);
+        config = this.props.context;
+        // TimeAgo.addLocale(en);
+        this.state = {
+            data: [],
+            pagination: {},
+            loading: false,
+            selectedRows: [],
+            homePageId: null
+        };
+    }
+
+    rowSelection = {
+        onChange: (selectedRowKeys, selectedRows) => {
+            // console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+            this.setState({
+                selectedRows: selectedRows
+            })
+        }
+    };
+
+    componentDidMount() {
+        this.setHomePage();
+        this.fetch();
+    }
+
+    //fetch data from api
+    fetch = (params = {}) => {
+        const config = this.props.context;
+        this.setState({loading: true});
+        // get current page
+        const currentPage = (params.hasOwnProperty("page")) ? params.page : 1;
+
+        const extraParams = {
+            offset: 10 * (currentPage - 1), //calculate the offset
+            limit: 10,
+            requireDeviceInfo: true,
+        };
+
+        //send request to the invoker
+        axios.get(
+            window.location.origin + config.serverConfig.invoker.uri +
+            "/device-mgt/android/v1.0/enterprise/store-layout/page",
+        ).then(res => {
+            if (res.status === 200) {
+                const pagination = {...this.state.pagination};
+                this.setState({
+                    loading: false,
+                    data: res.data.data.page,
+                    pagination,
+                });
+            }
+
+        }).catch((error) => {
+            if (error.hasOwnProperty("response") && error.response.status === 401) {
+                //todo display a popop with error
+                message.error('You are not logged in');
+                window.location.href = window.location.origin + '/publisher/login';
+            } else {
+                notification["error"]({
+                    message: "There was a problem",
+                    duration: 0,
+                    description:
+                        "Error occurred while trying to load pages.",
+                });
+            }
+
+            this.setState({loading: false});
+        });
+    };
+
+    setHomePage = () => {
+        const config = this.props.context;
+
+        //send request to the invoker
+        axios.get(
+            window.location.origin + config.serverConfig.invoker.uri +
+            "/device-mgt/android/v1.0/enterprise/store-layout/home-page",
+        ).then(res => {
+            if (res.status === 200) {
+                this.setState({
+                    homePageId: res.data.data.homepageId
+                });
+            }
+
+        }).catch((error) => {
+            if (error.hasOwnProperty("response") && error.response.status === 401) {
+                //todo display a popop with error
+                message.error('You are not logged in');
+                window.location.href = window.location.origin + '/publisher/login';
+            } else {
+                notification["error"]({
+                    message: "There was a problem",
+                    duration: 0,
+                    description:
+                        "Error occurred while trying to get home page.",
+                });
+            }
+        });
+    };
+
+    updateHomePage = (pageId) => {
+        const config = this.props.context;
+
+        //send request to the invoker
+        axios.put(
+            window.location.origin + config.serverConfig.invoker.uri +
+            "/device-mgt/android/v1.0/enterprise/store-layout/home-page/"+pageId
+        ).then(res => {
+            if (res.status === 200) {
+                this.setState({
+                    homePageId: res.data.data.homepageId
+                });
+            }
+
+        }).catch((error) => {
+            if (error.hasOwnProperty("response") && error.response.status === 401) {
+                //todo display a popop with error
+                message.error('You are not logged in');
+                window.location.href = window.location.origin + '/publisher/login';
+            } else {
+                notification["error"]({
+                    message: "There was a problem",
+                    duration: 0,
+                    description:
+                        "Error occurred while trying to update the home page.",
+                });
+            }
+        });
+    };
+
+    handleTableChange = (pagination, filters, sorter) => {
+        const pager = {...this.state.pagination};
+        pager.current = pagination.current;
+        this.setState({
+            pagination: pager,
+        });
+        this.fetch({
+            results: pagination.pageSize,
+            page: pagination.current,
+            sortField: sorter.field,
+            sortOrder: sorter.order,
+            ...filters,
+        });
+    };
+
+    columns = [
+        {
+            title: 'ID',
+            dataIndex: 'id',
+            width: 100,
+        },
+        {
+            title: 'Name',
+            dataIndex: 'name',
+            key: 'name',
+            render: (name, page) => {
+                console.log(this.state.homePageId, page.id === this.state.homePageId);
+                return (<div>
+                    <Link to={"#"}> {name[0].text + " "}</Link>
+                    {(page.id === this.state.homePageId) && (<Tag color="#badc58">Home Page</Tag>)}
+                </div>)
+
+            }
+        },
+        {
+            title: 'Actions',
+            key: 'actions',
+            render: (name, page) => (
+                <div>
+                    <span className="action">
+                        <Button disabled={page.id === this.state.homePageId}
+                                className="btn-warning"
+                                icon="home"
+                                type="link">
+                            set as homepage
+                        </Button>
+                    </span>
+                    <Divider type="vertical"/>
+                    <Popconfirm
+                        title="Are you sure？"
+                        okText="Yes"
+                        cancelText="No">
+                        <span className="action">
+                            <Text type="danger"><Icon type="delete"/> delete</Text>
+                        </span>
+                    </Popconfirm>
+                </div>
+            ),
+        },
+    ];
+
+    render() {
+        const {data, pagination, loading, selectedRows} = this.state;
+        return (
+            <div className="layout-pages">
+                <Title level={4}>Pages</Title>
+                <div style={{backgroundColor: "#ffffff", borderRadius: 5}}>
+                    <Table
+                        columns={this.columns}
+                        rowKey={record => record.id}
+                        dataSource={data}
+                        pagination={{
+                            ...pagination,
+                            size: "small",
+                            // position: "top",
+                            showTotal: (total, range) => `showing ${range[0]}-${range[1]} of ${total} pages`,
+                            showQuickJumper: true
+                        }}
+                        loading={loading}
+                        onChange={this.handleTableChange}
+                        rowSelection={this.rowSelection}
+                        scroll={{x: 1000}}
+                    />
+                </div>
+            </div>
+        );
+    }
+}
+
+export default withConfigContext(Pages);
