@@ -67,7 +67,6 @@ class Pages extends React.Component {
         const extraParams = {
             offset: 10 * (currentPage - 1), //calculate the offset
             limit: 10,
-            requireDeviceInfo: true,
         };
 
         //send request to the invoker
@@ -86,7 +85,6 @@ class Pages extends React.Component {
 
         }).catch((error) => {
             if (error.hasOwnProperty("response") && error.response.status === 401) {
-                //todo display a popop with error
                 message.error('You are not logged in');
                 window.location.href = window.location.origin + '/publisher/login';
             } else {
@@ -118,7 +116,6 @@ class Pages extends React.Component {
 
         }).catch((error) => {
             if (error.hasOwnProperty("response") && error.response.status === 401) {
-                //todo display a popop with error
                 message.error('You are not logged in');
                 window.location.href = window.location.origin + '/publisher/login';
             } else {
@@ -134,21 +131,30 @@ class Pages extends React.Component {
 
     updateHomePage = (pageId) => {
         const config = this.props.context;
-
+        this.setState({
+            loading: true
+        });
         //send request to the invoker
         axios.put(
             window.location.origin + config.serverConfig.invoker.uri +
-            "/device-mgt/android/v1.0/enterprise/store-layout/home-page/"+pageId
+            "/device-mgt/android/v1.0/enterprise/store-layout/home-page/" + pageId,
+            {}
         ).then(res => {
             if (res.status === 200) {
+                notification["success"]({
+                    message: "Done!",
+                    description:
+                        "Home page was updated successfully!",
+                });
+
                 this.setState({
-                    homePageId: res.data.data.homepageId
+                    homePageId: res.data.data.homepageId,
+                    loading: false
                 });
             }
 
         }).catch((error) => {
             if (error.hasOwnProperty("response") && error.response.status === 401) {
-                //todo display a popop with error
                 message.error('You are not logged in');
                 window.location.href = window.location.origin + '/publisher/login';
             } else {
@@ -158,7 +164,60 @@ class Pages extends React.Component {
                     description:
                         "Error occurred while trying to update the home page.",
                 });
+                this.setState({
+                    loading: false
+                });
             }
+
+        });
+    };
+
+    deletePage = (pageId) => {
+        const {data} = this.state;
+        const config = this.props.context;
+        this.setState({
+            loading: true
+        });
+        //send request to the invoker
+        axios.delete(
+            window.location.origin + config.serverConfig.invoker.uri +
+            "/device-mgt/android/v1.0/enterprise/store-layout/page/" + pageId
+        ).then(res => {
+            if (res.status === 200) {
+                notification["success"]({
+                    message: "Done!",
+                    description:
+                        "Home page was updated successfully!",
+                });
+
+                for( let i = 0; i < data.length; i++){
+                    if ( data[i].id === pageId) {
+                        data.splice(i, 1);
+                    }
+                }
+
+                this.setState({
+                    loading: false,
+                    data: data
+                });
+            }
+
+        }).catch((error) => {
+            if (error.hasOwnProperty("response") && error.response.status === 401) {
+                message.error('You are not logged in');
+                window.location.href = window.location.origin + '/publisher/login';
+            } else {
+                notification["error"]({
+                    message: "There was a problem",
+                    duration: 0,
+                    description:
+                        "Error occurred while trying to update the home page.",
+                });
+                this.setState({
+                    loading: false
+                });
+            }
+
         });
     };
 
@@ -168,27 +227,21 @@ class Pages extends React.Component {
         this.setState({
             pagination: pager,
         });
-        this.fetch({
-            results: pagination.pageSize,
-            page: pagination.current,
-            sortField: sorter.field,
-            sortOrder: sorter.order,
-            ...filters,
-        });
+        // this.fetch({
+        //     results: pagination.pageSize,
+        //     page: pagination.current,
+        //     sortField: sorter.field,
+        //     sortOrder: sorter.order,
+        //     ...filters,
+        // });
     };
 
     columns = [
         {
-            title: 'ID',
-            dataIndex: 'id',
-            width: 100,
-        },
-        {
-            title: 'Name',
+            title: 'Page',
             dataIndex: 'name',
             key: 'name',
             render: (name, page) => {
-                console.log(this.state.homePageId, page.id === this.state.homePageId);
                 return (<div>
                     <Link to={"#"}> {name[0].text + " "}</Link>
                     {(page.id === this.state.homePageId) && (<Tag color="#badc58">Home Page</Tag>)}
@@ -205,7 +258,10 @@ class Pages extends React.Component {
                         <Button disabled={page.id === this.state.homePageId}
                                 className="btn-warning"
                                 icon="home"
-                                type="link">
+                                type="link"
+                                onClick={() => {
+                                    this.updateHomePage(page.id);
+                                }}>
                             set as homepage
                         </Button>
                     </span>
@@ -213,7 +269,10 @@ class Pages extends React.Component {
                     <Popconfirm
                         title="Are you sure？"
                         okText="Yes"
-                        cancelText="No">
+                        cancelText="No"
+                        onConfirm={() => {
+                            this.deletePage(page.id);
+                        }}>
                         <span className="action">
                             <Text type="danger"><Icon type="delete"/> delete</Text>
                         </span>
@@ -242,7 +301,7 @@ class Pages extends React.Component {
                         }}
                         loading={loading}
                         onChange={this.handleTableChange}
-                        rowSelection={this.rowSelection}
+                        // rowSelection={this.rowSelection}
                         scroll={{x: 1000}}
                     />
                 </div>
