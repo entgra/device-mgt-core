@@ -50,7 +50,7 @@ class ManageAndroidEnterprise extends React.Component {
                     </Breadcrumb>
                     <div className="wrap">
                         <h3>Manage Android Enterprise</h3>
-                        <Paragraph>Lorem ipsum</Paragraph>
+                        {/*<Paragraph>Lorem ipsum</Paragraph>*/}
                     </div>
                 </PageHeader>
                 <div style={{background: '#f0f2f5', padding: 24, minHeight: 720}}>

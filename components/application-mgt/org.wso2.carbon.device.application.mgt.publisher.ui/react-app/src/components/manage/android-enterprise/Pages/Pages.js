@@ -45,7 +45,7 @@ class Pages extends React.Component {
 
     rowSelection = {
         onChange: (selectedRowKeys, selectedRows) => {
-            // console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+            // console.lohhhg(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
             this.setState({
                 selectedRows: selectedRows
             })
@@ -227,13 +227,6 @@ class Pages extends React.Component {
         this.setState({
             pagination: pager,
         });
-        // this.fetch({
-        //     results: pagination.pageSize,
-        //     page: pagination.current,
-        //     sortField: sorter.field,
-        //     sortOrder: sorter.order,
-        //     ...filters,
-        // });
     };
 
     columns = [
@@ -242,8 +235,9 @@ class Pages extends React.Component {
             dataIndex: 'name',
             key: 'name',
             render: (name, page) => {
+                const pageName = name[0].text;
                 return (<div>
-                    <Link to={"#"}> {name[0].text + " "}</Link>
+                    <Link to={`/publisher/manage/android-enterprise/pages/${pageName}/${page.id}`}> {pageName + " "}</Link>
                     {(page.id === this.state.homePageId) && (<Tag color="#badc58">Home Page</Tag>)}
                 </div>)
 

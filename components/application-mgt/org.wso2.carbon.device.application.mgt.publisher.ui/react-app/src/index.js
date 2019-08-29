@@ -31,6 +31,7 @@ import AddNewPublicApp from "./pages/dashboard/add-new-app/AddNewPublicApp";
 import AddNewWebClip from "./pages/dashboard/add-new-app/AddNewWebClip";
 import AddNewRelease from "./pages/dashboard/add-new-release/AddNewRelease";
 import ManageAndroidEnterprise from "./pages/dashboard/manage/android-enterprise/ManageAndroidEnterprise";
+import Page from "./pages/dashboard/manage/android-enterprise/page/Page";
 
 
 const routes = [
@@ -82,6 +83,11 @@ const routes = [
             {
                 path: '/publisher/manage/android-enterprise',
                 component: ManageAndroidEnterprise,
+                exact: true
+            },
+            {
+                path: '/publisher/manage/android-enterprise/pages/:pageName/:pageId',
+                component: Page,
                 exact: true
             }
         ]

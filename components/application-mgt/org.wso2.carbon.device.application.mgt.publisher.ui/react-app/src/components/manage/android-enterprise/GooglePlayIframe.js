@@ -57,11 +57,12 @@ class GooglePlayIframe extends React.Component {
                     Approve Applications
                 </Button>
                 <Modal
-                    title="Basic Modal"
+                    title={null}
                     visible={this.state.visible}
                     onOk={this.handleOk}
                     onCancel={this.handleCancel}
                     width = {740}
+                    footer={null}
                 >
                     <iframe
                         style={{
