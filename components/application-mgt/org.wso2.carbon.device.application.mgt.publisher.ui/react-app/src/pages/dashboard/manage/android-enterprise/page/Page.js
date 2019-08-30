@@ -21,6 +21,7 @@ import {PageHeader, Typography, Breadcrumb, Divider, Button, Icon, Col, Row, not
 import {Link, withRouter} from "react-router-dom";
 import {withConfigContext} from "../../../../../context/ConfigContext";
 import axios from "axios";
+import Cluster from "../../../../../components/manage/android-enterprise/Pages/Cluster/Cluster";
 
 const {Title} = Typography;
 
@@ -35,8 +36,13 @@ class Page extends React.Component {
         this.config = this.props.context;
         this.state = {
             pageName,
-            loading:false
-        }
+            clusters: [],
+            loading: false
+        };
+    }
+
+    componentDidMount() {
+        this.fetchClusters();
     }
 
     updatePageName = pageName => {
@@ -83,8 +89,39 @@ class Page extends React.Component {
         }
     };
 
+    fetchClusters = () => {
+        const config = this.props.context;
+        axios.get(
+            window.location.origin + config.serverConfig.invoker.uri +
+            `/device-mgt/android/v1.0/enterprise/store-layout/page/${this.pageId}/clusters`
+        ).then(res => {
+            if (res.status === 200) {
+                let clusters = JSON.parse(res.data.data);
+
+                this.setState({
+                    clusters,
+                    loading: false
+                });
+            }
+        }).catch((error) => {
+            if (error.hasOwnProperty("response") && error.response.status === 401) {
+                window.location.href = window.location.origin + '/publisher/login';
+            } else {
+                notification["error"]({
+                    message: "There was a problem",
+                    duration: 0,
+                    description:
+                        "Error occurred while trying to load clusters.",
+                });
+            }
+            this.setState({
+                loading: false
+            });
+        });
+    };
+
     render() {
-        const {pageName, loading} = this.state;
+        const {pageName, loading, clusters} = this.state;
         return (
             <div>
                 <PageHeader style={{paddingTop: 0}}>
@@ -112,6 +149,15 @@ class Page extends React.Component {
                                 <Title editable={{onChange: this.updatePageName}} level={2}>{pageName}</Title>
                             </Col>
                         </Row>
+                        {
+                            clusters.map((cluster) => {
+                                return (
+                                    <Cluster
+                                        key={cluster.clusterId}
+                                        cluster={cluster}/>
+                                );
+                            })
+                        }
                     </div>
                 </Spin>
             </div>
