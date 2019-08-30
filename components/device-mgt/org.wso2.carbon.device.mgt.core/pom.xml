@@ -356,6 +356,11 @@
             <groupId>org.powermock</groupId>
             <artifactId>powermock-api-mockito</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon.devicemgt</groupId>
+            <artifactId>org.wso2.carbon.device.mgt.common</artifactId>
+            <version>3.2.9-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
 </project>
