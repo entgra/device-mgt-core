@@ -19,6 +19,8 @@
 
 package org.wso2.carbon.device.mgt.core.device.details.mgt.dao;
 
+import org.wso2.carbon.device.mgt.common.Device;
+import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceInfo;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceLocation;
 
@@ -99,6 +101,14 @@ public interface DeviceDetailsDAO {
      * @throws DeviceDetailsMgtDAOException
      */
     void deleteDeviceLocation(int deviceId, int enrollmentId) throws DeviceDetailsMgtDAOException;
+
+    /**
+     *
+     * @param device
+     * @param deviceLocation
+     * @throws DeviceDetailsMgtDAOException
+     */
+    void addDeviceLocationHistory(Device device, DeviceLocation deviceLocation, int tenantId) throws DeviceDetailsMgtDAOException;
 
 //    /**
 //     * This method will add device application to database.
