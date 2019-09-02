@@ -154,7 +154,8 @@ class Page extends React.Component {
                                 return (
                                     <Cluster
                                         key={cluster.clusterId}
-                                        cluster={cluster}/>
+                                        cluster={cluster}
+                                        pageId={this.pageId}/>
                                 );
                             })
                         }

@@ -162,3 +162,7 @@
     background-color: rgba(250, 159, 0, 0.2);
     cursor: pointer;
 }
+
+.cluster .ant-typography-edit-content{
+    width: 200px;
+}
