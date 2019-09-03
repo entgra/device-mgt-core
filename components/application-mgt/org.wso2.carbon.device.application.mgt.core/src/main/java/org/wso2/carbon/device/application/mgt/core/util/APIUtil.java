@@ -333,6 +333,7 @@ public class APIUtil {
             applicationReleases.add(applicationRelease);
         }
         application.setApplicationReleases(applicationReleases);
+        application.setPackageName(applicationDTO.getPackageName());
         return application;
     }
 
