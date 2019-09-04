@@ -22,6 +22,7 @@ import {Button, Col, Divider, Icon, message, notification, Row, Spin, Tooltip, T
 import "./Cluster.css";
 import axios from "axios";
 import {withConfigContext} from "../../../../../context/ConfigContext";
+import AddAppsToClusterModal from "./AddAppsToClusterModal/AddAppsToClusterModal";
 
 const {Title} = Typography;
 
@@ -141,6 +142,8 @@ class Cluster extends React.Component {
 
                 this.originalCluster = Object.assign({}, cluster);
 
+                console.log(products);
+
                 this.setState({
                     loading: false,
                     name,
@@ -167,11 +170,84 @@ class Cluster extends React.Component {
 
     };
 
+    deleteCluster = () => {
+        const config = this.props.context;
+
+        this.setState({loading: true});
+
+        axios.delete(
+            window.location.origin + config.serverConfig.invoker.uri +
+            `/device-mgt/android/v1.0/enterprise/store-layout/cluster/${this.clusterId}/page/${this.pageId}`
+        ).then(res => {
+            if (res.status === 200) {
+                notification["success"]({
+                    message: 'Saved!',
+                    description: 'Cluster updated successfully!'
+                });
+
+                this.setState({
+                    loading: false,
+                });
+
+                this.props.removeLoadedCluster(this.clusterId);
+
+            }
+        }).catch((error) => {
+            if (error.hasOwnProperty("response") && error.response.status === 401) {
+                message.error('You are not logged in');
+                window.location.href = window.location.origin + '/publisher/login';
+            } else {
+                notification["error"]({
+                    message: "There was a problem",
+                    duration: 0,
+                    description:
+                        "Error occurred while trying to update the cluster.",
+                });
+            }
+            this.setState({loading: false});
+        });
+
+    };
+
+    getUnselectedProducts = () => {
+        const {applications} = this.props;
+        const selectedProducts = this.state.products;
+
+        // get a copy from all products
+        const unSelectedProducts = [...applications];
+
+        // remove selected products from unselected products
+        selectedProducts.forEach((selectedProduct) => {
+            for (let i = 0; i < unSelectedProducts.length; i++) {
+                if (selectedProduct.packageId === unSelectedProducts[i].packageId) {
+                    // remove item from array
+                    unSelectedProducts.splice(i, 1);
+                }
+            }
+        });
+
+        return unSelectedProducts;
+    };
+
+    addSelectedProducts = (products) => {
+        this.setState({
+            products: [...this.state.products, ...products],
+            isSaveable: products.length > 0
+        });
+    };
+
     render() {
         const {name, products, loading} = this.state;
-
+        const unselectedProducts = this.getUnselectedProducts();
         const Product = ({product, index}) => {
-            const {iconUrl, packageId} = product;
+            const {packageId} = product;
+            let imageSrc = "";
+            const iconUrl = product.iconUrl;
+            if (iconUrl.substring(0, 8) === "https://") {
+                imageSrc = iconUrl;
+            } else {
+                imageSrc = `https://lh3.googleusercontent.com/${iconUrl}=s240-rw`;
+            }
             return (
                 <div className="product">
                     <div className="arrow">
@@ -183,7 +259,7 @@ class Cluster extends React.Component {
                     </div>
                     <div className="product-icon">
                         <img
-                            src={`https://lh3.googleusercontent.com/${iconUrl}=s240-rw`}/>
+                            src={imageSrc}/>
                         <Tooltip title={packageId}>
                             <div className="title">
                                 {packageId}
@@ -213,19 +289,47 @@ class Cluster extends React.Component {
         return (
             <div className="cluster">
                 <Spin spinning={loading}>
-                    <Title editable={{onChange: this.handleNameChange}} level={4}>{name}</Title>
+                    <Row>
+                        <Col span={16}>
+                            <Title editable={{onChange: this.handleNameChange}} level={4}>{name}</Title>
+                        </Col>
+                        <Col span={8}>
+
+                            <div style={{float: "right"}}>
+                                <Tooltip title="Move Up">
+                                    <Button
+                                        type="link"
+                                        icon="caret-up"
+                                        size="large"
+                                        onClick={() => {
+
+                                        }} htmlType="button"/>
+                                </Tooltip>
+                                <Tooltip title="Move Down">
+                                    <Button
+                                        type="link"
+                                        icon="caret-down"
+                                        size="large"
+                                        onClick={() => {
+
+                                        }} htmlType="button"/>
+                                </Tooltip>
+                                <Tooltip title="Delete Cluster">
+                                    <Button
+                                        type="danger"
+                                        icon="delete"
+                                        shape="circle"
+                                        onClick={this.deleteCluster}
+                                        htmlType="button"/>
+                                </Tooltip>
+                            </div>
+                        </Col>
+                    </Row>
                     <div className="products-row">
-                        <div className="btn-add-new-wrapper">
-                            <div className="btn-add-new">
-                                <button className="btn">
-                                    {/*<div className="btn-bg"></div>*/}
-                                    <Icon style={{position: "relative"}} type="plus"/>
-                                </button>
-                            </div>
-                            <div className="title">
-                                Add app
-                            </div>
-                        </div>
+
+                        <AddAppsToClusterModal
+                            addSelectedProducts={this.addSelectedProducts}
+                            unselectedProducts={unselectedProducts}/>
 
                         <div className="product-icon">
 

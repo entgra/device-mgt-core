@@ -37,13 +37,27 @@ class Page extends React.Component {
         this.state = {
             pageName,
             clusters: [],
-            loading: false
+            loading: false,
+            applications: []
         };
     }
 
     componentDidMount() {
         this.fetchClusters();
+        this.fetchApplications();
     }
+
+    removeLoadedCluster = (clusterId) => {
+        const clusters = [...this.state.clusters];
+        let index = -1;
+        for (let i = 0; i < clusters.length; i++) {
+            if (clusters[i].clusterId === clusterId) {
+                index = i;
+                break;
+            }
+        }
+        clusters.splice(index, 1);
+    };
 
     updatePageName = pageName => {
         const config = this.props.context;
@@ -120,8 +134,58 @@ class Page extends React.Component {
         });
     };
 
+    //fetch applications
+    fetchApplications = () => {
+        const config = this.props.context;
+        this.setState({loading: true});
+
+        const filters = {
+            appType: "PUBLIC",
+            deviceType: "android"
+        };
+
+        //send request to the invoker
+        axios.post(
+            window.location.origin + config.serverConfig.invoker.uri + config.serverConfig.invoker.publisher + "/applications",
+            filters
+        ).then(res => {
+            if (res.status === 200) {
+                const applications = res.data.data.applications.map(application => {
+                    const release = application.applicationReleases[0];
+                    return {
+                        packageId: `app:${application.packageName}`,
+                        iconUrl: release.iconPath,
+                        name: application.name
+                    }
+                });
+
+                console.log(applications);
+                this.setState({
+                    loading: false,
+                    applications,
+                });
+            }
+
+        }).catch((error) => {
+            if (error.hasOwnProperty("response") && error.response.status === 401) {
+                message.error('You are not logged in');
+                window.location.href = window.location.origin + '/publisher/login';
+            } else {
+                notification["error"]({
+                    message: "There was a problem",
+                    duration: 0,
+                    description:
+                        "Error occurred while trying to load pages.",
+                });
+            }
+
+            this.setState({loading: false});
+        });
+    };
+
+
     render() {
-        const {pageName, loading, clusters} = this.state;
+        const {pageName, loading, clusters, applications} = this.state;
         return (
             <div>
                 <PageHeader style={{paddingTop: 0}}>
@@ -155,7 +219,9 @@ class Page extends React.Component {
                                     <Cluster
                                         key={cluster.clusterId}
                                         cluster={cluster}
-                                        pageId={this.pageId}/>
+                                        pageId={this.pageId}
+                                        applications={applications}
+                                        removeLoadedCluster={this.removeLoadedCluster}/>
                                 );
                             })
                         }
