@@ -33,16 +33,15 @@ class Cluster extends React.Component {
 
         const {cluster, pageId} = this.props;
         this.originalCluster = Object.assign({}, cluster);
-        const {name, products, clusterId, orderInPage} = cluster;
+        const {name, products, clusterId} = cluster;
         this.clusterId = clusterId;
         this.pageId = pageId;
-        this.orderInPage = orderInPage;
         this.state = {
             name,
             products,
             isSaveable: false,
             loading: false
-        }
+        };
     }
 
     handleNameChange = (name) => {
@@ -105,7 +104,7 @@ class Cluster extends React.Component {
             clusterId: this.clusterId,
             name: name,
             products: products,
-            orderInPage: this.orderInPage
+            orderInPage: this.props.orderInPage
         };
     };
 
@@ -142,15 +141,8 @@ class Cluster extends React.Component {
 
                 this.originalCluster = Object.assign({}, cluster);
 
-                console.log(products);
-
-                this.setState({
-                    loading: false,
-                    name,
-                    products,
-                    isSaveable: false
-                });
-
+                this.resetChanges();
+                this.props.toggleAddNewClusterVisibility(false);
             }
         }).catch((error) => {
             if (error.hasOwnProperty("response") && error.response.status === 401) {
@@ -236,9 +228,54 @@ class Cluster extends React.Component {
         });
     };
 
+    cancelAddingNewCluster = () => {
+        this.resetChanges();
+        this.props.toggleAddNewClusterVisibility(false);
+    };
+
+    saveNewCluster = () => {
+        const config = this.props.context;
+
+        const cluster = this.getCurrentCluster();
+        this.setState({loading: true});
+
+        axios.post(
+            window.location.origin + config.serverConfig.invoker.uri +
+            "/device-mgt/android/v1.0/enterprise/store-layout/cluster",
+            cluster
+        ).then(res => {
+            if (res.status === 200) {
+                notification["success"]({
+                    message: 'Saved!',
+                    description: 'Cluster updated successfully!'
+                });
+
+                const cluster = res.data.data;
+
+                this.resetChanges();
+                this.props.addSavedClusterToThePage(cluster);
+            }
+        }).catch((error) => {
+            if (error.hasOwnProperty("response") && error.response.status === 401) {
+                message.error('You are not logged in');
+                window.location.href = window.location.origin + '/publisher/login';
+            } else {
+                notification["error"]({
+                    message: "There was a problem",
+                    duration: 0,
+                    description:
+                        "Error occurred while trying to update the cluster.",
+                });
+            }
+
+            this.setState({loading: false});
+        });
+    };
+
     render() {
         const {name, products, loading} = this.state;
         const unselectedProducts = this.getUnselectedProducts();
+        const {isTemporary} = this.props;
         const Product = ({product, index}) => {
             const {packageId} = product;
             let imageSrc = "";
@@ -287,42 +324,43 @@ class Cluster extends React.Component {
 
 
         return (
-            <div className="cluster">
+            <div className="cluster" id={this.props.orderInPage}>
                 <Spin spinning={loading}>
                     <Row>
                         <Col span={16}>
                             <Title editable={{onChange: this.handleNameChange}} level={4}>{name}</Title>
                         </Col>
                         <Col span={8}>
+                            {!isTemporary && (
+                                <div style={{float: "right"}}>
+                                    <Tooltip title="Move Up">
+                                        <Button
+                                            type="link"
+                                            icon="caret-up"
+                                            size="large"
+                                            onClick={() => {
 
-                            <div style={{float: "right"}}>
-                                <Tooltip title="Move Up">
-                                    <Button
-                                        type="link"
-                                        icon="caret-up"
-                                        size="large"
-                                        onClick={() => {
+                                            }} htmlType="button"/>
+                                    </Tooltip>
+                                    <Tooltip title="Move Down">
+                                        <Button
+                                            type="link"
+                                            icon="caret-down"
+                                            size="large"
+                                            onClick={() => {
 
-                                        }} htmlType="button"/>
-                                </Tooltip>
-                                <Tooltip title="Move Down">
-                                    <Button
-                                        type="link"
-                                        icon="caret-down"
-                                        size="large"
-                                        onClick={() => {
-
-                                        }} htmlType="button"/>
-                                </Tooltip>
-                                <Tooltip title="Delete Cluster">
-                                    <Button
-                                        type="danger"
-                                        icon="delete"
-                                        shape="circle"
-                                        onClick={this.deleteCluster}
-                                        htmlType="button"/>
-                                </Tooltip>
-                            </div>
+                                            }} htmlType="button"/>
+                                    </Tooltip>
+                                    <Tooltip title="Delete Cluster">
+                                        <Button
+                                            type="danger"
+                                            icon="delete"
+                                            shape="circle"
+                                            onClick={this.deleteCluster}
+                                            htmlType="button"/>
+                                    </Tooltip>
+                                </div>
+                            )}
                         </Col>
                     </Row>
                     <div className="products-row">
@@ -348,23 +386,40 @@ class Cluster extends React.Component {
                     </div>
                     <Row>
                         <Col>
-                            {/*<Button>Cancel</Button>*/}
-                            {/*<Button>Save</Button>*/}
-                            <div>
-                                <Button
-                                    onClick={this.resetChanges}
-                                    disabled={!this.state.isSaveable}>
-                                    Cancel
-                                </Button>
-                                <Divider type="vertical"/>
-                                <Button
-                                    onClick={this.updateCluster}
-                                    htmlType="button" type="primary"
-                                    disabled={!this.state.isSaveable}>
-                                    Save
-                                </Button>
-
-                            </div>
+                            {isTemporary && (
+                                <div>
+                                    <Button
+                                        onClick={this.cancelAddingNewCluster}>
+                                        Cancel
+                                    </Button>
+                                    <Divider type="vertical"/>
+                                    <Tooltip
+                                        title={(products.length === 0) ? "You must add applications to the cluster before saving" : ""}>
+                                        <Button
+                                            disabled={products.length === 0}
+                                            onClick={this.saveNewCluster}
+                                            htmlType="button" type="primary">
+                                            Save
+                                        </Button>
+                                    </Tooltip>
+                                </div>
+                            )}
+                            {!isTemporary && (
+                                <div>
+                                    <Button
+                                        onClick={this.resetChanges}
+                                        disabled={!this.state.isSaveable}>
+                                        Cancel
+                                    </Button>
+                                    <Divider type="vertical"/>
+                                    <Button
+                                        onClick={this.updateCluster}
+                                        htmlType="button" type="primary"
+                                        disabled={!this.state.isSaveable}>
+                                        Save
+                                    </Button>
+                                </div>
+                            )}
                         </Col>
                     </Row>
                 </Spin>

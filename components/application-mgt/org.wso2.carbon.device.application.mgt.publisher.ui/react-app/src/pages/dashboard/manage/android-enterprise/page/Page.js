@@ -38,7 +38,8 @@ class Page extends React.Component {
             pageName,
             clusters: [],
             loading: false,
-            applications: []
+            applications: [],
+            isAddNewClusterVisible: false
         };
     }
 
@@ -112,6 +113,9 @@ class Page extends React.Component {
             if (res.status === 200) {
                 let clusters = JSON.parse(res.data.data);
 
+                // sort according to the orderInPage value
+                clusters.sort((a, b) => (a.orderInPage > b.orderInPage) ? 1 : -1);
+
                 this.setState({
                     clusters,
                     loading: false
@@ -183,9 +187,22 @@ class Page extends React.Component {
         });
     };
 
+    toggleAddNewClusterVisibility = (isAddNewClusterVisible) => {
+        this.setState({
+            isAddNewClusterVisible
+        });
+    };
+
+    addSavedClusterToThePage = (cluster) => {
+        this.setState({
+            clusters: [...this.state.clusters, cluster],
+            isAddNewClusterVisible: false
+        });
+        window.scrollTo(0,document.body.scrollHeight);
+    };
 
     render() {
-        const {pageName, loading, clusters, applications} = this.state;
+        const {pageName, loading, clusters, applications, isAddNewClusterVisible} = this.state;
         return (
             <div>
                 <PageHeader style={{paddingTop: 0}}>
@@ -213,11 +230,39 @@ class Page extends React.Component {
                                 <Title editable={{onChange: this.updatePageName}} level={2}>{pageName}</Title>
                             </Col>
                         </Row>
+                        <div hidden={isAddNewClusterVisible} style={{textAlign: "center"}}>
+                            <Button
+                                type="dashed"
+                                shape="round"
+                                icon="plus"
+                                size="large"
+                                onClick={() => {
+                                    this.toggleAddNewClusterVisibility(true);
+                                }}
+                            >Add new cluster</Button>
+                        </div>
+                        <div hidden={!isAddNewClusterVisible}>
+                            <Cluster
+                                cluster={{
+                                    clusterId: 0,
+                                    name: "New Cluster",
+                                    products: []
+                                }}
+                                orderInPage={clusters.length}
+                                isTemporary={true}
+                                pageId={this.pageId}
+                                applications={applications}
+                                addSavedClusterToThePage = {this.addSavedClusterToThePage}
+                                toggleAddNewClusterVisibility={this.toggleAddNewClusterVisibility}/>
+                        </div>
+
                         {
                             clusters.map((cluster) => {
                                 return (
                                     <Cluster
                                         key={cluster.clusterId}
+                                        orderInPage={cluster.orderInPage}
+                                        isTemporary={false}
                                         cluster={cluster}
                                         pageId={this.pageId}
                                         applications={applications}
