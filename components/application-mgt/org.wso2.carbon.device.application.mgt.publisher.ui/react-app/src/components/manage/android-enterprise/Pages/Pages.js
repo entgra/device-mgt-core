@@ -23,6 +23,7 @@ import {Tag, message, notification, Table, Typography, Divider, Icon, Popconfirm
 import {withConfigContext} from "../../../../context/ConfigContext";
 import "./Pages.css";
 import {Link} from "react-router-dom";
+import AddNewPage from "../AddNewPage/AddNewPage";
 
 const {Text, Title} = Typography;
 
@@ -281,6 +282,9 @@ class Pages extends React.Component {
         return (
             <div className="layout-pages">
                 <Title level={4}>Pages</Title>
+
+                <AddNewPage/>
+
                 <div style={{backgroundColor: "#ffffff", borderRadius: 5}}>
                     <Table
                         columns={this.columns}

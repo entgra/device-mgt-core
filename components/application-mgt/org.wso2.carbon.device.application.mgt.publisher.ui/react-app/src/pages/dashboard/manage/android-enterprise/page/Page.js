@@ -124,7 +124,8 @@ class Page extends React.Component {
         }).catch((error) => {
             if (error.hasOwnProperty("response") && error.response.status === 401) {
                 window.location.href = window.location.origin + '/publisher/login';
-            } else {
+            } else if (!(error.hasOwnProperty("response") && error.response.status === 404)) {
+                // API sends 404 when no apps
                 notification["error"]({
                     message: "There was a problem",
                     duration: 0,
@@ -198,7 +199,7 @@ class Page extends React.Component {
             clusters: [...this.state.clusters, cluster],
             isAddNewClusterVisible: false
         });
-        window.scrollTo(0,document.body.scrollHeight);
+        window.scrollTo(0, document.body.scrollHeight);
     };
 
     render() {
@@ -252,7 +253,7 @@ class Page extends React.Component {
                                 isTemporary={true}
                                 pageId={this.pageId}
                                 applications={applications}
-                                addSavedClusterToThePage = {this.addSavedClusterToThePage}
+                                addSavedClusterToThePage={this.addSavedClusterToThePage}
                                 toggleAddNewClusterVisibility={this.toggleAddNewClusterVisibility}/>
                         </div>
 
