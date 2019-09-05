@@ -3,28 +3,29 @@ image: charithag/docker-mvn-jdk8:latest
 variables:
   MAVEN_CLI_OPTS: "-s .m2/settings.xml --batch-mode"
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
-  DS_ANALYZER_IMAGES: "registry.gitlab.com/madawa/gemnasium-maven"
-  DS_RUN_ANALYZER_TIMEOUT: 3h
 
 cache:
   paths:
     - .m2/repository/
     - target/
 
-build:
-  stage: build
-  script:
-    - mvn $MAVEN_CLI_OPTS clean install -Dmaven.test.skip=true
+# build:
+#   stage: build
+#   script:
+#     - mvn $MAVEN_CLI_OPTS clean install -Dmaven.test.skip=true
 
-test:
-  stage: test
-  script:
-    - mvn $MAVEN_CLI_OPTS test
+# test:
+#   stage: test
+#   script:
+#     - mvn $MAVEN_CLI_OPTS test
     
 include:
   template: Dependency-Scanning.gitlab-ci.yml
   
-  
+variables:
+  DS_ANALYZER_IMAGES: "registry.gitlab.com/madawa/gemnasium-maven"
+  DS_RUN_ANALYZER_TIMEOUT: 3h
+  DS_DEFAULT_ANALYZERS: "gemnasium-maven"
 
 sast:
   stage: test
