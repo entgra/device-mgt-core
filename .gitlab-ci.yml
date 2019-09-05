@@ -22,7 +22,7 @@ cache:
 include:
   template: Dependency-Scanning.gitlab-ci.yml
   
-dependency_scan:  
+dependency_scanning:  
   variables:
     DS_ANALYZER_IMAGES: "registry.gitlab.com/madawa/gemnasium-maven"
     DS_RUN_ANALYZER_TIMEOUT: 3h
