@@ -25,7 +25,7 @@ include:
 variables:
   DS_ANALYZER_IMAGES: "registry.gitlab.com/madawa/gemnasium-maven"
   DS_RUN_ANALYZER_TIMEOUT: 3h
-  DS_DEFAULT_ANALYZERS: "gemnasium-maven"
+  DS_DEFAULT_ANALYZERS: ""
 
 sast:
   stage: test
