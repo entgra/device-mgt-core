@@ -17,13 +17,29 @@
  */
 
 import React from "react";
-import {PageHeader, Typography, Breadcrumb, Divider, Button, Icon, Col, Row, notification, message, Spin} from "antd";
+import {
+    PageHeader,
+    Typography,
+    Breadcrumb,
+    Button,
+    Icon,
+    Col,
+    Row,
+    notification,
+    message,
+    Spin,
+    Select,
+    Tag,
+    Divider
+} from "antd";
 import {Link, withRouter} from "react-router-dom";
 import {withConfigContext} from "../../../../../context/ConfigContext";
 import axios from "axios";
 import Cluster from "../../../../../components/manage/android-enterprise/Pages/Cluster/Cluster";
+import EditLinks from "../../../../../components/manage/android-enterprise/Pages/EditLinks/EditLinks";
 
-const {Title} = Typography;
+const {Option} = Select;
+const {Title, Text} = Typography;
 
 class Page extends React.Component {
     routes;
@@ -34,18 +50,22 @@ class Page extends React.Component {
         this.pageId = pageId;
         this.routes = props.routes;
         this.config = this.props.context;
+        this.pages = [];
+        this.pageNames = {};
         this.state = {
             pageName,
             clusters: [],
             loading: false,
             applications: [],
-            isAddNewClusterVisible: false
+            isAddNewClusterVisible: false,
+            links: []
         };
     }
 
     componentDidMount() {
         this.fetchClusters();
         this.fetchApplications();
+        this.fetchPages();
     }
 
     removeLoadedCluster = (clusterId) => {
@@ -102,6 +122,63 @@ class Page extends React.Component {
                 this.setState({loading: false});
             });
         }
+    };
+
+    swapClusters = (index, swapIndex) => {
+        const clusters = [...this.state.clusters];
+
+        if (swapIndex !== -1 && index < clusters.length) {
+            // swap elements
+            [clusters[index], clusters[swapIndex]] = [clusters[swapIndex], clusters[index]];
+
+            this.setState({
+                clusters,
+            });
+        }
+    };
+
+    fetchPages = () => {
+        const config = this.props.context;
+        this.setState({loading: true});
+
+        //send request to the invoker
+        axios.get(
+            window.location.origin + config.serverConfig.invoker.uri +
+            "/device-mgt/android/v1.0/enterprise/store-layout/page",
+        ).then(res => {
+            if (res.status === 200) {
+                this.pages = res.data.data.page;
+
+                let links = [];
+
+                this.pages.forEach((page) => {
+                    this.pageNames[page.id.toString()] = page.name[0]["text"];
+                    if (page.id === this.pageId && page.hasOwnProperty("link")) {
+                        links = page["link"];
+                    }
+                });
+
+                this.setState({
+                    loading: false,
+                    links
+                });
+            }
+
+        }).catch((error) => {
+            if (error.hasOwnProperty("response") && error.response.status === 401) {
+                message.error('You are not logged in');
+                window.location.href = window.location.origin + '/publisher/login';
+            } else {
+                notification["error"]({
+                    message: "There was a problem",
+                    duration: 0,
+                    description:
+                        "Error occurred while trying to load pages.",
+                });
+            }
+
+            this.setState({loading: false});
+        });
     };
 
     fetchClusters = () => {
@@ -164,7 +241,6 @@ class Page extends React.Component {
                     }
                 });
 
-                console.log(applications);
                 this.setState({
                     loading: false,
                     applications,
@@ -202,8 +278,14 @@ class Page extends React.Component {
         window.scrollTo(0, document.body.scrollHeight);
     };
 
+    updateLinks = (links) =>{
+        this.setState({
+            links
+        });
+    };
+
     render() {
-        const {pageName, loading, clusters, applications, isAddNewClusterVisible} = this.state;
+        const {pageName, loading, clusters, applications, isAddNewClusterVisible, links} = this.state;
         return (
             <div>
                 <PageHeader style={{paddingTop: 0}}>
@@ -231,6 +313,33 @@ class Page extends React.Component {
                                 <Title editable={{onChange: this.updatePageName}} level={2}>{pageName}</Title>
                             </Col>
                         </Row>
+                        <Row>
+                            <Col>
+                                <Title level={4}>Links</Title>
+                                {
+                                    links.map(link => {
+                                        if (this.pageNames.hasOwnProperty(link.toString())) {
+                                            return <Tag key={link}
+                                                        color="#87d068">{this.pageNames[link.toString()]}</Tag>
+                                        } else {
+                                            return null;
+                                        }
+                                    })
+                                }
+                                <EditLinks
+                                    updateLinks={this.updateLinks}
+                                    pageId={this.pageId}
+                                    selectedLinks={links}
+                                    pages={this.pages}/>
+                            </Col>
+                            {/*<Col>*/}
+
+                            {/*</Col>*/}
+                        </Row>
+
+                        <Divider dashed={true}/>
+                        <Title level={4}>Clusters</Title>
+
                         <div hidden={isAddNewClusterVisible} style={{textAlign: "center"}}>
                             <Button
                                 type="dashed"
@@ -258,15 +367,17 @@ class Page extends React.Component {
                         </div>
 
                         {
-                            clusters.map((cluster) => {
+                            clusters.map((cluster, index) => {
                                 return (
                                     <Cluster
                                         key={cluster.clusterId}
+                                        index={index}
                                         orderInPage={cluster.orderInPage}
                                         isTemporary={false}
                                         cluster={cluster}
                                         pageId={this.pageId}
                                         applications={applications}
+                                        swapClusters={this.swapClusters}
                                         removeLoadedCluster={this.removeLoadedCluster}/>
                                 );
                             })

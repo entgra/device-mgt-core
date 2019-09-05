@@ -275,7 +275,7 @@ class Cluster extends React.Component {
     render() {
         const {name, products, loading} = this.state;
         const unselectedProducts = this.getUnselectedProducts();
-        const {isTemporary} = this.props;
+        const {isTemporary, index} = this.props;
         const Product = ({product, index}) => {
             const {packageId} = product;
             let imageSrc = "";
@@ -339,7 +339,7 @@ class Cluster extends React.Component {
                                             icon="caret-up"
                                             size="large"
                                             onClick={() => {
-
+                                                this.props.swapClusters(index, index-1)
                                             }} htmlType="button"/>
                                     </Tooltip>
                                     <Tooltip title="Move Down">
@@ -348,7 +348,7 @@ class Cluster extends React.Component {
                                             icon="caret-down"
                                             size="large"
                                             onClick={() => {
-
+                                                this.props.swapClusters(index, index+1)
                                             }} htmlType="button"/>
                                     </Tooltip>
                                     <Tooltip title="Delete Cluster">
