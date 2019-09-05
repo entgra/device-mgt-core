@@ -27,9 +27,6 @@ dependency_scanning:
     DS_ANALYZER_IMAGES: "registry.gitlab.com/madawa/gemnasium-maven"
     DS_RUN_ANALYZER_TIMEOUT: 3h
     DS_DEFAULT_ANALYZERS: ""
-  only:
-    refs:
-      - security-scan      
 
 # sast:
 #   stage: test
@@ -102,13 +99,10 @@ dependency_scanning:
 #     paths:
 #       - gl-sast-report.json
 #   dependencies: []
-#   only:
-#     refs:
-#       - security-scan
 
-deploy:
-  stage: deploy
-  script:
-    - mvn $MAVEN_CLI_OPTS deploy -Dmaven.test.skip=true
-  only:
-    - master@entgra/carbon-device-mgt
+# deploy:
+#   stage: deploy
+#   script:
+#     - mvn $MAVEN_CLI_OPTS deploy -Dmaven.test.skip=true
+#   only:
+#     - master@entgra/carbon-device-mgt
