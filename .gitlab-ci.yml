@@ -9,102 +9,15 @@ cache:
     - .m2/repository/
     - target/
 
-# build:
-#   stage: build
-#   script:
-#     - mvn $MAVEN_CLI_OPTS clean install -Dmaven.test.skip=true
+build:
+  stage: build
+  script:
+    - mvn $MAVEN_CLI_OPTS clean install -Dmaven.test.skip=true
 
-# test:
-#   stage: test
-#   script:
-#     - mvn $MAVEN_CLI_OPTS test
-    
-include:
-  template: Dependency-Scanning.gitlab-ci.yml
-  
-dependency_scanning:  
-  variables:
-    DS_ANALYZER_IMAGES: "registry.gitlab.com/madawa/gemnasium-maven"
-    DS_RUN_ANALYZER_TIMEOUT: 3h
-    DS_DEFAULT_ANALYZERS: ""
-  only:
-    refs:
-      - security-scan      
-
-# sast:
-#   stage: test
-#   image: docker:stable
-#   variables:
-#     DOCKER_DRIVER: overlay2
-#     DOCKER_TLS_CERTDIR: ""
-#     MAVEN_CLI_OPTS: "-s /tmp/app/.m2/settings.xml --batch-mode"
-#     SAST_RUN_ANALYZER_TIMEOUT: 3h
-#     MAVEN_REPO_PATH: "/tmp/app/.m2/repository"
-#     SAST_DEFAULT_ANALYZERS: "spotbugs"
-#     MAVEN_OPTS: "-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
-#   allow_failure: false
-#   services:
-#     - docker:stable-dind
-#   script:
-#     - export SAST_VERSION=${SP_VERSION:-$(echo "$CI_SERVER_VERSION" | sed 's/^\([0-9]*\)\.\([0-9]*\).*/\1-\2-stable/')}
-#     - |
-#       if ! docker info &>/dev/null; then
-#         if [ -z "$DOCKER_HOST" -a "$KUBERNETES_PORT" ]; then
-#           export DOCKER_HOST='tcp://localhost:2375'
-#         fi
-#       fi
-#     - |
-#       function propagate_env_vars() {
-#         CURRENT_ENV=$(printenv)
-
-#         for VAR_NAME; do
-#           echo $CURRENT_ENV | grep "${VAR_NAME}=" > /dev/null && echo "--env $VAR_NAME "
-#         done
-#       }
-#     - |
-#       docker run \
-#         $(propagate_env_vars \
-#           SAST_BANDIT_EXCLUDED_PATHS \
-#           SAST_ANALYZER_IMAGES \
-#           SAST_ANALYZER_IMAGE_PREFIX \
-#           SAST_ANALYZER_IMAGE_TAG \
-#           SAST_DEFAULT_ANALYZERS \
-#           SAST_PULL_ANALYZER_IMAGES \
-#           SAST_BRAKEMAN_LEVEL \
-#           SAST_FLAWFINDER_LEVEL \
-#           SAST_GITLEAKS_ENTROPY_LEVEL \
-#           SAST_GOSEC_LEVEL \
-#           SAST_EXCLUDED_PATHS \
-#           SAST_DOCKER_CLIENT_NEGOTIATION_TIMEOUT \
-#           SAST_PULL_ANALYZER_IMAGE_TIMEOUT \
-#           SAST_RUN_ANALYZER_TIMEOUT \
-#           SAST_JAVA_VERSION \
-#           ANT_HOME \
-#           ANT_PATH \
-#           GRADLE_PATH \
-#           JAVA_OPTS \
-#           JAVA_PATH \
-#           JAVA_8_VERSION \
-#           JAVA_11_VERSION \
-#           MAVEN_CLI_OPTS \
-#           MAVEN_OPTS \
-#           MAVEN_PATH \
-#           MAVEN_REPO_PATH \
-#           SBT_PATH \
-#           FAIL_NEVER \
-#         ) \
-#         --volume "$PWD:/code" \
-#         --volume /var/run/docker.sock:/var/run/docker.sock \
-#         "registry.gitlab.com/gitlab-org/security-products/sast:$SAST_VERSION" /app/bin/run /code
-#   artifacts:
-#     reports:
-#       sast: gl-sast-report.json
-#     paths:
-#       - gl-sast-report.json
-#   dependencies: []
-#   only:
-#     refs:
-#       - security-scan
+test:
+  stage: test
+  script:
+    - mvn $MAVEN_CLI_OPTS test
 
 deploy:
   stage: deploy
