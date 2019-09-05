@@ -40,17 +40,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.CarbonContext;
-import org.wso2.carbon.device.mgt.common.Device;
-import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
-import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
-import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
-import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
-import org.wso2.carbon.device.mgt.common.Feature;
-import org.wso2.carbon.device.mgt.common.FeatureManager;
-import org.wso2.carbon.device.mgt.common.exceptions.InvalidConfigurationException;
-import org.wso2.carbon.device.mgt.common.exceptions.InvalidDeviceException;
-import org.wso2.carbon.device.mgt.common.PaginationRequest;
-import org.wso2.carbon.device.mgt.common.PaginationResult;
+import org.wso2.carbon.device.mgt.common.*;
 import org.wso2.carbon.device.mgt.common.app.mgt.Application;
 import org.wso2.carbon.device.mgt.common.app.mgt.ApplicationManagementException;
 import org.wso2.carbon.device.mgt.common.authorization.DeviceAccessAuthorizationException;
@@ -58,6 +48,10 @@ import org.wso2.carbon.device.mgt.common.authorization.DeviceAccessAuthorization
 import org.wso2.carbon.device.mgt.common.device.details.DeviceInfo;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceLocation;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceLocationHistory;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
+import org.wso2.carbon.device.mgt.common.exceptions.InvalidConfigurationException;
+import org.wso2.carbon.device.mgt.common.exceptions.InvalidDeviceException;
 import org.wso2.carbon.device.mgt.common.operation.mgt.Activity;
 import org.wso2.carbon.device.mgt.common.operation.mgt.Operation;
 import org.wso2.carbon.device.mgt.common.operation.mgt.OperationManagementException;
@@ -75,12 +69,9 @@ import org.wso2.carbon.device.mgt.core.operation.mgt.ProfileOperation;
 import org.wso2.carbon.device.mgt.core.search.mgt.SearchManagerService;
 import org.wso2.carbon.device.mgt.core.search.mgt.SearchMgtException;
 import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
-import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceCompliance;
-import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
-import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
-import org.wso2.carbon.device.mgt.jaxrs.beans.OperationList;
-import org.wso2.carbon.device.mgt.jaxrs.beans.OperationRequest;
+import org.wso2.carbon.device.mgt.jaxrs.beans.*;
 import org.wso2.carbon.device.mgt.jaxrs.service.api.DeviceManagementService;
+import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.InputValidationException;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.RequestValidationUtil;
 import org.wso2.carbon.device.mgt.jaxrs.util.DeviceMgtAPIUtils;
 import org.wso2.carbon.policy.mgt.common.PolicyManagementException;
@@ -89,16 +80,7 @@ import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.text.ParseException;
@@ -470,46 +452,58 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
     @GET
     @Consumes("application/json")
     @Produces("application/json")
-    public Response getGeoDeviceHistory(@PathParam("deviceType") String deviceType,
-                                        @PathParam("deviceId") String deviceId,
-                                        @QueryParam("from") long from, @QueryParam("to") long to) {
+    public Response getDeviceLocationInfo(@PathParam("deviceType") String deviceType,
+                                          @PathParam("deviceId") String deviceId,
+                                          @QueryParam("from") long from, @QueryParam("to") long to) {
 
         List<DeviceLocationHistory> deviceLocationHistory;
+        String errorMessage;
         try {
-
             RequestValidationUtil.validateDeviceIdentifier(deviceType, deviceId);
             DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
             DeviceAccessAuthorizationService deviceAccessAuthorizationService =
                     DeviceMgtAPIUtils.getDeviceAccessAuthorizationService();
-
-            if (deviceAccessAuthorizationService == null) {
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
-                        new ErrorResponse.ErrorResponseBuilder().setMessage("Device access authorization service is " +
-                                "failed").build()).build();
-            }
-
             String authorizedUser = CarbonContext.getThreadLocalCarbonContext().getUsername();
             DeviceIdentifier deviceIdentifier = new DeviceIdentifier(deviceId, deviceType);
+            deviceIdentifier.setId(deviceId);
+            deviceIdentifier.setType(deviceType);
 
+            if (deviceAccessAuthorizationService == null) {
+                errorMessage = "Device access authorization service is failed";
+                log.error(errorMessage);
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
+                        new ErrorResponse.ErrorResponseBuilder().setCode(500l).setMessage(errorMessage).build()).build();
+            }
             if (!deviceAccessAuthorizationService.isUserAuthorized(deviceIdentifier, authorizedUser)) {
-                String msg = "User '" + authorizedUser + "' is not authorized to retrieve the given device id '" + deviceId + "'";
+                String msg = "User '" + authorizedUser + "' is not authorized to retrieve the given device id '" +
+                        deviceId + "'";
                 log.error(msg);
                 return Response.status(Response.Status.UNAUTHORIZED).entity(
                         new ErrorResponse.ErrorResponseBuilder().setCode(401l).setMessage(msg).build()).build();
             }
-
-            deviceLocationHistory = dms.getDeviceLocationInfo(deviceType, deviceId, from, to);
+            if (from == 0 || to == 0) {
+                errorMessage = "Invalid values for from/to";
+                log.error(errorMessage);
+                return Response.status(Response.Status.BAD_REQUEST).entity(
+                        new ErrorResponse.ErrorResponseBuilder().setCode(400l).setMessage(errorMessage)).build();
+            }
+            deviceLocationHistory = dms.getDeviceLocationInfo(deviceIdentifier, from, to);
 
         } catch (DeviceManagementException e) {
-            String msg = "Error occurred while fetching the device information.";
-            log.error(msg, e);
+            errorMessage = "Error occurred while fetching the device information.";
+            log.error(errorMessage, e);
             return Response.serverError().entity(
-                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+                    new ErrorResponse.ErrorResponseBuilder().setCode(500l).setMessage(errorMessage).build()).build();
         } catch (DeviceAccessAuthorizationException e) {
-            String msg = "Error occurred while checking the device authorization.";
-            log.error(msg, e);
+            errorMessage = "Error occurred while checking the device authorization.";
+            log.error(errorMessage, e);
             return Response.serverError().entity(
-                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+                    new ErrorResponse.ErrorResponseBuilder().setCode(500l).setMessage(errorMessage).build()).build();
+        } catch (InputValidationException e){
+            errorMessage = "Invalid device Id or device type";
+            log.error(errorMessage, e);
+            return Response.status(Response.Status.BAD_REQUEST).entity(
+                    new ErrorResponse.ErrorResponseBuilder().setCode(400l).setMessage(errorMessage)).build();
         }
         return Response.status(Response.Status.OK).entity(deviceLocationHistory).build();
     }

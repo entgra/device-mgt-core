@@ -325,16 +325,19 @@ public class DeviceDetailsDAOImpl implements DeviceDetailsDAO {
     }
 
     @Override
-    public void addDeviceLocationHistory(Device device, DeviceLocation deviceLocation, int tenantId) throws DeviceDetailsMgtDAOException {
+    public void addDeviceLocationInfo(Device device, DeviceLocation deviceLocation, int tenantId)
+            throws DeviceDetailsMgtDAOException {
         Connection conn;
         PreparedStatement stmt = null;
-
+        String errMessage;
         try {
             conn = this.getConnection();
-            stmt = conn.prepareStatement("INSERT INTO DM_DEVICE_HISTORY_LAST_SEVEN_DAYS (DEVICE_ID, DEVICE_ID_NAME, TENANT_ID," +
-                    "DEVICE_TYPE_NAME, LATITUDE, LONGITUDE, SPEED, HEADING, TIMESTAMP, GEO_HASH, DEVICE_OWNER, DEVICE_ALTITUDE, " +
-                    "DISTANCE) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            stmt = conn.prepareStatement(
+                    "INSERT INTO " +
+                            "DM_DEVICE_HISTORY_LAST_SEVEN_DAYS " +
+                            "(DEVICE_ID, DEVICE_ID_NAME, TENANT_ID, DEVICE_TYPE_NAME, LATITUDE, LONGITUDE, SPEED, HEADING, " +
+                            "TIMESTAMP, GEO_HASH, DEVICE_OWNER, DEVICE_ALTITUDE, DISTANCE) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
             stmt.setInt(1, device.getId());
             stmt.setString(2, device.getDeviceIdentifier());
@@ -352,12 +355,13 @@ public class DeviceDetailsDAOImpl implements DeviceDetailsDAO {
             stmt.execute();
 
         } catch (SQLException e) {
-            throw new DeviceDetailsMgtDAOException("Error occurred while updating the device location history to database.", e);
+            errMessage = "Error occurred while updating the device location information to database.";
+            log.error(errMessage);
+            throw new DeviceDetailsMgtDAOException(errMessage, e);
         } finally {
             DeviceManagementDAOUtil.cleanupResources(stmt, null);
         }
     }
-
 
     private Connection getConnection() throws SQLException {
         return DeviceManagementDAOFactory.getConnection();

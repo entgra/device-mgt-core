@@ -2799,36 +2799,30 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public List<DeviceLocationHistory> getDeviceLocationInfo(String deviceType, String deviceId, long from, long to)
+    public List<DeviceLocationHistory> getDeviceLocationInfo(DeviceIdentifier deviceIdentifier, long from, long to)
             throws DeviceManagementException {
 
-        List<DeviceLocationHistory> deviceLocationHistory = new ArrayList<>();
-
         if (log.isDebugEnabled()) {
-            log.debug("Get device types");
+            log.debug("Get device location information");
         }
-        if (deviceId == null || deviceType == null) {
-            String msg = "Device type or deviceId is empty for method getAllDevices";
-            log.error(msg);
-            throw new DeviceManagementException(msg);
-        }
+
+        List<DeviceLocationHistory> deviceLocationHistory;
+        String errMessage;
 
         try {
             DeviceManagementDAOFactory.openConnection();
-            deviceLocationHistory = deviceDAO.getDeviceLocationInfo(deviceType, deviceId, from, to);
-            if (deviceLocationHistory == null) {
-                if (log.isDebugEnabled()) {
-                    log.debug("No device is found upon the type '" + deviceType + "'");
-                }
-                return null;
-            }
+            deviceLocationHistory = deviceDAO.getDeviceLocationInfo(deviceIdentifier, from, to);
+
         } catch (DeviceManagementDAOException e) {
-            String msg = "Error occurred in getDeviceLocationInfo";
-            log.error(msg, e);
-            throw new DeviceManagementException(msg, e);
+            errMessage = "Error occurred in getDeviceLocationInfo";
+            log.error(errMessage, e);
+            throw new DeviceManagementException(errMessage, e);
         } catch (SQLException e) {
-            String msg = "Error occurred while opening a connection to the data source";
-            log.error(msg, e);
+            errMessage = "Error occurred while opening a connection to the data source";
+            log.error(errMessage, e);
+            throw new DeviceManagementException(errMessage, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
         }
 
         return deviceLocationHistory;
@@ -3164,6 +3158,10 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         }
     }
 
+    /**
+     * Extracting device location properties
+     * @param device Device object
+     */
     private void extractDeviceLocationToUpdate(Device device) {
         List<Device.Property> properties = device.getProperties();
         if (properties != null) {
@@ -3212,8 +3210,8 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                     // a warning for reference.
                     log.warn("Error occurred while trying to add '" + device.getType() + "' device '" +
                             device.getDeviceIdentifier() + "' (id:'" + device.getId() + "') location (lat:" + latitude +
-                            ", lon:" + longitude + ", altitude: "+altitude +
-                            ", speed: " + speed + ", bearing:" + bearing+", distance: "+distance+") due to:" + e.getMessage());
+                            ", lon:" + longitude + ", altitude: " + altitude +
+                            ", speed: " + speed + ", bearing:" + bearing + ", distance: " + distance + ") due to:" + e.getMessage());
                 }
             }
         }

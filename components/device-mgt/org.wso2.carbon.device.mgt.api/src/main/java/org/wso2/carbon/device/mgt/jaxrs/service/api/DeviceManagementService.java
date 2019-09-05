@@ -522,7 +522,7 @@ public interface DeviceManagementService {
                     message = "Internal Server Error. \n Error on retrieving stats",
                     response = Response.class)
     })
-    Response getGeoDeviceHistory(
+    Response getDeviceLocationInfo(
             @ApiParam(
                     name = "device-type",
                     value = "The device type, such as ios, android, or windows.",
@@ -537,12 +537,14 @@ public interface DeviceManagementService {
             @PathParam("deviceId") String deviceId,
             @ApiParam(
                     name = "from",
-                    value = "Define the time to start getting the geo location history of the device in the Epoch or UNIX format.",
+                    value = "Define the time to start getting the geo location history of the device in " +
+                            "milliseconds.",
                     required = true)
             @QueryParam("from") long from,
             @ApiParam(
                     name = "to",
-                    value = "Define the time to finish getting the geo location history of the device in the Epoch or UNIX format.",
+                    value = "Define the time to finish getting the geo location history of the device in " +
+                            "milliseconds.",
                     required = true)
             @QueryParam("to") long to);
 

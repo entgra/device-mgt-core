@@ -522,10 +522,13 @@ public interface DeviceDAO {
     void deleteDevice(DeviceIdentifier deviceIdentifier, int tenantId) throws DeviceManagementDAOException;
 
     /**
-     *
-     * @return Device's historical location list
+     * Retrieve device location information
+     * @param deviceIdentifier Device Identifier object
+     * @param from Specified start timestamp
+     * @param to Specified end timestamp
+     * @return
      * @throws DeviceManagementDAOException
      */
-    List<DeviceLocationHistory> getDeviceLocationInfo(String deviceType, String deviceId, long from, long to)
+    List<DeviceLocationHistory> getDeviceLocationInfo(DeviceIdentifier deviceIdentifier, long from, long to)
             throws DeviceManagementDAOException;
 }

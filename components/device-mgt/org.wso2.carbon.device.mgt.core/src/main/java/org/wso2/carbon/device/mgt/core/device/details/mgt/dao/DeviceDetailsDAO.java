@@ -103,12 +103,14 @@ public interface DeviceDetailsDAO {
     void deleteDeviceLocation(int deviceId, int enrollmentId) throws DeviceDetailsMgtDAOException;
 
     /**
-     *
-     * @param device
-     * @param deviceLocation
+     * Add device location information to the database
+     * @param device Device object
+     * @param deviceLocation Device Location Object
+     * @param tenantId Tenant Id
      * @throws DeviceDetailsMgtDAOException
      */
-    void addDeviceLocationHistory(Device device, DeviceLocation deviceLocation, int tenantId) throws DeviceDetailsMgtDAOException;
+    void addDeviceLocationInfo(Device device, DeviceLocation deviceLocation, int tenantId)
+            throws DeviceDetailsMgtDAOException;
 
 //    /**
 //     * This method will add device application to database.

@@ -1514,7 +1514,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
     }
 
     @Override
-    public List<DeviceLocationHistory> getDeviceLocationInfo(String deviceType, String deviceId, long from, long to)
+    public List<DeviceLocationHistory> getDeviceLocationInfo(DeviceIdentifier deviceIdentifier, long from, long to)
             throws DeviceManagementDAOException {
 
         Connection conn;
@@ -1524,26 +1524,28 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         try {
             conn = this.getConnection();
 
-            String sql = "SELECT DEVICE_ID, TENANT_ID, DEVICE_ID_NAME, DEVICE_TYPE_NAME, LATITUDE, LONGITUDE, " +
-                    "SPEED, HEADING, TIMESTAMP, GEO_HASH, DEVICE_OWNER, DEVICE_ALTITUDE, DISTANCE " +
-                    "FROM " +
-                    "DM_DEVICE_HISTORY_LAST_SEVEN_DAYS " +
-                    "WHERE " +
-                    "DEVICE_ID_NAME = ? AND DEVICE_TYPE_NAME = ? AND TIMESTAMP >= ? AND TIMESTAMP <= ?";
+            String sql =
+                    "SELECT DEVICE_ID, TENANT_ID, DEVICE_ID_NAME, DEVICE_TYPE_NAME, LATITUDE, LONGITUDE, SPEED, " +
+                            "HEADING, TIMESTAMP, GEO_HASH, DEVICE_OWNER, DEVICE_ALTITUDE, DISTANCE " +
+                    "FROM DM_DEVICE_HISTORY_LAST_SEVEN_DAYS " +
+                    "WHERE DEVICE_ID_NAME = ? " +
+                    "AND DEVICE_TYPE_NAME = ? " +
+                    "AND TIMESTAMP >= ? " +
+                    "AND TIMESTAMP <= ?";
 
             stmt = conn.prepareStatement(sql);
-            stmt.setString(1, deviceId);
-            stmt.setString(2, deviceType);
+            stmt.setString(1, deviceIdentifier.getId());
+            stmt.setString(2, deviceIdentifier.getType());
             stmt.setLong(3, from);
             stmt.setLong(4, to);
             rs = stmt.executeQuery();
-
             while (rs.next()) {
                 deviceLocationHistories.add(DeviceManagementDAOUtil.loadDeviceLocation(rs));
             }
         } catch (SQLException e) {
-            throw new DeviceManagementDAOException("Error occurred while retrieving location details of " +
-                    "registered devices.", e);
+            String errMessage = "Error occurred while obtaining the DB connection to get device location information";
+            log.error(errMessage, e);
+            throw new DeviceManagementDAOException(errMessage, e);
         } finally {
             DeviceManagementDAOUtil.cleanupResources(stmt, rs);
         }

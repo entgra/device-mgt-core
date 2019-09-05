@@ -713,10 +713,15 @@ public interface DeviceManagementProviderService {
 
     /**
      * This retrieves the device location histories
+     *
+     * @param deviceIdentifier Device Identifier object
+     * @param from Specified start timestamp
+     * @param to Specified end timestamp
      * @throws DeviceManagementException
      * @return list of device's location histories
      */
-    List<DeviceLocationHistory> getDeviceLocationInfo(String deviceType, String deviceId, long from, long to) throws DeviceManagementException;
+    List<DeviceLocationHistory> getDeviceLocationInfo(DeviceIdentifier deviceIdentifier, long from, long to)
+            throws DeviceManagementException;
 
     /**
      * This retrieves the device pull notification payload and passes to device type pull notification subscriber.
