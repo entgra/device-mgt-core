@@ -17,7 +17,7 @@
  */
 
 import React from "react";
-import {Button, Col, Divider, Icon, message, notification, Row, Spin, Tooltip, Typography} from "antd";
+import {Button, Col, Divider, Icon, message, notification, Popconfirm, Row, Spin, Tooltip, Typography} from "antd";
 
 import "./Cluster.css";
 import axios from "axios";
@@ -142,9 +142,13 @@ class Cluster extends React.Component {
                 this.originalCluster = Object.assign({}, cluster);
 
                 this.resetChanges();
-                this.props.toggleAddNewClusterVisibility(false);
+                if (this.props.toggleAddNewClusterVisibility !== undefined) {
+                    this.props.toggleAddNewClusterVisibility(false);
+                }
             }
         }).catch((error) => {
+            console.log(error);
+
             if (error.hasOwnProperty("response") && error.response.status === 401) {
                 message.error('You are not logged in');
                 window.location.href = window.location.origin + '/publisher/login';
@@ -156,7 +160,6 @@ class Cluster extends React.Component {
                         "Error occurred while trying to update the cluster.",
                 });
             }
-
             this.setState({loading: false});
         });
 
@@ -173,8 +176,8 @@ class Cluster extends React.Component {
         ).then(res => {
             if (res.status === 200) {
                 notification["success"]({
-                    message: 'Saved!',
-                    description: 'Cluster updated successfully!'
+                    message: 'Done!',
+                    description: 'Cluster deleted successfully!'
                 });
 
                 this.setState({
@@ -339,7 +342,7 @@ class Cluster extends React.Component {
                                             icon="caret-up"
                                             size="large"
                                             onClick={() => {
-                                                this.props.swapClusters(index, index-1)
+                                                this.props.swapClusters(index, index - 1)
                                             }} htmlType="button"/>
                                     </Tooltip>
                                     <Tooltip title="Move Down">
@@ -348,16 +351,21 @@ class Cluster extends React.Component {
                                             icon="caret-down"
                                             size="large"
                                             onClick={() => {
-                                                this.props.swapClusters(index, index+1)
+                                                this.props.swapClusters(index, index + 1)
                                             }} htmlType="button"/>
                                     </Tooltip>
                                     <Tooltip title="Delete Cluster">
-                                        <Button
-                                            type="danger"
-                                            icon="delete"
-                                            shape="circle"
-                                            onClick={this.deleteCluster}
-                                            htmlType="button"/>
+                                        <Popconfirm
+                                            title="Are you sure?"
+                                            okText="Yes"
+                                            cancelText="No"
+                                            onConfirm={this.deleteCluster}>
+                                            <Button
+                                                type="danger"
+                                                icon="delete"
+                                                shape="circle"
+                                                htmlType="button"/>
+                                        </Popconfirm>
                                     </Tooltip>
                                 </div>
                             )}

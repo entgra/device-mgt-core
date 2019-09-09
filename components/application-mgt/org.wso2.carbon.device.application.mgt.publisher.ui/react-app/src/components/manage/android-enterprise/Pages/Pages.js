@@ -235,6 +235,7 @@ class Pages extends React.Component {
             title: 'Page',
             dataIndex: 'name',
             key: 'name',
+            width: 300,
             render: (name, page) => {
                 const pageName = name[0].text;
                 return (<div>

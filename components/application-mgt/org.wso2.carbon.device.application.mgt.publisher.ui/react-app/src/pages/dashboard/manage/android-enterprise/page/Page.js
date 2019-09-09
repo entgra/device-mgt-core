@@ -78,6 +78,9 @@ class Page extends React.Component {
             }
         }
         clusters.splice(index, 1);
+        this.setState({
+            clusters
+        });
     };
 
     updatePageName = pageName => {
