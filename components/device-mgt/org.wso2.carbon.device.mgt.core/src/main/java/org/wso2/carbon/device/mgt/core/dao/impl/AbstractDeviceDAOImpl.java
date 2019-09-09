@@ -43,6 +43,7 @@ import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo.Status;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.DevicePropertyInfo;
+import org.wso2.carbon.device.mgt.common.report.mgt.Report;
 import org.wso2.carbon.device.mgt.core.dao.DeviceDAO;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOException;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOFactory;
@@ -75,6 +76,11 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
     private static final String PROPERTY_DEVICE_TYPE_NAME = "DEVICE_TYPE_NAME";
     private static final String PROPERTY_DEVICE_IDENTIFICATION = "DEVICE_IDENTIFICATION";
     private static final String PROPERTY_TENANT_ID = "TENANT_ID";
+
+    @Override
+    public List<Device> getDevicesByDuration(PaginationRequest request, int tenantId, String fromDate, String toDate) throws DeviceManagementDAOException {
+        return null;
+    }
 
     @Override
     public int addDevice(int typeId, Device device, int tenantId) throws DeviceManagementDAOException {

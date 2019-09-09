@@ -191,6 +191,13 @@
         <url>/</url>
         <method>GET</method>
     </Permission>
+
+    <Permission>
+        <name>Reports</name>
+        <path>/device-mgt/reports</path>
+        <url>/</url>
+        <method>GET</method>
+    </Permission>
     <!-- Notification related APIs -->
     <Permission>
         <name>View notifications</name>

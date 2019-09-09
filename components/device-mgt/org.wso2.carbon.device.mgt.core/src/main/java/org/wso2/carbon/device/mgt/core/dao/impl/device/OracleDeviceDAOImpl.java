@@ -22,6 +22,7 @@ import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
+import org.wso2.carbon.device.mgt.common.report.mgt.Report;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOException;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOFactory;
 import org.wso2.carbon.device.mgt.core.dao.impl.AbstractDeviceDAOImpl;
@@ -430,6 +431,11 @@ public class OracleDeviceDAOImpl extends AbstractDeviceDAOImpl {
             DeviceManagementDAOUtil.cleanupResources(stmt, null);
         }
         return devices;
+    }
+
+    @Override
+    public List<Device> getDevicesByDuration(PaginationRequest request, int tenantId, String fromDate, String toDate) throws DeviceManagementDAOException {
+        return null;
     }
 
     /**
