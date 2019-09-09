@@ -24,11 +24,9 @@ public class ReportManagementServiceImpl implements ReportManagementService {
 
     private static final Log log = LogFactory.getLog(ReportManagementServiceImpl.class);
 
-    private ReportDAO reportDAO;
     private DeviceDAO deviceDAO;
 
     public ReportManagementServiceImpl() {
-        this.reportDAO = ReportManagementDAOFactory.getReportDAO();
         this.deviceDAO = DeviceManagementDAOFactory.getDeviceDAO();
     }
 
