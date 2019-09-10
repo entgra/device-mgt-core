@@ -30,6 +30,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
 
     /**
      * API endpoint to get devices which are enrolled between two dates
+     *
      * @param fromDate
      * @param toDate
      * @param offset
@@ -41,6 +42,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     @Override
     public Response getDevicesByDuration(
             @QueryParam("status") String status,
+            @QueryParam("ownership") String ownership,
             @QueryParam("from") String fromDate,
             @QueryParam("to") String toDate,
             @QueryParam("offset") int offset,
@@ -60,8 +62,11 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             PaginationResult result;
             DeviceList devices = new DeviceList();
 
-            if(status!=null && !status.isEmpty()){
+            if (status != null && !status.isEmpty()) {
                 request.setStatus(status);
+            }
+            if (ownership != null && !ownership.isEmpty()) {
+                request.setOwnership(ownership);
             }
 
             result = DeviceMgtAPIUtils.getReportManagementService().getDevicesByDuration(request, fromDate, toDate);

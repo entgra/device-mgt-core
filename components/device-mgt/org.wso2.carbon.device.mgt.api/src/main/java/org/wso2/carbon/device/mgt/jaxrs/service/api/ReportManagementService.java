@@ -173,16 +173,17 @@ public interface ReportManagementService {
                             response = ErrorResponse.class)
             })
     Response getDevicesByDuration(
-                    @QueryParam("status") String status,
-                    @QueryParam("from") String fromDate,
-                    @QueryParam("to") String toDate,
-                    @QueryParam("offset")
-                            int offset,
-                    @ApiParam(
-                            name = "limit",
-                            value = "Provide how many device details you require from the starting pagination index/offset.",
-                            required = false,
-                            defaultValue = "5")
-                    @QueryParam("limit")
-                            int limit) throws NotificationManagementException;
+            @QueryParam("status") String status,
+            @QueryParam("ownership") String ownership,
+            @QueryParam("from") String fromDate,
+            @QueryParam("to") String toDate,
+            @QueryParam("offset")
+                    int offset,
+            @ApiParam(
+                    name = "limit",
+                    value = "Provide how many device details you require from the starting pagination index/offset.",
+                    required = false,
+                    defaultValue = "5")
+            @QueryParam("limit")
+                    int limit) throws NotificationManagementException;
 }
