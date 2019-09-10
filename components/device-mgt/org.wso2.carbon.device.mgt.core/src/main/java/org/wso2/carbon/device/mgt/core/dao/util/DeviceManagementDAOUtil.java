@@ -38,6 +38,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 
 public final class DeviceManagementDAOUtil {
@@ -244,6 +245,25 @@ public final class DeviceManagementDAOUtil {
         deviceInfo.setPluggedIn(rs.getBoolean("PLUGGED_IN"));
         deviceInfo.setUpdatedTime(new java.util.Date(rs.getLong("UPDATE_TIMESTAMP")));
         return deviceInfo;
+    }
+
+    public static String convertStringListToString(List<String> values) {
+
+        StringBuilder buff = new StringBuilder();
+        for (String value : values) {
+            buff.append(value).append(",");
+        }
+        buff.deleteCharAt(buff.length() - 1);
+        return buff.toString();
+    }
+    public static String convertIntListToString(List<Integer> values) {
+
+        StringBuilder buff = new StringBuilder();
+        for (int value : values) {
+            buff.append(value).append(",");
+        }
+        buff.deleteCharAt(buff.length() - 1);
+        return buff.toString();
     }
 
 }

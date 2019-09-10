@@ -524,9 +524,9 @@ public interface DeviceDAO {
 
     /**
      * This method is used to permanently delete the device and its related details
-     * @param deviceIdentifier device id
+     * @param deviceIdentifiers device ids
      * @param tenantId tenant id
      * @throws DeviceManagementDAOException
      */
-    void deleteDevice(DeviceIdentifier deviceIdentifier, int tenantId) throws DeviceManagementDAOException;
+    void deleteDevices(List<String> deviceIdentifiers, int tenantId) throws DeviceManagementDAOException;
 }
