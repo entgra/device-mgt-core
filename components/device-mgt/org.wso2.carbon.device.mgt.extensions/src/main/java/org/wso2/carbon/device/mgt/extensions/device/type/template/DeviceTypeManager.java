@@ -587,25 +587,21 @@ public class DeviceTypeManager implements DeviceManager {
     }
 
     @Override
-    public boolean deleteDevice(DeviceIdentifier deviceIdentifier, Device device) throws DeviceManagementException {
+    public boolean deleteDevices(List<String> deviceIdentifierList) throws DeviceManagementException {
         if (propertiesExist) {
             boolean status;
-            Device existingDevice = this.getDevice(deviceIdentifier);
-            if (existingDevice == null) {
-                return false;
-            }
             try {
                 if (log.isDebugEnabled()) {
-                    log.debug("Deleting the details of " + deviceType + " device : " + device.getDeviceIdentifier());
+                    log.debug("Deleting the details of " + deviceType + " devices : " + deviceIdentifierList);
                 }
                 deviceTypePluginDAOManager.getDeviceTypeDAOHandler().beginTransaction();
-                status = deviceTypePluginDAOManager.getDeviceDAO().deleteDevice(existingDevice);
+                status = deviceTypePluginDAOManager.getDeviceDAO().deleteDevices(deviceIdentifierList);
                 deviceTypePluginDAOManager.getDeviceTypeDAOHandler().commitTransaction();
             } catch (DeviceTypeMgtPluginException e) {
                 deviceTypePluginDAOManager.getDeviceTypeDAOHandler().rollbackTransaction();
                 throw new DeviceManagementException(
-                        "Error occurred while deleting the " + deviceType + " device: '" +
-                        device.getDeviceIdentifier() + "'", e);
+                        "Error occurred while deleting the " + deviceType + " devices: '" +
+                        deviceIdentifierList + "'", e);
             } finally {
                 deviceTypePluginDAOManager.getDeviceTypeDAOHandler().closeConnection();
             }

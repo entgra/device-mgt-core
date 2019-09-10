@@ -139,25 +139,22 @@ public class DeviceManagementAdminServiceImpl implements DeviceManagementAdminSe
     @DELETE
     @Override
     @Path("/type/{device-type}/id/{device-id}")
-    public Response deleteDevicePermanently(@PathParam("device-type") String deviceType,
-                                 @PathParam("device-id") String deviceId) {
+    public Response deleteDevicePermanently(List<String> deviceIdentifiers) {
         DeviceManagementProviderService deviceManagementProviderService =
                 DeviceMgtAPIUtils.getDeviceManagementService();
         try {
-            DeviceIdentifier deviceIdentifier = new DeviceIdentifier(deviceId, deviceType);
-            Device persistedDevice = deviceManagementProviderService.getDevice(deviceIdentifier, true);
-            if (persistedDevice == null) {
-                String msg = "No device found with the device type: " + deviceType +
-                             " having the device ID: " + deviceId + " to permanently delete.";
-                log.error(msg);
-                return Response.status(Response.Status.NOT_FOUND).entity(
-                        new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
-            }
-            boolean response = deviceManagementProviderService.deleteDevice(deviceIdentifier);
+//            Device persistedDevice = deviceManagementProviderService.getDevice(deviceIdentifier, true);
+//            if (persistedDevice == null) {
+//                String msg = "No device found with the device type: " + deviceType +
+//                             " having the device ID: " + deviceId + " to permanently delete.";
+//                log.error(msg);
+//                return Response.status(Response.Status.NOT_FOUND).entity(
+//                        new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+//            }
+            boolean response = deviceManagementProviderService.deleteDevice(deviceIdentifiers);
             return Response.status(Response.Status.OK).entity(response).build();
         } catch (DeviceManagementException e) {
-            String msg = "Error encountered while permanently deleting device of type : " + deviceType + " and " +
-                         "ID : " + deviceId;
+            String msg = "Error encountered while permanently deleting devices";
             log.error(msg, e);
             return Response.status(Response.Status.BAD_REQUEST).entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();

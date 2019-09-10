@@ -99,11 +99,11 @@ public interface DeviceManager {
     /**
      * Method to delete a particular device from CDM.
      *
-     * @param deviceId Fully qualified device identifier
+     * @param deviceIdentifiers Fully qualified device identifier list
      * @return A boolean indicating the status of the operation.
      * @throws DeviceManagementException If some unusual behaviour is observed while deleting a device
      */
-    boolean deleteDevice(DeviceIdentifier deviceId, Device device) throws DeviceManagementException;
+    boolean deleteDevices(List<String> deviceIdentifiers) throws DeviceManagementException;
 
     /**
      * Method to retrieve the status of the registration process of a particular device.
