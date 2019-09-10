@@ -12,8 +12,6 @@ import org.wso2.carbon.device.mgt.core.dao.DeviceDAO;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOException;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOFactory;
 import org.wso2.carbon.device.mgt.core.dao.util.DeviceManagementDAOUtil;
-import org.wso2.carbon.device.mgt.core.report.mgt.dao.ReportDAO;
-import org.wso2.carbon.device.mgt.core.report.mgt.dao.ReportManagementDAOFactory;
 import org.wso2.carbon.device.mgt.core.util.DeviceManagerUtil;
 
 import java.sql.SQLException;
@@ -30,6 +28,14 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         this.deviceDAO = DeviceManagementDAOFactory.getDeviceDAO();
     }
 
+    /**
+     * Report service class which calls the deviceDAO and its methods
+     * @param request
+     * @param fromDate
+     * @param toDate
+     * @return A paginated result of devices
+     * @throws ReportManagementException
+     */
     @Override
     public PaginationResult getDevicesByDuration(PaginationRequest request, String fromDate, String toDate) throws ReportManagementException {
         List<Device> devices = new ArrayList<>();

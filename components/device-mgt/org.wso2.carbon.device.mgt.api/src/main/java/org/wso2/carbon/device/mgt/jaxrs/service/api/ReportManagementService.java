@@ -173,6 +173,7 @@ public interface ReportManagementService {
                             response = ErrorResponse.class)
             })
     Response getDevicesByDuration(
+                    @QueryParam("status") String status,
                     @QueryParam("from") String fromDate,
                     @QueryParam("to") String toDate,
                     @QueryParam("offset")

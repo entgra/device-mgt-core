@@ -424,24 +424,45 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
         return devices;
     }
 
+    /**
+     * Implementation of getDevicesByDuration method
+     * @param request
+     * @param tenantId
+     * @param fromDate
+     * @param toDate
+     * @return A list of Device objects
+     * @throws DeviceManagementDAOException
+     */
     @Override
     public List<Device> getDevicesByDuration(PaginationRequest request, int tenantId, String fromDate, String toDate) throws DeviceManagementDAOException {
         Connection conn;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         List<Device> devices = null;
+        boolean isDeviceStatusProviced = false;
+        String deviceStatus = request.getStatus();
         try {
             conn = this.getConnection();
             String sql = "SELECT " +
                     "d.ID AS DEVICE_ID,d.DESCRIPTION,d.NAME AS DEVICE_NAME,d.DEVICE_TYPE_ID AS DEVICE_TYPE, d.DEVICE_IDENTIFICATION," +
                     "e.OWNER,e.OWNERSHIP,e.STATUS,e.DATE_OF_LAST_UPDATE,e.DATE_OF_ENROLMENT,e.ID AS ENROLMENT_ID " +
                     "FROM DM_DEVICE AS d , DM_ENROLMENT AS e " +
-                    "WHERE d.ID=e.DEVICE_ID AND e.TENANT_ID=? AND e.DATE_OF_ENROLMENT BETWEEN ? AND ?;";
+                    "WHERE d.ID=e.DEVICE_ID AND e.TENANT_ID=? AND e.DATE_OF_ENROLMENT BETWEEN ? AND ?";
+
+            if(deviceStatus!=null){
+                sql = sql + " AND e.STATUS=?";
+                isDeviceStatusProviced = true;
+            }
 
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, tenantId);
             stmt.setString(2, fromDate);
             stmt.setString(3, toDate);
+
+            if(isDeviceStatusProviced){
+                stmt.setString(4, deviceStatus);
+            }
+
             rs = stmt.executeQuery();
             devices = new ArrayList<>();
             while (rs.next()) {
