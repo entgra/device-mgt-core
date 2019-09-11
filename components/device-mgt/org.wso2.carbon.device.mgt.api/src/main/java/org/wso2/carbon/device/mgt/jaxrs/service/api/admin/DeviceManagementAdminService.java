@@ -249,7 +249,7 @@ public interface DeviceManagementAdminService {
                     List<String> deviceIdentifiers);
 
     @DELETE
-    @Path("/type/{device-type}/id/{device-id}")
+    @Path("/permanent-delete")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             consumes = MediaType.APPLICATION_JSON,

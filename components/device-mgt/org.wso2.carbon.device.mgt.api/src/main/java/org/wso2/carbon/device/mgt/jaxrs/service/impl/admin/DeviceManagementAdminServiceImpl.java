@@ -138,7 +138,7 @@ public class DeviceManagementAdminServiceImpl implements DeviceManagementAdminSe
 
     @DELETE
     @Override
-    @Path("/type/{device-type}/id/{device-id}")
+    @Path("/permanent-delete")
     public Response deleteDevicePermanently(List<String> deviceIdentifiers) {
         DeviceManagementProviderService deviceManagementProviderService =
                 DeviceMgtAPIUtils.getDeviceManagementService();
