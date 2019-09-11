@@ -529,7 +529,6 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                                 + "contains device identifiers which are not in the system. Invalid device "
                                 + "identifiers are " + deviceIdentifiers.toString();
                 log.info(msg);
-                //throw new InvalidDeviceException(msg);
             }
             if (existingDevices.isEmpty()) {
                 return false;

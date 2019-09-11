@@ -1584,50 +1584,43 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         try {
             conn = this.getConnection();
             List<Integer> deviceIds = getDeviceIds(conn, deviceIdentifierIds, tenantId);
-//            if (deviceId == -1) {
-//                String msg = "Device " + deviceIdentifierId + " of type " + deviceType + " is not found";
-//                log.error(msg);
-//                throw new DeviceManagementDAOException(msg);
-//            }
-//            else {
-
-                List<Integer> enrollmentIds = getEnrollmentIds(conn, deviceIds, tenantId);
-                if (enrollmentIds == null || enrollmentIds.isEmpty()) {
-                    String msg = "Enrollments not found for the devices: " + deviceIdentifierIds;
-                    log.error(msg);
-                    throw new DeviceManagementDAOException(msg);
-                } else {
-                    removeDeviceDetail(conn, deviceIds);
-                    if (log.isDebugEnabled()) {
-                        log.debug("Successfully removed device detail data of device " + deviceIdentifierIds);
-                    }
-                    removeDeviceLocation(conn, deviceIds);
-                    if (log.isDebugEnabled()) {
-                        log.debug("Successfully removed device location data of device " + deviceIdentifierIds);
-                    }
-                    removeDeviceInfo(conn, deviceIds);
-                    if (log.isDebugEnabled()) {
-                        log.debug("Successfully removed device info data of device " + deviceIdentifierIds);
-                    }
-                    removeDeviceNotification(conn, deviceIds);
-                    if (log.isDebugEnabled()) {
-                        log.debug("Successfully removed device notification data of device " + deviceIdentifierIds);
-                    }
-                    removeDeviceApplicationMapping(conn, deviceIds);
-                    if (log.isDebugEnabled()) {
-                        log.debug("Successfully removed device application mapping data of device "
-                                + deviceIdentifierIds);
-                    }
-                    removeDevicePolicyApplied(conn, deviceIds);
-                    if (log.isDebugEnabled()) {
-                        log.debug("Successfully removed device applied policy data of device " + deviceIdentifierIds);
-                    }
-                    removeDevicePolicy(conn, deviceIds);
-                    if (log.isDebugEnabled()) {
-                        log.debug("Successfully removed device policy data of device " + deviceIdentifierIds);
-                    }
-                    if (log.isDebugEnabled()) {
-                        log.debug("Starting to remove " + enrollmentIds.size() + " enrollment data of device "
+            List<Integer> enrollmentIds = getEnrollmentIds(conn, deviceIds, tenantId);
+            if (enrollmentIds == null || enrollmentIds.isEmpty()) {
+                String msg = "Enrollments not found for the devices: " + deviceIdentifierIds;
+                log.error(msg);
+                throw new DeviceManagementDAOException(msg);
+            } else {
+                removeDeviceDetail(conn, deviceIds);
+                if (log.isDebugEnabled()) {
+                    log.debug("Successfully removed device detail data of device " + deviceIdentifierIds);
+                }
+                removeDeviceLocation(conn, deviceIds);
+                if (log.isDebugEnabled()) {
+                    log.debug("Successfully removed device location data of device " + deviceIdentifierIds);
+                }
+                removeDeviceInfo(conn, deviceIds);
+                if (log.isDebugEnabled()) {
+                    log.debug("Successfully removed device info data of device " + deviceIdentifierIds);
+                }
+                removeDeviceNotification(conn, deviceIds);
+                if (log.isDebugEnabled()) {
+                    log.debug("Successfully removed device notification data of device " + deviceIdentifierIds);
+                }
+                removeDeviceApplicationMapping(conn, deviceIds);
+                if (log.isDebugEnabled()) {
+                    log.debug("Successfully removed device application mapping data of device "
+                            + deviceIdentifierIds);
+                }
+                removeDevicePolicyApplied(conn, deviceIds);
+                if (log.isDebugEnabled()) {
+                    log.debug("Successfully removed device applied policy data of device " + deviceIdentifierIds);
+                }
+                removeDevicePolicy(conn, deviceIds);
+                if (log.isDebugEnabled()) {
+                    log.debug("Successfully removed device policy data of device " + deviceIdentifierIds);
+                }
+                if (log.isDebugEnabled()) {
+                    log.debug("Starting to remove " + enrollmentIds.size() + " enrollment data of device "
                                 + deviceIdentifierIds);
                     }
                     removeEnrollmentDeviceDetail(conn, enrollmentIds);
@@ -1651,11 +1644,10 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                         log.debug("Successfully removed device group mapping data of device " + deviceIdentifierIds);
                     }
                     removeDevice(conn, deviceIds);
-                    if (log.isDebugEnabled()) {
-                        log.debug("Successfully permanently deleted the device of device " + deviceIdentifierIds);
-                    }
+                if (log.isDebugEnabled()) {
+                    log.debug("Successfully permanently deleted the device of device " + deviceIdentifierIds);
                 }
-            //}
+            }
         } catch (SQLException e) {
             throw new DeviceManagementDAOException("Error occurred while deleting the device " + deviceIdentifierIds, e);
         }
@@ -1859,7 +1851,6 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 }
                 for (int i : ps.executeBatch()) {
                     if (i == 0 || i == Statement.SUCCESS_NO_INFO || i == Statement.EXECUTE_FAILED) {
-                        //updateStatus = false;
                         break;
                     }
                 }
@@ -1867,12 +1858,10 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 for (int enrollmentId : identifiers) {
                     ps.setInt(1, enrollmentId);
                     if (ps.executeUpdate() == 0) {
-                        //updateStatus = false;
                         break;
                     }
                 }
             }
-            // return updateStatus;
         }
     }
 }
