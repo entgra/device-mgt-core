@@ -20,7 +20,6 @@ package org.wso2.carbon.device.mgt.core.dao.impl.device;
 
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
-import org.wso2.carbon.device.mgt.common.report.mgt.Report;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOException;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOFactory;
 import org.wso2.carbon.device.mgt.core.dao.impl.AbstractDeviceDAOImpl;
@@ -447,10 +446,13 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
         try {
             conn = this.getConnection();
             String sql = "SELECT " +
-                    "d.ID AS DEVICE_ID,d.DESCRIPTION,d.NAME AS DEVICE_NAME,d.DEVICE_TYPE_ID AS DEVICE_TYPE, d.DEVICE_IDENTIFICATION," +
-                    "e.OWNER,e.OWNERSHIP,e.STATUS,e.DATE_OF_LAST_UPDATE,e.DATE_OF_ENROLMENT,e.ID AS ENROLMENT_ID " +
-                    "FROM DM_DEVICE AS d , DM_ENROLMENT AS e " +
-                    "WHERE d.ID=e.DEVICE_ID AND e.TENANT_ID=? AND e.DATE_OF_ENROLMENT BETWEEN ? AND ?";
+                         "d.ID AS DEVICE_ID,d.DESCRIPTION,d.NAME AS DEVICE_NAME, " +
+                         "t.NAME AS DEVICE_TYPE, d.DEVICE_IDENTIFICATION," +
+                         "e.OWNER,e.OWNERSHIP,e.STATUS,e.DATE_OF_LAST_UPDATE," +
+                         "e.DATE_OF_ENROLMENT,e.ID AS ENROLMENT_ID " +
+                         "FROM DM_DEVICE AS d , DM_ENROLMENT AS e , DM_DEVICE_TYPE AS t " +
+                         "WHERE d.ID=e.DEVICE_ID AND d.DEVICE_TYPE_ID=t.ID AND e.TENANT_ID=? AND " +
+                         "e.DATE_OF_ENROLMENT BETWEEN ? AND ?";
 
             if (deviceStatus != null) {
                 sql = sql + " AND e.STATUS=?";

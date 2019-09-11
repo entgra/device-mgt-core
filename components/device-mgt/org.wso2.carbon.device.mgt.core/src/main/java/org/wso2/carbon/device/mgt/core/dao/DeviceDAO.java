@@ -537,6 +537,7 @@ public interface DeviceDAO {
 
     /**
      * This method is used to get a device list which enrolled within a specific time period
+     * @param request
      * @param tenantId
      * @param fromDate
      * @param toDate
@@ -544,5 +545,4 @@ public interface DeviceDAO {
      */
     List<Device> getDevicesByDuration(PaginationRequest request, int tenantId, String fromDate, String toDate)
             throws DeviceManagementDAOException;
-
 }

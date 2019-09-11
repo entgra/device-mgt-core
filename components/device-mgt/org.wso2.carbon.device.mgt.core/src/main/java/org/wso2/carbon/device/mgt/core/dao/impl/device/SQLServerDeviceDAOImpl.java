@@ -523,10 +523,13 @@ public class SQLServerDeviceDAOImpl extends AbstractDeviceDAOImpl {
         try {
             conn = this.getConnection();
             String sql = "SELECT " +
-                    "d.ID AS DEVICE_ID,d.DESCRIPTION,d.NAME AS DEVICE_NAME,d.DEVICE_TYPE_ID AS DEVICE_TYPE, d.DEVICE_IDENTIFICATION," +
-                    "e.OWNER,e.OWNERSHIP,e.STATUS,e.DATE_OF_LAST_UPDATE,e.DATE_OF_ENROLMENT,e.ID AS ENROLMENT_ID " +
-                    "FROM DM_DEVICE AS d , DM_ENROLMENT AS e " +
-                    "WHERE d.ID=e.DEVICE_ID AND e.TENANT_ID=? AND e.DATE_OF_ENROLMENT BETWEEN ? AND ?";
+                    "d.ID AS DEVICE_ID,d.DESCRIPTION,d.NAME AS DEVICE_NAME, " +
+                    "t.NAME AS DEVICE_TYPE, d.DEVICE_IDENTIFICATION," +
+                    "e.OWNER,e.OWNERSHIP,e.STATUS,e.DATE_OF_LAST_UPDATE," +
+                    "e.DATE_OF_ENROLMENT,e.ID AS ENROLMENT_ID " +
+                    "FROM DM_DEVICE AS d , DM_ENROLMENT AS e , DM_DEVICE_TYPE AS t " +
+                    "WHERE d.ID=e.DEVICE_ID AND d.DEVICE_TYPE_ID=t.ID AND e.TENANT_ID=? AND " +
+                    "e.DATE_OF_ENROLMENT BETWEEN ? AND ?";
 
             if (deviceStatus != null) {
                 sql = sql + " AND e.STATUS=?";
@@ -534,6 +537,7 @@ public class SQLServerDeviceDAOImpl extends AbstractDeviceDAOImpl {
             }
             if (ownership != null) {
                 sql = sql + " AND e.OWNERSHIP=?";
+                isOwnershipProvided = true;
             }
 
             stmt = conn.prepareStatement(sql);
@@ -541,6 +545,7 @@ public class SQLServerDeviceDAOImpl extends AbstractDeviceDAOImpl {
             stmt.setString(2, fromDate);
             stmt.setString(3, toDate);
             int paramIdx = 4;
+
             if (isDeviceStatusProvided) {
                 stmt.setString(paramIdx++, deviceStatus);
             }

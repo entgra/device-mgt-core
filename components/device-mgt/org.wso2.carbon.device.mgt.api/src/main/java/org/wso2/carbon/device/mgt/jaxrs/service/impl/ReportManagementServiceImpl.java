@@ -5,7 +5,6 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
-import org.wso2.carbon.device.mgt.common.authorization.DeviceAccessAuthorizationService;
 import org.wso2.carbon.device.mgt.common.report.mgt.ReportManagementException;
 import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
@@ -50,14 +49,6 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         String msg;
         try {
             RequestValidationUtil.validatePaginationParameters(offset, limit);
-            DeviceAccessAuthorizationService deviceAccessAuthorizationService =
-                    DeviceMgtAPIUtils.getDeviceAccessAuthorizationService();
-            if (deviceAccessAuthorizationService == null) {
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
-                        new ErrorResponse.ErrorResponseBuilder().setMessage("Device access authorization service is " +
-                                "failed").build()).build();
-            }
-
             PaginationRequest request = new PaginationRequest(offset, limit);
             PaginationResult result;
             DeviceList devices = new DeviceList();
@@ -73,8 +64,9 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             devices.setList((List<Device>) result.getData());
             devices.setCount(result.getRecordsTotal());
             if (result == null || result.getData() == null || result.getData().size() <= 0) {
-                msg = "No devices";
-                return Response.status(Response.Status.OK).entity(msg).build();
+                    msg = "No devices have enrolled between " + fromDate + " to " + toDate + " or doesn't match with" +
+                    " given parameters";
+                    return Response.status(Response.Status.OK).entity(msg).build();
             } else {
                 return Response.status(Response.Status.OK).entity(devices).build();
             }

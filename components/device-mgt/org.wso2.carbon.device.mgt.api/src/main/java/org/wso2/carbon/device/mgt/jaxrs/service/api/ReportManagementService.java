@@ -8,7 +8,6 @@ import org.wso2.carbon.device.mgt.jaxrs.NotificationList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
 import org.wso2.carbon.device.mgt.jaxrs.util.Constants;
 
-import javax.validation.constraints.Size;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -19,7 +18,7 @@ import javax.ws.rs.core.Response;
                 title = "",
                 extensions = {
                         @Extension(properties = {
-                                @ExtensionProperty(name = "name", value = "DeviceNotificationManagement"),
+                                @ExtensionProperty(name = "name", value = "DeviceReportnManagement"),
                                 @ExtensionProperty(name = "context", value = "/api/device-mgt/v1.0/reports"),
                         })
                 }
@@ -30,18 +29,6 @@ import javax.ws.rs.core.Response;
 )
 @Scopes(
         scopes = {
-                @org.wso2.carbon.apimgt.annotations.api.Scope(
-                        name = "Getting All Device Notification Details",
-                        description = "Getting All Device Notification Details",
-                        key = "perm:notifications:view",
-                        permissions = {"/device-mgt/notifications/view"}
-                ),
-                @Scope(
-                        name = "Updating the Device Notification Status",
-                        description = "Updating the Device Notification Status",
-                        key = "perm:notifications:mark-checked",
-                        permissions = {"/device-mgt/notifications/view"}
-                ),
                 @Scope(
                         name = "Getting Details of Registered Devices",
                         description = "Getting Details of Registered Devices",
@@ -135,7 +122,7 @@ public interface ReportManagementService {
             value = {
                     @ApiResponse(
                             code = 200,
-                            message = "OK. \n Successfully fetched the list of notifications.",
+                            message = "OK. \n Successfully fetched the list of devices.",
                             response = NotificationList.class,
                             responseHeaders = {
                                     @ResponseHeader(
@@ -156,12 +143,12 @@ public interface ReportManagementService {
                                     "of the requested resource."),
                     @ApiResponse(
                             code = 400,
-                            message = "Bad Request. \n Invalid notification status type received. \n" +
+                            message = "Bad Request. \n Invalid device status type received. \n" +
                                     "Valid status types are NEW | CHECKED",
                             response = ErrorResponse.class),
                     @ApiResponse(
                             code = 404,
-                            message = "Not Found. \n There are no notification.",
+                            message = "Not Found. \n There are no devices.",
                             response = ErrorResponse.class),
                     @ApiResponse(
                             code = 406,
@@ -169,7 +156,7 @@ public interface ReportManagementService {
                     @ApiResponse(
                             code = 500,
                             message = "Internal Server Error. " +
-                                    "\n Server error occurred while fetching the notification list.",
+                                    "\n Server error occurred while fetching the device list.",
                             response = ErrorResponse.class)
             })
     Response getDevicesByDuration(

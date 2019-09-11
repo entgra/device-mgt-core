@@ -18,6 +18,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * This is the service class for reports which calls dao classes and its method which are used for
+ * report generation tasks.
+ */
 public class ReportManagementServiceImpl implements ReportManagementService {
 
     private static final Log log = LogFactory.getLog(ReportManagementServiceImpl.class);
@@ -30,6 +34,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
 
     /**
      * Report service class which calls the deviceDAO and its methods
+     *
      * @param request
      * @param fromDate
      * @param toDate
@@ -37,7 +42,8 @@ public class ReportManagementServiceImpl implements ReportManagementService {
      * @throws ReportManagementException
      */
     @Override
-    public PaginationResult getDevicesByDuration(PaginationRequest request, String fromDate, String toDate) throws ReportManagementException {
+    public PaginationResult getDevicesByDuration(PaginationRequest request, String fromDate, String toDate)
+            throws ReportManagementException {
         List<Device> devices = new ArrayList<>();
         PaginationResult paginationResult = new PaginationResult();
         try {
@@ -45,6 +51,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             DeviceManagementDAOFactory.openConnection();
             devices = deviceDAO.getDevicesByDuration(request, DeviceManagementDAOUtil.getTenantId(), fromDate, toDate);
             paginationResult.setData(devices);
+            //Todo: Should change the following code ta seperate count method from deviceDAO to get the count
             paginationResult.setRecordsTotal(devices.size());
             return paginationResult;
         } catch (SQLException e) {
