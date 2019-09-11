@@ -127,6 +127,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             @QueryParam("role") String role,
             @QueryParam("ownership") String ownership,
             @QueryParam("status") String status,
+            @QueryParam("excludeStatus") String excludeStatus,
             @QueryParam("groupId") int groupId,
             @QueryParam("since") String since,
             @HeaderParam("If-Modified-Since") String ifModifiedSince,
@@ -167,6 +168,10 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             if (status != null && !status.isEmpty()) {
                 RequestValidationUtil.validateStatus(status);
                 request.setStatus(status);
+            }
+            if (excludeStatus != null && !excludeStatus.isEmpty()) {
+                RequestValidationUtil.validateStatus(excludeStatus);
+                request.setExcludeStatus(excludeStatus);
             }
             if (groupId != 0) {
                 request.setGroupId(groupId);
@@ -457,7 +462,9 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                                           @QueryParam("from") long from, @QueryParam("to") long to) {
 
         List<DeviceLocationHistory> deviceLocationHistory;
+        DeviceLocationInfo deviceLocationInfo = new DeviceLocationInfo();
         String errorMessage;
+        PaginationResult result;
         try {
             RequestValidationUtil.validateDeviceIdentifier(deviceType, deviceId);
             DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
@@ -487,6 +494,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                 return Response.status(Response.Status.BAD_REQUEST).entity(
                         new ErrorResponse.ErrorResponseBuilder().setCode(400l).setMessage(errorMessage)).build();
             }
+
             deviceLocationHistory = dms.getDeviceLocationInfo(deviceIdentifier, from, to);
 
         } catch (DeviceManagementException e) {

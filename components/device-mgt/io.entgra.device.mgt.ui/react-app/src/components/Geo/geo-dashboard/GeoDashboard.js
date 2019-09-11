@@ -18,14 +18,15 @@
 import React from "react";
 import moment from "moment";
 import DateTimeRangeContainer from "react-advanced-datetimerange-picker";
-import {Button, Select, message, notification, Menu, Icon} from "antd";
+import {Button, Select, message, notification, Tag} from "antd";
 import axios from "axios";
-import {withConfigContext} from "../../context/ConfigContext";
-import GeoCustomMap from "./GeoCustomMap";
+import {withConfigContext} from "../../../context/ConfigContext";
+import GeoCustomMap from "../geo-custom-map/GeoCustomMap";
+import "./GeoDashboard.css";
 
-const {Option} = Select;
+import currentLocationData from "../mockCurrentLocation.json";
 
-class NavBar extends React.Component {
+class GeoDashboard extends React.Component {
 
     constructor(props) {
         super(props);
@@ -34,10 +35,10 @@ class NavBar extends React.Component {
             .add(5, "days")
             .subtract(1, "minute");
         this.state = {
-            selectedDevice: null,
             deviceData: [],
+            selectedDevice: '',
             locationData: [],
-            selectValue: '',
+            currentLocation: [],
             loading: false,
             start: start,
             end: end,
@@ -56,7 +57,7 @@ class NavBar extends React.Component {
             start: startDate,
             end: endDate
         });
-    }
+    };
 
     /**
      * Api call handle on fetch location date button
@@ -65,20 +66,23 @@ class NavBar extends React.Component {
 
         if (this.state.selectedDevice && this.state.start && this.state.end) {
             const toInMills = moment(this.state.end);
+            console.log("To time: " + toInMills);
             const fromInMills = moment(this.state.start);
+            console.log("From time: " + fromInMills);
             const deviceType = this.state.selectedDevice.type;
             const deviceId = this.state.selectedDevice.deviceIdentifier;
             const config = this.props.context;
             this.setState({loading: true});
 
             axios.get(window.location.origin + config.serverConfig.invoker.uri + config.serverConfig.invoker.deviceMgt
-                + "/devices/" + deviceType + "/" + deviceId + "/location-history?" + fromInMills + "&" + toInMills,).then(res => {
+                + "/devices/" + deviceType + "/" + deviceId + "/location-history?" + "from=" + fromInMills + "&to=" +
+                toInMills,).then(res => {
                 if (res.status === 200) {
+                    const locationData = JSON.parse(res.data.data);
                     this.setState({
                         loading: false,
-                        LocationData: res.data
+                        locationData,
                     });
-
                 }
             }).catch((error) => {
                 if (error.hasOwnProperty("response") && error.response.status === 401) {
@@ -89,12 +93,12 @@ class NavBar extends React.Component {
                         message: "There was a problem",
                         duration: 0,
                         description:
-                            "Error occurred while trying to fetch locations.",
+                            "Error occurred while trying to fetch locations......",
                     });
                 }
 
                 this.setState({loading: false});
-                // console.log(res.data);
+                console.log(error);
             });
         } else {
             notification["error"]({
@@ -112,16 +116,25 @@ class NavBar extends React.Component {
     handleDeviceList = (e) => {
         let selectedDevice = this.state.deviceData[e];
         this.setState({selectedDevice})
-    }
+    };
 
     componentDidMount() {
-        this.fetch();
+        this.fetchDevices();
+        this.fetchCurrentLocation();
     }
+
+    /**
+     * fetches current location to create a marker
+     */
+    fetchCurrentLocation = () => {
+        this.setState({currentLocation: currentLocationData});
+    };
+
 
     /**
      * fetches device data to populate the dropdown list
      */
-    fetch = () => {
+    fetchDevices = () => {
         const config = this.props.context;
         this.setState({loading: true});
 
@@ -156,19 +169,21 @@ class NavBar extends React.Component {
 
     /**
      * Geo Dashboard menu
-     * @param ranges
+     * @param ranges Date Range
      * @param local
      * @param maxDate
      */
     geoNavBar = (ranges, local, maxDate) => {
         let {deviceData} = this.state;
-        let value = `${this.state.start.format(
-            "DD-MM-YYYY HH:mm"
-        )} - ${this.state.end.format("DD-MM-YYYY HH:mm")}`;
+        let value =
+            `
+            ${this.state.start.format("DD-MM-YYYY HH:mm")} - ${this.state.end.format("DD-MM-YYYY HH:mm")}
+            `;
 
         return (
-            <div>
-                <Button>
+            <div className="controllerDiv">
+
+                <Button style={{marginRight: 20}}>
                     <DateTimeRangeContainer
                         ranges={ranges}
                         start={this.state.start}
@@ -180,28 +195,32 @@ class NavBar extends React.Component {
                         {value}
                     </DateTimeRangeContainer>
                 </Button>
+
                 <Select
                     showSearch
-                    style={{width: 300}}
+                    style={{width: 220, marginRight: 20}}
                     placeholder="Select a Device"
                     optionFilterProp="children"
                     onChange={this.handleDeviceList}
-                    // options={this.state.deviceData.name}
                     filterOption={(input, option) =>
                         option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
                     }
                 >
                     {deviceData.map((device, index) =>
-                        <Option key={index} value={index}>
-                            {device.name + " " + device.deviceIdentifier}
-                        </Option>)}
+                        <Select.Option key={index} value={index}>
+                            {device.name + " "}<Tag>{device.enrolmentInfo.status.toUpperCase()}</Tag>
+                        </Select.Option>)}
                 </Select>
+
                 <Button onClick={this.handleApiCall}>Fetch Locations</Button>
+
             </div>
         );
-    }
+    };
 
     render() {
+        let {locationData} = this.state;
+        let {currentLocation} = this.state;
         let now = new Date();
         let start = moment(
             new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
@@ -220,27 +239,24 @@ class NavBar extends React.Component {
             "1 Week": [moment(start).subtract(7, "days"), moment(end)],
             "2 Weeks": [moment(start).subtract(14, "days"), moment(end)],
             "1 Month": [moment(start).subtract(1, "months"), moment(end)],
-            "90 Days": [moment(start).subtract(90, "days"), moment(end)],
-            "1 Year": [moment(start).subtract(1, "years"), moment(end)]
         };
         let local = {
             format: "DD-MM-YYYY HH:mm",
             sundayFirst: false
         };
         let maxDate = moment(start).add(24, "hour");
-        const { locationData } = this.state;
+
         return (
             <div className="container">
                 {this.geoNavBar(ranges, local, maxDate)}
                 {locationData.length > 0 ?
-                    <GeoCustomMap locationData={{locationData}}/>
+                    <GeoCustomMap locationData={{locationData}} currentLocation={currentLocation}/>
                     :
-                    <GeoCustomMap />
-                }}
-
+                    <GeoCustomMap currentLocation={currentLocation}/>
+                }
             </div>
         );
     }
 }
 
-export default withConfigContext(NavBar);
+export default withConfigContext(GeoDashboard);

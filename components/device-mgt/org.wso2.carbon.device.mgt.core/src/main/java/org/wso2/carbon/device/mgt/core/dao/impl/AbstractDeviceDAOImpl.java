@@ -878,6 +878,8 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         boolean isOwnershipProvided = false;
         String status = request.getStatus();
         boolean isStatusProvided = false;
+        String excludeStatus = request.getExcludeStatus();
+        boolean isExcludeStatusProvided = false;
         Date since = request.getSince();
         boolean isSinceProvided = false;
         try {
@@ -926,6 +928,11 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 isStatusProvided = true;
             }
 
+            if (excludeStatus != null && !excludeStatus.isEmpty()) {
+                sql = sql + " AND e.STATUS != ?";
+                isExcludeStatusProvided = true;
+            }
+
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, tenantId);
             int paramIdx = 2;
@@ -950,6 +957,9 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             }
             if (isStatusProvided) {
                 stmt.setString(paramIdx++, request.getStatus());
+            }
+            if (isExcludeStatusProvided) {
+                stmt.setString(paramIdx++, excludeStatus);
             }
             rs = stmt.executeQuery();
             if (rs.next()) {

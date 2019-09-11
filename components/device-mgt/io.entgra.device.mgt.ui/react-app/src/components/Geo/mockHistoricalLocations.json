@@ -1,0 +1,15 @@
+{
+  "deviceId": 2,
+  "geoHash": "tc0z1dsyny0107rd",
+  "deviceType": "android",
+  "deviceIdentifier": "d13c16aec9e35237",
+  "latitude": 6.870264,
+  "longitude": 79.8774183,
+  "tenantId": -1234,
+  "altitude": -58.900001525878906,
+  "speed": 0,
+  "bearing": 0,
+  "distance": 1.4886962175369263,
+  "timestamp": 1567423438439,
+  "owner": "admin"
+}

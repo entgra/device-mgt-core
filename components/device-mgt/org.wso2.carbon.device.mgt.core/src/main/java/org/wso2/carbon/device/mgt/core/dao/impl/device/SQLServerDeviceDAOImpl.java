@@ -57,6 +57,8 @@ public class SQLServerDeviceDAOImpl extends AbstractDeviceDAOImpl {
         boolean isOwnershipProvided = false;
         String status = request.getStatus();
         boolean isStatusProvided = false;
+        String excludeStatus = request.getExcludeStatus();
+        boolean isExcludeStatusProvided = false;
         Date since = request.getSince();
         boolean isSinceProvided = false;
         try {
@@ -111,6 +113,11 @@ public class SQLServerDeviceDAOImpl extends AbstractDeviceDAOImpl {
                 sql = sql + " AND e.STATUS = ?";
                 isStatusProvided = true;
             }
+            //Add the query for exclude status
+            if (excludeStatus != null && !excludeStatus.isEmpty()) {
+                sql = sql + " AND e.STATUS != ?";
+                isExcludeStatusProvided = true;
+            }
 
             sql = sql + " ORDER BY ENROLMENT_ID OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
@@ -138,6 +145,9 @@ public class SQLServerDeviceDAOImpl extends AbstractDeviceDAOImpl {
             }
             if (isStatusProvided) {
                 stmt.setString(paramIdx++, status);
+            }
+            if (isExcludeStatusProvided) {
+                stmt.setString(paramIdx++, excludeStatus);
             }
             stmt.setInt(paramIdx++, request.getStartIndex());
             stmt.setInt(paramIdx, request.getRowCount());
@@ -177,6 +187,8 @@ public class SQLServerDeviceDAOImpl extends AbstractDeviceDAOImpl {
         boolean isOwnershipProvided = false;
         String status = request.getStatus();
         boolean isStatusProvided = false;
+        String excludeStatus = request.getExcludeStatus();
+        boolean isExcludeStatusProvided = false;
         Date since = request.getSince();
         boolean isSinceProvided = false;
 
@@ -237,6 +249,11 @@ public class SQLServerDeviceDAOImpl extends AbstractDeviceDAOImpl {
                 sql = sql + " AND e.STATUS = ?";
                 isStatusProvided = true;
             }
+            //Add the query for exclude status
+            if (excludeStatus != null && !excludeStatus.isEmpty()) {
+                sql = sql + " AND e.STATUS != ?";
+                isExcludeStatusProvided = true;
+            }
 
             sql = sql + " ORDER BY ENROLMENT_ID OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
@@ -267,6 +284,9 @@ public class SQLServerDeviceDAOImpl extends AbstractDeviceDAOImpl {
             }
             if (isStatusProvided) {
                 stmt.setString(paramIdx++, status);
+            }
+            if (isExcludeStatusProvided) {
+                stmt.setString(paramIdx++, excludeStatus);
             }
             stmt.setInt(paramIdx++, request.getStartIndex());
             stmt.setInt(paramIdx, request.getRowCount());

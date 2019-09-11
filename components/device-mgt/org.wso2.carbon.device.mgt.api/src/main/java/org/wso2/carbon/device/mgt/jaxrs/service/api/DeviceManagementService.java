@@ -270,6 +270,13 @@ public interface DeviceManagementService {
             @Size(max = 45)
                     String ownership,
             @ApiParam(
+                    name = "excludeStatus",
+                    value = "Provide the devices that excludes the given status",
+                    required = false)
+            @QueryParam("excludeStatus")
+            @Size(max = 45)
+                    String excludeStatus,
+            @ApiParam(
                     name = "status",
                     value = "Provide the device status details, such as active or inactive.",
                     required = false)
