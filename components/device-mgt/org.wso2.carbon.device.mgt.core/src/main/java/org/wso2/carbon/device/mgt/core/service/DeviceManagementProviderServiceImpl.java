@@ -515,7 +515,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         List<String> deviceIds = new ArrayList<>();
         Map<String, List<String>> deviceIdentifierMap = new HashMap<String, List<String>>();
         Map<String, DeviceManager> deviceManagerMap = new HashMap<String, DeviceManager>();
-        List<DeviceCacheKey> deviceCacheKeyList= new ArrayList<>();
+        List<DeviceCacheKey> deviceCacheKeyList = new ArrayList<>();
         int tenantId = this.getTenantId();
         List<Device> existingDevices;
         try {
@@ -528,8 +528,11 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                         "Couldn't find device ids for requested all device identifiers. Therefore payload should "
                                 + "contains device identifiers which are not in the system. Invalid device "
                                 + "identifiers are " + deviceIdentifiers.toString();
-                log.error(msg);
-                throw new InvalidDeviceException(msg);
+                log.info(msg);
+                //throw new InvalidDeviceException(msg);
+            }
+            if (existingDevices.isEmpty()) {
+                return false;
             }
             for (Device device : existingDevices) {
                 if (!device.getEnrolmentInfo().getStatus().equals(EnrolmentInfo.Status.REMOVED)) {
@@ -576,8 +579,6 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             DeviceManagementDAOFactory.commitTransaction();
             this.removeDevicesFromCache(deviceCacheKeyList);
 
-        } catch (InvalidDeviceException e) {
-            e.printStackTrace();
         } catch (TransactionManagementException e) {
             String msg = "Error occurred while initiating transaction";
             log.error(msg, e);
