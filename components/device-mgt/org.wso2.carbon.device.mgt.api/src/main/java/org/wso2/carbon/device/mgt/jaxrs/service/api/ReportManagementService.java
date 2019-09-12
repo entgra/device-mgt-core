@@ -1,10 +1,27 @@
+/*
+ *   Copyright (c) 2019, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
+ *
+ *   Entgra (pvt) Ltd. licenses this file to you under the Apache License,
+ *   Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing,
+ *   software distributed under the License is distributed on an
+ *   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *   KIND, either express or implied. See the License for the
+ *   specific language governing permissions and limitations
+ *   under the License.
+ */
 package org.wso2.carbon.device.mgt.jaxrs.service.api;
 
 import io.swagger.annotations.*;
 import org.wso2.carbon.apimgt.annotations.api.Scope;
 import org.wso2.carbon.apimgt.annotations.api.Scopes;
-import org.wso2.carbon.device.mgt.common.notification.mgt.NotificationManagementException;
-import org.wso2.carbon.device.mgt.jaxrs.NotificationList;
+import org.wso2.carbon.device.mgt.common.report.mgt.ReportManagementException;
+import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
 import org.wso2.carbon.device.mgt.jaxrs.util.Constants;
 
@@ -35,66 +52,6 @@ import javax.ws.rs.core.Response;
                         key = "perm:devices:view",
                         permissions = {"/device-mgt/devices/owning-device/view"}
                 ),
-                @Scope(
-                        name = "Getting Details of a Device",
-                        description = "Getting Details of a Device",
-                        key = "perm:devices:details",
-                        permissions = {"/device-mgt/devices/owning-device/view"}
-                ),
-                @Scope(
-                        name = "Update the device specified by device id",
-                        description = "Update the device specified by device id",
-                        key = "perm:devices:update",
-                        permissions = {"/device-mgt/devices/owning-device/view"}
-                ),
-                @Scope(
-                        name = "Delete the device specified by device id",
-                        description = "Delete the device specified by device id",
-                        key = "perm:devices:delete",
-                        permissions = {"/device-mgt/devices/owning-device/view"}
-                ),
-                @Scope(
-                        name = "Getting Feature Details of a Device",
-                        description = "Getting Feature Details of a Device",
-                        key = "perm:devices:features",
-                        permissions = {"/device-mgt/devices/owning-device/view"}
-                ),
-                @Scope(
-                        name = "Advanced Search for Devices",
-                        description = "Advanced Search for Devices",
-                        key = "perm:devices:search",
-                        permissions = {"/device-mgt/devices/owning-device/view"}
-                ),
-                @Scope(
-                        name = "Getting Installed Application Details of a Device",
-                        description = "Getting Installed Application Details of a Device",
-                        key = "perm:devices:applications",
-                        permissions = {"/device-mgt/devices/owning-device/view"}
-                ),
-                @Scope(
-                        name = "Getting Device Operation Details",
-                        description = "Getting Device Operation Details",
-                        key = "perm:devices:operations",
-                        permissions = {"/device-mgt/devices/owning-device/view"}
-                ),
-                @Scope(
-                        name = "Get the details of the policy that is enforced on a device.",
-                        description = "Get the details of the policy that is enforced on a device.",
-                        key = "perm:devices:effective-policy",
-                        permissions = {"/device-mgt/devices/owning-device/view"}
-                ),
-                @Scope(
-                        name = "Getting Policy Compliance Details of a Device",
-                        description = "Getting Policy Compliance Details of a Device",
-                        key = "perm:devices:compliance-data",
-                        permissions = {"/device-mgt/devices/owning-device/view"}
-                ),
-                @Scope(
-                        name = "Change device status.",
-                        description = "Change device status.",
-                        key = "perm:devices:change-status",
-                        permissions = {"/device-mgt/devices/change-status"}
-                ),
         }
 )
 
@@ -104,6 +61,15 @@ import javax.ws.rs.core.Response;
 @Consumes(MediaType.APPLICATION_JSON)
 public interface ReportManagementService {
 
+    /**
+     * API endpoint to get devices which are enrolled between two dates
+     *
+     * @param fromDate Start date (YYYY-MM-DD)
+     * @param toDate End date (YYYY-MM-DD)
+     * @param offset
+     * @param limit
+     * @return A paginated list of devices
+     */
     @GET
     @Path("/devices")
     @ApiOperation(
@@ -123,7 +89,7 @@ public interface ReportManagementService {
                     @ApiResponse(
                             code = 200,
                             message = "OK. \n Successfully fetched the list of devices.",
-                            response = NotificationList.class,
+                            response = DeviceList.class,
                             responseHeaders = {
                                     @ResponseHeader(
                                             name = "Content-Type",
@@ -172,5 +138,5 @@ public interface ReportManagementService {
                     required = false,
                     defaultValue = "5")
             @QueryParam("limit")
-                    int limit) throws NotificationManagementException;
+                    int limit) throws ReportManagementException;
 }

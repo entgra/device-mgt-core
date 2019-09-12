@@ -100,6 +100,10 @@ public class DeviceManagementDAOFactory {
     private static final Log log = LogFactory.getLog(DeviceManagementDAOFactory.class);
     private static ThreadLocal<Connection> currentConnection = new ThreadLocal<Connection>();
 
+    public DeviceManagementDAOFactory() throws SQLException {
+        openConnection();
+    }
+
     public static DeviceDAO getDeviceDAO() {
         if (databaseEngine != null) {
             switch (databaseEngine) {
@@ -288,5 +292,4 @@ public class DeviceManagementDAOFactory {
         }
         return dataSource;
     }
-
 }

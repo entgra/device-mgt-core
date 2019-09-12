@@ -537,10 +537,11 @@ public interface DeviceDAO {
 
     /**
      * This method is used to get a device list which enrolled within a specific time period
-     * @param request
-     * @param tenantId
-     * @param fromDate
-     * @param toDate
+     *
+     * @param request  Pagination request to get paginated result
+     * @param tenantId Tenant id
+     * @param fromDate Start date (YYYY-MM-DD)
+     * @param toDate   End date (YYYY-MM-DD)
      * @return returns a list of Device objects
      */
     List<Device> getDevicesByDuration(PaginationRequest request, int tenantId, String fromDate, String toDate)

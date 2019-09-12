@@ -1,3 +1,20 @@
+/*
+ *   Copyright (c) 2019, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
+ *
+ *   Entgra (pvt) Ltd. licenses this file to you under the Apache License,
+ *   Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing,
+ *   software distributed under the License is distributed on an
+ *   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *   KIND, either express or implied. See the License for the
+ *   specific language governing permissions and limitations
+ *   under the License.
+ */
 package org.wso2.carbon.device.mgt.jaxrs.service.impl;
 
 import org.apache.commons.logging.Log;
@@ -12,7 +29,12 @@ import org.wso2.carbon.device.mgt.jaxrs.service.api.ReportManagementService;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.RequestValidationUtil;
 import org.wso2.carbon.device.mgt.jaxrs.util.DeviceMgtAPIUtils;
 
-import javax.ws.rs.*;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
@@ -25,17 +47,8 @@ import java.util.List;
 @Consumes(MediaType.APPLICATION_JSON)
 public class ReportManagementServiceImpl implements ReportManagementService {
 
-    private static final Log log = LogFactory.getLog(NotificationManagementServiceImpl.class);
+    private static final Log log = LogFactory.getLog(ReportManagementServiceImpl.class);
 
-    /**
-     * API endpoint to get devices which are enrolled between two dates
-     *
-     * @param fromDate
-     * @param toDate
-     * @param offset
-     * @param limit
-     * @return A paginated list of devices
-     */
     @GET
     @Path("/devices")
     @Override
@@ -61,18 +74,22 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             }
 
             result = DeviceMgtAPIUtils.getReportManagementService().getDevicesByDuration(request, fromDate, toDate);
-            devices.setList((List<Device>) result.getData());
-            devices.setCount(result.getRecordsTotal());
-            if (result == null || result.getData() == null || result.getData().size() <= 0) {
+            if (result == null || result.getData() == null || result.getData().isEmpty()) {
                     msg = "No devices have enrolled between " + fromDate + " to " + toDate + " or doesn't match with" +
                     " given parameters";
-                    return Response.status(Response.Status.OK).entity(msg).build();
+                    log.debug(msg);
+                    return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
             } else {
+                devices.setList((List<Device>) result.getData());
+                devices.setCount(result.getRecordsTotal());
+                msg = "Devices retrieved successfuly.";
+                log.debug(msg);
                 return Response.status(Response.Status.OK).entity(devices).build();
             }
         } catch (ReportManagementException e) {
             msg = "Error occurred while retrieving device list";
             log.error(msg, e);
+            log.debug(msg);
             return Response.serverError().entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
         }

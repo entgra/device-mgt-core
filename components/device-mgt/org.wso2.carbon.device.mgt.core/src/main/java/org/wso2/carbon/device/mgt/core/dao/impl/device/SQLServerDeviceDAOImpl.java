@@ -20,7 +20,6 @@ package org.wso2.carbon.device.mgt.core.dao.impl.device;
 
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
-import org.wso2.carbon.device.mgt.common.report.mgt.Report;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOException;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOFactory;
 import org.wso2.carbon.device.mgt.core.dao.impl.AbstractDeviceDAOImpl;
@@ -512,58 +511,57 @@ public class SQLServerDeviceDAOImpl extends AbstractDeviceDAOImpl {
     @Override
     public List<Device> getDevicesByDuration(PaginationRequest request, int tenantId, String fromDate, String toDate)
             throws DeviceManagementDAOException {
-        Connection conn;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        List<Device> devices = null;
+        List<Device> devices;
         boolean isDeviceStatusProvided = false;
         String deviceStatus = request.getStatus();
         boolean isOwnershipProvided = false;
         String ownership = request.getOwnership();
-        try {
-            conn = this.getConnection();
-            String sql = "SELECT " +
-                    "d.ID AS DEVICE_ID,d.DESCRIPTION,d.NAME AS DEVICE_NAME, " +
-                    "t.NAME AS DEVICE_TYPE, d.DEVICE_IDENTIFICATION," +
-                    "e.OWNER,e.OWNERSHIP,e.STATUS,e.DATE_OF_LAST_UPDATE," +
-                    "e.DATE_OF_ENROLMENT,e.ID AS ENROLMENT_ID " +
-                    "FROM DM_DEVICE AS d , DM_ENROLMENT AS e , DM_DEVICE_TYPE AS t " +
-                    "WHERE d.ID=e.DEVICE_ID AND d.DEVICE_TYPE_ID=t.ID AND e.TENANT_ID=? AND " +
-                    "e.DATE_OF_ENROLMENT BETWEEN ? AND ?";
+        String msg;
 
-            if (deviceStatus != null) {
-                sql = sql + " AND e.STATUS=?";
-                isDeviceStatusProvided = true;
-            }
-            if (ownership != null) {
-                sql = sql + " AND e.OWNERSHIP=?";
-                isOwnershipProvided = true;
-            }
+        String sql = "SELECT " +
+                "d.ID AS DEVICE_ID,d.DESCRIPTION,d.NAME AS DEVICE_NAME, " +
+                "t.NAME AS DEVICE_TYPE, d.DEVICE_IDENTIFICATION," +
+                "e.OWNER,e.OWNERSHIP,e.STATUS,e.DATE_OF_LAST_UPDATE," +
+                "e.DATE_OF_ENROLMENT,e.ID AS ENROLMENT_ID " +
+                "FROM DM_DEVICE AS d , DM_ENROLMENT AS e , DM_DEVICE_TYPE AS t " +
+                "WHERE d.ID=e.DEVICE_ID AND d.DEVICE_TYPE_ID=t.ID AND e.TENANT_ID=? AND " +
+                "e.DATE_OF_ENROLMENT BETWEEN ? AND ?";
 
-            stmt = conn.prepareStatement(sql);
-            stmt.setInt(1, tenantId);
-            stmt.setString(2, fromDate);
-            stmt.setString(3, toDate);
-            int paramIdx = 4;
+        if (deviceStatus != null && deviceStatus.isEmpty()) {
+            sql = sql + " AND e.STATUS=?";
+            isDeviceStatusProvided = true;
+        }
+        if (ownership != null && deviceStatus.isEmpty()) {
+            sql = sql + " AND e.OWNERSHIP=?";
+            isOwnershipProvided = true;
+        }
+
+        try (Connection conn = this.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            int paramIdx = 1;
+            stmt.setInt(paramIdx++, tenantId);
+            stmt.setString(paramIdx++, fromDate);
+            stmt.setString(paramIdx++, toDate);
 
             if (isDeviceStatusProvided) {
                 stmt.setString(paramIdx++, deviceStatus);
             }
             if (isOwnershipProvided) {
-                stmt.setString(paramIdx++, ownership);
+                stmt.setString(paramIdx, ownership);
             }
 
-            rs = stmt.executeQuery();
-            devices = new ArrayList<>();
-            while (rs.next()) {
-                Device device = DeviceManagementDAOUtil.loadDevice(rs);
-                devices.add(device);
+            try (ResultSet rs = stmt.executeQuery()) {
+                devices = new ArrayList<>();
+                while (rs.next()) {
+                    Device device = DeviceManagementDAOUtil.loadDevice(rs);
+                    devices.add(device);
+                }
             }
         } catch (SQLException e) {
-            throw new DeviceManagementDAOException("Error occurred while retrieving information of all " +
-                    "registered devices", e);
-        } finally {
-            DeviceManagementDAOUtil.cleanupResources(stmt, rs);
+            msg = "Error occurred while retrieving information of all " +
+                    "registered devices";
+            throw new DeviceManagementDAOException(msg, e);
         }
         return devices;
     }
