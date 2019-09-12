@@ -519,13 +519,14 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         int tenantId = this.getTenantId();
         List<Device> existingDevices;
         try {
+            DeviceManagementDAOFactory.beginTransaction();
             existingDevices = deviceDAO.getDevicesByIdentifiers(deviceIdentifiers, tenantId);
             if (existingDevices.size() != deviceIdentifiers.size()) {
                 for (Device device : existingDevices) {
                     deviceIdentifiers.remove(device.getDeviceIdentifier());
                 }
                 String msg =
-                        "Couldn't find device ids for requested all device identifiers. Therefore payload should "
+                        "Couldn't find device ids for all the requested device identifiers. Therefore payload should "
                                 + "contains device identifiers which are not in the system. Invalid device "
                                 + "identifiers are " + deviceIdentifiers.toString();
                 log.info(msg);
@@ -535,7 +536,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             }
             for (Device device : existingDevices) {
                 if (!device.getEnrolmentInfo().getStatus().equals(EnrolmentInfo.Status.REMOVED)) {
-                    String msg = "Device " + device.getId() + " of type " + device.getType() + " is not dis-enrolled to " +
+                    String msg = "Device " + device.getDeviceIdentifier() + " of type " + device.getType() + " is not dis-enrolled to " +
                             "permanently delete the device";
                     log.error(msg);
                     throw new DeviceManagementException(msg);
@@ -563,7 +564,6 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                     }
                 }
             }
-            DeviceManagementDAOFactory.beginTransaction();
             deviceDAO.deleteDevices(deviceIds, tenantId);
             for (Map.Entry<String, DeviceManager> entry : deviceManagerMap.entrySet()) {
                 try {

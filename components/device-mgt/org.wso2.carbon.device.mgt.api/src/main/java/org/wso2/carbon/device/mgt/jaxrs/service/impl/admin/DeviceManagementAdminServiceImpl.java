@@ -144,7 +144,7 @@ public class DeviceManagementAdminServiceImpl implements DeviceManagementAdminSe
                 DeviceMgtAPIUtils.getDeviceManagementService();
         try {
             if (!deviceManagementProviderService.deleteDevice(deviceIdentifiers)) {
-                String msg = "Could not find device with valid identifier.";
+                String msg = "Could not find device with valid identifier that can be deleted.";
                 return Response.status(Response.Status.NOT_FOUND).entity(
                         new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
             } else {

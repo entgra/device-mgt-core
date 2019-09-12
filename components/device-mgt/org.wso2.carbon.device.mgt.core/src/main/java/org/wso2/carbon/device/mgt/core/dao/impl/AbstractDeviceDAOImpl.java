@@ -1576,52 +1576,48 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
 
     @Override
     public void deleteDevices(List<String> deviceIdentifiers, int tenantId) throws DeviceManagementDAOException {
-        List<String> deviceIdentifierIds = new ArrayList<>();
-        for (String deviceId : deviceIdentifiers) {
-            deviceIdentifierIds.add(deviceId);
-        }
         Connection conn;
         try {
             conn = this.getConnection();
-            List<Integer> deviceIds = getDeviceIds(conn, deviceIdentifierIds, tenantId);
+            List<Integer> deviceIds = getDeviceIds(conn, deviceIdentifiers, tenantId);
             List<Integer> enrollmentIds = getEnrollmentIds(conn, deviceIds, tenantId);
             if (enrollmentIds == null || enrollmentIds.isEmpty()) {
-                String msg = "Enrollments not found for the devices: " + deviceIdentifierIds;
+                String msg = "Enrollments not found for the devices: " + deviceIdentifiers;
                 log.error(msg);
                 throw new DeviceManagementDAOException(msg);
             } else {
                 removeDeviceDetail(conn, deviceIds);
                 if (log.isDebugEnabled()) {
-                    log.debug("Successfully removed device detail data of device " + deviceIdentifierIds);
+                    log.debug("Successfully removed device detail data of device " + deviceIdentifiers);
                 }
                 removeDeviceLocation(conn, deviceIds);
                 if (log.isDebugEnabled()) {
-                    log.debug("Successfully removed device location data of device " + deviceIdentifierIds);
+                    log.debug("Successfully removed device location data of device " + deviceIdentifiers);
                 }
                 removeDeviceInfo(conn, deviceIds);
                 if (log.isDebugEnabled()) {
-                    log.debug("Successfully removed device info data of device " + deviceIdentifierIds);
+                    log.debug("Successfully removed device info data of device " + deviceIdentifiers);
                 }
                 removeDeviceNotification(conn, deviceIds);
                 if (log.isDebugEnabled()) {
-                    log.debug("Successfully removed device notification data of device " + deviceIdentifierIds);
+                    log.debug("Successfully removed device notification data of device " + deviceIdentifiers);
                 }
                 removeDeviceApplicationMapping(conn, deviceIds);
                 if (log.isDebugEnabled()) {
                     log.debug("Successfully removed device application mapping data of device "
-                            + deviceIdentifierIds);
+                            + deviceIdentifiers);
                 }
                 removeDevicePolicyApplied(conn, deviceIds);
                 if (log.isDebugEnabled()) {
-                    log.debug("Successfully removed device applied policy data of device " + deviceIdentifierIds);
+                    log.debug("Successfully removed device applied policy data of device " + deviceIdentifiers);
                 }
                 removeDevicePolicy(conn, deviceIds);
                 if (log.isDebugEnabled()) {
-                    log.debug("Successfully removed device policy data of device " + deviceIdentifierIds);
+                    log.debug("Successfully removed device policy data of device " + deviceIdentifiers);
                 }
                 if (log.isDebugEnabled()) {
                     log.debug("Starting to remove " + enrollmentIds.size() + " enrollment data of device "
-                                + deviceIdentifierIds);
+                                + deviceIdentifiers);
                     }
                     removeEnrollmentDeviceDetail(conn, enrollmentIds);
                     removeEnrollmentDeviceLocation(conn, enrollmentIds);
@@ -1633,23 +1629,23 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                         log.debug("Successfully removed enrollment device details, enrollment device location, " +
                                 "enrollment device info, enrollment device application mapping, " +
                                 "enrollment device operation response, enrollment operation mapping data of device "
-                                + deviceIdentifierIds);
+                                + deviceIdentifiers);
                     }
                     removeDeviceEnrollment(conn, deviceIds);
                     if (log.isDebugEnabled()) {
-                        log.debug("Successfully removed device enrollment data of device " + deviceIdentifierIds);
+                        log.debug("Successfully removed device enrollment data of device " + deviceIdentifiers);
                     }
                     removeDeviceGroupMapping(conn, deviceIds);
                     if (log.isDebugEnabled()) {
-                        log.debug("Successfully removed device group mapping data of device " + deviceIdentifierIds);
+                        log.debug("Successfully removed device group mapping data of device " + deviceIdentifiers);
                     }
                     removeDevice(conn, deviceIds);
                 if (log.isDebugEnabled()) {
-                    log.debug("Successfully permanently deleted the device of device " + deviceIdentifierIds);
+                    log.debug("Successfully permanently deleted the device of device " + deviceIdentifiers);
                 }
             }
         } catch (SQLException e) {
-            throw new DeviceManagementDAOException("Error occurred while deleting the device " + deviceIdentifierIds, e);
+            throw new DeviceManagementDAOException("Error occurred while deleting the device " + deviceIdentifiers, e);
         }
     }
 
@@ -1658,38 +1654,34 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         List<Integer> deviceIdList = new ArrayList<>();
         try {
             String sql = "SELECT ID FROM DM_DEVICE WHERE DEVICE_IDENTIFICATION IN (?) AND TENANT_ID = ?";
-            try (PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
-
-                stmt.setString(1, DeviceManagementDAOUtil.convertStringListToString(deviceIds));
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, String.join(",",deviceIds));
                 stmt.setInt(2, tenantId);
-                if (rs.next()) {
-                    deviceIdList.add(rs.getInt("ID"));
+                try( ResultSet rs = stmt.executeQuery()){
+                    if (rs.next()) {
+                        deviceIdList.add(rs.getInt("ID"));
+                    }
                 }
-
             }
         } catch (SQLException e) {
-            throw new DeviceManagementDAOException("Error occurred while retrieving device id of the device", e);
+            throw new DeviceManagementDAOException("Error occurred while retrieving device id of the devices", e);
         }
         return deviceIdList;
     }
 
     private List<Integer> getEnrollmentIds(Connection conn, List<Integer> deviceIds, int tenantId) throws DeviceManagementDAOException {
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
+        String sql = "SELECT ID FROM DM_ENROLMENT WHERE DEVICE_ID IN (?) AND TENANT_ID = ?";
         List<Integer> enrollmentIds = new ArrayList<>();
-        try {
-            String sql = "SELECT ID FROM DM_ENROLMENT WHERE DEVICE_ID IN (?) AND TENANT_ID = ?";
-            stmt = conn.prepareStatement(sql);
-            stmt.setString(1, DeviceManagementDAOUtil.convertIntListToString(deviceIds));
+        try (PreparedStatement stmt= conn.prepareStatement(sql)){
+            stmt.setString(1, DeviceManagementDAOUtil.convertToString(deviceIds));
             stmt.setInt(2, tenantId);
-            rs = stmt.executeQuery();
-            while (rs.next()) {
-                enrollmentIds.add(rs.getInt("ID"));
+            try(ResultSet rs = stmt.executeQuery() ){
+                while (rs.next()) {
+                    enrollmentIds.add(rs.getInt("ID"));
+                }
             }
         } catch (SQLException e) {
             throw new DeviceManagementDAOException("Error occurred while retrieving enrollment id of the devices", e);
-        } finally {
-            DeviceManagementDAOUtil.cleanupResources(stmt, rs);
         }
         return enrollmentIds;
     }
