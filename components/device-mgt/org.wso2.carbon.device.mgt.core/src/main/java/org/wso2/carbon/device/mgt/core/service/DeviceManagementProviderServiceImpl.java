@@ -511,10 +511,11 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public boolean deleteDevice(List<String> deviceIdentifiers) throws DeviceManagementException {
-        List<String> deviceIds = new ArrayList<>();
-        Map<String, List<String>> deviceIdentifierMap = new HashMap<String, List<String>>();
-        Map<String, DeviceManager> deviceManagerMap = new HashMap<String, DeviceManager>();
+    public boolean deleteDevice(List<String> deviceIdentifiers) throws DeviceManagementException, InvalidDeviceException {
+        List<Integer> deviceIds = new ArrayList<>();
+        List<Integer> enrollmentIds = new ArrayList<>();
+        Map<String, List<String>> deviceIdentifierMap = new HashMap<>();
+        Map<String, DeviceManager> deviceManagerMap = new HashMap<>();
         List<DeviceCacheKey> deviceCacheKeyList = new ArrayList<>();
         int tenantId = this.getTenantId();
         List<Device> existingDevices;
@@ -526,58 +527,61 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                     deviceIdentifiers.remove(device.getDeviceIdentifier());
                 }
                 String msg =
-                        "Couldn't find device ids for all the requested device identifiers. Therefore payload should "
-                                + "contains device identifiers which are not in the system. Invalid device "
-                                + "identifiers are " + deviceIdentifiers.toString();
-                log.info(msg);
-            }
-            if (existingDevices.isEmpty()) {
-                return false;
+                        "Couldn't find device ids for all the requested device identifiers. " +
+                                "Therefore payload should contain device identifiers which are not in the system. " +
+                                "Invalid device identifiers are " + deviceIdentifiers.toString();
+                log.error(msg);
+                throw new InvalidDeviceException(msg);
             }
             for (Device device : existingDevices) {
                 if (!device.getEnrolmentInfo().getStatus().equals(EnrolmentInfo.Status.REMOVED)) {
-                    String msg = "Device " + device.getDeviceIdentifier() + " of type " + device.getType() + " is not dis-enrolled to " +
-                            "permanently delete the device";
+                    String msg = "Device " + device.getDeviceIdentifier() + " of type " + device.getType()
+                            + " is not dis-enrolled to permanently delete the device";
                     log.error(msg);
-                    throw new DeviceManagementException(msg);
-                } else {
-                    DeviceCacheKey deviceCacheKey = new DeviceCacheKey();
-                    deviceCacheKey.setDeviceId(device.getDeviceIdentifier());
-                    deviceCacheKey.setDeviceType(device.getType());
-                    deviceCacheKey.setTenantId(tenantId);
-                    deviceCacheKeyList.add(deviceCacheKey);
-                    deviceIds.add(device.getDeviceIdentifier());
-                    if (deviceIdentifierMap.containsKey(device.getType())) {
-                        deviceIdentifierMap.get(device.getType()).add(device.getDeviceIdentifier());
-                    } else {
-                        deviceIdentifierMap.put(device.getType(), new ArrayList<>(Arrays.asList(device.getDeviceIdentifier())));
-                        DeviceManager deviceManager = this.getDeviceManager(device.getType());
-                        if (deviceManager == null) {
-                            if (log.isDebugEnabled()) {
-                                log.debug("Device Manager associated with the device type '" + device.getType() + "' is null. " +
-                                        "Therefore, not attempting method 'deleteDevice'");
-                            }
-                            return false;
-                        } else {
-                            deviceManagerMap.put(device.getType(), deviceManager);
-                        }
-                    }
+                    throw new InvalidDeviceException(msg);
                 }
+                DeviceCacheKey deviceCacheKey = new DeviceCacheKey();
+                deviceCacheKey.setDeviceId(device.getDeviceIdentifier());
+                deviceCacheKey.setDeviceType(device.getType());
+                deviceCacheKey.setTenantId(tenantId);
+                deviceCacheKeyList.add(deviceCacheKey);
+                deviceIds.add(device.getId());
+                enrollmentIds.add(device.getEnrolmentInfo().getId());
+                if (deviceIdentifierMap.containsKey(device.getType())) {
+                    deviceIdentifierMap.get(device.getType()).add(device.getDeviceIdentifier());
+                } else {
+                    deviceIdentifierMap.put(device.getType(),
+                            new ArrayList<>(Arrays.asList(device.getDeviceIdentifier())));
+                    DeviceManager deviceManager = this.getDeviceManager(device.getType());
+                    if (deviceManager == null) {
+                        if (log.isDebugEnabled()) {
+                            log.debug("Device Manager associated with the device type '"
+                                    + device.getType() + "' is null. Therefore, not attempting method 'deleteDevice'");
+                        }
+                        return false;
+                    }
+                    deviceManagerMap.put(device.getType(), deviceManager);
+
+                }
+
             }
-            deviceDAO.deleteDevices(deviceIds, tenantId);
+            //deleting device from the core
+            deviceDAO.deleteDevices(deviceIdentifiers, deviceIds, enrollmentIds);
             for (Map.Entry<String, DeviceManager> entry : deviceManagerMap.entrySet()) {
                 try {
+                    // deleting device from the plugin level
                     entry.getValue().deleteDevices(deviceIdentifierMap.get(entry.getKey()));
                 } catch (DeviceManagementException e) {
                     String msg = "Error occurred while permanently deleting '" + entry.getKey() +
-                            "' devices with the identifiers: '" + deviceIdentifierMap.get(entry.getKey()) + "' in plugin.";
+                            "' devices with the identifiers: '" + deviceIdentifierMap.get(entry.getKey())
+                            + "' in plugin.";
                     log.error(msg, e);
                     throw new DeviceManagementDAOException(msg, e);
                 }
             }
             DeviceManagementDAOFactory.commitTransaction();
             this.removeDevicesFromCache(deviceCacheKeyList);
-
+            return true;
         } catch (TransactionManagementException e) {
             String msg = "Error occurred while initiating transaction";
             log.error(msg, e);
@@ -588,8 +592,12 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                     "' devices";
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
+        } catch (InvalidDeviceException e) {
+            String msg = "Error occurred while validating '" + deviceIdentifiers +
+                    "' devices";
+            log.error(msg, e);
+            throw new InvalidDeviceException(msg, e);
         }
-        return true;
     }
 
     @Override

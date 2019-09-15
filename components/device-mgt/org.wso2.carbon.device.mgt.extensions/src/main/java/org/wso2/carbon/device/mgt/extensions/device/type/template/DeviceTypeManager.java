@@ -587,27 +587,32 @@ public class DeviceTypeManager implements DeviceManager {
     }
 
     @Override
-    public boolean deleteDevices(List<String> deviceIdentifierList) throws DeviceManagementException {
+    public void deleteDevices(List<String> deviceIdentifierList) throws DeviceManagementException {
         if (propertiesExist) {
-            boolean status;
             try {
                 if (log.isDebugEnabled()) {
                     log.debug("Deleting the details of " + deviceType + " devices : " + deviceIdentifierList);
                 }
                 deviceTypePluginDAOManager.getDeviceTypeDAOHandler().beginTransaction();
-                status = deviceTypePluginDAOManager.getDeviceDAO().deleteDevices(deviceIdentifierList);
-                deviceTypePluginDAOManager.getDeviceTypeDAOHandler().commitTransaction();
+                if (deviceTypePluginDAOManager.getDeviceDAO().deleteDevices(deviceIdentifierList)) {
+                    deviceTypePluginDAOManager.getDeviceTypeDAOHandler().commitTransaction();
+                } else {
+                    deviceTypePluginDAOManager.getDeviceTypeDAOHandler().rollbackTransaction();
+                }
+                //check and rollback
             } catch (DeviceTypeMgtPluginException e) {
                 deviceTypePluginDAOManager.getDeviceTypeDAOHandler().rollbackTransaction();
+                if (log.isDebugEnabled()) {
+                    log.debug("Error occurred while deleting the " + deviceType + " devices: '" +
+                            deviceIdentifierList + "'. Transaction rolled back");
+                }
                 throw new DeviceManagementException(
                         "Error occurred while deleting the " + deviceType + " devices: '" +
-                        deviceIdentifierList + "'", e);
+                                deviceIdentifierList + "'", e);
             } finally {
                 deviceTypePluginDAOManager.getDeviceTypeDAOHandler().closeConnection();
             }
-            return status;
         }
-        return true;
     }
 
 }

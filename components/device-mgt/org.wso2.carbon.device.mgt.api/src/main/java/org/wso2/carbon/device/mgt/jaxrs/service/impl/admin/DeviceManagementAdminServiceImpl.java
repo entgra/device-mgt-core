@@ -144,16 +144,21 @@ public class DeviceManagementAdminServiceImpl implements DeviceManagementAdminSe
                 DeviceMgtAPIUtils.getDeviceManagementService();
         try {
             if (!deviceManagementProviderService.deleteDevice(deviceIdentifiers)) {
-                String msg = "Could not find device with valid identifier that can be deleted.";
+                String msg = "Found un-deployed device type.";
                 return Response.status(Response.Status.NOT_FOUND).entity(
                         new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
-            } else {
-                return Response.status(Response.Status.OK).entity(true).build();
             }
+            return Response.status(Response.Status.OK).entity(true).build();
         } catch (DeviceManagementException e) {
             String msg = "Error encountered while permanently deleting devices";
             log.error(msg, e);
             return Response.status(Response.Status.BAD_REQUEST).entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        }
+        catch (InvalidDeviceException e) {
+            String msg = "Found Invalid devices";
+            log.error(msg, e);
+            return Response.status(Response.Status.NOT_ACCEPTABLE).entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
         }
     }

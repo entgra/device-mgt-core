@@ -247,13 +247,4 @@ public final class DeviceManagementDAOUtil {
         return deviceInfo;
     }
 
-    public static String convertToString(List<Integer> values) {
-        StringBuilder buff = new StringBuilder();
-        for (int value : values) {
-            buff.append(value).append(",");
-        }
-        buff.deleteCharAt(buff.length() - 1);
-        return buff.toString();
-    }
-
 }

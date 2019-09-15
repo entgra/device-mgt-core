@@ -103,7 +103,7 @@ public interface DeviceManager {
      * @return A boolean indicating the status of the operation.
      * @throws DeviceManagementException If some unusual behaviour is observed while deleting a device
      */
-    boolean deleteDevices(List<String> deviceIdentifiers) throws DeviceManagementException;
+    void deleteDevices(List<String> deviceIdentifiers) throws DeviceManagementException;
 
     /**
      * Method to retrieve the status of the registration process of a particular device.
