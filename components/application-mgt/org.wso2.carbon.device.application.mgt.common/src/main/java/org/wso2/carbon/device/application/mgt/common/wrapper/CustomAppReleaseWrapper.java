@@ -65,13 +65,6 @@ public class CustomAppReleaseWrapper {
     @NotNull
     private String packageName;
 
-    @ApiModelProperty(name = "supportedOsVersions",
-            value = "Application release supported OS versions",
-            required = true,
-            example = "4.0-10.0")
-    @NotNull
-    private String supportedOsVersions;
-
     public String getReleaseType() {
         return releaseType;
     }
@@ -129,8 +122,4 @@ public class CustomAppReleaseWrapper {
     public void setPackageName(String packageName) {
         this.packageName = packageName;
     }
-
-    public String getSupportedOsVersions() { return supportedOsVersions; }
-
-    public void setSupportedOsVersions(String supportedOsVersions) { this.supportedOsVersions = supportedOsVersions; }
 }

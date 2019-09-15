@@ -2519,9 +2519,127 @@ public class ApplicationManagerImpl implements ApplicationManager {
     }
 
     @Override
-    public ApplicationRelease updateCustomAppRelease(String releaseUuid, CustomAppReleaseWrapper customAppReleaseWrapper,
-            ApplicationArtifact applicationArtifact) throws ApplicationManagementException{
-        return null;
+    public ApplicationRelease updateCustomAppRelease(String releaseUuid,
+            CustomAppReleaseWrapper customAppReleaseWrapper, ApplicationArtifact applicationArtifact)
+            throws ApplicationManagementException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        ApplicationStorageManager applicationStorageManager = DAOUtil.getApplicationStorageManager();
+        try {
+            ConnectionManagerUtil.beginDBTransaction();
+            ApplicationDTO applicationDTO = this.applicationDAO.getAppWithRelatedRelease(releaseUuid, tenantId);
+            AtomicReference<ApplicationReleaseDTO> applicationReleaseDTO = new AtomicReference<>(
+                    applicationDTO.getApplicationReleaseDTOs().get(0));
+            validateAppReleaseUpdating(applicationDTO, ApplicationType.ENTERPRISE.toString());
+            applicationReleaseDTO.get().setPrice(customAppReleaseWrapper.getPrice());
+            applicationReleaseDTO.get()
+                    .setIsSharedWithAllTenants(applicationReleaseDTO.get().getIsSharedWithAllTenants());
+            if (!StringUtils.isEmpty(customAppReleaseWrapper.getPackageName())) {
+                applicationReleaseDTO.get().setVersion(customAppReleaseWrapper.getVersion());
+            }
+            if (!StringUtils.isEmpty(customAppReleaseWrapper.getVersion())) {
+                applicationReleaseDTO.get().setVersion(customAppReleaseWrapper.getVersion());
+            }
+            if (!StringUtils.isEmpty(customAppReleaseWrapper.getDescription())) {
+                applicationReleaseDTO.get().setDescription(customAppReleaseWrapper.getDescription());
+            }
+            if (!StringUtils.isEmpty(customAppReleaseWrapper.getReleaseType())) {
+                applicationReleaseDTO.get().setReleaseType(customAppReleaseWrapper.getReleaseType());
+            }
+            if (!StringUtils.isEmpty(customAppReleaseWrapper.getMetaData())) {
+                applicationReleaseDTO.get().setMetaData(customAppReleaseWrapper.getMetaData());
+            }
+
+            if (!StringUtils.isEmpty(applicationArtifact.getInstallerName())
+                    && applicationArtifact.getInstallerStream() != null) {
+                DeviceType deviceTypeObj = APIUtil.getDeviceTypeData(applicationDTO.getDeviceTypeId());
+                // The application executable artifacts such as deb are uploaded.
+                try {
+                    byte[] content = IOUtils.toByteArray(applicationArtifact.getInstallerStream());
+                    try (ByteArrayInputStream binaryClone = new ByteArrayInputStream(content)) {
+                        String md5OfApp = StorageManagementUtil.getMD5(binaryClone);
+                        if (md5OfApp == null) {
+                            String msg = "Error occurred while retrieving md5sum value from the binary file for "
+                                    + "application release UUID " + applicationReleaseDTO.get().getUuid();
+                            log.error(msg);
+                            throw new ApplicationStorageManagementException(msg);
+                        }
+                        if (!applicationReleaseDTO.get().getAppHashValue().equals(md5OfApp)) {
+                            applicationReleaseDTO.get().setInstallerName(applicationArtifact.getInstallerName());
+                            try {
+                                ConnectionManagerUtil.getDBConnection();
+                                if (this.applicationReleaseDAO.verifyReleaseExistenceByHash(md5OfApp, tenantId)) {
+                                    String msg =
+                                            "Same binary file is in the server. Hence you can't add same file into the "
+                                                    + "server. Device Type: " + deviceTypeObj.getName()
+                                                    + " and package name: " + applicationDTO.getApplicationReleaseDTOs()
+                                                    .get(0).getPackageName();
+                                    log.error(msg);
+                                    throw new BadRequestException(msg);
+                                }
+
+                                String deletingAppHashValue = applicationReleaseDTO.get().getAppHashValue();
+                                applicationReleaseDTO.get().setAppHashValue(md5OfApp);
+                                try (ByteArrayInputStream binaryDuplicate = new ByteArrayInputStream(content)) {
+                                    applicationStorageManager
+                                            .uploadReleaseArtifact(applicationReleaseDTO.get(), deviceTypeObj.getName(),
+                                                    binaryDuplicate);
+                                    applicationStorageManager.copyImageArtifactsAndDeleteInstaller(deletingAppHashValue,
+                                            applicationReleaseDTO.get());
+                                }
+                            } catch (DBConnectionException e) {
+                                String msg = "Error occurred when getting database connection for verifying application"
+                                        + " release existing for new app hash value.";
+                                log.error(msg, e);
+                                throw new ApplicationManagementException(msg, e);
+                            } catch (ApplicationManagementDAOException e) {
+                                String msg =
+                                        "Error occurred when executing the query for verifying application release "
+                                                + "existence for the new app hash value.";
+                                log.error(msg, e);
+                                throw new ApplicationManagementException(msg, e);
+                            } finally {
+                                ConnectionManagerUtil.closeDBConnection();
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    String msg = "Error occurred when getting byte array of binary file. Installer name: "
+                            + applicationArtifact.getInstallerName();
+                    log.error(msg, e);
+                    throw new ApplicationStorageManagementException(msg, e);
+                }
+            }
+            applicationReleaseDTO.set(updateImageArtifacts(applicationReleaseDTO.get(), applicationArtifact));
+            boolean updateStatus = applicationReleaseDAO.updateRelease(applicationReleaseDTO.get(), tenantId) != null;
+            if (!updateStatus) {
+                ConnectionManagerUtil.rollbackDBTransaction();
+                return null;
+            }
+            ConnectionManagerUtil.commitDBTransaction();
+            return APIUtil.releaseDtoToRelease(applicationReleaseDTO.get());
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while getting the database connection to update enterprise app release which "
+                    + "has release UUID: " + releaseUuid;
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } catch (TransactionManagementException e) {
+            String msg = "Database access error is occurred when updating enterprise app release which has release "
+                    + "UUID: " + releaseUuid;
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } catch (ApplicationManagementDAOException e) {
+            ConnectionManagerUtil.rollbackDBTransaction();
+            String msg = "Error occured when updating Ent Application release of UUID: " + releaseUuid;
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } catch (ResourceManagementException e) {
+            String msg = "Error occured when updating application release artifact in the file system. Ent App release "
+                    + "UUID:" + releaseUuid;
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
     }
 
     private void validateAppReleaseUpdating(ApplicationDTO applicationDTO, String appType)
@@ -2865,14 +2983,15 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 log.error(msg);
                 throw new BadRequestException(msg);
             }
-
-        } else if (param instanceof CustomAppReleaseWrapper) {
-            CustomAppReleaseWrapper customAppReleaseWrapper = (CustomAppReleaseWrapper) param;
-            if (StringUtils.isEmpty(customAppReleaseWrapper.getSupportedOsVersions())) {
-                String msg = "Supported OS Version shouldn't be null or empty for custom app release creating request.";
+            if (!isValidOsVersions(publicAppReleaseWrapper.getSupportedOsVersions(), deviceType)) {
+                String msg = "You are trying to create application which has an application release contains invalid or "
+                        + "unsupported OS versions in the supportedOsVersions section. Hence, please re-evaluate the "
+                        + "request payload.";
                 log.error(msg);
                 throw new BadRequestException(msg);
             }
+        } else if (param instanceof CustomAppReleaseWrapper) {
+            CustomAppReleaseWrapper customAppReleaseWrapper = (CustomAppReleaseWrapper) param;
             if (StringUtils.isEmpty(customAppReleaseWrapper.getVersion())) {
                 String msg = "Version shouldn't be empty or null for the custom App release creating request.";
                 log.error(msg);
@@ -2883,7 +3002,6 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 log.error(msg);
                 throw new BadRequestException(msg);
             }
-
         } else {
             String msg = "Invalid payload found with the release creating request. Hence verify the release creating "
                     + "request payload object.";

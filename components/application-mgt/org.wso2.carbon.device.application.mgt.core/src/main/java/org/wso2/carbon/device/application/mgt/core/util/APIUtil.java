@@ -327,7 +327,6 @@ public class APIUtil {
             applicationReleaseDTO.setPrice(customAppReleaseWrapper.getPrice());
             applicationReleaseDTO.setIsSharedWithAllTenants(customAppReleaseWrapper.getIsSharedWithAllTenants());
             applicationReleaseDTO.setMetaData(customAppReleaseWrapper.getMetaData());
-            applicationReleaseDTO.setSupportedOsVersions(customAppReleaseWrapper.getSupportedOsVersions());
         }
         return applicationReleaseDTO;
     }
