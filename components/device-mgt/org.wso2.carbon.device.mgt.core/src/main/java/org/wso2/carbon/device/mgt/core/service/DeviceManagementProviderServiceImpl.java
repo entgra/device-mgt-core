@@ -99,7 +99,7 @@ import org.wso2.carbon.device.mgt.common.push.notification.NotificationStrategy;
 import org.wso2.carbon.device.mgt.common.spi.DeviceManagementService;
 import org.wso2.carbon.device.mgt.core.DeviceManagementConstants;
 import org.wso2.carbon.device.mgt.core.DeviceManagementPluginRepository;
-//import org.wso2.carbon.device.mgt.core.cache.DeviceCacheKey;
+import org.wso2.carbon.device.mgt.core.cache.DeviceCacheKey;
 import org.wso2.carbon.device.mgt.core.cache.impl.DeviceCacheManagerImpl;
 import org.wso2.carbon.device.mgt.core.config.DeviceConfigurationManager;
 import org.wso2.carbon.device.mgt.core.config.DeviceManagementConfig;
@@ -143,6 +143,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -607,7 +608,6 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             log.error(msg, e);
             throw new InvalidDeviceException(msg, e);
         }
-        return true;
     }
 
     @Override
@@ -2997,6 +2997,10 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
 
     private void removeDeviceFromCache(DeviceIdentifier deviceIdentifier) {
         DeviceCacheManagerImpl.getInstance().removeDeviceFromCache(deviceIdentifier, this.getTenantId());
+    }
+
+    private void removeDevicesFromCache(List<DeviceCacheKey> deviceList) {
+        DeviceCacheManagerImpl.getInstance().removeDevicesFromCache(deviceList);
     }
 
     @Override
