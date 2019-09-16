@@ -62,8 +62,7 @@ class GooglePlayIframe extends React.Component {
                     onOk={this.handleOk}
                     onCancel={this.handleCancel}
                     width = {740}
-                    footer={null}
-                >
+                    footer={null}>
                     <iframe
                         style={{
                             height: 720,

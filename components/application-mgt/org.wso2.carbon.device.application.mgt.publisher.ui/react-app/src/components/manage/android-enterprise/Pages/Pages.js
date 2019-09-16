@@ -24,6 +24,7 @@ import {withConfigContext} from "../../../../context/ConfigContext";
 import "./Pages.css";
 import {Link} from "react-router-dom";
 import AddNewPage from "../AddNewPage/AddNewPage";
+import {handleApiError} from "../../../../js/Utils";
 
 const {Text, Title} = Typography;
 
@@ -85,25 +86,13 @@ class Pages extends React.Component {
             }
 
         }).catch((error) => {
-            if (error.hasOwnProperty("response") && error.response.status === 401) {
-                message.error('You are not logged in');
-                window.location.href = window.location.origin + '/publisher/login';
-            } else {
-                notification["error"]({
-                    message: "There was a problem",
-                    duration: 0,
-                    description:
-                        "Error occurred while trying to load pages.",
-                });
-            }
-
+            handleApiError(error, "Error occurred while trying to load pages.");
             this.setState({loading: false});
         });
     };
 
     setHomePage = () => {
         const config = this.props.context;
-
         //send request to the invoker
         axios.get(
             window.location.origin + config.serverConfig.invoker.uri +
@@ -114,19 +103,9 @@ class Pages extends React.Component {
                     homePageId: res.data.data.homepageId
                 });
             }
-
         }).catch((error) => {
-            if (error.hasOwnProperty("response") && error.response.status === 401) {
-                message.error('You are not logged in');
-                window.location.href = window.location.origin + '/publisher/login';
-            } else {
-                notification["error"]({
-                    message: "There was a problem",
-                    duration: 0,
-                    description:
-                        "Error occurred while trying to get home page.",
-                });
-            }
+            handleApiError(error, "Error occurred while trying to get home page.");
+            this.setState({loading: false});
         });
     };
 
@@ -155,21 +134,8 @@ class Pages extends React.Component {
             }
 
         }).catch((error) => {
-            if (error.hasOwnProperty("response") && error.response.status === 401) {
-                message.error('You are not logged in');
-                window.location.href = window.location.origin + '/publisher/login';
-            } else {
-                notification["error"]({
-                    message: "There was a problem",
-                    duration: 0,
-                    description:
-                        "Error occurred while trying to update the home page.",
-                });
-                this.setState({
-                    loading: false
-                });
-            }
-
+            handleApiError(error, "Error occurred while trying to update the home page.");
+            this.setState({loading: false});
         });
     };
 
@@ -204,21 +170,8 @@ class Pages extends React.Component {
             }
 
         }).catch((error) => {
-            if (error.hasOwnProperty("response") && error.response.status === 401) {
-                message.error('You are not logged in');
-                window.location.href = window.location.origin + '/publisher/login';
-            } else {
-                notification["error"]({
-                    message: "There was a problem",
-                    duration: 0,
-                    description:
-                        "Error occurred while trying to update the home page.",
-                });
-                this.setState({
-                    loading: false
-                });
-            }
-
+            handleApiError(error, "Error occurred while trying to delete the page.");
+            this.setState({loading: false});
         });
     };
 
@@ -283,9 +236,7 @@ class Pages extends React.Component {
         return (
             <div className="layout-pages">
                 <Title level={4}>Pages</Title>
-
                 <AddNewPage/>
-
                 <div style={{backgroundColor: "#ffffff", borderRadius: 5}}>
                     <Table
                         columns={this.columns}

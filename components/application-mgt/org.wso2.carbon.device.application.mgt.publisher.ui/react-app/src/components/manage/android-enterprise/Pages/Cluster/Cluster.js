@@ -23,6 +23,7 @@ import "./Cluster.css";
 import axios from "axios";
 import {withConfigContext} from "../../../../../context/ConfigContext";
 import AddAppsToClusterModal from "./AddAppsToClusterModal/AddAppsToClusterModal";
+import {handleApiError} from "../../../../../js/Utils";
 
 const {Title} = Typography;
 
@@ -30,7 +31,6 @@ class Cluster extends React.Component {
 
     constructor(props) {
         super(props);
-
         const {cluster, pageId} = this.props;
         this.originalCluster = Object.assign({}, cluster);
         const {name, products, clusterId} = cluster;
@@ -147,19 +147,7 @@ class Cluster extends React.Component {
                 }
             }
         }).catch((error) => {
-            console.log(error);
-
-            if (error.hasOwnProperty("response") && error.response.status === 401) {
-                message.error('You are not logged in');
-                window.location.href = window.location.origin + '/publisher/login';
-            } else {
-                notification["error"]({
-                    message: "There was a problem",
-                    duration: 0,
-                    description:
-                        "Error occurred while trying to update the cluster.",
-                });
-            }
+            handleApiError(error, "Error occurred while trying to update the cluster.");
             this.setState({loading: false});
         });
 
@@ -167,7 +155,6 @@ class Cluster extends React.Component {
 
     deleteCluster = () => {
         const config = this.props.context;
-
         this.setState({loading: true});
 
         axios.delete(
@@ -188,17 +175,7 @@ class Cluster extends React.Component {
 
             }
         }).catch((error) => {
-            if (error.hasOwnProperty("response") && error.response.status === 401) {
-                message.error('You are not logged in');
-                window.location.href = window.location.origin + '/publisher/login';
-            } else {
-                notification["error"]({
-                    message: "There was a problem",
-                    duration: 0,
-                    description:
-                        "Error occurred while trying to update the cluster.",
-                });
-            }
+            handleApiError(error, "Error occurred while trying to update the cluster.");
             this.setState({loading: false});
         });
 
@@ -283,7 +260,8 @@ class Cluster extends React.Component {
             const {packageId} = product;
             let imageSrc = "";
             const iconUrl = product.iconUrl;
-            if (iconUrl.substring(0, 8) === "https://") {
+            // check if the icon url is an url or google image id
+            if (iconUrl.startsWith("http")) {
                 imageSrc = iconUrl;
             } else {
                 imageSrc = `https://lh3.googleusercontent.com/${iconUrl}=s240-rw`;
@@ -294,12 +272,12 @@ class Cluster extends React.Component {
                         <button disabled={index === 0} className="btn"
                                 onClick={() => {
                                     this.swapProduct(index, index - 1);
-                                }}
-                        ><Icon type="caret-left" theme="filled"/></button>
+                                }}>
+                            <Icon type="caret-left" theme="filled"/>
+                        </button>
                     </div>
                     <div className="product-icon">
-                        <img
-                            src={imageSrc}/>
+                        <img src={imageSrc}/>
                         <Tooltip title={packageId}>
                             <div className="title">
                                 {packageId}
@@ -324,7 +302,6 @@ class Cluster extends React.Component {
                 </div>
             );
         };
-
 
         return (
             <div className="cluster" id={this.props.orderInPage}>
@@ -372,15 +349,9 @@ class Cluster extends React.Component {
                         </Col>
                     </Row>
                     <div className="products-row">
-
                         <AddAppsToClusterModal
                             addSelectedProducts={this.addSelectedProducts}
                             unselectedProducts={unselectedProducts}/>
-
-                        <div className="product-icon">
-
-
-                        </div>
                         {
                             products.map((product, index) => {
                                 return (

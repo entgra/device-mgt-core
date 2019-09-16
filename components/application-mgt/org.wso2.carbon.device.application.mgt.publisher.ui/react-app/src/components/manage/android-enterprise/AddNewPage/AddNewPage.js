@@ -21,6 +21,7 @@ import {Button, Divider, Form, Input, message, Modal, notification, Spin} from "
 import axios from "axios";
 import {withConfigContext} from "../../../../context/ConfigContext";
 import {withRouter} from "react-router";
+import {handleApiError} from "../../../../js/Utils";
 
 class AddNewPage extends React.Component {
 
@@ -51,10 +52,7 @@ class AddNewPage extends React.Component {
     };
 
     createNewPage = () => {
-
-
         const config = this.props.context;
-
         this.setState({loading: true});
 
         axios.post(
@@ -79,18 +77,7 @@ class AddNewPage extends React.Component {
                 this.props.history.push(`/publisher/manage/android-enterprise/pages/${pageName}/${pageId}`);
             }
         }).catch((error) => {
-            if (error.hasOwnProperty("response") && error.response.status === 401) {
-                message.error('You are not logged in');
-                window.location.href = window.location.origin + '/publisher/login';
-            } else {
-                notification["error"]({
-                    message: "There was a problem",
-                    duration: 0,
-                    description:
-                        "Error occurred while trying to update the cluster.",
-                });
-            }
-
+            handleApiError(error, "Error occurred while trying to update the cluster.");
             this.setState({loading: false});
         });
     };
@@ -114,9 +101,7 @@ class AddNewPage extends React.Component {
                     <Spin spinning={this.state.loading}>
                         <p>Choose a name for the page</p>
                         <Input onChange={this.handlePageName}/>
-
                         <Divider/>
-
                         <div>
                             <Button
                                 onClick={this.handleCancel}>

@@ -16,28 +16,11 @@
  * under the License.
  */
 
-/*
- * Copyright (c) 2019, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
- *
- * Entgra (pvt) Ltd. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-
 import React from "react";
-import {Button, Divider, Form, Input, message, Modal, notification, Select, Spin} from "antd";
+import {Button, message, Modal, notification, Select, Spin} from "antd";
 import axios from "axios";
 import {withConfigContext} from "../../../../../context/ConfigContext";
+import {handleApiError} from "../../../../../js/Utils";
 
 const {Option} = Select;
 
@@ -65,11 +48,8 @@ class EditLinks extends React.Component {
         });
     };
 
-
     updateLinks = () => {
-
         const config = this.props.context;
-
         this.setState({loading: true});
 
         axios.put(
@@ -95,18 +75,7 @@ class EditLinks extends React.Component {
                 });
             }
         }).catch((error) => {
-            if (error.hasOwnProperty("response") && error.response.status === 401) {
-                message.error('You are not logged in');
-                window.location.href = window.location.origin + '/publisher/login';
-            } else {
-                notification["error"]({
-                    message: "There was a problem",
-                    duration: 0,
-                    description:
-                        "Error occurred while trying to update the cluster.",
-                });
-            }
-
+            handleApiError(error, "Error occurred while trying to update the cluster.");
             this.setState({loading: false});
         });
     };
@@ -114,6 +83,7 @@ class EditLinks extends React.Component {
     handleChange= (selectedLinks) =>{
         this.selectedLinks = selectedLinks;
     };
+
     render() {
         return (
             <div>
@@ -123,8 +93,7 @@ class EditLinks extends React.Component {
                     visible={this.state.visible}
                     onOk={this.updateLinks}
                     onCancel={this.handleCancel}
-                    okText="Update"
-                >
+                    okText="Update">
                     <Spin spinning={this.state.loading}>
                         <Select
                             mode="multiple"
@@ -139,7 +108,6 @@ class EditLinks extends React.Component {
                                     </Option>))
                             }
                         </Select>
-
                     </Spin>
                 </Modal>
             </div>

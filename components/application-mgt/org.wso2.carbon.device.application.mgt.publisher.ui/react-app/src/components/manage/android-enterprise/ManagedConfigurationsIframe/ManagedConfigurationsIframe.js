@@ -20,6 +20,7 @@ import React from "react";
 import {Button, message, Modal, notification, Spin} from "antd";
 import axios from "axios";
 import {withConfigContext} from "../../../../context/ConfigContext";
+import {handleApiError} from "../../../../js/Utils";
 
 // import gapi from 'gapi-client';
 
@@ -133,6 +134,7 @@ class ManagedConfigurationsIframe extends React.Component {
             profileName: event.name,
             packageName
         };
+
         //send request to the invoker
         axios({
             method,
@@ -189,18 +191,7 @@ class ManagedConfigurationsIframe extends React.Component {
                 });
             }
         }).catch((error) => {
-            if (error.hasOwnProperty("response") && error.response.status === 401) {
-                message.error('You are not logged in');
-                window.location.href = window.location.origin + '/publisher/login';
-            } else {
-                notification["error"]({
-                    message: "There was a problem",
-                    duration: 0,
-                    description:
-                        "Error occurred while trying to remove configurations.",
-                });
-            }
-
+            handleApiError(error, "Error occurred while trying to remove configurations.");
             this.setState({loading: false});
         });
     };

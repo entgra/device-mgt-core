@@ -20,6 +20,7 @@ import React from "react";
 import {Button, notification} from "antd";
 import axios from "axios";
 import {withConfigContext} from "../../../context/ConfigContext";
+import {handleApiError} from "../../../js/Utils";
 
 class SyncAndroidApps extends React.Component {
 
@@ -29,7 +30,6 @@ class SyncAndroidApps extends React.Component {
             loading: false
         }
     }
-
 
     syncApps = () => {
         const config = this.props.context;
@@ -51,12 +51,7 @@ class SyncAndroidApps extends React.Component {
                 loading: false
             });
         }).catch((error) => {
-            notification["error"]({
-                message: "There was a problem",
-                duration: 0,
-                description:
-                    "Error occurred while syncing the apps.",
-            });
+            handleApiError(error, "Error occurred while syncing the apps.");
             this.setState({
                 loading: false
             })

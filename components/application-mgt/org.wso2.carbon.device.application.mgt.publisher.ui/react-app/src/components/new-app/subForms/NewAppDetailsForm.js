@@ -41,10 +41,9 @@ class NewAppDetailsForm extends React.Component {
         this.state = {
             categories: [],
             tags: [],
-            deviceTypes:[]
+            deviceTypes: []
         }
     }
-
 
     handleSubmit = e => {
         e.preventDefault();
@@ -56,7 +55,11 @@ class NewAppDetailsForm extends React.Component {
                 this.setState({
                     loading: true
                 });
-                const {name, description, categories, tags, price, isSharedWithAllTenants, binaryFile, icon, screenshots, releaseDescription, releaseType} = values;
+                const {
+                    name, description, categories, tags, price,
+                    isSharedWithAllTenants, binaryFile, icon, screenshots,
+                    releaseDescription, releaseType
+                } = values;
                 const application = {
                     name,
                     description,
@@ -72,7 +75,6 @@ class NewAppDetailsForm extends React.Component {
                     application.type = "WEB_CLIP";
                     application.deviceType = "ALL";
                 }
-
                 this.props.onSuccessApplicationData(application);
             }
         });
@@ -96,7 +98,6 @@ class NewAppDetailsForm extends React.Component {
                     loading: false
                 });
             }
-
         }).catch((error) => {
             if (error.hasOwnProperty("response") && error.response.status === 401) {
                 window.location.href = window.location.origin + '/publisher/login';
@@ -126,7 +127,6 @@ class NewAppDetailsForm extends React.Component {
                     loading: false,
                 });
             }
-
         }).catch((error) => {
             if (error.hasOwnProperty("response") && error.response.status === 401) {
                 window.location.href = window.location.origin + '/publisher/login';
@@ -156,7 +156,6 @@ class NewAppDetailsForm extends React.Component {
                     loading: false,
                 });
             }
-
         }).catch((error) => {
             if (error.hasOwnProperty("response") && error.response.status === 401) {
                 window.location.href = window.location.origin + '/publisher/login';
@@ -205,8 +204,7 @@ class NewAppDetailsForm extends React.Component {
                                         <Select
                                             style={{width: '100%'}}
                                             placeholder="select device type"
-                                            onChange={this.handleCategoryChange}
-                                        >
+                                            onChange={this.handleCategoryChange}>
                                             {
                                                 deviceTypes.map(deviceType => {
                                                     return (
@@ -256,8 +254,7 @@ class NewAppDetailsForm extends React.Component {
                                         mode="multiple"
                                         style={{width: '100%'}}
                                         placeholder="Select a Category"
-                                        onChange={this.handleCategoryChange}
-                                    >
+                                        onChange={this.handleCategoryChange}>
                                         {
                                             categories.map(category => {
                                                 return (
@@ -281,8 +278,7 @@ class NewAppDetailsForm extends React.Component {
                                     <Select
                                         mode="tags"
                                         style={{width: '100%'}}
-                                        placeholder="Tags"
-                                    >
+                                        placeholder="Tags">
                                         {
                                             tags.map(tag => {
                                                 return (

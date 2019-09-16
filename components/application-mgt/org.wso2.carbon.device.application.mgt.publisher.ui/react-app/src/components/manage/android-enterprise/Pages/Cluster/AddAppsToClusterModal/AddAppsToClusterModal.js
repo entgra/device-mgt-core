@@ -17,7 +17,7 @@
  */
 
 import React from "react";
-import {Modal, Button, Icon, Tag, Divider, Popconfirm, Table, Avatar} from 'antd';
+import {Modal, Icon, Table, Avatar} from 'antd';
 import "../Cluster.css";
 import {withConfigContext} from "../../../../../../context/ConfigContext";
 
@@ -76,10 +76,8 @@ class AddAppsToClusterModal extends React.Component {
         },
     };
 
-
-
     render() {
-        const {data, pagination, loading, selectedRows} = this.state;
+        const {pagination, loading} = this.state;
         return (
             <div>
                 <div className="btn-add-new-wrapper">
@@ -98,8 +96,7 @@ class AddAppsToClusterModal extends React.Component {
                     width={640}
                     visible={this.state.visible}
                     onOk={this.handleOk}
-                    onCancel={this.handleCancel}
-                >
+                    onCancel={this.handleCancel}>
                     <Table
                         columns={columns}
                         rowKey={record => record.packageId}
