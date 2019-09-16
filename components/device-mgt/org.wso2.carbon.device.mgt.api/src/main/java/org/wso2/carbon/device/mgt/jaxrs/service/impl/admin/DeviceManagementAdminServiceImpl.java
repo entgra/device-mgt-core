@@ -152,13 +152,13 @@ public class DeviceManagementAdminServiceImpl implements DeviceManagementAdminSe
         } catch (DeviceManagementException e) {
             String msg = "Error encountered while permanently deleting devices";
             log.error(msg, e);
-            return Response.status(Response.Status.BAD_REQUEST).entity(
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
         }
         catch (InvalidDeviceException e) {
             String msg = "Found Invalid devices";
             log.error(msg, e);
-            return Response.status(Response.Status.NOT_ACCEPTABLE).entity(
+            return Response.status(Response.Status.BAD_REQUEST).entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
         }
     }

@@ -1643,8 +1643,9 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 }
             }
         } catch (SQLException e) {
-            throw new DeviceManagementDAOException("Error occurred while deleting the devices: "
-                    + deviceIdentifiers, e);
+            String msg ="Error occurred while deleting the devices: " + deviceIdentifiers;
+            log.error(msg);
+            throw new DeviceManagementDAOException(msg, e);
         }
     }
 
