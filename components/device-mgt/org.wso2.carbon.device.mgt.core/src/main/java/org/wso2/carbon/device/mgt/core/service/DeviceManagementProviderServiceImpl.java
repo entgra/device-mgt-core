@@ -571,9 +571,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                         return false;
                     }
                     deviceManagerMap.put(device.getType(), deviceManager);
-
                 }
-
             }
             //deleting device from the core
             deviceDAO.deleteDevices(deviceIdentifiers, deviceIds, enrollmentIds);
@@ -602,11 +600,6 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                     "' devices";
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
-        } catch (InvalidDeviceException e) {
-            String msg = "Error occurred while validating '" + deviceIdentifiers +
-                    "' devices";
-            log.error(msg, e);
-            throw new InvalidDeviceException(msg, e);
         }
     }
 
