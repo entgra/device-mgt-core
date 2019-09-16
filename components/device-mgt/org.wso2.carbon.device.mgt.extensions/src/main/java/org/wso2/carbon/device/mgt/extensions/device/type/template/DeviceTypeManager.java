@@ -599,7 +599,6 @@ public class DeviceTypeManager implements DeviceManager {
                 } else {
                     deviceTypePluginDAOManager.getDeviceTypeDAOHandler().rollbackTransaction();
                 }
-                //check and rollback
             } catch (DeviceTypeMgtPluginException e) {
                 deviceTypePluginDAOManager.getDeviceTypeDAOHandler().rollbackTransaction();
                 if (log.isDebugEnabled()) {
