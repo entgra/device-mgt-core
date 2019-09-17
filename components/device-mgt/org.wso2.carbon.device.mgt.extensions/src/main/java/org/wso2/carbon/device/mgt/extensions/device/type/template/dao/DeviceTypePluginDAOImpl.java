@@ -217,13 +217,13 @@ public class DeviceTypePluginDAOImpl implements PluginDAO {
     }
 
     @Override
-    public boolean deleteDevices(List<String> deviceIds) throws DeviceTypeMgtPluginException {
+    public boolean deleteDevices(List<String> deviceIdentifiers) throws DeviceTypeMgtPluginException {
         try {
             Connection conn = deviceTypeDAOHandler.getConnection();
             boolean status = true;
             try (PreparedStatement ps = conn.prepareStatement(deleteDBQueryForDeleteDevice)) {
                 if (conn.getMetaData().supportsBatchUpdates()) {
-                    for (String deviceId : deviceIds) {
+                    for (String deviceId : deviceIdentifiers) {
                         ps.setString(1, deviceId);
                         ps.addBatch();
                     }
@@ -234,7 +234,7 @@ public class DeviceTypePluginDAOImpl implements PluginDAO {
                         }
                     }
                 } else {
-                    for (String deviceId : deviceIds) {
+                    for (String deviceId : deviceIdentifiers) {
                         ps.setString(1, deviceId);
                         if (ps.executeUpdate() == 0) {
                             status = false;

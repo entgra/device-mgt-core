@@ -219,13 +219,13 @@ public class PropertyBasedPluginDAOImpl implements PluginDAO {
     }
 
     @Override
-    public boolean deleteDevices(List<String> deviceIds) throws DeviceTypeMgtPluginException {
+    public boolean deleteDevices(List<String> deviceIdentifiers) throws DeviceTypeMgtPluginException {
         try {
             Connection conn = deviceTypeDAOHandler.getConnection();
             boolean status = true;
             try (PreparedStatement ps = conn.prepareStatement("DELETE FROM DM_DEVICE_PROPERTIES WHERE DEVICE_IDENTIFICATION = ?")) {
                 if (conn.getMetaData().supportsBatchUpdates()) {
-                    for (String deviceId : deviceIds) {
+                    for (String deviceId : deviceIdentifiers) {
                         ps.setString(1, deviceId);
                         ps.addBatch();
                     }
@@ -236,7 +236,7 @@ public class PropertyBasedPluginDAOImpl implements PluginDAO {
                         }
                     }
                 } else {
-                    for (String deviceId : deviceIds) {
+                    for (String deviceId : deviceIdentifiers) {
                         ps.setString(1, deviceId);
                         if (ps.executeUpdate() == 0) {
                             status = false;
@@ -247,7 +247,7 @@ public class PropertyBasedPluginDAOImpl implements PluginDAO {
             }
             return status;
         } catch (SQLException e) {
-            String msg = "Error occurred while deleting the data of the devices: '" + deviceIds + "'of type:  "
+            String msg = "Error occurred while deleting the data of the devices: '" + deviceIdentifiers + "'of type:  "
                     + deviceType;
             log.error(msg, e);
             throw new DeviceTypeMgtPluginException(msg, e);

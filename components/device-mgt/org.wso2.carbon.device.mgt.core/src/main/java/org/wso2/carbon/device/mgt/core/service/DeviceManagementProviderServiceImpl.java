@@ -541,6 +541,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                                 "Therefore payload should contain device identifiers which are not in the system. " +
                                 "Invalid device identifiers are " + deviceIdentifiers.toString();
                 log.error(msg);
+                DeviceManagementDAOFactory.rollbackTransaction();
                 throw new InvalidDeviceException(msg);
             }
             for (Device device : existingDevices) {
@@ -548,6 +549,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                     String msg = "Device " + device.getDeviceIdentifier() + " of type " + device.getType()
                             + " is not dis-enrolled to permanently delete the device";
                     log.error(msg);
+                    DeviceManagementDAOFactory.rollbackTransaction();
                     throw new InvalidDeviceException(msg);
                 }
                 DeviceCacheKey deviceCacheKey = new DeviceCacheKey();
@@ -584,6 +586,8 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                             "' devices with the identifiers: '" + deviceIdentifierMap.get(entry.getKey())
                             + "' in plugin.";
                     log.error(msg, e);
+                    // a DeviceManagementException is thrown when the device deletion fails from the plugin level.
+                    // Here, that exception is caught and a DeviceManagementDAOException is thrown
                     throw new DeviceManagementDAOException(msg, e);
                 }
             }

@@ -598,6 +598,10 @@ public class DeviceTypeManager implements DeviceManager {
                     deviceTypePluginDAOManager.getDeviceTypeDAOHandler().commitTransaction();
                 } else {
                     deviceTypePluginDAOManager.getDeviceTypeDAOHandler().rollbackTransaction();
+                    String msg = "Error occurred while deleting the " + deviceType + " devices: '" +
+                            deviceIdentifierList;
+                    log.error(msg);
+                    throw new DeviceManagementException(msg);
                 }
             } catch (DeviceTypeMgtPluginException e) {
                 deviceTypePluginDAOManager.getDeviceTypeDAOHandler().rollbackTransaction();
@@ -605,9 +609,9 @@ public class DeviceTypeManager implements DeviceManager {
                     log.debug("Error occurred while deleting the " + deviceType + " devices: '" +
                             deviceIdentifierList + "'. Transaction rolled back");
                 }
-                throw new DeviceManagementException(
-                        "Error occurred while deleting the " + deviceType + " devices: '" +
-                                deviceIdentifierList + "'", e);
+                String msg= "Error occurred while deleting the " + deviceType + " devices: '" +
+                        deviceIdentifierList;
+                throw new DeviceManagementException(msg, e);
             } finally {
                 deviceTypePluginDAOManager.getDeviceTypeDAOHandler().closeConnection();
             }
