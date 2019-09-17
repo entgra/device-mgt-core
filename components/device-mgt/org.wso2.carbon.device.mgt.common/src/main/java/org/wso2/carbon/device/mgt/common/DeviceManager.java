@@ -97,10 +97,8 @@ public interface DeviceManager {
     boolean disenrollDevice(DeviceIdentifier deviceId) throws DeviceManagementException;
 
     /**
-     * Method to delete a particular device from CDM.
-     *
+     * Method to delete multiple devices from CDM.
      * @param deviceIdentifiers Fully qualified device identifier list
-     * @return A boolean indicating the status of the operation.
      * @throws DeviceManagementException If some unusual behaviour is observed while deleting a device
      */
     void deleteDevices(List<String> deviceIdentifiers) throws DeviceManagementException;
