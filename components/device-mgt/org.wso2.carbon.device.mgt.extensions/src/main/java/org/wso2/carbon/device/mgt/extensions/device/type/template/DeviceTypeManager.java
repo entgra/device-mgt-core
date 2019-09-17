@@ -611,6 +611,7 @@ public class DeviceTypeManager implements DeviceManager {
                 }
                 String msg= "Error occurred while deleting the " + deviceType + " devices: '" +
                         deviceIdentifierList;
+                log.error(msg,e);
                 throw new DeviceManagementException(msg, e);
             } finally {
                 deviceTypePluginDAOManager.getDeviceTypeDAOHandler().closeConnection();
