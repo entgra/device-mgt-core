@@ -1654,8 +1654,8 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         try {
             executeBatchOperation(conn, sql, deviceIds);
         } catch (SQLException e) {
-            String msg = "Error occurred while removing. device details";
-            log.error(msg);
+            String msg = "Error occurred while removing device details.";
+            log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
     }
@@ -1666,7 +1666,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             executeBatchOperation(conn, sql, deviceIds);
         } catch (SQLException e) {
             String msg = "Error occurred while obtaining locations of devices.";
-            log.error(msg);
+            log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
     }
@@ -1677,7 +1677,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             executeBatchOperation(conn, sql, deviceIds);
         } catch (SQLException e) {
             String msg = "Error occurred while removing device info.";
-            log.error(msg);
+            log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
     }
@@ -1688,7 +1688,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             executeBatchOperation(conn, sql, deviceIds);
         } catch (SQLException e) {
             String msg = "Error occurred while removing device notifications.";
-            log.error(msg);
+            log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
 
@@ -1701,7 +1701,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             executeBatchOperation(conn, sql, deviceIds);
         } catch (SQLException e) {
             String msg = "Error occurred while removing device application mapping";
-            log.error(msg);
+            log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
     }
@@ -1713,7 +1713,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             executeBatchOperation(conn, sql, deviceIds);
         } catch (SQLException e) {
             String msg = "Error occurred while removing policies applied on devices";
-            log.error(msg);
+            log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
     }
@@ -1724,7 +1724,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             executeBatchOperation(conn, sql, deviceIds);
         } catch (SQLException e) {
             String msg = "Error occurred while removing policies of devices";
-            log.error(msg);
+            log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
     }
@@ -1736,7 +1736,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             executeBatchOperation(conn, sql, enrollmentIds);
         } catch (SQLException e) {
             String msg = "Error occurred while removing enrollment details of devices";
-            log.error(msg);
+            log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
     }
@@ -1748,7 +1748,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             executeBatchOperation(conn, sql, enrollmentIds);
         } catch (SQLException e) {
             String msg = "Error occurred while removing enrollment locations of devices";
-            log.error(msg);
+            log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
     }
@@ -1760,7 +1760,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             executeBatchOperation(conn, sql, enrollmentIds);
         } catch (SQLException e) {
             String msg = "Error occurred while removing enrollment info of devices";
-            log.error(msg);
+            log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
     }
@@ -1772,7 +1772,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             executeBatchOperation(conn, sql, enrollmentIds);
         } catch (SQLException e) {
             String msg = "Error occurred while removing enrollment device application mapping";
-            log.error(msg);
+            log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
     }
@@ -1784,7 +1784,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             executeBatchOperation(conn, sql, enrollmentIds);
         } catch (SQLException e) {
             String msg = "Error occurred while removing device operation response";
-            log.error(msg);
+            log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
     }
@@ -1796,7 +1796,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             executeBatchOperation(conn, sql, enrollmentIds);
         } catch (SQLException e) {
             String msg = "Error occurred while removing enrollment operation mapping";
-            log.error(msg);
+            log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
     }
@@ -1808,7 +1808,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             executeBatchOperation(conn, sql, enrollmentIds);
         } catch (SQLException e) {
             String msg = "Error occurred while removing enrollments of devices";
-            log.error(msg);
+            log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
     }
@@ -1819,7 +1819,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             executeBatchOperation(conn, sql, deviceIds);
         } catch (SQLException e) {
             String msg = "Error occurred while removing device group mapping";
-            log.error(msg);
+            log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
     }
@@ -1830,7 +1830,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             executeBatchOperation(conn, sql, deviceIds);
         } catch (SQLException e) {
             String msg = "Error occurred while removing devices.";
-            log.error(msg);
+            log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
     }
