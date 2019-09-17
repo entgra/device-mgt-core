@@ -1804,7 +1804,9 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
     }
 
     /***
-     * This method executes batch operations for a given list of primary keys.
+     * This method executes batch operations for a given list of primary keys
+     * where the statement only has one param of type int, following the given pattern:
+     *    DELETE FROM TABLE WHERE ID = ?
      * @param sql SQL statement
      * @param conn Connection object
      * @param identifiers list of device ids (primary keys)
