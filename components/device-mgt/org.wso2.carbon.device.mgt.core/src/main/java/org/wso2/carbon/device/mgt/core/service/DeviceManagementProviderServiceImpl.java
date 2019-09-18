@@ -521,7 +521,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public boolean deleteDevice(List<String> deviceIdentifiers) throws DeviceManagementException, InvalidDeviceException {
+    public boolean deleteDevices(List<String> deviceIdentifiers) throws DeviceManagementException, InvalidDeviceException {
         List<Integer> deviceIds = new ArrayList<>();
         List<Integer> enrollmentIds = new ArrayList<>();
         Map<String, List<String>> deviceIdentifierMap = new HashMap<>();

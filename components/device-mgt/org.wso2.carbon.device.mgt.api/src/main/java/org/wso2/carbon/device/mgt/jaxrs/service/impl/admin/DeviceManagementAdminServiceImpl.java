@@ -139,11 +139,11 @@ public class DeviceManagementAdminServiceImpl implements DeviceManagementAdminSe
     @DELETE
     @Override
     @Path("/permanent-delete")
-    public Response deleteDevicePermanently(List<String> deviceIdentifiers) {
+    public Response deleteDevicesPermanently(List<String> deviceIdentifiers) {
         DeviceManagementProviderService deviceManagementProviderService =
                 DeviceMgtAPIUtils.getDeviceManagementService();
         try {
-            if (!deviceManagementProviderService.deleteDevice(deviceIdentifiers)) {
+            if (!deviceManagementProviderService.deleteDevices(deviceIdentifiers)) {
                 String msg = "Found un-deployed device type.";
                 log.error(msg);
                 return Response.status(Response.Status.NOT_FOUND).entity(

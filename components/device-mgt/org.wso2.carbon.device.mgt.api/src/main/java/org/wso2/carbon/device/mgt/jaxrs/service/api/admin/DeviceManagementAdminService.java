@@ -300,7 +300,7 @@ public interface DeviceManagementAdminService {
                                       "Server error occurred while retrieving information requested device.",
                             response = ErrorResponse.class)
             })
-    Response deleteDevicePermanently(
+    Response deleteDevicesPermanently(
             @ApiParam(
                     name = "Device Identifiers",
                     value = "List of device identifiers.",
