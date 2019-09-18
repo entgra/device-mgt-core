@@ -249,7 +249,7 @@ public interface DeviceManagementAdminService {
                     List<String> deviceIdentifiers);
 
     @DELETE
-    @Path("/type/{device-type}/id/{device-id}")
+    @Path("/permanent-delete")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             consumes = MediaType.APPLICATION_JSON,
@@ -302,17 +302,8 @@ public interface DeviceManagementAdminService {
             })
     Response deleteDevicePermanently(
             @ApiParam(
-                    name = "device-type",
-                    value = "The device type, such as ios, android, or windows.",
+                    name = "Device Identifiers",
+                    value = "List of device identifiers.",
                     required = true)
-            @PathParam("device-type")
-            @Size(max = 45)
-                    String deviceType,
-            @ApiParam(
-                    name = "device-id",
-                    value = "The device identifier of the device.",
-                    required = true)
-            @PathParam("device-id")
-            @Size(max = 45)
-                    String deviceId);
+                    List<String> deviceIdentifiers);
 }
