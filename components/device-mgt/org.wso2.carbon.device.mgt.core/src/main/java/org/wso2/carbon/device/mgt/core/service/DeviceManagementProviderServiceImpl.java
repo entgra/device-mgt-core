@@ -2996,6 +2996,10 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         DeviceCacheManagerImpl.getInstance().removeDeviceFromCache(deviceIdentifier, this.getTenantId());
     }
 
+    /***
+     * This method removes a given list of devices from the cache
+     * @param deviceList list of DeviceCacheKey objects
+     */
     private void removeDevicesFromCache(List<DeviceCacheKey> deviceList) {
         DeviceCacheManagerImpl.getInstance().removeDevicesFromCache(deviceList);
     }

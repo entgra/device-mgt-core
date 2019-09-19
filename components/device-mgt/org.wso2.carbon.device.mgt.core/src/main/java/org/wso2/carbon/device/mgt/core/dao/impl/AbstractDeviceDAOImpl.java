@@ -1649,6 +1649,12 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
+    /***
+     * This method removes records of a given list of devices from the DM_DEVICE_DETAIL table
+     * @param conn Connection object
+     * @param deviceIds list of device ids (primary keys)
+     * @throws DeviceManagementDAOException if deletion fails
+     */
     private void removeDeviceDetail(Connection conn, List<Integer> deviceIds) throws DeviceManagementDAOException {
         String sql = "DELETE FROM DM_DEVICE_DETAIL WHERE DEVICE_ID = ?";
         try {
@@ -1660,6 +1666,12 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
+    /***
+     * This method removes records of a given list of devices from the DM_DEVICE_LOCATION table
+     * @param conn Connection object
+     * @param deviceIds list of device ids (primary keys)
+     * @throws DeviceManagementDAOException if deletion fails
+     */
     private void removeDeviceLocation(Connection conn, List<Integer> deviceIds) throws DeviceManagementDAOException {
         String sql = "DELETE FROM DM_DEVICE_LOCATION WHERE DEVICE_ID = ?";
         try {
@@ -1671,6 +1683,12 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
+    /***
+     * This method removes records of a given list of devices from the DM_DEVICE_INFO table
+     * @param conn Connection object
+     * @param deviceIds list of device ids (primary keys)
+     * @throws DeviceManagementDAOException if deletion fails
+     */
     private void removeDeviceInfo(Connection conn, List<Integer> deviceIds) throws DeviceManagementDAOException {
         String sql = "DELETE FROM DM_DEVICE_INFO WHERE DEVICE_ID = ?";
         try {
@@ -1682,6 +1700,12 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
+    /***
+     * This method removes records of a given list of devices from the DM_NOTIFICATION table
+     * @param conn Connection object
+     * @param deviceIds list of device ids (primary keys)
+     * @throws DeviceManagementDAOException if deletion fails
+     */
     private void removeDeviceNotification(Connection conn, List<Integer> deviceIds) throws DeviceManagementDAOException {
         String sql = "DELETE FROM DM_NOTIFICATION WHERE DEVICE_ID = ?";
         try {
@@ -1694,6 +1718,12 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
 
     }
 
+    /***
+     * This method removes records of a given list of devices from the DM_DEVICE_APPLICATION_MAPPING table
+     * @param conn Connection object
+     * @param deviceIds list of device ids (primary keys)
+     * @throws DeviceManagementDAOException if deletion fails
+     */
     private void removeDeviceApplicationMapping(Connection conn, List<Integer> deviceIds)
             throws DeviceManagementDAOException {
         String sql = "DELETE FROM DM_DEVICE_APPLICATION_MAPPING WHERE DEVICE_ID = ?";
@@ -1706,6 +1736,12 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
+    /***
+     * This method removes records of a given list of devices from the DM_DEVICE_POLICY_APPLIED table
+     * @param conn Connection object
+     * @param deviceIds list of device ids (primary keys)
+     * @throws DeviceManagementDAOException if deletion fails
+     */
     private void removeDevicePolicyApplied(Connection conn, List<Integer> deviceIds)
             throws DeviceManagementDAOException {
         String sql = "DELETE FROM DM_DEVICE_POLICY_APPLIED WHERE DEVICE_ID = ?";
@@ -1718,6 +1754,12 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
+    /***
+     * This method removes records of a given list of devices from the DM_DEVICE_POLICY table
+     * @param conn Connection object
+     * @param deviceIds list of device ids (primary keys)
+     * @throws DeviceManagementDAOException if deletion fails
+     */
     private void removeDevicePolicy(Connection conn, List<Integer> deviceIds) throws DeviceManagementDAOException {
         String sql = "DELETE FROM DM_DEVICE_POLICY WHERE DEVICE_ID = ?";
         try {
@@ -1729,6 +1771,12 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
+    /***
+     * This method removes records of a given list of enrollments from the DM_DEVICE_DETAIL table
+     * @param conn Connection object
+     * @param enrollmentIds list of enrollment ids (primary keys)
+     * @throws DeviceManagementDAOException if deletion fails
+     */
     private void removeEnrollmentDeviceDetail(Connection conn, List<Integer> enrollmentIds)
             throws DeviceManagementDAOException {
         String sql = "DELETE FROM DM_DEVICE_DETAIL WHERE ENROLMENT_ID = ?";
@@ -1741,6 +1789,12 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
+    /***
+     * This method removes records of a given list of enrollments from the DM_DEVICE_LOCATION table
+     * @param conn Connection object
+     * @param enrollmentIds list of enrollment ids (primary keys)
+     * @throws DeviceManagementDAOException if deletion fails
+     */
     private void removeEnrollmentDeviceLocation(Connection conn, List<Integer> enrollmentIds)
             throws DeviceManagementDAOException {
         String sql = "DELETE FROM DM_DEVICE_LOCATION WHERE ENROLMENT_ID = ?";
@@ -1753,6 +1807,12 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
+    /***
+     * This method removes records of a given list of enrollments from the DM_DEVICE_INFO table
+     * @param conn Connection object
+     * @param enrollmentIds list of enrollment ids (primary keys)
+     * @throws DeviceManagementDAOException if deletion fails
+     */
     private void removeEnrollmentDeviceInfo(Connection conn, List<Integer> enrollmentIds)
             throws DeviceManagementDAOException {
         String sql = "DELETE FROM DM_DEVICE_INFO WHERE ENROLMENT_ID = ?";
@@ -1765,6 +1825,12 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
+    /***
+     * This method removes records of a given list of enrollments from the DM_DEVICE_APPLICATION_MAPPING table
+     * @param conn Connection object
+     * @param enrollmentIds list of enrollment ids (primary keys)
+     * @throws DeviceManagementDAOException if deletion fails
+     */
     private void removeEnrollmentDeviceApplicationMapping(Connection conn, List<Integer> enrollmentIds)
             throws DeviceManagementDAOException {
         String sql = "DELETE FROM DM_DEVICE_APPLICATION_MAPPING WHERE ENROLMENT_ID = ?";
@@ -1777,6 +1843,12 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
+    /***
+     * This method removes records of a given list of enrollments from the DM_DEVICE_OPERATION_RESPONSE table
+     * @param conn Connection object
+     * @param enrollmentIds list of enrollment ids (primary keys)
+     * @throws DeviceManagementDAOException if deletion fails
+     */
     private void removeDeviceOperationResponse(Connection conn, List<Integer> enrollmentIds)
             throws DeviceManagementDAOException {
         String sql = "DELETE FROM DM_DEVICE_OPERATION_RESPONSE WHERE ENROLMENT_ID = ?";
@@ -1789,6 +1861,12 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
+    /***
+     * This method removes records of a given list of enrollments from the DM_ENROLMENT_OP_MAPPING table
+     * @param conn Connection object
+     * @param enrollmentIds list of enrollment ids (primary keys)
+     * @throws DeviceManagementDAOException if deletion fails
+     */
     private void removeEnrollmentOperationMapping(Connection conn, List<Integer> enrollmentIds)
             throws DeviceManagementDAOException {
         String sql = "DELETE FROM DM_ENROLMENT_OP_MAPPING WHERE ENROLMENT_ID = ?";
@@ -1801,6 +1879,12 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
+    /***
+     * This method removes records of a given list of enrollments from the DM_ENROLMENT table
+     * @param conn Connection object
+     * @param enrollmentIds list of enrollment ids (primary keys)
+     * @throws DeviceManagementDAOException if deletion fails
+     */
     private void removeDeviceEnrollment(Connection conn, List<Integer> enrollmentIds)
             throws DeviceManagementDAOException {
         String sql = "DELETE FROM DM_ENROLMENT WHERE DEVICE_ID = ?";
@@ -1813,6 +1897,12 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
+    /***
+     * This method removes records of a given list of devices from the DM_DEVICE_GROUP_MAP table
+     * @param conn Connection object
+     * @param deviceIds list of device ids (primary keys)
+     * @throws DeviceManagementDAOException if deletion fails
+     */
     private void removeDeviceGroupMapping(Connection conn, List<Integer> deviceIds) throws DeviceManagementDAOException {
         String sql = "DELETE FROM DM_DEVICE_GROUP_MAP WHERE DEVICE_ID = ?";
         try {
@@ -1824,6 +1914,12 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
+    /***
+     * This method removes records of a given list of devices from the DM_DEVICE table
+     * @param conn Connection object
+     * @param deviceIds list of device ids (primary keys)
+     * @throws DeviceManagementDAOException if deletion fails
+     */
     private void removeDevice(Connection conn, List<Integer> deviceIds) throws DeviceManagementDAOException {
         String sql = "DELETE FROM DM_DEVICE WHERE ID = ?";
         try {
@@ -1842,7 +1938,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
      * @param sql SQL statement
      * @param conn Connection object
      * @param identifiers list of device ids (primary keys)
-     * @throws SQLException if device deletion fails.
+     * @throws SQLException if deletion fails.
      */
     private void executeBatchOperation(Connection conn, String sql, List<Integer> identifiers) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
