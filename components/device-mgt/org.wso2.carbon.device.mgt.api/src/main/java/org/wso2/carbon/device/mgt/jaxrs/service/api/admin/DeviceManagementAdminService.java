@@ -283,16 +283,8 @@ public interface DeviceManagementAdminService {
                                                           "Used by caches, or in conditional requests."),
                             }),
                     @ApiResponse(
-                            code = 304,
-                            message = "Not Modified. Empty body because the client already has the latest " +
-                                      "version of the requested resource."),
-                    @ApiResponse(
                             code = 400,
                             message = "Bad Request. \n Invalid request or validation error.",
-                            response = ErrorResponse.class),
-                    @ApiResponse(
-                            code = 404,
-                            message = "Not Found. \n No device is found under the provided type and id.",
                             response = ErrorResponse.class),
                     @ApiResponse(
                             code = 500,
