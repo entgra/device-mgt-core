@@ -70,7 +70,7 @@ function InitiateViewOption(url) {
 var deviceCheckbox = "#ast-container .ctrl-wr-asset .itm-select input[type='checkbox']";
 var assetContainer = "#ast-container";
 
-var deviceListing, currentUser, groupId, hasDeletePermission;
+var deviceListing, currentUser, groupId;
 
 /*
  * DOM ready functions.
@@ -87,8 +87,8 @@ $(document).ready(function () {
     };
 
     deviceListing = $("#device-listing");
-    hasDeletePermission = $("#permission").data("permission")['PERMANENT_DELETE'];
     currentUser = deviceListing.data("current-user");
+
     groupId = getParameterByName("groupId");
 
     /* Adding selected class for selected devices */
@@ -320,7 +320,7 @@ function loadDevices(searchType, searchParam) {
                         html = '<span><i class="fw fw-remove icon-danger"></i> Blocked</span>';
                         break;
                     case 'REMOVED' :
-                        html = '<span><i class="fw fw-disabled icon-danger"></i> Removed</span>';
+                        html = '<span><i class="fw fw-delete icon-danger"></i> Removed</span>';
                         break;
                     case 'UNREACHABLE' :
                         html = '<span><i class="fw fw-warning icon-warning"></i> Unreachable</span>';
@@ -360,12 +360,12 @@ function loadDevices(searchType, searchParam) {
                 var portalUrl = $("#device-listing").data("portal-url");
                 var serverUrl = $("#device-listing").data("server-url");
                 var userDomain = $("#device-listing").data("userDomain");
-                var statusCode = row.status;
                 var statURL;
-                if (statusCode != 'REMOVED') {
+                if (status != 'REMOVED') {
                     html = '';
 
                     if (analyticsEnabled(row.deviceType)) {
+
                         // redirecting to respective analytics view depending on device configs
                         switch (getAnalyticsView(deviceType)) {
                             case "DAS" : { statURL =portalUrl + "/portal/t/"+ userDomain+ "/dashboards/android-iot/battery?owner=" +currentUser+"&deviceId=";break;}
@@ -404,69 +404,11 @@ function loadDevices(searchType, searchParam) {
                             + 'data-deviceid="' + deviceIdentifier + '" data-devicetype="' + deviceType
                             + '" data-devicename="' + row.name + '" data-placement="top" data-toggle="tooltip" data-original-title="Remove from group">'
                             + '<span class="fw-stack"><i class="fw fw-circle-outline fw-stack-2x"></i>'
-                            + '<i class="fw fw-disabled fw-stack-1x"></i></span>'
-                            + '<span class="hidden-xs hidden-on-grid-view">Remove from group</span>';
-                    } else {
-                        html +=
-                            '<a href="#" data-click-event="remove-form" class="btn padding-reduce-on-grid-view remove-device-link" '
-                            + 'data-deviceid="' + deviceIdentifier + '" data-devicetype="' + deviceType
-                            + '" data-devicename="' + row.name + '" data-placement="top" data-toggle="tooltip" data-original-title="Remove">'
-                            + '<span class="fw-stack"><i class="fw fw-circle-outline fw-stack-2x"></i>'
-                            + '<i class="fw fw-disabled fw-stack-1x"></i></span>'
-                            + '<span class="hidden-xs hidden-on-grid-view">Delete</span>';
-                    }
-                } else if (statusCode == 'REMOVED' && hasDeletePermission) {
-                    html = '';
-
-                    if (analyticsEnabled(row.deviceType)) {
-                        // redirecting to respective analytics view depending on device configs
-                        switch (getAnalyticsView(deviceType)) {
-                            case "DAS" : {
-                                statURL = portalUrl + "/portal/t/" + userDomain + "/dashboards/android-iot/battery?owner=" + currentUser + "&deviceId=";
-                                break;
-                            }
-                            default : {
-                                statURL = context + "/device/" + row.deviceType + "/analytics?deviceId="
-                            }
-                        }
-
-                        html += '<a href="' + statURL +
-                            deviceIdentifier + '&deviceName=' + row.name + '" ' + 'data-click-event="remove-form"' +
-                            ' class="btn padding-reduce-on-grid-view" data-placement="top" data-toggle="tooltip" data-original-title="Analytics"><span class="fw-stack">' +
-                            '<i class="fw fw-circle-outline fw-stack-2x"></i><i class="fw fw-statistics fw-stack-1x"></i></span>' +
-                            '<span class="hidden-xs hidden-on-grid-view">Analytics</span>';
-                    }
-
-                    if (!groupId && groupingEnabled(row.deviceType)) {
-                        html +=
-                            '<a href="#" data-click-event="remove-form" class="btn padding-reduce-on-grid-view group-device-link" '
-                            +
-                            'data-deviceid="' + deviceIdentifier + '" data-devicetype="' + deviceType
-                            + '" data-devicename="' +
-                            row.name + '" data-placement="top" data-toggle="tooltip" data-original-title="Group"><span class="fw-stack"><i class="fw fw-circle-outline fw-stack-2x"></i>' +
-                            '<i class="fw fw-group fw-stack-1x"></i></span>' +
-                            '<span class="hidden-xs hidden-on-grid-view">Group</span></a>';
-                    }
-
-                    html +=
-                        '<a href="#" data-click-event="remove-form" class="btn padding-reduce-on-grid-view edit-device-link" '
-                        + 'data-deviceid="' + deviceIdentifier + '" data-devicetype="' + deviceType
-                        + '" data-devicename="' + row.name + '" data-placement="top" data-toggle="tooltip" data-original-title="Edit">'
-                        + '<span class="fw-stack"><i class="fw fw-circle-outline fw-stack-2x"></i>'
-                        + '<i class="fw fw-edit fw-stack-1x"></i></span>'
-                        + '<span class="hidden-xs hidden-on-grid-view">Edit</span></a>';
-                    var groupOwner = $('#group_owner').text();
-                    if (groupId && groupOwner != "wso2.system.user") {
-                        html +=
-                            '<a href="#" data-click-event="remove-form" class="btn padding-reduce-on-grid-view delete-device-link" '
-                            + 'data-deviceid="' + deviceIdentifier + '" data-devicetype="' + deviceType
-                            + '" data-devicename="' + row.name + '" data-placement="top" data-toggle="tooltip" data-original-title="Remove from group">'
-                            + '<span class="fw-stack"><i class="fw fw-circle-outline fw-stack-2x"></i>'
                             + '<i class="fw fw-delete fw-stack-1x"></i></span>'
                             + '<span class="hidden-xs hidden-on-grid-view">Remove from group</span>';
                     } else {
                         html +=
-                            '<a href="#" data-click-event="remove-form" class="btn padding-reduce-on-grid-view delete-device-link" '
+                            '<a href="#" data-click-event="remove-form" class="btn padding-reduce-on-grid-view remove-device-link" '
                             + 'data-deviceid="' + deviceIdentifier + '" data-devicetype="' + deviceType
                             + '" data-devicename="' + row.name + '" data-placement="top" data-toggle="tooltip" data-original-title="Delete">'
                             + '<span class="fw-stack"><i class="fw fw-circle-outline fw-stack-2x"></i>'
@@ -853,43 +795,6 @@ function attachDeviceEvents() {
 
     /**
      * Following click function would execute
-     * when a user clicks on "Delete" link
-     * on Device Management page in WSO2 MDM Console.
-     */
-    $("a.delete-device-link").click(function () {
-        var deviceIdentifiers = [];
-        var deviceId = $(this).data("deviceid");
-        var deviceType = $(this).data("devicetype");
-
-        if (deviceId && deviceType) {
-            deviceIdentifiers = [{"id": deviceId, "type": deviceType}];
-        } else {
-            deviceIdentifiers = getSelectedDevices();
-        }
-
-        if (deviceIdentifiers.length == 0) {
-            $(modalPopupContent).html($('#no-device-selected').html());
-            $("a#no-device-selected-link").click(function () {
-                hidePopup();
-            });
-            showPopup();
-            return;
-        }
-
-        $(modalPopupContent).html($('#delete-device-modal-content').html());
-        showPopup();
-
-        $("a#delete-device-yes-link").click(function () {
-            deleteDevices(deviceIdentifiers);
-        });
-
-        $("a#delete-device-cancel-link").click(function () {
-            hidePopup();
-        });
-    });
-
-    /**
-     * Following click function would execute
      * when a user clicks on "Edit" link
      * on Device Management page in WSO2 MDM Console.
      */
@@ -1191,24 +1096,6 @@ function removeDevices(deviceIdentifiers) {
             removeDevices(deviceIdentifiers);
         } else {
             $(modalPopupContent).html($('#remove-device-200-content').html());
-            setTimeout(function () {
-                hidePopup();
-                location.reload(false);
-            }, 2000);
-        }
-    }, function (jqXHR) {
-        displayDeviceErrors(jqXHR);
-    });
-}
-
-function deleteDevices(deviceIdentifiers) {
-    var serviceURL = "/api/device-mgt/v1.0/devices/type/" + deviceIdentifiers[0].type + "/id/" + deviceIdentifiers[0].id;
-    invokerUtil.delete(serviceURL, function (message) {
-        if (deviceIdentifiers.length > 1) {
-            deviceIdentifiers.shift();
-            deleteDevices(deviceIdentifiers);
-        } else {
-            $(modalPopupContent).html($('#delete-device-200-content').html());
             setTimeout(function () {
                 hidePopup();
                 location.reload(false);
