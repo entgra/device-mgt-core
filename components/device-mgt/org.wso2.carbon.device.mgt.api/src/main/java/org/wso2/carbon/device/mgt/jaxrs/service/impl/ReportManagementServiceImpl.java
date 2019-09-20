@@ -80,19 +80,22 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             if (result == null || result.getData() == null || result.getData().isEmpty()) {
                 msg = "No devices have enrolled between " + fromDate + " to " + toDate + " or doesn't match with" +
                       " given parameters";
-                log.debug(msg);
+                if(log.isDebugEnabled()){
+                    log.debug(msg);
+                }
                 return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
             } else {
                 devices.setList((List<Device>) result.getData());
                 devices.setCount(result.getRecordsTotal());
                 msg = "Devices retrieved successfuly.";
-                log.debug(msg);
+                if(log.isDebugEnabled()){
+                    log.debug(msg);
+                }
                 return Response.status(Response.Status.OK).entity(devices).build();
             }
         } catch (ReportManagementException e) {
             msg = "Error occurred while retrieving device list";
             log.error(msg, e);
-            log.debug(msg);
             return Response.serverError().entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
         }

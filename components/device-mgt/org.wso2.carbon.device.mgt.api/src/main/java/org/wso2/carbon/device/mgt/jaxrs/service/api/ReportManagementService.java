@@ -17,7 +17,18 @@
  */
 package org.wso2.carbon.device.mgt.jaxrs.service.api;
 
-import io.swagger.annotations.*;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Extension;
+import io.swagger.annotations.ExtensionProperty;
+import io.swagger.annotations.Info;
+import io.swagger.annotations.ResponseHeader;
+import io.swagger.annotations.SwaggerDefinition;
+import io.swagger.annotations.Tag;
 import org.wso2.carbon.apimgt.annotations.api.Scope;
 import org.wso2.carbon.apimgt.annotations.api.Scopes;
 import org.wso2.carbon.device.mgt.common.report.mgt.ReportManagementException;
@@ -122,10 +133,34 @@ public interface ReportManagementService {
                             response = ErrorResponse.class)
             })
     Response getDevicesByDuration(
+            @ApiParam(
+                    name = "status",
+                    value = "Provide the device status details, such as active or inactive.",
+                    required = false)
             @QueryParam("status") String status,
+            @ApiParam(
+                    name = "ownership",
+                    allowableValues = "BYOD, COPE",
+                    value = "Provide the ownership status of the device. The following values can be assigned:\n" +
+                            "- BYOD: Bring Your Own Device\n" +
+                            "- COPE: Corporate-Owned, Personally-Enabled",
+                    required = false)
             @QueryParam("ownership") String ownership,
+            @ApiParam(
+                    name = "fromDate",
+                    value = "Start date of the duration",
+                    required = true)
             @QueryParam("from") String fromDate,
+            @ApiParam(
+                    name = "toDate",
+                    value = "end date of the duration",
+                    required = true)
             @QueryParam("to") String toDate,
+            @ApiParam(
+                    name = "offset",
+                    value = "The starting pagination index for the complete list of qualified items.",
+                    required = false,
+                    defaultValue = "0")
             @QueryParam("offset")
                     int offset,
             @ApiParam(

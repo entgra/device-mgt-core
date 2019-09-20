@@ -59,7 +59,7 @@ public interface DeviceDAO {
     /**
      * This method is used to get the device count by device-type.
      *
-     * @param type device type.
+     * @param type     device type.
      * @param tenantId tenant id.
      * @return returns the device count of given type.
      * @throws DeviceManagementDAOException
@@ -340,7 +340,8 @@ public interface DeviceDAO {
      * @return returns paginated list of devices in which owner matches (search) with given username.
      * @throws DeviceManagementDAOException
      */
-    List<Device> getDevicesOfUser(PaginationRequest request, int tenantId) throws DeviceManagementDAOException;
+    List<Device> getDevicesOfUser(PaginationRequest request, int tenantId)
+            throws DeviceManagementDAOException;
 
     /**
      * This method is used to retrieve the device count of a given tenant.
@@ -399,7 +400,7 @@ public interface DeviceDAO {
      * This method is used to retrieve devices of a given device name as a paginated result.
      *
      * @param request  PaginationRequest object holding the data for pagination and device search info.
-     * @param tenantId   tenant id.
+     * @param tenantId tenant id.
      * @return returns paginated list of devices which name matches (search) given device-name.
      * @throws DeviceManagementDAOException
      */
@@ -508,8 +509,10 @@ public interface DeviceDAO {
      * @param tenantId   tenant id.
      * @return returns a list of enrolment info objects.
      */
-    List<GeoCluster> findGeoClusters(String deviceType, GeoCoordinate southWest, GeoCoordinate northEast,
-                                     int geohashLength,int tenantId) throws DeviceManagementDAOException;
+    List<GeoCluster> findGeoClusters(String deviceType, GeoCoordinate southWest,
+                                     GeoCoordinate northEast,
+                                     int geohashLength, int tenantId)
+            throws DeviceManagementDAOException;
 
     /***
      * This method is used to identify whether given device ids are exist or not.
@@ -544,7 +547,9 @@ public interface DeviceDAO {
      * @param toDate   End date (YYYY-MM-DD)
      * @return returns a list of Device objects
      */
-    List<Device> getDevicesByDuration(PaginationRequest request, int tenantId, String fromDate,
+    List<Device> getDevicesByDuration(PaginationRequest request,
+                                      int tenantId,
+                                      String fromDate,
                                       String toDate)
             throws DeviceManagementDAOException;
 }

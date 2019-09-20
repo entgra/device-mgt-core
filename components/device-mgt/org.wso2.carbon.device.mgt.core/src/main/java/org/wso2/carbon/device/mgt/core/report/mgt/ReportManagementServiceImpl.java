@@ -65,17 +65,14 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             String msg = "Error occurred while opening a connection " +
                          "to the data source";
             log.error(msg, e);
-            log.debug(msg);
             throw new ReportManagementException(msg, e);
         } catch (DeviceManagementDAOException e) {
             String msg = "Error occurred while retrieving Tenant ID";
             log.error(msg, e);
-            log.debug(msg);
             throw new ReportManagementException(msg, e);
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while validating device list page size";
             log.error(msg, e);
-            log.debug(msg);
             throw new ReportManagementException(msg, e);
         } finally {
             DeviceManagementDAOFactory.closeConnection();

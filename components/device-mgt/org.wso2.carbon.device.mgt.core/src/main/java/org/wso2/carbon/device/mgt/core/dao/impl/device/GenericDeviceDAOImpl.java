@@ -27,7 +27,10 @@ import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOFactory;
 import org.wso2.carbon.device.mgt.core.dao.impl.AbstractDeviceDAOImpl;
 import org.wso2.carbon.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -45,7 +48,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
         Connection conn;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        List<Device> devices = null;
+        List<Device> devices;
         String deviceType = request.getDeviceType();
         boolean isDeviceTypeProvided = false;
         String deviceName = request.getDeviceName();
@@ -60,6 +63,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
         boolean isStatusProvided = false;
         Date since = request.getSince();
         boolean isSinceProvided = false;
+        String msg;
         try {
             conn = this.getConnection();
             String sql = "SELECT d1.ID AS DEVICE_ID, d1.DESCRIPTION, d1.NAME AS DEVICE_NAME, d1.DEVICE_TYPE, " +
@@ -149,8 +153,10 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                 devices.add(device);
             }
         } catch (SQLException e) {
-            throw new DeviceManagementDAOException("Error occurred while retrieving information of all " +
-                                                   "registered devices", e);
+            msg = "Error occurred while retrieving information of all " +
+                  "registered devices";
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
         } finally {
             DeviceManagementDAOUtil.cleanupResources(stmt, rs);
         }
@@ -432,9 +438,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                                              String fromDate, String toDate)
             throws DeviceManagementDAOException {
         List<Device> devices;
-        boolean isDeviceStatusProvided = false;
         String deviceStatus = request.getStatus();
-        boolean isOwnershipProvided = false;
         String ownership = request.getOwnership();
         String msg;
 
@@ -449,11 +453,9 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
 
         if (deviceStatus != null) {
             sql = sql + " AND e.STATUS=?";
-            isDeviceStatusProvided = true;
         }
         if (ownership != null) {
             sql = sql + " AND e.OWNERSHIP=?";
-            isOwnershipProvided = true;
         }
 
         sql = sql + " LIMIT ?,?";
@@ -466,10 +468,10 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
             stmt.setString(paramIdx++, fromDate);
             stmt.setString(paramIdx++, toDate);
 
-            if (isDeviceStatusProvided) {
+            if (deviceStatus != null) {
                 stmt.setString(paramIdx++, deviceStatus);
             }
-            if (isOwnershipProvided) {
+            if (ownership != null) {
                 stmt.setString(paramIdx++, ownership);
             }
 
@@ -486,7 +488,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
         } catch (SQLException e) {
             msg = "Error occurred while retrieving information of all " +
                   "registered devices";
-            log.debug(msg);
+            log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
         return devices;
@@ -501,8 +503,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
      * @throws DeviceManagementDAOException
      */
     @Override
-    public List<Device> getDevicesByNameAndType(String deviceName, String type, int tenantId,
-                                                int offset, int limit)
+    public List<Device> getDevicesByNameAndType(String deviceName, String type, int tenantId, int offset, int limit)
             throws DeviceManagementDAOException {
 
         String filteringString = "";
