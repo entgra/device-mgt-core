@@ -20,10 +20,11 @@ import {
     Map,
     TileLayer,
     Marker,
-    Polyline, Popup, CircleMarker, WMSTileLayer
+    Polyline, Popup, CircleMarker, Tooltip
 } from "react-leaflet";
+import {withConfigContext} from "../../../context/ConfigContext";
 
-export default class GeoCustomMap extends Component {
+class GeoCustomMap extends Component {
 
     constructor(props) {
         super(props);
@@ -36,18 +37,22 @@ export default class GeoCustomMap extends Component {
 
     /**
      * Pop up marker for the device's current location
-     * @param currentLocation current location object
+     * @param currentLocation - current location object
      * @returns content
      */
     currentLocationMarker = ({currentLocation}) => {
+        const initMarker = ref => {
+            if (ref) {
+                ref.leafletElement.openPopup()
+            }
+        };
         const content = currentLocation.map((marker, index) =>
-            <Marker key={index} position={[marker.latitude, marker.longitude]}>
+            <Marker ref={initMarker} key={index} position={[marker.latitude, marker.longitude]}>
                 <Popup>
-                <span>
                     {marker.deviceName}<br/>
                     {marker.deviceIdentifier}<br/>
                     Speed :{marker.speed}<br/>
-                </span>
+                    Last seen: {}
                 </Popup>
             </Marker>);
         return <div style={{display: "none"}}>{content}</div>;
@@ -56,16 +61,15 @@ export default class GeoCustomMap extends Component {
 
     /**
      * Pop up circle marker for initial location
-     * @param locationData location data object
+     * @param locationData - location data object
      * @returns content
      */
     startingLocation = ({locationData}) => {
 
-        const startingPoint = [locationData.locationData[0].latitude, locationData.locationData[0].longitude]
+        const startingPoint = [locationData.locationData[0].latitude, locationData.locationData[0].longitude];
         const content =
-            <CircleMarker center={startingPoint} color="red" radius={3}>
-                <Popup>Starting Location</Popup>
-
+            <CircleMarker center={startingPoint} color="red" radius={2}>
+                <Tooltip>Starting Location</Tooltip>
             </CircleMarker>;
 
         return <div style={{display: "none"}}>{content}</div>;
@@ -73,52 +77,60 @@ export default class GeoCustomMap extends Component {
 
     /**
      * Polyline draw for historical locations
-     * @param locationData location data object
+     * @param locationData - location data object
      * @returns content
      */
     polylineMarker = ({locationData}) => {
 
         const polyMarkers = locationData.locationData
-            //filter location points that has less than 5m distance
-            .filter(locationpoint => locationpoint.distance > 5)
-            .map(locationpoint => {
-                return [locationpoint.latitude, locationpoint.longitude]
+        //filter location points that has less than 5m distance
+            .filter(locationPoint => locationPoint.distance > 5)
+            .map(locationPoint => {
+                return [locationPoint.latitude, locationPoint.longitude]
             });
 
         const content =
-            <Polyline color="green" positions={polyMarkers} smoothFactor={10}>
+            <Polyline color="green" positions={polyMarkers}>
                 <Popup>on the way</Popup>
             </Polyline>;
 
         return <div style={{display: "none"}}>{content}</div>;
     };
 
-
-    render() {
+    /**
+     * Renders the map with markers
+     */
+    renderMap = () => {
         const center = [this.state.lat, this.state.lng];
         const locationData = this.props.locationData;
         const currentLocation = this.props.currentLocation;
+        const config = this.props.context;
+        const url = config.geoMap.url;
+        const attribution = config.geoMap.attribution;
+        return (
+            <Map center={center} zoom={this.state.zoom}>
+                <TileLayer
+                    url={url}
+                    attribution={attribution}
+                />
+                {this.currentLocationMarker({currentLocation})}
+                {locationData &&
+                <Fragment>
+                    {this.polylineMarker({locationData})}
+                    {this.startingLocation({locationData})}
+                </Fragment>
+                }
+            </Map>
+        )
+    };
 
+    render() {
         return (
             <div>
-                <Map center={center} zoom={this.state.zoom}>
-                    <TileLayer
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        attribution="&copy; <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
-                    />
-                    <WMSTileLayer
-                        layers={this.state.bluemarble ? 'nasa:bluemarble' : 'ne:ne'}
-                        url="https://demo.boundlessgeo.com/geoserver/ows"
-                    />
-                    {this.currentLocationMarker({currentLocation})}
-                    {locationData &&
-                        <Fragment>
-                            {this.polylineMarker({locationData})}
-                            {this.startingLocation({locationData})}
-                        </Fragment>
-                    }
-                </Map>
+                {this.renderMap()}
             </div>
         );
     }
 }
+
+export default withConfigContext(GeoCustomMap);

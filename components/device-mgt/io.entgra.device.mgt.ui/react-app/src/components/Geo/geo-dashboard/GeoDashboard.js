@@ -18,7 +18,7 @@
 import React from "react";
 import moment from "moment";
 import DateTimeRangeContainer from "react-advanced-datetimerange-picker";
-import {Button, Select, message, notification, Tag} from "antd";
+import {Button, Select, message, notification, Tag, Tooltip} from "antd";
 import axios from "axios";
 import {withConfigContext} from "../../../context/ConfigContext";
 import GeoCustomMap from "../geo-custom-map/GeoCustomMap";
@@ -42,17 +42,22 @@ class GeoDashboard extends React.Component {
             loading: false,
             start: start,
             end: end,
+            buttonTooltip: "Fetch Locations",
         };
+    }
+
+    componentDidMount() {
+        this.fetchDevices();
+        this.fetchCurrentLocation();
     }
 
     /**
      * Call back on apply button in the date time picker
-     * @param startDate
-     * @param endDate
+     * @param startDate - start date
+     * @param endDate - end date
      */
     applyCallback = (startDate, endDate) => {
         console.log("Apply Callback");
-        // console.log(startDate.format("DD-MM-YYYY HH:mm"));
         this.setState({
             start: startDate,
             end: endDate
@@ -66,9 +71,7 @@ class GeoDashboard extends React.Component {
 
         if (this.state.selectedDevice && this.state.start && this.state.end) {
             const toInMills = moment(this.state.end);
-            console.log("To time: " + toInMills);
             const fromInMills = moment(this.state.start);
-            console.log("From time: " + fromInMills);
             const deviceType = this.state.selectedDevice.type;
             const deviceId = this.state.selectedDevice.deviceIdentifier;
             const config = this.props.context;
@@ -112,16 +115,12 @@ class GeoDashboard extends React.Component {
 
     /**
      * Device dropdown list handler
+     * @param e - selected device data
      */
     handleDeviceList = (e) => {
         let selectedDevice = this.state.deviceData[e];
         this.setState({selectedDevice})
     };
-
-    componentDidMount() {
-        this.fetchDevices();
-        this.fetchCurrentLocation();
-    }
 
     /**
      * fetches current location to create a marker
@@ -130,6 +129,28 @@ class GeoDashboard extends React.Component {
         this.setState({currentLocation: currentLocationData});
     };
 
+    /**
+     * render fetch location button
+     */
+    fetchLocationButton = () => {
+        if (this.state.selectedDevice === "") {
+            return (
+                <Tooltip placement="rightBottom" title={"Please select a Device"}>
+                    <Button disabled={true}
+                            onClick={this.handleApiCall}>
+                        Fetch Locations
+                    </Button>
+                </Tooltip>);
+        } else {
+            return (
+                <Tooltip placement="rightBottom">
+                    <Button
+                        onClick={this.handleApiCall}>
+                        Fetch Locations
+                    </Button>
+                </Tooltip>);
+        }
+    };
 
     /**
      * fetches device data to populate the dropdown list
@@ -140,8 +161,7 @@ class GeoDashboard extends React.Component {
 
         axios.get(
             window.location.origin + config.serverConfig.invoker.uri + config.serverConfig.invoker.deviceMgt +
-            "/devices",
-        ).then(res => {
+            "/devices?excludeStatus=REMOVED",).then(res => {
             if (res.status === 200) {
                 this.setState({
                     loading: false,
@@ -168,17 +188,39 @@ class GeoDashboard extends React.Component {
     };
 
     /**
-     * Geo Dashboard menu
-     * @param ranges Date Range
-     * @param local
-     * @param maxDate
+     * Geo Dashboard controller
      */
-    geoNavBar = (ranges, local, maxDate) => {
-        let {deviceData} = this.state;
+    controllerBar = () => {
+
+        let now = new Date();
+        let start = moment(
+            new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
+        );
+        let end = moment(start)
+            .add(1, "days")
+            .subtract(1, "seconds");
+        let ranges = {
+            "Today Only": [moment(start), moment(end)],
+            "Yesterday Only": [
+                moment(start).subtract(1, "days"),
+                moment(end).subtract(1, "days")
+            ],
+            "3 Days": [moment(start).subtract(3, "days"), moment(end)],
+            "5 Days": [moment(start).subtract(5, "days"), moment(end)],
+            "1 Week": [moment(start).subtract(7, "days"), moment(end)],
+            "2 Weeks": [moment(start).subtract(14, "days"), moment(end)],
+            "1 Month": [moment(start).subtract(1, "months"), moment(end)],
+        };
+        let local = {
+            format: "DD-MM-YYYY HH:mm",
+            sundayFirst: false
+        };
+        let maxDate = moment(start).add(24, "hour");
         let value =
             `
             ${this.state.start.format("DD-MM-YYYY HH:mm")} - ${this.state.end.format("DD-MM-YYYY HH:mm")}
             `;
+        let {deviceData} = this.state;
 
         return (
             <div className="controllerDiv">
@@ -208,47 +250,48 @@ class GeoDashboard extends React.Component {
                 >
                     {deviceData.map((device, index) =>
                         <Select.Option key={index} value={index}>
-                            {device.name + " "}<Tag>{device.enrolmentInfo.status.toUpperCase()}</Tag>
+                            {device.name + " "}{this.statusTag(device)}
                         </Select.Option>)}
                 </Select>
 
-                <Button onClick={this.handleApiCall}>Fetch Locations</Button>
-
+                {this.fetchLocationButton()}
             </div>
         );
+    };
+
+    /**
+     * Creates color based tags on device status
+     * @param device - device object
+     */
+    statusTag = (device)=>{
+
+        const status = device.enrolmentInfo.status.toLowerCase();
+        let color = "#f9ca24";
+        switch (status) {
+            case "active":
+                color = "#badc58";
+                break;
+            case "created":
+                color = "#6ab04c";
+                break;
+            case "inactive":
+                color = "#f9ca24";
+                break;
+            case "blocked":
+                color = "#636e72";
+                break;
+        }
+        
+        return <Tag color={color}>{status}</Tag>
     };
 
     render() {
         let {locationData} = this.state;
         let {currentLocation} = this.state;
-        let now = new Date();
-        let start = moment(
-            new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
-        );
-        let end = moment(start)
-            .add(1, "days")
-            .subtract(1, "seconds");
-        let ranges = {
-            "Today Only": [moment(start), moment(end)],
-            "Yesterday Only": [
-                moment(start).subtract(1, "days"),
-                moment(end).subtract(1, "days")
-            ],
-            "3 Days": [moment(start).subtract(3, "days"), moment(end)],
-            "5 Days": [moment(start).subtract(5, "days"), moment(end)],
-            "1 Week": [moment(start).subtract(7, "days"), moment(end)],
-            "2 Weeks": [moment(start).subtract(14, "days"), moment(end)],
-            "1 Month": [moment(start).subtract(1, "months"), moment(end)],
-        };
-        let local = {
-            format: "DD-MM-YYYY HH:mm",
-            sundayFirst: false
-        };
-        let maxDate = moment(start).add(24, "hour");
 
         return (
             <div className="container">
-                {this.geoNavBar(ranges, local, maxDate)}
+                {this.controllerBar()}
                 {locationData.length > 0 ?
                     <GeoCustomMap locationData={{locationData}} currentLocation={currentLocation}/>
                     :
