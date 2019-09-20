@@ -28,7 +28,7 @@ public interface ReportManagementService {
      * @param request Pagination Request to get a paginated result
      * @param fromDate Start Date (YYYY-MM-DD)
      * @param toDate End Date (YYYY-MM-DD)
-     * @return PaginationResult
+     * @return PaginationResult {@link PaginationResult}
      * @throws DeviceManagementException
      * @throws ReportManagementException
      */

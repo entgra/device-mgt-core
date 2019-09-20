@@ -443,41 +443,45 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
         String msg;
 
         String sql = "SELECT " +
-                     "d.ID AS DEVICE_ID,d.DESCRIPTION,d.NAME AS DEVICE_NAME, " +
-                     "t.NAME AS DEVICE_TYPE, d.DEVICE_IDENTIFICATION," +
-                     "e.OWNER,e.OWNERSHIP,e.STATUS,e.DATE_OF_LAST_UPDATE," +
-                     "e.DATE_OF_ENROLMENT,e.ID AS ENROLMENT_ID " +
+                     "d.ID AS DEVICE_ID, " +
+                     "d.DESCRIPTION,d.NAME AS DEVICE_NAME, " +
+                     "t.NAME AS DEVICE_TYPE, " +
+                     "d.DEVICE_IDENTIFICATION, " +
+                     "e.OWNER, " +
+                     "e.OWNERSHIP, " +
+                     "e.STATUS, " +
+                     "e.DATE_OF_LAST_UPDATE," +
+                     "e.DATE_OF_ENROLMENT, " +
+                     "e.ID AS ENROLMENT_ID " +
                      "FROM DM_DEVICE AS d , DM_ENROLMENT AS e , DM_DEVICE_TYPE AS t " +
-                     "WHERE d.ID=e.DEVICE_ID AND d.DEVICE_TYPE_ID=t.ID AND e.TENANT_ID=? AND " +
+                     "WHERE d.ID = e.DEVICE_ID AND " +
+                     "d.DEVICE_TYPE_ID = t.ID AND " +
+                     "e.TENANT_ID = ? AND " +
                      "e.DATE_OF_ENROLMENT BETWEEN ? AND ?";
 
         if (deviceStatus != null) {
-            sql = sql + " AND e.STATUS=?";
+            sql = sql + " AND e.STATUS = ?";
         }
         if (ownership != null) {
-            sql = sql + " AND e.OWNERSHIP=?";
+            sql = sql + " AND e.OWNERSHIP = ?";
         }
 
         sql = sql + " LIMIT ?,?";
 
         try (Connection conn = this.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-
             int paramIdx = 1;
             stmt.setInt(paramIdx++, tenantId);
             stmt.setString(paramIdx++, fromDate);
             stmt.setString(paramIdx++, toDate);
-
             if (deviceStatus != null) {
                 stmt.setString(paramIdx++, deviceStatus);
             }
             if (ownership != null) {
                 stmt.setString(paramIdx++, ownership);
             }
-
             stmt.setInt(paramIdx++, request.getStartIndex());
             stmt.setInt(paramIdx, request.getRowCount());
-
             try (ResultSet rs = stmt.executeQuery()) {
                 devices = new ArrayList<>();
                 while (rs.next()) {

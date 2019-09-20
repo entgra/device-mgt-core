@@ -394,7 +394,7 @@ public interface DeviceDAO {
      * @throws DeviceManagementDAOException
      */
     List<Device> getDevicesByNameAndType(String deviceName, String type, int tenantId, int offset, int limit)
-                                                                                throws DeviceManagementDAOException;
+            throws DeviceManagementDAOException;
 
     /**
      * This method is used to retrieve devices of a given device name as a paginated result.
@@ -546,10 +546,10 @@ public interface DeviceDAO {
      * @param fromDate Start date (YYYY-MM-DD)
      * @param toDate   End date (YYYY-MM-DD)
      * @return returns a list of Device objects
+     * @throws DeviceManagementDAOException
      */
     List<Device> getDevicesByDuration(PaginationRequest request,
                                       int tenantId,
                                       String fromDate,
-                                      String toDate)
-            throws DeviceManagementDAOException;
+                                      String toDate) throws DeviceManagementDAOException;
 }

@@ -77,11 +77,6 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
     private static final String PROPERTY_TENANT_ID = "TENANT_ID";
 
     @Override
-    public List<Device> getDevicesByDuration(PaginationRequest request, int tenantId, String fromDate, String toDate) throws DeviceManagementDAOException {
-        return null;
-    }
-
-    @Override
     public int addDevice(int typeId, Device device, int tenantId) throws DeviceManagementDAOException {
         Connection conn;
         PreparedStatement stmt = null;

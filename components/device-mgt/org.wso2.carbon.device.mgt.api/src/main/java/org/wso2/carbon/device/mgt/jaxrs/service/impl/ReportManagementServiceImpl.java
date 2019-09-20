@@ -29,13 +29,12 @@ import org.wso2.carbon.device.mgt.jaxrs.service.api.ReportManagementService;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.RequestValidationUtil;
 import org.wso2.carbon.device.mgt.jaxrs.util.DeviceMgtAPIUtils;
 
-
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
@@ -77,20 +76,15 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             }
 
             result = DeviceMgtAPIUtils.getReportManagementService().getDevicesByDuration(request, fromDate, toDate);
-            if (result == null || result.getData() == null || result.getData().isEmpty()) {
+            if (result.getData().isEmpty()) {
                 msg = "No devices have enrolled between " + fromDate + " to " + toDate + " or doesn't match with" +
                       " given parameters";
-                if(log.isDebugEnabled()){
-                    log.debug(msg);
-                }
+                log.error(msg);
                 return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
             } else {
                 devices.setList((List<Device>) result.getData());
                 devices.setCount(result.getRecordsTotal());
                 msg = "Devices retrieved successfuly.";
-                if(log.isDebugEnabled()){
-                    log.debug(msg);
-                }
                 return Response.status(Response.Status.OK).entity(devices).build();
             }
         } catch (ReportManagementException e) {

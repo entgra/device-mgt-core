@@ -18,6 +18,8 @@
 
 package org.wso2.carbon.device.mgt.core.dao.impl.device;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOException;
@@ -37,6 +39,8 @@ import java.util.List;
  * This class holds the generic implementation of DeviceDAO which can be used to support ANSI db syntax.
  */
 public class SQLServerDeviceDAOImpl extends AbstractDeviceDAOImpl {
+
+    private static final Log log = LogFactory.getLog(SQLServerDeviceDAOImpl.class);
 
     @Override
     public List<Device> getDevices(PaginationRequest request, int tenantId)
@@ -512,45 +516,50 @@ public class SQLServerDeviceDAOImpl extends AbstractDeviceDAOImpl {
     public List<Device> getDevicesByDuration(PaginationRequest request, int tenantId, String fromDate, String toDate)
             throws DeviceManagementDAOException {
         List<Device> devices;
-        boolean isDeviceStatusProvided = false;
         String deviceStatus = request.getStatus();
-        boolean isOwnershipProvided = false;
         String ownership = request.getOwnership();
         String msg;
 
         String sql = "SELECT " +
-                "d.ID AS DEVICE_ID,d.DESCRIPTION,d.NAME AS DEVICE_NAME, " +
-                "t.NAME AS DEVICE_TYPE, d.DEVICE_IDENTIFICATION," +
-                "e.OWNER,e.OWNERSHIP,e.STATUS,e.DATE_OF_LAST_UPDATE," +
-                "e.DATE_OF_ENROLMENT,e.ID AS ENROLMENT_ID " +
-                "FROM DM_DEVICE AS d , DM_ENROLMENT AS e , DM_DEVICE_TYPE AS t " +
-                "WHERE d.ID=e.DEVICE_ID AND d.DEVICE_TYPE_ID=t.ID AND e.TENANT_ID=? AND " +
-                "e.DATE_OF_ENROLMENT BETWEEN ? AND ?";
+                     "d.ID AS DEVICE_ID, " +
+                     "d.DESCRIPTION,d.NAME AS DEVICE_NAME, " +
+                     "t.NAME AS DEVICE_TYPE, " +
+                     "d.DEVICE_IDENTIFICATION, " +
+                     "e.OWNER, " +
+                     "e.OWNERSHIP, " +
+                     "e.STATUS, " +
+                     "e.DATE_OF_LAST_UPDATE," +
+                     "e.DATE_OF_ENROLMENT, " +
+                     "e.ID AS ENROLMENT_ID " +
+                     "FROM DM_DEVICE AS d , DM_ENROLMENT AS e , DM_DEVICE_TYPE AS t " +
+                     "WHERE d.ID = e.DEVICE_ID AND " +
+                     "d.DEVICE_TYPE_ID = t.ID AND " +
+                     "e.TENANT_ID = ? AND " +
+                     "e.DATE_OF_ENROLMENT BETWEEN ? AND ?";
 
-        if (deviceStatus != null && deviceStatus.isEmpty()) {
-            sql = sql + " AND e.STATUS=?";
-            isDeviceStatusProvided = true;
+        if (deviceStatus != null) {
+            sql = sql + " AND e.STATUS = ?";
         }
-        if (ownership != null && deviceStatus.isEmpty()) {
-            sql = sql + " AND e.OWNERSHIP=?";
-            isOwnershipProvided = true;
+        if (ownership != null) {
+            sql = sql + " AND e.OWNERSHIP = ?";
         }
+
+        sql = sql + " LIMIT ?,?";
 
         try (Connection conn = this.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-
             int paramIdx = 1;
             stmt.setInt(paramIdx++, tenantId);
             stmt.setString(paramIdx++, fromDate);
             stmt.setString(paramIdx++, toDate);
-
-            if (isDeviceStatusProvided) {
+            if (deviceStatus != null) {
                 stmt.setString(paramIdx++, deviceStatus);
             }
-            if (isOwnershipProvided) {
-                stmt.setString(paramIdx, ownership);
+            if (ownership != null) {
+                stmt.setString(paramIdx++, ownership);
             }
-
+            stmt.setInt(paramIdx++, request.getStartIndex());
+            stmt.setInt(paramIdx, request.getRowCount());
             try (ResultSet rs = stmt.executeQuery()) {
                 devices = new ArrayList<>();
                 while (rs.next()) {
@@ -560,7 +569,8 @@ public class SQLServerDeviceDAOImpl extends AbstractDeviceDAOImpl {
             }
         } catch (SQLException e) {
             msg = "Error occurred while retrieving information of all " +
-                    "registered devices";
+                  "registered devices";
+            log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
         return devices;
