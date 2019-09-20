@@ -49,7 +49,8 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @Override
-    public PaginationResult getDevicesByDuration(PaginationRequest request, String fromDate, String toDate)
+    public PaginationResult getDevicesByDuration(PaginationRequest request, String fromDate,
+                                                 String toDate)
             throws ReportManagementException {
         PaginationResult paginationResult = new PaginationResult();
         try {
@@ -62,7 +63,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             return paginationResult;
         } catch (SQLException e) {
             String msg = "Error occurred while opening a connection " +
-                    "to the data source";
+                         "to the data source";
             log.error(msg, e);
             log.debug(msg);
             throw new ReportManagementException(msg, e);

@@ -55,7 +55,8 @@ public class NotificationManagementServiceImpl implements NotificationManagement
 
     @Override
     public boolean addNotification(DeviceIdentifier deviceId,
-                                   Notification notification) throws NotificationManagementException {
+                                   Notification notification)
+            throws NotificationManagementException {
         if (log.isDebugEnabled()) {
             log.debug("Adding a Notification : [" + notification.toString() + "]");
         }
@@ -65,7 +66,7 @@ public class NotificationManagementServiceImpl implements NotificationManagement
         Device device = this.getDevice(deviceId);
         if (device == null) {
             throw new EntityDoesNotExistException("No device is found with type '" + deviceId.getType() +
-                    "' and id '" + deviceId.getId() + "'");
+                                                  "' and id '" + deviceId.getId() + "'");
         }
 
         try {
@@ -90,13 +91,14 @@ public class NotificationManagementServiceImpl implements NotificationManagement
             device = DeviceManagementDataHolder.getInstance().getDeviceManagementProvider().getDevice(deviceId, false);
         } catch (DeviceManagementException e) {
             throw new NotificationManagementException("Error occurred while retrieving device data for " +
-                    " adding notification", e);
+                                                      " adding notification", e);
         }
         return device;
     }
 
     @Override
-    public boolean updateNotification(Notification notification) throws NotificationManagementException {
+    public boolean updateNotification(Notification notification)
+            throws NotificationManagementException {
         if (log.isDebugEnabled()) {
             log.debug("Updating Notification : [" + notification.toString() + "]");
         }
@@ -112,7 +114,7 @@ public class NotificationManagementServiceImpl implements NotificationManagement
         }
         if (log.isDebugEnabled()) {
             log.debug("Notification id : " + notification.getNotificationId() +
-                    " has updated successfully.");
+                      " has updated successfully.");
         }
         return true;
     }
@@ -141,7 +143,7 @@ public class NotificationManagementServiceImpl implements NotificationManagement
 
     @Override
     public boolean updateAllNotifications(Notification.Status status, int tenantID) throws
-            NotificationManagementException {
+                                                                                    NotificationManagementException {
         if (log.isDebugEnabled()) {
             log.debug("Attempting to clear all notifications");
         }
@@ -168,7 +170,7 @@ public class NotificationManagementServiceImpl implements NotificationManagement
             return notificationDAO.getAllNotifications(NotificationDAOUtil.getTenantId());
         } catch (SQLException e) {
             throw new NotificationManagementException("Error occurred while opening a connection to" +
-                    " the data source", e);
+                                                      " the data source", e);
         } finally {
             NotificationManagementDAOFactory.closeConnection();
         }
@@ -181,18 +183,19 @@ public class NotificationManagementServiceImpl implements NotificationManagement
             return notificationDAO.getNotification(NotificationDAOUtil.getTenantId(), notificationId);
         } catch (SQLException e) {
             throw new NotificationManagementException("Error occurred while opening a connection to" +
-                    " the data source", e);
+                                                      " the data source", e);
         } finally {
             NotificationManagementDAOFactory.closeConnection();
         }
     }
 
     @Override
-    public PaginationResult getAllNotifications(PaginationRequest request) throws NotificationManagementException {
+    public PaginationResult getAllNotifications(PaginationRequest request)
+            throws NotificationManagementException {
         PaginationResult paginationResult = new PaginationResult();
         List<Notification> notifications = new ArrayList<>();
         request = DeviceManagerUtil.validateNotificationListPageSize(request);
-        int count =0;
+        int count = 0;
         try {
             NotificationManagementDAOFactory.openConnection();
             notifications = notificationDAO.getAllNotifications(request, NotificationDAOUtil.getTenantId());
@@ -203,7 +206,7 @@ public class NotificationManagementServiceImpl implements NotificationManagement
             return paginationResult;
         } catch (SQLException e) {
             throw new NotificationManagementException("Error occurred while opening a connection to" +
-                    " the data source", e);
+                                                      " the data source", e);
         } finally {
             NotificationManagementDAOFactory.closeConnection();
         }
@@ -211,11 +214,12 @@ public class NotificationManagementServiceImpl implements NotificationManagement
 
     @Override
     public PaginationResult getNotificationsByStatus(Notification.Status status,
-                                                     PaginationRequest request) throws NotificationManagementException{
+                                                     PaginationRequest request)
+            throws NotificationManagementException {
         PaginationResult paginationResult = new PaginationResult();
         List<Notification> notifications = new ArrayList<>();
         request = DeviceManagerUtil.validateNotificationListPageSize(request);
-        int count =0;
+        int count = 0;
         try {
             NotificationManagementDAOFactory.openConnection();
             notifications = notificationDAO.getNotificationsByStatus(request, status, NotificationDAOUtil.getTenantId());
@@ -226,7 +230,7 @@ public class NotificationManagementServiceImpl implements NotificationManagement
             return paginationResult;
         } catch (SQLException e) {
             throw new NotificationManagementException("Error occurred while opening a connection " +
-                    "to the data source", e);
+                                                      "to the data source", e);
         } finally {
             NotificationManagementDAOFactory.closeConnection();
         }
@@ -241,7 +245,7 @@ public class NotificationManagementServiceImpl implements NotificationManagement
             return notificationDAO.getNotificationsByStatus(status, NotificationDAOUtil.getTenantId());
         } catch (SQLException e) {
             throw new NotificationManagementException("Error occurred while opening a connection " +
-                    "to the data source", e);
+                                                      "to the data source", e);
         } finally {
             NotificationManagementDAOFactory.closeConnection();
         }

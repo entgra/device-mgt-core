@@ -35,6 +35,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
@@ -57,7 +58,9 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             @QueryParam("ownership") String ownership,
             @QueryParam("from") String fromDate,
             @QueryParam("to") String toDate,
+            @DefaultValue("0")
             @QueryParam("offset") int offset,
+            @DefaultValue("5")
             @QueryParam("limit") int limit) {
         String msg;
         try {
@@ -75,10 +78,10 @@ public class ReportManagementServiceImpl implements ReportManagementService {
 
             result = DeviceMgtAPIUtils.getReportManagementService().getDevicesByDuration(request, fromDate, toDate);
             if (result == null || result.getData() == null || result.getData().isEmpty()) {
-                    msg = "No devices have enrolled between " + fromDate + " to " + toDate + " or doesn't match with" +
-                    " given parameters";
-                    log.debug(msg);
-                    return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+                msg = "No devices have enrolled between " + fromDate + " to " + toDate + " or doesn't match with" +
+                      " given parameters";
+                log.debug(msg);
+                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
             } else {
                 devices.setList((List<Device>) result.getData());
                 devices.setCount(result.getRecordsTotal());

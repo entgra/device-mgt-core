@@ -142,7 +142,7 @@ public interface DeviceDAO {
      * This method is used to retrieve a device of a given device-identifier and tenant-id.
      *
      * @param deviceIdentifier device id.
-     * @param tenantId tenant id.
+     * @param tenantId         tenant id.
      * @return returns the device object.
      * @throws DeviceManagementDAOException
      */
@@ -181,7 +181,7 @@ public interface DeviceDAO {
      * @throws DeviceManagementDAOException
      */
     Device getDevice(DeviceIdentifier deviceIdentifier, Date ifModifiedSince, int tenantId) throws
-                                                                                            DeviceManagementDAOException;
+            DeviceManagementDAOException;
 
     /**
      * Retrieves a list of devices based on a given criteria of properties
@@ -544,6 +544,7 @@ public interface DeviceDAO {
      * @param toDate   End date (YYYY-MM-DD)
      * @return returns a list of Device objects
      */
-    List<Device> getDevicesByDuration(PaginationRequest request, int tenantId, String fromDate, String toDate)
+    List<Device> getDevicesByDuration(PaginationRequest request, int tenantId, String fromDate,
+                                      String toDate)
             throws DeviceManagementDAOException;
 }
