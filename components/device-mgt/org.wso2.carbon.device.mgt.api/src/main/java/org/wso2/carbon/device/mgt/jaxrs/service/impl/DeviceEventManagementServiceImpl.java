@@ -54,6 +54,7 @@ import javax.ws.rs.core.Response;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -106,7 +107,13 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
         List<String> recordIds = getRecordIds(resultEntries);
         AnalyticsDataResponse response = analyticsDataAPI.get(tenantId, tableName, 1, null, recordIds);
         eventRecords.setCount(eventCount);
-        eventRecords.setList(AnalyticsDataAPIUtil.listRecords(analyticsDataAPI, response));
+        List<Record> records = AnalyticsDataAPIUtil.listRecords(analyticsDataAPI, response);
+        records.sort(new Comparator<Record>() {
+            @Override public int compare(Record r1, Record r2) {
+                return Long.compare(r2.getTimestamp(), r1.getTimestamp());
+            }
+        });
+        eventRecords.setList(records);
         return eventRecords;
     }
 
@@ -192,6 +199,7 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
     @Path("/{type}")
     @Override
     public Response deployDeviceTypeEventDefinition(@PathParam("type") String deviceType,
+                                                    @QueryParam("skipPersist") boolean skipPersist,
                                                     @Valid DeviceTypeEvent deviceTypeEvent) {
         TransportType transportType = deviceTypeEvent.getTransportType();
         EventAttributeList eventAttributes = deviceTypeEvent.getEventAttributeList();
@@ -208,7 +216,9 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
             String streamNameWithVersion = streamName + ":" + Constants.DEFAULT_STREAM_VERSION;
             publishStreamDefinitons(streamName, Constants.DEFAULT_STREAM_VERSION, deviceType, eventAttributes);
             publishEventReceivers(streamNameWithVersion, transportType, tenantDomain, deviceType);
-            publishEventStore(streamName, Constants.DEFAULT_STREAM_VERSION, eventAttributes);
+            if (!skipPersist) {
+                publishEventStore(streamName, Constants.DEFAULT_STREAM_VERSION, eventAttributes);
+            }
             publishWebsocketPublisherDefinition(streamNameWithVersion, deviceType);
             try {
                 PrivilegedCarbonContext.startTenantFlow();

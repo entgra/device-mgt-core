@@ -17,30 +17,21 @@
  */
 package org.wso2.carbon.device.mgt.jaxrs.beans.analytics;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
-import org.wso2.carbon.device.mgt.common.Device;
-import org.wso2.carbon.device.mgt.jaxrs.beans.BasePaginatedResult;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- * This holds event attributes
+ * Execution plan definition including :
+ * Attributes : Plan data.
  */
-public class EventAttributeList {
+public class SiddhiExecutionPlan {
+    @ApiModelProperty(value = "Execution plan definition")
+    private String definition;
 
-    private List<Attribute> attributes = new ArrayList<>();
-
-    @ApiModelProperty(value = "List of Event Attributes")
-    @JsonProperty("attributes")
-    public List<Attribute> getList() {
-        return attributes;
+    public String getDefinition() {
+        return definition;
     }
 
-    public void setList(List<Attribute> attributes) {
-        this.attributes = attributes;
+    public void setDefinition(String definition) {
+        this.definition = definition;
     }
-
 }
-

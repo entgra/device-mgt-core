@@ -19,7 +19,7 @@
 package org.wso2.carbon.device.mgt.jaxrs.beans.analytics;
 
 /**
- * This hold the definition of the attribute type for the attributes.
+ * Attribute data types
  */
 public enum AttributeType {
     STRING, LONG, BOOL, INT, FLOAT, DOUBLE;
@@ -29,4 +29,3 @@ public enum AttributeType {
         return super.toString().toLowerCase();
     }
 }
-

@@ -17,30 +17,14 @@
  */
 package org.wso2.carbon.device.mgt.jaxrs.beans.analytics;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
-import org.wso2.carbon.device.mgt.common.Device;
-import org.wso2.carbon.device.mgt.jaxrs.beans.BasePaginatedResult;
-
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * This holds event attributes
+ * Available adapter types
  */
-public class EventAttributeList {
+public enum AdapterType {
+    EMAIL, FILE_TAIL, HTTP, IOT_EVENT, JMS, KAFKA, MQTT, OAUTH_MQTT, SOAP, WEBSOCKET, WEBSOCKET_LOCAL,
+    WSO2_EVENT, XMPP, UI, RDBMS, SECURED_WEBSOCKET, CASSANDRA, LOGGER;
 
-    private List<Attribute> attributes = new ArrayList<>();
-
-    @ApiModelProperty(value = "List of Event Attributes")
-    @JsonProperty("attributes")
-    public List<Attribute> getList() {
-        return attributes;
+    public String toStringFormatted() {
+        return super.toString().toLowerCase().replace("_", "-");
     }
-
-    public void setList(List<Attribute> attributes) {
-        this.attributes = attributes;
-    }
-
 }
-

@@ -15,32 +15,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.wso2.carbon.device.mgt.jaxrs.beans.analytics;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
-import org.wso2.carbon.device.mgt.common.Device;
-import org.wso2.carbon.device.mgt.jaxrs.beans.BasePaginatedResult;
 
-import java.util.ArrayList;
-import java.util.List;
+public class EventPublisher {
+    @ApiModelProperty(value = "Publisher definition")
+    private String definition;
 
-/**
- * This holds event attributes
- */
-public class EventAttributeList {
-
-    private List<Attribute> attributes = new ArrayList<>();
-
-    @ApiModelProperty(value = "List of Event Attributes")
-    @JsonProperty("attributes")
-    public List<Attribute> getList() {
-        return attributes;
+    public String getDefinition() {
+        return definition;
     }
 
-    public void setList(List<Attribute> attributes) {
-        this.attributes = attributes;
+    public void setDefinition(String definition) {
+        this.definition = definition;
     }
-
 }
-

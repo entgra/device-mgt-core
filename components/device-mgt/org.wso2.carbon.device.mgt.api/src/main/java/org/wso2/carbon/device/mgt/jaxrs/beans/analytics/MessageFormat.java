@@ -17,30 +17,14 @@
  */
 package org.wso2.carbon.device.mgt.jaxrs.beans.analytics;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
-import org.wso2.carbon.device.mgt.common.Device;
-import org.wso2.carbon.device.mgt.jaxrs.beans.BasePaginatedResult;
-
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * This holds event attributes
+ * Message protocol types
  */
-public class EventAttributeList {
+public enum MessageFormat {
+    JSON, MAP, XML, WSO2EVENT, TEXT;
 
-    private List<Attribute> attributes = new ArrayList<>();
-
-    @ApiModelProperty(value = "List of Event Attributes")
-    @JsonProperty("attributes")
-    public List<Attribute> getList() {
-        return attributes;
+    @Override
+    public String toString() {
+        return super.toString().toLowerCase();
     }
-
-    public void setList(List<Attribute> attributes) {
-        this.attributes = attributes;
-    }
-
 }
-
