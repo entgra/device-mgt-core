@@ -488,7 +488,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
             }
         } catch (SQLException e) {
             String msg = "Error occurred while retrieving information of all " +
-                  "registered devices";
+                  "registered devices under tenant id " + tenantId;
             log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
