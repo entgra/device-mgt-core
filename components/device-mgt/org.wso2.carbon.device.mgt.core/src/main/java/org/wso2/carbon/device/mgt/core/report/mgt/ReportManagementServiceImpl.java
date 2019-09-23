@@ -20,7 +20,7 @@ package org.wso2.carbon.device.mgt.core.report.mgt;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.device.mgt.common.Device;
-import org.wso2.carbon.device.mgt.common.DeviceManagementException;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
 import org.wso2.carbon.device.mgt.common.report.mgt.ReportManagementException;
@@ -55,6 +55,12 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         PaginationResult paginationResult = new PaginationResult();
         try {
             request = DeviceManagerUtil.validateDeviceListPageSize(request);
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while validating device list page size";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        }
+        try {
             DeviceManagementDAOFactory.openConnection();
             List<Device> devices = deviceDAO.getDevicesByDuration(request, DeviceManagementDAOUtil.getTenantId(), fromDate, toDate);
             paginationResult.setData(devices);
@@ -68,10 +74,6 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             throw new ReportManagementException(msg, e);
         } catch (DeviceManagementDAOException e) {
             String msg = "Error occurred while retrieving Tenant ID";
-            log.error(msg, e);
-            throw new ReportManagementException(msg, e);
-        } catch (DeviceManagementException e) {
-            String msg = "Error occurred while validating device list page size";
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
         } finally {

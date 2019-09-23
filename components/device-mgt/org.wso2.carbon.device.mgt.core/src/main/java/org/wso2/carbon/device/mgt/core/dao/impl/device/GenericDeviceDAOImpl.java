@@ -422,6 +422,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                 devices.add(device);
             }
         } catch (SQLException e) {
+
             throw new DeviceManagementDAOException("Error occurred while fetching the list of devices that matches to status " +
                                                    "'" + request.getStatus() + "'", e);
         } finally {

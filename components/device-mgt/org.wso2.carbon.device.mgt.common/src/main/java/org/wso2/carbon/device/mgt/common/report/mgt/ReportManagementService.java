@@ -17,7 +17,7 @@
  */
 package org.wso2.carbon.device.mgt.common.report.mgt;
 
-import org.wso2.carbon.device.mgt.common.DeviceManagementException;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
 
