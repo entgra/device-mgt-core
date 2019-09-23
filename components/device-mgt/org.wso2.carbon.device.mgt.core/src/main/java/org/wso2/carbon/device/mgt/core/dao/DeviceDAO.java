@@ -59,7 +59,7 @@ public interface DeviceDAO {
     /**
      * This method is used to get the device count by device-type.
      *
-     * @param type     device type.
+     * @param type device type.
      * @param tenantId tenant id.
      * @return returns the device count of given type.
      * @throws DeviceManagementDAOException
@@ -142,7 +142,7 @@ public interface DeviceDAO {
      * This method is used to retrieve a device of a given device-identifier and tenant-id.
      *
      * @param deviceIdentifier device id.
-     * @param tenantId         tenant id.
+     * @param tenantId tenant id.
      * @return returns the device object.
      * @throws DeviceManagementDAOException
      */
@@ -181,7 +181,7 @@ public interface DeviceDAO {
      * @throws DeviceManagementDAOException
      */
     Device getDevice(DeviceIdentifier deviceIdentifier, Date ifModifiedSince, int tenantId) throws
-            DeviceManagementDAOException;
+                                                                                            DeviceManagementDAOException;
 
     /**
      * Retrieves a list of devices based on a given criteria of properties
@@ -340,8 +340,7 @@ public interface DeviceDAO {
      * @return returns paginated list of devices in which owner matches (search) with given username.
      * @throws DeviceManagementDAOException
      */
-    List<Device> getDevicesOfUser(PaginationRequest request, int tenantId)
-            throws DeviceManagementDAOException;
+    List<Device> getDevicesOfUser(PaginationRequest request, int tenantId) throws DeviceManagementDAOException;
 
     /**
      * This method is used to retrieve the device count of a given tenant.
@@ -394,13 +393,13 @@ public interface DeviceDAO {
      * @throws DeviceManagementDAOException
      */
     List<Device> getDevicesByNameAndType(String deviceName, String type, int tenantId, int offset, int limit)
-            throws DeviceManagementDAOException;
+                                                                                throws DeviceManagementDAOException;
 
     /**
      * This method is used to retrieve devices of a given device name as a paginated result.
      *
      * @param request  PaginationRequest object holding the data for pagination and device search info.
-     * @param tenantId tenant id.
+     * @param tenantId   tenant id.
      * @return returns paginated list of devices which name matches (search) given device-name.
      * @throws DeviceManagementDAOException
      */
@@ -509,10 +508,8 @@ public interface DeviceDAO {
      * @param tenantId   tenant id.
      * @return returns a list of enrolment info objects.
      */
-    List<GeoCluster> findGeoClusters(String deviceType, GeoCoordinate southWest,
-                                     GeoCoordinate northEast,
-                                     int geohashLength, int tenantId)
-            throws DeviceManagementDAOException;
+    List<GeoCluster> findGeoClusters(String deviceType, GeoCoordinate southWest, GeoCoordinate northEast,
+                                     int geohashLength,int tenantId) throws DeviceManagementDAOException;
 
     /***
      * This method is used to identify whether given device ids are exist or not.
@@ -542,11 +539,12 @@ public interface DeviceDAO {
      * This method is used to get a device list which enrolled within a specific time period
      *
      * @param request  Pagination request to get paginated result
-     * @param tenantId Tenant id
-     * @param fromDate Start date (YYYY-MM-DD)
-     * @param toDate   End date (YYYY-MM-DD)
+     * @param tenantId ID of the current tenant
+     * @param fromDate Start date to filter devices(YYYY-MM-DD)
+     * @param toDate   End date to filter devices(YYYY-MM-DD)
      * @return returns a list of Device objects
-     * @throws DeviceManagementDAOException
+     * @throws DeviceManagementDAOException If failed to retrieve devices
+     * {@Link DeviceManagementDAOException}
      */
     List<Device> getDevicesByDuration(PaginationRequest request,
                                       int tenantId,

@@ -17,6 +17,7 @@
  */
 package org.wso2.carbon.device.mgt.jaxrs.service.impl;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.device.mgt.common.Device;
@@ -61,34 +62,32 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             @QueryParam("offset") int offset,
             @DefaultValue("5")
             @QueryParam("limit") int limit) {
-        String msg;
         try {
             RequestValidationUtil.validatePaginationParameters(offset, limit);
             PaginationRequest request = new PaginationRequest(offset, limit);
             PaginationResult result;
             DeviceList devices = new DeviceList();
 
-            if (status != null && !status.isEmpty()) {
+            if (StringUtils.isBlank(status)) {
                 request.setStatus(status);
             }
-            if (ownership != null && !ownership.isEmpty()) {
+            if (StringUtils.isBlank(ownership)) {
                 request.setOwnership(ownership);
             }
 
             result = DeviceMgtAPIUtils.getReportManagementService().getDevicesByDuration(request, fromDate, toDate);
             if (result.getData().isEmpty()) {
-                msg = "No devices have enrolled between " + fromDate + " to " + toDate + " or doesn't match with" +
+                String msg = "No devices have enrolled between " + fromDate + " to " + toDate + " or doesn't match with" +
                       " given parameters";
                 log.error(msg);
                 return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
             } else {
                 devices.setList((List<Device>) result.getData());
                 devices.setCount(result.getRecordsTotal());
-                msg = "Devices retrieved successfuly.";
                 return Response.status(Response.Status.OK).entity(devices).build();
             }
         } catch (ReportManagementException e) {
-            msg = "Error occurred while retrieving device list";
+            String msg = "Error occurred while retrieving device list";
             log.error(msg, e);
             return Response.serverError().entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();

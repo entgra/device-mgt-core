@@ -25,12 +25,15 @@ public interface ReportManagementService {
 
     /**
      * This method is used to call the getDevicesByDuration method from DeviceDAO
-     * @param request Pagination Request to get a paginated result
-     * @param fromDate Start Date (YYYY-MM-DD)
-     * @param toDate End Date (YYYY-MM-DD)
+     *
+     * @param request  Pagination Request to get a paginated result
+     * @param fromDate Start date to filter devices(YYYY-MM-DD)
+     * @param toDate   End date to filter devices(YYYY-MM-DD)
      * @return PaginationResult {@link PaginationResult}
-     * @throws DeviceManagementException
-     * @throws ReportManagementException
+     * @throws DeviceManagementException When error occurred while validating device list page size
+     * {@Link DeviceManagementException}
+     * @throws ReportManagementException When failed to retrieve devices.
+     * {@Link ReportManagementException}
      */
     PaginationResult getDevicesByDuration(PaginationRequest request, String fromDate, String toDate)
             throws ReportManagementException;

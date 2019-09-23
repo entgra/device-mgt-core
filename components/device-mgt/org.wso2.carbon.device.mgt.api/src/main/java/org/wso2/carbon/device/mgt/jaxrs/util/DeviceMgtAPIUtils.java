@@ -439,7 +439,9 @@ public class DeviceMgtAPIUtils {
         reportManagementService = (ReportManagementService) ctx.getOSGiService(
                 ReportManagementService.class, null);
         if (reportManagementService == null) {
-            throw new IllegalStateException("Report Management service not initialized.");
+            String msg = "Report Management service not initialized.";
+            log.error(msg);
+            throw new IllegalStateException(msg);
         }
         return reportManagementService;
     }
