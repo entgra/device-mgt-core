@@ -543,8 +543,8 @@ public interface DeviceDAO {
      * @param fromDate Start date to filter devices(YYYY-MM-DD)
      * @param toDate   End date to filter devices(YYYY-MM-DD)
      * @return returns a list of Device objects
-     * @throws DeviceManagementDAOException If failed to retrieve devices
-     * {@Link DeviceManagementDAOException}
+     * @throws {@Link DeviceManagementDAOException} If failed to retrieve devices
+     *
      */
     List<Device> getDevicesByDuration(PaginationRequest request,
                                       int tenantId,

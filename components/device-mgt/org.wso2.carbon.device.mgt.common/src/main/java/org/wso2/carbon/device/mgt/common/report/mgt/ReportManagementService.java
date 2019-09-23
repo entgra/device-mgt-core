@@ -29,11 +29,9 @@ public interface ReportManagementService {
      * @param request  Pagination Request to get a paginated result
      * @param fromDate Start date to filter devices(YYYY-MM-DD)
      * @param toDate   End date to filter devices(YYYY-MM-DD)
-     * @return PaginationResult {@link PaginationResult}
-     * @throws DeviceManagementException When error occurred while validating device list page size
-     * {@Link DeviceManagementException}
-     * @throws ReportManagementException When failed to retrieve devices.
-     * {@Link ReportManagementException}
+     * @return {@link PaginationResult}
+     * @throws {@Link DeviceManagementException} When error occurred while validating device list page size
+     * @throws {@Link ReportManagementException} When failed to retrieve devices.
      */
     PaginationResult getDevicesByDuration(PaginationRequest request, String fromDate, String toDate)
             throws ReportManagementException;
