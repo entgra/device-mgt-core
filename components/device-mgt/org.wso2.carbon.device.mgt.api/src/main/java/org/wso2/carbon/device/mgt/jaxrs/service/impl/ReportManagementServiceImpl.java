@@ -68,10 +68,10 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             PaginationResult result;
             DeviceList devices = new DeviceList();
 
-            if (StringUtils.isBlank(status)) {
+            if (!StringUtils.isBlank(status)) {
                 request.setStatus(status);
             }
-            if (StringUtils.isBlank(ownership)) {
+            if (!StringUtils.isBlank(ownership)) {
                 request.setOwnership(ownership);
             }
 
