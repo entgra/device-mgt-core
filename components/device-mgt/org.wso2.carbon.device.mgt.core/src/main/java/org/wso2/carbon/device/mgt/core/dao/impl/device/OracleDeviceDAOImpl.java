@@ -556,9 +556,6 @@ public class OracleDeviceDAOImpl extends AbstractDeviceDAOImpl {
                 devices.add(device);
             }
         } catch (SQLException e) {
-            String msg = "Error occurred while retrieving information of all " +
-                         "registered devices";
-            log.error(msg, e);
             throw new DeviceManagementDAOException("Error occurred while fetching the list of devices corresponding" +
                     "to the mentioned filtering criteria", e);
         } finally {
