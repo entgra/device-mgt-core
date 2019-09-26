@@ -17,10 +17,13 @@
  */
 package org.wso2.carbon.device.mgt.common.report.mgt;
 
-import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
+import org.wso2.carbon.device.mgt.common.exceptions.ReportManagementException;
 
+/**
+ * This is the service class for reports which connects with DAO layer
+ */
 public interface ReportManagementService {
 
     /**

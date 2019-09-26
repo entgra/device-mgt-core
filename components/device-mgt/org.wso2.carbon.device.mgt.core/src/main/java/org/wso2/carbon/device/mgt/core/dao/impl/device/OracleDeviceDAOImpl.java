@@ -437,7 +437,9 @@ public class OracleDeviceDAOImpl extends AbstractDeviceDAOImpl {
     }
 
     @Override
-    public List<Device> getDevicesByDuration(PaginationRequest request, int tenantId, String fromDate, String toDate) throws DeviceManagementDAOException {
+    public List<Device> getDevicesByDuration(PaginationRequest request, int tenantId,
+                                             String fromDate, String toDate)
+            throws DeviceManagementDAOException {
         List<Device> devices;
         String deviceStatus = request.getStatus();
         String ownership = request.getOwnership();

@@ -23,7 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
-import org.wso2.carbon.device.mgt.common.report.mgt.ReportManagementException;
+import org.wso2.carbon.device.mgt.common.exceptions.ReportManagementException;
 import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
 import org.wso2.carbon.device.mgt.jaxrs.service.api.ReportManagementService;
@@ -75,12 +75,14 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 request.setOwnership(ownership);
             }
 
-            result = DeviceMgtAPIUtils.getReportManagementService().getDevicesByDuration(request, fromDate, toDate);
+            result = DeviceMgtAPIUtils.getReportManagementService()
+                    .getDevicesByDuration(request, fromDate, toDate);
             if (result.getData().isEmpty()) {
-                String msg = "No devices have enrolled between " + fromDate + " to " + toDate + " or doesn't match with" +
-                      " given parameters";
+                String msg = "No devices have enrolled between " + fromDate + " to " + toDate +
+                             " or doesn't match with" +
+                             " given parameters";
                 log.error(msg);
-                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+                return Response.status(Response.Status.OK).entity(msg).build();
             } else {
                 devices.setList((List<Device>) result.getData());
                 devices.setCount(result.getRecordsTotal());

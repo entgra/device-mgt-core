@@ -30,7 +30,7 @@ import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.annotations.Tag;
 import org.wso2.carbon.apimgt.annotations.api.Scope;
 import org.wso2.carbon.apimgt.annotations.api.Scopes;
-import org.wso2.carbon.device.mgt.common.report.mgt.ReportManagementException;
+import org.wso2.carbon.device.mgt.common.exceptions.ReportManagementException;
 import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
 import org.wso2.carbon.device.mgt.jaxrs.util.Constants;
@@ -126,16 +126,14 @@ public interface ReportManagementService {
     Response getDevicesByDuration(
             @ApiParam(
                     name = "status",
-                    value = "Provide the device status details, such as active or inactive.",
-                    required = false)
+                    value = "Provide the device status details, such as active or inactive.")
             @QueryParam("status") String status,
             @ApiParam(
                     name = "ownership",
                     allowableValues = "BYOD, COPE",
                     value = "Provide the ownership status of the device. The following values can be assigned:\n" +
                             "- BYOD: Bring Your Own Device\n" +
-                            "- COPE: Corporate-Owned, Personally-Enabled",
-                    required = false)
+                            "- COPE: Corporate-Owned, Personally-Enabled")
             @QueryParam("ownership") String ownership,
             @ApiParam(
                     name = "fromDate",
@@ -150,14 +148,12 @@ public interface ReportManagementService {
             @ApiParam(
                     name = "offset",
                     value = "The starting pagination index for the complete list of qualified items.",
-                    required = false,
                     defaultValue = "0")
             @QueryParam("offset")
                     int offset,
             @ApiParam(
                     name = "limit",
                     value = "Provide how many device details you require from the starting pagination index/offset.",
-                    required = false,
                     defaultValue = "5")
             @QueryParam("limit")
                     int limit) throws ReportManagementException;

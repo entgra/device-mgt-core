@@ -46,7 +46,6 @@ import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration
 import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfigurationManagementService;
 import org.wso2.carbon.device.mgt.common.geo.service.GeoLocationProviderService;
 import org.wso2.carbon.device.mgt.common.notification.mgt.NotificationManagementService;
-import org.wso2.carbon.device.mgt.common.report.mgt.ReportManagementException;
 import org.wso2.carbon.device.mgt.common.report.mgt.ReportManagementService;
 import org.wso2.carbon.device.mgt.common.spi.DeviceTypeGeneratorService;
 import org.wso2.carbon.device.mgt.core.app.mgt.ApplicationManagementProviderService;
@@ -433,6 +432,10 @@ public class DeviceMgtAPIUtils {
         return notificationManagementService;
     }
 
+    /**
+     * Method for initializing ReportManagementService
+     * @return ReportManagementServie Instance
+     */
     public static ReportManagementService getReportManagementService() {
         ReportManagementService reportManagementService;
         PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();

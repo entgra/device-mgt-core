@@ -15,8 +15,11 @@
  *   specific language governing permissions and limitations
  *   under the License.
  */
-package org.wso2.carbon.device.mgt.common.report.mgt;
+package org.wso2.carbon.device.mgt.common.exceptions;
 
+/**
+ * This class is used for exception handling in report generating operations
+ */
 public class ReportManagementException extends Exception {
 
     private static final long serialVersionUID = -409298183404045217L;

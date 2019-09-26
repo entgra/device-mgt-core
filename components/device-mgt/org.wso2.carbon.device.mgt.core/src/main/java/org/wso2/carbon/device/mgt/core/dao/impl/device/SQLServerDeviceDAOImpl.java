@@ -502,7 +502,8 @@ public class SQLServerDeviceDAOImpl extends AbstractDeviceDAOImpl {
     }
 
     @Override
-    public List<Device> getDevicesByDuration(PaginationRequest request, int tenantId, String fromDate, String toDate)
+    public List<Device> getDevicesByDuration(PaginationRequest request, int tenantId,
+                                             String fromDate, String toDate)
             throws DeviceManagementDAOException {
         List<Device> devices;
         String deviceStatus = request.getStatus();

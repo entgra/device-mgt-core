@@ -23,7 +23,7 @@ import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
-import org.wso2.carbon.device.mgt.common.report.mgt.ReportManagementException;
+import org.wso2.carbon.device.mgt.common.exceptions.ReportManagementException;
 import org.wso2.carbon.device.mgt.common.report.mgt.ReportManagementService;
 import org.wso2.carbon.device.mgt.core.dao.DeviceDAO;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOException;
@@ -62,9 +62,14 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         }
         try {
             DeviceManagementDAOFactory.openConnection();
-            List<Device> devices = deviceDAO.getDevicesByDuration(request, DeviceManagementDAOUtil.getTenantId(), fromDate, toDate);
+            List<Device> devices = deviceDAO.getDevicesByDuration(
+                    request,
+                    DeviceManagementDAOUtil.getTenantId(),
+                    fromDate,
+                    toDate
+            );
             paginationResult.setData(devices);
-            //Todo: Should change the following code to a seperate count method from deviceDAO to get the count
+            //TODO: Should change the following code to a seperate count method from deviceDAO to get the count
             paginationResult.setRecordsTotal(devices.size());
             return paginationResult;
         } catch (SQLException e) {
