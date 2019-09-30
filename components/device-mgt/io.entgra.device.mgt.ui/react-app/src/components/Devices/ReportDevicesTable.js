@@ -29,6 +29,12 @@ const {Text} = Typography;
 
 let config = null;
 let apiUrl;
+let reportParamMap = {
+    status: null,
+    ownership: null,
+    from:null,
+    to:null
+};
 
 const columns = [
     {
@@ -160,8 +166,17 @@ class ReportDeviceTable extends React.Component {
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         if(prevProps.reportParams != this.props.reportParams){
+            let obj = this.props.reportParams;
+            reportParamMap = Object.keys(obj)
+                    .filter(e => obj[e] !== null)
+                    .reduce( (o, e) => {
+                        o[e]  = obj[e]
+                        return o;
+                    }, {});
+
             this.fetch();
-            //console.log(this.props.reportParams);
+            console.log(this.props.reportParams);
+            console.log(reportParamMap);
         }
     }
 
@@ -178,16 +193,10 @@ class ReportDeviceTable extends React.Component {
             requireDeviceInfo: true,
         };
 
-
-        const encodedExtraParams = Object.keys(this.props.reportParams).map(key => key + '=' + this.props.reportParams[key]).join('&');
+        const encodedExtraParams = Object.keys(reportParamMap).map(key => key + '=' + reportParamMap[key]).join('&');
         console.log(encodedExtraParams);
 
-      //  if (this.props.reportParams.duration=="" && this.props.reportParams.filter==""){
-       //     console.log("Must have a duration");
-     //   }else{
-
-      //  }
-        if(this.props.reportParams.from==null){
+        if(reportParamMap.from==null){
             apiUrl = window.location.origin + config.serverConfig.invoker.uri + config.serverConfig.invoker.deviceMgt +
                      "/devices";
         }else{
@@ -224,53 +233,6 @@ class ReportDeviceTable extends React.Component {
             this.setState({loading: false});
         });
     };
-
-    fetchReports = () => {
-        const config = this.props.context;
-        this.setState({loading: true});
-        // get current page
-        const currentPage = (params.hasOwnProperty("page")) ? params.page : 1;
-
-        const extraParams = {
-            offset: 10 * (currentPage - 1), //calculate the offset
-            limit: 10,
-            requireDeviceInfo: true,
-        };
-
-        const encodedExtraParams = Object.keys(extraParams).map(key => key + '=' + extraParams[key]).join('&');
-
-        apiUrl = window.location.origin + config.serverConfig.invoker.uri + config.serverConfig.invoker.deviceMgt +
-                 "/devices" + this.props.reportParam.filter + this.props.reportParam.duration;
-
-        console.log(apiUrl);
-        //send request to the invokerss
-        axios.get(apiUrl).then(res => {
-            if (res.status === 200) {
-                const pagination = {...this.state.pagination};
-                this.setState({
-                                  loading: false,
-                                  data: res.data.data.devices,
-                                  pagination,
-                              });
-            }
-
-        }).catch((error) => {
-            if (error.hasOwnProperty("response") && error.response.status === 401) {
-                //todo display a popop with error
-                message.error('You are not logged in');
-                window.location.href = window.location.origin + '/entgra/login';
-            } else {
-                notification["error"]({
-                                          message: "There was a problem",
-                                          duration: 0,
-                                          description:
-                                                  "Error occurred while trying to load devices.",
-                                      });
-            }
-
-            this.setState({loading: false});
-        });
-    }
 
     handleTableChange = (pagination, filters, sorter) => {
         const pager = {...this.state.pagination};

@@ -40,8 +40,8 @@ class Reports extends React.Component {
         this.state = {
             durationFromDate: '',
             durationToDate:'',
-            filterDropdownStatusValue: 'ALL',
-            filterDropdownOwnershipValue:'ALL'
+            filterDropdownStatusValue: null,
+            filterDropdownOwnershipValue: null
         }
     }
 
@@ -55,13 +55,13 @@ class Reports extends React.Component {
             if(filterType=="Device Status"){
                 this.setState({filterDropdownStatusValue: modifiedValue});
                 if(modifiedValue=="ALL"){
-                    this.setState({filterDropdownStatusValue: 'ALL'});
+                    this.setState({filterDropdownStatusValue: null});
                 }
                 //console.log("asdsdf"+modifiedValue);
             }else{
                 this.setState({filterDropdownOwnershipValue:modifiedValue});
                 if(modifiedValue=="ALL"){
-                    this.setState({filterDropdownOwnershipValue: 'ALL'});
+                    this.setState({filterDropdownOwnershipValue: null});
                 }
             }
 
@@ -69,37 +69,11 @@ class Reports extends React.Component {
     }
 
     render() {
-        var reportParams;
-        if(this.state.durationFromDate==""){
-            reportParams = {
-                //   duration: this.state.durationDropdownValue,
-                from: null
-            }
-        }else if(this.state.filterDropdownStatusValue=="ALL" && this.state.filterDropdownOwnershipValue=="ALL"){
-            reportParams = {
-                //   duration: this.state.durationDropdownValue,
-                from:this.state.durationFromDate,
-                to:this.state.durationToDate
-            }
-        }else if(this.state.filterDropdownStatusValue!="ALL" && this.state.filterDropdownOwnershipValue=="ALL"){
-            reportParams = {
-                status: this.state.filterDropdownStatusValue,
-                from:this.state.durationFromDate,
-                to:this.state.durationToDate
-            }
-        }else if(this.state.filterDropdownOwnershipValue!="ALL" && this.state.filterDropdownStatusValue=="ALL"){
-            reportParams = {
-                ownership: this.state.filterDropdownOwnershipValue,
-                from:this.state.durationFromDate,
-                to:this.state.durationToDate
-            }
-        }else{
-            reportParams = {
-                status: this.state.filterDropdownStatusValue,
-                ownership: this.state.filterDropdownOwnershipValue,
-                from:this.state.durationFromDate,
-                to:this.state.durationToDate
-            }
+        var reportParams = {
+            status: this.state.filterDropdownStatusValue,
+            ownership: this.state.filterDropdownOwnershipValue,
+            from:this.state.durationFromDate,
+            to:this.state.durationToDate
         }
         const statusObj = [
             {
