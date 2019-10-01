@@ -35,7 +35,6 @@ import org.wso2.carbon.device.application.mgt.core.exception.NotFoundException;
 import org.wso2.carbon.device.application.mgt.core.internal.DataHolder;
 import org.wso2.carbon.device.application.mgt.core.lifecycle.LifecycleStateManager;
 import org.wso2.carbon.device.application.mgt.core.util.ConnectionManagerUtil;
-import org.wso2.carbon.device.application.mgt.core.util.Constants;
 
 import java.io.InputStream;
 import java.util.Map;
@@ -46,12 +45,9 @@ public class AppmDataHandlerImpl implements AppmDataHandler {
     private UIConfiguration uiConfiguration;
     private LifecycleStateManager lifecycleStateManager;
 
-
-
     public AppmDataHandlerImpl(UIConfiguration config) {
         this.uiConfiguration = config;
         lifecycleStateManager = DataHolder.getInstance().getLifecycleStateManager();
-
     }
 
     @Override
@@ -64,9 +60,8 @@ public class AppmDataHandlerImpl implements AppmDataHandler {
         return lifecycleStateManager.getLifecycleConfig();
     }
 
-    @Override public InputStream getArtifactStream(String uuid, String folderName, String artifactName)
+    @Override public InputStream getArtifactStream(int tenantId, String uuid, String folderName, String artifactName)
             throws ApplicationManagementException {
-        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         ApplicationStorageManager applicationStorageManager = DAOUtil.getApplicationStorageManager();
         ApplicationReleaseDAO applicationReleaseDAO = ApplicationManagementDAOFactory.getApplicationReleaseDAO();
         String appReleaseHashValue;
@@ -87,18 +82,16 @@ public class AppmDataHandlerImpl implements AppmDataHandler {
             }
             return inputStream;
         } catch (ApplicationManagementDAOException e) {
-            String msg =
-                    "Error occurred when retrieving application release hash value for given application release UUID: "
-                            + uuid;
-            log.error(msg);
-            throw new ApplicationManagementException(msg);
+            String msg = "Error occurred when retrieving application release hash value for given application release "
+                    + "UUID: " + uuid;
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
         } catch (ApplicationStorageManagementException e) {
             String msg = "Error occurred when getting input stream of the " + artifactName + " file.";
-            log.error(msg);
-            throw new ApplicationManagementException(msg);
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
         } finally {
             ConnectionManagerUtil.closeDBConnection();
         }
-
     }
 }

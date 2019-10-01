@@ -40,10 +40,12 @@ import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo.Status;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
+import org.wso2.carbon.device.mgt.common.configuration.mgt.DevicePropertyInfo;
 import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.geo.GeoCluster;
 import org.wso2.carbon.device.mgt.core.geo.geoHash.GeoCoordinate;
 
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -190,6 +192,15 @@ public interface DeviceDAO {
      */
     List<Device> getDeviceBasedOnDeviceProperties(Map<String, String> deviceProps, int tenantId) throws DeviceManagementDAOException;
 
+    /**
+     * Retrieves a list of devices based on a given criteria of properties
+     * This will ignores the tenant and it will return devices registered under every tenants
+     * @param deviceProps properties by which devices need to be filtered
+     * @return list of devices with properties
+     * @throws DeviceManagementDAOException if the SQL query has failed to be executed
+     */
+    List<DevicePropertyInfo> getDeviceBasedOnDeviceProperties(Map<String, String> deviceProps)
+            throws DeviceManagementDAOException;
 
     /**
      * Retrieves properties of given device identifier
@@ -276,6 +287,17 @@ public interface DeviceDAO {
      * @throws DeviceManagementDAOException
      */
     List<Device> getDevices(PaginationRequest request, int tenantId) throws DeviceManagementDAOException;
+
+
+    /**
+     * This method is used to search for devices within a specific group.
+     *
+     * @param request  PaginationRequest object holding the data for pagination
+     * @param tenantId tenant id.
+     * @return returns paginated list of devices.
+     * @throws DeviceManagementDAOException
+     */
+    List<Device> searchDevicesInGroup(PaginationRequest request, int tenantId) throws DeviceManagementDAOException;
 
     /**
      * This method is used to retrieve all the devices of a given tenant and device type.
@@ -498,14 +520,18 @@ public interface DeviceDAO {
      * @throws DeviceManagementDAOException throws {@link DeviceManagementDAOException} if connections establishment
      * fails.
      */
-    List<Device> getDevicesByIdentifiers(List<String> deviceIdentifiers, int tenantId) throws DeviceManagementDAOException;
+    List<Device> getDevicesByIdentifiers(List<String> deviceIdentifiers, int tenantId)
+            throws DeviceManagementDAOException;
 
-    /**
-     * This method is used to permanently delete the device and its related details
-     * @param deviceIdentifier device id
-     * @param tenantId tenant id
-     * @throws DeviceManagementDAOException
+    /***
+     * This method is used to permanently delete devices and their related details
+     * @param deviceIdentifiers List of device identifiers.
+     * @param deviceIds list of device ids (primary keys).
+     * @param enrollmentIds list of enrollment ids.
+     * @throws DeviceManagementDAOException when no enrolments are found for the given device.
      */
-    void deleteDevice(DeviceIdentifier deviceIdentifier, int tenantId) throws DeviceManagementDAOException;
-}
+    void deleteDevices(List<String> deviceIdentifiers, List<Integer> deviceIds, List<Integer> enrollmentIds) throws DeviceManagementDAOException;
 
+    boolean transferDevice(String deviceType, String deviceId, String owner, int destinationTenantId)
+            throws DeviceManagementDAOException, SQLException;
+}

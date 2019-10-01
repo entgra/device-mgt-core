@@ -15,6 +15,22 @@
  *   specific language governing permissions and limitations
  *   under the License.
  *
+ *
+ *   Copyright (c) 2019, Entgra (pvt) Ltd. (https://entgra.io) All Rights Reserved.
+ *
+ *   Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
+ *   Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing,
+ *   software distributed under the License is distributed on an
+ *   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *   KIND, either express or implied. See the License for the
+ *   specific language governing permissions and limitations
+ *   under the License.
  */
 package org.wso2.carbon.device.mgt.jaxrs.service.impl.admin;
 
@@ -24,10 +40,12 @@ import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.device.mgt.common.Device;
+import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.InvalidDeviceException;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.exceptions.UserNotFoundException;
+import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
 import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
 import org.wso2.carbon.device.mgt.jaxrs.service.api.admin.DeviceManagementAdminService;
@@ -96,25 +114,53 @@ public class DeviceManagementAdminServiceImpl implements DeviceManagementAdminSe
             @QueryParam("owner") String owner,
             List<String> deviceIdentifiers){
         try {
-            if (DeviceMgtAPIUtils.getDeviceManagementService().updateEnrollment(owner, deviceIdentifiers)){
+            if (DeviceMgtAPIUtils.getDeviceManagementService().updateEnrollment(owner, deviceIdentifiers)) {
                 String msg = "Device owner is updated successfully.";
                 return Response.status(Response.Status.OK).entity(msg).build();
             }
             String msg = "Device owner updating is failed.";
             log.error(msg);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
-        } catch(InvalidDeviceException e){
+        } catch (InvalidDeviceException e) {
             String msg = "Invalid device identifiers are found with the request.";
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
-        }catch (DeviceManagementException e) {
+        } catch (DeviceManagementException e) {
             String msg = "Error occurred when updating device owners.";
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         } catch (UserNotFoundException e) {
             String msg = "Couldn't found the owner in user store to update the owner of devices.";
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+        }
+    }
+
+    @DELETE
+    @Override
+    @Path("/permanent-delete")
+    public Response deleteDevicesPermanently(List<String> deviceIdentifiers) {
+        DeviceManagementProviderService deviceManagementProviderService =
+                DeviceMgtAPIUtils.getDeviceManagementService();
+        try {
+            if (!deviceManagementProviderService.deleteDevices(deviceIdentifiers)) {
+                String msg = "Found un-deployed device type.";
+                log.error(msg);
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
+                        new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+            }
+            return Response.status(Response.Status.OK).entity(true).build();
+        } catch (DeviceManagementException e) {
+            String msg = "Error encountered while permanently deleting devices";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        }
+        catch (InvalidDeviceException e) {
+            String msg = "Found Invalid devices";
+            log.error(msg, e);
+            return Response.status(Response.Status.BAD_REQUEST).entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
         }
     }
 }

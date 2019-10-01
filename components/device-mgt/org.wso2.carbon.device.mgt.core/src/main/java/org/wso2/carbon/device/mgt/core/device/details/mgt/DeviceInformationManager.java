@@ -34,6 +34,8 @@ import java.util.List;
 
 public interface DeviceInformationManager {
 
+    void register(DeviceIdentifier deviceId, DeviceInfo deviceInfo) throws DeviceDetailsMgtException;
+
     /**
      * This method will manage the storing of the device information as key value pairs.
      * @param deviceInfo - Device info object.

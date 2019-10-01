@@ -61,5 +61,8 @@
     "RETIRED": {
       "text": "The final state of an application, where no transition of states will be allowed after this."
     }
+  },
+  "deviceTypes": {
+    "mobileTypes": ["android", "ios"]
   }
 }

@@ -121,7 +121,12 @@ if (!user || accessToken == null) {
                 response.sendRedirect("/devicemgt/platform-configuration?enterprise-success=true");
             }
         }
+    } else if (uriMatcher.match("/{context}/api/enterprise/asdsad/unenroll")) {
+        session.put("externalEndpoint", restAPIRequestDetails["endpoint"]);
+        session.put("externalToken", restAPIRequestDetails["externalToken"]);
+        callBackend(restAPIRequestDetails["endpoint"], session.get("externalToken"), "POST", restAPIRequestDetails);
     }
+
 }
 
 %>

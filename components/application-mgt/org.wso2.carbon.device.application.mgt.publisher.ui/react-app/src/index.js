@@ -30,6 +30,7 @@ import './index.css';
 import AddNewPublicApp from "./pages/dashboard/add-new-app/AddNewPublicApp";
 import AddNewWebClip from "./pages/dashboard/add-new-app/AddNewWebClip";
 import AddNewRelease from "./pages/dashboard/add-new-release/AddNewRelease";
+import AddNewCustomApp from "./pages/dashboard/add-new-app/AddNewCustomApp";
 import ManageAndroidEnterprise from "./pages/dashboard/manage/android-enterprise/ManageAndroidEnterprise";
 import Page from "./pages/dashboard/manage/android-enterprise/page/Page";
 
@@ -56,7 +57,7 @@ const routes = [
                 component: Release
             },
             {
-                path: '/publisher/apps/:appId/add-release',
+                path: '/publisher/apps/:deviceType/:appId/add-release',
                 component: AddNewRelease,
                 exact: true
             },
@@ -73,6 +74,11 @@ const routes = [
             {
                 path: '/publisher/add-new-app/web-clip',
                 component: AddNewWebClip,
+                exact: true
+            },
+            {
+                path: '/publisher/add-new-app/custom-app',
+                component: AddNewCustomApp,
                 exact: true
             },
             {

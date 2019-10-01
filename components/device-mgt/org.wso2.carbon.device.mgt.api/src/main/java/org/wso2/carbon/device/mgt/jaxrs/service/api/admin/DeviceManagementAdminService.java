@@ -15,6 +15,22 @@
  *   specific language governing permissions and limitations
  *   under the License.
  *
+ *
+ *   Copyright (c) 2019, Entgra (pvt) Ltd. (https://entgra.io) All Rights Reserved.
+ *
+ *   Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
+ *   Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing,
+ *   software distributed under the License is distributed on an
+ *   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *   KIND, either express or implied. See the License for the
+ *   specific language governing permissions and limitations
+ *   under the License.
  */
 package org.wso2.carbon.device.mgt.jaxrs.service.api.admin;
 
@@ -76,6 +92,12 @@ import java.util.List;
                         description = "Update the ownership of the device",
                         key = "perm:admin:devices:update-enrollment",
                         permissions = {"/device-mgt/admin/devices/update-enrollment"}
+                ),
+                @Scope(
+                        name = "Permanently Delete the device specified by device id",
+                        description = "Permanently Delete the device specified by device id",
+                        key = "perm:devices:permanent-delete",
+                        permissions = {"/device-mgt/admin/devices/permanent-delete"}
                 )
         }
 )
@@ -220,6 +242,57 @@ public interface DeviceManagementAdminService {
                     value = "The username that is going to use for the new device owner of given devices.",
                     required = true)
             @QueryParam("owner") String owner,
+            @ApiParam(
+                    name = "Device Identifiers",
+                    value = "List of device identifiers.",
+                    required = true)
+                    List<String> deviceIdentifiers);
+
+    @DELETE
+    @Path("/permanent-delete")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            consumes = MediaType.APPLICATION_JSON,
+            httpMethod = "DELETE",
+            value = "Permanently remove the Device Specified by the Device ID",
+            notes = "Returns the status of the permanently deleted device operation and the details of the deleted device.",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:permanent-delete")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully deleted the device permanently.",
+                            response = Device.class,
+                            responseHeaders = {
+                                    @ResponseHeader(
+                                            name = "Content-Type",
+                                            description = "The content type of the body"),
+                                    @ResponseHeader(
+                                            name = "ETag",
+                                            description = "Entity Tag of the response resource.\n" +
+                                                          "Used by caches, or in conditional requests."),
+                                    @ResponseHeader(
+                                            name = "Last-Modified",
+                                            description = "Date and time the resource has been modified the last time.\n" +
+                                                          "Used by caches, or in conditional requests."),
+                            }),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. \n Invalid request or validation error.",
+                            response = ErrorResponse.class),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n " +
+                                      "Server error occurred while retrieving information requested device.",
+                            response = ErrorResponse.class)
+            })
+    Response deleteDevicesPermanently(
             @ApiParam(
                     name = "Device Identifiers",
                     value = "List of device identifiers.",

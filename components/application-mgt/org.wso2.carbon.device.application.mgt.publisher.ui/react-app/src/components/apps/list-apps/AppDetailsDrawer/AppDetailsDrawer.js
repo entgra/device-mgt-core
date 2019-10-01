@@ -32,13 +32,11 @@ import {
     Icon,
     Card
 } from 'antd';
-
-import "../../../../App.css";
 import DetailedRating from "../../detailed-rating/DetailedRating";
 import {Link} from "react-router-dom";
 import axios from "axios";
 import ReactQuill from "react-quill";
-import ReactHtmlParser, {processNodes, convertNodeToElement, htmlparser2} from 'react-html-parser';
+import ReactHtmlParser from 'react-html-parser';
 import "./AppDetailsDrawer.css";
 import pSBC from "shade-blend-color";
 import {withConfigContext} from "../../../../context/ConfigContext";
@@ -73,6 +71,8 @@ const formats = [
 class AppDetailsDrawer extends React.Component {
     constructor(props) {
         super(props);
+        const drawerWidth = window.innerWidth<=770 ? '80%' : '40%';
+
         this.state = {
             loading: false,
             name: "",
@@ -87,12 +87,13 @@ class AppDetailsDrawer extends React.Component {
             isDescriptionEditEnabled: false,
             isCategoriesEditEnabled: false,
             isTagsEditEnabled: false,
+            drawer: null,
+            drawerWidth
         };
     }
 
     componentDidMount() {
         this.getCategories();
-        this.getTags();
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -117,7 +118,7 @@ class AppDetailsDrawer extends React.Component {
         ).then(res => {
             if (res.status === 200) {
                 const categories = JSON.parse(res.data.data);
-
+                this.getTags();
                 const globalCategories = categories.map(category => {
                     return (
                         <Option
@@ -500,39 +501,46 @@ class AppDetailsDrawer extends React.Component {
 
                         <Text strong={true}>Releases </Text>
                         {/*display add new release only if app type is enterprise*/}
-                        {(app.type === "ENTERPRISE") && (
-                            <Link to={`/publisher/apps/${app.id}/add-release`}><Button htmlType="button" size="small">Add
-                                new release</Button></Link>)}
-                        <List
-                            style={{paddingTop: 16}}
-                            grid={{gutter: 16, column: 2}}
-                            dataSource={app.applicationReleases}
-                            renderItem={release => (
-                                <List.Item>
-                                    <Link to={"apps/releases/" + release.uuid}>
-                                        <Card className="release-card">
-                                            <Meta
-                                                avatar={
-                                                    <Avatar size="large" shape="square" src={release.iconPath}/>
-                                                }
-                                                title={release.version}
-                                                description={
-                                                    <div style={{
-                                                        fontSize: "0.7em"
-                                                    }}>
-                                                        <IconText type="check" text={release.currentStatus}/>
-                                                        <Divider type="vertical"/>
-                                                        <IconText type="upload" text={release.releaseType}/>
-                                                        <Divider type="vertical"/>
-                                                        <IconText type="star-o" text={release.rating.toFixed(1)}/>
-                                                    </div>
-                                                }
-                                            />
-                                        </Card>
-                                    </Link>
-                                </List.Item>
-                            )}
-                        />
+
+                        <div className="releases-details">
+
+                            {(app.type === "ENTERPRISE") && (
+                                <Link to={`/publisher/apps/${app.id}/add-release`}><Button htmlType="button"
+                                                                                           size="small">Add
+                                    new release</Button></Link>)}
+                            <List
+                                style={{paddingTop: 16}}
+                                grid={{gutter: 16, column: 2}}
+                                dataSource={app.applicationReleases}
+                                renderItem={release => (
+                                    <List.Item>
+                                        <Link to={"apps/releases/" + release.uuid}>
+                                            <Card className="release-card">
+                                                <Meta
+                                                    avatar={
+                                                        <Avatar size="large" shape="square" src={release.iconPath}/>
+                                                    }
+                                                    title={release.version}
+                                                    description={
+                                                        <div style={{
+                                                            fontSize: "0.7em"
+                                                        }} className="description-view">
+                                                            <IconText type="check" text={release.currentStatus}/>
+                                                            <Divider type="vertical"/>
+                                                            <IconText type="upload" text={release.releaseType}/>
+                                                            <Divider type="vertical"/>
+                                                            <IconText type="star-o" text={release.rating.toFixed(1)}/>
+                                                        </div>
+                                                    }
+                                                />
+                                            </Card>
+                                        </Link>
+                                    </List.Item>
+                                )}
+                            />
+
+                        </div>
+
                         <Divider dashed={true}/>
 
                         <Text strong={true}>Description </Text>
@@ -663,8 +671,11 @@ class AppDetailsDrawer extends React.Component {
                         )}
 
                         <Divider dashed={true}/>
-                        {app.applicationReleases.length > 0 && (
-                            <DetailedRating type="app" uuid={app.applicationReleases[0].uuid}/>)}
+
+                        <div className="app-rate">
+                            {app.applicationReleases.length > 0 && (
+                                <DetailedRating type="app" uuid={app.applicationReleases[0].uuid} />)}
+                        </div>
                     </Spin>
                 </Drawer>
             </div>

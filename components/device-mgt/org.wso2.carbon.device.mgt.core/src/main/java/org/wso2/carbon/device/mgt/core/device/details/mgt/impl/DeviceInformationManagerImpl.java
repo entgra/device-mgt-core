@@ -61,6 +61,11 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
     }
 
     @Override
+    public void register(DeviceIdentifier deviceId, DeviceInfo deviceInfo) throws DeviceDetailsMgtException {
+
+    }
+
+    @Override
     public void addDeviceInfo(DeviceIdentifier deviceId, DeviceInfo deviceInfo) throws DeviceDetailsMgtException {
         try {
             Device device = DeviceManagementDataHolder.getInstance().

@@ -41,9 +41,11 @@ class NewAppDetailsForm extends React.Component {
         this.state = {
             categories: [],
             tags: [],
-            deviceTypes: []
-        }
+            deviceTypes:[]
+        };
+
     }
+
 
     handleSubmit = e => {
         e.preventDefault();
@@ -55,11 +57,7 @@ class NewAppDetailsForm extends React.Component {
                 this.setState({
                     loading: true
                 });
-                const {
-                    name, description, categories, tags, price,
-                    isSharedWithAllTenants, binaryFile, icon, screenshots,
-                    releaseDescription, releaseType
-                } = values;
+                const {name, description, categories, tags, price, isSharedWithAllTenants, binaryFile, icon, screenshots, releaseDescription, releaseType} = values;
                 const application = {
                     name,
                     description,
@@ -75,6 +73,7 @@ class NewAppDetailsForm extends React.Component {
                     application.type = "WEB_CLIP";
                     application.deviceType = "ALL";
                 }
+
                 this.props.onSuccessApplicationData(application);
             }
         });
@@ -98,6 +97,7 @@ class NewAppDetailsForm extends React.Component {
                     loading: false
                 });
             }
+
         }).catch((error) => {
             if (error.hasOwnProperty("response") && error.response.status === 401) {
                 window.location.href = window.location.origin + '/publisher/login';
@@ -127,6 +127,7 @@ class NewAppDetailsForm extends React.Component {
                     loading: false,
                 });
             }
+
         }).catch((error) => {
             if (error.hasOwnProperty("response") && error.response.status === 401) {
                 window.location.href = window.location.origin + '/publisher/login';
@@ -146,17 +147,41 @@ class NewAppDetailsForm extends React.Component {
 
     getDeviceTypes = () => {
         const config = this.props.context;
+        const {formConfig} = this.props;
+        const {installationType} = formConfig;
+
         axios.get(
             window.location.origin + config.serverConfig.invoker.uri + config.serverConfig.invoker.deviceMgt + "/device-types"
         ).then(res => {
             if (res.status === 200) {
-                const deviceTypes = JSON.parse(res.data.data);
+                const allDeviceTypes = JSON.parse(res.data.data);
+                const mobileDeviceTypes = config.deviceTypes.mobileTypes;
+                const allowedDeviceTypes = [];
+
+                // exclude mobile device types if installation type is custom
+                if(installationType==="CUSTOM"){
+                    allDeviceTypes.forEach(deviceType=>{
+                        if(!mobileDeviceTypes.includes(deviceType.name)){
+                            allowedDeviceTypes.push(deviceType);
+                        }
+                    });
+                }else{
+                    allDeviceTypes.forEach(deviceType=>{
+                        if(mobileDeviceTypes.includes(deviceType.name)){
+                            allowedDeviceTypes.push(deviceType);
+                        }
+                    });
+                }
+
                 this.setState({
-                    deviceTypes,
+                    deviceTypes: allowedDeviceTypes,
                     loading: false,
                 });
             }
+
+
         }).catch((error) => {
+            console.log(error);
             if (error.hasOwnProperty("response") && error.response.status === 401) {
                 window.location.href = window.location.origin + '/publisher/login';
             } else {
@@ -177,6 +202,7 @@ class NewAppDetailsForm extends React.Component {
         const {formConfig} = this.props;
         const {categories, tags, deviceTypes} = this.state;
         const {getFieldDecorator} = this.props.form;
+
 
         return (
             <div>
@@ -204,7 +230,8 @@ class NewAppDetailsForm extends React.Component {
                                         <Select
                                             style={{width: '100%'}}
                                             placeholder="select device type"
-                                            onChange={this.handleCategoryChange}>
+                                            onChange={this.handleCategoryChange}
+                                        >
                                             {
                                                 deviceTypes.map(deviceType => {
                                                     return (
@@ -254,7 +281,8 @@ class NewAppDetailsForm extends React.Component {
                                         mode="multiple"
                                         style={{width: '100%'}}
                                         placeholder="Select a Category"
-                                        onChange={this.handleCategoryChange}>
+                                        onChange={this.handleCategoryChange}
+                                    >
                                         {
                                             categories.map(category => {
                                                 return (
@@ -278,7 +306,8 @@ class NewAppDetailsForm extends React.Component {
                                     <Select
                                         mode="tags"
                                         style={{width: '100%'}}
-                                        placeholder="Tags">
+                                        placeholder="Tags"
+                                    >
                                         {
                                             tags.map(tag => {
                                                 return (
