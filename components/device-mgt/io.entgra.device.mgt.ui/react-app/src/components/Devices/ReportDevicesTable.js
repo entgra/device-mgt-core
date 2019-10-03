@@ -176,7 +176,6 @@ class ReportDeviceTable extends React.Component {
 
         const encodedExtraParams = Object.keys(this.props.paramsObject)
                 .map(key => key + '=' + this.props.paramsObject[key]).join('&');
-        console.log(encodedExtraParams);
 
         if(this.props.paramsObject.from==null && this.props.paramsObject.to==null){
             apiUrl = window.location.origin + config.serverConfig.invoker.uri +
@@ -189,16 +188,15 @@ class ReportDeviceTable extends React.Component {
                      "/reports/devices?" + encodedExtraParams;
         }
 
-        console.log(apiUrl);
         //send request to the invokerss
         axios.get(apiUrl).then(res => {
             if (res.status === 200) {
                 const pagination = {...this.state.pagination};
                 this.setState({
-                                  loading: false,
-                                  data: res.data.data.devices,
-                                  pagination,
-                              });
+                    loading: false,
+                    data: res.data.data.devices,
+                    pagination,
+                });
             }
 
         }).catch((error) => {
@@ -208,11 +206,10 @@ class ReportDeviceTable extends React.Component {
                 window.location.href = window.location.origin + '/entgra/login';
             } else {
                 notification["error"]({
-                                          message: "There was a problem",
-                                          duration: 0,
-                                          description:
-                                                  "Error occurred while trying to load devices.",
-                                      });
+                    message: "There was a problem",
+                    duration: 0,
+                    description:"Error occurred while trying to load devices.",
+                });
             }
 
             this.setState({loading: false});
@@ -223,15 +220,15 @@ class ReportDeviceTable extends React.Component {
         const pager = {...this.state.pagination};
         pager.current = pagination.current;
         this.setState({
-                          pagination: pager,
-                      });
+            pagination: pager,
+        });
         this.fetch({
-                       results: pagination.pageSize,
-                       page: pagination.current,
-                       sortField: sorter.field,
-                       sortOrder: sorter.order,
-                       ...filters,
-                   });
+            results: pagination.pageSize,
+            page: pagination.current,
+            sortField: sorter.field,
+            sortOrder: sorter.order,
+            ...filters,
+        });
     };
 
     render() {

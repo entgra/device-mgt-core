@@ -57,8 +57,7 @@ class Filter extends React.Component {
                 onChange={this.onChange}
                 filterOption={(input, option) =>
                 option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                }
-            >
+                }>
                 {item}
             </Select>
         )
