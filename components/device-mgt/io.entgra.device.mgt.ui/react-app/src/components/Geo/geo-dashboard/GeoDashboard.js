@@ -31,8 +31,8 @@ class GeoDashboard extends React.Component {
         super(props);
         let start = moment(new Date());
         let end = moment(start)
-            .add(5, "days")
-            .subtract(1, "minute");
+                .add(5, "days")
+                .subtract(1, "minute");
         this.state = {
             deviceData: [],
             selectedDevice: '',
@@ -58,9 +58,9 @@ class GeoDashboard extends React.Component {
     applyCallback = (startDate, endDate) => {
         console.log("Apply Callback");
         this.setState({
-            start: startDate,
-            end: endDate
-        });
+                          start: startDate,
+                          end: endDate
+                      });
     };
 
     /**
@@ -77,14 +77,14 @@ class GeoDashboard extends React.Component {
             this.setState({loading: true});
 
             axios.get(window.location.origin + config.serverConfig.invoker.uri + config.serverConfig.invoker.deviceMgt
-                + "/devices/" + deviceType + "/" + deviceId + "/location-history?" + "from=" + fromInMills + "&to=" +
-                toInMills,).then(res => {
+                      + "/devices/" + deviceType + "/" + deviceId + "/location-history?" + "from=" + fromInMills + "&to=" +
+                      toInMills,).then(res => {
                 if (res.status === 200) {
                     const locationData = JSON.parse(res.data.data);
                     this.setState({
-                        loading: false,
-                        locationData,
-                    });
+                                      loading: false,
+                                      locationData,
+                                  });
                 }
             }).catch((error) => {
                 if (error.hasOwnProperty("response") && error.response.status === 401) {
@@ -92,11 +92,11 @@ class GeoDashboard extends React.Component {
                     window.location.href = window.location.origin + '/entgra/login';
                 } else {
                     notification["error"]({
-                        message: "There was a problem",
-                        duration: 0,
-                        description:
-                            "Error occurred while trying to fetch locations......",
-                    });
+                                              message: "There was a problem",
+                                              duration: 0,
+                                              description:
+                                                      "Error occurred while trying to fetch locations......",
+                                          });
                 }
 
                 this.setState({loading: false});
@@ -104,11 +104,11 @@ class GeoDashboard extends React.Component {
             });
         } else {
             notification["error"]({
-                message: "There was a problem",
-                duration: 0,
-                description:
-                    "Please provide a date range and a device.",
-            });
+                                      message: "There was a problem",
+                                      duration: 0,
+                                      description:
+                                              "Please provide a date range and a device.",
+                                  });
         }
     };
 
@@ -121,13 +121,6 @@ class GeoDashboard extends React.Component {
         this.setState({selectedDevice})
     };
 
-    // /**
-    //  * fetches current location to create a marker
-    //  */
-    // fetchCurrentLocation = () => {
-    //     this.setState({currentLocation: currentLocationData});
-    // };
-
     /**
      * render fetch location button
      */
@@ -139,12 +132,12 @@ class GeoDashboard extends React.Component {
             toolTip = "Please select a Device";
         }
         return (
-            <Tooltip placement="rightBottom" title={toolTip}>
-                <Button disabled={flag}
-                        onClick={this.handleApiCall}>
-                    Fetch Locations
-                </Button>
-            </Tooltip>);
+                <Tooltip placement="rightBottom" title={toolTip}>
+                    <Button disabled={flag}
+                            onClick={this.handleApiCall}>
+                        Fetch Locations
+                    </Button>
+                </Tooltip>);
 
     };
 
@@ -156,27 +149,26 @@ class GeoDashboard extends React.Component {
         this.setState({loading: true});
 
         axios.get(
-            window.location.origin + config.serverConfig.invoker.uri + config.serverConfig.invoker.deviceMgt +
-            "/devices?excludeStatus=REMOVED",).then(res => {
+                window.location.origin + config.serverConfig.invoker.uri + config.serverConfig.invoker.deviceMgt +
+                "/devices?excludeStatus=REMOVED",).then(res => {
             if (res.status === 200) {
                 this.setState({
-                    loading: false,
-                    deviceData: res.data.data.devices,
-                });
+                                  loading: false,
+                                  deviceData: res.data.data.devices,
+                              });
             }
 
         }).catch((error) => {
             if (error.hasOwnProperty("response") && error.response.status === 401) {
-                //todo display a popop with error
                 message.error('You are not logged in');
                 window.location.href = window.location.origin + '/entgra/login';
             } else {
                 notification["error"]({
-                    message: "There was a problem",
-                    duration: 0,
-                    description:
-                        "Error occurred while trying to load devices.",
-                });
+                                          message: "There was a problem",
+                                          duration: 0,
+                                          description:
+                                                  "Error occurred while trying to load devices.",
+                                      });
             }
 
             this.setState({loading: false});
@@ -190,11 +182,11 @@ class GeoDashboard extends React.Component {
 
         let now = new Date();
         let start = moment(
-            new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
+                new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
         );
         let end = moment(start)
-            .add(1, "days")
-            .subtract(1, "seconds");
+                .add(1, "days")
+                .subtract(1, "seconds");
         let ranges = {
             "Today Only": [moment(start), moment(end)],
             "Yesterday Only": [
@@ -213,45 +205,45 @@ class GeoDashboard extends React.Component {
         };
         let maxDate = moment(start).add(24, "hour");
         let value =
-            `
+                `
             ${this.state.start.format("DD-MM-YYYY HH:mm")} - ${this.state.end.format("DD-MM-YYYY HH:mm")}
             `;
         let {deviceData} = this.state;
 
         return (
-            <div className="controllerDiv">
+                <div className="controllerDiv">
 
-                <Button style={{marginRight: 20}}>
-                    <DateTimeRangeContainer
-                        ranges={ranges}
-                        start={this.state.start}
-                        end={this.state.end}
-                        local={local}
-                        maxDate={maxDate}
-                        applyCallback={this.applyCallback}
+                    <Button style={{marginRight: 20}}>
+                        <DateTimeRangeContainer
+                                ranges={ranges}
+                                start={this.state.start}
+                                end={this.state.end}
+                                local={local}
+                                maxDate={maxDate}
+                                applyCallback={this.applyCallback}
+                        >
+                            {value}
+                        </DateTimeRangeContainer>
+                    </Button>
+
+                    <Select
+                            showSearch
+                            style={{width: 220, marginRight: 20}}
+                            placeholder="Select a Device"
+                            optionFilterProp="children"
+                            onChange={this.handleDeviceList}
+                            filterOption={(input, option) =>
+                                    option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                            }
                     >
-                        {value}
-                    </DateTimeRangeContainer>
-                </Button>
+                        {deviceData.map((device, index) =>
+                                                <Select.Option key={index} value={index}>
+                                                    {device.name + " "}{this.statusTag(device)}
+                                                </Select.Option>)}
+                    </Select>
 
-                <Select
-                    showSearch
-                    style={{width: 220, marginRight: 20}}
-                    placeholder="Select a Device"
-                    optionFilterProp="children"
-                    onChange={this.handleDeviceList}
-                    filterOption={(input, option) =>
-                        option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                    }
-                >
-                    {deviceData.map((device, index) =>
-                        <Select.Option key={index} value={index}>
-                            {device.name + " "}{this.statusTag(device)}
-                        </Select.Option>)}
-                </Select>
-
-                {this.fetchLocationButton()}
-            </div>
+                    {this.fetchLocationButton()}
+                </div>
         );
     };
 
@@ -282,18 +274,17 @@ class GeoDashboard extends React.Component {
     };
 
     render() {
-        // let {currentLocation} = this.state;
         const locationData = [...this.state.locationData];
 
         return (
-            <div className="container">
-                {this.controllerBar()}
-                {(locationData.length > 0) ?
-                    <GeoCustomMap locationData={locationData}/>
-                    :
-                    <Empty/>
-                }
-            </div>
+                <div className="container">
+                    {this.controllerBar()}
+                    {(locationData.length > 0) ?
+                     <GeoCustomMap locationData={locationData}/>
+                                               :
+                     <Empty/>
+                    }
+                </div>
         );
     }
 }

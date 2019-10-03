@@ -31,31 +31,6 @@ class GeoCustomMap extends Component {
         super(props);
     }
 
-    // /**
-    //  * Pop up marker for the device's current location
-    //  * @param currentLocation - current location object
-    //  * @returns content
-    //  */
-    // currentLocationMarker = ({currentLocation}) => {
-    //     const initMarker = ref => {
-    //         if (ref) {
-    //             ref.leafletElement.openPopup()
-    //         }
-    //     };
-    //     const content = currentLocation.map((marker, index) =>
-    //                                                 <Marker ref={initMarker} key={index}
-    //                                                         position={[marker.latitude, marker.longitude]}>
-    //                                                     <Popup>
-    //                                                         {marker.deviceName}<br/>
-    //                                                         {marker.deviceIdentifier}<br/>
-    //                                                         Speed :{marker.speed}<br/>
-    //                                                         Last seen: {}
-    //                                                     </Popup>
-    //                                                 </Marker>);
-    //     return <div style={{display: "none"}}>{content}</div>;
-    //
-    // };
-
     /**
      * Polyline draw for historical locations
      * @param locationData - location data object
@@ -64,29 +39,18 @@ class GeoCustomMap extends Component {
     polylineMarker = (locationData) => {
 
         const polyMarkers = locationData
-            .map(locationPoint => {
-                return [locationPoint.latitude, locationPoint.longitude]
-            });
+                .map(locationPoint => {
+                    return [locationPoint.latitude, locationPoint.longitude]
+                });
 
         return (
-            <div style={{display: "none"}}>{
-                <Polyline color="green" positions={polyMarkers}>
-                    <Popup>on the way</Popup>
-                </Polyline>
-            }</div>
+                <div style={{display: "none"}}>{
+                    <Polyline color="green" positions={polyMarkers}>
+                        <Popup>on the way</Popup>
+                    </Polyline>
+                }</div>
         );
     };
-
-    // /**
-    //  * Renders the map with markers
-    //  */
-    // renderMap = () => {
-    //     const locationData = this.props.locationData;
-    //     let startingLocation = this.startingLocation({locationData});
-    //     // const currentLocation = this.props.currentLocation;
-    //
-    //     return <div style={{display: "none"}}>{startingLocation}</div>;
-    // };
 
     render() {
         const locationData = this.props.locationData;
@@ -96,20 +60,20 @@ class GeoCustomMap extends Component {
         const startingPoint = [locationData[0].latitude, locationData[0].longitude];
         const zoom = config.geoMap.defaultZoomLevel;
         return (
-            <div style={{backgroundColor: "#ffffff", borderRadius: 5, padding: 5}}>
-                <Map center={startingPoint} zoom={zoom}>
-                    <TileLayer
-                        url={url}
-                        attribution={attribution}
-                    />
-                    <Fragment>
-                        {this.polylineMarker(locationData)}
-                        <Marker position={startingPoint}>
-                            <Tooltip>Starting Location</Tooltip>
-                        </Marker>
-                    </Fragment>
-                </Map>
-            </div>
+                <div style={{backgroundColor: "#ffffff", borderRadius: 5, padding: 5}}>
+                    <Map center={startingPoint} zoom={zoom}>
+                        <TileLayer
+                                url={url}
+                                attribution={attribution}
+                        />
+                        <Fragment>
+                            {this.polylineMarker(locationData)}
+                            <Marker position={startingPoint}>
+                                <Tooltip>Starting Location</Tooltip>
+                            </Marker>
+                        </Fragment>
+                    </Map>
+                </div>
         );
     }
 }
