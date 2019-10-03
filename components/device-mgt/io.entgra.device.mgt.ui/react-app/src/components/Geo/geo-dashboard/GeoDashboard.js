@@ -15,16 +15,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 import React from "react";
 import moment from "moment";
 import DateTimeRangeContainer from "react-advanced-datetimerange-picker";
-import {Button, Select, message, notification, Tag, Tooltip} from "antd";
+import {Button, Select, message, notification, Tag, Tooltip, Empty} from "antd";
 import axios from "axios";
 import {withConfigContext} from "../../../context/ConfigContext";
 import GeoCustomMap from "../geo-custom-map/GeoCustomMap";
 import "./GeoDashboard.css";
-
-import currentLocationData from "../mockCurrentLocation.json";
 
 class GeoDashboard extends React.Component {
 
@@ -38,7 +37,7 @@ class GeoDashboard extends React.Component {
             deviceData: [],
             selectedDevice: '',
             locationData: [],
-            currentLocation: [],
+            // currentLocation: [],
             loading: false,
             start: start,
             end: end,
@@ -48,7 +47,7 @@ class GeoDashboard extends React.Component {
 
     componentDidMount() {
         this.fetchDevices();
-        this.fetchCurrentLocation();
+        // this.fetchCurrentLocation();
     }
 
     /**
@@ -122,34 +121,31 @@ class GeoDashboard extends React.Component {
         this.setState({selectedDevice})
     };
 
-    /**
-     * fetches current location to create a marker
-     */
-    fetchCurrentLocation = () => {
-        this.setState({currentLocation: currentLocationData});
-    };
+    // /**
+    //  * fetches current location to create a marker
+    //  */
+    // fetchCurrentLocation = () => {
+    //     this.setState({currentLocation: currentLocationData});
+    // };
 
     /**
      * render fetch location button
      */
     fetchLocationButton = () => {
+        let flag;
+        let toolTip = "";
         if (this.state.selectedDevice === "") {
-            return (
-                <Tooltip placement="rightBottom" title={"Please select a Device"}>
-                    <Button disabled={true}
-                            onClick={this.handleApiCall}>
-                        Fetch Locations
-                    </Button>
-                </Tooltip>);
-        } else {
-            return (
-                <Tooltip placement="rightBottom">
-                    <Button
-                        onClick={this.handleApiCall}>
-                        Fetch Locations
-                    </Button>
-                </Tooltip>);
+            flag = true;
+            toolTip = "Please select a Device";
         }
+        return (
+            <Tooltip placement="rightBottom" title={toolTip}>
+                <Button disabled={flag}
+                        onClick={this.handleApiCall}>
+                    Fetch Locations
+                </Button>
+            </Tooltip>);
+
     };
 
     /**
@@ -263,7 +259,7 @@ class GeoDashboard extends React.Component {
      * Creates color based tags on device status
      * @param device - device object
      */
-    statusTag = (device)=>{
+    statusTag = (device) => {
 
         const status = device.enrolmentInfo.status.toLowerCase();
         let color = "#f9ca24";
@@ -281,21 +277,21 @@ class GeoDashboard extends React.Component {
                 color = "#636e72";
                 break;
         }
-        
+
         return <Tag color={color}>{status}</Tag>
     };
 
     render() {
-        let {locationData} = this.state;
-        let {currentLocation} = this.state;
+        // let {currentLocation} = this.state;
+        const locationData = [...this.state.locationData];
 
         return (
             <div className="container">
                 {this.controllerBar()}
-                {locationData.length > 0 ?
-                    <GeoCustomMap locationData={{locationData}} currentLocation={currentLocation}/>
+                {(locationData.length > 0) ?
+                    <GeoCustomMap locationData={locationData}/>
                     :
-                    <GeoCustomMap currentLocation={currentLocation}/>
+                    <Empty/>
                 }
             </div>
         );
