@@ -6,7 +6,7 @@
   "license": "Apache License 2.0",
   "dependencies": {
     "acorn": "^6.2.0",
-    "antd": "^3.22.0",
+    "antd": "^3.23.5",
     "axios": "^0.18.1",
     "bootstrap": "^4.3.1",
     "javascript-time-ago": "^2.0.1",

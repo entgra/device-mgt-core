@@ -37,34 +37,37 @@ class Reports extends React.Component {
         super(props);
         this.routes = props.routes;
         this.state = {
-            duration:'',
-            filters:'',
             paramsObject:{}
         }
     }
 
+    //Get modified value from datepicker and set it to paramsObject
     updateDurationValue = (modifiedFromDate,modifiedToDate) => {
-        this.setState({duration:"Duration Updated"});
-        this.state.paramsObject.from = modifiedFromDate;
-        this.state.paramsObject.to = modifiedToDate;
+        let tempParamObj = this.state.paramsObject;
+        tempParamObj.from = modifiedFromDate;
+        tempParamObj.to = modifiedToDate;
+        this.setState({paramsObject:tempParamObj});
     }
 
+    //Get modified value from filters and set it to paramsObject
     updateFiltersValue = (modifiedValue,filterType) => {
-        this.setState({filters:"Filters Updated"});
+            let tempParamObj = this.state.paramsObject;
             if(filterType=="Device Status"){
-                this.state.paramsObject.status = modifiedValue;
-                if(modifiedValue=="ALL" && this.state.paramsObject.status){
-                    delete this.state.paramsObject.status;
+                tempParamObj.status = modifiedValue;
+                if(modifiedValue=="ALL" && tempParamObj.status){
+                    delete tempParamObj.status;
                 }
             }else{
-                this.state.paramsObject.ownership = modifiedValue;
-                if(modifiedValue=="ALL" && this.state.paramsObject.ownership){
-                    delete this.state.paramsObject.ownership;
+                tempParamObj.ownership = modifiedValue;
+                if(modifiedValue=="ALL" && tempParamObj.ownership){
+                    delete tempParamObj.ownership;
                 }
             }
+            this.setState({paramsObject:tempParamObj});
     }
 
     render() {
+        //Arrays for filters
         const statusObj = ['ALL','ACTIVE','INACTIVE','REMOVED'];
         const ownershipObj = ['ALL','BYOD','COPE'];
         
@@ -81,19 +84,37 @@ class Reports extends React.Component {
                     </Breadcrumb>
                     <div className="wrap">
                         <h3>Reports</h3>
-                        <Paragraph>Lorem ipsum dolor sit amet, est similique constituto at, quot inermis id mel, an
-                            illud incorrupte nam.</Paragraph>
+                        <Paragraph>
+                            To generate a report, select a duration and apply filters
+                        </Paragraph>
                         <div style={{paddingBottom:'5px'}}>
-                            <DateRangePicker 
-                                updateDurationValue={this.updateDurationValue}/>
-                            <Filter 
-                                updateFiltersValue={this.updateFiltersValue} 
-                                dropDownItems={statusObj} 
-                                dropDownName={"Device Status"}/>
-                            <Filter 
-                                updateFiltersValue={this.updateFiltersValue} 
-                                dropDownItems={ownershipObj} 
-                                dropDownName={"Device Ownership"}/>
+                            <table>
+                                <tbody>
+                                    <tr style={{fontSize:'12px'}}>
+                                        <td>Select Duration</td>
+                                        <td>Device Status</td>
+                                        <td>Device Ownership</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <DateRangePicker
+                                                updateDurationValue={this.updateDurationValue}/>
+                                        </td>
+                                        <td>
+                                            <Filter
+                                                updateFiltersValue={this.updateFiltersValue}
+                                                dropDownItems={statusObj}
+                                                dropDownName={"Device Status"}/>
+                                        </td>
+                                        <td>
+                                            <Filter
+                                                updateFiltersValue={this.updateFiltersValue}
+                                                dropDownItems={ownershipObj}
+                                                dropDownName={"Device Ownership"}/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                         <div style={{backgroundColor:"#ffffff", borderRadius: 5}}>
                             <ReportDeviceTable paramsObject={params}/>

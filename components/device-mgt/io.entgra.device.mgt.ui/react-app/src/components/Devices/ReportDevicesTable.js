@@ -131,7 +131,6 @@ const getTimeAgo = (time) => {
     return timeAgo.format(time);
 };
 
-
 class ReportDeviceTable extends React.Component {
     constructor(props) {
         super(props);
@@ -148,7 +147,6 @@ class ReportDeviceTable extends React.Component {
 
     rowSelection = {
         onChange: (selectedRowKeys, selectedRows) => {
-            // console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
             this.setState({
                 selectedRows: selectedRows
             })
@@ -159,6 +157,7 @@ class ReportDeviceTable extends React.Component {
          this.fetch();
     }
 
+    //Rerender component when parameters change
     componentDidUpdate(prevProps, prevState, snapshot) {
         if(prevProps.paramsObject !== this.props.paramsObject){
             this.fetch();
@@ -175,15 +174,18 @@ class ReportDeviceTable extends React.Component {
         this.props.paramsObject.offset = 10 * (currentPage -1); //calculate the offset
         this.props.paramsObject.limit = 10;
 
-        const encodedExtraParams = Object.keys(this.props.paramsObject).map(key => key + '=' + this.props.paramsObject[key]).join('&');
+        const encodedExtraParams = Object.keys(this.props.paramsObject)
+                .map(key => key + '=' + this.props.paramsObject[key]).join('&');
         console.log(encodedExtraParams);
 
         if(this.props.paramsObject.from==null && this.props.paramsObject.to==null){
-            apiUrl = window.location.origin + config.serverConfig.invoker.uri + config.serverConfig.invoker.deviceMgt +
+            apiUrl = window.location.origin + config.serverConfig.invoker.uri +
+                     config.serverConfig.invoker.deviceMgt +
                      "/devices?" + encodedExtraParams;
             
         }else{
-            apiUrl = window.location.origin + config.serverConfig.invoker.uri + config.serverConfig.invoker.deviceMgt +
+            apiUrl = window.location.origin + config.serverConfig.invoker.uri +
+                     config.serverConfig.invoker.deviceMgt +
                      "/reports/devices?" + encodedExtraParams;
         }
 
