@@ -109,7 +109,7 @@ public class ApplicationStorageManagerImpl implements ApplicationStorageManager 
         } catch (IOException e) {
             String msg = "IO Exception occurred while saving application artifacts for the application which has UUID "
                     + applicationReleaseDTO.getUuid();
-            log.error(msg);
+            log.error(msg, e);
             throw new ApplicationStorageManagementException(msg, e);
         }
     }
@@ -136,32 +136,28 @@ public class ApplicationStorageManagerImpl implements ApplicationStorageManager 
             }
         } catch (ParsingException e){
             String msg = "Application Type doesn't match with supporting application types " + deviceType;
-            log.error(msg);
-            throw new ApplicationStorageManagementException(msg);
+            log.error(msg, e);
+            throw new ApplicationStorageManagementException(msg, e);
         }
         return applicationInstaller;
     }
 
     @Override
-    public ApplicationReleaseDTO uploadReleaseArtifact(ApplicationReleaseDTO applicationReleaseDTO,
+    public void uploadReleaseArtifact(ApplicationReleaseDTO applicationReleaseDTO,
             String deviceType, InputStream binaryFile) throws ResourceManagementException {
         try {
-            String artifactDirectoryPath;
-            String artifactPath;
             byte [] content = IOUtils.toByteArray(binaryFile);
-
-            artifactDirectoryPath =
+            String artifactDirectoryPath =
                     storagePath + applicationReleaseDTO.getAppHashValue() + File.separator + Constants.APP_ARTIFACT;
             StorageManagementUtil.createArtifactDirectory(artifactDirectoryPath);
-            artifactPath = artifactDirectoryPath + File.separator + applicationReleaseDTO.getInstallerName();
+            String artifactPath = artifactDirectoryPath + File.separator + applicationReleaseDTO.getInstallerName();
             saveFile(new ByteArrayInputStream(content), artifactPath);
         } catch (IOException e) {
             String msg = "IO Exception while saving the release artifacts in the server for the application UUID "
                     + applicationReleaseDTO.getUuid();
-            log.error(msg);
-            throw new ApplicationStorageManagementException( msg, e);
+            log.error(msg, e);
+            throw new ResourceManagementException( msg, e);
         }
-        return applicationReleaseDTO;
     }
 
     @Override
@@ -213,7 +209,7 @@ public class ApplicationStorageManagerImpl implements ApplicationStorageManager 
             deleteAppReleaseArtifact( storagePath + deletingAppHashValue);
         } catch (IOException e) {
             String msg = "Application installer updating is failed because of I/O issue";
-            log.error(msg);
+            log.error(msg, e);
             throw new ApplicationStorageManagementException(msg, e);
         }
     }
@@ -243,6 +239,7 @@ public class ApplicationStorageManagerImpl implements ApplicationStorageManager 
             return StorageManagementUtil.getInputStream(filePath);
         } catch (IOException e) {
             String msg = "Error occured when accessing the file in file path: " + filePath;
+            log.error(msg, e);
             throw new ApplicationStorageManagementException(msg, e);
         }
     }

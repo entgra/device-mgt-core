@@ -1706,7 +1706,7 @@ public interface DeviceManagementService {
                           @Valid OperationRequest operationRequest);
 
     @GET
-    @Path("/status/count/{type}/{status}")
+    @Path("/status/count/{tenantDomain}/{type}/{status}")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
@@ -1732,16 +1732,16 @@ public interface DeviceManagementService {
                                     @ResponseHeader(
                                             name = "ETag",
                                             description = "Entity Tag of the response resource.\n" +
-                                                    "Used by caches, or in conditional requests."),
+                                                          "Used by caches, or in conditional requests."),
                                     @ResponseHeader(
                                             name = "Last-Modified",
                                             description = "Date and time the resource was last modified.\n" +
-                                                    "Used by caches, or in conditional requests."),
+                                                          "Used by caches, or in conditional requests."),
                             }),
                     @ApiResponse(
                             code = 304,
                             message = "Not Modified. Empty body because the client already has the latest version" +
-                                    " of the requested resource.\n"),
+                                      " of the requested resource.\n"),
                     @ApiResponse(
                             code = 400,
                             message = "Bad Request. \n Invalid request or validation error.",
@@ -1753,10 +1753,17 @@ public interface DeviceManagementService {
                     @ApiResponse(
                             code = 500,
                             message = "Internal Server Error. \n " +
-                                    "Server error occurred while retrieving the device details.",
+                                      "Server error occurred while retrieving the device details.",
                             response = ErrorResponse.class)
             })
     Response getDeviceCountByStatus(
+            @ApiParam(
+                    name = "tenantDomain",
+                    value = "The tenant doamin.",
+                    required = true)
+            @PathParam("tenantDomain")
+            @Size(max = 45)
+                    String tenantDomain,
             @ApiParam(
                     name = "type",
                     value = "The device type name, such as ios, android, windows or fire-alarm.",
@@ -1774,7 +1781,7 @@ public interface DeviceManagementService {
 
 
     @GET
-    @Path("/status/ids/{type}/{status}")
+    @Path("/status/ids/{tenantDomain}/{type}/{status}")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
@@ -1801,16 +1808,16 @@ public interface DeviceManagementService {
                                     @ResponseHeader(
                                             name = "ETag",
                                             description = "Entity Tag of the response resource.\n" +
-                                                    "Used by caches, or in conditional requests."),
+                                                          "Used by caches, or in conditional requests."),
                                     @ResponseHeader(
                                             name = "Last-Modified",
                                             description = "Date and time the resource was last modified.\n" +
-                                                    "Used by caches, or in conditional requests."),
+                                                          "Used by caches, or in conditional requests."),
                             }),
                     @ApiResponse(
                             code = 304,
                             message = "Not Modified. Empty body because the client already has the latest version" +
-                                    " of the requested resource.\n"),
+                                      " of the requested resource.\n"),
                     @ApiResponse(
                             code = 400,
                             message = "Bad Request. \n Invalid request or validation error.",
@@ -1822,10 +1829,17 @@ public interface DeviceManagementService {
                     @ApiResponse(
                             code = 500,
                             message = "Internal Server Error. \n " +
-                                    "Server error occurred while retrieving the device details.",
+                                      "Server error occurred while retrieving the device details.",
                             response = ErrorResponse.class)
             })
     Response getDeviceIdentifiersByStatus(
+            @ApiParam(
+                    name = "tenantDomain",
+                    value = "The tenant domain.",
+                    required = true)
+            @PathParam("tenantDomain")
+            @Size(max = 45)
+                    String tenantDomain,
             @ApiParam(
                     name = "type",
                     value = "The device type name, such as ios, android, windows or fire-alarm.",
@@ -1842,7 +1856,7 @@ public interface DeviceManagementService {
                     String status);
 
     @PUT
-    @Path("/status/update/{type}/{status}")
+    @Path("/status/update/{tenantDomain}/{type}/{status}")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             consumes = MediaType.APPLICATION_JSON,
@@ -1869,16 +1883,16 @@ public interface DeviceManagementService {
                                     @ResponseHeader(
                                             name = "ETag",
                                             description = "Entity Tag of the response resource.\n" +
-                                                    "Used by caches, or in conditional requests."),
+                                                          "Used by caches, or in conditional requests."),
                                     @ResponseHeader(
                                             name = "Last-Modified",
                                             description = "Date and time the resource has been modified the last time.\n" +
-                                                    "Used by caches, or in conditional requests."),
+                                                          "Used by caches, or in conditional requests."),
                             }),
                     @ApiResponse(
                             code = 304,
                             message = "Not Modified. Empty body because the client already has the latest " +
-                                    "version of the requested resource."),
+                                      "version of the requested resource."),
                     @ApiResponse(
                             code = 400,
                             message = "Bad Request. \n Invalid request or validation error.",
@@ -1890,13 +1904,16 @@ public interface DeviceManagementService {
                     @ApiResponse(
                             code = 500,
                             message = "Internal Server Error. \n " +
-                                    "Server error occurred while retrieving information requested device.",
+                                      "Server error occurred while retrieving information requested device.",
                             response = ErrorResponse.class)
             })
-    Response bulkUpdateDeviceStatus(@ApiParam(name = "type", value = "The device type, such as ios, android or windows.", required = true)
-                                    @PathParam("type") String type,
-                                    @ApiParam(name = "status", value = "The device type, such as ios, android or windows.", required = true)
-                                    @PathParam("status") String status,
-                                    @ApiParam(name = "deviceList", value = "The payload containing the new name of the device.", required = true)
-                                    @Valid List<String> deviceList);
+    Response bulkUpdateDeviceStatus(
+            @ApiParam(name = "tenantDomain", value = "The tenant domain.", required = true)
+            @PathParam("tenantDomain") String tenantDomain,
+            @ApiParam(name = "type", value = "The device type, such as ios, android or windows.", required = true)
+            @PathParam("type") String type,
+            @ApiParam(name = "status", value = "The device type, such as ios, android or windows.", required = true)
+            @PathParam("status") String status,
+            @ApiParam(name = "deviceList", value = "The payload containing the new name of the device.", required = true)
+            @Valid List<String> deviceList);
 }

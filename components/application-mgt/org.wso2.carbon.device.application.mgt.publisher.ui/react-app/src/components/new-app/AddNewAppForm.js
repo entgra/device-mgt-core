@@ -71,7 +71,9 @@ class AddNewAppFormComponent extends React.Component {
         const {application} = this.state;
         const {data, release} = releaseData;
         const {formConfig} = this.props;
+        const {price} = release;
 
+        application.subMethod = (price === 0) ? "FREE" : "PAID";
         //add release wrapper
         application[formConfig.releaseWrapperName] = [release];
 

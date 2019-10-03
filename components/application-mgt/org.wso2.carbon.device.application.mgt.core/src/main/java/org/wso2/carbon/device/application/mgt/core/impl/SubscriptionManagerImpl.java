@@ -24,19 +24,20 @@ import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.device.application.mgt.common.ApplicationInstallResponse;
 import org.wso2.carbon.device.application.mgt.common.ApplicationType;
 import org.wso2.carbon.device.application.mgt.common.DeviceTypes;
+import org.wso2.carbon.device.application.mgt.common.ExecutionStatus;
 import org.wso2.carbon.device.application.mgt.common.SubAction;
-import org.wso2.carbon.device.application.mgt.common.SubsciptionType;
+import org.wso2.carbon.device.application.mgt.common.SubscriptionType;
 import org.wso2.carbon.device.application.mgt.common.SubscribingDeviceIdHolder;
-import org.wso2.carbon.device.application.mgt.common.config.MDMConfig;
 import org.wso2.carbon.device.application.mgt.common.dto.ApplicationDTO;
 import org.wso2.carbon.device.application.mgt.common.dto.DeviceSubscriptionDTO;
+import org.wso2.carbon.device.application.mgt.common.dto.ScheduledSubscriptionDTO;
 import org.wso2.carbon.device.application.mgt.common.exception.ApplicationManagementException;
 import org.wso2.carbon.device.application.mgt.common.exception.DBConnectionException;
 import org.wso2.carbon.device.application.mgt.common.exception.LifecycleManagementException;
+import org.wso2.carbon.device.application.mgt.common.exception.SubscriptionManagementException;
 import org.wso2.carbon.device.application.mgt.common.exception.TransactionManagementException;
 import org.wso2.carbon.device.application.mgt.common.response.Application;
 import org.wso2.carbon.device.application.mgt.common.services.SubscriptionManager;
-import org.wso2.carbon.device.application.mgt.core.config.ConfigurationManager;
 import org.wso2.carbon.device.application.mgt.core.dao.ApplicationDAO;
 import org.wso2.carbon.device.application.mgt.core.dao.SubscriptionDAO;
 import org.wso2.carbon.device.application.mgt.core.dao.common.ApplicationManagementDAOFactory;
@@ -53,8 +54,9 @@ import org.wso2.carbon.device.application.mgt.core.util.HelperUtil;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.MDMAppConstants;
-import org.wso2.carbon.device.mgt.common.app.mgt.MobileApp;
+import org.wso2.carbon.device.mgt.common.app.mgt.App;
 import org.wso2.carbon.device.mgt.common.app.mgt.MobileAppTypes;
+import org.wso2.carbon.device.mgt.common.app.mgt.android.CustomApplication;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.InvalidDeviceException;
 import org.wso2.carbon.device.mgt.common.exceptions.UnknownApplicationTypeException;
@@ -64,6 +66,7 @@ import org.wso2.carbon.device.mgt.common.operation.mgt.ActivityStatus;
 import org.wso2.carbon.device.mgt.common.operation.mgt.Operation;
 import org.wso2.carbon.device.mgt.common.operation.mgt.OperationManagementException;
 import org.wso2.carbon.device.mgt.core.dto.DeviceType;
+import org.wso2.carbon.device.mgt.core.operation.mgt.ProfileOperation;
 import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
 import org.wso2.carbon.device.mgt.core.service.GroupManagementProviderService;
 import org.wso2.carbon.device.mgt.core.util.MDMAndroidOperationUtil;
@@ -114,7 +117,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
 
             //todo validate users, groups and roles
             ApplicationDTO applicationDTO = getApplicationDTO(applicationUUID);
-            if (SubsciptionType.DEVICE.toString().equals(subType)) {
+            if (SubscriptionType.DEVICE.toString().equals(subType)) {
                 for (T param : params) {
                     DeviceIdentifier deviceIdentifier = (DeviceIdentifier) param;
                     if (StringUtils.isEmpty(deviceIdentifier.getId()) || StringUtils
@@ -136,19 +139,19 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                     }
                     devices.add(deviceManagementProviderService.getDevice(deviceIdentifier, false));
                 }
-            } else if (SubsciptionType.USER.toString().equalsIgnoreCase(subType)) {
+            } else if (SubscriptionType.USER.toString().equalsIgnoreCase(subType)) {
                 for (T param : params) {
                     String username = (String) param;
                     subscribers.add(username);
                     devices.addAll(deviceManagementProviderService.getDevicesOfUser(username));
                 }
-            } else if (SubsciptionType.ROLE.toString().equalsIgnoreCase(subType)) {
+            } else if (SubscriptionType.ROLE.toString().equalsIgnoreCase(subType)) {
                 for (T param : params) {
                     String roleName = (String) param;
                     subscribers.add(roleName);
                     devices.addAll(deviceManagementProviderService.getAllDevicesOfRole(roleName));
                 }
-            } else if (SubsciptionType.GROUP.toString().equalsIgnoreCase(subType)) {
+            } else if (SubscriptionType.GROUP.toString().equalsIgnoreCase(subType)) {
                 for (T param : params) {
                     String groupName = (String) param;
                     subscribers.add(groupName);
@@ -175,12 +178,131 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             return applicationInstallResponse;
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while getting devices of given users or given roles.";
-            log.error(msg);
+            log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
         } catch (GroupManagementException e) {
             String msg = "Error occurred while getting devices of given groups";
-            log.error(msg);
+            log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
+        }
+    }
+
+    @Override
+    public void createScheduledSubscription(ScheduledSubscriptionDTO subscriptionDTO)
+            throws SubscriptionManagementException {
+        try {
+            ConnectionManagerUtil.beginDBTransaction();
+            ScheduledSubscriptionDTO existingEntry = subscriptionDAO.getPendingScheduledSubscriptionByTaskName(
+                    subscriptionDTO.getTaskName());
+            boolean transactionStatus;
+            if (existingEntry == null) {
+                transactionStatus = subscriptionDAO.createScheduledSubscription(subscriptionDTO);
+            } else {
+                transactionStatus = subscriptionDAO.updateScheduledSubscription(existingEntry.getId(),
+                        subscriptionDTO.getScheduledAt(), subscriptionDTO.getScheduledBy());
+            }
+            if (!transactionStatus) {
+                ConnectionManagerUtil.rollbackDBTransaction();
+            }
+            ConnectionManagerUtil.commitDBTransaction();
+        } catch (ApplicationManagementDAOException e) {
+            ConnectionManagerUtil.rollbackDBTransaction();
+            String msg = "Error occurred while creating the scheduled subscription entry.";
+            log.error(msg, e);
+            throw new SubscriptionManagementException(msg, e);
+        } catch (TransactionManagementException e) {
+            String msg = "Error occurred while executing database transaction";
+            log.error(msg, e);
+            throw new SubscriptionManagementException(msg, e);
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while observing the database connection to update subscription status.";
+            log.error(msg, e);
+            throw new SubscriptionManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+    }
+
+    @Override
+    public List<ScheduledSubscriptionDTO> cleanScheduledSubscriptions() throws SubscriptionManagementException {
+        try {
+            // Cleaning up already executed, missed and failed tasks
+            ConnectionManagerUtil.beginDBTransaction();
+            List<ScheduledSubscriptionDTO> taskList = subscriptionDAO.getScheduledSubscriptionByStatus(
+                    ExecutionStatus.EXECUTED, false);
+            taskList.addAll(subscriptionDAO.getNonExecutedSubscriptions());
+            taskList.addAll(subscriptionDAO.getScheduledSubscriptionByStatus(ExecutionStatus.FAILED, false));
+            List<Integer> tasksToClean = taskList.stream().map(ScheduledSubscriptionDTO::getId).collect(
+                    Collectors.toList());
+            if (!subscriptionDAO.deleteScheduledSubscription(tasksToClean)) {
+                ConnectionManagerUtil.rollbackDBTransaction();
+            }
+            ConnectionManagerUtil.commitDBTransaction();
+            return taskList;
+        } catch (ApplicationManagementDAOException e) {
+            ConnectionManagerUtil.rollbackDBTransaction();
+            String msg = "Error occurred while cleaning up the old subscriptions.";
+            log.error(msg, e);
+            throw new SubscriptionManagementException(msg, e);
+        } catch (TransactionManagementException e) {
+            String msg = "Error occurred while executing database transaction";
+            log.error(msg, e);
+            throw new SubscriptionManagementException(msg, e);
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while retrieving the database connection";
+            log.error(msg, e);
+            throw new SubscriptionManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+    }
+
+    @Override
+    public ScheduledSubscriptionDTO getPendingScheduledSubscription(String taskName)
+            throws SubscriptionManagementException {
+        try {
+            ConnectionManagerUtil.openDBConnection();
+            return subscriptionDAO.getPendingScheduledSubscriptionByTaskName(taskName);
+        } catch (ApplicationManagementDAOException e) {
+            String msg = "Error occurred while retrieving subscription for task: " + taskName;
+            log.error(msg, e);
+            throw new SubscriptionManagementException(msg, e);
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while retrieving the database connection";
+            log.error(msg, e);
+            throw new SubscriptionManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+    }
+
+    @Override
+    public void updateScheduledSubscriptionStatus(int id, ExecutionStatus status)
+            throws SubscriptionManagementException {
+        try {
+            ConnectionManagerUtil.beginDBTransaction();
+            if (!subscriptionDAO.updateScheduledSubscriptionStatus(id, status)) {
+                ConnectionManagerUtil.rollbackDBTransaction();
+                String msg = "Unable to update the status of the subscription: " + id;
+                log.error(msg);
+                throw new SubscriptionManagementException(msg);
+            }
+            ConnectionManagerUtil.commitDBTransaction();
+        } catch (ApplicationManagementDAOException e) {
+            ConnectionManagerUtil.rollbackDBTransaction();
+            String msg = "Error occurred while updating the status of the subscription.";
+            log.error(msg, e);
+            throw new SubscriptionManagementException(msg, e);
+        } catch (TransactionManagementException e) {
+            String msg = "Error occurred while executing database transaction.";
+            log.error(msg, e);
+            throw new SubscriptionManagementException(msg, e);
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while retrieving the database connection";
+            log.error(msg, e);
+            throw new SubscriptionManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
         }
     }
 
@@ -191,7 +313,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             log.error(msg);
             throw new BadRequestException(msg);
         }
-        boolean isValidSubType = Arrays.stream(SubsciptionType.values())
+        boolean isValidSubType = Arrays.stream(SubscriptionType.values())
                 .anyMatch(sub -> sub.name().equalsIgnoreCase(subType));
         if (!isValidSubType) {
             String msg = "Found invalid subscription type " + subType+  " to install application release" ;
@@ -316,12 +438,12 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             return applicationDTO;
         } catch (LifecycleManagementException e) {
             String msg = "Error occured when getting life-cycle state from life-cycle state manager.";
-            log.error(msg);
-            throw new ApplicationManagementException(msg);
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
         } catch (ApplicationManagementDAOException e) {
             String msg = "Error occurred while getting application data for application release UUID: " + uuid;
-            log.error(msg);
-            throw new ApplicationManagementException(msg);
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
         } finally {
             ConnectionManagerUtil.closeDBConnection();
         }
@@ -336,7 +458,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             ConnectionManagerUtil.beginDBTransaction();
             List<Integer> deviceSubIds = new ArrayList<>();
 
-            if (SubsciptionType.USER.toString().equalsIgnoreCase(subType)) {
+            if (SubscriptionType.USER.toString().equalsIgnoreCase(subType)) {
                 List<String> subscribedEntities = subscriptionDAO.getSubscribedUserNames(params, tenantId);
                 if (SubAction.INSTALL.toString().equalsIgnoreCase(action)) {
                     params.removeAll(subscribedEntities);
@@ -344,7 +466,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                 }
                 subscriptionDAO.updateSubscriptions(tenantId, username, subscribedEntities, applicationReleaseId, subType,
                         action);
-            } else if (SubsciptionType.ROLE.toString().equalsIgnoreCase(subType)) {
+            } else if (SubscriptionType.ROLE.toString().equalsIgnoreCase(subType)) {
                 List<String> subscribedEntities = subscriptionDAO.getSubscribedRoleNames(params, tenantId);
                 if (SubAction.INSTALL.toString().equalsIgnoreCase(action)) {
                     params.removeAll(subscribedEntities);
@@ -352,7 +474,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                 }
                 subscriptionDAO.updateSubscriptions(tenantId, username, subscribedEntities, applicationReleaseId, subType,
                         action);
-            } else if (SubsciptionType.GROUP.toString().equalsIgnoreCase(subType)) {
+            } else if (SubscriptionType.GROUP.toString().equalsIgnoreCase(subType)) {
                 List<String> subscribedEntities = subscriptionDAO.getSubscribedGroupNames(params, tenantId);
                 if (SubAction.INSTALL.toString().equalsIgnoreCase(action)) {
                     params.removeAll(subscribedEntities);
@@ -393,17 +515,16 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             ConnectionManagerUtil.rollbackDBTransaction();
             String msg = "Error occurred when adding subscription data for application release ID: "
                     + applicationReleaseId;
-            log.error(msg);
+            log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
         } catch (DBConnectionException e) {
             String msg = "Error occurred when getting database connection to add new device subscriptions to application.";
-            log.error(msg);
+            log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
         } catch (TransactionManagementException e) {
-            String msg =
-                    "SQL Error occurred when adding new device subscription to application release which has ID: "
+            String msg = "SQL Error occurred when adding new device subscription to application release which has ID: "
                             + applicationReleaseId;
-            log.error(msg);
+            log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
         } finally {
             ConnectionManagerUtil.closeDBConnection();
@@ -430,16 +551,15 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             return this.subscriptionDAO.getDeviceSubscriptions(filteredDeviceIds, tenantId);
         } catch (ApplicationManagementDAOException e) {
             String msg = "Error occured when getting device subscriptions for given device IDs";
-            log.error(msg);
-            throw new ApplicationManagementException(msg);
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
         } catch (DBConnectionException e) {
             String msg = "Error occured while getting database connection for getting device subscriptions.";
-            log.error(msg);
-            throw new ApplicationManagementException(msg);
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
         } finally {
             ConnectionManagerUtil.closeDBConnection();
         }
-
     }
 
     private Activity addAppOperationOnDevices(ApplicationDTO applicationDTO,
@@ -452,8 +572,9 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             Operation operation = generateOperationPayloadByDeviceType(deviceType, application, action);
             return deviceManagementProviderService.addOperation(deviceType, operation, deviceIdentifierList);
         } catch (OperationManagementException e) {
-            throw new ApplicationManagementException(
-                    "Error occurred while adding the application install " + "operation to devices", e);
+            String msg = "Error occurred while adding the application install operation to devices";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
         } catch (InvalidDeviceException e) {
             //This exception should not occur because the validation has already been done.
             throw new ApplicationManagementException("The list of device identifiers are invalid");
@@ -463,50 +584,101 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
     private Operation generateOperationPayloadByDeviceType(String deviceType, Application application, String action)
             throws ApplicationManagementException {
         try {
-
-            //todo rethink and modify the {@link MobileApp} usage
-            MobileApp mobileApp = new MobileApp();
-            MobileAppTypes mobileAppType = MobileAppTypes.valueOf(application.getType());
-            if (DeviceTypes.ANDROID.toString().equalsIgnoreCase(deviceType)) {
+            //todo rethink and modify the {@link App} usage
+            if (ApplicationType.CUSTOM.toString().equalsIgnoreCase(application.getType())) {
+                ProfileOperation operation = new ProfileOperation();
                 if (SubAction.INSTALL.toString().equalsIgnoreCase(action)) {
-                    mobileApp.setType(mobileAppType);
-                    mobileApp.setLocation(application.getApplicationReleases().get(0).getInstallerPath());
-                    return MDMAndroidOperationUtil.createInstallAppOperation(mobileApp);
+                    operation.setCode(MDMAppConstants.AndroidConstants.OPCODE_INSTALL_APPLICATION);
+                    operation.setType(Operation.Type.PROFILE);
+                    CustomApplication customApplication = new CustomApplication();
+                    customApplication.setType(application.getType());
+                    customApplication.setUrl(application.getApplicationReleases().get(0).getInstallerPath());
+                    operation.setPayLoad(customApplication.toJSON());
+                    return operation;
                 } else if (SubAction.UNINSTALL.toString().equalsIgnoreCase(action)) {
-                    return MDMAndroidOperationUtil.createAppUninstallOperation(mobileApp);
-                } else {
-                    String msg = "Invalid Action is found. Action: " + action;
-                    log.error(msg);
-                    throw new ApplicationManagementException(msg);
-                }
-            } else if (DeviceTypes.IOS.toString().equalsIgnoreCase(deviceType)) {
-                if (SubAction.INSTALL.toString().equalsIgnoreCase(action)) {
-                    String plistDownloadEndpoint = APIUtil.getArtifactDownloadBaseURL()
-                            + MDMAppConstants.IOSConstants.PLIST + Constants.FORWARD_SLASH
-                            + application.getApplicationReleases().get(0).getUuid();
-                    mobileApp.setType(mobileAppType);
-                    mobileApp.setLocation(plistDownloadEndpoint);
-                    Properties properties = new Properties();
-                    properties.put(MDMAppConstants.IOSConstants.IS_PREVENT_BACKUP, true);
-                    properties.put(MDMAppConstants.IOSConstants.IS_REMOVE_APP, true);
-                    mobileApp.setProperties(properties);
-                    return MDMIOSOperationUtil.createInstallAppOperation(mobileApp);
-                } else if (SubAction.UNINSTALL.toString().equalsIgnoreCase(action)) {
-                    return MDMIOSOperationUtil.createAppUninstallOperation(mobileApp);
+                    operation.setCode(MDMAppConstants.AndroidConstants.OPCODE_UNINSTALL_APPLICATION);
+                    operation.setType(Operation.Type.PROFILE);
+                    CustomApplication customApplication = new CustomApplication();
+                    customApplication.setType(application.getType());
+                    //todo get application package name and set
+                    operation.setPayLoad(customApplication.toJSON());
+                    return operation;
                 } else {
                     String msg = "Invalid Action is found. Action: " + action;
                     log.error(msg);
                     throw new ApplicationManagementException(msg);
                 }
             } else {
-                String msg = "Invalid device type is found. Device Type: " + deviceType;
-                log.error(msg);
-                throw new ApplicationManagementException(msg);
+                App app = new App();
+                MobileAppTypes mobileAppType = MobileAppTypes.valueOf(application.getType());
+                if (DeviceTypes.ANDROID.toString().equalsIgnoreCase(deviceType)) {
+                    if (SubAction.INSTALL.toString().equalsIgnoreCase(action)) {
+                        app.setType(mobileAppType);
+                        app.setLocation(application.getApplicationReleases().get(0).getInstallerPath());
+                        return MDMAndroidOperationUtil.createInstallAppOperation(app);
+                    } else if (SubAction.UNINSTALL.toString().equalsIgnoreCase(action)) {
+                        return MDMAndroidOperationUtil.createAppUninstallOperation(app);
+                    } else {
+                        String msg = "Invalid Action is found. Action: " + action;
+                        log.error(msg);
+                        throw new ApplicationManagementException(msg);
+                    }
+                } else if (DeviceTypes.IOS.toString().equalsIgnoreCase(deviceType)) {
+                    if (SubAction.INSTALL.toString().equalsIgnoreCase(action)) {
+                        String plistDownloadEndpoint =
+                                APIUtil.getArtifactDownloadBaseURL() + MDMAppConstants.IOSConstants.PLIST
+                                        + Constants.FORWARD_SLASH + application.getApplicationReleases().get(0)
+                                        .getUuid();
+                        app.setType(mobileAppType);
+                        app.setLocation(plistDownloadEndpoint);
+                        Properties properties = new Properties();
+                        properties.put(MDMAppConstants.IOSConstants.IS_PREVENT_BACKUP, true);
+                        properties.put(MDMAppConstants.IOSConstants.IS_REMOVE_APP, true);
+                        app.setProperties(properties);
+                        return MDMIOSOperationUtil.createInstallAppOperation(app);
+                    } else if (SubAction.UNINSTALL.toString().equalsIgnoreCase(action)) {
+                        return MDMIOSOperationUtil.createAppUninstallOperation(app);
+                    } else {
+                        String msg = "Invalid Action is found. Action: " + action;
+                        log.error(msg);
+                        throw new ApplicationManagementException(msg);
+                    }
+                } else {
+                    if (ApplicationType.CUSTOM.toString().equalsIgnoreCase(application.getType())) {
+                        if (SubAction.INSTALL.toString().equalsIgnoreCase(action)) {
+                            ProfileOperation operation = new ProfileOperation();
+                            operation.setCode(MDMAppConstants.AndroidConstants.OPCODE_INSTALL_APPLICATION);
+                            operation.setType(Operation.Type.PROFILE);
+                            CustomApplication customApplication = new CustomApplication();
+                            customApplication.setType(application.getType());
+                            customApplication.setUrl(application.getApplicationReleases().get(0).getInstallerPath());
+                            operation.setPayLoad(customApplication.toJSON());
+                            return operation;
+                        } else if (SubAction.UNINSTALL.toString().equalsIgnoreCase(action)) {
+                            ProfileOperation operation = new ProfileOperation();
+                            operation.setCode(MDMAppConstants.AndroidConstants.OPCODE_UNINSTALL_APPLICATION);
+                            operation.setType(Operation.Type.PROFILE);
+                            CustomApplication customApplication = new CustomApplication();
+                            customApplication.setType(application.getType());
+                            //todo get application package name and set
+                            operation.setPayLoad(customApplication.toJSON());
+                            return MDMAndroidOperationUtil.createAppUninstallOperation(app);
+                        } else {
+                            String msg = "Invalid Action is found. Action: " + action;
+                            log.error(msg);
+                            throw new ApplicationManagementException(msg);
+                        }
+                    } else {
+                        String msg = "Invalid device type is found. Device Type: " + deviceType;
+                        log.error(msg);
+                        throw new ApplicationManagementException(msg);
+                    }
+                }
             }
         } catch (UnknownApplicationTypeException e) {
             String msg = "Unknown Application type is found.";
-            log.error(msg);
-            throw new ApplicationManagementException(msg);
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
         }
     }
 }

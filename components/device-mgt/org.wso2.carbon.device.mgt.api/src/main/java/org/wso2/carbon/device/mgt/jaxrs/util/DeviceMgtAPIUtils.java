@@ -46,6 +46,7 @@ import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration
 import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfigurationManagementService;
 import org.wso2.carbon.device.mgt.common.geo.service.GeoLocationProviderService;
 import org.wso2.carbon.device.mgt.common.notification.mgt.NotificationManagementService;
+import org.wso2.carbon.device.mgt.common.report.mgt.ReportManagementService;
 import org.wso2.carbon.device.mgt.common.spi.DeviceTypeGeneratorService;
 import org.wso2.carbon.device.mgt.core.app.mgt.ApplicationManagementProviderService;
 import org.wso2.carbon.device.mgt.core.device.details.mgt.DeviceInformationManager;
@@ -58,6 +59,7 @@ import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceTypeVersionWrapper;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
 import org.wso2.carbon.device.mgt.jaxrs.beans.analytics.EventAttributeList;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.InputValidationException;
+import org.wso2.carbon.event.processor.stub.EventProcessorAdminServiceStub;
 import org.wso2.carbon.event.publisher.stub.EventPublisherAdminServiceStub;
 import org.wso2.carbon.event.receiver.stub.EventReceiverAdminServiceStub;
 import org.wso2.carbon.event.stream.stub.EventStreamAdminServiceStub;
@@ -110,6 +112,7 @@ public class DeviceMgtAPIUtils {
     private static final String EVENT_PUBLISHER_CONTEXT = "EventPublisherAdminService/";
     private static final String EVENT_STREAM_CONTEXT = "EventStreamAdminService/";
     private static final String EVENT_PERSISTENCE_CONTEXT = "EventStreamPersistenceAdminService/";
+    private static final String EVENT_PROCESSOR_CONTEXT = "EventProcessorAdminService";
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String AUTHORIZATION_HEADER_VALUE = "Bearer";
     public static final String DAS_PORT = "${iot.analytics.https.port}";
@@ -429,6 +432,23 @@ public class DeviceMgtAPIUtils {
         return notificationManagementService;
     }
 
+    /**
+     * Method for initializing ReportManagementService
+     * @return ReportManagementServie Instance
+     */
+    public static ReportManagementService getReportManagementService() {
+        ReportManagementService reportManagementService;
+        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        reportManagementService = (ReportManagementService) ctx.getOSGiService(
+                ReportManagementService.class, null);
+        if (reportManagementService == null) {
+            String msg = "Report Management service not initialized.";
+            log.error(msg);
+            throw new IllegalStateException(msg);
+        }
+        return reportManagementService;
+    }
+
     public static DeviceInformationManager getDeviceInformationManagerService() {
         PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
         DeviceInformationManager deviceInformationManager =
@@ -636,6 +656,41 @@ public class DeviceMgtAPIUtils {
 
         eventStreamPersistenceAdminServiceStub._getServiceClient().setOptions(eventReciverOptions);
         return eventStreamPersistenceAdminServiceStub;
+    }
+
+    public static EventProcessorAdminServiceStub getEventProcessorAdminServiceStub()
+            throws AxisFault, UserStoreException, JWTClientException {
+        EventProcessorAdminServiceStub eventProcessorAdminServiceStub = new EventProcessorAdminServiceStub(
+                Utils.replaceSystemProperty(DAS_ADMIN_SERVICE_EP + EVENT_PROCESSOR_CONTEXT));
+        Options eventProcessorOption = eventProcessorAdminServiceStub._getServiceClient().getOptions();
+        if (eventProcessorOption == null) {
+            eventProcessorOption = new Options();
+        }
+        // Get the tenant Domain
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+        String username = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUserRealm()
+                                  .getRealmConfiguration().getAdminUserName() + "@" + tenantDomain;
+        // Create the SSL context with the loaded TrustStore/keystore.
+        JWTClient jwtClient = getJWTClientManagerService().getJWTClient();
+
+        String authValue = AUTHORIZATION_HEADER_VALUE + " " + new String(Base64.encodeBase64(
+                jwtClient.getJwtToken(username).getBytes()));
+
+        List<Header> list = new ArrayList<>();
+        Header httpHeader = new Header();
+        httpHeader.setName(AUTHORIZATION_HEADER);
+        httpHeader.setValue(authValue);
+        list.add(httpHeader);//"https"
+
+        eventProcessorOption.setProperty(HTTPConstants.HTTP_HEADERS, list);
+        eventProcessorOption.setProperty(HTTPConstants.CUSTOM_PROTOCOL_HANDLER
+                , new Protocol(DEFAULT_HTTP_PROTOCOL
+                        , (ProtocolSocketFactory) new SSLProtocolSocketFactory(sslContext)
+                        , Integer.parseInt(Utils.replaceSystemProperty(DAS_PORT))));
+
+        eventProcessorAdminServiceStub._getServiceClient().setOptions(eventProcessorOption);
+        return eventProcessorAdminServiceStub;
     }
 
     /**

@@ -42,7 +42,8 @@ class NewAppDetailsForm extends React.Component {
             categories: [],
             tags: [],
             deviceTypes:[]
-        }
+        };
+
     }
 
 
@@ -61,7 +62,6 @@ class NewAppDetailsForm extends React.Component {
                     name,
                     description,
                     categories,
-                    subMethod: (price === undefined || parseInt(price) === 0) ? "FREE" : "PAID",
                     tags,
                     unrestrictedRoles: [],
                 };
@@ -146,18 +146,41 @@ class NewAppDetailsForm extends React.Component {
 
     getDeviceTypes = () => {
         const config = this.props.context;
+        const {formConfig} = this.props;
+        const {installationType} = formConfig;
+
         axios.get(
             window.location.origin + config.serverConfig.invoker.uri + config.serverConfig.invoker.deviceMgt + "/device-types"
         ).then(res => {
             if (res.status === 200) {
-                const deviceTypes = JSON.parse(res.data.data);
+                const allDeviceTypes = JSON.parse(res.data.data);
+                const mobileDeviceTypes = config.deviceTypes.mobileTypes;
+                const allowedDeviceTypes = [];
+
+                // exclude mobile device types if installation type is custom
+                if(installationType==="CUSTOM"){
+                    allDeviceTypes.forEach(deviceType=>{
+                        if(!mobileDeviceTypes.includes(deviceType.name)){
+                            allowedDeviceTypes.push(deviceType);
+                        }
+                    });
+                }else{
+                    allDeviceTypes.forEach(deviceType=>{
+                        if(mobileDeviceTypes.includes(deviceType.name)){
+                            allowedDeviceTypes.push(deviceType);
+                        }
+                    });
+                }
+
                 this.setState({
-                    deviceTypes,
+                    deviceTypes: allowedDeviceTypes,
                     loading: false,
                 });
             }
 
+
         }).catch((error) => {
+            console.log(error);
             if (error.hasOwnProperty("response") && error.response.status === 401) {
                 window.location.href = window.location.origin + '/publisher/login';
             } else {
@@ -178,6 +201,7 @@ class NewAppDetailsForm extends React.Component {
         const {formConfig} = this.props;
         const {categories, tags, deviceTypes} = this.state;
         const {getFieldDecorator} = this.props.form;
+
 
         return (
             <div>
@@ -296,22 +320,6 @@ class NewAppDetailsForm extends React.Component {
                                     </Select>
                                 )}
                             </Form.Item>
-                            {/* //todo implement add meta data */}
-                            {/*<Form.Item {...formItemLayout} label="Meta Data">*/}
-                            {/*<InputGroup>*/}
-                            {/*<Row gutter={8}>*/}
-                            {/*<Col span={10}>*/}
-                            {/*<Input placeholder="Key"/>*/}
-                            {/*</Col>*/}
-                            {/*<Col span={12}>*/}
-                            {/*<Input placeholder="value"/>*/}
-                            {/*</Col>*/}
-                            {/*<Col span={2}>*/}
-                            {/*<Button type="dashed" shape="circle" icon="plus"/>*/}
-                            {/*</Col>*/}
-                            {/*</Row>*/}
-                            {/*</InputGroup>*/}
-                            {/*</Form.Item>*/}
                             <Form.Item style={{float: "right"}}>
                                 <Button type="primary" htmlType="submit">
                                     Next

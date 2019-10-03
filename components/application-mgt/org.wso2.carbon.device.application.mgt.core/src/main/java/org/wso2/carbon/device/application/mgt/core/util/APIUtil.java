@@ -32,6 +32,8 @@ import org.wso2.carbon.device.application.mgt.common.response.Application;
 import org.wso2.carbon.device.application.mgt.common.response.ApplicationRelease;
 import org.wso2.carbon.device.application.mgt.common.services.*;
 import org.wso2.carbon.device.application.mgt.common.ErrorResponse;
+import org.wso2.carbon.device.application.mgt.common.wrapper.CustomAppReleaseWrapper;
+import org.wso2.carbon.device.application.mgt.common.wrapper.CustomAppWrapper;
 import org.wso2.carbon.device.application.mgt.common.wrapper.EntAppReleaseWrapper;
 import org.wso2.carbon.device.application.mgt.common.wrapper.ApplicationWrapper;
 import org.wso2.carbon.device.application.mgt.common.wrapper.PublicAppReleaseWrapper;
@@ -190,7 +192,6 @@ public class APIUtil {
         List<DeviceType> deviceTypes;
         try {
             deviceTypes = DAOUtil.getDeviceManagementService().getDeviceTypes();
-
             if (deviceTypeAttr instanceof String) {
                 for (DeviceType dt : deviceTypes) {
                     if (dt.getName().equals(deviceTypeAttr)) {
@@ -209,16 +210,14 @@ public class APIUtil {
                 log.error(msg);
                 throw new BadRequestException(msg);
             }
-
-            String msg =
-                    "Invalid device type Attribute is found with the request. Device Type attribute: " + deviceTypeAttr;
+            String msg = "Invalid device type Attribute is found with the request. Device Type attribute: "
+                    + deviceTypeAttr;
             log.error(msg);
             throw new BadRequestException(msg);
-
         } catch (DeviceManagementException e) {
             String msg = "Error occured when getting device types which are supported by the Entgra IoTS";
-            log.error(msg);
-            throw new UnexpectedServerErrorException(msg);
+            log.error(msg, e);
+            throw new UnexpectedServerErrorException(msg, e);
         }
     }
 
@@ -269,6 +268,21 @@ public class APIUtil {
             List<ApplicationReleaseDTO> applicationReleaseEntities = publicAppWrapper.getPublicAppReleaseWrappers()
                     .stream().map(APIUtil::releaseWrapperToReleaseDTO).collect(Collectors.toList());
             applicationDTO.setApplicationReleaseDTOs(applicationReleaseEntities);
+        } else if (param instanceof CustomAppWrapper){
+            CustomAppWrapper customAppWrapper = (CustomAppWrapper) param;
+            DeviceType deviceType = getDeviceTypeData(customAppWrapper.getDeviceType());
+            applicationDTO.setName(customAppWrapper.getName());
+            applicationDTO.setDescription(customAppWrapper.getDescription());
+            applicationDTO.setAppCategories(customAppWrapper.getCategories());
+            applicationDTO.setType(ApplicationType.CUSTOM.toString());
+            applicationDTO.setSubType(customAppWrapper.getSubMethod());
+            applicationDTO.setPaymentCurrency(customAppWrapper.getPaymentCurrency());
+            applicationDTO.setTags(customAppWrapper.getTags());
+            applicationDTO.setUnrestrictedRoles(customAppWrapper.getUnrestrictedRoles());
+            applicationDTO.setDeviceTypeId(deviceType.getId());
+            List<ApplicationReleaseDTO> applicationReleaseEntities = customAppWrapper.getCustomAppReleaseWrappers()
+                    .stream().map(APIUtil::releaseWrapperToReleaseDTO).collect(Collectors.toList());
+            applicationDTO.setApplicationReleaseDTOs(applicationReleaseEntities);
         }
         return applicationDTO;
     }
@@ -304,6 +318,16 @@ public class APIUtil {
             applicationReleaseDTO.setIsSharedWithAllTenants(publicAppReleaseWrapper.getIsSharedWithAllTenants());
             applicationReleaseDTO.setMetaData(publicAppReleaseWrapper.getMetaData());
             applicationReleaseDTO.setSupportedOsVersions(publicAppReleaseWrapper.getSupportedOsVersions());
+        } else if (param instanceof CustomAppReleaseWrapper) {
+            CustomAppReleaseWrapper customAppReleaseWrapper = (CustomAppReleaseWrapper) param;
+            applicationReleaseDTO.setDescription(customAppReleaseWrapper.getDescription());
+            applicationReleaseDTO.setReleaseType(customAppReleaseWrapper.getReleaseType());
+            applicationReleaseDTO.setVersion(customAppReleaseWrapper.getVersion());
+            applicationReleaseDTO.setSupportedOsVersions(Constants.ANY);
+            applicationReleaseDTO.setPackageName(customAppReleaseWrapper.getPackageName());
+            applicationReleaseDTO.setPrice(customAppReleaseWrapper.getPrice());
+            applicationReleaseDTO.setIsSharedWithAllTenants(customAppReleaseWrapper.getIsSharedWithAllTenants());
+            applicationReleaseDTO.setMetaData(customAppReleaseWrapper.getMetaData());
         }
         return applicationReleaseDTO;
     }
@@ -329,8 +353,7 @@ public class APIUtil {
         application.setRating(applicationDTO.getAppRating());
         List<ApplicationRelease> applicationReleases = new ArrayList<>();
         for (ApplicationReleaseDTO applicationReleaseDTO : applicationDTO.getApplicationReleaseDTOs()) {
-            ApplicationRelease applicationRelease = releaseDtoToRelease(applicationReleaseDTO);
-            applicationReleases.add(applicationRelease);
+            applicationReleases.add(releaseDtoToRelease(applicationReleaseDTO));
         }
         application.setApplicationReleases(applicationReleases);
         return application;
@@ -338,8 +361,10 @@ public class APIUtil {
 
     public static ApplicationRelease releaseDtoToRelease(ApplicationReleaseDTO applicationReleaseDTO)
             throws ApplicationManagementException {
-        String basePath = getArtifactDownloadBaseURL() + applicationReleaseDTO.getUuid()
-                + Constants.FORWARD_SLASH;
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        String basePath =
+                getArtifactDownloadBaseURL() + tenantId + Constants.FORWARD_SLASH + applicationReleaseDTO.getUuid()
+                        + Constants.FORWARD_SLASH;
 
         List<String> screenshotPaths = new ArrayList<>();
         ApplicationRelease applicationRelease = new ApplicationRelease();
@@ -409,5 +434,4 @@ public class APIUtil {
         return mdmConfig.getArtifactDownloadProtocol() + "://" + host + ":" + port
                 + artifactDownloadEndpoint + Constants.FORWARD_SLASH;
     }
-
 }

@@ -32,6 +32,7 @@
 			<ref bean="configurationManagementService"/>
             <ref bean="activityProviderService"/>
             <ref bean="notificationManagementService"/>
+            <ref bean="reportManagementService"/>
             <ref bean="policyManagementService"/>
             <ref bean="roleManagementService"/>
             <ref bean="userManagementService"/>
@@ -46,6 +47,7 @@
 			<ref bean="deviceEventManagementService"/>
 			<ref bean="deviceAgentService"/>
             <ref bean="swaggerResource"/>
+            <ref bean="analyticsArtifactsManagementService"/>
         </jaxrs:serviceBeans>
         <jaxrs:providers>
             <ref bean="jsonProvider"/>
@@ -77,6 +79,7 @@
 	<bean id="configurationManagementService" class="org.wso2.carbon.device.mgt.jaxrs.service.impl.ConfigurationServiceImpl"/>
     <bean id="activityProviderService" class="org.wso2.carbon.device.mgt.jaxrs.service.impl.ActivityProviderServiceImpl"/>
     <bean id="notificationManagementService" class="org.wso2.carbon.device.mgt.jaxrs.service.impl.NotificationManagementServiceImpl"/>
+    <bean id="reportManagementService" class="org.wso2.carbon.device.mgt.jaxrs.service.impl.ReportManagementServiceImpl"/>
     <bean id="policyManagementService" class="org.wso2.carbon.device.mgt.jaxrs.service.impl.PolicyManagementServiceImpl"/>
     <bean id="roleManagementService" class="org.wso2.carbon.device.mgt.jaxrs.service.impl.RoleManagementServiceImpl"/>
     <bean id="userManagementService" class="org.wso2.carbon.device.mgt.jaxrs.service.impl.UserManagementServiceImpl"/>
@@ -93,6 +96,7 @@
 	<bean id="deviceEventManagementService" class="org.wso2.carbon.device.mgt.jaxrs.service.impl.DeviceEventManagementServiceImpl"/>
 	<bean id="deviceAgentService" class="org.wso2.carbon.device.mgt.jaxrs.service.impl.DeviceAgentServiceImpl"/>
 	<bean id="jsonProvider" class="org.wso2.carbon.device.mgt.jaxrs.common.GsonMessageBodyHandler"/>
+    <bean id="analyticsArtifactsManagementService" class="org.wso2.carbon.device.mgt.jaxrs.service.impl.AnalyticsArtifactsManagementServiceImpl"/>
 
     <!--<bean id="errorHandler" class="org.wso2.carbon.device.mgt.jaxrs.common.ErrorHandler"/>-->
     <cxf:bus>

@@ -38,7 +38,6 @@ import java.util.List;
  * This class represents implementation of GroupDAO
  */
 public class GenericGroupDAOImpl extends AbstractGroupDAOImpl {
-
     @Override
     public List<DeviceGroup> getGroups(GroupPaginationRequest request, int tenantId)
             throws GroupManagementDAOException {
@@ -56,11 +55,11 @@ public class GenericGroupDAOImpl extends AbstractGroupDAOImpl {
             Connection conn = GroupManagementDAOFactory.getConnection();
             String sql = "SELECT ID, DESCRIPTION, GROUP_NAME, OWNER FROM DM_GROUP WHERE TENANT_ID = ?";
             if (groupName != null && !groupName.isEmpty()) {
-                sql += " AND GROUP_NAME LIKE ?";
+                sql += " AND UPPER(GROUP_NAME) LIKE ?";
                 hasGroupName = true;
             }
             if (owner != null && !owner.isEmpty()) {
-                sql += " AND OWNER LIKE ?";
+                sql += " AND UPPER(OWNER) LIKE ?";
                 hasOwner = true;
             }
             if (hasLimit) {

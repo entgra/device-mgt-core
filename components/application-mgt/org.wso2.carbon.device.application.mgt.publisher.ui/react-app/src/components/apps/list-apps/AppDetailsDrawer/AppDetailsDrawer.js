@@ -92,7 +92,6 @@ class AppDetailsDrawer extends React.Component {
 
     componentDidMount() {
         this.getCategories();
-        this.getTags();
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -117,7 +116,7 @@ class AppDetailsDrawer extends React.Component {
         ).then(res => {
             if (res.status === 200) {
                 const categories = JSON.parse(res.data.data);
-
+                this.getTags();
                 const globalCategories = categories.map(category => {
                     return (
                         <Option
@@ -190,6 +189,7 @@ class AppDetailsDrawer extends React.Component {
         });
     };
 
+
     // change the app name
     handleNameSave = name => {
         const config = this.props.context;
@@ -200,6 +200,7 @@ class AppDetailsDrawer extends React.Component {
                 window.location.origin + config.serverConfig.invoker.uri + config.serverConfig.invoker.publisher + "/applications/" + id,
                 data
             ).then(res => {
+                this.props.onUpdateApp("name", name);
                 if (res.status === 200) {
                     notification["success"]({
                         message: 'Saved!',
@@ -282,6 +283,7 @@ class AppDetailsDrawer extends React.Component {
                 data
             ).then(res => {
                 if (res.status === 200) {
+                    this.props.onUpdateApp("categories", temporaryCategories);
                     notification["success"]({
                         message: 'Saved!',
                         description: 'App categories updated successfully!'
@@ -413,6 +415,7 @@ class AppDetailsDrawer extends React.Component {
         }
     };
 
+
     render() {
         const config = this.props.context;
         const {app, visible, onClose} = this.props;
@@ -458,12 +461,11 @@ class AppDetailsDrawer extends React.Component {
             <div>
                 <Drawer
                     placement="right"
-                    width={this.state.drawerWidth}
+                    width={640}
                     closable={false}
                     onClose={onClose}
                     visible={visible}
                 >
-
                     <Spin spinning={loading} delay={500}>
                         <div style={{textAlign: "center"}}>
                             {avatar}
@@ -554,7 +556,6 @@ class AppDetailsDrawer extends React.Component {
                         )}
 
                         <Divider dashed={true}/>
-
                         <Text strong={true}>Categories </Text>
                         {!isCategoriesEditEnabled && (<Text
                                 style={{color: config.theme.primaryColor, cursor: "pointer"}}
@@ -599,8 +600,8 @@ class AppDetailsDrawer extends React.Component {
                             }</span>
                         )}
 
-                        <Divider dashed={true}/>
 
+                        <Divider dashed={true}/>
                         <Text strong={true}>Tags </Text>
                         {!isTagsEditEnabled && (<Text
                                 style={{color: config.theme.primaryColor, cursor: "pointer"}}
