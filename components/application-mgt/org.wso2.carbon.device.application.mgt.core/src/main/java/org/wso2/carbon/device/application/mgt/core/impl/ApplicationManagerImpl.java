@@ -225,11 +225,11 @@ public class ApplicationManagerImpl implements ApplicationManager {
             } catch (ApplicationManagementDAOException e) {
                 ConnectionManagerUtil.rollbackDBTransaction();
                 String msg = "Error occurred when updating public app: " + publicAppWrapper.getName();
-                log.error(msg);
+                log.error(msg, e);
                 throw new ApplicationManagementException(msg, e);
             } catch (ResourceManagementException e) {
                 String msg = "Error occurred when adding artifacts of release: " + publicAppWrapper.getName();
-                log.error(msg);
+                log.error(msg, e);
                 throw new ApplicationManagementException(msg, e);
             } finally {
                 ConnectionManagerUtil.closeDBConnection();
@@ -242,7 +242,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 applicationDTO.getApplicationReleaseDTOs().add(applicationReleaseDTO);
             } catch (ResourceManagementException e) {
                 String msg = "Error Occured when uploading artifacts of the public app: " + publicAppWrapper.getName();
-                log.error(msg);
+                log.error(msg, e);
                 throw new ApplicationManagementException(msg, e);
             }
             //insert application data into database
@@ -352,7 +352,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                                 + ". Either you can delete all application releases for package " + packagename + " or "
                                 + "you can add this app release as an new application release, under the existing "
                                 + "application.";
-                        log.error(msg);
+                        log.error(msg, e);
                         throw new ApplicationManagementException(msg);
                     }
                     applicationReleaseDTO.setVersion(applicationInstaller.getVersion());
@@ -3168,11 +3168,11 @@ public class ApplicationManagerImpl implements ApplicationManager {
         } catch (DBConnectionException e) {
             String msg = "Error occurred while obtaining the database connection for getting application for the " +
                     "packages";
-            log.error(msg);
+            log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
         } catch (ApplicationManagementDAOException e) {
             String msg = "Error occurred while getting application data for packages";
-            log.error(msg);
+            log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
         } finally {
             ConnectionManagerUtil.closeDBConnection();

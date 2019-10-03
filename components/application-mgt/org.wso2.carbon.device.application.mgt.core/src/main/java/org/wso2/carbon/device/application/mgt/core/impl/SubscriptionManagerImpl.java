@@ -329,7 +329,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             return categories;
         } catch (ApplicationManagementDAOException e) {
             String msg = "Error occurred while getting categories for application : " + id;
-            log.error(msg);
+            log.error(msg, e);
             throw new ApplicationManagementException(msg);
         } finally {
             ConnectionManagerUtil.closeDBConnection();
