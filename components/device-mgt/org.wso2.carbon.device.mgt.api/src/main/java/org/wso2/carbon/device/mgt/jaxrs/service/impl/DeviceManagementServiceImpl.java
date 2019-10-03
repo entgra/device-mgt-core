@@ -77,7 +77,6 @@ import org.wso2.carbon.device.mgt.core.search.mgt.SearchMgtException;
 import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
 import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceCompliance;
 import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
-import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceLocationInfo;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
 import org.wso2.carbon.device.mgt.jaxrs.beans.OperationList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.OperationRequest;
@@ -483,9 +482,8 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                                           @QueryParam("from") long from, @QueryParam("to") long to) {
 
         List<DeviceLocationHistory> deviceLocationHistory;
-        DeviceLocationInfo deviceLocationInfo = new DeviceLocationInfo();
         String errorMessage;
-        PaginationResult result;
+
         try {
             RequestValidationUtil.validateDeviceIdentifier(deviceType, deviceId);
             DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
