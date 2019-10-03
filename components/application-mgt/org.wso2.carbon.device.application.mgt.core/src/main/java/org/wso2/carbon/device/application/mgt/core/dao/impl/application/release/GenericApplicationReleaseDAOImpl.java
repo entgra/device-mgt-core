@@ -36,8 +36,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 
-/**
+    /**
  * GenericApplicationReleaseDAOImpl holds the implementation of ApplicationRelease related DAO operations.
  */
 public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements ApplicationReleaseDAO {
@@ -587,15 +588,9 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
                 + "FROM AP_APP_RELEASE AS AR "
                 + "WHERE AR.TENANT_ID = ? AND AR.PACKAGE_NAME IN (";
 
-
-        for (int x = 0; x < packages.size(); x++) {
-            if (x == 0) {
-                sql += "?";
-            } else {
-                sql += ", ?";
-            }
-        }
-        sql += ")";
+        StringJoiner joiner = new StringJoiner(",", sql, ")");
+        packages.stream().map(ignored -> "?").forEach(joiner::add);
+        sql = joiner.toString();
 
         try {
             Connection connection = this.getDBConnection();

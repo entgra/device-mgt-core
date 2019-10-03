@@ -352,7 +352,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                                 + ". Either you can delete all application releases for package " + packagename + " or "
                                 + "you can add this app release as an new application release, under the existing "
                                 + "application.";
-                        log.error(msg, e);
+                        log.error(msg);
                         throw new ApplicationManagementException(msg);
                     }
                     applicationReleaseDTO.setVersion(applicationInstaller.getVersion());

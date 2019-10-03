@@ -214,7 +214,7 @@ class EditReleaseModal extends React.Component {
                     isSharedWithAllTenants,
                     metaData: "string",
                     releaseType: releaseType,
-                    supportedOsVersions: "4.0-10.0"
+                    supportedOsVersions: "4-30"
                 };
 
                 if (specificElements.hasOwnProperty("binaryFile") && binaryFiles.length === 1) {
