@@ -29,12 +29,6 @@ const {Text} = Typography;
 
 let config = null;
 let apiUrl;
-let reportParamMap = {
-    status: null,
-    ownership: null,
-    from:null,
-    to:null
-};
 
 const columns = [
     {
@@ -147,7 +141,8 @@ class ReportDeviceTable extends React.Component {
             data: [],
             pagination: {},
             loading: false,
-            selectedRows: []
+            selectedRows: [],
+            paramsObj:{}
         };
     }
 
@@ -155,30 +150,20 @@ class ReportDeviceTable extends React.Component {
         onChange: (selectedRowKeys, selectedRows) => {
             // console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
             this.setState({
-                              selectedRows: selectedRows
-                          })
+                selectedRows: selectedRows
+            })
         }
     };
 
     componentDidMount() {
-        this.fetch();
+         this.fetch();
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if(prevProps.reportParams != this.props.reportParams){
-            let obj = this.props.reportParams;
-            reportParamMap = Object.keys(obj)
-                    .filter(e => obj[e] !== null)
-                    .reduce( (o, e) => {
-                        o[e]  = obj[e]
-                        return o;
-                    }, {});
-
+        if(prevProps.paramsObject !== this.props.paramsObject){
             this.fetch();
-            console.log(this.props.reportParams);
-            console.log(reportParamMap);
         }
-    }
+   }
 
     //fetch data from api
     fetch = (params = {}) => {
@@ -187,18 +172,16 @@ class ReportDeviceTable extends React.Component {
         // get current page
         const currentPage = (params.hasOwnProperty("page")) ? params.page : 1;
 
-        const extraParams = {
-            offset: 10 * (currentPage - 1), //calculate the offset
-            limit: 10,
-            requireDeviceInfo: true,
-        };
+        this.props.paramsObject.offset = 10 * (currentPage -1); //calculate the offset
+        this.props.paramsObject.limit = 10;
 
-        const encodedExtraParams = Object.keys(reportParamMap).map(key => key + '=' + reportParamMap[key]).join('&');
+        const encodedExtraParams = Object.keys(this.props.paramsObject).map(key => key + '=' + this.props.paramsObject[key]).join('&');
         console.log(encodedExtraParams);
 
-        if(reportParamMap.from==null){
+        if(this.props.paramsObject.from==null && this.props.paramsObject.to==null){
             apiUrl = window.location.origin + config.serverConfig.invoker.uri + config.serverConfig.invoker.deviceMgt +
-                     "/devices";
+                     "/devices?" + encodedExtraParams;
+            
         }else{
             apiUrl = window.location.origin + config.serverConfig.invoker.uri + config.serverConfig.invoker.deviceMgt +
                      "/reports/devices?" + encodedExtraParams;
@@ -250,12 +233,13 @@ class ReportDeviceTable extends React.Component {
     };
 
     render() {
+    
         const {data, pagination, loading, selectedRows} = this.state;
         return (
                 <div>
                     <Table
                             columns={columns}
-                            rowKey={record => record.deviceIdentifier}
+                            rowKey={record => (record.deviceIdentifier + record.enrolmentInfo.owner + record.enrolmentInfo.ownership)}
                             dataSource={data}
                             pagination={{
                                 ...pagination,

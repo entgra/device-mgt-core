@@ -21,13 +21,12 @@ import {
     PageHeader,
     Typography,
     Breadcrumb,
-    Icon,
-    Card
+    Icon
 } from "antd";
 import {Link} from "react-router-dom";
 import ReportDeviceTable from "../../../components/Devices/ReportDevicesTable";
-import DurationDropDown from "../../../components/Reports/DurationDropDown";
-import FiltersDropDown from "../../../components/Reports/FiltersDropDown";
+import Filter from "../../../components/Reports/Filter";
+import DateRangePicker from "../../../components/Reports/DateRangePicker";
 
 const {Paragraph} = Typography;
 
@@ -38,75 +37,39 @@ class Reports extends React.Component {
         super(props);
         this.routes = props.routes;
         this.state = {
-            durationFromDate: '',
-            durationToDate:'',
-            filterDropdownStatusValue: null,
-            filterDropdownOwnershipValue: null
+            duration:'',
+            filters:'',
+            paramsObject:{}
         }
     }
 
     updateDurationValue = (modifiedFromDate,modifiedToDate) => {
-        this.setState({durationFromDate: modifiedFromDate, durationToDate:modifiedToDate});
-
+        this.setState({duration:"Duration Updated"});
+        this.state.paramsObject.from = modifiedFromDate;
+        this.state.paramsObject.to = modifiedToDate;
     }
 
     updateFiltersValue = (modifiedValue,filterType) => {
-
+        this.setState({filters:"Filters Updated"});
             if(filterType=="Device Status"){
-                this.setState({filterDropdownStatusValue: modifiedValue});
-                if(modifiedValue=="ALL"){
-                    this.setState({filterDropdownStatusValue: null});
+                this.state.paramsObject.status = modifiedValue;
+                if(modifiedValue=="ALL" && this.state.paramsObject.status){
+                    delete this.state.paramsObject.status;
                 }
-                //console.log("asdsdf"+modifiedValue);
             }else{
-                this.setState({filterDropdownOwnershipValue:modifiedValue});
-                if(modifiedValue=="ALL"){
-                    this.setState({filterDropdownOwnershipValue: null});
+                this.state.paramsObject.ownership = modifiedValue;
+                if(modifiedValue=="ALL" && this.state.paramsObject.ownership){
+                    delete this.state.paramsObject.ownership;
                 }
             }
-
-
     }
 
     render() {
-        var reportParams = {
-            status: this.state.filterDropdownStatusValue,
-            ownership: this.state.filterDropdownOwnershipValue,
-            from:this.state.durationFromDate,
-            to:this.state.durationToDate
-        }
-        const statusObj = [
-            {
-                id: '1',
-                item: 'ALL'
-            },
-            {
-                id: '2',
-                item: 'ACTIVE'
-            },
-            {
-                id: '3',
-                item: 'INACTIVE'
-            },
-            {
-                id: '4',
-                item: 'REMOVED'
-            }
-        ];
-        const ownershipObj = [
-            {
-                id: '1',
-                item: 'ALL'
-            },
-            {
-                id: '2',
-                item: 'BYOD'
-            },
-            {
-                id: '3',
-                item: 'COPE'
-            }
-        ];
+        const statusObj = ['ALL','ACTIVE','INACTIVE','REMOVED'];
+        const ownershipObj = ['ALL','BYOD','COPE'];
+        
+        const params = {...this.state.paramsObject};
+
         return (
             <div>
                 <PageHeader style={{paddingTop: 0}}>
@@ -120,10 +83,21 @@ class Reports extends React.Component {
                         <h3>Reports</h3>
                         <Paragraph>Lorem ipsum dolor sit amet, est similique constituto at, quot inermis id mel, an
                             illud incorrupte nam.</Paragraph>
-                        <DurationDropDown updateDurationValue={this.updateDurationValue}/>
-                        <FiltersDropDown updateFiltersValue={this.updateFiltersValue} dropDownItems={statusObj} dropDownName={"Device Status"}/>
-                        <FiltersDropDown updateFiltersValue={this.updateFiltersValue} dropDownItems={ownershipObj} dropDownName={"Device Ownership"}/>
-                        <ReportDeviceTable reportParams={reportParams}/>
+                        <div style={{paddingBottom:'5px'}}>
+                            <DateRangePicker 
+                                updateDurationValue={this.updateDurationValue}/>
+                            <Filter 
+                                updateFiltersValue={this.updateFiltersValue} 
+                                dropDownItems={statusObj} 
+                                dropDownName={"Device Status"}/>
+                            <Filter 
+                                updateFiltersValue={this.updateFiltersValue} 
+                                dropDownItems={ownershipObj} 
+                                dropDownName={"Device Ownership"}/>
+                        </div>
+                        <div style={{backgroundColor:"#ffffff", borderRadius: 5}}>
+                            <ReportDeviceTable paramsObject={params}/>
+                        </div>
                     </div>
                 </PageHeader>
                 <div style={{background: '#f0f2f5', padding: 24, minHeight: 720}}>
