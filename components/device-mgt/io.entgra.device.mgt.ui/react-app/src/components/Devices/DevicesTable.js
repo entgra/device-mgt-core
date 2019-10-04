@@ -225,7 +225,7 @@ class DeviceTable extends React.Component {
             <div>
                 <Table
                     columns={columns}
-                    rowKey={record => record.deviceIdentifier}
+                    rowKey={record => (record.deviceIdentifier + record.enrolmentInfo.owner + record.enrolmentInfo.ownership)}
                     dataSource={data}
                     pagination={{
                         ...pagination,

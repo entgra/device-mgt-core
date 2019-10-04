@@ -202,6 +202,7 @@ class AppDetailsDrawer extends React.Component {
                 window.location.origin + config.serverConfig.invoker.uri + config.serverConfig.invoker.publisher + "/applications/" + id,
                 data
             ).then(res => {
+                this.props.onUpdateApp("name", name);
                 if (res.status === 200) {
                     notification["success"]({
                         message: 'Saved!',
@@ -284,6 +285,7 @@ class AppDetailsDrawer extends React.Component {
                 data
             ).then(res => {
                 if (res.status === 200) {
+                    this.props.onUpdateApp("categories", temporaryCategories);
                     notification["success"]({
                         message: 'Saved!',
                         description: 'App categories updated successfully!'
