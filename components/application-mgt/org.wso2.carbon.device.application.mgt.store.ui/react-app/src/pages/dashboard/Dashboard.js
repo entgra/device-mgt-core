@@ -123,22 +123,23 @@ class Dashboard extends React.Component {
                                 theme="light"
                                 mode="horizontal"
                                 defaultSelectedKeys={selectedKeys}
-                                style={{lineHeight: '64px'}}
-                            >
+                                style={{lineHeight: '64px'}}>
 
                                 {DeviceTypesData}
 
-                                <Menu.Item key="web-clip"><Link to="/store/web-clip"><Icon type="upload"/>Web
-                                    Clips</Link></Menu.Item>
+                                <Menu.Item key="web-clip">
+                                    <Link to="/store/web-clip">
+                                        <Icon type="upload"/>
+                                            Web Clips
+                                    </Link>
+                                </Menu.Item>
 
                                 <SubMenu className="profile"
                                          title={
                                              <span className="submenu-title-wrapper">
                                      <Icon type="user"/>
                                          Profile
-                                     </span>
-                                         }
-                                >
+                                     </span> }>
                                     <Logout/>
                                 </SubMenu>
                             </Menu>
@@ -163,35 +164,32 @@ class Dashboard extends React.Component {
                         onClose={this.onCloseMobileNavigationBar}
                         visible={this.state.visible}
                         getContainer={false}
-                        style={{position: 'absolute'}}
-                    >
+                        style={{position: 'absolute'}}>
                         <Menu
                             theme="light"
                             mode="inline"
                             defaultSelectedKeys={selectedKeys}
-                            style={{lineHeight: '64px', width: 231}}
-                        >
+                            style={{lineHeight: '64px', width: 231}}>
 
                             {DeviceTypesData}
 
-                            <Menu.Item key="web-clip"><Link to="/store/web-clip"><Icon type="upload"/>Web
-                                Clips</Link></Menu.Item>
-
+                            <Menu.Item key="web-clip">
+                                <Link to="/store/web-clip">
+                                <Icon type="upload"/>Web Clips
+                                </Link>
+                            </Menu.Item>
                         </Menu>
                     </Drawer>
                 <Layout className="mobile-layout">
                     <Menu
                         mode="horizontal"
                         defaultSelectedKeys={selectedKeys}
-                        style={{lineHeight: '63px', position: 'fixed', marginLeft: '80%'}}
-                    >
+                        style={{lineHeight: '63px', position: 'fixed', marginLeft: '80%'}}>
                         <SubMenu
                             title={
                                 <span className="submenu-title-wrapper">
                                      <Icon type="user"/>
-                                     </span>
-                            }
-                        >
+                                </span>}>
                             <Logout/>
                         </SubMenu>
                     </Menu>
@@ -204,9 +202,7 @@ class Dashboard extends React.Component {
                                 <RouteWithSubRoutes changeSelectedMenuItem={this.changeSelectedMenuItem}
                                                     key={route.path} {...route} />
                             ))}
-
                         </Switch>
-
                     </Content>
 
                     <Footer style={{textAlign: 'center'}}>
