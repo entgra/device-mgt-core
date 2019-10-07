@@ -140,6 +140,7 @@ class Dashboard extends React.Component {
                             <Icon type={this.state.collapsed ? 'menu-fold' : 'menu-unfold'} className="bar-icon"/>
                         </Button>
                     </div>
+                </Layout>
                     <Drawer
                         title={
                             <Link to="/publisher/apps">
@@ -188,6 +189,7 @@ class Dashboard extends React.Component {
                             </Menu.Item>
                         </Menu>
                     </Drawer>
+                <Layout className="mobile-layout">
                     <Menu
                         mode="horizontal"
                         defaultSelectedKeys={['1']}
@@ -219,6 +221,6 @@ class Dashboard extends React.Component {
             </div>
         );
     }
-};
+}
 
 export default withConfigContext(Dashboard);

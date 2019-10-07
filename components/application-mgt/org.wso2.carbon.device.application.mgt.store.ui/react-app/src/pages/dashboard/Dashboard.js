@@ -80,7 +80,7 @@ class Dashboard extends React.Component {
             collapsed: !this.state.collapsed,
         });
     };
-
+    
     onCloseMobileNavigationBar = () => {
         this.setState({
             visible: false,
@@ -153,6 +153,7 @@ class Dashboard extends React.Component {
                             <Icon type={this.state.collapsed ? 'menu-fold' : 'menu-unfold'} className="bar-icon"/>
                         </Button>
                     </div>
+                </Layout>
                     <Drawer
                         title={<Link to="/store/android">
                             <img alt="logo" src={this.logo} style={{marginLeft: 30}} width={"60%"}/>
@@ -178,6 +179,7 @@ class Dashboard extends React.Component {
 
                         </Menu>
                     </Drawer>
+                <Layout className="mobile-layout">
                     <Menu
                         mode="horizontal"
                         defaultSelectedKeys={selectedKeys}
