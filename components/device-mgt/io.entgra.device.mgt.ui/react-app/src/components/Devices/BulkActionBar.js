@@ -1,65 +1,82 @@
+/*
+ * Copyright (c) 2019, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
+ *
+ * Entgra (pvt) Ltd. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 import React from "react";
-import {Button, Select, Icon} from "antd";
+import {Button, Icon, notification} from "antd";
 
 class BulkActionBar extends React.Component {
 
     constructor(props){
         super(props);
         this.state = {
-            hideDeleteButton:true,
-            deleteRequest:false,
-            selected:"Actions"
+            selectedMultiple:false,
+            selectedSingle:false
         }
-    }
-
-    onChange = value => {
-        this.setState({hideDeleteButton:false});
-        this.props.enableDelete();
     }
 
     //This method is used to trigger delete request on selected devices
     deleteDevice = () => {
-        this.props.deleteDevice();
-    }
-
-    //This method is used to cancel deletion
-    cancelDelete = () => {
-        this.setState({hideDeleteButton:true})
-        this.props.disableDelete();
-        console.log("Disabled");
+        const deviceStatusArray = this.props.selectedRows.map(obj => obj.enrolmentInfo.status);
+        if(deviceStatusArray.includes("ACTIVE") || deviceStatusArray.includes("INACTIVE")){
+            notification["error"]({
+                message: "There was a problem",
+                duration: 0,
+                description:
+                "Cannot delete ACTIVE/INACTIVE devices.",
+            });
+        }else{
+            this.props.deleteDevice();
+        }
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         if(prevProps.selectedRows !== this.props.selectedRows){
-            console.log(this.props.selectedRows);
-            if(this.props.selectedRows.length>1){
-                console.log("Multiple");
-            }else if(this.props.selectedRows.length==1){
-                console.log("Single");
+            if(this.props.selectedRows.length > 1){
+                this.setState({selectedMultiple:true,selectedSingle:false})
+            }else if(this.props.selectedRows.length == 1){
+                this.setState({selectedSingle:true,selectedMultiple:true})
             }else{
-                console.log("Empty");
+                this.setState({selectedSingle:false,selectedMultiple:false})
             }
         }
     }
 
     render() {
         return(
-                <div style={{paddingBottom:'5px'}}>
-
-                                <Button type="normal" icon="delete" size={'default'} />
-
-                                <Button type="primary" icon="delete"
+                <div style={{padding:'5px'}}>
+                                <Button
+                                        type="normal"
+                                        icon="delete"
+                                        size={'default'}
                                         onClick={this.deleteDevice}
-                                        style={{display:!this.state.hideDeleteButton ? "inline" : "none"}}>
-                                    Delete Selected Devices
-                                </Button>.
-
-                                <Button type="danger"
-                                        onClick={this.cancelDelete}
-                                        style={{display:!this.state.hideDeleteButton ? "inline" : "none"}}>
-                                    Cancel
+                                        style={
+                                            {display:this.state.selectedMultiple ? "inline" : "none"}
+                                        }>Delete
                                 </Button>
 
+                                <Button
+                                        type="normal"
+                                        icon="delete"
+                                        size={'default'}
+                                        style={
+                                            {display:this.state.selectedSingle ? "inline" : "none"}
+                                        }>Disenroll
+                                </Button>
                 </div>
         )
     }

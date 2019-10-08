@@ -142,8 +142,7 @@ class DeviceTable extends React.Component {
             pagination: {},
             loading: false,
             selectedRows: [],
-            deviceIds: [],
-            isDeleteEnabled:false
+            deviceIds: []
         };
     }
 
@@ -153,25 +152,11 @@ class DeviceTable extends React.Component {
                 selectedRows: selectedRows
             });
             this.state.deviceIds = selectedRows.map(obj => obj.deviceIdentifier);
-        },
-        getCheckboxProps:  record => ({
-             disabled: this.state.isDeleteEnabled ? record.enrolmentInfo.status !== 'REMOVED' : null// Column configuration not to be checked
-        })
+        }
     };
 
     componentDidMount() {
         this.fetch();
-    }
-
-    enableDelete = () => {
-        this.setState({selectedRows:[],isDeleteEnabled:true})
-        console.log(this.state.selectedRows)
-    }
-
-    disableDelete = () => {
-        this.rowSelection.getCheckboxProps = record => ({
-            disabled: null // Column configuration not to be checked
-        });
     }
 
     //fetch data from api
@@ -239,6 +224,7 @@ class DeviceTable extends React.Component {
 
         ).then(res => {
             if (res.status === 200) {
+                this.fetch();
                 const pagination = {...this.state.pagination};
                 this.setState({
                                   loading: false,
@@ -256,7 +242,7 @@ class DeviceTable extends React.Component {
                                           message: "There was a problem",
                                           duration: 0,
                                           description:
-                                                  "Error occurred while trying to load devices.",
+                                                  "Error occurred while trying to delete devices.",
                                       });
             }
 
@@ -284,10 +270,7 @@ class DeviceTable extends React.Component {
         return (
             <div>
                 <BulkActionBar
-                        deviceIds={this.state.deviceIds}
-                        enableDelete={this.enableDelete}
                         deleteDevice={this.deleteDevice}
-                        disableDelete={this.disableDelete}
                         selectedRows={this.state.selectedRows}/>
                 <Table
                     columns={columns}

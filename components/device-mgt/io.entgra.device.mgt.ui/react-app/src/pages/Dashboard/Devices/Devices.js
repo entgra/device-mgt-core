@@ -35,32 +35,6 @@ class Devices extends React.Component {
     constructor(props) {
         super(props);
         this.routes = props.routes;
-        this.state = {
-            deselectRequest:false,
-            deleteRequest:false,
-            deleteButtonDisabled:true,
-            displayDeleteButton:'none',
-            selected:"Actions"
-        }
-        this.deleteCall = this.deleteCall.bind(this);
-        this.cancelDelete = this.cancelDelete.bind(this);
-    }
-
-    //This method is used to trigger delete request on selected devices
-    deleteCall = () => {
-        this.setState({deleteRequest:!this.state.deleteRequest});
-    }
-
-    //This method is used to cancel deletion
-    cancelDelete = () => {
-        this.setState({displayDeleteButton:'none' , deleteRequest:false})
-    }
-
-    //When delete action is selected, this method is called and devices which aren't in REMOVED state becomes unselectable
-    onChange = value => {
-        this.setState(
-                {displayDeleteButton:'inline' , deselectRequest:!this.state.deselectRequest
-                });
     }
 
     render() {
@@ -74,14 +48,12 @@ class Devices extends React.Component {
                         <Breadcrumb.Item>Devices</Breadcrumb.Item>
                     </Breadcrumb>
                     <div className="wrap">
-                        <h3>Devicesssdsds</h3>
+                        <h3>Devices</h3>
                         <Paragraph>Lorem ipsum dolor sit amet, est similique constituto at, quot inermis id mel, an
                             illud incorrupte nam.</Paragraph>
                     </div>
                     <div style={{backgroundColor:"#ffffff", borderRadius: 5}}>
-                        <DeviceTable
-                                deleteRequest={this.state.deleteRequest}
-                                deselectRequest={this.state.deselectRequest}/>
+                        <DeviceTable/>
                     </div>
                 </PageHeader>
                 <div style={{background: '#f0f2f5', padding: 24, minHeight: 720}}>
