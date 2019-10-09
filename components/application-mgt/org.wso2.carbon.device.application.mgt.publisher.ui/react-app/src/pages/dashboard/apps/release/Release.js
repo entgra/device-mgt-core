@@ -86,8 +86,6 @@ class Release extends React.Component {
                     loading: false,
                     uuid: uuid
                 });
-                console.log(config.deviceTypes.mobileTypes);
-                console.log(config.deviceTypes.mobileTypes);
                 if(config.deviceTypes.mobileTypes.includes(app.deviceType)){
                     this.getSupportedOsVersions(app.deviceType);
                 }else{

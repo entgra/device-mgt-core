@@ -84,9 +84,6 @@ class NewAppUploadForm extends React.Component {
                 this.setState({
                     loading: true
                 });
-
-                console.log(values);
-
                 const {price, isSharedWithAllTenants, binaryFile, icon, screenshots, releaseDescription, releaseType} = values;
 
                 //add release data
