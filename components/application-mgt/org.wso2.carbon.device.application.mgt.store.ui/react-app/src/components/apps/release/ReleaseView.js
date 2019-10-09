@@ -43,6 +43,7 @@ class ReleaseView extends React.Component {
     }
 
     appOperation = (type, payload, operation, timestamp=null) => {
+        console.log(timestamp);
         const config = this.props.context;
         const release = this.props.app.applicationReleases[0];
         const {uuid} = release;
@@ -62,16 +63,16 @@ class ReleaseView extends React.Component {
                 headers: {'X-Platform': config.serverConfig.platform}
             }
         ).then(res => {
-            if (res.status === 200) {
+            if (res.status === 200 || res.status === 201) {
                 this.setState({
                     loading: false,
                     appInstallModalVisible: false,
-                    appUnInstallModalVisible: false,
+                    appUninstallModalVisible: false,
                 });
                 notification["success"]({
                     message: 'Done!',
                     description:
-                        'App '+operation+'ed triggered.',
+                        'Operation triggered.',
                 });
             } else {
                 this.setState({
