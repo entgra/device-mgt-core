@@ -220,7 +220,6 @@ public class DeviceTypePluginDAOImpl implements PluginDAO {
     public boolean deleteDevices(List<String> deviceIdentifiers) throws DeviceTypeMgtPluginException {
         try {
             Connection conn = deviceTypeDAOHandler.getConnection();
-            boolean status = true;
             try (PreparedStatement ps = conn.prepareStatement(deleteDBQueryForDeleteDevice)) {
                 if (conn.getMetaData().supportsBatchUpdates()) {
                     for (String deviceId : deviceIdentifiers) {
@@ -228,22 +227,17 @@ public class DeviceTypePluginDAOImpl implements PluginDAO {
                         ps.addBatch();
                     }
                     for (int i : ps.executeBatch()) {
-                        if (i == 0 || i == Statement.SUCCESS_NO_INFO || i == Statement.EXECUTE_FAILED) {
-                            status = false;
-                            break;
+                        if (i == Statement.SUCCESS_NO_INFO || i == Statement.EXECUTE_FAILED) {
+                            return false;
                         }
                     }
                 } else {
                     for (String deviceId : deviceIdentifiers) {
                         ps.setString(1, deviceId);
-                        if (ps.executeUpdate() == 0) {
-                            status = false;
-                            break;
-                        }
                     }
                 }
             }
-            return status;
+            return true;
         } catch (SQLException e) {
             String msg = "Error occurred while deleting the data in "
                     + deviceDAODefinition.getDeviceTableName();
