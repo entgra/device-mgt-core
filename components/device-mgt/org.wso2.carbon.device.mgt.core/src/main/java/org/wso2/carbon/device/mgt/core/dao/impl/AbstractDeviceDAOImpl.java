@@ -2041,7 +2041,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
      * @param identifiers list of device ids (primary keys)
      * @throws SQLException if deletion fails.
      */
-    private void executeBatchOperation(Connection conn, String sql, List<Integer> identifiers) throws SQLException {
+    private void executeBatchOperation(Connection conn, String sql, List<Integer> identifiers) throws SQLException, DeviceManagementDAOException {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             if (conn.getMetaData().supportsBatchUpdates()) {
                 for (int identifier : identifiers) {
@@ -2050,14 +2050,16 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 }
                 for (int i : ps.executeBatch()) {
                     if (i == 0 || i == Statement.SUCCESS_NO_INFO || i == Statement.EXECUTE_FAILED) {
-                        break;
+                        String msg = "Error occurred while executing batch operation";
+                        throw new DeviceManagementDAOException(msg);
                     }
                 }
             } else {
                 for (int enrollmentId : identifiers) {
                     ps.setInt(1, enrollmentId);
                     if (ps.executeUpdate() == 0) {
-                        break;
+                        String msg = "Error occurred while executing batch operation";
+                        throw new DeviceManagementDAOException(msg);
                     }
                 }
             }
