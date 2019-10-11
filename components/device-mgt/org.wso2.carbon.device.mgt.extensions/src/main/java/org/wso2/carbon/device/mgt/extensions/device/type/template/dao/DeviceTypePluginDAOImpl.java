@@ -234,6 +234,7 @@ public class DeviceTypePluginDAOImpl implements PluginDAO {
                 } else {
                     for (String deviceId : deviceIdentifiers) {
                         ps.setString(1, deviceId);
+                        ps.executeUpdate();
                     }
                 }
             }
