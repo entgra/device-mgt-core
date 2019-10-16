@@ -460,7 +460,7 @@ class AppDetailsDrawer extends React.Component {
                         <Divider/>
 
                         {/*display manage config button only if the app is public android app*/}
-                        {(app.type === "PUBLIC") && (app.deviceType === "android") && (
+                        {(app.type === "PUBLIC") && (app.deviceType === "android") && (config.androidEnterpriseToken !== null)&&(
                             <div>
                                 <div>
                                     <Text strong={true}>Set up managed configurations</Text>
