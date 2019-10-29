@@ -1860,11 +1860,14 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 if (!addingAppCategories.isEmpty()) {
                     List<Integer> categoryIds = this.applicationDAO.getCategoryIdsForCategoryNames(addingAppCategories, tenantId);
                     this.applicationDAO.addCategoryMapping(categoryIds, applicationId, tenantId);
+                    appCategories.addAll(addingAppCategories);
                 }
                 if (!removingAppCategories.isEmpty()) {
                     List<Integer> categoryIds = this.applicationDAO.getCategoryIdsForCategoryNames(removingAppCategories, tenantId);
                     this.applicationDAO.deleteAppCategories(categoryIds, applicationId, tenantId);
+                    appCategories.removeAll(removingAppCategories);
                 }
+                applicationDTO.setAppCategories(appCategories);
             }
 
             List<String> updatingAppTags = applicationUpdateWrapper.getTags();
@@ -1881,11 +1884,14 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     }
                     List<Integer> addingTagIds = this.applicationDAO.getTagIdsForTagNames(addingTagList, tenantId);
                     this.applicationDAO.addTagMapping(addingTagIds, applicationId, tenantId);
+                    appTags.addAll(addingTagList);
                 }
                 if (!removingTagList.isEmpty()) {
                     List<Integer> removingTagIds = this.applicationDAO.getTagIdsForTagNames(removingTagList, tenantId);
                     this.applicationDAO.deleteApplicationTags(removingTagIds, applicationId, tenantId);
+                    appTags.removeAll(removingTagList);
                 }
+                applicationDTO.setTags(appTags);
             }
             if (!applicationDAO.updateApplication(applicationDTO, tenantId)){
                 ConnectionManagerUtil.rollbackDBTransaction();
