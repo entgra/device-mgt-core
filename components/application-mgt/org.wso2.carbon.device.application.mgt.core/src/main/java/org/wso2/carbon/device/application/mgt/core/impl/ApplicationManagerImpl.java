@@ -1814,7 +1814,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
 
             if (isExistingAppRestricted && !isUpdatingAppRestricted) {
                 visibilityDAO.deleteUnrestrictedRoles(appUnrestrictedRoles, applicationId, tenantId);
-                appUnrestrictedRoles = new ArrayList<>();
+                appUnrestrictedRoles.clear();
             } else if (isUpdatingAppRestricted) {
                 if (!hasUserRole(applicationUpdateWrapper.getUnrestrictedRoles(), userName)) {
                     String msg =
