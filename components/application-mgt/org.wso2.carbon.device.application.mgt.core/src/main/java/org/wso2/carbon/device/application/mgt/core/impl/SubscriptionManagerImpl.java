@@ -1146,11 +1146,13 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             } else if (SubscriptionType.ROLE.toString().equalsIgnoreCase(subType)) {
                 subscriptionList = subscriptionDAO
                         .getAppSubscribedRoles(offsetValue, limitValue, applicationReleaseId, tenantId);
+                count = subscriptionDAO.getSubscribedRoleCount(applicationReleaseId, tenantId);
             } else if (SubscriptionType.GROUP.toString().equalsIgnoreCase(subType)) {
                 subscriptionList = subscriptionDAO
                         .getAppSubscribedGroups(offsetValue, limitValue, applicationReleaseId, tenantId);
+                count = subscriptionDAO.getSubscribedGroupCount(applicationReleaseId, tenantId);
             }
-//            int count = subscriptionList.size();
+
             paginationResult.setData(subscriptionList);
             paginationResult.setRecordsFiltered(count);
             paginationResult.setRecordsTotal(count);
