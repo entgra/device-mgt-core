@@ -165,6 +165,9 @@ public interface SubscriptionDAO {
                                        int tenantId)
             throws ApplicationManagementDAOException;
 
+    int getSubscribedUserCount(int appReleaseId, int tenantId)
+            throws ApplicationManagementDAOException;
+
     /**
      * This method is used to get the details of roles
      *
