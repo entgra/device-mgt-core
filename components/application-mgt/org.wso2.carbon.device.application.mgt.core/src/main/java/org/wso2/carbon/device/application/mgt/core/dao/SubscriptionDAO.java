@@ -51,13 +51,13 @@ public interface SubscriptionDAO {
      * @param releaseId id of the {@link ApplicationReleaseDTO}
      * @throws ApplicationManagementDAOException If unable to add a mapping between device and application
      */
-    void addUserSubscriptions(int tenantId, String subscribedBy, List<String> users, int releaseId)
+    void addUserSubscriptions(int tenantId, String subscribedBy, List<String> users, int releaseId, String action)
             throws ApplicationManagementDAOException;
 
-    void addRoleSubscriptions(int tenantId, String subscribedBy, List<String> roles, int releaseId)
+    void addRoleSubscriptions(int tenantId, String subscribedBy, List<String> roles, int releaseId, String action)
             throws ApplicationManagementDAOException;
 
-    void addGroupSubscriptions(int tenantId, String subscribedBy, List<String> groups, int releaseId)
+    void addGroupSubscriptions(int tenantId, String subscribedBy, List<String> groups, int releaseId, String action)
             throws ApplicationManagementDAOException;
 
     List<DeviceSubscriptionDTO> getDeviceSubscriptions(int appReleaseId, int tenantId) throws
