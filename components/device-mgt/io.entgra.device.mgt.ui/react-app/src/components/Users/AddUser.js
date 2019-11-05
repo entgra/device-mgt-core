@@ -77,7 +77,7 @@ class AddUser extends React.Component {
         });
     };
 
-    OnCancelHandler = e => {
+    onCancelHandler = e => {
         this.setState({
             isModalVisible: false,
         });
