@@ -77,7 +77,7 @@ class AddUser extends React.Component {
         });
     };
 
-    OnCancelHandler = e => {
+    onCancelHandler = e => {
         this.setState({
             isModalVisible: false,
         });
@@ -128,9 +128,9 @@ class AddUser extends React.Component {
                         width="40%"
                         visible={this.state.isModalVisible}
                         onOk={this.onSubmitHandler}
-                        onCancel={this.OnCancelHandler}
+                        onCancel={this.onCancelHandler}
                         footer={[
-                            <Button key="cancel" onClick={this.OnCancelHandler}>
+                            <Button key="cancel" onClick={this.onCancelHandler}>
                                 Cancel
                             </Button>,
                             <Button key="submit" type="primary" onClick={this.onSubmitHandler}>
