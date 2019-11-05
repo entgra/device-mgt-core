@@ -36,9 +36,9 @@ public class Constants {
     public static final String PLIST_NAME = "Info.plist";
     public static final String CF_BUNDLE_VERSION = "CFBundleVersion";
     public static final String APP_EXTENSION = ".app";
-    public static final String IOT_GATEWAY_HOST = "iot.gateway.host";
-    public static final String IOT_GATEWAY_HTTP_PORT = "iot.gateway.http.port";
-    public static final String IOT_GATEWAY_HTTPS_PORT = "iot.gateway.https.port";
+    public static final String IOT_CORE_HOST = "iot.core.host";
+    public static final String IOT_CORE_HTTP_PORT = "iot.core.http.port";
+    public static final String IOT_CORE_HTTPS_PORT = "iot.core.https.port";
     public static final String HTTPS_PROTOCOL = "https";
     public static final String HTTP_PROTOCOL = "http";
 

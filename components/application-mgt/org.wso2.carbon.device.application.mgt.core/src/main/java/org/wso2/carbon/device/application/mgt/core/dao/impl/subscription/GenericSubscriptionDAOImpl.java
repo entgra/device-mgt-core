@@ -195,10 +195,10 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
             String sql = "INSERT INTO AP_USER_SUBSCRIPTION(TENANT_ID, ";
 
             if (SubAction.UNINSTALL.toString().equalsIgnoreCase(action)) {
-                sql += "UNSUBSCRIBED, UNSUBSCRIBED_BY, UNSUBSCRIBED_TIMESTAMP ";
+                sql += "UNSUBSCRIBED, UNSUBSCRIBED_BY, UNSUBSCRIBED_TIMESTAMP, ";
                 isUnsubscribed = true;
             } else {
-                sql += "UNSUBSCRIBED, SUBSCRIBED_BY, SUBSCRIBED_TIMESTAMP ";
+                sql += "UNSUBSCRIBED, SUBSCRIBED_BY, SUBSCRIBED_TIMESTAMP, ";
             }
 
             sql += "USER_NAME, AP_APP_RELEASE_ID) VALUES (?, ?, ?, ?, ?,?)";
@@ -243,13 +243,13 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
             String sql = "INSERT INTO AP_ROLE_SUBSCRIPTION(TENANT_ID, ";
 
             if (SubAction.UNINSTALL.toString().equalsIgnoreCase(action)) {
-                sql += "UNSUBSCRIBED, UNSUBSCRIBED_BY, UNSUBSCRIBED_TIMESTAMP ";
+                sql += "UNSUBSCRIBED, UNSUBSCRIBED_BY, UNSUBSCRIBED_TIMESTAMP, ";
                 isUnsubscribed = true;
             } else {
-                sql += "UNSUBSCRIBED, SUBSCRIBED_BY, SUBSCRIBED_TIMESTAMP ";
+                sql += "UNSUBSCRIBED, SUBSCRIBED_BY, SUBSCRIBED_TIMESTAMP, ";
             }
 
-            sql += "USER_NAME, AP_APP_RELEASE_ID) VALUES (?, ?, ?, ?, ?,?)";
+            sql += "ROLE_NAME, AP_APP_RELEASE_ID) VALUES (?, ?, ?, ?, ?,?)";
 
             Connection conn = this.getDBConnection();
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -291,13 +291,13 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
             String sql = "INSERT INTO AP_GROUP_SUBSCRIPTION(TENANT_ID, ";
 
             if (SubAction.UNINSTALL.toString().equalsIgnoreCase(action)) {
-                sql += "UNSUBSCRIBED, UNSUBSCRIBED_BY, UNSUBSCRIBED_TIMESTAMP ";
+                sql += "UNSUBSCRIBED, UNSUBSCRIBED_BY, UNSUBSCRIBED_TIMESTAMP, ";
                 isUnsubscribed = true;
             } else {
-                sql += "UNSUBSCRIBED, SUBSCRIBED_BY, SUBSCRIBED_TIMESTAMP ";
+                sql += "UNSUBSCRIBED, SUBSCRIBED_BY, SUBSCRIBED_TIMESTAMP, ";
             }
 
-            sql += "USER_NAME, AP_APP_RELEASE_ID) VALUES (?, ?, ?, ?, ?,?)";
+            sql += "GROUP_NAME, AP_APP_RELEASE_ID) VALUES (?, ?, ?, ?, ?,?)";
 
             Connection conn = this.getDBConnection();
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {

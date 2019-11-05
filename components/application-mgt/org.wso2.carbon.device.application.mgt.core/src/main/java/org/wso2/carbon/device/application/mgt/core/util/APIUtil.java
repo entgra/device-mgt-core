@@ -423,13 +423,13 @@ public class APIUtil {
     }
 
     public static String getArtifactDownloadBaseURL() throws ApplicationManagementException {
-        String host = System.getProperty(Constants.IOT_GATEWAY_HOST);
+        String host = System.getProperty(Constants.IOT_CORE_HOST);
         MDMConfig mdmConfig = ConfigurationManager.getInstance().getConfiguration().getMdmConfig();
         String port;
         if (Constants.HTTP_PROTOCOL.equals(mdmConfig.getArtifactDownloadProtocol())){
-            port = System.getProperty(Constants.IOT_GATEWAY_HTTP_PORT);
+            port = System.getProperty(Constants.IOT_CORE_HTTP_PORT);
         } else if( Constants.HTTPS_PROTOCOL.equals(mdmConfig.getArtifactDownloadProtocol())){
-            port = System.getProperty(Constants.IOT_GATEWAY_HTTPS_PORT);
+            port = System.getProperty(Constants.IOT_CORE_HTTPS_PORT);
         } else {
             String msg = "In order to download application artifacts invalid protocols are defined.";
             log.error(msg);
