@@ -973,10 +973,14 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                                         .getUuid();
                         app.setType(mobileAppType);
                         app.setLocation(plistDownloadEndpoint);
+                        app.setIconImage(application.getApplicationReleases().get(0).getIconPath());
                         Properties properties = new Properties();
                         properties.put(MDMAppConstants.IOSConstants.IS_PREVENT_BACKUP, true);
                         properties.put(MDMAppConstants.IOSConstants.IS_REMOVE_APP, true);
                         properties.put(MDMAppConstants.IOSConstants.I_TUNES_ID, application.getPackageName());
+                        properties.put(MDMAppConstants.IOSConstants.LABEL, application.getName());
+                        properties.put(MDMAppConstants.IOSConstants.WEB_CLIP_URL,
+                                application.getApplicationReleases().get(0).getInstallerPath());
                         app.setProperties(properties);
                         return MDMIOSOperationUtil.createInstallAppOperation(app);
                     } else if (SubAction.UNINSTALL.toString().equalsIgnoreCase(action)) {
@@ -1137,18 +1141,22 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             int applicationReleaseId = applicationDTO.getApplicationReleaseDTOs().get(0).getId();
 
             List<String> subscriptionList = new ArrayList<>();
+            int count = 0;
 
             if (SubscriptionType.USER.toString().equalsIgnoreCase(subType)) {
                 subscriptionList = subscriptionDAO
                         .getAppSubscribedUsers(offsetValue, limitValue, applicationReleaseId, tenantId);
+                count = subscriptionDAO.getSubscribedUserCount(applicationReleaseId, tenantId);
             } else if (SubscriptionType.ROLE.toString().equalsIgnoreCase(subType)) {
                 subscriptionList = subscriptionDAO
                         .getAppSubscribedRoles(offsetValue, limitValue, applicationReleaseId, tenantId);
+                count = subscriptionDAO.getSubscribedRoleCount(applicationReleaseId, tenantId);
             } else if (SubscriptionType.GROUP.toString().equalsIgnoreCase(subType)) {
                 subscriptionList = subscriptionDAO
                         .getAppSubscribedGroups(offsetValue, limitValue, applicationReleaseId, tenantId);
+                count = subscriptionDAO.getSubscribedGroupCount(applicationReleaseId, tenantId);
             }
-            int count = subscriptionList.size();
+
             paginationResult.setData(subscriptionList);
             paginationResult.setRecordsFiltered(count);
             paginationResult.setRecordsTotal(count);
