@@ -1,64 +1,59 @@
-import React, {Component} from 'react';
+import React from 'react';
 import {Button, Form, Select, Input, message, Modal, notification, Typography} from "antd";
 import axios from "axios";
 import {withConfigContext} from "../../context/ConfigContext";
 const { Option } = Select;
 const {Text} = Typography;
-let config = null;
-let roleSelector = [];
 
-class AddUser extends Component {
+class AddUser extends React.Component {
 
     constructor(props) {
         super(props);
-        config =  this.props.context;
+        this.config =  this.props.context;
         this.state = {
-            addModalVisible: false,
-            userStoreDomain:'PRIMARY',
-            userName: '',
-            firstName: '',
-            lastName: '',
-            emailAddress: '',
-            userRole: [],
+            isModalVisible: false,
+            roles : []
         }
     }
-    openAddModal = () => {
 
-        this.setState({
-            addModalVisible:true
-        });
+    componentDidMount() {
         this.getRole();
+    }
+
+    openAddModal = () => {
+        this.setState({
+            isModalVisible:true
+        });
     };
 
-    handleAddOk = e => {
-        this.props.form.validateFields(err => {
+    onSubmitHandler = e => {
+        this.props.form.validateFields((err, values) => {
             if (!err) {
-                this.onConfirmAddUser();
-                this.setState({
-                    addModalVisible: false,
-                });
+                this.onConfirmAddUser(values);
             }
         });
     };
 
-    onConfirmAddUser = () =>{
-        const config = this.props.context;
+    onConfirmAddUser = (value) =>{
         const userData = {
-            username : this.state.userStoreDomain +"/"+this.state.userName,
-            firstname : this.state.firstName,
-            lastname : this.state.lastName,
-            emailAddress : this.state.emailAddress,
-            roles : this.state.userRole
+            username : value.userStoreDomain +"/"+value.userName,
+            firstname : value.firstName,
+            lastname : value.lastName,
+            emailAddress : value.email,
+            roles : value.userRoles
         };
         axios.post(
-            window.location.origin + config.serverConfig.invoker.uri +
-            config.serverConfig.invoker.deviceMgt +
+            window.location.origin + this.config.serverConfig.invoker.uri +
+            this.config.serverConfig.invoker.deviceMgt +
             "/users",
             userData,
             {headers: {'Content-Type' : 'application-json'}}
         ).then(res => {
             if (res.status === 201) {
                 this.props.fetchUsers();
+                this.setState({
+                    isModalVisible: false,
+                });
                 notification["success"]({
                     message: "Done",
                     duration: 4,
@@ -82,39 +77,26 @@ class AddUser extends Component {
         });
     };
 
-    handleAddCancel = e => {
+    OnCancelHandler = e => {
         this.setState({
-            addModalVisible: false,
-        });
-    };
-
-    onChangeInputs = (e) =>{
-        let name = e.target.name;
-        let value = e.target.value;
-        this.setState({
-            [name] : value
-        });
-    };
-
-    onSelectInputs = value =>{
-        this.setState({
-            userRole: value
+            isModalVisible: false,
         });
     };
 
     getRole = () => {
-        const config = this.props.context;
-
-        let apiURL = window.location.origin + config.serverConfig.invoker.uri +
-            config.serverConfig.invoker.deviceMgt + "/roles?user-store="+this.state.userStoreDomain+"&limit=100";
+        let apiURL = window.location.origin + this.config.serverConfig.invoker.uri +
+            this.config.serverConfig.invoker.deviceMgt + "/roles?user-store=PRIMARY&limit=100";
 
         axios.get(apiURL).then(res => {
             if (res.status === 200) {
+                const roles = [];
                 for(let i=0; i<res.data.data.roles.length ; i++){
-                    roleSelector.push(<Option key={res.data.data.roles[i]}>{res.data.data.roles[i]}</Option>);
+                    roles.push(<Option key={res.data.data.roles[i]}>{res.data.data.roles[i]}</Option>);
                 }
+                this.setState({
+                    roles : roles
+                })
             }
-
         }).catch((error) => {
             if (error.hasOwnProperty("response") && error.response.status === 401) {
                 //todo display a popop with error
@@ -128,7 +110,6 @@ class AddUser extends Component {
                     description:"Error occurred while trying to load roles.",
                 });
             }
-
         })
     };
 
@@ -137,7 +118,7 @@ class AddUser extends Component {
         return (
             <div>
                 <div>
-                    <Button type="primary" icon="plus" size={"default"} onClick={this.openAddModal}>
+                    <Button type="primary" icon="plus" size={"default"} onClick={this.openAddModal} style={{marginBottom : '10px'}}>
                         Add User
                     </Button>
                 </div>
@@ -145,28 +126,30 @@ class AddUser extends Component {
                     <Modal
                         title="ADD NEW USER"
                         width="40%"
-                        visible={this.state.addModalVisible}
-                        onOk={this.handleAddOk}
-                        onCancel={this.handleAddCancel}
+                        visible={this.state.isModalVisible}
+                        onOk={this.onSubmitHandler}
+                        onCancel={this.OnCancelHandler}
                         footer={[
-                            <Button key="cancel" onClick={this.handleAddCancel}>
+                            <Button key="cancel" onClick={this.OnCancelHandler}>
                                 Cancel
                             </Button>,
-                            <Button key="submit" type="primary" onClick={this.handleAddOk}>
+                            <Button key="submit" type="primary" onClick={this.onSubmitHandler}>
                                 Submit
                             </Button>,
-                        ]}
-                    >
+                        ]}>
                         <div style={{alignItems:"center"}}>
                             <p>Create new user on IoT Server.</p>
                             <Form
                                 labelCol={{ span: 5 }}
-                                wrapperCol={{ span: 18 }}
-                            >
+                                wrapperCol={{ span: 18 }}>
                                 <Form.Item label="User Store Domain" style={{display:"block"}}>
-                                    <Select defaultValue="PRIMARY">
-                                        <Option value="PRIMARY">PRIMARY</Option>
-                                    </Select>
+                                    {getFieldDecorator('userStoreDomain', {
+                                        initialValue : 'PRIMARY'
+                                    })(
+                                        <Select>
+                                            <Option key="PRIMARY">PRIMARY</Option>
+                                        </Select>
+                                    )}
                                 </Form.Item>
                                 <Form.Item label="User Name" style={{display:"block"}}>
                                     {getFieldDecorator('userName', {
@@ -176,7 +159,7 @@ class AddUser extends Component {
                                                 message: 'This field is required. Username should be at least 3 characters long with no white spaces.',
                                             },
                                         ],
-                                    })(<Input name="userName" onChange={this.onChangeInputs}/>)}
+                                    })(<Input/>)}
                                 </Form.Item>
                                 <Form.Item label="First Name" style={{display:"block"}}>
                                     {getFieldDecorator('firstName', {
@@ -186,7 +169,7 @@ class AddUser extends Component {
                                                 message: 'This field is required',
                                             },
                                         ],
-                                    })(<Input name="firstName" onChange={this.onChangeInputs}/>)}
+                                    })(<Input/>)}
                                 </Form.Item>
                                 <Form.Item label="Last Name" style={{display:"block"}}>
                                     {getFieldDecorator('lastName', {
@@ -196,27 +179,28 @@ class AddUser extends Component {
                                                 message: 'This field is required',
                                             },
                                         ],
-                                    })(<Input name="lastName" onChange={this.onChangeInputs}/>)}
+                                    })(<Input/>)}
                                 </Form.Item>
                                 <Form.Item label="Email Address" style={{display:"block"}}>
                                     {getFieldDecorator('email', {
                                         rules: [
                                             {
+                                                type: 'email',
+                                                message: 'Invalid Email Address',
+                                            },
+                                            {
                                                 required: true,
                                                 message: 'This field is required',
                                             },
                                         ],
-                                    })(<Input name="emailAddress" onChange={this.onChangeInputs}/>)}
+                                    })(<Input/>)}
                                 </Form.Item>
-
                                 <Form.Item label="User Roles" style={{display:"block"}}>
                                     {getFieldDecorator('userRoles', {
                                     })(<Select
                                             mode="multiple"
-                                            style={{ width: '100%' }}
-                                            onChange={this.onSelectInputs}
-                                        >
-                                        {roleSelector}
+                                            style={{ width: '100%' }}>
+                                        {this.state.roles}
                                     </Select>)}
                                 </Form.Item>
                             </Form>
