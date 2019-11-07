@@ -253,9 +253,8 @@ public class RoleManagementServiceImpl implements RoleManagementService {
             roleInfo.setPermissionList(rolePermissions);
             String[] permListAr = new String[permList.size()];
             roleInfo.setPermissions(permList.toArray(permListAr));
-
             return Response.status(Response.Status.OK).entity(roleInfo).build();
-        } catch (UserStoreException | UserAdminException e) {
+        }catch (UserStoreException | UserAdminException e) {
             String msg = "Error occurred while retrieving the user role '" + roleName + "'";
             log.error(msg, e);
             return Response.serverError().entity(
@@ -264,10 +263,16 @@ public class RoleManagementServiceImpl implements RoleManagementService {
     }
 
     private List<String> iteratePermissions(UIPermissionNode uiPermissionNode, List<String> list) {
+        //To prevent NullPointer exceptions
+        if (uiPermissionNode == null){
+            return list;
+        }
         for (UIPermissionNode permissionNode : uiPermissionNode.getNodeList()) {
-            list.add(permissionNode.getResourcePath());
-            if (permissionNode.getNodeList() != null && permissionNode.getNodeList().length > 0) {
-                iteratePermissions(permissionNode, list);
+            if (permissionNode != null){
+                list.add(permissionNode.getResourcePath());
+                if (permissionNode.getNodeList() != null && permissionNode.getNodeList().length > 0) {
+                    iteratePermissions(permissionNode, list);
+                }
             }
         }
         return list;
