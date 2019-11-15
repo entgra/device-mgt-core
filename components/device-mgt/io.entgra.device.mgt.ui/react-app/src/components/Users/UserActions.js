@@ -22,28 +22,28 @@ class UserActions extends React.Component {
         super(props);
         this.config =  this.props.context;
         this.state = {
-            editModalVisible: false,
-            resetPasswordModalVisible: false,
+            isEditModalVisible: false,
+            isResetPasswordModalVisible: false,
             rolesData: [],
         }
     }
     openEditModal = () =>{
         this.setState({
-            editModalVisible: true,
+            isEditModalVisible: true,
         });
         this.fetchRoles(this.props.data.username);
 
     };
     openPasswordResetModal = () =>{
         this.setState({
-            resetPasswordModalVisible: true,
+            isResetPasswordModalVisible: true,
         })
     };
 
     onCancelHandler = () =>{
         this.setState({
-            editModalVisible: false,
-            resetPasswordModalVisible: false,
+            isEditModalVisible: false,
+            isResetPasswordModalVisible: false,
         })
     };
 
@@ -77,7 +77,7 @@ class UserActions extends React.Component {
             if (res.status === 200) {
                 this.props.fetchUsers();
                 this.setState({
-                    resetPasswordModalVisible: false,
+                    isResetPasswordModalVisible: false,
                 });
                 notification["success"]({
                     message: "Done",
@@ -223,7 +223,7 @@ class UserActions extends React.Component {
             if (res.status === 200) {
                 this.props.fetchUsers();
                 this.setState({
-                    editModalVisible: false,
+                    isEditModalVisible: false,
                 });
                 notification["success"]({
                     message: "Done",
@@ -278,7 +278,7 @@ class UserActions extends React.Component {
                     <Modal
                         title="Reset Password"
                         width="40%"
-                        visible={this.state.resetPasswordModalVisible}
+                        visible={this.state.isResetPasswordModalVisible}
                         onCancel={this.onCancelHandler}
                         onOk={this.onSavePassword}
                         footer={[
@@ -329,7 +329,7 @@ class UserActions extends React.Component {
                     <Modal
                         title="EDIT USER"
                         width="40%"
-                        visible={this.state.editModalVisible}
+                        visible={this.state.isEditModalVisible}
                         onOk={this.handleEditOk}
                         onCancel={this.onCancelHandler}
                         footer={[

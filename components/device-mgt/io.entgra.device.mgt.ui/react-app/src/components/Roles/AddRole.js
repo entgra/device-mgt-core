@@ -11,6 +11,7 @@ class AddRole extends React.Component {
     constructor(props) {
         super(props);
         this.config = this.props.context;
+        this.expandKeys = [];
         this.state = {
             isAddRoleModalVisible: false,
             isAddPermissionModalVisible: false,
@@ -20,7 +21,6 @@ class AddRole extends React.Component {
             expandedKeys: [],
             autoExpandParent: true,
             checkedKeys: [],
-            selectedKeys: [],
             isNodeList: false,
         }
     }
@@ -38,6 +38,17 @@ class AddRole extends React.Component {
         });
     };
 
+    getCheckedPermissionsList = (data) =>{
+        data.forEach(item => {
+            if (item !== null) {
+                this.expandKeys.push(item.resourcePath);
+                this.getCheckedPermissionsList(item.nodeList);
+            }else{
+                return null;
+            }
+        });
+    };
+
     onAddRole = e => {
         this.props.form.validateFields((err, values) => {
             if (!err) {
@@ -48,9 +59,6 @@ class AddRole extends React.Component {
     };
 
     onExpand = expandedKeys => {
-        console.log('onExpand', expandedKeys);
-        // if not set autoExpandParent to false, if children expanded, parent can not collapse.
-        // or, you can remove all expanded children keys.
         this.setState({
             expandedKeys,
             autoExpandParent: false,
@@ -58,13 +66,7 @@ class AddRole extends React.Component {
     };
 
     onCheck = checkedKeys => {
-        console.log('onCheck', checkedKeys);
         this.setState({checkedKeys});
-    };
-
-    onSelect = (selectedKeys, info) => {
-        console.log('onSelect', info);
-        this.setState({selectedKeys});
     };
 
     onConfirmAddRole = (value) => {
@@ -114,11 +116,9 @@ class AddRole extends React.Component {
     };
 
     renderTreeNodes = (data) => {
-        console.log("rendering")
-        data.map(item => {
+        return data.map(item => {
             if (item !== null) {
                 if (item.hasOwnProperty("nodeList")) {
-                    // console.log(item.resourcePath);
                     return (
                         <TreeNode title={item.displayName} key={item.resourcePath} dataRef={item}>
                             {this.renderTreeNodes(item.nodeList)}
@@ -126,6 +126,49 @@ class AddRole extends React.Component {
                     );
                 }
                 return <TreeNode key={item.resourcePath} {...item}/>;
+            }
+            else{
+                return <TreeNode/>;
+            }
+        });
+    };
+
+    onAssignPermissions = () =>{
+        const roleData = {
+            roleName : this.state.roleName,
+            permissions : this.state.checkedKeys
+        };
+        axios.put(
+            window.location.origin + this.config.serverConfig.invoker.uri +
+            this.config.serverConfig.invoker.deviceMgt +
+            "/roles/"+ this.state.roleName,
+            roleData,
+            {headers: {'Content-Type' : 'application-json'}}
+        ).then(res => {
+            if (res.status === 200) {
+                this.props.fetchUsers();
+                notification["success"]({
+                    message: "Done",
+                    duration: 4,
+                    description:
+                        "Successfully Updated the Permissions.",
+                });
+                this.setState({
+                    isAddPermissionModalVisible : false
+                });
+            }
+        }).catch((error) => {
+            if (error.hasOwnProperty("response") && error.response.status === 401) {
+                //todo display a popop with error
+                message.error('You are not logged in');
+                window.location.href = window.location.origin + '/entgra/login';
+            } else {
+                notification["error"]({
+                    message: "There was a problem",
+                    duration: 0,
+                    description:
+                        "Error occurred while trying to add permissions.",
+                });
             }
         });
     };
@@ -136,12 +179,12 @@ class AddRole extends React.Component {
 
         axios.get(apiURL).then(res => {
             if (res.status === 200) {
+                this.getCheckedPermissionsList(res.data.data.nodeList);
                 this.setState({
                     nodeList: res.data.data.nodeList,
                     isNodeList: true,
+                    expandedKeys : this.expandKeys
                 });
-                // this.state.nodeList.push(res.data.data.nodeList);
-                // console.log(this.state.nodeList);
 
             }
         }).catch((error) => {
@@ -261,13 +304,14 @@ class AddRole extends React.Component {
                         title="CHANGE ROLE PERMISSION"
                         width="40%"
                         visible={this.state.isAddPermissionModalVisible}
-                        onOk={this.onSubmitHandler}
+                        onOk={this.onAssignPermissions}
                         onCancel={this.onCancelHandler}
+                        bodyStyle={{overflowY:"scroll", maxHeight:'500px', marginLeft:'10px'}}
                         footer={[
                             <Button key="cancel" onClick={this.onCancelHandler}>
                                 Cancel
                             </Button>,
-                            <Button key="submit" type="primary" onClick={this.onSubmitHandler}>
+                            <Button key="submit" type="primary" onClick={this.onAssignPermissions}>
                                 Assign
                             </Button>,
                         ]}>
@@ -280,9 +324,7 @@ class AddRole extends React.Component {
                                         expandedKeys={this.state.expandedKeys}
                                         autoExpandParent={this.state.autoExpandParent}
                                         onCheck={this.onCheck}
-                                        checkedKeys={this.state.checkedKeys}
-                                        onSelect={this.onSelect}
-                                        selectedKeys={this.state.selectedKeys}>
+                                        checkedKeys={this.state.checkedKeys}>
                                         {this.renderTreeNodes(this.state.nodeList)}
                                     </Tree>
                                 )}

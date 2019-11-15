@@ -15,8 +15,6 @@ import {
 } from "antd";
 import axios from "axios";
 import {withConfigContext} from "../../context/ConfigContext";
-import TimeAgo from "javascript-time-ago/modules/JavascriptTimeAgo";
-import en from "javascript-time-ago/locale/en";
 const { Option } = Select;
 const {Text} = Typography;
 const { TreeNode } = Tree;
@@ -25,9 +23,11 @@ class RoleAction extends React.Component {
     constructor(props) {
         super(props);
         this.config =  this.props.context;
-        TimeAgo.addLocale(en);
+        this.selected = [];
+        this.expandKeys = [];
         this.state = {
             roleData: [],
+            nodeList : [],
             isNodeList: false,
             users : [],
             isEditRoleModalVisible: false,
@@ -35,7 +35,6 @@ class RoleAction extends React.Component {
             expandedKeys: [],
             autoExpandParent: true,
             checkedKeys: [],
-            selectedKeys: [],
         };
     }
 
@@ -44,7 +43,6 @@ class RoleAction extends React.Component {
             this.config.serverConfig.invoker.deviceMgt +
             "/roles/"+ this.props.data;
 
-        //send request to the invokerss
         axios.get(apiUrl).then(res => {
             if (res.status === 200) {
                 this.setState({
@@ -81,13 +79,13 @@ class RoleAction extends React.Component {
 
         axios.get(apiURL).then(res => {
             if (res.status === 200) {
+                this.getCheckedPermissions(res.data.data.nodeList);
                 this.setState({
                     nodeList : res.data.data.nodeList,
                     isNodeList: true,
+                    checkedKeys : this.selected,
+                    expandedKeys : this.expandKeys
                 });
-                // this.state.nodeList.push(res.data.data.nodeList);
-                // console.log(this.state.nodeList);
-
             }
         }).catch((error) => {
             if (error.hasOwnProperty("response") && error.response.status === 401) {
@@ -103,12 +101,36 @@ class RoleAction extends React.Component {
             }
         })
     };
+    
+    getCheckedPermissions = (data) =>{
+        data.forEach(item => {
+            if (item !== null) {
+                this.expandKeys.push(item.resourcePath);
+                if (item.isSelected) {
+                    this.selected.push(item.resourcePath);
+                }
+                this.getCheckedPermissions(item.nodeList);
+            }else{
+                return null;
+            }
+        });
+    };
+
+    onExpand = expandedKeys => {
+        this.setState({
+            expandedKeys,
+            autoExpandParent: false,
+        });
+    };
+
+    onCheck = checkedKeys => {
+        this.setState({checkedKeys});
+    };
 
     renderTreeNodes = (data) => {
-        data.map(item => {
-            if(item!==null){
+        return data.map(item => {
+            if (item !== null) {
                 if (item.hasOwnProperty("nodeList")) {
-                    // console.log(item.resourcePath);
                     return (
                         <TreeNode title={item.displayName} key={item.resourcePath} dataRef={item}>
                             {this.renderTreeNodes(item.nodeList)}
@@ -116,8 +138,9 @@ class RoleAction extends React.Component {
                     );
                 }
                 return <TreeNode key={item.resourcePath} {...item}/>;
+            } else{
+                return <TreeNode/>;
             }
-
         });
     };
 
@@ -177,6 +200,46 @@ class RoleAction extends React.Component {
         });
     };
 
+    onAssignPermission = () =>{
+        const roleData = {
+            roleName : this.props.data,
+            permissions : this.state.checkedKeys
+        };
+        axios.put(
+            window.location.origin + this.config.serverConfig.invoker.uri +
+            this.config.serverConfig.invoker.deviceMgt +
+            "/roles/"+ this.props.data,
+            roleData,
+            {headers: {'Content-Type' : 'application-json'}}
+        ).then(res => {
+            if (res.status === 200) {
+                this.props.fetchUsers();
+                notification["success"]({
+                    message: "Done",
+                    duration: 4,
+                    description:
+                        "Successfully Updated the Permissions.",
+                });
+                this.setState({
+                    isEditPermissionModalVisible : false
+                });
+            }
+        }).catch((error) => {
+            if (error.hasOwnProperty("response") && error.response.status === 401) {
+                //todo display a popop with error
+                message.error('You are not logged in');
+                window.location.href = window.location.origin + '/entgra/login';
+            } else {
+                notification["error"]({
+                    message: "There was a problem",
+                    duration: 0,
+                    description:
+                        "Error occurred while trying to add permissions.",
+                });
+            }
+        });
+    };
+
     loadUsersList = (value) => {
         let apiURL = window.location.origin + this.config.serverConfig.invoker.uri +
             this.config.serverConfig.invoker.deviceMgt + "/users/search/usernames?filter="+value+"&domain=Primary";
@@ -208,7 +271,6 @@ class RoleAction extends React.Component {
     };
 
     onDeleteRole = () => {
-        // console.log(event);
         axios.delete(
             window.location.origin + this.config.serverConfig.invoker.uri +
             this.config.serverConfig.invoker.deviceMgt +
@@ -332,32 +394,29 @@ class RoleAction extends React.Component {
                         title="CHANGE ROLE PERMISSION"
                         width="40%"
                         visible={this.state.isEditPermissionModalVisible}
-                        onOk={this.onSubmitHandler}
+                        onOk={this.onAssignPermission}
                         onCancel={this.onCancelHandler}
                         footer={[
                             <Button key="cancel" onClick={this.onCancelHandler}>
                                 Cancel
                             </Button>,
-                            <Button key="submit" type="primary" onClick={this.onSubmitHandler}>
+                            <Button key="submit" type="primary" onClick={this.onAssignPermission}>
                                 Assign
                             </Button>,
-                        ]}>
-                        <div style={{alignItems:"center"}}>
-                            <div>
-                                {(this.state.isNodeList) &&(
-                                    <Tree
-                                        checkable
-                                        onExpand={this.onExpand}
-                                        expandedKeys={this.state.expandedKeys}
-                                        autoExpandParent={this.state.autoExpandParent}
-                                        onCheck={this.onCheck}
-                                        checkedKeys={this.state.checkedKeys}
-                                        onSelect={this.onSelect}
-                                        selectedKeys={this.state.selectedKeys}>
-                                        {this.renderTreeNodes(this.state.nodeList)}
-                                    </Tree>
-                                )}
-                            </div>
+                        ]}
+                        bodyStyle={{overflowY:"scroll", maxHeight:'500px', marginLeft:'10px'}}>
+                        <div>
+                            {(this.state.isNodeList) &&(
+                                <Tree
+                                    checkable
+                                    onExpand={this.onExpand}
+                                    expandedKeys={this.state.expandedKeys}
+                                    autoExpandParent={this.state.autoExpandParent}
+                                    onCheck={this.onCheck}
+                                    checkedKeys={this.state.checkedKeys}>
+                                    {this.renderTreeNodes(this.state.nodeList)}
+                                </Tree>
+                            )}
                         </div>
                     </Modal>
                 </div>
