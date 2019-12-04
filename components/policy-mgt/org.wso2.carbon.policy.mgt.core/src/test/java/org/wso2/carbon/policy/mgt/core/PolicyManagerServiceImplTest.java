@@ -24,6 +24,8 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.device.mgt.common.*;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
+import org.wso2.carbon.device.mgt.common.exceptions.InvalidDeviceException;
 import org.wso2.carbon.device.mgt.common.group.mgt.DeviceGroup;
 import org.wso2.carbon.device.mgt.common.group.mgt.GroupManagementException;
 import org.wso2.carbon.device.mgt.common.operation.mgt.Operation;
@@ -92,7 +94,7 @@ public class  PolicyManagerServiceImplTest extends BasePolicyManagementDAOTest {
         operationManager = new OperationManagerImpl(DEVICE_TYPE_A, deviceManagementService);
         enrollDevice(DEVICE1, DEVICE_TYPE_A);
         createDeviceGroup(GROUP1);
-        DeviceGroup group1 = groupMgtService.getGroup(GROUP1);
+        DeviceGroup group1 = groupMgtService.getGroup(GROUP1, false);
         addDeviceToGroup(new DeviceIdentifier(DEVICE1, DEVICE_TYPE_A), GROUP1);
 
         Profile profile = new Profile();

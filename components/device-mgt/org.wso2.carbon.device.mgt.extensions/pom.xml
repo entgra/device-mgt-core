@@ -22,7 +22,7 @@
     <parent>
         <artifactId>device-mgt</artifactId>
         <groupId>org.wso2.carbon.devicemgt</groupId>
-        <version>3.2.13-SNAPSHOT</version>
+        <version>4.1.6-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -75,6 +75,11 @@
         <dependency>
             <groupId>org.wso2.carbon.devicemgt</groupId>
             <artifactId>org.wso2.carbon.device.mgt.extensions.pull.notification</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon.devicemgt</groupId>
+            <artifactId>org.wso2.carbon.device.application.mgt.common</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -154,7 +159,6 @@
                             javax.xml.namespace;resolution:=optional,
                             org.wso2.carbon.context,
                             org.wso2.carbon.device.mgt.common.*,
-                            org.wso2.carbon.device.mgt.common.license.mgt,
                             org.wso2.carbon.registry.api,
                             org.wso2.carbon.registry.core,
                             org.wso2.carbon.registry.core.exceptions,

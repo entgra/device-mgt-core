@@ -14,6 +14,23 @@
 * KIND, either express or implied.  See the License for the
 * specific language governing permissions and limitations
 * under the License.
+*
+*
+* Copyright (c) 2019, Entgra (Pvt) Ltd. (http://entgra.io) All Rights Reserved.
+*
+* Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
+* Version 2.0 (the "License"); you may not use this file except
+* in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied. See the License for the
+* specific language governing permissions and limitations
+* under the License.
 */
 
 package org.wso2.carbon.policy.mgt.core.impl;
@@ -23,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
-import org.wso2.carbon.device.mgt.common.DeviceManagementException;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.group.mgt.DeviceGroup;
 import org.wso2.carbon.device.mgt.common.group.mgt.GroupManagementException;
 import org.wso2.carbon.device.mgt.common.policy.mgt.Policy;
@@ -81,7 +98,7 @@ public class PolicyInformationPointImpl implements PolicyInformationPoint {
                 pipDevice.setDeviceIdentifier(deviceIdentifier);
                 pipDevice.setUserId(device.getEnrolmentInfo().getOwner());
                 pipDevice.setOwnershipType(device.getEnrolmentInfo().getOwnership().toString());
-                pipDevice.setDeviceGroups(groupManagementProviderService.getGroups(pipDevice.getDeviceIdentifier()));
+                pipDevice.setDeviceGroups(groupManagementProviderService.getGroups(pipDevice.getDeviceIdentifier(), false));
 
             } else {
                 throw new PolicyManagementException("Device details cannot be null.");
@@ -113,6 +130,7 @@ public class PolicyInformationPointImpl implements PolicyInformationPoint {
         }
 
         policies = policyFilter.filterActivePolicies(policies);
+        policies = policyFilter.filterGeneralPolicies(policies);
 
         if (pipDevice.getDeviceType() != null) {
             policies = policyFilter.filterDeviceTypeBasedPolicies(pipDevice.getDeviceType().getName(), policies);

@@ -30,8 +30,8 @@ import org.wso2.carbon.CarbonConstants;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
-import org.wso2.carbon.device.mgt.common.DeviceManagementException;
-import org.wso2.carbon.device.mgt.common.DeviceNotFoundException;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceNotFoundException;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
 import org.wso2.carbon.device.mgt.common.authorization.DeviceAccessAuthorizationException;
 import org.wso2.carbon.device.mgt.common.authorization.DeviceAuthorizationResult;
@@ -167,7 +167,7 @@ public class DeviceAccessAuthorizationServiceTest {
         GroupManagementProviderService groupManagementProviderService = DeviceManagementDataHolder.getInstance()
                 .getGroupManagementProviderService();
         groupManagementProviderService.createDefaultGroup(DEFAULT_GROUP);
-        int groupId = groupManagementProviderService.getGroup(DEFAULT_GROUP).getGroupId();
+        int groupId = groupManagementProviderService.getGroup(DEFAULT_GROUP, false).getGroupId();
         //Sharing group with admin and non admin roles
         groupManagementProviderService.manageGroupSharing(groupId, new ArrayList<>(Arrays.asList(ADMIN_ROLE,
                 NON_ADMIN_ROLE)));

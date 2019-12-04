@@ -48,12 +48,14 @@ public class GenericGroupDAOImpl extends AbstractGroupDAOImpl {
         String groupName = request.getGroupName();
         boolean hasGroupName = false;
         String owner = request.getOwner();
+        String status = request.getStatus();
         boolean hasOwner = false;
+        boolean hasStatus = false;
         boolean hasLimit = request.getRowCount() != 0;
 
         try {
             Connection conn = GroupManagementDAOFactory.getConnection();
-            String sql = "SELECT ID, DESCRIPTION, GROUP_NAME, OWNER FROM DM_GROUP WHERE TENANT_ID = ?";
+            String sql = "SELECT ID, DESCRIPTION, GROUP_NAME, OWNER, STATUS FROM DM_GROUP WHERE TENANT_ID = ?";
             if (groupName != null && !groupName.isEmpty()) {
                 sql += " AND UPPER(GROUP_NAME) LIKE ?";
                 hasGroupName = true;
@@ -61,6 +63,10 @@ public class GenericGroupDAOImpl extends AbstractGroupDAOImpl {
             if (owner != null && !owner.isEmpty()) {
                 sql += " AND UPPER(OWNER) LIKE ?";
                 hasOwner = true;
+            }
+            if (status != null && !status.isEmpty()) {
+                sql += " AND STATUS = ?";
+                hasStatus = true;
             }
             if (hasLimit) {
                 sql += " LIMIT ?, ?";
@@ -74,6 +80,9 @@ public class GenericGroupDAOImpl extends AbstractGroupDAOImpl {
             }
             if (hasOwner) {
                 stmt.setString(paramIndex++, owner + "%");
+            }
+            if (hasStatus) {
+                stmt.setString(paramIndex++, status.toUpperCase());
             }
             if (hasLimit) {
                 stmt.setInt(paramIndex++, request.getStartIndex());
@@ -111,7 +120,7 @@ public class GenericGroupDAOImpl extends AbstractGroupDAOImpl {
 
         try {
             Connection conn = GroupManagementDAOFactory.getConnection();
-            String sql = "SELECT ID, DESCRIPTION, GROUP_NAME, OWNER FROM DM_GROUP WHERE TENANT_ID = ?";
+            String sql = "SELECT ID, DESCRIPTION, GROUP_NAME, OWNER, STATUS FROM DM_GROUP WHERE TENANT_ID = ?";
             if (groupName != null && !groupName.isEmpty()) {
                 sql += " AND GROUP_NAME LIKE ?";
                 hasGroupName = true;

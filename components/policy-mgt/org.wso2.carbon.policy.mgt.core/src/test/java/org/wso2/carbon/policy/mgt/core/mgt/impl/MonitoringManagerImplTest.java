@@ -12,8 +12,8 @@ import org.testng.internal.collections.Pair;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
-import org.wso2.carbon.device.mgt.common.DeviceManagementException;
-import org.wso2.carbon.device.mgt.common.IllegalTransactionStateException;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
+import org.wso2.carbon.device.mgt.common.exceptions.IllegalTransactionStateException;
 import org.wso2.carbon.device.mgt.common.group.mgt.DeviceGroup;
 import org.wso2.carbon.device.mgt.common.operation.mgt.OperationManager;
 import org.wso2.carbon.device.mgt.common.policy.mgt.DeviceGroupWrapper;
@@ -97,7 +97,7 @@ public class MonitoringManagerImplTest extends BasePolicyManagementDAOTest{
         enrollDevice(DEVICE5, DEVICE_TYPE_E);
         createDeviceGroup(GROUP5);
         addDeviceToGroup(new DeviceIdentifier(DEVICE5, DEVICE_TYPE_E), GROUP5);
-        DeviceGroup group5 = groupMgtService.getGroup(GROUP5);
+        DeviceGroup group5 = groupMgtService.getGroup(GROUP5, false);
 
         device5 = deviceMgtService.getAllDevices().get(0);
 

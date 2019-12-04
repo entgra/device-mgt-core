@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.wso2.carbon.devicemgt</groupId>
         <artifactId>email-sender</artifactId>
-        <version>3.2.13-SNAPSHOT</version>
+        <version>4.1.6-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -56,7 +56,6 @@
                             org.osgi.framework,
                             org.osgi.service.component,
                             org.apache.commons.logging,
-                            javax.xml.*,
 			                javax.xml.parsers;version="${javax.xml.parsers.import.pkg.version}";resolution:=optional,
                             org.wso2.carbon.context,
                             org.wso2.carbon.utils.*,

@@ -20,7 +20,7 @@ package org.wso2.carbon.device.mgt.core.service;
 
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
-import org.wso2.carbon.device.mgt.common.DeviceNotFoundException;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceNotFoundException;
 import org.wso2.carbon.device.mgt.common.GroupPaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
 import org.wso2.carbon.device.mgt.common.group.mgt.DeviceGroup;
@@ -69,55 +69,63 @@ public interface GroupManagementProviderService {
      * Get the device group provided the device group id.
      *
      * @param groupId of the group.
+     * @param requireGroupProps to include group properties
      * @return group with details.
      * @throws GroupManagementException
      */
-    DeviceGroup getGroup(int groupId) throws GroupManagementException;
+    DeviceGroup getGroup(int groupId, boolean requireGroupProps) throws GroupManagementException;
 
     /**
      * Get the device group provided the device group name.
      *
      * @param groupName of the group.
+     * @param requireGroupProps to include group properties
      * @return group with details.
      * @throws GroupManagementException
      */
-    DeviceGroup getGroup(String groupName) throws GroupManagementException;
+    DeviceGroup getGroup(String groupName, boolean requireGroupProps) throws GroupManagementException;
 
     /**
      * Get all device groups in tenant.
      *
+     * @param requireGroupProps to include group properties
      * @return list of groups.
      * @throws GroupManagementException
      */
-    List<DeviceGroup> getGroups() throws GroupManagementException;
+    List<DeviceGroup> getGroups(boolean requireGroupProps) throws GroupManagementException;
 
     /**
      * Get all device groups for user.
      *
      * @param username   of the user.
+     * @param requireGroupProps to include group properties
      * @return list of groups
      * @throws GroupManagementException
      */
-    List<DeviceGroup> getGroups(String username) throws GroupManagementException;
+    List<DeviceGroup> getGroups(String username, boolean requireGroupProps) throws GroupManagementException;
 
     /**
      * Get device groups with pagination.
      *
      * @param paginationRequest to filter results
+     * @param requireGroupProps to include group properties
      * @return list of groups.
      * @throws GroupManagementException
      */
-    PaginationResult getGroups(GroupPaginationRequest paginationRequest) throws GroupManagementException;
+    PaginationResult getGroups(GroupPaginationRequest paginationRequest, boolean requireGroupProps)
+            throws GroupManagementException;
 
     /**
      * Get device groups belongs to specified user with pagination.
      *
      * @param username   of the user.
      * @param paginationRequest to filter results
+     * @param requireGroupProps to include group properties
      * @return list of groups.
      * @throws GroupManagementException
      */
-    PaginationResult getGroups(String username, GroupPaginationRequest paginationRequest) throws GroupManagementException;
+    PaginationResult getGroups(String username, GroupPaginationRequest paginationRequest, boolean requireGroupProps)
+            throws GroupManagementException;
 
     /**
      * Get all device group count in tenant
@@ -126,6 +134,14 @@ public interface GroupManagementProviderService {
      * @throws GroupManagementException
      */
     int getGroupCount() throws GroupManagementException;
+
+    /**
+     * Get all device group count in tenant by group status
+     *
+     * @return group count
+     * @throws GroupManagementException
+     */
+    int getGroupCountByStatus(String status) throws GroupManagementException;
 
     /**
      * Get device group count of user
@@ -161,10 +177,23 @@ public interface GroupManagementProviderService {
      * @param groupId   of the group
      * @param startIndex for pagination.
      * @param rowCount   for pagination.
+     * @param requireDeviceProps to include device properties.
      * @return list of devices in group.
      * @throws GroupManagementException
      */
-    List<Device> getDevices(int groupId, int startIndex, int rowCount, boolean requireDeviceProps) throws GroupManagementException;
+    List<Device> getDevices(int groupId, int startIndex, int rowCount, boolean requireDeviceProps)
+            throws GroupManagementException;
+
+    /**
+     * Get all devices in device group as paginated result.
+     *
+     * @param groupName of the group.
+     * @param requireDeviceProps to include device properties.
+     * @return list of devices in group.
+     * @throws GroupManagementException
+     */
+    List<Device> getAllDevicesOfGroup(String groupName, boolean requireDeviceProps) throws GroupManagementException;
+
 
     /**
      * This method is used to retrieve the device count of a given group.
@@ -192,8 +221,8 @@ public interface GroupManagementProviderService {
      * @param deviceIdentifiers of devices.
      * @throws GroupManagementException
      */
-    void removeDevice(int groupId, List<DeviceIdentifier> deviceIdentifiers) throws GroupManagementException,
-                                                                                       DeviceNotFoundException;
+    void removeDevice(int groupId, List<DeviceIdentifier> deviceIdentifiers)
+            throws GroupManagementException, DeviceNotFoundException;
     /**
      * Get device groups of user with permission.
      *
@@ -202,7 +231,8 @@ public interface GroupManagementProviderService {
      * @return group list with specified permissions.
      * @throws GroupManagementException
      */
-    List<DeviceGroup> getGroups(String username, String permission) throws GroupManagementException;
+    List<DeviceGroup> getGroups(String username, String permission, boolean requireGroupProps)
+            throws GroupManagementException;
 
     /**
      * Get groups which contains particular device.
@@ -211,7 +241,7 @@ public interface GroupManagementProviderService {
      * @return groups contain the device.
      * @throws GroupManagementException
      */
-    List<DeviceGroup> getGroups(DeviceIdentifier deviceIdentifier) throws GroupManagementException;
+    List<DeviceGroup> getGroups(DeviceIdentifier deviceIdentifier, boolean requireGroupProps) throws GroupManagementException;
 
     /**
      * Checks for the default group existence and create group based on device ownership.

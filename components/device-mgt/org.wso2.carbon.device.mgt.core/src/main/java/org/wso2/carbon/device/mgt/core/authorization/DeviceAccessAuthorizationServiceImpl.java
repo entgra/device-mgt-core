@@ -23,7 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.CarbonConstants;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
-import org.wso2.carbon.device.mgt.common.DeviceManagementException;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.authorization.DeviceAccessAuthorizationException;
 import org.wso2.carbon.device.mgt.common.authorization.DeviceAccessAuthorizationService;
 import org.wso2.carbon.device.mgt.common.authorization.DeviceAuthorizationResult;
@@ -79,7 +79,7 @@ public class DeviceAccessAuthorizationServiceImpl implements DeviceAccessAuthori
                 }
             }
             return true;
-        } catch (GroupManagementException | UserStoreException e) {
+        } catch (GroupManagementException e) {
             throw new DeviceAccessAuthorizationException("Unable to authorize the access to device : " +
                                                          deviceIdentifier.getId() + " for the user : " +
                                                          username, e);
@@ -152,7 +152,7 @@ public class DeviceAccessAuthorizationServiceImpl implements DeviceAccessAuthori
                     } else {
                         deviceAuthorizationResult.addUnauthorizedDevice(deviceIdentifier);
                     }
-                } catch (GroupManagementException | UserStoreException e) {
+                } catch (GroupManagementException e) {
                     throw new DeviceAccessAuthorizationException("Unable to authorize the access to device : " +
                                                                  deviceIdentifier.getId() + " for the user : " +
                                                                  username, e);
@@ -192,13 +192,13 @@ public class DeviceAccessAuthorizationServiceImpl implements DeviceAccessAuthori
     }
 
     private boolean isAuthorizedViaGroup(String username, DeviceIdentifier deviceIdentifier, String groupPermission)
-            throws GroupManagementException, UserStoreException {
+            throws GroupManagementException {
         List<DeviceGroup> authorizedGroups =
                 DeviceManagementDataHolder.getInstance().getGroupManagementProviderService()
-                        .getGroups(username, groupPermission);
+                        .getGroups(username, groupPermission, false);
         List<DeviceGroup> groupsWithDevice =
                 DeviceManagementDataHolder.getInstance().getGroupManagementProviderService()
-                        .getGroups(deviceIdentifier);
+                        .getGroups(deviceIdentifier, false);
         for (DeviceGroup group : authorizedGroups) {
             Iterator<DeviceGroup> groupsWithDeviceIterator = groupsWithDevice.iterator();
             while (groupsWithDeviceIterator.hasNext()) {
