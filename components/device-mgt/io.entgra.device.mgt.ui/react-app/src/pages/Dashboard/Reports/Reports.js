@@ -21,12 +21,17 @@ import {
     PageHeader,
     Typography,
     Breadcrumb,
-    Icon
+    Icon,
+    Col,
+    Row, Select,
+    Radio, Card
 } from "antd";
 import {Link} from "react-router-dom";
 import ReportDeviceTable from "../../../components/Devices/ReportDevicesTable";
 import Filter from "../../../components/Reports/Filter";
 import DateRangePicker from "../../../components/Reports/DateRangePicker";
+import ReportGadget from "../../../components/Reports/ReportGadget";
+import ReportTopics from "../../../components/Reports/ReportTopics";
 
 const {Paragraph} = Typography;
 
@@ -37,17 +42,16 @@ class Reports extends React.Component {
         super(props);
         this.routes = props.routes;
         this.state = {
-            paramsObject:{}
+            paramsObject:{},
         }
     }
-
-    //Get modified value from datepicker and set it to paramsObject
+        //Get modified value from datepicker and set it to paramsObject
     updateDurationValue = (modifiedFromDate,modifiedToDate) => {
         let tempParamObj = this.state.paramsObject;
         tempParamObj.from = modifiedFromDate;
         tempParamObj.to = modifiedToDate;
         this.setState({paramsObject:tempParamObj});
-    }
+    };
 
     //Get modified value from filters and set it to paramsObject
     updateFiltersValue = (modifiedValue,filterType) => {
@@ -64,13 +68,13 @@ class Reports extends React.Component {
                 }
             }
             this.setState({paramsObject:tempParamObj});
-    }
+    };
 
     render() {
         //Arrays for filters
         const statusObj = ['ALL','ACTIVE','INACTIVE','REMOVED'];
         const ownershipObj = ['ALL','BYOD','COPE'];
-        
+
         const params = {...this.state.paramsObject};
 
         return (
@@ -84,41 +88,34 @@ class Reports extends React.Component {
                     </Breadcrumb>
                     <div className="wrap">
                         <h3>Reports</h3>
-                        <Paragraph>
-                            To generate a report, select a duration and apply filters
-                        </Paragraph>
-                        <div style={{paddingBottom:'5px'}}>
-                            <table>
-                                <tbody>
-                                    <tr style={{fontSize:'12px'}}>
-                                        <td>Select Duration</td>
-                                        <td>Device Status</td>
-                                        <td>Device Ownership</td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <DateRangePicker
-                                                updateDurationValue={this.updateDurationValue}/>
-                                        </td>
-                                        <td>
-                                            <Filter
-                                                updateFiltersValue={this.updateFiltersValue}
-                                                dropDownItems={statusObj}
-                                                dropDownName={"Device Status"}/>
-                                        </td>
-                                        <td>
-                                            <Filter
-                                                updateFiltersValue={this.updateFiltersValue}
-                                                dropDownItems={ownershipObj}
-                                                dropDownName={"Device Ownership"}/>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div style={{backgroundColor:"#ffffff", borderRadius: 5}}>
-                            <ReportDeviceTable paramsObject={params}/>
-                        </div>
+                            {/*<table>*/}
+                            {/*    <tbody>*/}
+                            {/*        <tr style={{fontSize:'12px'}}>*/}
+                            {/*            <td>Select Duration</td>*/}
+                            {/*            <td>Device Status</td>*/}
+                            {/*            <td>Device Ownership</td>*/}
+                            {/*        </tr>*/}
+                            {/*        <tr>*/}
+                            {/*            <td>*/}
+                            {/*                <DateRangePicker*/}
+                            {/*                    updateDurationValue={this.updateDurationValue}/>*/}
+                            {/*            </td>*/}
+                            {/*            <td>*/}
+                            {/*                <Filter*/}
+                            {/*                    updateFiltersValue={this.updateFiltersValue}*/}
+                            {/*                    dropDownItems={statusObj}*/}
+                            {/*                    dropDownName={"Device Status"}/>*/}
+                            {/*            </td>*/}
+                            {/*            <td>*/}
+                            {/*                <Filter*/}
+                            {/*                    updateFiltersValue={this.updateFiltersValue}*/}
+                            {/*                    dropDownItems={ownershipObj}*/}
+                            {/*                    dropDownName={"Device Ownership"}/>*/}
+                            {/*            </td>*/}
+                            {/*        </tr>*/}
+                            {/*    </tbody>*/}
+                            {/*</table>*/}
+                            <ReportTopics/>
                     </div>
                 </PageHeader>
                 <div style={{background: '#f0f2f5', padding: 24, minHeight: 720}}>

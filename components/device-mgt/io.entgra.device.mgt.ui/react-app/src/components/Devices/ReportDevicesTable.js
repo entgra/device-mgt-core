@@ -185,6 +185,7 @@ class ReportDeviceTable extends React.Component {
                     data: res.data.data.devices,
                     pagination,
                 });
+                this.props.getStats(res.data.data.count);
             }
 
         }).catch((error) => {

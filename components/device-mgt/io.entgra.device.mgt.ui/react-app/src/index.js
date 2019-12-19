@@ -34,6 +34,7 @@ import DeviceTypes from "./pages/Dashboard/DeviceTypes/DeviceTypes";
 import DeviceEnroll from "./pages/Dashboard/Devices/DeviceEnroll";
 import AddNewPolicy from "./pages/Dashboard/Policies/AddNewPolicy";
 import Certificates from "./pages/Dashboard/Configurations/Certificates/Certificates";
+import ReportDetails from "./pages/Dashboard/Reports/ReportDetails";
 
 const routes = [
     {
@@ -99,6 +100,11 @@ const routes = [
             {
                 path: '/entgra/certificates',
                 component: Certificates,
+                exact: true
+            },
+            {
+                path: '/entgra/reportdetails',
+                component: ReportDetails,
                 exact: true
             }
         ]
