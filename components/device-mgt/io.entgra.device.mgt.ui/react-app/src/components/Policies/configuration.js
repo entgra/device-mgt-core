@@ -3,10 +3,10 @@ const jsonResponse = {
         "androidPolicy": {
             "Policy": [
                 {
-                    "id": "PASSCODE_POLICY",
                     "Name": "Passcode Policy",
                     "Panel": [
                         {
+                            "panelId": "PASSCODE_POLICY",
                             "PanelItem": [
                                 {
                                     "Label": "Allow Simple Value",
@@ -31,21 +31,59 @@ const jsonResponse = {
                                     "tooltip": "Minimum number of characters allowed in a passcode",
                                     "Optional": {
                                         "Option": [
-                                            "None",
-                                            "04",
-                                            "05",
-                                            "06",
-                                            "07",
-                                            "08",
-                                            "09",
-                                            "10",
-                                            "11",
-                                            "12",
-                                            "13",
-                                            "14",
-                                            "15"
+                                            {
+                                               "name" : "None",
+                                               "value": "",
+                                            },
+                                            {
+                                                "name" : "04",
+                                                "value": "4",
+                                            },
+                                            {
+                                                "name" : "05",
+                                                "value": "5",
+                                            },
+                                            {
+                                                "name" : "06",
+                                                "value": "6",
+                                            },
+                                            {
+                                                "name" : "07",
+                                                "value": "7",
+                                            },
+                                            {
+                                                "name" : "08",
+                                                "value": "8",
+                                            },
+                                            {
+                                                "name" : "09",
+                                                "value": "9",
+                                            },
+                                            {
+                                                "name" : "10",
+                                                "value": "10",
+                                            },
+                                            {
+                                                "name" : "11",
+                                                "value": "11",
+                                            },
+                                            {
+                                                "name" : "12",
+                                                "value": "12",
+                                            },
+                                            {
+                                                "name" : "13",
+                                                "value": "13",
+                                            },
+                                            {
+                                                "name" : "14",
+                                                "value": "14",
+                                            },
+                                            {
+                                                "name" : "15",
+                                                "value": "15",
+                                            },
                                         ]
-
                                     },
                                     "_type": "select",
                                     "_id": "minLength",
@@ -55,16 +93,33 @@ const jsonResponse = {
                                     "Label": "Minimum number of complex characters",
                                     "tooltip": "Minimum number of complex or non-alphanumeric characters allowed in a passcode",
                                     "Optional": {
-
                                         "Option": [
-                                            "None",
-                                            "01",
-                                            "02",
-                                            "03",
-                                            "04",
-                                            "05"
-                                        ]
+                                            {
+                                                "name" : "None",
+                                                "value": "",
+                                            },
+                                            {
+                                                "name" : "01",
+                                                "value": "1",
+                                            },
+                                            {
+                                                "name" : "02",
+                                                "value": "2",
+                                            },
+                                            {
+                                                "name" : "03",
+                                                "value": "3",
+                                            },
 
+                                            {
+                                                "name" : "04",
+                                                "value": "4",
+                                            },
+                                            {
+                                                "name" : "05",
+                                                "value": "5",
+                                            },
+                                        ]
                                     },
                                     "_type": "select",
                                     "_id": "minComplexChars"
@@ -102,15 +157,43 @@ const jsonResponse = {
                                     "tooltip": "The maximum number of incorrect password entries allowed. If the correct password is not entered within the allowed number of attempts, the data on the device will be erased.",
                                     "Optional": {
                                         "Option": [
-                                            "None",
-                                            "03",
-                                            "04",
-                                            "05",
-                                            "06",
-                                            "07",
-                                            "08",
-                                            "09",
-                                            "10"
+                                            {
+                                                "name" : "None",
+                                                "value": "",
+                                            },
+                                            {
+                                                "name" : "03",
+                                                "value": "3",
+                                            },
+
+                                            {
+                                                "name" : "04",
+                                                "value": "4",
+                                            },
+                                            {
+                                                "name" : "05",
+                                                "value": "5",
+                                            },
+                                            {
+                                                "name" : "06",
+                                                "value": "6",
+                                            },
+                                            {
+                                                "name" : "07",
+                                                "value": "7",
+                                            },
+                                            {
+                                                "name" : "08",
+                                                "value": "8",
+                                            },
+                                            {
+                                                "name" : "09",
+                                                "value": "9",
+                                            },
+                                            {
+                                                "name" : "10",
+                                                "value": "10",
+                                            },
                                         ]
                                     },
                                     "_type": "select",
@@ -125,138 +208,228 @@ const jsonResponse = {
                                     "tooltip": "Enabled Work profile passcode.",
                                     "Optional": {
                                         "checked": false,
-                                        "switch": {
-                                            "_linkedKey": "workProfilePasscode"
-                                        },
-                                        // "checked": false
+                                        "subPanel":
+                                            {
+                                                "PanelItem": [
+                                                    {
+                                                        "Label": "Allow Simple Value",
+                                                        "tooltip": "Permits repeating, ascending and descending character sequences",
+                                                        "Optional": {
+                                                            "checked": true
+                                                        },
+                                                        "_type": "checkbox",
+                                                        "_id": "passcodePolicyAllowSimpleWP"
+                                                    },
+                                                    {
+                                                        "Label": "Require alphanumeric value",
+                                                        "tooltip": "Mandates to contain both letters and numbers",
+                                                        "Optional": {
+                                                            "checked": true
+                                                        },
+                                                        "_type": "checkbox",
+                                                        "_id": "passcodePolicyRequireAlphanumericWP"
+                                                    },
+                                                    {
+                                                        "Label": "Minimum passcode length",
+                                                        "tooltip": "Minimum number of characters allowed in a passcode",
+                                                        "Optional": {
+                                                            "Option": [
+                                                                {
+                                                                    "name" : "None",
+                                                                    "value": "",
+                                                                },
+                                                                {
+                                                                    "name" : "04",
+                                                                    "value": "4",
+                                                                },
+                                                                {
+                                                                    "name" : "05",
+                                                                    "value": "5",
+                                                                },
+                                                                {
+                                                                    "name" : "06",
+                                                                    "value": "6",
+                                                                },
+                                                                {
+                                                                    "name" : "07",
+                                                                    "value": "7",
+                                                                },
+                                                                {
+                                                                    "name" : "08",
+                                                                    "value": "8",
+                                                                },
+                                                                {
+                                                                    "name" : "09",
+                                                                    "value": "9",
+                                                                },
+                                                                {
+                                                                    "name" : "10",
+                                                                    "value": "10",
+                                                                },
+                                                                {
+                                                                    "name" : "11",
+                                                                    "value": "11",
+                                                                },
+                                                                {
+                                                                    "name" : "12",
+                                                                    "value": "12",
+                                                                },
+                                                                {
+                                                                    "name" : "13",
+                                                                    "value": "13",
+                                                                },
+                                                                {
+                                                                    "name" : "14",
+                                                                    "value": "14",
+                                                                },
+                                                                {
+                                                                    "name" : "15",
+                                                                    "value": "15",
+                                                                },
+                                                            ]
 
+                                                        },
+                                                        "_type": "select",
+                                                        "_id": "passcodePolicyMinLengthWP"
+                                                    },
+                                                    {
+                                                        "Label": "Minimum number of complex characters",
+                                                        "tooltip": "Minimum number of complex or non-alphanumeric characters allowed in a passcode",
+                                                        "Optional": {
+
+                                                            "Option": [
+                                                                {
+                                                                    "name" : "None",
+                                                                    "value": "",
+                                                                },
+                                                                {
+                                                                    "name" : "01",
+                                                                    "value": "1",
+                                                                },
+                                                                {
+                                                                    "name" : "02",
+                                                                    "value": "2",
+                                                                },
+                                                                {
+                                                                    "name" : "03",
+                                                                    "value": "3",
+                                                                },
+
+                                                                {
+                                                                    "name" : "04",
+                                                                    "value": "4",
+                                                                },
+                                                                {
+                                                                    "name" : "05",
+                                                                    "value": "5",
+                                                                },
+                                                            ]
+
+                                                        },
+                                                        "_type": "select",
+                                                        "_id": "passcodePolicyMinComplexCharsWP"
+                                                    },
+                                                    {
+                                                        "Label": "Maximum passcode age in days",
+                                                        "tooltip": "Number of days after which a passcode must be changed",
+                                                        "Optional": {
+                                                            "Placeholder": "Should be in between 1-to-730 days or 0 for none",
+                                                            "rules":{
+                                                                "regex": "",
+                                                                "validationMsg": "",
+                                                                "required": false
+                                                            },
+                                                        },
+                                                        "_type": "input",
+                                                        "_id": "passcodePolicyMaxPasscodeAgeInDaysWP"
+                                                    },
+                                                    {
+                                                        "Label": "Passcode history",
+                                                        "tooltip": "Number of consequent unique passcodes to be used before reuse",
+                                                        "Optional": {
+                                                            "Placeholder": "Should be in between 1-to-50 passcodes or 0 for none",
+                                                            "rules":{
+                                                                "regex": "",
+                                                                "validationMsg": "",
+                                                                "required": false
+                                                            },
+                                                        },
+                                                        "_type": "input",
+                                                        "_id": "passcodePolicyPasscodeHistoryWP"
+                                                    },
+                                                    {
+                                                        "Label": "Maximum number of failed attempts",
+                                                        "tooltip": "The maximum number of incorrect password entries allowed. If the correct password is not entered within the allowed number of attempts, the data on the device will be erased.",
+                                                        "Optional": {
+                                                            "Option": [
+                                                                {
+                                                                    "name" : "None",
+                                                                    "value": "",
+                                                                },
+                                                                {
+                                                                    "name" : "03",
+                                                                    "value": "3",
+                                                                },
+
+                                                                {
+                                                                    "name" : "04",
+                                                                    "value": "4",
+                                                                },
+                                                                {
+                                                                    "name" : "05",
+                                                                    "value": "5",
+                                                                },
+                                                                {
+                                                                    "name" : "06",
+                                                                    "value": "6",
+                                                                },
+                                                                {
+                                                                    "name" : "07",
+                                                                    "value": "7",
+                                                                },
+                                                                {
+                                                                    "name" : "08",
+                                                                    "value": "8",
+                                                                },
+                                                                {
+                                                                    "name" : "09",
+                                                                    "value": "9",
+                                                                },
+                                                                {
+                                                                    "name" : "10",
+                                                                    "value": "10",
+                                                                },
+                                                            ]
+                                                        },
+                                                        "_type": "select",
+                                                        "_id": "passcodePolicyMaxFailedAttemptsWP"
+                                                    }
+                                                ],
+                                                "_key": "workProfilePasscode",
+                                                "_show": false
+                                            }
                                     },
                                     "_type": "checkbox",
                                     "_id": "passcodePolicyWPExist",
-                                    "subPanel": [
-                                        {
-                                            "PanelItem": [
-                                                {
-                                                    "Label": "Allow Simple Value",
-                                                    "tooltip": "Permits repeating, ascending and descending character sequences",
-                                                    "Optional": {
-                                                        "checked": false
-                                                    },
-                                                    "_type": "checkbox",
-                                                    "_id": "passcodePolicyAllowSimpleWP"
-                                                },
-                                                {
-                                                    "Label": "Require alphanumeric value",
-                                                    "tooltip": "Mandates to contain both letters and numbers",
-                                                    "Optional": {
-                                                        "checked": false
-                                                    },
-                                                    "_type": "checkbox",
-                                                    "_id": "passcodePolicyRequireAlphanumericWP"
-                                                },
-                                                {
-                                                    "Label": "Minimum passcode length",
-                                                    "tooltip": "Minimum number of characters allowed in a passcode",
-                                                    "Optional": {
 
-                                                        "Option": [
-                                                            "None",
-                                                            "04",
-                                                            "05",
-                                                            "06",
-                                                            "07",
-                                                            "08",
-                                                            "09",
-                                                            "10",
-                                                            "11",
-                                                            "12",
-                                                            "13",
-                                                            "14",
-                                                            "15"
-                                                        ]
-
-                                                    },
-                                                    "_type": "select",
-                                                    "_id": "passcodePolicyMinLengthWP"
-                                                },
-                                                {
-                                                    "Label": "Minimum number of complex characters",
-                                                    "tooltip": "Minimum number of complex or non-alphanumeric characters allowed in a passcode",
-                                                    "Optional": {
-
-                                                        "Option": [
-                                                            "None",
-                                                            "01",
-                                                            "02",
-                                                            "03",
-                                                            "04",
-                                                            "05"
-                                                        ]
-
-                                                    },
-                                                    "_type": "select",
-                                                    "_id": "passcodePolicyMinComplexCharsWP"
-                                                },
-                                                {
-                                                    "Label": "Maximum passcode age in days",
-                                                    "tooltip": "Number of days after which a passcode must be changed",
-                                                    "Optional": {
-                                                        "Placeholder": "Should be in between 1-to-730 days or 0 for none"
-                                                    },
-                                                    "_type": "input",
-                                                    "_id": "passcodePolicyMaxPasscodeAgeInDaysWP"
-                                                },
-                                                {
-                                                    "Label": "Passcode history",
-                                                    "tooltip": "Number of consequent unique passcodes to be used before reuse",
-                                                    "Optional": {
-                                                        "Placeholder": "Should be in between 1-to-50 passcodes or 0 for none"
-                                                    },
-                                                    "_type": "input",
-                                                    "_id": "passcodePolicyPasscodeHistoryWP"
-                                                },
-                                                {
-                                                    "Label": "Maximum number of failed attempts",
-                                                    "tooltip": "The maximum number of incorrect password entries allowed. If the correct password is not entered within the allowed number of attempts, the data on the device will be erased.",
-                                                    "Optional": {
-
-                                                        "Option": [
-                                                            "None",
-                                                            "03",
-                                                            "04",
-                                                            "05",
-                                                            "06",
-                                                            "07",
-                                                            "08",
-                                                            "09",
-                                                            "10"
-                                                        ]
-
-                                                    },
-                                                    "_type": "select",
-                                                    "_id": "passcodePolicyMaxFailedAttemptsWP"
-                                                }
-                                            ],
-                                            "_key": "workProfilePasscode",
-                                            "_show": false
-                                        }
-                                    ]
                                 }
                             ],
                             "_key": "1",
                             "_show": true,
                             "title": "Passcode Policy",
-                            "description": "Enforce a configured passcode policy on Android devices. Once this profile is applied, the device owners won't be able to modify the password settings on their devices.",
+                            "description": "Enforce a configured passcode policy on Android devices. Once this profile is applied," +
+                                " the device owners won't be able to modify the password settings on their devices.",
                         },
 
                     ]
                 },
                 {
-                    "id": "CAMERA",
                     "Name": "Restrictions",
                     "Panel": [{
+                        "panelId": "CAMERA",
                         "title": "Restrictions",
-                        "description": "This configurations can be used to restrict certain settings on an Android device. Once this configuration profile is installed on a device, corresponding users will not be able to modify these settings on their devices.",
+                        "description": "This configurations can be used to restrict certain settings on an Android device. Once this configuration" +
+                            " profile is installed on a device, corresponding users will not be able to modify these settings on their devices.",
                         "PanelItem": [
                             {
                                 "Label": "Allow use of camera",
@@ -287,7 +460,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_APPS_CONTROL"
                             },
                             {
                                 "Label": "Disallow cross profile copy paste",
@@ -296,7 +469,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_CROSS_PROFILE_COPY_PASTE"
                             },
                             {
                                 "Label": "Disallow debugging",
@@ -305,7 +478,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_DEBUGGING_FEATURES"
                             },
                             {
                                 "Label": "Disallow install apps",
@@ -314,7 +487,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_INSTALL_APPS"
                             },
                             {
                                 "Label": "Disallow install from unknown sources",
@@ -323,7 +496,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_INSTALL_UNKNOWN_SOURCES"
                             },
                             {
                                 "Label": "Disallow modify accounts",
@@ -332,7 +505,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_MODIFY_ACCOUNTS"
                             },
                             {
                                 "Label": "Disallow outgoing beam",
@@ -341,7 +514,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_OUTGOING_BEAM"
                             },
                             {
                                 "Label": "Disallow location sharing",
@@ -350,7 +523,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_SHARE_LOCATION"
                             },
                             {
                                 "Label": "Disallow uninstall apps",
@@ -359,7 +532,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_UNINSTALL_APPS"
                             },
                             {
                                 "Label": "Disallow parent profile app linking",
@@ -368,7 +541,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "ALLOW_PARENT_PROFILE_APP_LINKING"
                             },
                             {
                                 "Label": " Below restrictions will be applicable when the agent is the device owner and Android version 6.0 (Marshmallow) or higher.",
@@ -381,7 +554,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_SET_WALLPAPER"
                             },
                             {
                                 "Label": "Disallow set user icon",
@@ -390,7 +563,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_SET_USER_ICON"
                             },
                             {
                                 "Label": "Disallow remove managed profile",
@@ -399,7 +572,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_REMOVE_MANAGEMENT_PROFILE"
                             },
                             {
                                 "Label": "Disallow autofill",
@@ -408,7 +581,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_AUTOFILL"
                             },
                             {
                                 "Label": "Disallow bluetooth",
@@ -417,7 +590,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_BLUETOOTH"
                             },
                             {
                                 "Label": "Disallow bluetooth sharing",
@@ -426,7 +599,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_BLUETOOTH_SHARING"
                             },
                             {
                                 "Label": "Disallow remove user",
@@ -448,7 +621,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_SMS"
                             },
                             {
                                 "Label": "Ensure verifying apps",
@@ -457,7 +630,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "ENSURE_VERIFY_APPS"
                             },
                             {
                                 "Label": "Enable auto timing",
@@ -466,7 +639,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "AUTO_TIME"
                             },
                             {
                                 "Label": "Disable screen capture",
@@ -475,7 +648,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "SET_SCREEN_CAPTURE_DISABLED"
                             },
                             {
                                 "Label": "Disallow volume adjust",
@@ -484,7 +657,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_ADJUST_VOLUME"
                             },
                             {
                                 "Label": "Disallow cell broadcast",
@@ -493,7 +666,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_CONFIG_CELL_BROADCASTS"
                             },
                             {
                                 "Label": "Disallow configuring bluetooth",
@@ -502,7 +675,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_CONFIG_BLUETOOTH"
                             },
                             {
                                 "Label": "Disallow configuring mobile networks",
@@ -511,7 +684,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_CONFIG_MOBILE_NETWORKS"
                             },
                             {
                                 "Label": "Disallow configuring tethering",
@@ -520,7 +693,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_CONFIG_TETHERING"
                             },
                             {
                                 "Label": "Disallow configuring WIFI",
@@ -529,7 +702,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_CONFIG_WIFI"
                             },
                             {
                                 "Label": "Disallow safe boot",
@@ -538,7 +711,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_SAFE_BOOT"
                             },
                             {
                                 "Label": "Disallow outgoing calls",
@@ -547,7 +720,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_OUTGOING_CALLS"
                             },
                             {
                                 "Label": "Disallow mount physical media",
@@ -556,7 +729,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_MOUNT_PHYSICAL_MEDIA"
                             },
                             {
                                 "Label": "Disallow create window",
@@ -565,7 +738,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_CREATE_WINDOWS"
                             },
                             {
                                 "Label": "Disallow factory reset",
@@ -574,7 +747,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_FACTORY_RESET"
                             },
                             {
                                 "Label": "Disallow remove user",
@@ -583,7 +756,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_REMOVE_USER"
                             },
                             {
                                 "Label": "Disallow add user",
@@ -592,7 +765,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_ADD_USER"
                             },
                             {
                                 "Label": "Disallow network reset",
@@ -601,7 +774,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_NETWORK_RESET"
                             },
                             {
                                 "Label": "Disallow USB file transfer",
@@ -610,7 +783,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_USB_FILE_TRANSFER"
                             },
                             {
                                 "Label": "Disallow unmute microphone",
@@ -619,7 +792,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_UNMUTE_MICROPHONE"
                             },
                             {
                                 "Label": "Below restrictions will be applied on devices with Android version 6.0 Marshmallow onwards only.",
@@ -632,7 +805,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "SET_STATUS_BAR_DISABLED"
                             },
                             {
                                 "Label": "Disallow data roaming",
@@ -641,7 +814,7 @@ const jsonResponse = {
                                     "checked": false
                                 },
                                 "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "_id": "DISALLOW_DATA_ROAMING"
                             },
                             {
                                 "Label": "Enable device backup service",
@@ -659,9 +832,9 @@ const jsonResponse = {
                     }]
                 },
                 {
-                    "id": "ENCRYPT_STORAGE",
                     "Name": "Encryption Settings",
                     "Panel": [{
+                        "panelId": "ENCRYPT_STORAGE",
                         "title": "Encryption Settings",
                         "description": "This configuration can be used to encrypt data on an Android device, when the device" +
                             " is locked and make it readable when the passcode is entered. Once this configuration profile is installed on a device, " +
@@ -675,7 +848,7 @@ const jsonResponse = {
                                 "Label": "Enable storage-encryption",
                                 "tooltip": "Having this checked would enable Storage-encryption in the device.",
                                 "Optional": {
-                                    "checked": false
+                                    "checked": true
                                 },
                                 "_type": "checkbox",
                                 "_id": "ENCRYPT_STORAGE"
@@ -686,9 +859,9 @@ const jsonResponse = {
                     }]
                 },
                 {
-                    "id": "ENCRYPT_STORAGE",
                     "Name": "Wi-Fi Settings",
                     "Panel": [{
+                        "panelId": "WIFI",
                         "title": "Wi-Fi Settings",
                         "description": "This configurations can be used to configure Wi-Fi access on an Android device. " +
                             "Once this configuration profile is installed on a device, corresponding users will not be able to modify these settings on their devices.",
@@ -709,17 +882,29 @@ const jsonResponse = {
                                     },
                                 },
                                 "_type": "input",
-                                "_id": "maxPINAgjghgheInDays"
+                                "_id": "ssid"
                             },
                             {
                                 "Label": "Security *",
                                 "tooltip": "Minimum number of complex or non-alphanumeric characters allowed in a passcode",
                                 "Optional": {
                                     "Option": [
-                                        "None",
-                                        "WEP",
-                                        "WPA/WPA 2 PSK",
-                                        "802.1x EAP",
+                                        {
+                                            "name" : "None",
+                                            "value": "",
+                                        },
+                                        {
+                                            "name" : "WEP",
+                                            "value": "wep",
+                                        },
+                                        {
+                                            "name" : "WPA/WPA 2 PSK",
+                                            "value": "wpa",
+                                        },
+                                        {
+                                            "name" : "802.1x EAP",
+                                            "value": "802eap",
+                                        },
                                     ],
                                     "SubPanel":[
                                         {
@@ -728,10 +913,15 @@ const jsonResponse = {
                                                     "Label": "Password *",
                                                     "tooltip": "Password for the wireless network.",
                                                     "Optional": {
-                                                        "Placeholder": ""
+                                                        "Placeholder": "",
+                                                        "rules":{
+                                                            "regex": "",
+                                                            "validationMsg": "",
+                                                            "required": false
+                                                        },
                                                     },
                                                     "_type": "input",
-                                                    "_id": "XXXXXXXXXXXX" //toDo add id
+                                                    "_id": "password" //toDo add id
                                                 },
                                             ],
                                             "_key": "none",
@@ -744,31 +934,64 @@ const jsonResponse = {
                                                     "tooltip": "EAP Method of the wireless network to be configured.",
                                                     "Optional": {
                                                         "Option": [
-                                                            "PEAP",
-                                                            "TLS",
-                                                            "TTLS",
-                                                            "PWD",
-                                                            "SIM",
-                                                            "AKA"
+                                                            {
+                                                                "name" : "PEAP",
+                                                                "value": "peap",
+                                                            },
+                                                            {
+                                                                "name" : "TLS",
+                                                                "value": "tls",
+                                                            },
+                                                            {
+                                                                "name" : "TTLS",
+                                                                "value": "ttls",
+                                                            },
+                                                            {
+                                                                "name" : "PWD",
+                                                                "value": "pwd",
+                                                            },
+                                                            {
+                                                                "name" : "SIM",
+                                                                "value": "sim",
+                                                            },
+                                                            {
+                                                                "name" : "AKA",
+                                                                "value": "aka",
+                                                            },
                                                         ]
                                                     },
                                                     "_type": "select",
-                                                    "_id": "minCompzzlexChars"
+                                                    "_id": "eap"
                                                 },
                                                 {
                                                     "Label": "Phase 2 Authentication",
                                                     "tooltip": "Phase 2 authentication of the wireless network to be configured.",
                                                     "Optional": {
                                                         "Option": [
-                                                            "None",
-                                                            "PAP",
-                                                            "MCHAP",
-                                                            "MCHAPV2",
-                                                            "GTC"
+                                                            {
+                                                                "name" : "None",
+                                                                "value": "",
+                                                            },
+                                                            {
+                                                                "name" : "PAP",
+                                                                "value": "pap",
+                                                            },
+                                                            {
+                                                                "name" : "MCHAP",
+                                                                "value": "mchap",
+                                                            },
+                                                            {
+                                                                "name" : "MCHAPV2",
+                                                                "value": "mchapv2",
+                                                            },
+                                                            {
+                                                                "name" : "GTC",
+                                                                "value": "gtc",
+                                                            },
                                                         ]
                                                     },
                                                     "_type": "select",
-                                                    "_id": "minComplzzexChars"
+                                                    "_id": "phase2"
                                                 },
                                                 {
                                                     "Label": "Identify",
@@ -777,7 +1000,7 @@ const jsonResponse = {
                                                         "Placeholder": "Should be 1 to 30 characters long"
                                                     },
                                                     "_type": "input",
-                                                    "_id": "XXXXXXXXXXXX" //toDo add id
+                                                    "_id": "identity" //toDo add id
                                                 },
                                                 {
                                                     "Label": "Anonymous Identity",
@@ -786,7 +1009,7 @@ const jsonResponse = {
                                                         "Placeholder": "Should be 1 to 30 characters long"
                                                     },
                                                     "_type": "input",
-                                                    "_id": "XXXXXXXXXXXX" //toDo add id
+                                                    "_id": "anonymousIdentity" //toDo add id
                                                 },
                                                 {
                                                     "Label": "CA Certificate",
@@ -795,7 +1018,7 @@ const jsonResponse = {
                                                         "Placeholder": ""
                                                     },
                                                     "_type": "upload",
-                                                    "_id": "XXXXXXXXXXXX" //toDo add id
+                                                    "_id": "cacert" //toDo add id
                                                 },
                                                 {
                                                     "Label": "Password *",
@@ -813,7 +1036,7 @@ const jsonResponse = {
                                     ]
                                 },
                                 "_type": "select",
-                                "_id": "minCompzzdlexChars"
+                                "_id": "type"
                             },
                         ],
                         "_key": "1",
@@ -822,10 +1045,10 @@ const jsonResponse = {
                     ]
                 },
                 {
-                    "id": "ENCRYPT_STORAGE",
                     "Name": "Global Proxy Settings",
                     "Panel": [
                         {
+                            "panelId": "GLOBAL_PROXY",
                             "title": "Global Proxy Settings",
                             "description": "This configurations can be used to set a network-independent global HTTP proxy on an " +
                                 "Android device. Once this configuration profile is installed on a device, all the network traffic will " +
@@ -848,12 +1071,10 @@ const jsonResponse = {
                                     "tooltip": "Select the configuration type.",
                                     "Optional": {
                                         "Radio": [
-                                            "Manual",
-                                            "Auto"
-                                        ],
-                                        "SubPanel":[
                                             {
-                                                "PanelItem": [
+                                                "name" : "Manual",
+                                                "value": "MANUAL",
+                                                "subPanel": [
                                                     {
                                                         "Label": "Proxy Host *",
                                                         "tooltip": "Host name/IP address of the proxy server.",
@@ -866,7 +1087,7 @@ const jsonResponse = {
                                                             },
                                                         },
                                                         "_type": "input",
-                                                        "_id": "XXXXXXXXXXXX" //toDo add id
+                                                        "_id": "proxyHost" //toDo add id
                                                     },
                                                     {
                                                         "Label": "Proxy Port *",
@@ -880,7 +1101,7 @@ const jsonResponse = {
                                                             },
                                                         },
                                                         "_type": "input",
-                                                        "_id": "XXXXXXXXXXXX" //toDo add id
+                                                        "_id": "proxyPort" //toDo add id
                                                     },
                                                     {
                                                         "Label": "Proxy Exclusion List",
@@ -896,14 +1117,14 @@ const jsonResponse = {
                                                             },
                                                         },
                                                         "_type": "input",
-                                                        "_id": "XXXXXXXXXXXX" //toDo add id
+                                                        "_id": "proxyExclList" //toDo add id
                                                     },
                                                 ],
-                                                "_key": "Manual",
-                                                "_show": true
                                             },
                                             {
-                                                "PanelItem": [
+                                                "name" : "Auto",
+                                                "value": "AUTO",
+                                                "subPanel": [
                                                     {
                                                         "Label": "Proxy PAC File URL *",
                                                         "tooltip": "URL for the proxy auto config PAC script",
@@ -916,19 +1137,14 @@ const jsonResponse = {
                                                             },
                                                         },
                                                         "_type": "input",
-                                                        "_id": "XXXXXXXsdsdXXXXX" //toDo add id
+                                                        "_id": "proxyPacUrl" //toDo add id
                                                     },
                                                 ],
-                                                "_key": "Auto",
-                                                "_show": true
-                                            }
-
-                                        ]
-
-
+                                            },
+                                        ],
                                     },
                                     "_type": "radioGroup",
-                                    "_id": "ENCRYPT_STORAGE"  //toDo change id
+                                    "_id": "proxyConfigType"  //toDo change id
                                 },
                             ],
                             "_key": "1",
@@ -937,10 +1153,10 @@ const jsonResponse = {
                     ]
                 },
                 {
-                    "id": "ENCRYPT_STORAGE",
                     "Name": "Virtual Private Network",
                     "Panel": [
                         {
+                            "panelId": "VPN",
                             "title": "VPN Settings",
                             "description": "Configure the OpenVPN settings on Android devices. In order to enable this, device needs to have \"OpenVPN for Android\" application installed.",
                             "PanelItem": [
@@ -959,6 +1175,7 @@ const jsonResponse = {
                             "_show": true
                         },
                         {
+                            "panelId": "VPN_ON",
                             "title": "Always On VPN Settings",
                             "description": "Configure an always-on VPN connection through a specific VPN client application.",
                             "PanelItem": [
@@ -978,7 +1195,7 @@ const jsonResponse = {
                                         },
                                     },
                                     "_type": "input",
-                                    "_id": "XXXXXXXXczxczxXXXX" //toDo add id
+                                    "_id": "packageName" //toDo add id
                                 },
                             ],
                             "_key": "1zxz",
@@ -987,9 +1204,9 @@ const jsonResponse = {
                     ]
                 },
                 {
-                    "id": "ENCRYPT_STsdsadORAGE",
                     "Name": "Certificates Install",
                     "Panel": [{
+                        "panelId": "INSTALL_CERT",
                         "title": "Certificate Install Settings",
                         "description": "Configure the certificate install settings on Android devices.",
                         "PanelItem": [
@@ -997,9 +1214,32 @@ const jsonResponse = {
                                 "Label": "Added Certificate List",
                                 "tooltip": "Add a certificate.",
                                 "Optional": {
+                                    "button": {
+                                        "id": "addCertificate",
+                                        "name": " Add Certificate"
+                                    },
+                                    "dataSource": "cert-list",
+                                    "columns": [
+                                        {
+                                            "name" : "Certificate Name",
+                                            "key" : "CERT_NAME",
+                                            "type": "input",
+                                            "others": {
+                                                "placeholder":"Cert name",
+                                                "inputType": "text"
+                                            }
+                                        },
+                                        {
+                                            "name" : "Certificate File",
+                                            "key" : "CERT_CONTENT_VIEW",
+                                            "type": "upload",
+                                            "others": {
+                                            }
+                                        },
+                                    ]
                                 },
                                 "_type": "inputTable",
-                                "_id": "ENCRYcbchdPT_STORAGE"
+                                "_id": "CERT_LIST"
                             },
                         ],
                         "_key": "1",
@@ -1007,9 +1247,9 @@ const jsonResponse = {
                     }]
                 },
                 {
-                    "id": "ENCRYPT_STOssdsRAGE",
                     "Name": "Work-Profile Configurations",
                     "Panel": [{
+                        "panelId": "WORK_PROFILE",
                         "title": "Work-Profile Configurations",
                         "description": "Configure these settings to manage the applications in the work profile.",
                         "PanelItem": [
@@ -1073,9 +1313,9 @@ const jsonResponse = {
                     }]
                 },
                 {
-                    "id": "ENCRYPT_STORAGE",
                     "Name": "COSU Profile Configurations",
                     "Panel": [{
+                        "panelId": "COSU_PROFILE",
                         "title": "COSU Profile Configurations",
                         "description": "This policy can be used to configure the profile of COSU Devices.",
                         "PanelItem": [
@@ -1084,63 +1324,206 @@ const jsonResponse = {
                                 "tooltip": "",
                                 "Optional": {
                                     "checked": false,
-                                    "subPanel":[
+                                    "subPanel":
                                         {
                                             "PanelItem": [
                                                 {
                                                     "Label": "Start Time",
                                                     "tooltip": "Start time for the device",
                                                     "Optional": {
-
                                                         "Option": [
-                                                            "12:00 Midnight",
-                                                            "12:30 AM",
-                                                            "01:00 AM",
-                                                            "01:30 AM",
-                                                            "02:00 AM",
-                                                            "02:30 AM",
-                                                            "03:00 AM",
-                                                            "03:30 AM",
-                                                            "04:00 AM",
-                                                            "04:30 AM",
-                                                            "05:00 AM",
-                                                            "05:30 AM",
-                                                            "06:00 AM",
-                                                            "06:30 AM",
-                                                            "07:00 AM",
-                                                            "07:30 AM",
-                                                            "08:00 AM",
-                                                            "08:30 AM",
-                                                            "09:00 AM",
-                                                            "09:30 AM",
-                                                            "10:00 AM",
-                                                            "10:30 AM",
-                                                            "11:00 AM",
-                                                            "11:30 AM",
-                                                            "12:00 Noon",
-                                                            "12:30 PM",
-                                                            "01:00 PM",
-                                                            "01:30 PM",
-                                                            "02:00 PM",
-                                                            "02:30 PM",
-                                                            "03:00 PM",
-                                                            "03:30 PM",
-                                                            "04:00 PM",
-                                                            "04:30 PM",
-                                                            "05:00 PM",
-                                                            "05:30 PM",
-                                                            "06:00 PM",
-                                                            "06:30 PM",
-                                                            "07:00 PM",
-                                                            "07:30 PM",
-                                                            "08:00 PM",
-                                                            "08:30 PM",
-                                                            "09:00 PM",
-                                                            "09:30 PM",
-                                                            "10:00 PM",
-                                                            "10:30 PM",
-                                                            "11:00 PM",
-                                                            "11:30 PM"
+                                                            {
+                                                                "name" : "12:00 Midnight",
+                                                                "value": "1440",
+                                                            },
+                                                            {
+                                                                "name" : "12:30 AM",
+                                                                "value": "30",
+                                                            },
+                                                            {
+                                                                "name" : "01:00 AM",
+                                                                "value": "60",
+                                                            },
+                                                            {
+                                                                "name" : "01:30 AM",
+                                                                "value": "90",
+                                                            },
+                                                            {
+                                                                "name" : "02:00 AM",
+                                                                "value": "120",
+                                                            },
+                                                            {
+                                                                "name" : "02:30 AM",
+                                                                "value": "150",
+                                                            },
+                                                            {
+                                                                "name" : "03:00 AM",
+                                                                "value": "180",
+                                                            },
+                                                            {
+                                                                "name" : "03:30 AM",
+                                                                "value": "210",
+                                                            },
+                                                            {
+                                                                "name" : "04:00 AM",
+                                                                "value": "240",
+                                                            },
+                                                            {
+                                                                "name" : "04:30 AM",
+                                                                "value": "270",
+                                                            },
+                                                            {
+                                                                "name" : "05:00 AM",
+                                                                "value": "300",
+                                                            },
+                                                            {
+                                                                "name" : "05:30 AM",
+                                                                "value": "330",
+                                                            },
+                                                            {
+                                                                "name" : "06:00 AM",
+                                                                "value": "360",
+                                                            },
+                                                            {
+                                                                "name" : "06:30 AM",
+                                                                "value": "390",
+                                                            },
+                                                            {
+                                                                "name" : "07:00 AM",
+                                                                "value": "420",
+                                                            },
+                                                            {
+                                                                "name" : "07:30 AM",
+                                                                "value": "450",
+                                                            },
+                                                            {
+                                                                "name" : "08:00 AM",
+                                                                "value": "480",
+                                                            },
+                                                            {
+                                                                "name" : "08:30 AM",
+                                                                "value": "510",
+                                                            },
+                                                            {
+                                                                "name" : "09:00 AM",
+                                                                "value": "540",
+                                                            },
+                                                            {
+                                                                "name" : "09:30 AM",
+                                                                "value": "570",
+                                                            },
+                                                            {
+                                                                "name" : "10:00 AM",
+                                                                "value": "600",
+                                                            },
+                                                            {
+                                                                "name" : "10:30 AM",
+                                                                "value": "630",
+                                                            },
+                                                            {
+                                                                "name" : "11:00 AM",
+                                                                "value": "660",
+                                                            },
+                                                            {
+                                                                "name" : "11:30 AM",
+                                                                "value": "690",
+                                                            },
+                                                            {
+                                                                "name" : "12:00 noon",
+                                                                "value": "720",
+                                                            },
+                                                            {
+                                                                "name" : "12:30 PM",
+                                                                "value": "750",
+                                                            },
+                                                            {
+                                                                "name" : "01:00 PM",
+                                                                "value": "780",
+                                                            },
+                                                            {
+                                                                "name" : "01:30 PM",
+                                                                "value": "810",
+                                                            },
+                                                            {
+                                                                "name" : "02:00 PM",
+                                                                "value": "840",
+                                                            },
+                                                            {
+                                                                "name" : "02:30 PM",
+                                                                "value": "870",
+                                                            },
+                                                            {
+                                                                "name" : "03:00 PM",
+                                                                "value": "900",
+                                                            },
+                                                            {
+                                                                "name" : "03:30 PM",
+                                                                "value": "930",
+                                                            },
+                                                            {
+                                                                "name" : "04:00 PM",
+                                                                "value": "960",
+                                                            },
+                                                            {
+                                                                "name" : "04:30 PM",
+                                                                "value": "990",
+                                                            },
+                                                            {
+                                                                "name" : "05:00 PM",
+                                                                "value": "1020",
+                                                            },
+                                                            {
+                                                                "name" : "05:30 PM",
+                                                                "value": "1050",
+                                                            },
+                                                            {
+                                                                "name" : "06:00 PM",
+                                                                "value": "1080",
+                                                            },
+                                                            {
+                                                                "name" : "06:30 PM",
+                                                                "value": "1110",
+                                                            },
+                                                            {
+                                                                "name" : "07:00 PM",
+                                                                "value": "1140",
+                                                            },
+                                                            {
+                                                                "name" : "07:30 PM",
+                                                                "value": "1170",
+                                                            },
+                                                            {
+                                                                "name" : "08:00 PM",
+                                                                "value": "1200",
+                                                            },
+                                                            {
+                                                                "name" : "08:30 PM",
+                                                                "value": "1230",
+                                                            },
+                                                            {
+                                                                "name" : "09:00 PM",
+                                                                "value": "1260",
+                                                            },
+                                                            {
+                                                                "name" : "09:30 PM",
+                                                                "value": "1290",
+                                                            },
+                                                            {
+                                                                "name" : "10:00 PM",
+                                                                "value": "1320",
+                                                            },
+                                                            {
+                                                                "name" : "10:30 PM",
+                                                                "value": "1350",
+                                                            },
+                                                            {
+                                                                "name" : "11:00 PM",
+                                                                "value": "1380",
+                                                            },
+                                                            {
+                                                                "name" : "11:30 PM",
+                                                                "value": "1410",
+                                                            },
                                                         ]
 
                                                     },
@@ -1152,54 +1535,198 @@ const jsonResponse = {
                                                     "tooltip": "Lock-down time for the device",
                                                     "Optional": {
                                                         "Option": [
-                                                            "12:00 Midnight",
-                                                            "12:30 AM",
-                                                            "01:00 AM",
-                                                            "01:30 AM",
-                                                            "02:00 AM",
-                                                            "02:30 AM",
-                                                            "03:00 AM",
-                                                            "03:30 AM",
-                                                            "04:00 AM",
-                                                            "04:30 AM",
-                                                            "05:00 AM",
-                                                            "05:30 AM",
-                                                            "06:00 AM",
-                                                            "06:30 AM",
-                                                            "07:00 AM",
-                                                            "07:30 AM",
-                                                            "08:00 AM",
-                                                            "08:30 AM",
-                                                            "09:00 AM",
-                                                            "09:30 AM",
-                                                            "10:00 AM",
-                                                            "10:30 AM",
-                                                            "11:00 AM",
-                                                            "11:30 AM",
-                                                            "12:00 Noon",
-                                                            "12:30 PM",
-                                                            "01:00 PM",
-                                                            "01:30 PM",
-                                                            "02:00 PM",
-                                                            "02:30 PM",
-                                                            "03:00 PM",
-                                                            "03:30 PM",
-                                                            "04:00 PM",
-                                                            "04:30 PM",
-                                                            "05:00 PM",
-                                                            "05:30 PM",
-                                                            "06:00 PM",
-                                                            "06:30 PM",
-                                                            "07:00 PM",
-                                                            "07:30 PM",
-                                                            "08:00 PM",
-                                                            "08:30 PM",
-                                                            "09:00 PM",
-                                                            "09:30 PM",
-                                                            "10:00 PM",
-                                                            "10:30 PM",
-                                                            "11:00 PM",
-                                                            "11:30 PM"
+                                                            {
+                                                                "name" : "12:00 Midnight",
+                                                                "value": "1440",
+                                                            },
+                                                            {
+                                                                "name" : "12:30 AM",
+                                                                "value": "30",
+                                                            },
+                                                            {
+                                                                "name" : "01:00 AM",
+                                                                "value": "60",
+                                                            },
+                                                            {
+                                                                "name" : "01:30 AM",
+                                                                "value": "90",
+                                                            },
+                                                            {
+                                                                "name" : "02:00 AM",
+                                                                "value": "120",
+                                                            },
+                                                            {
+                                                                "name" : "02:30 AM",
+                                                                "value": "150",
+                                                            },
+                                                            {
+                                                                "name" : "03:00 AM",
+                                                                "value": "180",
+                                                            },
+                                                            {
+                                                                "name" : "03:30 AM",
+                                                                "value": "210",
+                                                            },
+                                                            {
+                                                                "name" : "04:00 AM",
+                                                                "value": "240",
+                                                            },
+                                                            {
+                                                                "name" : "04:30 AM",
+                                                                "value": "270",
+                                                            },
+                                                            {
+                                                                "name" : "05:00 AM",
+                                                                "value": "300",
+                                                            },
+                                                            {
+                                                                "name" : "05:30 AM",
+                                                                "value": "330",
+                                                            },
+                                                            {
+                                                                "name" : "06:00 AM",
+                                                                "value": "360",
+                                                            },
+                                                            {
+                                                                "name" : "06:30 AM",
+                                                                "value": "390",
+                                                            },
+                                                            {
+                                                                "name" : "07:00 AM",
+                                                                "value": "420",
+                                                            },
+                                                            {
+                                                                "name" : "07:30 AM",
+                                                                "value": "450",
+                                                            },
+                                                            {
+                                                                "name" : "08:00 AM",
+                                                                "value": "480",
+                                                            },
+                                                            {
+                                                                "name" : "08:30 AM",
+                                                                "value": "510",
+                                                            },
+                                                            {
+                                                                "name" : "09:00 AM",
+                                                                "value": "540",
+                                                            },
+                                                            {
+                                                                "name" : "09:30 AM",
+                                                                "value": "570",
+                                                            },
+                                                            {
+                                                                "name" : "10:00 AM",
+                                                                "value": "600",
+                                                            },
+                                                            {
+                                                                "name" : "10:30 AM",
+                                                                "value": "630",
+                                                            },
+                                                            {
+                                                                "name" : "11:00 AM",
+                                                                "value": "660",
+                                                            },
+                                                            {
+                                                                "name" : "11:30 AM",
+                                                                "value": "690",
+                                                            },
+                                                            {
+                                                                "name" : "12:00 noon",
+                                                                "value": "720",
+                                                            },
+                                                            {
+                                                                "name" : "12:30 PM",
+                                                                "value": "750",
+                                                            },
+                                                            {
+                                                                "name" : "01:00 PM",
+                                                                "value": "780",
+                                                            },
+                                                            {
+                                                                "name" : "01:30 PM",
+                                                                "value": "810",
+                                                            },
+                                                            {
+                                                                "name" : "02:00 PM",
+                                                                "value": "840",
+                                                            },
+                                                            {
+                                                                "name" : "02:30 PM",
+                                                                "value": "870",
+                                                            },
+                                                            {
+                                                                "name" : "03:00 PM",
+                                                                "value": "900",
+                                                            },
+                                                            {
+                                                                "name" : "03:30 PM",
+                                                                "value": "930",
+                                                            },
+                                                            {
+                                                                "name" : "04:00 PM",
+                                                                "value": "960",
+                                                            },
+                                                            {
+                                                                "name" : "04:30 PM",
+                                                                "value": "990",
+                                                            },
+                                                            {
+                                                                "name" : "05:00 PM",
+                                                                "value": "1020",
+                                                            },
+                                                            {
+                                                                "name" : "05:30 PM",
+                                                                "value": "1050",
+                                                            },
+                                                            {
+                                                                "name" : "06:00 PM",
+                                                                "value": "1080",
+                                                            },
+                                                            {
+                                                                "name" : "06:30 PM",
+                                                                "value": "1110",
+                                                            },
+                                                            {
+                                                                "name" : "07:00 PM",
+                                                                "value": "1140",
+                                                            },
+                                                            {
+                                                                "name" : "07:30 PM",
+                                                                "value": "1170",
+                                                            },
+                                                            {
+                                                                "name" : "08:00 PM",
+                                                                "value": "1200",
+                                                            },
+                                                            {
+                                                                "name" : "08:30 PM",
+                                                                "value": "1230",
+                                                            },
+                                                            {
+                                                                "name" : "09:00 PM",
+                                                                "value": "1260",
+                                                            },
+                                                            {
+                                                                "name" : "09:30 PM",
+                                                                "value": "1290",
+                                                            },
+                                                            {
+                                                                "name" : "10:00 PM",
+                                                                "value": "1320",
+                                                            },
+                                                            {
+                                                                "name" : "10:30 PM",
+                                                                "value": "1350",
+                                                            },
+                                                            {
+                                                                "name" : "11:00 PM",
+                                                                "value": "1380",
+                                                            },
+                                                            {
+                                                                "name" : "11:30 PM",
+                                                                "value": "1410",
+                                                            },
                                                         ]
 
                                                     },
@@ -1213,11 +1740,10 @@ const jsonResponse = {
                                             ],
                                             "_key": "RestrictDeviceOperationTime",
                                             "_show": true
-                                        },
-                                    ]
+                                        }
                                 },
                                 "_type": "checkbox",
-                                "_id": "ENCRYPT_STOcxcxcRAGE"
+                                "_id": "ENCRYPT_STOcxcxcRAGhftyE"
                             },
                             {
                                 "Label": "Device Global Configuration",
@@ -1270,20 +1796,10 @@ const jsonResponse = {
                                             },
                                             {
                                                 "Label": "Is single application mode",
-                                                "tooltip": "Is single application mode.",
-                                                "Optional": {
-                                                    "checked": false
-                                                },
-                                                "_type": "checkbox",
-                                                "_id": "Efdgdg"
-                                            },
-                                            {
-                                                "Label": "Is idle media enabled",
-                                                "tooltip": "Is idle media enabled",
+                                                "tooltip": "Is single application mode",
                                                 "Optional": {
                                                     "checked": false,
-                                                    "subPanel": [
-                                                        {
+                                                    "subPanel": {
                                                             "PanelItem": [
                                                                 {
                                                                     "Label": "Selected initial app in Enrollment Application Install" +
@@ -1295,7 +1811,7 @@ const jsonResponse = {
                                                                     "tooltip": "Is single mode app built for Kisosk. Enable if lock task method is called in the " +
                                                                         "application",
                                                                     "Optional": {
-                                                                        "checked": false
+                                                                        "checked": true,
                                                                     },
                                                                     "_type": "checkbox",
                                                                     "_id": "Efdgdg"
@@ -1304,7 +1820,7 @@ const jsonResponse = {
                                                             "_key": "SingleAppMode",
                                                             "_show": true
                                                         },
-                                                    ]
+
                                                 },
                                                 "_type": "checkbox",
                                                 "_id": "ENCRsdfsdfdAGE"
@@ -1314,8 +1830,7 @@ const jsonResponse = {
                                                 "tooltip": "Is idle media enabled ",
                                                 "Optional": {
                                                     "checked": false,
-                                                    "subPanel": [
-                                                        {
+                                                    "subPanel": {
                                                             "PanelItem": [
                                                                 {
                                                                     "Label": "Media to display while idle",
@@ -1349,7 +1864,6 @@ const jsonResponse = {
                                                             "_key": "idleMediaEnabled",
                                                             "_show": true
                                                         }
-                                                    ]
                                                 },
                                                 "_type": "checkbox",
                                                 "_id": "ENCsdsdsORAGE"
@@ -1359,8 +1873,7 @@ const jsonResponse = {
                                                 "tooltip": "Is multi-user device.",
                                                 "Optional": {
                                                     "checked": false,
-                                                    "subPanel": [
-                                                        {
+                                                    "subPanel":{
                                                             "PanelItem": [
                                                                 {
                                                                     "Label": "Is login needed for user switch",
@@ -1391,9 +1904,34 @@ const jsonResponse = {
                                                                     "_id": "primaryUserApps" //toDo add id
                                                                 },
                                                                 {
-                                                                    "Label": "Added Certificate List",
-                                                                    "tooltip": "Add a certificate.",
+                                                                    "Label": "Add User Applications",
+                                                                    "tooltip": "Add User Applications.",
                                                                     "Optional": {
+                                                                        "button": {
+                                                                            "id": "addUserApps",
+                                                                            "name": " Add User Apps"
+                                                                        },
+                                                                        "dataSource": "cosu-user-app-config",
+                                                                        "columns": [
+                                                                            {
+                                                                                "name" : "User",
+                                                                                "key" : "username",
+                                                                                "type": "input",
+                                                                                "others": {
+                                                                                    "placeholder":"Username",
+                                                                                    "inputType": "text"
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                "name" : "Applications",
+                                                                                "key" : "visibleAppList",
+                                                                                "type": "input",
+                                                                                "others": {
+                                                                                    "placeholder":"",
+                                                                                    "inputType": "text"
+                                                                                }
+                                                                            },
+                                                                        ]
                                                                     },
                                                                     "_type": "inputTable",
                                                                     "_id": "ENCRYcbchdPT_STORAGE"
@@ -1402,7 +1940,6 @@ const jsonResponse = {
                                                             "_key": "idleMediaEnabled",
                                                             "_show": true
                                                         }
-                                                    ]
                                                 },
                                                 "_type": "checkbox",
                                                 "_id": "isMultiUserDevice"
@@ -1412,9 +1949,18 @@ const jsonResponse = {
                                                 "tooltip": "Device display orientation",
                                                 "Optional": {
                                                     "Option": [
-                                                        "Auto",
-                                                        "Portrait",
-                                                        "Landscape",
+                                                        {
+                                                            "name": "Auto",
+                                                            "value": "auto"
+                                                        },
+                                                        {
+                                                            "name": "Portrait",
+                                                            "value": "portrait"
+                                                        },
+                                                        {
+                                                            "name": "Landscape",
+                                                            "value": "landscape"
+                                                        },
                                                     ]
                                                 },
                                                 "_type": "select",
@@ -1425,8 +1971,7 @@ const jsonResponse = {
                                                 "tooltip": "Browser Properties",
                                                 "Optional": {
                                                     "checked": false,
-                                                    "subPanel": [
-                                                        {
+                                                    "subPanel": {
                                                             "PanelItem": [
                                                                 {
                                                                     "Label": "Primary URL ",
@@ -1604,10 +2149,22 @@ const jsonResponse = {
                                                                         "LOAD_CACHE_ELSE_NETWORK, LOAD_NO_CACHE or LOAD_CACHE_ONLY",
                                                                     "Optional": {
                                                                         "Option": [
-                                                                            "LOAD_DEFAULT",
-                                                                            "LOAD_CACHE_ELSE_NETWORK",
-                                                                            "LOAD_NO_CACHE",
-                                                                            "LOAD_CACHE_ONLY"
+                                                                            {
+                                                                                "name" : "LOAD_DEFAULT",
+                                                                                "value" : "-1",
+                                                                            },
+                                                                            {
+                                                                                "name" : "LOAD_CACHE_ELSE_NETWORK",
+                                                                                "value" : "1",
+                                                                            },
+                                                                            {
+                                                                                "name" : "LOAD_NO_CACHE",
+                                                                                "value" : "2",
+                                                                            },
+                                                                            {
+                                                                                "name" : "LOAD_CACHE_ONLY",
+                                                                                "value" : "3",
+                                                                            },
                                                                         ]
                                                                     },
                                                                     "_type": "select",
@@ -1795,9 +2352,18 @@ const jsonResponse = {
                                                                         "from an insecure origin",
                                                                     "Optional": {
                                                                         "Option": [
-                                                                            "MIXED_CONTENT_ALWAYS_ALLOW",
-                                                                            "MIXED_CONTENT_NEVER_ALLOW",
-                                                                            "MIXED_CONTENT_COMPATIBILITY_MODE"
+                                                                            {
+                                                                                "name": "MIXED_CONTENT_ALWAYS_ALLOW",
+                                                                                "value": "0",
+                                                                            },
+                                                                            {
+                                                                                "name": "MIXED_CONTENT_NEVER_ALLOW",
+                                                                                "value": "1",
+                                                                            },
+                                                                            {
+                                                                                "name": "MIXED_CONTENT_COMPATIBILITY_MODE",
+                                                                                "value": "2",
+                                                                            },
                                                                         ]
                                                                     },
                                                                     "_type": "select",
@@ -1808,7 +2374,6 @@ const jsonResponse = {
                                                             "_key": "idleMediaEnabled",
                                                             "_show": true
                                                         }
-                                                    ]
                                                 },
                                                 "_type": "checkbox",
                                                 "_id": "ENCsdsdcxzcxsORAGE"
@@ -1835,9 +2400,9 @@ const jsonResponse = {
                     ]
                 },
                 {
-                    "id": "ENCRYPT_STORAGE",
                     "Name": "Application Restrictions",
                     "Panel": [{
+                        "panelId": "APP-RESTRICTION",
                         "title": "Application Restriction Setting",
                         "description": "This configuration can be used to encrypt data on an Android device, when the device is locked and make it " +
                             "readable when the passcode is entered. Once this configuration profile is installed on a device, corresponding users" +
@@ -1848,9 +2413,18 @@ const jsonResponse = {
                                 "tooltip": "Select a type to proceed",
                                 "Optional": {
                                     "Option": [
-                                        "None",
-                                        "Black List",
-                                        "White List"
+                                        {
+                                            "name": "None",
+                                            "value": "",
+                                        },
+                                        {
+                                            "name": "Black List",
+                                            "value": "black-list",
+                                        },
+                                        {
+                                            "name": "White List",
+                                            "value": "white-list",
+                                        },
                                     ]
                                 },
                                 "_type": "select",
@@ -1860,6 +2434,31 @@ const jsonResponse = {
                                 "Label": "Restricted Application List",
                                 "tooltip": "Add an application to restrict.",
                                 "Optional": {
+                                    "button": {
+                                        "id": "addApplication",
+                                        "name": " Add Application"
+                                    },
+                                    "dataSource": "restricted-applications",
+                                    "columns": [
+                                        {
+                                            "name" : "Application Name/Description",
+                                            "key" : "appName",
+                                            "type": "input",
+                                            "others": {
+                                                "placeholder":"Gmail",
+                                                "inputType": "email"
+                                            }
+                                        },
+                                        {
+                                            "name" : "Package Name",
+                                            "key" : "packageName",
+                                            "type": "input",
+                                            "others": {
+                                                "placeholder":"com.google.android.gm",
+                                                "inputType": "text"
+                                            }
+                                        },
+                                    ]
                                 },
                                 "_type": "inputTable",
                                 "_id": "RestrictedApplicationList"
@@ -1870,20 +2469,34 @@ const jsonResponse = {
                     }]
                 },
                 {
-                    "id": "ENCRYPT_STORAGE",
                     "Name": "Runtime Permission Policy (COSU)",
                     "Panel": [{
+                        "panelId": "RUNTIME_PERMISSION_POLICY",
                         "title": "Runtime Permission Policy (COSU / Work Profile)",
                         "description": "This configuration can be used to set a runtime permission policy to an Android Device.",
                         "PanelItem": [
                             {
-                                "Label": "Select type",
-                                "tooltip": "Select a type to proceed",
+                                "Label": "Set default runtime permission",
+                                "tooltip": "When an app requests a runtime permission this enforces whether the user needs" +
+                                    " to prompted or the permission either automatically granted or denied",
                                 "Optional": {
                                     "Option": [
-                                        "AUTO DENY",
-                                        "AUTO GRANT",
-                                        "AUTO_DENY"
+                                        {
+                                            "name": "NONE",
+                                            "value": "",
+                                        },
+                                        {
+                                            "name": "PROMPT USER",
+                                            "value": "0",
+                                        },
+                                        {
+                                            "name": "AUTO GRANT",
+                                            "value": "1",
+                                        },
+                                        {
+                                            "name": "AUTO DENY",
+                                            "value": "2",
+                                        },
                                     ]
                                 },
                                 "_type": "select",
@@ -1893,9 +2506,65 @@ const jsonResponse = {
                                 "Label": "Set app-specific runtime permissions",
                                 "tooltip": "Add an application and set permission policy for a specific permission it need.",
                                 "Optional": {
+                                    "button": {
+                                        "id": "addApplication-runtimePermission",
+                                        "name": " Add Application"
+                                    },
+                                    "dataSource": "permittedApplications",
+                                    "columns": [
+                                        {
+                                            "name" : "Application",
+                                            "key" : "appName",
+                                            "type": "input",
+                                            "others": {
+                                                "placeholder":"Android Pay",
+                                                "inputType": "text"
+                                            }
+                                        },
+                                        {
+                                            "name" : "Package Name",
+                                            "key" : "packageName",
+                                            "type": "input",
+                                            "others": {
+                                                "placeholder":"com.google.android.pay",
+                                                "inputType": "text"
+                                            }
+                                        },
+                                        {
+                                            "name" : "Permission Name",
+                                            "key" : "permissionName",
+                                            "type": "input",
+                                            "others": {
+                                                "placeholder":"android.permission.NFC",
+                                                "inputType": "text"
+                                            }
+                                        },
+                                        {
+                                            "name" : "Permission Type",
+                                            "key" : "permissionType",
+                                            "type": "select",
+                                            "others": {
+                                                "initialDataIndex": "1",
+                                                "options":[
+                                                    {
+                                                        "value":"PROMPT USER",
+                                                        "key": "0"
+                                                    },
+                                                    {
+                                                        "value": "AUTO GRANT",
+                                                        "key": "1"
+                                                    },
+                                                    {
+                                                        "value": "AUTO DENY",
+                                                        "key": "2"
+                                                    },
+                                                ],
+                                            }
+                                        },
+                                    ]
                                 },
                                 "_type": "inputTable",
-                                "_id": ""
+                                "_id": "restricted-applications"
                             },
                             {
                                 "Label": "Already granted or denied permissions are not affected by this policy.",
@@ -1911,9 +2580,9 @@ const jsonResponse = {
                     }]
                 },
                 {
-                    "id": "System_Update_Policy",
                     "Name": "System Update Policy (COSU)",
                     "Panel": [{
+                        "panelId": "SYSTEM_UPDATE_POLICY",
                         "title": "System Update Policy (COSU)",
                         "description": "This configuration can be used to set a passcode policy to an Android Device. Once this" +
                             " configuration profile is installed on a device, corresponding users will not be able to modify " +
@@ -1924,13 +2593,24 @@ const jsonResponse = {
                                 "tooltip": "Type of the System Update to be set by the Device Owner.",
                                 "Optional": {
                                     "Radio": [
-                                        "Automatic",
-                                        "Postpone",
-                                        "Window"
-                                    ],
-                                    "SubPanel":[
                                         {
-                                            "PanelItem": [
+                                            "name": "Automatic",
+                                            "value": "automatic",
+                                            "subPanel": [{
+                                                "_type": "none",
+                                            }]
+                                        },
+                                        {
+                                            "name": "Postpone",
+                                            "value": "postpone",
+                                            "subPanel": [{
+                                                "_type": "none",
+                                            }]
+                                        },
+                                        {
+                                            "name": "Window",
+                                            "value": "window",
+                                            "subPanel": [
                                                 {
                                                     "Label": "Below configuration of start time and end time are valid only when window option is selected.",
                                                     "_type": "alert",
@@ -1939,32 +2619,103 @@ const jsonResponse = {
                                                     "Label": "Start Time",
                                                     "tooltip": "Window start time for system update",
                                                     "Optional": {
-
                                                         "Option": [
-                                                            "12:00 AM",
-                                                            "01:00 AM",
-                                                            "02:00 AM",
-                                                            "03:00 AM",
-                                                            "04:00 AM",
-                                                            "05:00 AM",
-                                                            "06:00 AM",
-                                                            "07:00 AM",
-                                                            "08:00 AM",
-                                                            "09:00 AM",
-                                                            "10:00 AM",
-                                                            "11:00 AM",
-                                                            "12:00 Noon",
-                                                            "01:00 PM",
-                                                            "02:00 PM",
-                                                            "03:00 PM",
-                                                            "04:00 PM",
-                                                            "05:00 PM",
-                                                            "06:00 PM",
-                                                            "07:00 PM",
-                                                            "08:00 PM",
-                                                            "09:00 PM",
-                                                            "10:00 PM",
-                                                            "11:00 PM",
+                                                            {
+                                                                "name" : "12:00 AM",
+                                                                "value": "1440",
+                                                            },
+                                                            {
+                                                                "name" : "01:00 AM",
+                                                                "value": "60",
+                                                            },
+                                                            {
+                                                                "name" : "02:00 AM",
+                                                                "value": "120",
+                                                            },
+                                                            {
+                                                                "name" : "03:00 AM",
+                                                                "value": "180",
+                                                            },
+                                                            {
+                                                                "name" : "04:00 AM",
+                                                                "value": "240",
+                                                            },
+                                                            {
+                                                                "name" : "05:00 AM",
+                                                                "value": "300",
+                                                            },
+                                                            {
+                                                                "name" : "06:00 AM",
+                                                                "value": "360",
+                                                            },
+                                                            {
+                                                                "name" : "07:00 AM",
+                                                                "value": "420",
+                                                            },
+                                                            {
+                                                                "name" : "08:00 AM",
+                                                                "value": "480",
+                                                            },
+                                                            {
+                                                                "name" : "09:00 AM",
+                                                                "value": "540",
+                                                            },
+                                                            {
+                                                                "name" : "10:00 AM",
+                                                                "value": "600",
+                                                            },
+                                                            {
+                                                                "name" : "11:00 AM",
+                                                                "value": "660",
+                                                            },
+                                                            {
+                                                                "name" : "12:00 noon",
+                                                                "value": "720",
+                                                            },
+                                                            {
+                                                                "name" : "01:00 PM",
+                                                                "value": "780",
+                                                            },
+                                                            {
+                                                                "name" : "02:00 PM",
+                                                                "value": "840",
+                                                            },
+                                                            {
+                                                                "name" : "03:00 PM",
+                                                                "value": "900",
+                                                            },
+                                                            {
+                                                                "name" : "04:00 PM",
+                                                                "value": "960",
+                                                            },
+                                                            {
+                                                                "name" : "05:00 PM",
+                                                                "value": "1020",
+                                                            },
+                                                            {
+                                                                "name" : "06:00 PM",
+                                                                "value": "1080",
+                                                            },
+                                                            {
+                                                                "name" : "07:00 PM",
+                                                                "value": "1140",
+                                                            },
+                                                            {
+                                                                "name" : "08:00 PM",
+                                                                "value": "1200",
+                                                            },
+                                                            {
+                                                                "name" : "09:00 PM",
+                                                                "value": "1260",
+                                                            },
+                                                            {
+                                                                "name" : "10:00 PM",
+                                                                "value": "1320",
+                                                            },
+                                                            {
+                                                                "name" : "11:00 PM",
+                                                                "value": "1380",
+                                                            },
                                                         ]
 
                                                     },
@@ -1976,30 +2727,102 @@ const jsonResponse = {
                                                     "tooltip": "Window end time for system update",
                                                     "Optional": {
                                                         "Option": [
-                                                            "12:00 AM",
-                                                            "01:00 AM",
-                                                            "02:00 AM",
-                                                            "03:00 AM",
-                                                            "04:00 AM",
-                                                            "05:00 AM",
-                                                            "06:00 AM",
-                                                            "07:00 AM",
-                                                            "08:00 AM",
-                                                            "09:00 AM",
-                                                            "10:00 AM",
-                                                            "11:00 AM",
-                                                            "12:00 Noon",
-                                                            "01:00 PM",
-                                                            "02:00 PM",
-                                                            "03:00 PM",
-                                                            "04:00 PM",
-                                                            "05:00 PM",
-                                                            "06:00 PM",
-                                                            "07:00 PM",
-                                                            "08:00 PM",
-                                                            "09:00 PM",
-                                                            "10:00 PM",
-                                                            "11:00 PM",
+                                                            {
+                                                                "name" : "12:00 AM",
+                                                                "value": "1440",
+                                                            },
+                                                            {
+                                                                "name" : "01:00 AM",
+                                                                "value": "60",
+                                                            },
+                                                            {
+                                                                "name" : "02:00 AM",
+                                                                "value": "120",
+                                                            },
+                                                            {
+                                                                "name" : "03:00 AM",
+                                                                "value": "180",
+                                                            },
+                                                            {
+                                                                "name" : "04:00 AM",
+                                                                "value": "240",
+                                                            },
+                                                            {
+                                                                "name" : "05:00 AM",
+                                                                "value": "300",
+                                                            },
+                                                            {
+                                                                "name" : "06:00 AM",
+                                                                "value": "360",
+                                                            },
+                                                            {
+                                                                "name" : "07:00 AM",
+                                                                "value": "420",
+                                                            },
+                                                            {
+                                                                "name" : "08:00 AM",
+                                                                "value": "480",
+                                                            },
+                                                            {
+                                                                "name" : "09:00 AM",
+                                                                "value": "540",
+                                                            },
+                                                            {
+                                                                "name" : "10:00 AM",
+                                                                "value": "600",
+                                                            },
+                                                            {
+                                                                "name" : "11:00 AM",
+                                                                "value": "660",
+                                                            },
+                                                            {
+                                                                "name" : "12:00 noon",
+                                                                "value": "720",
+                                                            },
+                                                            {
+                                                                "name" : "01:00 PM",
+                                                                "value": "780",
+                                                            },
+                                                            {
+                                                                "name" : "02:00 PM",
+                                                                "value": "840",
+                                                            },
+                                                            {
+                                                                "name" : "03:00 PM",
+                                                                "value": "900",
+                                                            },
+                                                            {
+                                                                "name" : "04:00 PM",
+                                                                "value": "960",
+                                                            },
+                                                            {
+                                                                "name" : "05:00 PM",
+                                                                "value": "1020",
+                                                            },
+                                                            {
+                                                                "name" : "06:00 PM",
+                                                                "value": "1080",
+                                                            },
+                                                            {
+                                                                "name" : "07:00 PM",
+                                                                "value": "1140",
+                                                            },
+                                                            {
+                                                                "name" : "08:00 PM",
+                                                                "value": "1200",
+                                                            },
+                                                            {
+                                                                "name" : "09:00 PM",
+                                                                "value": "1260",
+                                                            },
+                                                            {
+                                                                "name" : "10:00 PM",
+                                                                "value": "1320",
+                                                            },
+                                                            {
+                                                                "name" : "11:00 PM",
+                                                                "value": "1380",
+                                                            },
                                                         ]
 
                                                     },
@@ -2007,6 +2830,11 @@ const jsonResponse = {
                                                     "_id": "cosuSystemUpdatePolicyWindowEndTime"
                                                 },
                                             ],
+                                        },
+                                    ],
+                                    "SubPanel":[
+                                        {
+
                                             "_key": "Manual",
                                             "_show": true
                                         },                                    ]
@@ -2022,9 +2850,9 @@ const jsonResponse = {
                     }]
                 },
                 {
-                    "id": "Enrollment_Application_Install",
                     "Name": "Enrollment Application Install",
                     "Panel": [{
+                        "panelId": "ENROLLMENT_APP_INSTALL",
                         "title": "Enrollment Application Install",
                         "description": "This configuration can be used to install applications during Android device enrollment.",
                         "PanelItem": [
@@ -2044,14 +2872,24 @@ const jsonResponse = {
                                 "Label": "App Auto Update Policy",
                                 "tooltip": "The Auto-update policy for apps installed on the device",
                                 "Optional": {
-
                                     "Option": [
-                                        "When Connected to WiFi",
-                                        "Auto Update Anytime",
-                                        "Ask User to Update",
-                                        "Disable Auto Update",
+                                        {
+                                            "name" : "When Connected to WiFi",
+                                            "value": "0",
+                                        },
+                                        {
+                                            "name" : "Auto Update Anytime",
+                                            "value": "1",
+                                        },
+                                        {
+                                            "name" : "Ask User to Update",
+                                            "value": "2",
+                                        },
+                                        {
+                                            "name" : "Disable Auto Update",
+                                            "value": "3",
+                                        },
                                     ]
-
                                 },
                                 "_type": "select",
                                 "_id": "autoUpdatePolicy"
@@ -2060,13 +2898,20 @@ const jsonResponse = {
                                 "Label": "App Availability to a User",
                                 "tooltip": "The availability granted to the user for the specified app",
                                 "Optional": {
-
                                     "Option": [
-                                        "All Approved Apps For Enterprise",
-                                        "All Apps From Playstore",
-                                        "Only Whitelisted Apps",
+                                        {
+                                            "name" : "All Approved Apps For Enterprise",
+                                            "value": "1",
+                                        },
+                                        {
+                                            "name" : "All Apps From Playstore",
+                                            "value": "2",
+                                        },
+                                        {
+                                            "name" : "Only Whitelisted Apps",
+                                            "value": "3",
+                                        },
                                     ]
-
                                 },
                                 "_type": "select",
                                 "_id": "productSetBehavior"

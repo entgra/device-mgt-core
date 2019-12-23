@@ -1,29 +1,36 @@
-.ant-tabs-content {
-    /*height: 120px;*/
-    margin-top: -16px;
+
+/*.tab-container > .ant-tabs > .ant-tabs-content > .ant-tabs-tabpane {*/
+/*    background: #fff;*/
+/*    padding: 16px;*/
+/*    border-color: transparent;*/
+/*}*/
+
+.tab-container > .ant-tabs > .ant-tabs-bar {
+    border-color: #aaaaaa;
 }
 
-.ant-tabs-content > .ant-tabs-tabpane {
-    /*background: #000066;*/
-    /*color: #ffffff;*/
-    /*padding: 16px;*/
+.tab-container > .ant-tabs > .ant-tabs-bar .ant-tabs-tab {
+    height: 50px;
+    margin: 0;
 }
 
-.ant-tabs-bar {
-    border-color: #3498db;
+.tab-container > .ant-tabs > .ant-tabs-bar .ant-tabs-tab-active {
+    border-color: transparent;
+    background: #4b92db;
+    color: #fff;
 }
 
-.ant-tabs-bar .ant-tabs-tab {
-    border-color: #3498db;
+.radio-panel-container > .ant-tabs > .ant-tabs-bar .ant-tabs-tab {
+    height: 0;
+    margin: -10px;
+}
+
+.radio-panel-container > .ant-tabs > .ant-tabs-bar {
+    border-color: transparent;
+}
+
+.radio-panel-container > .ant-tabs > .ant-tabs-bar .ant-tabs-tab-active {
+    border-color: transparent;
     background: transparent;
-    /*color: #cc0000;*/
-
-}
-
-.ant-tabs-bar .ant-tabs-tab-active {
-
-    /*border-color: #1b3bcc;*/
-    /*background: #3498db;*/
-    /*color: #cc0000;*/
-
+    color: transparent;
 }
