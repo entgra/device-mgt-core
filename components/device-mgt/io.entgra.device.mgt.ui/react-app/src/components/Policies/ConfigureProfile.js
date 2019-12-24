@@ -1,7 +1,24 @@
+/*
+ * Copyright (c) 2019, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
+ *
+ * Entgra (pvt) Ltd. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 import React from 'react';
 import {Tabs, Row, Col, Switch, Menu,Input, Typography, Form, Checkbox, Select,
     Tooltip, Icon, Collapse, Alert, Upload, Button,Radio, Table, Popconfirm} from "antd";
-import { FaBeer } from 'react-icons/fa';
 import {withConfigContext} from "../../context/ConfigContext";
 import "../../pages/Dashboard/Policies/policies.css";
 import jsonResponse from "./configuration";
@@ -11,19 +28,20 @@ const {Option} = Select;
 const {Panel} = Collapse;
 const { TextArea } = Input;
 
-const policyConfigurationsList = jsonResponse.PolicyConfigurations;
+const policyConfigurationslist = jsonResponse.policyConfigurations;
 
 class ConfigureProfile extends React.Component {
     constructor(props) {
         super(props);
         this.config =  this.props.context;
-        this.policies = policyConfigurationsList.androidPolicy.Policy;
+        this.policies = policyConfigurationslist.androidPolicy.policy;
         this.state = {
             isDisplayMain: "none",
             activePanelKeys: [],
             activeSubPanelKeys: [],
             count: 0,
             activeRadioValues: "",
+            activeSelectedValues: "",
         }
     };
 
@@ -34,6 +52,13 @@ class ConfigureProfile extends React.Component {
         this.setState({
             activeRadioValue : e.target.value
         });
+    };
+
+    handleSelectedPanel =(e)=>{
+      console.log(e);
+      this.setState({
+          activeSelectedValues: e
+      })
     };
 
     handleSubPanel = (e) =>{
@@ -50,6 +75,7 @@ class ConfigureProfile extends React.Component {
         }
     };
 
+    //handle Switch on off button
     handleMainPanel = (e, ref) =>{
         if(e){
             let joined = this.state.activePanelKeys.concat(ref);
@@ -104,28 +130,72 @@ class ConfigureProfile extends React.Component {
         return(columns);
     };
 
+    //generate form items
     getPanelItems = (panel)=>{
         const { getFieldDecorator } = this.props.form;
             return (
                 panel.map((item,k)=>{
-                    switch(item._type){
+                    switch(item.type){
                         case "select":
+                            if(item.optional.hasOwnProperty("subPanel")){
+                                return(
+                                    <div>
+                                        <Form.Item key={k}
+                                                   label={
+                                                       <span>
+                                               {item.label}&nbsp;
+                                                           <Tooltip title={item.tooltip} placement="right">
+                                                   <Icon type="question-circle-o" />
+                                               </Tooltip>
+                                           </span>
+                                                   }
+                                                   style={{display: "block"}}>
+                                            {getFieldDecorator(`${item.id}`, {
+                                                initialValue: `${item.optional.option[0].name}`
+                                            })(
+                                                <Select onChange={this.handleSelectedPanel}>
+                                                    {item.optional.option.map((option,i)=>{
+                                                        return(
+                                                            <Option className={option.panelKey} value={option.value}>{option.name}</Option>
+                                                        );
+                                                    })}
+                                                </Select>
+                                            )}
+                                        </Form.Item>
+                                        <div className={"sub-panel-container"}>
+                                            <Tabs animated={false} tabBarGutter={0} activeKey={this.state.activeSelectedValues}>
+                                                {item.optional.subPanel.map((panel,i) =>{
+                                                    return(
+                                                        <TabPane
+                                                            tab={""}
+                                                            key={panel.key}
+                                                        >
+                                                            {this.getPanelItems(panel.panelItem)}
+                                                        </TabPane>
+                                                    );
+                                                })}
+                                            </Tabs>
+                                        </div>
+                                    </div>
+                                );
+                            }
+                            else {
                             return(
                                 <Form.Item key={k}
                                            label={
                                                <span>
-                                               {item.Label}&nbsp;
+                                               {item.label}&nbsp;
                                                    <Tooltip title={item.tooltip} placement="right">
                                                    <Icon type="question-circle-o" />
                                                </Tooltip>
                                            </span>
                                            }
                                            style={{display: "block"}}>
-                                    {getFieldDecorator(`${item._id}`, {
-                                        initialValue: `${item.Optional.Option[0].name}`
+                                    {getFieldDecorator(`${item.id}`, {
+                                        initialValue: `${item.optional.option[0].name}`
                                     })(
                                         <Select>
-                                            {item.Optional.Option.map((option,i)=>{
+                                            {item.optional.option.map((option,i)=>{
                                                 return(
                                                     <Option value={option.value}>{option.name}</Option>
                                                 );
@@ -134,48 +204,49 @@ class ConfigureProfile extends React.Component {
                                     )}
                                 </Form.Item>
                             );
+                            }
                         case "input":
                             return(
                                 <Form.Item key={k}
                                            label={
                                                <span>
-                                               {item.Label}&nbsp;
+                                               {item.label}&nbsp;
                                                    <Tooltip title={item.tooltip} placement="right">
                                                     <Icon type="question-circle-o" />
                                                </Tooltip>
                                            </span>
                                            }
                                            style={{display: "block"}}>
-                                    {getFieldDecorator(`${item._id}`, {
+                                    {getFieldDecorator(`${item.id}`, {
                                         rules: [
                                             {
-                                                pattern: new RegExp(`${item.Optional.rules.regex}`),
-                                                message: `${item.Optional.rules.validationMsg}`,
+                                                pattern: new RegExp(`${item.optional.rules.regex}`),
+                                                message: `${item.optional.rules.validationMsg}`,
                                             },
                                         ],
                                     })(
-                                        <Input placeholder={item.Optional.Placeholder}/>
+                                        <Input placeholder={item.optional.placeholder}/>
                                     )}
                                 </Form.Item>
                             );
                         case "checkbox":
-                            if(item.Optional.hasOwnProperty("subPanel")){
+                            if(item.optional.hasOwnProperty("subPanel")){
                                 return (
                                     <div key={k} >
                                         <Collapse bordered={false} activeKey={this.state.activeSubPanelKeys} >
-                                            <Collapse.Panel key={item._id}
+                                            <Collapse.Panel key={item.id}
                                                             showArrow={false}
                                                             style={{border:0}}
                                                             header={
                                                                 <Form.Item key={k}>
-                                                                    {getFieldDecorator(`${item._id}`, {
+                                                                    {getFieldDecorator(`${item.id}`, {
                                                                         valuePropName: 'checked',
-                                                                        initialValue: item.Optional.checked,
+                                                                        initialValue: item.optional.checked,
                                                                     })(
                                                                         <Checkbox
                                                                             onChange={this.handleSubPanel}>
                                                                             <span>
-                                                                                {item.Label}&nbsp;
+                                                                                {item.label}&nbsp;
                                                                                 <Tooltip title={item.tooltip} placement="right">
                                                                                     <Icon type="question-circle-o" />
                                                                                 </Tooltip>
@@ -186,7 +257,7 @@ class ConfigureProfile extends React.Component {
                                                             }>
                                                 <div>
                                                     <div>
-                                                        {this.getPanelItems(item.Optional.subPanel.PanelItem)}
+                                                        {this.getPanelItems(item.optional.subPanel.panelItem)}
                                                     </div>
                                                 </div>
                                             </Collapse.Panel>
@@ -196,13 +267,13 @@ class ConfigureProfile extends React.Component {
                             }else{
                                 return(
                                     <Form.Item key={k}>
-                                        {getFieldDecorator(`${item._id}`, {
+                                        {getFieldDecorator(`${item.id}`, {
                                             valuePropName: 'checked',
-                                            initialValue: item.Optional.checked,
+                                            initialValue: item.optional.checked,
                                         })(
                                             <Checkbox>
                                         <span>
-                                            {item.Label}&nbsp;
+                                            {item.label}&nbsp;
                                             <Tooltip title={item.tooltip} placement="right">
                                                 <Icon type="question-circle-o" />
                                             </Tooltip>
@@ -218,18 +289,18 @@ class ConfigureProfile extends React.Component {
                                 <Form.Item key={k}
                                            label={
                                                <span>
-                                               {item.Label}&nbsp;
+                                               {item.label}&nbsp;
                                                    <Tooltip title={item.tooltip} placement="right">
                                                     <Icon type="question-circle-o" />
                                                </Tooltip>
                                            </span>
                                            }
                                            style={{display: "block"}}>
-                                    {getFieldDecorator(`${item._id}`, {
+                                    {getFieldDecorator(`${item.id}`, {
 
                                     })(
-                                        <TextArea placeholder={item.Optional.Placeholder}
-                                                  rows={item.Optional.Row} />
+                                        <TextArea placeholder={item.optional.placeholder}
+                                                  rows={item.optional.row} />
                                     )}
                                 </Form.Item>
                             );
@@ -239,17 +310,17 @@ class ConfigureProfile extends React.Component {
                                     <Form.Item key={k}
                                                label={
                                                    <span>
-                                               {item.Label}&nbsp;
+                                               {item.label}&nbsp;
                                                        <Tooltip title={item.tooltip} placement="right">
                                                     <Icon type="question-circle-o" />
                                                </Tooltip>
                                            </span>
                                                }
                                                style={{display: "block"}}>
-                                        {getFieldDecorator(`${item._id}`, {
+                                        {getFieldDecorator(`${item.id}`, {
                                         })(
                                             <Radio.Group onChange={this.handleRadioPanel}>
-                                                {item.Optional.Radio.map((option,i)=>{
+                                                {item.optional.radio.map((option,i)=>{
                                                     return(
                                                         <Radio value={option.value}>{option.name}</Radio>
                                                     );
@@ -257,9 +328,9 @@ class ConfigureProfile extends React.Component {
                                             </Radio.Group>
                                         )}
                                     </Form.Item>
-                                    <div className={"radio-panel-container"} style={{marginTop: -10}}>
-                                        <Tabs id={item._id} activeKey={this.state.activeRadioValue}>
-                                            {item.Optional.Radio.map((option,i)=>{
+                                    <div className={"radio-panels"} style={{marginTop: -10}}>
+                                        <Tabs id={item.id} activeKey={this.state.activeRadioValue}>
+                                            {item.optional.radio.map((option,i)=>{
                                                 return(
                                                     <TabPane
                                                         tab={null}
@@ -275,32 +346,33 @@ class ConfigureProfile extends React.Component {
                             );
                         case "title":
                             return(
-                                <Title key={k} level={4}>{item.Label} </Title>
+                                <Title key={k} level={4}>{item.label} </Title>
                             );
                         case "paragraph":
                             return(
-                                <Paragraph key={k} style={{marginTop:20}}>{item.Label} </Paragraph>
+                                <Paragraph key={k} style={{marginTop:20}}>{item.label} </Paragraph>
                             );
                         case "alert":
                             return(
                                 <Alert
                                     key={k}
-                                    description={item.Label}
+                                    description={item.label}
                                     type="warning"
                                     showIcon
                                 />
                             );
                         case "upload":
                             return(
-                                <Form.Item key={k}
-                                           label={
-                                               <span>
-                                               {item.Label}&nbsp;
-                                                   <Tooltip title={item.tooltip} placement="right">
-                                                   <Icon type="question-circle-o" />
-                                               </Tooltip>
-                                            </span>
-                                           }
+                                <Form.Item
+                                    key={k}
+                                    label={
+                                        <span>
+                                            {item.label}&nbsp;
+                                            <Tooltip title={item.tooltip} placement="right">
+                                                <Icon type="question-circle-o" />
+                                            </Tooltip>
+                                        </span>
+                                     }
                                 >
                                     {getFieldDecorator('upload', {
 
@@ -315,14 +387,14 @@ class ConfigureProfile extends React.Component {
                             );
                         case "inputTable":
                             let dataSourceArr = [];
-                            const column = this.getColumns({ getFieldDecorator }, item.Optional.columns);
+                            const column = this.getColumns({ getFieldDecorator }, item.optional.columns);
                             return (
                                 <div key={k}>
                                     <Button
                                         onClick={()=>this.handleAdd(dataSourceArr)}
                                         type="primary"
                                         style={{ marginBottom: 16 }}>
-                                        <Icon type="plus-circle"/>{item.Optional.button.name}
+                                        <Icon type="plus-circle"/>{item.optional.button.name}
                                     </Button>
                                     <Table dataSource={dataSourceArr} columns={column}/>
                                 </div>
@@ -340,32 +412,33 @@ class ConfigureProfile extends React.Component {
                 <Tabs tabPosition={"left"} size={"large"}>
                     { this.policies.map((element, i) =>{
                         return(
-                            <TabPane tab={<span>{element.Name}</span>} key={i}  >
-                                { Object.values(element.Panel).map((panel, j)=>{
+                            <TabPane tab={<span>{element.name}</span>} key={i}  >
+                                { Object.values(element.panel).map((panel, j)=>{
                                     return(
                                         <div key={j}>
                                             <Collapse bordered={false} activeKey={this.state.activePanelKeys}>
-                                                <Collapse.Panel key={panel.panelId}
-                                                                showArrow={false}
-                                                                style={{border:0}}
-                                                                header={
-                                                                    <div>
-                                                                        <Row>
-                                                                            <Col offset={0} span={14}>
-                                                                                <Title level={4}> {panel.title} </Title>
-                                                                            </Col>
-                                                                            <Col offset={8}  span={1}>
-                                                                                <Switch
-                                                                                    checkedChildren="ON"
-                                                                                    unCheckedChildren="OFF"
-                                                                                    onChange={(e)=>this.handleMainPanel(e, `${panel.panelId}`)}/>
-                                                                            </Col>
-                                                                        </Row>
-                                                                        <Row>{panel.description}</Row>
-                                                                    </div>}>
+                                                <Collapse.Panel
+                                                    key={panel.panelId}
+                                                    showArrow={false}
+                                                    style={{border:0}}
+                                                    header={
+                                                        <div>
+                                                            <Row>
+                                                                <Col offset={0} span={14}>
+                                                                    <Title level={4}> {panel.title} </Title>
+                                                                </Col>
+                                                                <Col offset={8}  span={1}>
+                                                                    <Switch
+                                                                        checkedChildren="ON"
+                                                                        unCheckedChildren="OFF"
+                                                                        onChange={(e)=>this.handleMainPanel(e, `${panel.panelId}`)}/>
+                                                                </Col>
+                                                            </Row>
+                                                            <Row>{panel.description}</Row>
+                                                        </div>}>
                                                     <div>
                                                         <Form>
-                                                            {this.getPanelItems(panel.PanelItem)}
+                                                            {this.getPanelItems(panel.panelItem)}
                                                         </Form>
                                                     </div>
                                                 </Collapse.Panel>
@@ -377,7 +450,8 @@ class ConfigureProfile extends React.Component {
                     })
                     }
                 </Tabs>
-            </div>);
+            </div>
+        );
     }
 }
 

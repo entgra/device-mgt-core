@@ -1,36 +1,36 @@
 const jsonResponse = {
-    "PolicyConfigurations": {
+    "policyConfigurations": {
         "androidPolicy": {
-            "Policy": [
+            "policy": [
                 {
-                    "Name": "Passcode Policy",
-                    "Panel": [
+                    "name": "Passcode Policy",
+                    "panel": [
                         {
                             "panelId": "PASSCODE_POLICY",
-                            "PanelItem": [
+                            "panelItem": [
                                 {
-                                    "Label": "Allow Simple Value",
+                                    "label": "Allow Simple Value",
                                     "tooltip": "Permits repeating, ascending and descending character sequences",
-                                    "Optional": {
+                                    "optional": {
                                         "checked": true
                                     },
-                                    "_type": "checkbox",
-                                    "_id": "allowSimple"
+                                    "type": "checkbox",
+                                    "id": "allowSimple"
                                 },
                                 {
-                                    "Label": "Require alphanumeric value",
+                                    "label": "Require alphanumeric value",
                                     "tooltip": "Mandates to contain both letters and numbers",
-                                    "Optional": {
+                                    "optional": {
                                         "checked": true
                                     },
-                                    "_type": "checkbox",
-                                    "_id": "requireAlphanumeric"
+                                    "type": "checkbox",
+                                    "id": "requireAlphanumeric"
                                 },
                                 {
-                                    "Label": "Minimum passcode length",
+                                    "label": "Minimum passcode length",
                                     "tooltip": "Minimum number of characters allowed in a passcode",
-                                    "Optional": {
-                                        "Option": [
+                                    "optional": {
+                                        "option": [
                                             {
                                                "name" : "None",
                                                "value": "",
@@ -85,15 +85,15 @@ const jsonResponse = {
                                             },
                                         ]
                                     },
-                                    "_type": "select",
-                                    "_id": "minLength",
+                                    "type": "select",
+                                    "id": "minLength",
 
                                 },
                                 {
-                                    "Label": "Minimum number of complex characters",
+                                    "label": "Minimum number of complex characters",
                                     "tooltip": "Minimum number of complex or non-alphanumeric characters allowed in a passcode",
-                                    "Optional": {
-                                        "Option": [
+                                    "optional": {
+                                        "option": [
                                             {
                                                 "name" : "None",
                                                 "value": "",
@@ -121,42 +121,42 @@ const jsonResponse = {
                                             },
                                         ]
                                     },
-                                    "_type": "select",
-                                    "_id": "minComplexChars"
+                                    "type": "select",
+                                    "id": "minComplexChars"
                                 },
                                 {
-                                    "Label": "Maximum passcode age in days",
+                                    "label": "Maximum passcode age in days",
                                     "tooltip": "Number of days after which a passcode must be changed",
-                                    "Optional": {
-                                        "Placeholder": "Should be in between 1-to-730 days or 0 for none",
+                                    "optional": {
+                                        "placeholder": "Should be in between 1-to-730 days or 0 for none",
                                         "rules":{
                                             "regex": "^(?:0|[1-9]|[1-9][1-9]|[0-6][0-9][0-9]|7[0-2][0-9]|730)$",
                                             "validationMsg": "Should be in between 1-to-730 days or 0 for none",
                                             "required": false
                                         },
                                     },
-                                    "_type": "input",
-                                    "_id": "maxPINAgeInDays"
+                                    "type": "input",
+                                    "id": "maxPINAgeInDays"
                                 },
                                 {
-                                    "Label": "Passcode history",
+                                    "label": "Passcode history",
                                     "tooltip": "Number of consequent unique passcodes to be used before reuse",
-                                    "Optional": {
-                                        "Placeholder": "Should be in between 1-to-50 passcodes or 0 for none",
+                                    "optional": {
+                                        "placeholder": "Should be in between 1-to-50 passcodes or 0 for none",
                                         "rules":{
                                             "regex": "^(?:0|[1-9]|[1-4][0-9]|50)$",
                                             "validationMsg": "Should be in between 1-to-50 passcodes or 0 for none",
                                             "required": false
                                         },
                                     },
-                                    "_type": "input",
-                                    "_id": "pinHistory"
+                                    "type": "input",
+                                    "id": "pinHistory"
                                 },
                                 {
-                                    "Label": "Maximum number of failed attempts",
+                                    "label": "Maximum number of failed attempts",
                                     "tooltip": "The maximum number of incorrect password entries allowed. If the correct password is not entered within the allowed number of attempts, the data on the device will be erased.",
-                                    "Optional": {
-                                        "Option": [
+                                    "optional": {
+                                        "option": [
                                             {
                                                 "name" : "None",
                                                 "value": "",
@@ -196,44 +196,44 @@ const jsonResponse = {
                                             },
                                         ]
                                     },
-                                    "_type": "select",
-                                    "_id": "maxFailedAttempts"
+                                    "type": "select",
+                                    "id": "maxFailedAttempts"
                                 },
                                 {
-                                    "Label": "Passcode policy for work profile",
-                                    "_type": "title"
+                                    "label": "Passcode policy for work profile",
+                                    "type": "title"
                                 },
                                 {
-                                    "Label": "Enabled Work profile passcode",
+                                    "label": "Enabled Work profile passcode",
                                     "tooltip": "Enabled Work profile passcode.",
-                                    "Optional": {
+                                    "optional": {
                                         "checked": false,
                                         "subPanel":
                                             {
-                                                "PanelItem": [
+                                                "panelItem": [
                                                     {
-                                                        "Label": "Allow Simple Value",
+                                                        "label": "Allow Simple Value",
                                                         "tooltip": "Permits repeating, ascending and descending character sequences",
-                                                        "Optional": {
+                                                        "optional": {
                                                             "checked": true
                                                         },
-                                                        "_type": "checkbox",
-                                                        "_id": "passcodePolicyAllowSimpleWP"
+                                                        "type": "checkbox",
+                                                        "id": "passcodePolicyAllowSimpleWP"
                                                     },
                                                     {
-                                                        "Label": "Require alphanumeric value",
+                                                        "label": "Require alphanumeric value",
                                                         "tooltip": "Mandates to contain both letters and numbers",
-                                                        "Optional": {
+                                                        "optional": {
                                                             "checked": true
                                                         },
-                                                        "_type": "checkbox",
-                                                        "_id": "passcodePolicyRequireAlphanumericWP"
+                                                        "type": "checkbox",
+                                                        "id": "passcodePolicyRequireAlphanumericWP"
                                                     },
                                                     {
-                                                        "Label": "Minimum passcode length",
+                                                        "label": "Minimum passcode length",
                                                         "tooltip": "Minimum number of characters allowed in a passcode",
-                                                        "Optional": {
-                                                            "Option": [
+                                                        "optional": {
+                                                            "option": [
                                                                 {
                                                                     "name" : "None",
                                                                     "value": "",
@@ -289,15 +289,14 @@ const jsonResponse = {
                                                             ]
 
                                                         },
-                                                        "_type": "select",
-                                                        "_id": "passcodePolicyMinLengthWP"
+                                                        "type": "select",
+                                                        "id": "passcodePolicyMinLengthWP"
                                                     },
                                                     {
-                                                        "Label": "Minimum number of complex characters",
+                                                        "label": "Minimum number of complex characters",
                                                         "tooltip": "Minimum number of complex or non-alphanumeric characters allowed in a passcode",
-                                                        "Optional": {
-
-                                                            "Option": [
+                                                        "optional": {
+                                                            "option": [
                                                                 {
                                                                     "name" : "None",
                                                                     "value": "",
@@ -326,42 +325,42 @@ const jsonResponse = {
                                                             ]
 
                                                         },
-                                                        "_type": "select",
-                                                        "_id": "passcodePolicyMinComplexCharsWP"
+                                                        "type": "select",
+                                                        "id": "passcodePolicyMinComplexCharsWP"
                                                     },
                                                     {
-                                                        "Label": "Maximum passcode age in days",
+                                                        "label": "Maximum passcode age in days",
                                                         "tooltip": "Number of days after which a passcode must be changed",
-                                                        "Optional": {
-                                                            "Placeholder": "Should be in between 1-to-730 days or 0 for none",
+                                                        "optional": {
+                                                            "placeholder": "Should be in between 1-to-730 days or 0 for none",
                                                             "rules":{
                                                                 "regex": "",
                                                                 "validationMsg": "",
                                                                 "required": false
                                                             },
                                                         },
-                                                        "_type": "input",
-                                                        "_id": "passcodePolicyMaxPasscodeAgeInDaysWP"
+                                                        "type": "input",
+                                                        "id": "passcodePolicyMaxPasscodeAgeInDaysWP"
                                                     },
                                                     {
-                                                        "Label": "Passcode history",
+                                                        "label": "Passcode history",
                                                         "tooltip": "Number of consequent unique passcodes to be used before reuse",
-                                                        "Optional": {
-                                                            "Placeholder": "Should be in between 1-to-50 passcodes or 0 for none",
+                                                        "optional": {
+                                                            "placeholder": "Should be in between 1-to-50 passcodes or 0 for none",
                                                             "rules":{
                                                                 "regex": "",
                                                                 "validationMsg": "",
                                                                 "required": false
                                                             },
                                                         },
-                                                        "_type": "input",
-                                                        "_id": "passcodePolicyPasscodeHistoryWP"
+                                                        "type": "input",
+                                                        "id": "passcodePolicyPasscodeHistoryWP"
                                                     },
                                                     {
-                                                        "Label": "Maximum number of failed attempts",
+                                                        "label": "Maximum number of failed attempts",
                                                         "tooltip": "The maximum number of incorrect password entries allowed. If the correct password is not entered within the allowed number of attempts, the data on the device will be erased.",
-                                                        "Optional": {
-                                                            "Option": [
+                                                        "optional": {
+                                                            "option": [
                                                                 {
                                                                     "name" : "None",
                                                                     "value": "",
@@ -401,21 +400,21 @@ const jsonResponse = {
                                                                 },
                                                             ]
                                                         },
-                                                        "_type": "select",
-                                                        "_id": "passcodePolicyMaxFailedAttemptsWP"
+                                                        "type": "select",
+                                                        "id": "passcodePolicyMaxFailedAttemptsWP"
                                                     }
                                                 ],
-                                                "_key": "workProfilePasscode",
-                                                "_show": false
+                                                "key": "workProfilePasscode",
+                                                "show": false
                                             }
                                     },
-                                    "_type": "checkbox",
-                                    "_id": "passcodePolicyWPExist",
+                                    "type": "checkbox",
+                                    "id": "passcodePolicyWPExist",
 
                                 }
                             ],
-                            "_key": "1",
-                            "_show": true,
+                            "key": "1",
+                            "show": true,
                             "title": "Passcode Policy",
                             "description": "Enforce a configured passcode policy on Android devices. Once this profile is applied," +
                                 " the device owners won't be able to modify the password settings on their devices.",
@@ -424,691 +423,815 @@ const jsonResponse = {
                     ]
                 },
                 {
-                    "Name": "Restrictions",
-                    "Panel": [{
+                    "name": "Restrictions",
+                    "panel": [{
                         "panelId": "CAMERA",
                         "title": "Restrictions",
                         "description": "This configurations can be used to restrict certain settings on an Android device. Once this configuration" +
                             " profile is installed on a device, corresponding users will not be able to modify these settings on their devices.",
-                        "PanelItem": [
+                        "panelItem": [
                             {
-                                "Label": "Allow use of camera",
+                                "label": "Allow use of camera",
                                 "tooltip": "Enables the usage of device camera",
-                                "Optional": {
+                                "optional": {
                                     "checked": true
                                 },
-                                "_type": "checkbox",
-                                "_id": "CAMERA"
+                                "type": "checkbox",
+                                "id": "CAMERA"
                             },
                             {
-                                "Label": "Below Restrictions are valid only when the Agent is work-profile owner or device owner.",
-                                "_type": "alert"
+                                "label": "Below Restrictions are valid only when the Agent is work-profile owner or device owner.",
+                                "type": "alert"
                             },
                             {
-                                "Label": "Disallow configuring VPN",
+                                "label": "Disallow configuring VPN",
                                 "tooltip": "Users are restricted from configuring VPN.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_VPN"
+                                "type": "checkbox",
+                                "id": "DISALLOW_CONFIG_VPN"
                             },
                             {
-                                "Label": "Disallow configuring app control",
+                                "label": "Disallow configuring app control",
                                 "tooltip": "Restricts users from modifying applications in the device's settings or launchers.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_APPS_CONTROL"
+                                "type": "checkbox",
+                                "id": "DISALLOW_APPS_CONTROL"
                             },
                             {
-                                "Label": "Disallow cross profile copy paste",
+                                "label": "Disallow cross profile copy paste",
                                 "tooltip": "Device owners are restricted from copying items that are copied to the clipboard from the managed profile to the parent profile or vice-versa.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_CROSS_PROFILE_COPY_PASTE"
+                                "type": "checkbox",
+                                "id": "DISALLOW_CROSS_PROFILE_COPY_PASTE"
                             },
                             {
-                                "Label": "Disallow debugging",
+                                "label": "Disallow debugging",
                                 "tooltip": "Users are restricted from accessing debug logs.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_DEBUGGING_FEATURES"
+                                "type": "checkbox",
+                                "id": "DISALLOW_DEBUGGING_FEATURES"
                             },
                             {
-                                "Label": "Disallow install apps",
+                                "label": "Disallow install apps",
                                 "tooltip": "Users are restricted from installing applications.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_INSTALL_APPS"
+                                "type": "checkbox",
+                                "id": "DISALLOW_INSTALL_APPS"
                             },
                             {
-                                "Label": "Disallow install from unknown sources",
+                                "label": "Disallow install from unknown sources",
                                 "tooltip": "Users are restricted from installing applications from unknown origin.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_INSTALL_UNKNOWN_SOURCES"
+                                "type": "checkbox",
+                                "id": "DISALLOW_INSTALL_UNKNOWN_SOURCES"
                             },
                             {
-                                "Label": "Disallow modify accounts",
+                                "label": "Disallow modify accounts",
                                 "tooltip": "Users are restricted from modifying user accounts.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_MODIFY_ACCOUNTS"
+                                "type": "checkbox",
+                                "id": "DISALLOW_MODIFY_ACCOUNTS"
                             },
                             {
-                                "Label": "Disallow outgoing beam",
+                                "label": "Disallow outgoing beam",
                                 "tooltip": "Users are restricted from using NFC bump.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_OUTGOING_BEAM"
+                                "type": "checkbox",
+                                "id": "DISALLOW_OUTGOING_BEAM"
                             },
                             {
-                                "Label": "Disallow location sharing",
+                                "label": "Disallow location sharing",
                                 "tooltip": "Users are restricted from sharing their geo-location.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_SHARE_LOCATION"
+                                "type": "checkbox",
+                                "id": "DISALLOW_SHARE_LOCATION"
                             },
                             {
-                                "Label": "Disallow uninstall apps",
+                                "label": "Disallow uninstall apps",
                                 "tooltip": "Users are restricted from uninstalling applications.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_UNINSTALL_APPS"
+                                "type": "checkbox",
+                                "id": "DISALLOW_UNINSTALL_APPS"
                             },
                             {
-                                "Label": "Disallow parent profile app linking",
+                                "label": "Disallow parent profile app linking",
                                 "tooltip": "Allows apps in the parent profile to access or handle web links from the managed profile.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "ALLOW_PARENT_PROFILE_APP_LINKING"
+                                "type": "checkbox",
+                                "id": "ALLOW_PARENT_PROFILE_APP_LINKING"
                             },
                             {
-                                "Label": " Below restrictions will be applicable when the agent is the device owner and Android version 6.0 (Marshmallow) or higher.",
-                                "_type": "alert"
+                                "label": " Below restrictions will be applicable when the agent is the device owner and Android version 6.0 (Marshmallow) or higher.",
+                                "type": "alert"
                             },
                             {
-                                "Label": "Disallow set wallpaper",
+                                "label": "Disallow set wallpaper",
                                 "tooltip": "Users are restricted from setting wallpapers.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_SET_WALLPAPER"
+                                "type": "checkbox",
+                                "id": "DISALLOW_SET_WALLPAPER"
                             },
                             {
-                                "Label": "Disallow set user icon",
+                                "label": "Disallow set user icon",
                                 "tooltip": "Users are restricted from changing their icon.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_SET_USER_ICON"
+                                "type": "checkbox",
+                                "id": "DISALLOW_SET_USER_ICON"
                             },
                             {
-                                "Label": "Disallow remove managed profile",
+                                "label": "Disallow remove managed profile",
                                 "tooltip": "Users are restricted from removing the managed profile.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_REMOVE_MANAGEMENT_PROFILE"
+                                "type": "checkbox",
+                                "id": "DISALLOW_REMOVE_MANAGEMENT_PROFILE"
                             },
                             {
-                                "Label": "Disallow autofill",
+                                "label": "Disallow autofill",
                                 "tooltip": "Users are restricted from using autofill services.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_AUTOFILL"
+                                "type": "checkbox",
+                                "id": "DISALLOW_AUTOFILL"
                             },
                             {
-                                "Label": "Disallow bluetooth",
+                                "label": "Disallow bluetooth",
                                 "tooltip": "Bluetooth is disallowed on the device.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_BLUETOOTH"
+                                "type": "checkbox",
+                                "id": "DISALLOW_BLUETOOTH"
                             },
                             {
-                                "Label": "Disallow bluetooth sharing",
+                                "label": "Disallow bluetooth sharing",
                                 "tooltip": "Users are restricted from Bluetooth sharing on the device.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_BLUETOOTH_SHARING"
+                                "type": "checkbox",
+                                "id": "DISALLOW_BLUETOOTH_SHARING"
                             },
                             {
-                                "Label": "Disallow remove user",
+                                "label": "Disallow remove user",
                                 "tooltip": "Users are restricted from removing user itself.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "type": "checkbox",
+                                "id": "DISALLOW_CONFIG_CREDENTIALS"
                             },
                             {
-                                "Label": " Below Restrictions are valid only when the Agent is the device owner.",
-                                "_type": "alert"
+                                "label": " Below Restrictions are valid only when the Agent is the device owner.",
+                                "type": "alert"
                             },
                             {
-                                "Label": "Disallow SMS",
+                                "label": "Disallow SMS",
                                 "tooltip": "Users are restricted from sending SMS messages.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_SMS"
+                                "type": "checkbox",
+                                "id": "DISALLOW_SMS"
                             },
                             {
-                                "Label": "Ensure verifying apps",
+                                "label": "Ensure verifying apps",
                                 "tooltip": "Ensure app verification.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "ENSURE_VERIFY_APPS"
+                                "type": "checkbox",
+                                "id": "ENSURE_VERIFY_APPS"
                             },
                             {
-                                "Label": "Enable auto timing",
+                                "label": "Enable auto timing",
                                 "tooltip": "Enables the auto time feature that is in the device's Settings > Data & Time.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "AUTO_TIME"
+                                "type": "checkbox",
+                                "id": "AUTO_TIME"
                             },
                             {
-                                "Label": "Disable screen capture",
+                                "label": "Disable screen capture",
                                 "tooltip": "Screen capturing would be disable.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "SET_SCREEN_CAPTURE_DISABLED"
+                                "type": "checkbox",
+                                "id": "SET_SCREEN_CAPTURE_DISABLED"
                             },
                             {
-                                "Label": "Disallow volume adjust",
+                                "label": "Disallow volume adjust",
                                 "tooltip": "Users are restricted from adjusting device volume.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_ADJUST_VOLUME"
+                                "type": "checkbox",
+                                "id": "DISALLOW_ADJUST_VOLUME"
                             },
                             {
-                                "Label": "Disallow cell broadcast",
+                                "label": "Disallow cell broadcast",
                                 "tooltip": "Users are restricted from configuring cell broadcast.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CELL_BROADCASTS"
+                                "type": "checkbox",
+                                "id": "DISALLOW_CONFIG_CELL_BROADCASTS"
                             },
                             {
-                                "Label": "Disallow configuring bluetooth",
+                                "label": "Disallow configuring bluetooth",
                                 "tooltip": "Users are restricted from configuring bluetooth.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_BLUETOOTH"
+                                "type": "checkbox",
+                                "id": "DISALLOW_CONFIG_BLUETOOTH"
                             },
                             {
-                                "Label": "Disallow configuring mobile networks",
+                                "label": "Disallow configuring mobile networks",
                                 "tooltip": "Users are restricted from configuring mobile network.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_MOBILE_NETWORKS"
+                                "type": "checkbox",
+                                "id": "DISALLOW_CONFIG_MOBILE_NETWORKS"
                             },
                             {
-                                "Label": "Disallow configuring tethering",
+                                "label": "Disallow configuring tethering",
                                 "tooltip": "Users are restricted from configuring tethering.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_TETHERING"
+                                "type": "checkbox",
+                                "id": "DISALLOW_CONFIG_TETHERING"
                             },
                             {
-                                "Label": "Disallow configuring WIFI",
+                                "label": "Disallow configuring WIFI",
                                 "tooltip": "Users are restricted from configuring Wifi.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_WIFI"
+                                "type": "checkbox",
+                                "id": "DISALLOW_CONFIG_WIFI"
                             },
                             {
-                                "Label": "Disallow safe boot",
+                                "label": "Disallow safe boot",
                                 "tooltip": "Users are restricted to enter safe boot mode.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_SAFE_BOOT"
+                                "type": "checkbox",
+                                "id": "DISALLOW_SAFE_BOOT"
                             },
                             {
-                                "Label": "Disallow outgoing calls",
+                                "label": "Disallow outgoing calls",
                                 "tooltip": "Users are restricted from taking calls.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_OUTGOING_CALLS"
+                                "type": "checkbox",
+                                "id": "DISALLOW_OUTGOING_CALLS"
                             },
                             {
-                                "Label": "Disallow mount physical media",
+                                "label": "Disallow mount physical media",
                                 "tooltip": "Users are restricted from mounting the device as physical media.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_MOUNT_PHYSICAL_MEDIA"
+                                "type": "checkbox",
+                                "id": "DISALLOW_MOUNT_PHYSICAL_MEDIA"
                             },
                             {
-                                "Label": "Disallow create window",
+                                "label": "Disallow create window",
                                 "tooltip": "Restricts device owners from opening new windows beside the app windows.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_CREATE_WINDOWS"
+                                "type": "checkbox",
+                                "id": "DISALLOW_CREATE_WINDOWS"
                             },
                             {
-                                "Label": "Disallow factory reset",
+                                "label": "Disallow factory reset",
                                 "tooltip": "Users are restricted from performing factory reset.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_FACTORY_RESET"
+                                "type": "checkbox",
+                                "id": "DISALLOW_FACTORY_RESET"
                             },
                             {
-                                "Label": "Disallow remove user",
+                                "label": "Disallow remove user",
                                 "tooltip": "Users are restricted from removing user.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_REMOVE_USER"
+                                "type": "checkbox",
+                                "id": "DISALLOW_REMOVE_USER"
                             },
                             {
-                                "Label": "Disallow add user",
+                                "label": "Disallow add user",
                                 "tooltip": "Users are restricted from creating new users.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_ADD_USER"
+                                "type": "checkbox",
+                                "id": "DISALLOW_ADD_USER"
                             },
                             {
-                                "Label": "Disallow network reset",
+                                "label": "Disallow network reset",
                                 "tooltip": "Users are restricted from resetting network.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_NETWORK_RESET"
+                                "type": "checkbox",
+                                "id": "DISALLOW_NETWORK_RESET"
                             },
                             {
-                                "Label": "Disallow USB file transfer",
+                                "label": "Disallow USB file transfer",
                                 "tooltip": "Users are restricted from transferring files via USB.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_USB_FILE_TRANSFER"
+                                "type": "checkbox",
+                                "id": "DISALLOW_USB_FILE_TRANSFER"
                             },
                             {
-                                "Label": "Disallow unmute microphone",
+                                "label": "Disallow unmute microphone",
                                 "tooltip": "Users are restricted from unmuting the microphone.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_UNMUTE_MICROPHONE"
+                                "type": "checkbox",
+                                "id": "DISALLOW_UNMUTE_MICROPHONE"
                             },
                             {
-                                "Label": "Below restrictions will be applied on devices with Android version 6.0 Marshmallow onwards only.",
-                                "_type": "alert"
+                                "label": "Below restrictions will be applied on devices with Android version 6.0 Marshmallow onwards only.",
+                                "type": "alert"
                             },
                             {
-                                "Label": "Disable status bar",
+                                "label": "Disable status bar",
                                 "tooltip": "Checking this will disable the status bar.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "SET_STATUS_BAR_DISABLED"
+                                "type": "checkbox",
+                                "id": "SET_STATUS_BAR_DISABLED"
                             },
                             {
-                                "Label": "Disallow data roaming",
+                                "label": "Disallow data roaming",
                                 "tooltip": "Users are restricted from using cellular data when roaming.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_DATA_ROAMING"
+                                "type": "checkbox",
+                                "id": "DISALLOW_DATA_ROAMING"
                             },
                             {
-                                "Label": "Enable device backup service",
+                                "label": "Enable device backup service",
                                 "tooltip": "Device backup service wil be enabled.",
-                                "Optional": {
+                                "optional": {
                                     "checked": false
                                 },
-                                "_type": "checkbox",
-                                "_id": "DISALLOW_CONFIG_CREDENTIALS"
+                                "type": "checkbox",
+                                "id": "DISALLOW_CONFIG_CREDENTIALS"
                             },
 
                         ],
-                        "_key": "1",
-                        "_show": true
+                        "key": "1",
+                        "show": true
                     }]
                 },
                 {
-                    "Name": "Encryption Settings",
-                    "Panel": [{
+                    "name": "Encryption Settings",
+                    "panel": [{
                         "panelId": "ENCRYPT_STORAGE",
                         "title": "Encryption Settings",
                         "description": "This configuration can be used to encrypt data on an Android device, when the device" +
                             " is locked and make it readable when the passcode is entered. Once this configuration profile is installed on a device, " +
                             "corresponding users will not be able to modify these settings on their devices.",
-                        "PanelItem": [
+                        "panelItem": [
                             {
-                                "Label": "Un-check following checkbox in case you do not need the device to be encrypted.",
-                                "_type": "paragraph",
+                                "label": "Un-check following checkbox in case you do not need the device to be encrypted.",
+                                "type": "paragraph",
                             },
                             {
-                                "Label": "Enable storage-encryption",
+                                "label": "Enable storage-encryption",
                                 "tooltip": "Having this checked would enable Storage-encryption in the device.",
-                                "Optional": {
+                                "optional": {
                                     "checked": true
                                 },
-                                "_type": "checkbox",
-                                "_id": "ENCRYPT_STORAGE"
+                                "type": "checkbox",
+                                "id": "ENCRYPT_STORAGE"
                             },
                         ],
-                        "_key": "1",
-                        "_show": true
+                        "key": "1",
+                        "show": true
                     }]
                 },
                 {
-                    "Name": "Wi-Fi Settings",
-                    "Panel": [{
+                    "name": "Wi-Fi Settings",
+                    "panel": [{
                         "panelId": "WIFI",
                         "title": "Wi-Fi Settings",
                         "description": "This configurations can be used to configure Wi-Fi access on an Android device. " +
                             "Once this configuration profile is installed on a device, corresponding users will not be able to modify these settings on their devices.",
-                        "PanelItem": [
+                        "panelItem": [
                             {
-                                "Label": "Please note that * sign represents required fields of data.",
-                                "_type": "paragraph",
+                                "label": "Please note that * sign represents required fields of data.",
+                                "type": "paragraph",
                             },
                             {
-                                "Label": "Service Set Identifier (SSID) *",
+                                "label": "Service Set Identifier (SSID) *",
                                 "tooltip": "Identification of the wireless network to be configured.",
-                                "Optional": {
-                                    "Placeholder": "Should be 1-to-30 characters long",
+                                "optional": {
+                                    "placeholder": "Should be 1-to-30 characters long",
                                     "rules":{
                                         "regex": "^.{1,30}$",
                                         "validationMsg": "Should be 1-to-30 characters long",
                                         "required": false
                                     },
                                 },
-                                "_type": "input",
-                                "_id": "ssid"
+                                "type": "input",
+                                "id": "ssid"
                             },
                             {
-                                "Label": "Security *",
+                                "label": "Security *",
                                 "tooltip": "Minimum number of complex or non-alphanumeric characters allowed in a passcode",
-                                "Optional": {
-                                    "Option": [
+                                "optional": {
+                                    "option": [
                                         {
                                             "name" : "None",
                                             "value": "",
+                                            "panelKey":"none"
                                         },
                                         {
                                             "name" : "WEP",
                                             "value": "wep",
+                                            "panelKey":"wep-wpa"
                                         },
                                         {
                                             "name" : "WPA/WPA 2 PSK",
                                             "value": "wpa",
+                                            "panelKey":"wep-wpa"
                                         },
                                         {
                                             "name" : "802.1x EAP",
                                             "value": "802eap",
+                                            "panelKey":"802eap"
                                         },
                                     ],
-                                    "SubPanel":[
+                                    "subPanel": [
                                         {
-                                            "PanelItem": [
+                                            "panelItem": [
                                                 {
-                                                    "Label": "Password *",
+                                                    "type": "none",
+                                                },
+                                            ],
+                                            "key": "none",
+                                            "show": true
+                                        },
+                                        {
+                                            "panelItem": [
+                                                {
+                                                    "label": "Password *",
                                                     "tooltip": "Password for the wireless network.",
-                                                    "Optional": {
-                                                        "Placeholder": "",
+                                                    "optional": {
+                                                        "placeholder": "",
                                                         "rules":{
                                                             "regex": "",
                                                             "validationMsg": "",
                                                             "required": false
                                                         },
                                                     },
-                                                    "_type": "input",
-                                                    "_id": "password" //toDo add id
+                                                    "type": "input",
+                                                    "id": "password" //toDo add id
                                                 },
                                             ],
-                                            "_key": "none",
-                                            "_show": true
+                                            "key": "wep-wpa",
+                                            "show": true
                                         },
                                         {
-                                            "PanelItem": [
+                                            "panelItem": [
                                                 {
-                                                    "Label": "EAP Method",
+                                                    "label": "EAP Method",
                                                     "tooltip": "EAP Method of the wireless network to be configured.",
-                                                    "Optional": {
-                                                        "Option": [
+                                                    "optional": {
+                                                        "option": [
                                                             {
                                                                 "name" : "PEAP",
                                                                 "value": "peap",
+                                                                "panelKey":"peap-ttls"
                                                             },
                                                             {
                                                                 "name" : "TLS",
                                                                 "value": "tls",
+                                                                "panelKey":"tls"
                                                             },
                                                             {
                                                                 "name" : "TTLS",
                                                                 "value": "ttls",
+                                                                "panelKey":"peap-ttls"
                                                             },
                                                             {
                                                                 "name" : "PWD",
                                                                 "value": "pwd",
+                                                                "panelKey":"pwd"
                                                             },
                                                             {
                                                                 "name" : "SIM",
                                                                 "value": "sim",
+                                                                "panelKey":"sim-aka"
                                                             },
                                                             {
                                                                 "name" : "AKA",
                                                                 "value": "aka",
+                                                                "panelKey":"sim-aka"
+                                                            },
+                                                        ],
+                                                        "subPanel" : [
+                                                            {
+                                                                "panelItem": [
+                                                                    {
+                                                                        "label": "Phase 2 Authentication",
+                                                                        "tooltip": "Phase 2 authentication of the wireless network to be configured.",
+                                                                        "optional": {
+                                                                            "option": [
+                                                                                {
+                                                                                    "name" : "None",
+                                                                                    "value": "",
+                                                                                },
+                                                                                {
+                                                                                    "name" : "PAP",
+                                                                                    "value": "pap",
+                                                                                },
+                                                                                {
+                                                                                    "name" : "MCHAP",
+                                                                                    "value": "mchap",
+                                                                                },
+                                                                                {
+                                                                                    "name" : "MCHAPV2",
+                                                                                    "value": "mchapv2",
+                                                                                },
+                                                                                {
+                                                                                    "name" : "GTC",
+                                                                                    "value": "gtc",
+                                                                                },
+                                                                            ]
+                                                                        },
+                                                                        "type": "select",
+                                                                        "id": "phase2"
+                                                                    },
+                                                                    {
+                                                                        "label": "Identify",
+                                                                        "tooltip": "Identify of the wireless network to be configured.",
+                                                                        "optional": {
+                                                                            "placeholder": "Should be 1 to 30 characters long",
+                                                                            "rules":{
+                                                                                "regex": "",
+                                                                                "validationMsg": "",
+                                                                                "required": false
+                                                                            },
+                                                                        },
+                                                                        "type": "input",
+                                                                        "id": "identity" //toDo add id
+                                                                    },
+                                                                    {
+                                                                        "label": "Anonymous Identity",
+                                                                        "tooltip": "Identity of the wireless network to be configured.",
+                                                                        "optional": {
+                                                                            "placeholder": "Should be 1 to 30 characters long",
+                                                                            "rules":{
+                                                                                "regex": "",
+                                                                                "validationMsg": "",
+                                                                                "required": false
+                                                                            },
+                                                                        },
+                                                                        "type": "input",
+                                                                        "id": "anonymousIdentity" //toDo add id
+                                                                    },
+                                                                    {
+                                                                        "label": "CA Certificate",
+                                                                        "tooltip": "CA Certificate for the wireless network.",
+                                                                        "optional": {
+                                                                            "placeholder": "",
+                                                                            "rules":{
+                                                                                "regex": "",
+                                                                                "validationMsg": "",
+                                                                                "required": false
+                                                                            },
+                                                                        },
+                                                                        "type": "upload",
+                                                                        "id": "cacert" //toDo add id
+                                                                    },
+                                                                    {
+                                                                        "label": "Password *",
+                                                                        "tooltip": "Password for the wireless network.",
+                                                                        "optional": {
+                                                                            "placeholder": "",
+                                                                            "rules":{
+                                                                                "regex": "",
+                                                                                "validationMsg": "",
+                                                                                "required": false
+                                                                            },
+                                                                        },
+                                                                        "type": "input",
+                                                                        "id": "XXXXXXXXXXXX" //toDo add id
+                                                                    },
+                                                                ],
+                                                                "key": "peap-ttls",
+                                                                "show": true
+                                                            },
+                                                            {
+                                                                "panelItem": [
+                                                                    {
+                                                                        "label": "Identify",
+                                                                        "tooltip": "Identify of the wireless network to be configured.",
+                                                                        "optional": {
+                                                                            "placeholder": "Should be 1 to 30 characters long",
+                                                                            "rules":{
+                                                                                "regex": "",
+                                                                                "validationMsg": "",
+                                                                                "required": false
+                                                                            },
+                                                                        },
+                                                                        "type": "input",
+                                                                        "id": "identity" //toDo add id
+                                                                    },
+                                                                    {
+                                                                        "label": "CA Certificate",
+                                                                        "tooltip": "CA Certificate for the wireless network.",
+                                                                        "optional": {
+                                                                            "placeholder": "",
+                                                                            "rules":{
+                                                                                "regex": "",
+                                                                                "validationMsg": "",
+                                                                                "required": false
+                                                                            },
+                                                                        },
+                                                                        "type": "upload",
+                                                                        "id": "cacert" //toDo add id
+                                                                    },
+                                                                ],
+                                                                "key": "tls",
+                                                                "show": true
+                                                            },
+                                                            {
+                                                                "panelItem": [
+                                                                    {
+                                                                        "label": "Identify",
+                                                                        "tooltip": "Identify of the wireless network to be configured.",
+                                                                        "optional": {
+                                                                            "placeholder": "Should be 1 to 30 characters long",
+                                                                            "rules":{
+                                                                                "regex": "",
+                                                                                "validationMsg": "",
+                                                                                "required": false
+                                                                            },
+                                                                        },
+                                                                        "type": "input",
+                                                                        "id": "identity" //toDo add id
+                                                                    },
+                                                                    {
+                                                                        "label": "Password *",
+                                                                        "tooltip": "Password for the wireless network.",
+                                                                        "optional": {
+                                                                            "placeholder": "",
+                                                                            "rules":{
+                                                                                "regex": "",
+                                                                                "validationMsg": "",
+                                                                                "required": false
+                                                                            },
+                                                                        },
+                                                                        "type": "input",
+                                                                        "id": "XXXXXXXXXXXX" //toDo add id
+                                                                    },
+                                                                ],
+                                                                "key": "pwd",
+                                                                "show": true
+                                                            },
+                                                            {
+                                                                "panelItem": [
+                                                                    {
+                                                                        "type": "none",
+                                                                    },
+                                                                ],
+                                                                "key": "sim-aka",
+                                                                "show": true
                                                             },
                                                         ]
                                                     },
-                                                    "_type": "select",
-                                                    "_id": "eap"
-                                                },
-                                                {
-                                                    "Label": "Phase 2 Authentication",
-                                                    "tooltip": "Phase 2 authentication of the wireless network to be configured.",
-                                                    "Optional": {
-                                                        "Option": [
-                                                            {
-                                                                "name" : "None",
-                                                                "value": "",
-                                                            },
-                                                            {
-                                                                "name" : "PAP",
-                                                                "value": "pap",
-                                                            },
-                                                            {
-                                                                "name" : "MCHAP",
-                                                                "value": "mchap",
-                                                            },
-                                                            {
-                                                                "name" : "MCHAPV2",
-                                                                "value": "mchapv2",
-                                                            },
-                                                            {
-                                                                "name" : "GTC",
-                                                                "value": "gtc",
-                                                            },
-                                                        ]
-                                                    },
-                                                    "_type": "select",
-                                                    "_id": "phase2"
-                                                },
-                                                {
-                                                    "Label": "Identify",
-                                                    "tooltip": "Identify of the wireless network to be configured.",
-                                                    "Optional": {
-                                                        "Placeholder": "Should be 1 to 30 characters long"
-                                                    },
-                                                    "_type": "input",
-                                                    "_id": "identity" //toDo add id
-                                                },
-                                                {
-                                                    "Label": "Anonymous Identity",
-                                                    "tooltip": "Identity of the wireless network to be configured.",
-                                                    "Optional": {
-                                                        "Placeholder": "Should be 1 to 30 characters long"
-                                                    },
-                                                    "_type": "input",
-                                                    "_id": "anonymousIdentity" //toDo add id
-                                                },
-                                                {
-                                                    "Label": "CA Certificate",
-                                                    "tooltip": "CA Certificate for the wireless network.",
-                                                    "Optional": {
-                                                        "Placeholder": ""
-                                                    },
-                                                    "_type": "upload",
-                                                    "_id": "cacert" //toDo add id
-                                                },
-                                                {
-                                                    "Label": "Password *",
-                                                    "tooltip": "Password for the wireless network.",
-                                                    "Optional": {
-                                                        "Placeholder": ""
-                                                    },
-                                                    "_type": "input",
-                                                    "_id": "XXXXXXXXXXXX" //toDo add id
+                                                    "type": "select",
+                                                    "id": "eap"
                                                 },
                                             ],
-                                            "_key": "EAP",
-                                            "_show": true
+                                            "key": "802eap",
+                                            "show": true
                                         },
-                                    ]
+                                    ],
                                 },
-                                "_type": "select",
-                                "_id": "type"
+                                "type": "select",
+                                "id": "type"
                             },
                         ],
-                        "_key": "1",
-                        "_show": true
+                        "key": "1",
+                        "show": true
                     },
                     ]
                 },
                 {
-                    "Name": "Global Proxy Settings",
-                    "Panel": [
+                    "name": "Global Proxy Settings",
+                    "panel": [
                         {
                             "panelId": "GLOBAL_PROXY",
                             "title": "Global Proxy Settings",
                             "description": "This configurations can be used to set a network-independent global HTTP proxy on an " +
                                 "Android device. Once this configuration profile is installed on a device, all the network traffic will " +
                                 "be routed through the proxy server.",
-                            "PanelItem": [
+                            "panelItem": [
                                 {
-                                    "Label": "This profile requires the agent application to be the device owner.",
-                                    "_type": "alert"
+                                    "label": "This profile requires the agent application to be the device owner.",
+                                    "type": "alert"
                                 },
                                 {
-                                    "Label": "This proxy is only a recommendation and it is possible that some apps will ignore it.",
-                                    "_type": "alert"
+                                    "label": "This proxy is only a recommendation and it is possible that some apps will ignore it.",
+                                    "type": "alert"
                                 },
                                 {
-                                    "Label": "Please note that * sign represents required fields of data.",
-                                    "_type": "paragraph",
+                                    "label": "Please note that * sign represents required fields of data.",
+                                    "type": "paragraph",
                                 },
                                 {
-                                    "Label": "Proxy Configuration Type",
+                                    "label": "Proxy Configuration Type",
                                     "tooltip": "Select the configuration type.",
-                                    "Optional": {
-                                        "Radio": [
+                                    "optional": {
+                                        "radio": [
                                             {
                                                 "name" : "Manual",
                                                 "value": "MANUAL",
                                                 "subPanel": [
                                                     {
-                                                        "Label": "Proxy Host *",
+                                                        "label": "Proxy Host *",
                                                         "tooltip": "Host name/IP address of the proxy server.",
-                                                        "Optional": {
-                                                            "Placeholder": "192.168.8.1",
+                                                        "optional": {
+                                                            "placeholder": "192.168.8.1",
                                                             "rules":{
                                                                 "regex": "^(0|[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]{1,3})\\.(0|[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]{1,3})\\.(0|[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]{1,3})\\.(0|[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]{1,3})$",
                                                                 "validationMsg": "Please enter valid IP address",
                                                                 "required": false
                                                             },
                                                         },
-                                                        "_type": "input",
-                                                        "_id": "proxyHost" //toDo add id
+                                                        "type": "input",
+                                                        "id": "proxyHost" //toDo add id
                                                     },
                                                     {
-                                                        "Label": "Proxy Port *",
+                                                        "label": "Proxy Port *",
                                                         "tooltip": "Target port for the proxy server.",
-                                                        "Optional": {
-                                                            "Placeholder": "Target port 0 - 65535",
+                                                        "optional": {
+                                                            "placeholder": "Target port 0 - 65535",
                                                             "rules":{
                                                                 "regex": "^(?:0|[1-9]|[1-9][0-9]|[1-9][0-9][0-9]|[1-9][0-9][0-9][0-9]|[1-5][0-9][0-9][0-9][0-9]|6[0-4][0-9][0-9][0-9]|65[0-4][0-9][0-9]|655[0-2][0-9]|6553[0-5])$",
                                                                 "validationMsg": "Please enter valid port",
                                                                 "required": false
                                                             },
                                                         },
-                                                        "_type": "input",
-                                                        "_id": "proxyPort" //toDo add id
+                                                        "type": "input",
+                                                        "id": "proxyPort" //toDo add id
                                                     },
                                                     {
-                                                        "Label": "Proxy Exclusion List",
+                                                        "label": "Proxy Exclusion List",
                                                         "tooltip": "Add host names to this separated by commas to prevent them" +
                                                             "from routing through the proxy server. The hostname entries can be wildcards such as" +
                                                             "*.example.com",
-                                                        "Optional": {
+                                                        "optional": {
                                                             "Placeholder": "Example : localhost, *.example.com",
                                                             "rules":{
                                                                 "regex": "",
@@ -1116,8 +1239,8 @@ const jsonResponse = {
                                                                 "required": false
                                                             },
                                                         },
-                                                        "_type": "input",
-                                                        "_id": "proxyExclList" //toDo add id
+                                                        "type": "input",
+                                                        "id": "proxyExclList" //toDo add id
                                                     },
                                                 ],
                                             },
@@ -1126,94 +1249,94 @@ const jsonResponse = {
                                                 "value": "AUTO",
                                                 "subPanel": [
                                                     {
-                                                        "Label": "Proxy PAC File URL *",
+                                                        "label": "Proxy PAC File URL *",
                                                         "tooltip": "URL for the proxy auto config PAC script",
-                                                        "Optional": {
-                                                            "Placeholder": "http://exampleproxy.com/proxy.pac",
+                                                        "optional": {
+                                                            "placeholder": "http://exampleproxy.com/proxy.pac",
                                                             "rules":{
                                                                 "regex": "",
                                                                 "validationMsg": "",
                                                                 "required": false
                                                             },
                                                         },
-                                                        "_type": "input",
-                                                        "_id": "proxyPacUrl" //toDo add id
+                                                        "type": "input",
+                                                        "id": "proxyPacUrl" //toDo add id
                                                     },
                                                 ],
                                             },
                                         ],
                                     },
-                                    "_type": "radioGroup",
-                                    "_id": "proxyConfigType"  //toDo change id
+                                    "type": "radioGroup",
+                                    "id": "proxyConfigType"  //toDo change id
                                 },
                             ],
-                            "_key": "1",
-                            "_show": true
+                            "key": "1",
+                            "show": true
                         },
                     ]
                 },
                 {
-                    "Name": "Virtual Private Network",
-                    "Panel": [
+                    "name": "Virtual Private Network",
+                    "panel": [
                         {
                             "panelId": "VPN",
                             "title": "VPN Settings",
                             "description": "Configure the OpenVPN settings on Android devices. In order to enable this, device needs to have \"OpenVPN for Android\" application installed.",
-                            "PanelItem": [
+                            "panelItem": [
                                 {
-                                    "Label": "OpenVPN Server Config file",
+                                    "label": "OpenVPN Server Config file",
                                     "tooltip": "OpenVPN configurations ovpn file.",
-                                    "Optional": {
-                                        "Placeholder": ""
+                                    "optional": {
+                                        "placeholder": ""
                                     },
-                                    "_type": "upload",
-                                    "_id": "XXXXXXXXXXvccvXX" //toDo add id
+                                    "type": "upload",
+                                    "id": "XXXXXXXXXXvccvXX" //toDo add id
                                 },
 
                             ],
-                            "_key": "cxcx1",
-                            "_show": true
+                            "key": "cxcx1",
+                            "show": true
                         },
                         {
                             "panelId": "VPN_ON",
                             "title": "Always On VPN Settings",
                             "description": "Configure an always-on VPN connection through a specific VPN client application.",
-                            "PanelItem": [
+                            "panelItem": [
                                 {
-                                    "Label": "Below configurations are valid only when the Agent is work-profile owner or device owner.",
-                                    "_type": "alert"
+                                    "label": "Below configurations are valid only when the Agent is work-profile owner or device owner.",
+                                    "type": "alert"
                                 },
                                 {
-                                    "Label": "VPN Client Application Package Name* ",
+                                    "label": "VPN Client Application Package name* ",
                                     "tooltip": "Package name of the VPN client application to be configured.",
-                                    "Optional": {
-                                        "Placeholder": "Should be a valid package name",
+                                    "optional": {
+                                        "placeholder": "Should be a valid package name",
                                         "rules":{
                                             "regex": "",
                                             "validationMsg": "",
                                             "required": false
                                         },
                                     },
-                                    "_type": "input",
-                                    "_id": "packageName" //toDo add id
+                                    "type": "input",
+                                    "id": "packageName" //toDo add id
                                 },
                             ],
-                            "_key": "1zxz",
-                            "_show": true
+                            "key": "1zxz",
+                            "show": true
                         }
                     ]
                 },
                 {
-                    "Name": "Certificates Install",
-                    "Panel": [{
+                    "name": "Certificates Install",
+                    "panel": [{
                         "panelId": "INSTALL_CERT",
                         "title": "Certificate Install Settings",
                         "description": "Configure the certificate install settings on Android devices.",
-                        "PanelItem": [
+                        "panelItem": [
                             {
-                                "Label": "Added Certificate List",
+                                "label": "Added Certificate List",
                                 "tooltip": "Add a certificate.",
-                                "Optional": {
+                                "optional": {
                                     "button": {
                                         "id": "addCertificate",
                                         "name": " Add Certificate"
@@ -1221,7 +1344,7 @@ const jsonResponse = {
                                     "dataSource": "cert-list",
                                     "columns": [
                                         {
-                                            "name" : "Certificate Name",
+                                            "name" : "Certificate name",
                                             "key" : "CERT_NAME",
                                             "type": "input",
                                             "others": {
@@ -1238,100 +1361,100 @@ const jsonResponse = {
                                         },
                                     ]
                                 },
-                                "_type": "inputTable",
-                                "_id": "CERT_LIST"
+                                "type": "inputTable",
+                                "id": "CERT_LIST"
                             },
                         ],
-                        "_key": "1",
-                        "_show": true
+                        "key": "1",
+                        "show": true
                     }]
                 },
                 {
-                    "Name": "Work-Profile Configurations",
-                    "Panel": [{
+                    "name": "Work-Profile Configurations",
+                    "panel": [{
                         "panelId": "WORK_PROFILE",
                         "title": "Work-Profile Configurations",
                         "description": "Configure these settings to manage the applications in the work profile.",
-                        "PanelItem": [
+                        "panelItem": [
                             {
-                                "Label": "Profile Name",
-                                "tooltip": "Name of the Work-Profile created by IOT Server Agent.",
-                                "Optional": {
-                                    "Placeholder": "",
+                                "label": "Profile name",
+                                "tooltip": "name of the Work-Profile created by IOT Server Agent.",
+                                "optional": {
+                                    "placeholder": "",
                                     "rules":{
                                         "regex": "",
                                         "validationMsg": "",
                                         "required": false
                                     },
                                 },
-                                "_type": "input",
-                                "_id": "XXXXXXXXczxczxXXXX" //toDo add id
+                                "type": "input",
+                                "id": "XXXXXXXXczxczxXXXX" //toDo add id
                             },
                             {
-                                "Label": "Enable System Apps",
+                                "label": "Enable System Apps",
                                 "tooltip": "The set of system apps needed to be added to the work-profile.",
-                                "Optional": {
-                                    "Placeholder": "Should be exact package names separated by commas. Ex: com.google.android.apps.maps, com.google.android.calculator",
-                                    "Row": 4
+                                "optional": {
+                                    "placeholder": "Should be exact package names separated by commas. Ex: com.google.android.apps.maps, com.google.android.calculator",
+                                    "row": 4
                                 },
-                                "_type": "textArea",
-                                "_id": "ENCRYPT_STxcxORAGcxcxcE"
+                                "type": "textArea",
+                                "id": "ENCRYPT_STxcxORAGcxcxcE"
                             },
                             {
-                                "Label": "Hide System Apps",
+                                "label": "Hide System Apps",
                                 "tooltip": "The set of system apps needed to be hide in the work-profile.",
-                                "Optional": {
-                                    "Placeholder": "Should be exact package names separated by commas. Ex: com.google.android.apps.maps, com.google.android.calculator",
-                                    "Row": 4
+                                "optional": {
+                                    "placeholder": "Should be exact package names separated by commas. Ex: com.google.android.apps.maps, com.google.android.calculator",
+                                    "row": 4
                                 },
-                                "_type": "textArea",
-                                "_id": "ENCRYPccxT_STORAGcxcxcE"
+                                "type": "textArea",
+                                "id": "ENCRYPccxT_STORAGcxcxcE"
                             },
                             {
-                                "Label": "Unhide System Apps",
+                                "label": "Unhide System Apps",
                                 "tooltip": "The set of system apps needed to be unhide in the work-profile.",
-                                "Optional": {
-                                    "Placeholder": "Should be exact package names separated by commas. Ex: com.google.android.apps.maps, com.google.android.calculator",
-                                    "Row": 4
+                                "optional": {
+                                    "placeholder": "Should be exact package names separated by commas. Ex: com.google.android.apps.maps, com.google.android.calculator",
+                                    "row": 4
                                 },
-                                "_type": "textArea",
-                                "_id": "ENCRYPccxT_STORAGcxcxcE"
+                                "type": "textArea",
+                                "id": "ENCRYPccxT_STORAGcxcxcE"
                             },
                             {
-                                "Label": "Enable Google PlayStore Apps",
+                                "label": "Enable Google PlayStore Apps",
                                 "tooltip": "The set of apps needed to be installed from Google PlayStore to work-profile.",
-                                "Optional": {
-                                    "Placeholder": "Should be exact package names separated by commas. Ex: com.google.android.apps.maps, com.google.android.calculator",
-                                    "Row": 4
+                                "optional": {
+                                    "placeholder": "Should be exact package names separated by commas. Ex: com.google.android.apps.maps, com.google.android.calculator",
+                                    "row": 4
                                 },
-                                "_type": "textArea",
-                                "_id": "ENCRYPccxT_STORAGcxcxcE"
+                                "type": "textArea",
+                                "id": "ENCRYPccxT_STORAGcxcxcE"
                             },
                         ],
-                        "_key": "1",
-                        "_show": true
+                        "key": "1",
+                        "show": true
                     }]
                 },
                 {
-                    "Name": "COSU Profile Configurations",
-                    "Panel": [{
+                    "name": "COSU Profile Configurations",
+                    "panel": [{
                         "panelId": "COSU_PROFILE",
                         "title": "COSU Profile Configurations",
                         "description": "This policy can be used to configure the profile of COSU Devices.",
-                        "PanelItem": [
+                        "panelItem": [
                             {
-                                "Label": "Restrict Device Operation Time",
+                                "label": "Restrict Device Operation Time",
                                 "tooltip": "",
-                                "Optional": {
+                                "optional": {
                                     "checked": false,
                                     "subPanel":
                                         {
-                                            "PanelItem": [
+                                            "panelItem": [
                                                 {
-                                                    "Label": "Start Time",
+                                                    "label": "Start Time",
                                                     "tooltip": "Start time for the device",
-                                                    "Optional": {
-                                                        "Option": [
+                                                    "optional": {
+                                                        "option": [
                                                             {
                                                                 "name" : "12:00 Midnight",
                                                                 "value": "1440",
@@ -1527,14 +1650,14 @@ const jsonResponse = {
                                                         ]
 
                                                     },
-                                                    "_type": "select",
-                                                    "_id": "passcodePolicyMinLengthWP"
+                                                    "type": "select",
+                                                    "id": "passcodePolicyMinLengthWP"
                                                 },
                                                 {
-                                                    "Label": "End Time",
+                                                    "label": "End Time",
                                                     "tooltip": "Lock-down time for the device",
-                                                    "Optional": {
-                                                        "Option": [
+                                                    "optional": {
+                                                        "option": [
                                                             {
                                                                 "name" : "12:00 Midnight",
                                                                 "value": "1440",
@@ -1730,32 +1853,32 @@ const jsonResponse = {
                                                         ]
 
                                                     },
-                                                    "_type": "select",
-                                                    "_id": "ENDTIME"
+                                                    "type": "select",
+                                                    "id": "ENDTIME"
                                                 },
                                                 {
-                                                    "Label": "Device will be operable only during the above period.",
-                                                    "_type": "alert"
+                                                    "label": "Device will be operable only during the above period.",
+                                                    "type": "alert"
                                                 },
                                             ],
-                                            "_key": "RestrictDeviceOperationTime",
-                                            "_show": true
+                                            "key": "RestrictDeviceOperationTime",
+                                            "show": true
                                         }
                                 },
-                                "_type": "checkbox",
-                                "_id": "ENCRYPT_STOcxcxcRAGhftyE"
+                                "type": "checkbox",
+                                "id": "ENCRYPT_STOcxcxcRAGhftyE"
                             },
                             {
-                                "Label": "Device Global Configuration",
+                                "label": "Device Global Configuration",
                                 "tooltip": "",
-                                "Optional": {
+                                "optional": {
                                     "checked": false,
                                     "subPanel": {
-                                        "PanelItem": [
+                                        "panelItem": [
                                             {
-                                                "Label": "Launcher background image",
+                                                "label": "Launcher background image",
                                                 "tooltip": "This is the image that will be displayed in kiosk background.",
-                                                "Optional": {
+                                                "optional": {
                                                     "Placeholder": "Should be a valid URL of jpg or jpeg or png",
                                                     "rules":{
                                                         "regex": "",
@@ -1763,13 +1886,13 @@ const jsonResponse = {
                                                         "required": false
                                                     },
                                                 },
-                                                "_type": "input",
-                                                "_id": "XXXXXXXsdsdXXXXX" //toDo add id
+                                                "type": "input",
+                                                "id": "XXXXXXXsdsdXXXXX" //toDo add id
                                             },
                                             {
-                                                "Label": "Company logo to display",
+                                                "label": "Company logo to display",
                                                 "tooltip": "Company logo to display",
-                                                "Optional": {
+                                                "optional": {
                                                     "Placeholder": "Should be a valid URL ending with .jpg, .png, .jpeg",
                                                     "rules":{
                                                         "regex": "",
@@ -1777,65 +1900,65 @@ const jsonResponse = {
                                                         "required": false
                                                     },
                                                 },
-                                                "_type": "input",
-                                                "_id": "XXXXXXXsdsdXXXXX" //toDo add id
+                                                "type": "input",
+                                                "id": "XXXXXXXsdsdXXXXX" //toDo add id
                                             },
                                             {
-                                                "Label": "Company name",
+                                                "label": "Company name",
                                                 "tooltip": "Company name",
-                                                "Optional": {
-                                                    "Placeholder": "Name to appear on the agent",
+                                                "optional": {
+                                                    "Placeholder": "name to appear on the agent",
                                                     "rules":{
                                                         "regex": "",
                                                         "validationMsg": "",
                                                         "required": false
                                                     },
                                                 },
-                                                "_type": "input",
-                                                "_id": "XXXXXXXsdsdXXXXX" //toDo add id
+                                                "type": "input",
+                                                "id": "XXXXXXXsdsdXXXXX" //toDo add id
                                             },
                                             {
-                                                "Label": "Is single application mode",
+                                                "label": "Is single application mode",
                                                 "tooltip": "Is single application mode",
-                                                "Optional": {
+                                                "optional": {
                                                     "checked": false,
                                                     "subPanel": {
-                                                            "PanelItem": [
+                                                            "panelItem": [
                                                                 {
-                                                                    "Label": "Selected initial app in Enrollment Application Install" +
+                                                                    "label": "Selected initial app in Enrollment Application Install" +
                                                                         " policy config will be selected for single application mode.",
-                                                                    "_type": "alert",
+                                                                    "type": "alert",
                                                                 },
                                                                 {
-                                                                    "Label": "Is application built for Kiosk",
+                                                                    "label": "Is application built for Kiosk",
                                                                     "tooltip": "Is single mode app built for Kisosk. Enable if lock task method is called in the " +
                                                                         "application",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": true,
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "Efdgdg"
+                                                                    "type": "checkbox",
+                                                                    "id": "Efdgdg"
                                                                 },
                                                             ],
-                                                            "_key": "SingleAppMode",
-                                                            "_show": true
+                                                            "key": "SingleAppMode",
+                                                            "show": true
                                                         },
 
                                                 },
-                                                "_type": "checkbox",
-                                                "_id": "ENCRsdfsdfdAGE"
+                                                "type": "checkbox",
+                                                "id": "ENCRsdfsdfdAGE"
                                             },
                                             {
-                                                "Label": "Is idle media enabled ",
+                                                "label": "Is idle media enabled ",
                                                 "tooltip": "Is idle media enabled ",
-                                                "Optional": {
+                                                "optional": {
                                                     "checked": false,
                                                     "subPanel": {
-                                                            "PanelItem": [
+                                                            "panelItem": [
                                                                 {
-                                                                    "Label": "Media to display while idle",
+                                                                    "label": "Media to display while idle",
                                                                     "tooltip": "Media to display while the device is idle",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "Placeholder": "Should be a valid URL ending with .jpg, .png, .jpeg, .mp4, .3gp, .wmv, .mkv",
                                                                         "rules":{
                                                                             "regex": "",
@@ -1843,13 +1966,13 @@ const jsonResponse = {
                                                                             "required": false
                                                                         },
                                                                     },
-                                                                    "_type": "input",
-                                                                    "_id": "XXXXXXXsdsdXXXXX" //toDo add id
+                                                                    "type": "input",
+                                                                    "id": "XXXXXXXsdsdXXXXX" //toDo add id
                                                                 },
                                                                 {
-                                                                    "Label": "Idle graphic begin after(seconds)",
+                                                                    "label": "Idle graphic begin after(seconds)",
                                                                     "tooltip": "Idle graphic begin after the defined seconds",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "Placeholder": "Idle timeout in seconds",
                                                                         "rules":{
                                                                             "regex": "",
@@ -1857,42 +1980,42 @@ const jsonResponse = {
                                                                             "required": false
                                                                         },
                                                                     },
-                                                                    "_type": "input",
-                                                                    "_id": "XXXXXXXsdsdXXXXX" //toDo add id
+                                                                    "type": "input",
+                                                                    "id": "XXXXXXXsdsdXXXXX" //toDo add id
                                                                 },
                                                             ],
-                                                            "_key": "idleMediaEnabled",
-                                                            "_show": true
+                                                            "key": "idleMediaEnabled",
+                                                            "show": true
                                                         }
                                                 },
-                                                "_type": "checkbox",
-                                                "_id": "ENCsdsdsORAGE"
+                                                "type": "checkbox",
+                                                "id": "ENCsdsdsORAGE"
                                             },
                                             {
-                                                "Label": "Is multi-user device",
+                                                "label": "Is multi-user device",
                                                 "tooltip": "Is multi-user device.",
-                                                "Optional": {
+                                                "optional": {
                                                     "checked": false,
                                                     "subPanel":{
-                                                            "PanelItem": [
+                                                            "panelItem": [
                                                                 {
-                                                                    "Label": "Is login needed for user switch",
+                                                                    "label": "Is login needed for user switch",
                                                                     "tooltip": "Permits repeating, ascending and descending character sequences",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": true
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isLoginRequired"
+                                                                    "type": "checkbox",
+                                                                    "id": "isLoginRequired"
                                                                 },
                                                                 {
-                                                                    "Label": " Provide comma separated package name or web clip details for applications.\n" +
+                                                                    "label": " Provide comma separated package name or web clip details for applications.\n" +
                                                                         "eg: com.google.android.apps.maps, {\"identity\":\"http:entgra.io/\",\"title\":\"entgra-webclip\"}",
-                                                                    "_type": "alert",
+                                                                    "type": "alert",
                                                                 },
                                                                 {
-                                                                    "Label": "Primary User Apps ",
+                                                                    "label": "Primary User Apps ",
                                                                     "tooltip": "Primary User is the user to which the device is enrolled",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "Placeholder": "Applications",
                                                                         "rules":{
                                                                             "regex": "",
@@ -1900,13 +2023,13 @@ const jsonResponse = {
                                                                             "required": false
                                                                         },
                                                                     },
-                                                                    "_type": "input",
-                                                                    "_id": "primaryUserApps" //toDo add id
+                                                                    "type": "input",
+                                                                    "id": "primaryUserApps" //toDo add id
                                                                 },
                                                                 {
-                                                                    "Label": "Add User Applications",
+                                                                    "label": "Add User Applications",
                                                                     "tooltip": "Add User Applications.",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "button": {
                                                                             "id": "addUserApps",
                                                                             "name": " Add User Apps"
@@ -1933,22 +2056,22 @@ const jsonResponse = {
                                                                             },
                                                                         ]
                                                                     },
-                                                                    "_type": "inputTable",
-                                                                    "_id": "ENCRYcbchdPT_STORAGE"
+                                                                    "type": "inputTable",
+                                                                    "id": "ENCRYcbchdPT_STORAGE"
                                                                 },
                                                             ],
-                                                            "_key": "idleMediaEnabled",
-                                                            "_show": true
+                                                            "key": "idleMediaEnabled",
+                                                            "show": true
                                                         }
                                                 },
-                                                "_type": "checkbox",
-                                                "_id": "isMultiUserDevice"
+                                                "type": "checkbox",
+                                                "id": "isMultiUserDevice"
                                             },
                                             {
-                                                "Label": "Device display orientation",
+                                                "label": "Device display orientation",
                                                 "tooltip": "Device display orientation",
-                                                "Optional": {
-                                                    "Option": [
+                                                "optional": {
+                                                    "option": [
                                                         {
                                                             "name": "Auto",
                                                             "value": "auto"
@@ -1963,20 +2086,20 @@ const jsonResponse = {
                                                         },
                                                     ]
                                                 },
-                                                "_type": "select",
-                                                "_id": "minCompzzdlexChars"
+                                                "type": "select",
+                                                "id": "minCompzzdlexChars"
                                             },
                                             {
-                                                "Label": "Enable Browser Properties",
+                                                "label": "Enable Browser Properties",
                                                 "tooltip": "Browser Properties",
-                                                "Optional": {
+                                                "optional": {
                                                     "checked": false,
                                                     "subPanel": {
-                                                            "PanelItem": [
+                                                            "panelItem": [
                                                                 {
-                                                                    "Label": "Primary URL ",
+                                                                    "label": "Primary URL ",
                                                                     "tooltip": "Primary URL",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "Placeholder": "Should be a valid URL",
                                                                         "rules":{
                                                                             "regex": "",
@@ -1984,152 +2107,152 @@ const jsonResponse = {
                                                                             "required": false
                                                                         },
                                                                     },
-                                                                    "_type": "input",
-                                                                    "_id": "primaryURL" //toDo add id
+                                                                    "type": "input",
+                                                                    "id": "primaryURL" //toDo add id
                                                                 },
                                                                 {
-                                                                    "Label": "Enable browser address bar",
+                                                                    "label": "Enable browser address bar",
                                                                     "tooltip": "Enables address bar of the browser",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": false
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isAddressBarEnabled"
+                                                                    "type": "checkbox",
+                                                                    "id": "isAddressBarEnabled"
                                                                 },
                                                                 {
-                                                                    "Label": "Is allow to go back on a page",
+                                                                    "label": "Is allow to go back on a page",
                                                                     "tooltip": "Allow to go back in a page",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": false
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "showBackController"
+                                                                    "type": "checkbox",
+                                                                    "id": "showBackController"
                                                                 },
                                                                 {
-                                                                    "Label": "Is it allowed to go forward in browser",
+                                                                    "label": "Is it allowed to go forward in browser",
                                                                     "tooltip": "Is it allowed to go forward in a web page",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": false
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isForwardControllerEnabled"
+                                                                    "type": "checkbox",
+                                                                    "id": "isForwardControllerEnabled"
                                                                 },
                                                                 {
-                                                                    "Label": "Is home button enabled",
+                                                                    "label": "Is home button enabled",
                                                                     "tooltip": "Is home button enabled",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": false
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isHomeButtonEnabled"
+                                                                    "type": "checkbox",
+                                                                    "id": "isHomeButtonEnabled"
                                                                 },
                                                                 {
-                                                                    "Label": "Is page reload enabled",
+                                                                    "label": "Is page reload enabled",
                                                                     "tooltip": "Is page reload enabled",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": false
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isReloadEnabled"
+                                                                    "type": "checkbox",
+                                                                    "id": "isReloadEnabled"
                                                                 },
                                                                 {
-                                                                    "Label": "Only allowed to visit the primary url",
+                                                                    "label": "Only allowed to visit the primary url",
                                                                     "tooltip": "Only allowed to visit the primary url",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": true
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "lockToPrimaryURL"
+                                                                    "type": "checkbox",
+                                                                    "id": "lockToPrimaryURL"
                                                                 },
                                                                 {
-                                                                    "Label": "Is javascript enabled",
+                                                                    "label": "Is javascript enabled",
                                                                     "tooltip": "Is javascript enabled",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": true
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isJavascriptEnabled"
+                                                                    "type": "checkbox",
+                                                                    "id": "isJavascriptEnabled"
                                                                 },
                                                                 {
-                                                                    "Label": "Is copying to visit the primary url",
+                                                                    "label": "Is copying to visit the primary url",
                                                                     "tooltip": "Is copying to visit the primary url",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": false
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isTextCopyEnabled"
+                                                                    "type": "checkbox",
+                                                                    "id": "isTextCopyEnabled"
                                                                 },
                                                                 {
-                                                                    "Label": "Is downloading files enabled",
+                                                                    "label": "Is downloading files enabled",
                                                                     "tooltip": "Is downloading files enabled",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": false
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isDownloadsEnabled"
+                                                                    "type": "checkbox",
+                                                                    "id": "isDownloadsEnabled"
                                                                 },
                                                                 {
-                                                                    "Label": "Is Kiosk limited to one webapp",
+                                                                    "label": "Is Kiosk limited to one webapp",
                                                                     "tooltip": "Is Kiosk limited to one webapp.",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": false
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isLockedToBrowser"
+                                                                    "type": "checkbox",
+                                                                    "id": "isLockedToBrowser"
                                                                 },
                                                                 {
-                                                                    "Label": "Is form auto-fill enabled",
+                                                                    "label": "Is form auto-fill enabled",
                                                                     "tooltip": "Is form auto-fill enabled.",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": false
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isFormAutoFillEnabled"
+                                                                    "type": "checkbox",
+                                                                    "id": "isFormAutoFillEnabled"
                                                                 },
                                                                 {
-                                                                    "Label": "Is content access enabled",
+                                                                    "label": "Is content access enabled",
                                                                     "tooltip": "Enables or disable content URL access within WebView. Content URL" +
                                                                         "access allows WebView to load content from a content provider installed in the system.",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": false
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isContentAccessEnabled"
+                                                                    "type": "checkbox",
+                                                                    "id": "isContentAccessEnabled"
                                                                 },
                                                                 {
-                                                                    "Label": "Is file access allowed",
+                                                                    "label": "Is file access allowed",
                                                                     "tooltip": "Sets whether javascript running in the context of a file schema URL should be" +
                                                                         "allowed to access content from other file scheme URLs.",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": false
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isFileAccessAllowed"
+                                                                    "type": "checkbox",
+                                                                    "id": "isFileAccessAllowed"
                                                                 },
                                                                 {
-                                                                    "Label": "Is allowed universal access from file URLs",
+                                                                    "label": "Is allowed universal access from file URLs",
                                                                     "tooltip": "Sets whether JavaScript running in the context of a file scheme URL should be allowed" +
                                                                         "to access content from any origin",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": false
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isAllowedUniversalAccessFromFileURLs"
+                                                                    "type": "checkbox",
+                                                                    "id": "isAllowedUniversalAccessFromFileURLs"
                                                                 },
                                                                 {
-                                                                    "Label": "Is application cache enabled",
+                                                                    "label": "Is application cache enabled",
                                                                     "tooltip": "Is application cache enabled",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": false
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isAppCacheEnabled"
+                                                                    "type": "checkbox",
+                                                                    "id": "isAppCacheEnabled"
                                                                 },
                                                                 {
-                                                                    "Label": "Application cache file path",
+                                                                    "label": "Application cache file path",
                                                                     "tooltip": "Sets the path to the Application Cache files. In order for the Application Caches API" +
                                                                         "to be enabled, this method must be called with a path to which the application can write",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "Placeholder": "Should be a valid path",
                                                                         "rules":{
                                                                             "regex": "",
@@ -2137,18 +2260,18 @@ const jsonResponse = {
                                                                             "required": false
                                                                         },
                                                                     },
-                                                                    "_type": "input",
-                                                                    "_id": "appCachePath"
+                                                                    "type": "input",
+                                                                    "id": "appCachePath"
                                                                 },
                                                                 {
-                                                                    "Label": "Application cache mode",
+                                                                    "label": "Application cache mode",
                                                                     "tooltip": "Overrides the way the cache is used. The way the cache is used is based on the navigation" +
                                                                         "type. For a normal page load, the cache is checked and content is re-validated as needed. " +
                                                                         "When navigating back, content is not revalidated, instead the content is just retrieved from the cache." +
                                                                         "This method allows the client to override this behavior by specifying one of LOAD_DEFAULT," +
                                                                         "LOAD_CACHE_ELSE_NETWORK, LOAD_NO_CACHE or LOAD_CACHE_ONLY",
-                                                                    "Optional": {
-                                                                        "Option": [
+                                                                    "optional": {
+                                                                        "option": [
                                                                             {
                                                                                 "name" : "LOAD_DEFAULT",
                                                                                 "value" : "-1",
@@ -2167,63 +2290,63 @@ const jsonResponse = {
                                                                             },
                                                                         ]
                                                                     },
-                                                                    "_type": "select",
-                                                                    "_id": "cacheMode"
+                                                                    "type": "select",
+                                                                    "id": "cacheMode"
                                                                 },
                                                                 {
-                                                                    "Label": "Should load images",
+                                                                    "label": "Should load images",
                                                                     "tooltip": "Sets whether the browser should load image resources (through network and cached)." +
                                                                         "Note that this method controls loading of all images, including those embedded using the data URI" +
                                                                         "scheme.",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": true
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isLoadsImagesAutomatically"
+                                                                    "type": "checkbox",
+                                                                    "id": "isLoadsImagesAutomatically"
                                                                 },
                                                                 {
-                                                                    "Label": "Block image loads via network",
+                                                                    "label": "Block image loads via network",
                                                                     "tooltip": "Sets whether the browser should not load image resources from the network" +
                                                                         "(resources accessed via http and https URI schemes)",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": false
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isBlockNetworkImage"
+                                                                    "type": "checkbox",
+                                                                    "id": "isBlockNetworkImage"
                                                                 },
                                                                 {
-                                                                    "Label": "Block all resource loads from network",
+                                                                    "label": "Block all resource loads from network",
                                                                     "tooltip": "Sets whether the browser should not load any resources from the network.",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": false
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isBlockNetworkLoads"
+                                                                    "type": "checkbox",
+                                                                    "id": "isBlockNetworkLoads"
                                                                 },
                                                                 {
-                                                                    "Label": "Support zooming",
+                                                                    "label": "Support zooming",
                                                                     "tooltip": "Sets whether the browser should support zooming using its on-screen zoom" +
                                                                         "controls and gestures",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": true
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isSupportZoomEnabled"
+                                                                    "type": "checkbox",
+                                                                    "id": "isSupportZoomEnabled"
                                                                 },
                                                                 {
-                                                                    "Label": "Show on-screen zoom controllers",
+                                                                    "label": "Show on-screen zoom controllers",
                                                                     "tooltip": "Sets whether the browser should display on-screen zoom controls. Gesture based controllers" +
                                                                         "are still available",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": false
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isDisplayZoomControls"
+                                                                    "type": "checkbox",
+                                                                    "id": "isDisplayZoomControls"
                                                                 },
                                                                 {
-                                                                    "Label": "Text zoom percentage",
+                                                                    "label": "Text zoom percentage",
                                                                     "tooltip": "Sets the text zoom of the page in percent",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "Placeholder": "Should be a positive number",
                                                                         "rules":{
                                                                             "regex": "",
@@ -2231,13 +2354,13 @@ const jsonResponse = {
                                                                             "required": false
                                                                         },
                                                                     },
-                                                                    "_type": "input",
-                                                                    "_id": "textZoom"
+                                                                    "type": "input",
+                                                                    "id": "textZoom"
                                                                 },
                                                                 {
-                                                                    "Label": "Default font size",
+                                                                    "label": "Default font size",
                                                                     "tooltip": "Sets the default font size",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "Placeholder": "Should be a positive number between 1 and 72",
                                                                         "rules":{
                                                                             "regex": "",
@@ -2245,13 +2368,13 @@ const jsonResponse = {
                                                                             "required": false
                                                                         },
                                                                     },
-                                                                    "_type": "input",
-                                                                    "_id": "defaultFontSize"
+                                                                    "type": "input",
+                                                                    "id": "defaultFontSize"
                                                                 },
                                                                 {
-                                                                    "Label": "Default text encoding name",
+                                                                    "label": "Default text encoding name",
                                                                     "tooltip": "Sets the default text encoding name to use when decoding html pages",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "Placeholder": "Should a valid text encoding",
                                                                         "rules":{
                                                                             "regex": "",
@@ -2259,83 +2382,83 @@ const jsonResponse = {
                                                                             "required": false
                                                                         },
                                                                     },
-                                                                    "_type": "input",
-                                                                    "_id": "defaultTextEncodingName"
+                                                                    "type": "input",
+                                                                    "id": "defaultTextEncodingName"
                                                                 },
                                                                 {
-                                                                    "Label": "Is database storage API enabled",
+                                                                    "label": "Is database storage API enabled",
                                                                     "tooltip": "Sets whether the database storage API is enabled.",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": false
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isDatabaseEnabled"
+                                                                    "type": "checkbox",
+                                                                    "id": "isDatabaseEnabled"
                                                                 },
                                                                 {
-                                                                    "Label": "Is DOM storage API enabled",
+                                                                    "label": "Is DOM storage API enabled",
                                                                     "tooltip": "Sets whether the DOM storage API is enabled.",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": false
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isDomStorageEnabled"
+                                                                    "type": "checkbox",
+                                                                    "id": "isDomStorageEnabled"
                                                                 },
                                                                 {
-                                                                    "Label": "Is Geo-location enabled",
+                                                                    "label": "Is Geo-location enabled",
                                                                     "tooltip": "Sets whether Geo-location API is enabled.",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": false
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "geolocationEnabled"
+                                                                    "type": "checkbox",
+                                                                    "id": "geolocationEnabled"
                                                                 },
                                                                 {
-                                                                    "Label": "Can JavaScript open windows",
+                                                                    "label": "Can JavaScript open windows",
                                                                     "tooltip": "JavaScript can open window automatically or not. This applies to the JavaScript" +
                                                                         "function window.open()",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": false
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isJavaScriptCanOpenWindowsAutomatically"
+                                                                    "type": "checkbox",
+                                                                    "id": "isJavaScriptCanOpenWindowsAutomatically"
                                                                 },
                                                                 {
-                                                                    "Label": "Does media playback requires user consent",
+                                                                    "label": "Does media playback requires user consent",
                                                                     "tooltip": "Sets whether the browser requires a user gesture to play media. If false, the browser" +
                                                                         "can play media without user consent",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": true
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isMediaPlaybackRequiresUserGesture"
+                                                                    "type": "checkbox",
+                                                                    "id": "isMediaPlaybackRequiresUserGesture"
                                                                 },
                                                                 {
-                                                                    "Label": "Is safe browsing enabled",
+                                                                    "label": "Is safe browsing enabled",
                                                                     "tooltip": "Sets whether safe browsing in enabled. Safe browsing allows browser to protect against malware and" +
                                                                         " phishing attacks by verifying the links.",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": true
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isSafeBrowsingEnabled"
+                                                                    "type": "checkbox",
+                                                                    "id": "isSafeBrowsingEnabled"
                                                                 },
                                                                 {
-                                                                    "Label": "Use wide view port",
+                                                                    "label": "Use wide view port",
                                                                     "tooltip": "Sets whether the browser should enable support for the viewport HTML meta tag or should" +
                                                                         "use a wide viewport. When the value of the setting is false, the layout width is always set to the " +
                                                                         "width of the browser control in  device-independent (CSS) pixels. When the value is true and the" +
                                                                         "page contains the viewport meta tag, the value of the width specified in th tag is used. If the page" +
                                                                         "does not contain the tag or does not provide a width, then a wide viewport will be used",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "checked": true
                                                                     },
-                                                                    "_type": "checkbox",
-                                                                    "_id": "isUseWideViewPort"
+                                                                    "type": "checkbox",
+                                                                    "id": "isUseWideViewPort"
                                                                 },
                                                                 {
-                                                                    "Label": "Browser user agent string",
+                                                                    "label": "Browser user agent string",
                                                                     "tooltip": "Sets the WebView's user-agent string",
-                                                                    "Optional": {
+                                                                    "optional": {
                                                                         "Placeholder": "Should be a valid user agent string",
                                                                         "rules":{
                                                                             "regex": "",
@@ -2343,15 +2466,15 @@ const jsonResponse = {
                                                                             "required": false
                                                                         },
                                                                     },
-                                                                    "_type": "input",
-                                                                    "_id": "userAgentString" //toDo add id
+                                                                    "type": "input",
+                                                                    "id": "userAgentString" //toDo add id
                                                                 },
                                                                 {
-                                                                    "Label": "Mixed content mode",
+                                                                    "label": "Mixed content mode",
                                                                     "tooltip": "Configures the browser's behavior when a secure origin attempts to load a resource" +
                                                                         "from an insecure origin",
-                                                                    "Optional": {
-                                                                        "Option": [
+                                                                    "optional": {
+                                                                        "option": [
                                                                             {
                                                                                 "name": "MIXED_CONTENT_ALWAYS_ALLOW",
                                                                                 "value": "0",
@@ -2366,33 +2489,33 @@ const jsonResponse = {
                                                                             },
                                                                         ]
                                                                     },
-                                                                    "_type": "select",
-                                                                    "_id": "mixedContentMode"
+                                                                    "type": "select",
+                                                                    "id": "mixedContentMode"
                                                                 },
 
                                                             ],
-                                                            "_key": "idleMediaEnabled",
-                                                            "_show": true
+                                                            "key": "idleMediaEnabled",
+                                                            "show": true
                                                         }
                                                 },
-                                                "_type": "checkbox",
-                                                "_id": "ENCsdsdcxzcxsORAGE"
+                                                "type": "checkbox",
+                                                "id": "ENCsdsdcxzcxsORAGE"
                                             },
                                             {
-                                                "Label": "Global configurations related to device.",
-                                                "_type": "alert",
+                                                "label": "Global configurations related to device.",
+                                                "type": "alert",
                                             },
                                         ],
-                                        "_key": "DeviceGlobalConfiguration",
-                                        "_show": true
+                                        "key": "DeviceGlobalConfiguration",
+                                        "show": true
                                     },
                                 },
-                                "_type": "checkbox",
-                                "_id": "ENCRYPT_STOxcxcRAGE"
+                                "type": "checkbox",
+                                "id": "ENCRYPT_STOxcxcRAGE"
                             },
                         ],
-                        "_key": "1",
-                        "_show": true
+                        "key": "1",
+                        "show": true
                     },
 
 
@@ -2400,19 +2523,19 @@ const jsonResponse = {
                     ]
                 },
                 {
-                    "Name": "Application Restrictions",
-                    "Panel": [{
+                    "name": "Application Restrictions",
+                    "panel": [{
                         "panelId": "APP-RESTRICTION",
                         "title": "Application Restriction Setting",
                         "description": "This configuration can be used to encrypt data on an Android device, when the device is locked and make it " +
                             "readable when the passcode is entered. Once this configuration profile is installed on a device, corresponding users" +
                             " will not be able to modify these settings on their devices.",
-                        "PanelItem": [
+                        "panelItem": [
                             {
-                                "Label": "Select type",
+                                "label": "Select type",
                                 "tooltip": "Select a type to proceed",
-                                "Optional": {
-                                    "Option": [
+                                "optional": {
+                                    "option": [
                                         {
                                             "name": "None",
                                             "value": "",
@@ -2427,13 +2550,13 @@ const jsonResponse = {
                                         },
                                     ]
                                 },
-                                "_type": "select",
-                                "_id": "restrictionType"
+                                "type": "select",
+                                "id": "restrictionType"
                             },
                             {
-                                "Label": "Restricted Application List",
+                                "label": "Restricted Application List",
                                 "tooltip": "Add an application to restrict.",
-                                "Optional": {
+                                "optional": {
                                     "button": {
                                         "id": "addApplication",
                                         "name": " Add Application"
@@ -2441,7 +2564,7 @@ const jsonResponse = {
                                     "dataSource": "restricted-applications",
                                     "columns": [
                                         {
-                                            "name" : "Application Name/Description",
+                                            "name" : "Application name/Description",
                                             "key" : "appName",
                                             "type": "input",
                                             "others": {
@@ -2450,7 +2573,7 @@ const jsonResponse = {
                                             }
                                         },
                                         {
-                                            "name" : "Package Name",
+                                            "name" : "Package name",
                                             "key" : "packageName",
                                             "type": "input",
                                             "others": {
@@ -2460,27 +2583,27 @@ const jsonResponse = {
                                         },
                                     ]
                                 },
-                                "_type": "inputTable",
-                                "_id": "RestrictedApplicationList"
+                                "type": "inputTable",
+                                "id": "RestrictedApplicationList"
                             },
                         ],
-                        "_key": "1",
-                        "_show": true
+                        "key": "1",
+                        "show": true
                     }]
                 },
                 {
-                    "Name": "Runtime Permission Policy (COSU)",
-                    "Panel": [{
+                    "name": "Runtime Permission Policy (COSU)",
+                    "panel": [{
                         "panelId": "RUNTIME_PERMISSION_POLICY",
                         "title": "Runtime Permission Policy (COSU / Work Profile)",
                         "description": "This configuration can be used to set a runtime permission policy to an Android Device.",
-                        "PanelItem": [
+                        "panelItem": [
                             {
-                                "Label": "Set default runtime permission",
+                                "label": "Set default runtime permission",
                                 "tooltip": "When an app requests a runtime permission this enforces whether the user needs" +
                                     " to prompted or the permission either automatically granted or denied",
-                                "Optional": {
-                                    "Option": [
+                                "optional": {
+                                    "option": [
                                         {
                                             "name": "NONE",
                                             "value": "",
@@ -2499,13 +2622,13 @@ const jsonResponse = {
                                         },
                                     ]
                                 },
-                                "_type": "select",
-                                "_id": "defaultPermissionType"
+                                "type": "select",
+                                "id": "defaultPermissionType"
                             },
                             {
-                                "Label": "Set app-specific runtime permissions",
+                                "label": "Set app-specific runtime permissions",
                                 "tooltip": "Add an application and set permission policy for a specific permission it need.",
-                                "Optional": {
+                                "optional": {
                                     "button": {
                                         "id": "addApplication-runtimePermission",
                                         "name": " Add Application"
@@ -2522,7 +2645,7 @@ const jsonResponse = {
                                             }
                                         },
                                         {
-                                            "name" : "Package Name",
+                                            "name" : "Package name",
                                             "key" : "packageName",
                                             "type": "input",
                                             "others": {
@@ -2531,7 +2654,7 @@ const jsonResponse = {
                                             }
                                         },
                                         {
-                                            "name" : "Permission Name",
+                                            "name" : "Permission name",
                                             "key" : "permissionName",
                                             "type": "input",
                                             "others": {
@@ -2563,48 +2686,48 @@ const jsonResponse = {
                                         },
                                     ]
                                 },
-                                "_type": "inputTable",
-                                "_id": "restricted-applications"
+                                "type": "inputTable",
+                                "id": "restricted-applications"
                             },
                             {
-                                "Label": "Already granted or denied permissions are not affected by this policy.",
-                                "_type": "alert",
+                                "label": "Already granted or denied permissions are not affected by this policy.",
+                                "type": "alert",
                             },
                             {
-                                "Label": "Permissions can be granted or revoked only for applications built with a Target SDK Version of Android Marshmallow or later.",
-                                "_type": "alert",
+                                "label": "Permissions can be granted or revoked only for applications built with a Target SDK Version of Android Marshmallow or later.",
+                                "type": "alert",
                             },
                         ],
-                        "_key": "1",
-                        "_show": true
+                        "key": "1",
+                        "show": true
                     }]
                 },
                 {
-                    "Name": "System Update Policy (COSU)",
-                    "Panel": [{
+                    "name": "System Update Policy (COSU)",
+                    "panel": [{
                         "panelId": "SYSTEM_UPDATE_POLICY",
                         "title": "System Update Policy (COSU)",
                         "description": "This configuration can be used to set a passcode policy to an Android Device. Once this" +
                             " configuration profile is installed on a device, corresponding users will not be able to modify " +
                             "these settings on their devices.",
-                        "PanelItem": [
+                        "panelItem": [
                             {
-                                "Label": "System Update",
+                                "label": "System Update",
                                 "tooltip": "Type of the System Update to be set by the Device Owner.",
-                                "Optional": {
-                                    "Radio": [
+                                "optional": {
+                                    "radio": [
                                         {
                                             "name": "Automatic",
                                             "value": "automatic",
                                             "subPanel": [{
-                                                "_type": "none",
+                                                "type": "none",
                                             }]
                                         },
                                         {
                                             "name": "Postpone",
                                             "value": "postpone",
                                             "subPanel": [{
-                                                "_type": "none",
+                                                "type": "none",
                                             }]
                                         },
                                         {
@@ -2612,14 +2735,14 @@ const jsonResponse = {
                                             "value": "window",
                                             "subPanel": [
                                                 {
-                                                    "Label": "Below configuration of start time and end time are valid only when window option is selected.",
-                                                    "_type": "alert",
+                                                    "label": "Below configuration of start time and end time are valid only when window option is selected.",
+                                                    "type": "alert",
                                                 },
                                                 {
-                                                    "Label": "Start Time",
+                                                    "label": "Start Time",
                                                     "tooltip": "Window start time for system update",
-                                                    "Optional": {
-                                                        "Option": [
+                                                    "optional": {
+                                                        "option": [
                                                             {
                                                                 "name" : "12:00 AM",
                                                                 "value": "1440",
@@ -2719,14 +2842,14 @@ const jsonResponse = {
                                                         ]
 
                                                     },
-                                                    "_type": "select",
-                                                    "_id": "cosuSystemUpdatePolicyWindowStartTime"
+                                                    "type": "select",
+                                                    "id": "cosuSystemUpdatePolicyWindowStartTime"
                                                 },
                                                 {
-                                                    "Label": "End Time",
+                                                    "label": "End Time",
                                                     "tooltip": "Window end time for system update",
-                                                    "Optional": {
-                                                        "Option": [
+                                                    "optional": {
+                                                        "option": [
                                                             {
                                                                 "name" : "12:00 AM",
                                                                 "value": "1440",
@@ -2826,53 +2949,50 @@ const jsonResponse = {
                                                         ]
 
                                                     },
-                                                    "_type": "select",
-                                                    "_id": "cosuSystemUpdatePolicyWindowEndTime"
+                                                    "type": "select",
+                                                    "id": "cosuSystemUpdatePolicyWindowEndTime"
                                                 },
                                             ],
                                         },
                                     ],
-                                    "SubPanel":[
+                                    "subPanel":[
                                         {
-
-                                            "_key": "Manual",
-                                            "_show": true
+                                            "key": "Manual",
+                                            "show": true
                                         },                                    ]
-
-
                                 },
-                                "_type": "radioGroup",
-                                "_id": "ENCRYPT_STORAGE"  //toDo change id
+                                "type": "radioGroup",
+                                "id": "ENCRYPT_STORAGE"  //toDo change id
                             },
                         ],
-                        "_key": "1",
-                        "_show": true
+                        "key": "1",
+                        "show": true
                     }]
                 },
                 {
-                    "Name": "Enrollment Application Install",
-                    "Panel": [{
+                    "name": "Enrollment Application Install",
+                    "panel": [{
                         "panelId": "ENROLLMENT_APP_INSTALL",
                         "title": "Enrollment Application Install",
                         "description": "This configuration can be used to install applications during Android device enrollment.",
-                        "PanelItem": [
+                        "panelItem": [
                             {
-                                "Label": "This configuration will be applied only during Android device enrollment.",
-                                "_type": "alert",
+                                "label": "This configuration will be applied only during Android device enrollment.",
+                                "type": "alert",
                             },
                             {
-                                "Label": "Select Enrollment Applications.",
-                                "_type": "selectTable",
+                                "label": "Select Enrollment Applications.",
+                                "type": "selectTable",
                             },
                             {
-                                "Label": "Work profile global user configurations",
-                                "_type": "title"
+                                "label": "Work profile global user configurations",
+                                "type": "title"
                             },
                             {
-                                "Label": "App Auto Update Policy",
+                                "label": "App Auto Update Policy",
                                 "tooltip": "The Auto-update policy for apps installed on the device",
-                                "Optional": {
-                                    "Option": [
+                                "optional": {
+                                    "option": [
                                         {
                                             "name" : "When Connected to WiFi",
                                             "value": "0",
@@ -2891,14 +3011,14 @@ const jsonResponse = {
                                         },
                                     ]
                                 },
-                                "_type": "select",
-                                "_id": "autoUpdatePolicy"
+                                "type": "select",
+                                "id": "autoUpdatePolicy"
                             },
                             {
-                                "Label": "App Availability to a User",
+                                "label": "App Availability to a User",
                                 "tooltip": "The availability granted to the user for the specified app",
-                                "Optional": {
-                                    "Option": [
+                                "optional": {
+                                    "option": [
                                         {
                                             "name" : "All Approved Apps For Enterprise",
                                             "value": "1",
@@ -2913,12 +3033,12 @@ const jsonResponse = {
                                         },
                                     ]
                                 },
-                                "_type": "select",
-                                "_id": "productSetBehavior"
+                                "type": "select",
+                                "id": "productSetBehavior"
                             },
                         ],
-                        "_key": "1",
-                        "_show": true
+                        "key": "1",
+                        "show": true
                     }]
                 },
             ]
