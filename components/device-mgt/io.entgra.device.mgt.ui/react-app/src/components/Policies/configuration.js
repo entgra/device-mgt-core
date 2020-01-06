@@ -936,7 +936,27 @@ const jsonResponse = {
                                                     "id": "password" //toDo add id
                                                 },
                                             ],
-                                            "key": "wep-wpa",
+                                            "key": "wep",
+                                            "show": true
+                                        },
+                                        {
+                                            "panelItem": [
+                                                {
+                                                    "label": "Password *",
+                                                    "tooltip": "Password for the wireless network.",
+                                                    "optional": {
+                                                        "placeholder": "",
+                                                        "rules":{
+                                                            "regex": "",
+                                                            "validationMsg": "",
+                                                            "required": false
+                                                        },
+                                                    },
+                                                    "type": "input",
+                                                    "id": "password" //toDo add id
+                                                },
+                                            ],
+                                            "key": "wpa",
                                             "show": true
                                         },
                                         {
@@ -1067,7 +1087,99 @@ const jsonResponse = {
                                                                         "id": "XXXXXXXXXXXX" //toDo add id
                                                                     },
                                                                 ],
-                                                                "key": "peap-ttls",
+                                                                "key": "peap",
+                                                                "show": true
+                                                            },
+                                                            {
+                                                                "panelItem": [
+                                                                    {
+                                                                        "label": "Phase 2 Authentication",
+                                                                        "tooltip": "Phase 2 authentication of the wireless network to be configured.",
+                                                                        "optional": {
+                                                                            "option": [
+                                                                                {
+                                                                                    "name" : "None",
+                                                                                    "value": "",
+                                                                                },
+                                                                                {
+                                                                                    "name" : "PAP",
+                                                                                    "value": "pap",
+                                                                                },
+                                                                                {
+                                                                                    "name" : "MCHAP",
+                                                                                    "value": "mchap",
+                                                                                },
+                                                                                {
+                                                                                    "name" : "MCHAPV2",
+                                                                                    "value": "mchapv2",
+                                                                                },
+                                                                                {
+                                                                                    "name" : "GTC",
+                                                                                    "value": "gtc",
+                                                                                },
+                                                                            ]
+                                                                        },
+                                                                        "type": "select",
+                                                                        "id": "phase2"
+                                                                    },
+                                                                    {
+                                                                        "label": "Identify",
+                                                                        "tooltip": "Identify of the wireless network to be configured.",
+                                                                        "optional": {
+                                                                            "placeholder": "Should be 1 to 30 characters long",
+                                                                            "rules":{
+                                                                                "regex": "",
+                                                                                "validationMsg": "",
+                                                                                "required": false
+                                                                            },
+                                                                        },
+                                                                        "type": "input",
+                                                                        "id": "identity" //toDo add id
+                                                                    },
+                                                                    {
+                                                                        "label": "Anonymous Identity",
+                                                                        "tooltip": "Identity of the wireless network to be configured.",
+                                                                        "optional": {
+                                                                            "placeholder": "Should be 1 to 30 characters long",
+                                                                            "rules":{
+                                                                                "regex": "",
+                                                                                "validationMsg": "",
+                                                                                "required": false
+                                                                            },
+                                                                        },
+                                                                        "type": "input",
+                                                                        "id": "anonymousIdentity" //toDo add id
+                                                                    },
+                                                                    {
+                                                                        "label": "CA Certificate",
+                                                                        "tooltip": "CA Certificate for the wireless network.",
+                                                                        "optional": {
+                                                                            "placeholder": "",
+                                                                            "rules":{
+                                                                                "regex": "",
+                                                                                "validationMsg": "",
+                                                                                "required": false
+                                                                            },
+                                                                        },
+                                                                        "type": "upload",
+                                                                        "id": "cacert" //toDo add id
+                                                                    },
+                                                                    {
+                                                                        "label": "Password *",
+                                                                        "tooltip": "Password for the wireless network.",
+                                                                        "optional": {
+                                                                            "placeholder": "",
+                                                                            "rules":{
+                                                                                "regex": "",
+                                                                                "validationMsg": "",
+                                                                                "required": false
+                                                                            },
+                                                                        },
+                                                                        "type": "input",
+                                                                        "id": "XXXXXXXXXXXX" //toDo add id
+                                                                    },
+                                                                ],
+                                                                "key": "ttls",
                                                                 "show": true
                                                             },
                                                             {
@@ -1144,7 +1256,16 @@ const jsonResponse = {
                                                                         "type": "none",
                                                                     },
                                                                 ],
-                                                                "key": "sim-aka",
+                                                                "key": "sim",
+                                                                "show": true
+                                                            },
+                                                            {
+                                                                "panelItem": [
+                                                                    {
+                                                                        "type": "none",
+                                                                    },
+                                                                ],
+                                                                "key": "aka",
                                                                 "show": true
                                                             },
                                                         ]
@@ -1193,6 +1314,7 @@ const jsonResponse = {
                                     "label": "Proxy Configuration Type",
                                     "tooltip": "Select the configuration type.",
                                     "optional": {
+                                        "initialValue": "MANUAL",
                                         "radio": [
                                             {
                                                 "name" : "Manual",
@@ -2715,6 +2837,7 @@ const jsonResponse = {
                                 "label": "System Update",
                                 "tooltip": "Type of the System Update to be set by the Device Owner.",
                                 "optional": {
+                                    "initialValue": "automatic",
                                     "radio": [
                                         {
                                             "name": "Automatic",

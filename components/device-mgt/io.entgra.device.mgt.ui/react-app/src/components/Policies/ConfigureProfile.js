@@ -41,26 +41,39 @@ class ConfigureProfile extends React.Component {
             activeSubPanelKeys: [],
             count: 0,
             activeRadioValues: "",
-            activeSelectedValues: "",
+            activeSelectedValues: [],
+            dataArray: []
         }
     };
 
     componentDidMount() {
     };
 
-    handleRadioPanel = (e)=>{
-        this.setState({
-            activeRadioValue : e.target.value
-        });
+    //handle items which handle from radio buttons
+    handleRadioPanel = (e, subPanel)=>{
+        console.log(e);
+        {subPanel.map((panel,i) =>{
+            if(panel.value===e.target.value){
+                document.getElementById(panel.value).style.display = "block";
+            }else {
+                document.getElementById(panel.value).style.display = "none";
+            }
+        })}
+
     };
 
-    handleSelectedPanel =(e)=>{
-      console.log(e);
-      this.setState({
-          activeSelectedValues: e
-      })
+    //handle items which handle from select options
+    handleSelectedPanel =(e, subPanel)=>{
+        {subPanel.map((panel,i) =>{
+            if(panel.key===e){
+                document.getElementById(panel.key).style.display = "block";
+            }else {
+                document.getElementById(panel.key).style.display = "none";
+            }
+        })}
     };
 
+    //handle items which handle from checkbox
     handleSubPanel = (e) =>{
         if(e.target.checked){
             let joined = this.state.activeSubPanelKeys.concat(e.target.id);
@@ -90,41 +103,90 @@ class ConfigureProfile extends React.Component {
         }
     };
 
-    // handleAdd = (dataSource) => {
-    //     const { count } = this.state;
-    //     const newData = [{
-    //         key: count,
-    //     }];
-    //     dataSource.concat(newData);
-    //     // console.log(count+1);
-    //     this.setState({
-    //         count: count +1
-    //     });
-    // };
+    handleAdd = (dataSource, id) => {
+        const { count, dataArray } = this.state;
+        const newData = [{
+            key: count,
+        }];
+        this.setState({
+            dataArray: [...dataArray, newData],
+            count: count +1
+        });
+        console.log(dataArray);
+        console.log(id);
+    };
 
     getColumns = ({ getFieldDecorator },arr) =>{
         const columnArray = [];
         const actionColumn = [{
-                title: 'Actions',
+                title: '',
                 dataIndex: 'operation',
                 render: (text, record) =>
                     <Form.Item>
                         <Popconfirm title="Sure to delete?" >
-                            Delete
+                            <a><Text type="danger"><Icon type="delete"/></Text></a>
                         </Popconfirm>
                     </Form.Item> },
         ];
         Object.values(arr).map((columnData, c) =>{
-            const column = {
-                title: `${columnData.name}`,
-                dataIndex: `${columnData.key}`,
-                key: `${columnData.key}`,
-                render: (name, row, i) => (
-                    <Form.Item>
-                        {getFieldDecorator({})(<Input/>)}
-                    </Form.Item>)
-            };
-            columnArray.push(column);
+             if(columnData.type==="input"){
+                const column = {
+                    title: `${columnData.name}`,
+                    dataIndex: `${columnData.key}`,
+                    key: `${columnData.key}`,
+                    render: (name, row, i) => (
+                        <Form.Item>
+                            {getFieldDecorator(`${columnData.key}`,{})
+                            (<Input type={columnData.others.inputType} placeholder={columnData.others.placeholder}/>)}
+                        </Form.Item>)
+                };
+                columnArray.push(column);
+
+            }else if(columnData.type==="upload"){
+                const column = {
+                    title: `${columnData.name}`,
+                    dataIndex: `${columnData.key}`,
+                    key: `${columnData.key}`,
+                    render: (name, row, i) => (
+                        <Form.Item>
+                            {getFieldDecorator(`${columnData.key}`, {
+
+                            })(
+                                <Upload>
+                                    <Button>
+                                        <Icon type="upload" /> Choose file
+                                    </Button>
+                                </Upload>,
+                            )}
+                        </Form.Item>)
+                };
+                columnArray.push(column);
+            }else if(columnData.type==="select"){
+                 const column = {
+                     title: `${columnData.name}`,
+                     dataIndex: `${columnData.key}`,
+                     key: `${columnData.key}`,
+                     render: (name, row, i) => (
+                         <Form.Item>
+                             {getFieldDecorator(`${columnData.key}`, {
+                                 initialValue: columnData.others.initialDataIndex
+                             })(
+                                 <Select>
+                                     {columnData.others.options.map((option,i)=>{
+                                         return(
+                                             <Option value={option.key}>{option.value}</Option>
+                                         );
+                                     })}
+                                 </Select>,
+                             )}
+                         </Form.Item>
+                         )
+                 };
+                 columnArray.push(column);
+
+             }
+
+
         });
         const columns = columnArray.concat(actionColumn);
         return(columns);
@@ -153,28 +215,23 @@ class ConfigureProfile extends React.Component {
                                             {getFieldDecorator(`${item.id}`, {
                                                 initialValue: `${item.optional.option[0].name}`
                                             })(
-                                                <Select onChange={this.handleSelectedPanel}>
+                                                <Select onChange={(e)=>this.handleSelectedPanel(e, item.optional.subPanel)}>
                                                     {item.optional.option.map((option,i)=>{
                                                         return(
-                                                            <Option className={option.panelKey} value={option.value}>{option.name}</Option>
+                                                            <Option value={option.value}>{option.name}</Option>
                                                         );
                                                     })}
                                                 </Select>
                                             )}
                                         </Form.Item>
-                                        <div className={"sub-panel-container"}>
-                                            <Tabs animated={false} tabBarGutter={0} activeKey={this.state.activeSelectedValues}>
-                                                {item.optional.subPanel.map((panel,i) =>{
-                                                    return(
-                                                        <TabPane
-                                                            tab={""}
-                                                            key={panel.key}
-                                                        >
-                                                            {this.getPanelItems(panel.panelItem)}
-                                                        </TabPane>
-                                                    );
-                                                })}
-                                            </Tabs>
+                                        <div className={"sub-panel-container"} >
+                                            {item.optional.subPanel.map((panel,i) =>{
+                                                return(
+                                                    <div id={panel.key} style={{display:"none"}}>
+                                                    {this.getPanelItems(panel.panelItem)}
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 );
@@ -318,8 +375,9 @@ class ConfigureProfile extends React.Component {
                                                }
                                                style={{display: "block"}}>
                                         {getFieldDecorator(`${item.id}`, {
+                                            initialValue:`${item.optional.initialValue}`
                                         })(
-                                            <Radio.Group onChange={this.handleRadioPanel}>
+                                            <Radio.Group onChange={(e)=>this.handleRadioPanel(e, item.optional.radio)}>
                                                 {item.optional.radio.map((option,i)=>{
                                                     return(
                                                         <Radio value={option.value}>{option.name}</Radio>
@@ -329,18 +387,14 @@ class ConfigureProfile extends React.Component {
                                         )}
                                     </Form.Item>
                                     <div className={"radio-panels"} style={{marginTop: -10}}>
-                                        <Tabs id={item.id} activeKey={this.state.activeRadioValue}>
-                                            {item.optional.radio.map((option,i)=>{
-                                                return(
-                                                    <TabPane
-                                                        tab={null}
-                                                        key={option.value}
-                                                    >
-                                                        {this.getPanelItems(option.subPanel)}
-                                                    </TabPane>
-                                                );
-                                            })}
-                                        </Tabs>
+                                        {
+                                            item.optional.radio.map((option,i)=>{
+                                            return(
+                                                <div id={option.value} style={{display:"none"}}>
+                                                    {this.getPanelItems(option.subPanel)}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             );
@@ -386,17 +440,17 @@ class ConfigureProfile extends React.Component {
                                 </Form.Item>
                             );
                         case "inputTable":
-                            let dataSourceArr = [];
+                            let dataArray = [];
                             const column = this.getColumns({ getFieldDecorator }, item.optional.columns);
                             return (
                                 <div key={k}>
                                     <Button
-                                        onClick={()=>this.handleAdd(dataSourceArr)}
+                                        onClick={()=>this.handleAdd(dataArray, item.id)}
                                         type="primary"
                                         style={{ marginBottom: 16 }}>
                                         <Icon type="plus-circle"/>{item.optional.button.name}
                                     </Button>
-                                    <Table dataSource={dataSourceArr} columns={column}/>
+                                    <Table id={item.id} dataSource={this.state.dataArray} columns={column}/>
                                 </div>
                             );
                         default:
