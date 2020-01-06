@@ -35,64 +35,127 @@ import ReportDeviceTable from "../../../components/Devices/ReportDevicesTable";
 import PieChart from "../../../components/Reports/Widgets/PieChart";
 import axios from "axios";
 import CountWidget from "../../../components/Reports/Widgets/CountWidget";
+import {withConfigContext} from "../../../context/ConfigContext";
 const {Paragraph} = Typography;
 const { CheckableTag } = Tag;
 
 const { Option } = Select;
+let config = null;
+
 
 class ReportDetails extends React.Component {
     routes;
 
-    tagsFromServer = ['Enrolled', 'Unenrolled'];
-
-
     constructor(props) {
         super(props);
         this.routes = props.routes;
+        config =  this.props.context;
+        const { reportData } = this.props.location;
         this.state = {
             selectedTags: ['Enrolled'],
-            paramsObject:{},
-            count:0
+            paramsObject:{
+                from:reportData.duration[0],
+                to:reportData.duration[1]
+            },
+            statsObject:{},
+            statArray:[{item:"ACTIVE",count:0},{item:"INACTIVE",count:0},{item:"REMOVED",count:0}]
         };
 
-        console.log(window.innerHeight/2);
+
+        console.log(reportData.duration);
+     //   console.log(window.innerHeight/2);
     }
 
-    //Get modified value from datepicker and set it to paramsObject
-    updateDurationValue = (modifiedFromDate,modifiedToDate) => {
-        let tempParamObj = this.state.paramsObject;
-        tempParamObj.from = modifiedFromDate;
-        tempParamObj.to = modifiedToDate;
-        this.setState({paramsObject:tempParamObj});
-        console.log(this.state.paramsObject);
-    };
+    statDataArray = []
 
-    onRadioChange = (e) => {
-        const { reportData } = this.props.location;
-        console.log(e.target.value);
-        const value = e.target.value;
-        let tempParamObj = this.state.paramsObject;
-
-        // tempParamObj.status = value;
-        // if(value=="ALL" && tempParamObj.status) {
-        //     delete tempParamObj.status;
-        // }
-
-        this.setParam(tempParamObj, reportData.paramsType, value);
-
-        this.setState({paramsObject:tempParamObj});
-        console.log(this.state.paramsObject);
-    };
-
-    getStats = (value) => {
-        console.log(value);
-        //this.setState({count:value})
+    componentDidMount() {
     }
+
+    // fetchStats = () => {
+    //     const { reportData } = this.props.location;
+    //     let { statArray } = this.state;
+    //
+    //     for(let i=0; i<reportData.params.length; i++){
+    //         let params = {
+    //             status: reportData.params[i],
+    //             from: reportData.duration[0],
+    //             to: reportData.duration[1]
+    //         };
+    //
+    //         this.getCount(params, (data) => {
+    //             statArray[i] = {
+    //                 "item":reportData.params[i],
+    //                 "count":parseInt(data)
+    //             }
+    //         });
+    //     }
+    //     console.log("SSSSS")
+    //     console.log(statArray);
+    //     this.setState({statArray})
+    //     // console.log("this.state.statArray")
+    //     // console.log(this.state.statArray)
+    // }
+
+    deviceParams = {};
+
+    // //Get modified value from datepicker and set it to paramsObject
+    // updateDurationValue = (modifiedFromDate,modifiedToDate) => {
+    //     let tempParamObj = this.state.paramsObject;
+    //     tempParamObj.from = modifiedFromDate;
+    //     tempParamObj.to = modifiedToDate;
+    //  //   this.setState({paramsObject:tempParamObj});
+    //     this.deviceParams = tempParamObj;
+    //     console.log(this.state.paramsObject);
+    // };
+
+    // onRadioChange = (e) => {
+    //     const { reportData } = this.props.location;
+    //     console.log(e.target.value);
+    //     const value = e.target.value;
+    //     let tempParamObj = this.state.paramsObject;
+    //
+    //     // tempParamObj.status = value;
+    //     // if(value=="ALL" && tempParamObj.status) {
+    //     //     delete tempParamObj.status;
+    //     // }
+    //
+    //     this.setParam(tempParamObj, reportData.paramsType, value);
+    //
+    //     this.setState({paramsObject:tempParamObj});
+    //     console.log(this.state.paramsObject);
+    // };
+
+    // onSelectChange = (value) => {
+    //     const { reportData } = this.props.location;
+    //     let tempParamObj = this.state.paramsObject;
+    //
+    //     // tempParamObj.status = value;
+    //     // if(value=="ALL" && tempParamObj.status) {
+    //     //     delete tempParamObj.status;
+    //     // }
+    //
+    //     this.setParam(tempParamObj, reportData.paramsType, value);
+    //
+    //     this.deviceParams = tempParamObj;
+    //   //  this.setState({paramsObject:tempParamObj});
+    //     console.log(this.state.paramsObject);
+    // };
+
+    // onSubmitReport = () => {
+    //     this.setState({paramsObject:this.deviceParams});
+    //
+    //     const params = {
+    //         status: "ACTIVE",
+    //         from: "2019-01-01",
+    //         to: "2020-01-01"
+    //     }
+    //     this.getCount(this.deviceParams);
+    // };
 
     setParam = (tempParamObj, type, value) => {
-        if(type=="status"){
+        if(type==="status"){
             tempParamObj.status = value;
-            if(value=="ALL" && tempParamObj.status) {
+            if(tempParamObj.status) {
                 delete tempParamObj.status;
             }
         } else if(type=="ownership"){
@@ -103,25 +166,72 @@ class ReportDetails extends React.Component {
         }
     };
 
+    // getCount = (params, returnData) => {
+    //
+    //     const encodedExtraParams = Object.keys(params)
+    //         .map(key => key + '=' + params[key]).join('&');
+    //
+    //
+    //     const apiUrl = window.location.origin + config.serverConfig.invoker.uri +
+    //         config.serverConfig.invoker.deviceMgt +
+    //         "/reports/devices/count?" + encodedExtraParams;
+    //
+    //     //send request to the invokerss
+    //     axios.get(apiUrl).then(res => {
+    //         if (res.status === 200) {
+    //             returnData(res.data.data)
+    //         }
+    //     }).catch((error) => {
+    //         if (error.hasOwnProperty("response") && error.response.status === 401) {
+    //             //todo display a popup with error
+    //             message.error('You are not logged in');
+    //             window.location.href = window.location.origin + '/entgra/login';
+    //         } else {
+    //             notification["error"]({
+    //                 message: "There was a problem",
+    //                 duration: 0,
+    //                 description:"Error occurred while trying to get device count.",
+    //             });
+    //         }
+    //     });
+    // };
+
+    onClickPieChart = (value) => {
+        console.log(value.data.point.item);
+        const chartValue = value.data.point.item;
+        let tempParamObj = this.state.paramsObject;
+
+       // this.setParam(tempParamObj, "status", chartValue);
+
+        tempParamObj.status = chartValue;
+
+
+        this.setState({paramsObject:tempParamObj});
+        console.log(this.state.paramsObject)
+    };
+
     render() {
-        const { selectedTags } = this.state;
-        const { reportData } = this.props.location;
-        console.log(reportData);
+        const { statArray } = this.state;
+       const { reportData } = this.props.location;
+        
+        console.log("&&&&&")
+        console.log(statArray);
+        
 
-        let radioItems;
-        if(reportData){
-            radioItems = reportData.params.map((data) =>
-                <Radio.Button value={data} key={data}>{data}</Radio.Button>
-            );
-        }else{
-            const empty = ['ALL']
-            radioItems = empty.map((data) =>
-                <Radio.Button value={data} key={data}>{data}</Radio.Button>
-            );
-        }
+        // let radioItems;
+        // if(reportData){
+        //     radioItems = reportData.params.map((data) =>
+        //         // <Radio.Button value={data} key={data}>{data}</Radio.Button>
+        //         <Option value={data} key={data}>{data}</Option>
+        //     );
+        // }else{
+        //     const empty = ['ALL']
+        //     radioItems = empty.map((data) =>
+        //         // <Radio.Button value={data} key={data}>{data}</Radio.Button>
+        //         <Option value={data} key={data}>{data}</Option>
+        //     );
+        // }
         const params = {...this.state.paramsObject};
-
-
         return (
             <div>
                 <PageHeader style={{paddingTop: 0}}>
@@ -141,53 +251,79 @@ class ReportDetails extends React.Component {
                                 <Option value="windows">Windows</Option>
                             </Select>
 
-                            <DateRangePicker
-                                updateDurationValue={this.updateDurationValue}/>
+                            {/*<Select onChange={this.onSelectChange} defaultValue="ALL" style={{ width: 120 , marginRight:10}}>*/}
+                            {/*    /!*{radioItems}*!/*/}
+                            {/*</Select>*/}
+
+                            {/*<DateRangePicker*/}
+                            {/*    updateDurationValue={this.updateDurationValue}/>*/}
+
+                            <Button onClick={this.onSubmitReport} style={{marginLeft:10}} type="primary">Generate Report</Button>
                         </div>
 
 
                     </div>
 
                     <div>
-                        <Row>
-                            <Col span={18} push={6}>
+                        {/*<Row>*/}
+                        {/*    <Col span={18} push={6}>*/}
 
-                                    <Card
-                                        bordered={true}
-                                        hoverable={true}
-                                        style={{borderRadius: 5, marginBottom: 10, marginLeft:10, height:window.innerHeight*0.5}}>
+                        {/*            <Card*/}
+                        {/*                bordered={true}*/}
+                        {/*                hoverable={true}*/}
+                        {/*                style={{borderRadius: 5, marginBottom: 10, marginLeft:10, height:window.innerHeight*0.5}}>*/}
 
 
-                                        <PieChart/>
+                        {/*                <PieChart onClickPieChart={this.onClickPieChart} reportData={reportData}/>*/}
 
-                                    </Card>
+                        {/*            </Card>*/}
 
-                            </Col>
-                            <Col span={6} pull={18}>
+                        {/*    </Col>*/}
+                        {/*    <Col span={6} pull={18}>*/}
 
-                                    <Card
-                                        className="scrollable-container"
-                                        bordered={true}
-                                        hoverable={true}
-                                        style={{borderRadius: 5, marginBottom: 10, width:"100%", height:window.innerHeight*0.5}}>
+                        {/*            <Card*/}
+                        {/*                className="scrollable-container"*/}
+                        {/*                bordered={true}*/}
+                        {/*                hoverable={true}*/}
+                        {/*                style={{borderRadius: 5, marginBottom: 10, width:"100%", height:window.innerHeight*0.5}}>*/}
 
-                                        <CountWidget allCount={this.state.count}/>
+                        {/*                /!*<CountWidget/>*!/*/}
 
-                                    </Card>
+                        {/*            </Card>*/}
 
-                            </Col>
-                        </Row>
+                        {/*    </Col>*/}
+                        {/*</Row>*/}
+
+                        <Card
+                            bordered={true}
+                            hoverable={true}
+                            style={{borderRadius: 5, marginBottom: 10, height:window.innerHeight*0.5}}>
+
+
+                            <PieChart onClickPieChart={this.onClickPieChart} reportData={reportData}/>
+
+                        </Card>
+
+                        {/*<div>*/}
+                        {/*    <div style={{borderRadius: 5}}>*/}
+                        {/*        /!*<ReportDeviceTable paramsObject={params}/>*!/*/}
+
+                        {/*        <Row gutter={16} >*/}
+                        {/*            <CountWidget statArray={statArray}/>*/}
+                        {/*        </Row>*/}
+                        {/*    </div>*/}
+                        {/*</div>*/}
                     </div>
 
-                    <div style={{marginBottom: '10px'}}>
-                        <Radio.Group defaultValue="a" buttonStyle="solid" onChange={this.onRadioChange} style={{marginRight: '10px'}}>
-                            {radioItems}
-                        </Radio.Group>
+                    {/*<div style={{marginBottom: '10px'}}>*/}
+                    {/*    <Radio.Group defaultValue="a" buttonStyle="solid" onChange={this.onRadioChange} style={{marginRight: '10px'}}>*/}
+                    {/*        {radioItems}*/}
+                    {/*    </Radio.Group>*/}
 
-                    </div>
+                    {/*</div>*/}
 
                     <div style={{backgroundColor:"#ffffff", borderRadius: 5}}>
-                        <ReportDeviceTable paramsObject={params} getStats={this.getStats}/>
+                        <ReportDeviceTable paramsObject={params}/>
                     </div>
                 </PageHeader>
                 <div style={{background: '#f0f2f5', padding: 24, minHeight: 720}}>
@@ -198,4 +334,4 @@ class ReportDetails extends React.Component {
     }
 }
 
-export default ReportDetails;
+export default withConfigContext(ReportDetails);

@@ -105,40 +105,25 @@ class ReportTopics extends React.Component {
 
         let item = this.state.reportsArray.map((data) =>
             <Col key={data.name} span={6}>
-                <Card key={data.name} bordered={true} hoverable={true} style={{borderRadius: 10, marginBottom: 16, height:250}}>
+                <Link
+                    to={{
+                        pathname: "/entgra/reportdetails",
+                        reportData: {
+                            reportType: data.reportType,
+                            params: data.params,
+                            paramsType: data.paramsType
+                        }
+                    }}>
+                    <Card key={data.name} bordered={true} hoverable={true} style={{borderRadius: 10, marginBottom: 16}}>
 
-                        <div align='center'>
-                            <Icon type="desktop" style={{ fontSize: '25px', color: '#08c' }}/>
-                            <h2><b>{data.name}</b></h2>
-                            <p>{"deviceTypes"}</p>
-                            {/*<ReportFilterModal/>*/}
-                        </div>
-
-                        <Select
-                            mode="multiple"
-                            style={{ width: '100%' }}
-                            size={"small"}
-                            placeholder="Select device type"
-                            defaultValue={"Android"}
-                        >
-                            {deviceTypes}
-                        </Select>
-                        <Link
-                            to={{
-                                pathname: "/entgra/reportdetails",
-                                reportData: {
-                                    reportType: data.reportType,
-                                    params: data.params,
-                                    paramsType: data.paramsType
-                                }
-                            }}>
-                            <div align={'center'} style={{marginTop:10}}>
-                                <Button type="primary">
-                                    Generate Report
-                                </Button>
+                            <div align='center'>
+                                <Icon type="desktop" style={{ fontSize: '25px', color: '#08c' }}/>
+                                <h2><b>{data.name}</b></h2>
+                                <p>{"deviceTypes"}</p>
+                                {/*<ReportFilterModal/>*/}
                             </div>
-                        </Link>
-                </Card>
+                    </Card>
+                </Link>
             </Col>
         );
         return(

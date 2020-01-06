@@ -32,6 +32,7 @@ import Filter from "../../../components/Reports/Filter";
 import DateRangePicker from "../../../components/Reports/DateRangePicker";
 import ReportGadget from "../../../components/Reports/ReportGadget";
 import ReportTopics from "../../../components/Reports/ReportTopics";
+import ReportDurationItemList from "./ReportDurationItemList";
 
 const {Paragraph} = Typography;
 
@@ -115,7 +116,7 @@ class Reports extends React.Component {
                             {/*        </tr>*/}
                             {/*    </tbody>*/}
                             {/*</table>*/}
-                            <ReportTopics/>
+                            <ReportDurationItemList/>
                     </div>
                 </PageHeader>
                 <div style={{background: '#f0f2f5', padding: 24, minHeight: 720}}>

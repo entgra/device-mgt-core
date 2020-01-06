@@ -1,0 +1,20 @@
+#!usr/bin/env bash
+
+folderName=patch8007
+
+cd org.wso2.carbon.device.mgt.common
+mvn clean install -Dmaven.test.skip=true
+echo "jar build successful"
+mkdir -p ~/Entgra/Product-new/pack/new8/entgra-iot-3.8.1-SNAPSHOT/patches/$folderName
+cp target/org.wso2.carbon.device.mgt.common-4.1.7-SNAPSHOT.jar ~/Entgra/Product-new/pack/new8/entgra-iot-3.8.1-SNAPSHOT/patches/$folderName
+echo "Coppied jar file to webapps diectory"
+echo "Common build successfull"
+
+cd ..
+cd org.wso2.carbon.device.mgt.core
+mvn clean install -Dmaven.test.skip=true
+echo "jar build successful"
+cp target/org.wso2.carbon.device.mgt.core-4.1.7-SNAPSHOT.jar ~/Entgra/Product-new/pack/new8/entgra-iot-3.8.1-SNAPSHOT/patches/$folderName
+echo "Coppied jar file to webapps diectory"
+echo "Core build successfull"
+

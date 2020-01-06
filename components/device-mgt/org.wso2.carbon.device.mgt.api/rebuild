@@ -1,0 +1,14 @@
+#!usr/bin/env bash
+
+mvn clean install -Dmaven.test.skip=true
+echo "War build successful"
+cd target
+sudo cp api#device-mgt#v1.0.war /home/shamalka/Entgra/Product-new/pack/new8/entgra-iot-3.8.1-SNAPSHOT/repository/deployment/server/webapps
+echo "Coppied War file to webapps diectory"
+cd /
+cd /home/shamalka/Entgra/Product-new/pack/new8/entgra-iot-3.8.1-SNAPSHOT/repository/deployment/server/webapps
+ls
+echo "Routed to webapps directory"
+sudo rm -R api#device-mgt#v1.0
+echo "Deleted old folder"
+echo "test done"
