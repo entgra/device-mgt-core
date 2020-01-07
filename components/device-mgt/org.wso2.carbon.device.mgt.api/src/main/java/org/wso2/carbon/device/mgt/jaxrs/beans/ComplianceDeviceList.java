@@ -2,21 +2,22 @@ package org.wso2.carbon.device.mgt.jaxrs.beans;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
+import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.ComplianceData;
 import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.NonComplianceData;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ComplianceDeviceList extends BasePaginatedResult{
-    private List<NonComplianceData> complianceData = new ArrayList<>();
+    private List<ComplianceData> complianceData = new ArrayList<>();
 
     @ApiModelProperty(value = "List of devices returned")
     @JsonProperty("devices")
-    public List<NonComplianceData> getList() {
+    public List<ComplianceData> getList() {
         return complianceData;
     }
 
-    public void setList(List<NonComplianceData> complianceData) {
+    public void setList(List<ComplianceData> complianceData) {
         this.complianceData = complianceData;
     }
 

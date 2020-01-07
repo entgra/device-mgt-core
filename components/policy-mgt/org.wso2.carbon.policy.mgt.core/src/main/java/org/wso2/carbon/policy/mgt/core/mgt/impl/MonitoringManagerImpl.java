@@ -29,6 +29,7 @@ import org.wso2.carbon.device.mgt.common.exceptions.InvalidDeviceException;
 import org.wso2.carbon.device.mgt.common.operation.mgt.Operation;
 import org.wso2.carbon.device.mgt.common.operation.mgt.OperationManagementException;
 import org.wso2.carbon.device.mgt.common.policy.mgt.PolicyMonitoringManager;
+import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.ComplianceData;
 import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.ComplianceFeature;
 import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.NonComplianceData;
 import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.PolicyComplianceException;
@@ -378,7 +379,7 @@ public class MonitoringManagerImpl implements MonitoringManager {
         PaginationResult paginationResult = new PaginationResult();
         try {
             PolicyManagementDAOFactory.openConnection();
-            List<NonComplianceData> complianceDataList = monitoringDAO.getAllComplianceDevices(paginationRequest);
+            List<ComplianceData> complianceDataList = monitoringDAO.getAllComplianceDevices(paginationRequest);
             paginationResult.setData(complianceDataList);
             paginationResult.setRecordsTotal(complianceDataList.size());
         } catch (MonitoringDAOException e) {

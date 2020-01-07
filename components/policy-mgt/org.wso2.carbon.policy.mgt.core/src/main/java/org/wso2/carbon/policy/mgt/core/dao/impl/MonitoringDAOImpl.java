@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
+import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.ComplianceData;
 import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.NonComplianceData;
 import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.ComplianceFeature;
 import org.wso2.carbon.policy.mgt.common.monitor.PolicyDeviceWrapper;
@@ -349,15 +350,19 @@ public class MonitoringDAOImpl implements MonitoringDAO {
     }
 
     @Override
-    public List<NonComplianceData> getAllComplianceDevices(PaginationRequest paginationRequest) throws MonitoringDAOException {
+    public List<ComplianceData> getAllComplianceDevices(PaginationRequest paginationRequest) throws MonitoringDAOException {
         Connection conn;
         PreparedStatement stmt = null;
         ResultSet resultSet = null;
-        List<NonComplianceData> complianceDataList = new ArrayList<>();
+        List<ComplianceData> complianceDataList = new ArrayList<>();
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         try {
             conn = this.getConnection();
-            String query = "SELECT * FROM DM_POLICY_COMPLIANCE_STATUS WHERE TENANT_ID = ? LIMIT ?,?";
+            String query = "SELECT DEVICE.NAME, ENROLLMENT.OWNER, POLICY.* " +
+                    "FROM DM_POLICY_COMPLIANCE_STATUS AS POLICY, DM_DEVICE AS DEVICE, DM_ENROLMENT AS ENROLLMENT " +
+                    "WHERE DEVICE.ID=POLICY.DEVICE_ID " +
+                    "AND DEVICE.ID=ENROLLMENT.DEVICE_ID " +
+                    "AND POLICY.TENANT_ID = ? LIMIT ?,?";
             stmt = conn.prepareStatement(query);
             stmt.setInt(1, tenantId);
             stmt.setInt(2, paginationRequest.getStartIndex());
@@ -365,9 +370,11 @@ public class MonitoringDAOImpl implements MonitoringDAO {
 
             resultSet = stmt.executeQuery();
             while (resultSet.next()) {
-                NonComplianceData complianceData = new NonComplianceData();
+                ComplianceData complianceData = new ComplianceData();
                 complianceData.setId(resultSet.getInt("ID"));
                 complianceData.setDeviceId(resultSet.getInt("DEVICE_ID"));
+                complianceData.setDeviceName(resultSet.getString("NAME"));
+                complianceData.setOwner(resultSet.getString("OWNER"));
                 complianceData.setEnrolmentId(resultSet.getInt("ENROLMENT_ID"));
                 complianceData.setPolicyId(resultSet.getInt("POLICY_ID"));
                 complianceData.setStatus(resultSet.getBoolean("STATUS"));

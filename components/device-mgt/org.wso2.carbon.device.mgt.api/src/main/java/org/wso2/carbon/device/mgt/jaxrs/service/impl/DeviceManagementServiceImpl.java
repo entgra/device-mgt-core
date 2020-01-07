@@ -66,6 +66,7 @@ import org.wso2.carbon.device.mgt.common.operation.mgt.Activity;
 import org.wso2.carbon.device.mgt.common.operation.mgt.Operation;
 import org.wso2.carbon.device.mgt.common.operation.mgt.OperationManagementException;
 import org.wso2.carbon.device.mgt.common.policy.mgt.Policy;
+import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.ComplianceData;
 import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.ComplianceFeature;
 import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.NonComplianceData;
 import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.PolicyComplianceException;
@@ -1075,7 +1076,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                 String msg = "No data";
                 return Response.status(Response.Status.OK).entity(msg).build();
             } else {
-                complianceDeviceList.setList((List<NonComplianceData>) paginationResult.getData());
+                complianceDeviceList.setList((List<ComplianceData>) paginationResult.getData());
                 complianceDeviceList.setCount(paginationResult.getRecordsTotal());
                 return Response.status(Response.Status.OK).entity(complianceDeviceList).build();
             }
