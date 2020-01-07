@@ -22,6 +22,7 @@ package org.wso2.carbon.policy.mgt.core.dao.impl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.NonComplianceData;
 import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.ComplianceFeature;
 import org.wso2.carbon.policy.mgt.common.monitor.PolicyDeviceWrapper;
@@ -323,6 +324,44 @@ public class MonitoringDAOImpl implements MonitoringDAO {
             String query = "SELECT * FROM DM_POLICY_COMPLIANCE_STATUS WHERE TENANT_ID = ?";
             stmt = conn.prepareStatement(query);
             stmt.setInt(1, tenantId);
+
+            resultSet = stmt.executeQuery();
+            while (resultSet.next()) {
+                NonComplianceData complianceData = new NonComplianceData();
+                complianceData.setId(resultSet.getInt("ID"));
+                complianceData.setDeviceId(resultSet.getInt("DEVICE_ID"));
+                complianceData.setEnrolmentId(resultSet.getInt("ENROLMENT_ID"));
+                complianceData.setPolicyId(resultSet.getInt("POLICY_ID"));
+                complianceData.setStatus(resultSet.getBoolean("STATUS"));
+                complianceData.setAttempts(resultSet.getInt("ATTEMPTS"));
+                complianceData.setLastRequestedTime(resultSet.getTimestamp("LAST_REQUESTED_TIME"));
+                complianceData.setLastSucceededTime(resultSet.getTimestamp("LAST_SUCCESS_TIME"));
+                complianceData.setLastFailedTime(resultSet.getTimestamp("LAST_FAILED_TIME"));
+
+                complianceDataList.add(complianceData);
+            }
+            return complianceDataList;
+        } catch (SQLException e) {
+            throw new MonitoringDAOException("Unable to retrieve compliance data from database.", e);
+        } finally {
+            PolicyManagementDAOUtil.cleanupResources(stmt, resultSet);
+        }
+    }
+
+    @Override
+    public List<NonComplianceData> getAllComplianceDevices(PaginationRequest paginationRequest) throws MonitoringDAOException {
+        Connection conn;
+        PreparedStatement stmt = null;
+        ResultSet resultSet = null;
+        List<NonComplianceData> complianceDataList = new ArrayList<>();
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        try {
+            conn = this.getConnection();
+            String query = "SELECT * FROM DM_POLICY_COMPLIANCE_STATUS WHERE TENANT_ID = ? LIMIT ?,?";
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, tenantId);
+            stmt.setInt(2, paginationRequest.getStartIndex());
+            stmt.setInt(3, paginationRequest.getRowCount());
 
             resultSet = stmt.executeQuery();
             while (resultSet.next()) {

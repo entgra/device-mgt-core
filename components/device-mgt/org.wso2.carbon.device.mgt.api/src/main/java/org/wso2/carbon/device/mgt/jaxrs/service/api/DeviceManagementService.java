@@ -1906,4 +1906,49 @@ public interface DeviceManagementService {
             @PathParam("status") String status,
             @ApiParam(name = "deviceList", value = "The payload containing the new name of the device.", required = true)
             @Valid List<String> deviceList);
+
+    @GET
+    @Path("{type}/{device-id}/compliance")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Getting Policy Compliance Status of all devices",
+            notes = "A policy is enforced on the devices that register with WSO2 IoTS. " +
+                    "The server checks if the settings in the device comply with the policy that is enforced on the device using this REST API.",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:compliance-data")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK",
+                            response = NonComplianceData.class),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. \n Invalid request or validation error.",
+                            response = ErrorResponse.class),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Error occurred while getting the compliance data.",
+                            response = ErrorResponse.class)
+            })
+    Response getPolicyCompliance(
+            @ApiParam(
+                    name = "offset",
+                    value = "The starting pagination index for the complete list of qualified items.",
+                    defaultValue = "0")
+            @QueryParam("offset")
+                    int offset,
+            @ApiParam(
+                    name = "limit",
+                    value = "Provide how many device details you require from the starting pagination index/offset.",
+                    defaultValue = "5")
+            @QueryParam("limit")
+                    int limit);
+    
 }

@@ -39,6 +39,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.Feature;
+import org.wso2.carbon.device.mgt.common.PaginationRequest;
+import org.wso2.carbon.device.mgt.common.PaginationResult;
 import org.wso2.carbon.device.mgt.common.exceptions.InvalidDeviceException;
 import org.wso2.carbon.device.mgt.common.operation.mgt.OperationManagementException;
 import org.wso2.carbon.device.mgt.common.policy.mgt.Policy;
@@ -247,5 +249,10 @@ public class PolicyManagerServiceImpl implements PolicyManagerService {
     @Override
     public boolean isCompliant(DeviceIdentifier deviceIdentifier) throws PolicyComplianceException {
         return monitoringManager.isCompliant(deviceIdentifier);
+    }
+
+    @Override
+    public PaginationResult getPolicyCompliance(PaginationRequest paginationRequest) throws PolicyComplianceException {
+        return monitoringManager.getPolicyCompliance(paginationRequest);
     }
 }

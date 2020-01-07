@@ -22,6 +22,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
+import org.wso2.carbon.device.mgt.common.PaginationRequest;
+import org.wso2.carbon.device.mgt.common.PaginationResult;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.InvalidDeviceException;
 import org.wso2.carbon.device.mgt.common.operation.mgt.Operation;
@@ -369,6 +371,24 @@ public class MonitoringManagerImpl implements MonitoringManager {
             throw new PolicyComplianceException("Error occurred while getting the device types.", e);
         }
         return deviceTypes;
+    }
+
+    @Override
+    public PaginationResult getPolicyCompliance(PaginationRequest paginationRequest) throws PolicyComplianceException {
+        PaginationResult paginationResult = new PaginationResult();
+        try {
+            PolicyManagementDAOFactory.openConnection();
+            List<NonComplianceData> complianceDataList = monitoringDAO.getAllComplianceDevices(paginationRequest);
+            paginationResult.setData(complianceDataList);
+            paginationResult.setRecordsTotal(complianceDataList.size());
+        } catch (MonitoringDAOException e) {
+            throw new PolicyComplianceException("Unable to retrieve compliance data");
+        } catch (SQLException e) {
+            throw new PolicyComplianceException("Error occurred while opening a connection to the data source", e);
+        } finally {
+            PolicyManagementDAOFactory.closeConnection();
+        }
+        return paginationResult;
     }
 
     private void addMonitoringOperationsToDatabase(List<Device> devices)

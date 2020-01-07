@@ -79,11 +79,7 @@ import org.wso2.carbon.device.mgt.core.operation.mgt.ProfileOperation;
 import org.wso2.carbon.device.mgt.core.search.mgt.SearchManagerService;
 import org.wso2.carbon.device.mgt.core.search.mgt.SearchMgtException;
 import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
-import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceCompliance;
-import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
-import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
-import org.wso2.carbon.device.mgt.jaxrs.beans.OperationList;
-import org.wso2.carbon.device.mgt.jaxrs.beans.OperationRequest;
+import org.wso2.carbon.device.mgt.jaxrs.beans.*;
 import org.wso2.carbon.device.mgt.jaxrs.service.api.DeviceManagementService;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.InputValidationException;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.RequestValidationUtil;
@@ -1055,5 +1051,38 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                     new ErrorResponse.ErrorResponseBuilder().setMessage(errorMessage).build()).build();
         }
         return Response.status(Response.Status.OK).build();
+    }
+
+    @GET
+    @Override
+    @Path("/compliance")
+    public Response getPolicyCompliance(
+            @DefaultValue("0")
+            @QueryParam("offset") int offset,
+            @DefaultValue("10")
+            @QueryParam("limit") int limit) {
+
+        PaginationRequest request = new PaginationRequest(offset, limit);
+        ComplianceDeviceList complianceDeviceList = new ComplianceDeviceList();
+        PaginationResult paginationResult;
+        try {
+
+            PolicyManagerService policyManagerService = DeviceMgtAPIUtils.getPolicyManagementService();
+            paginationResult = policyManagerService.getPolicyCompliance(request);
+
+            if (paginationResult.getData().isEmpty()) {
+                String msg = "No data";
+                return Response.status(Response.Status.OK).entity(msg).build();
+            } else {
+                complianceDeviceList.setList((List<NonComplianceData>) paginationResult.getData());
+                complianceDeviceList.setCount(paginationResult.getRecordsTotal());
+                return Response.status(Response.Status.OK).entity(complianceDeviceList).build();
+            }
+        } catch (PolicyComplianceException e) {
+            String msg = "Error occurred while retrieving compliance data";
+            log.error(msg, e);
+            return Response.serverError().entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        }
     }
 }
