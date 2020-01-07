@@ -255,4 +255,9 @@ public class PolicyManagerServiceImpl implements PolicyManagerService {
     public PaginationResult getPolicyCompliance(PaginationRequest paginationRequest) throws PolicyComplianceException {
         return monitoringManager.getPolicyCompliance(paginationRequest);
     }
+
+    @Override
+    public List<ComplianceFeature> getNoneComplianceFeatures(int complianceStatusId) throws PolicyComplianceException {
+        return monitoringManager.getNoneComplianceFeatures(complianceStatusId);
+    }
 }

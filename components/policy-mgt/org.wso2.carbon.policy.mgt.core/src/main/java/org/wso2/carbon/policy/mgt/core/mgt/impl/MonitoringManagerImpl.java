@@ -391,6 +391,22 @@ public class MonitoringManagerImpl implements MonitoringManager {
         return paginationResult;
     }
 
+    @Override
+    public List<ComplianceFeature> getNoneComplianceFeatures(int complianceStatusId) throws PolicyComplianceException {
+        List<ComplianceFeature> complianceFeatureList;
+        try {
+            PolicyManagementDAOFactory.openConnection();
+            complianceFeatureList = monitoringDAO.getNoneComplianceFeatures(complianceStatusId);
+        } catch (MonitoringDAOException e) {
+            throw new PolicyComplianceException("Unable to retrieve non compliance features");
+        } catch (SQLException e) {
+            throw new PolicyComplianceException("Error occurred while opening a connection to the data source", e);
+        } finally {
+            PolicyManagementDAOFactory.closeConnection();
+        }
+        return complianceFeatureList;
+    }
+
     private void addMonitoringOperationsToDatabase(List<Device> devices)
             throws PolicyComplianceException, OperationManagementException, InvalidDeviceException {
 

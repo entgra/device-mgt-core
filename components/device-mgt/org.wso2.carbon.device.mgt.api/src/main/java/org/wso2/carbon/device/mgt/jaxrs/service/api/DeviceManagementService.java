@@ -1950,5 +1950,43 @@ public interface DeviceManagementService {
                     defaultValue = "5")
             @QueryParam("limit")
                     int limit);
-    
+
+    @GET
+    @Path("/{id}/features")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Getting Policy Compliance Status of all devices",
+            notes = "A policy is enforced on the devices that register with WSO2 IoTS. " +
+                    "The server checks if the settings in the device comply with the policy that is enforced on the device using this REST API.",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:compliance-data")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK",
+                            response = NonComplianceData.class),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. \n Invalid request or validation error.",
+                            response = ErrorResponse.class),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Error occurred while getting the compliance data.",
+                            response = ErrorResponse.class)
+            })
+    Response getNoneComplianceFeatures(
+            @ApiParam(
+                    name = "id",
+                    value = "The device identifier of the device you wish to get details.\n" +
+                            "INFO: Make sure to add the ID of a device that is already registered with WSO2 IoTS.",
+                    required = true)
+            @PathParam("id")
+                    int id);
 }

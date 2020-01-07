@@ -85,4 +85,6 @@ public interface PolicyManagerService {
     boolean isCompliant(DeviceIdentifier deviceIdentifier) throws PolicyComplianceException;
 
     PaginationResult getPolicyCompliance(PaginationRequest paginationRequest) throws PolicyComplianceException;
+
+    List<ComplianceFeature> getNoneComplianceFeatures(int complianceStatusId) throws PolicyComplianceException;
 }

@@ -45,4 +45,7 @@ public interface MonitoringManager {
 
     PaginationResult getPolicyCompliance(PaginationRequest paginationRequest) throws PolicyComplianceException;
 
+    List<ComplianceFeature> getNoneComplianceFeatures(int complianceStatusId)
+            throws PolicyComplianceException;
+
 }

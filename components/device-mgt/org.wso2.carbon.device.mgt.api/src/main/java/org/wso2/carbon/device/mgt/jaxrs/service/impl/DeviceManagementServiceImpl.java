@@ -66,6 +66,7 @@ import org.wso2.carbon.device.mgt.common.operation.mgt.Activity;
 import org.wso2.carbon.device.mgt.common.operation.mgt.Operation;
 import org.wso2.carbon.device.mgt.common.operation.mgt.OperationManagementException;
 import org.wso2.carbon.device.mgt.common.policy.mgt.Policy;
+import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.ComplianceFeature;
 import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.NonComplianceData;
 import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.PolicyComplianceException;
 import org.wso2.carbon.device.mgt.common.search.PropertyMap;
@@ -1077,6 +1078,30 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                 complianceDeviceList.setList((List<NonComplianceData>) paginationResult.getData());
                 complianceDeviceList.setCount(paginationResult.getRecordsTotal());
                 return Response.status(Response.Status.OK).entity(complianceDeviceList).build();
+            }
+        } catch (PolicyComplianceException e) {
+            String msg = "Error occurred while retrieving compliance data";
+            log.error(msg, e);
+            return Response.serverError().entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        }
+    }
+
+    @GET
+    @Override
+    @Path("/{id}/features")
+    public Response getNoneComplianceFeatures(
+            @PathParam("id") int id) {
+        List<ComplianceFeature> complianceFeatureList;
+        try {
+            PolicyManagerService policyManagerService = DeviceMgtAPIUtils.getPolicyManagementService();
+            complianceFeatureList = policyManagerService.getNoneComplianceFeatures(id);
+
+            if (complianceFeatureList.isEmpty()) {
+                String msg = "No data";
+                return Response.status(Response.Status.OK).entity(msg).build();
+            } else {
+                return Response.status(Response.Status.OK).entity(complianceFeatureList).build();
             }
         } catch (PolicyComplianceException e) {
             String msg = "Error occurred while retrieving compliance data";
