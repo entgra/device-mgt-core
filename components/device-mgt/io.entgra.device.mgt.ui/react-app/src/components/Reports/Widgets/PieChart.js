@@ -34,30 +34,13 @@ class PieChart extends React.Component {
     }
 
     componentDidMount() {
-        // this.fetchStats();
         let { statArray }  = this.state;
-        // const promise = new Promise((resolve, reject) => {
-        //     this.fetchStats(statArray);
-        //
-        //     resolve("Done");
-        // });
-        //
-        // promise.then((response) => {
-        //     console.log(response);
-        //     this.setState({statArray});
-        // })
         const { reportData } = this.props;
         let params = {
             status: reportData.params[0],
             from: reportData.duration[0],
             to: reportData.duration[1]
         };
-
-        // const urlArray = reportData.map((data) => {
-        //     {data.params, data.duration}
-        // });
-
-        console.log(reportData)
 
         const urlSet = {
             paramsList:reportData.params,
@@ -73,8 +56,6 @@ class PieChart extends React.Component {
         }else{
             this.getCount(params, urlSet);
         }
-
-        // console.log(this.state.statArray)
     }
 
     clicked = () => {
@@ -82,37 +63,12 @@ class PieChart extends React.Component {
     };
 
     onChartChange = (data) => {
-        // console.log(data);
         this.props.onClickPieChart(data);
     };
 
     statArray = [];
 
-    fetchStats = () => {
-        const { reportData } = this.props;
-        let { statArray } = this.state;
-
-        for(let i=0; i<reportData.params.length; i++){
-            let params = {
-                status: reportData.params[i],
-                from: reportData.duration[0],
-                to: reportData.duration[1]
-            };
-
-            this.getCount(params, (data) => {
-                statArray[i] = {
-                    "item":reportData.params[i],
-                    "count":parseInt(data)
-                }
-            });
-        }
-        console.log("SSSSS")
-        // console.log(statArray);
-         this.setState({statArray,loading: false})
-        // console.log("this.state.statArray")
-        // console.log(this.state.statArray)
-    }
-
+    //Call count APIs and get count for given parameters, then create data object to build pie chart
     getCount = (params, urlSet) => {
 
         this.setState({loading: true});
@@ -143,15 +99,11 @@ class PieChart extends React.Component {
 
 
         axios.all(urlArray).then(res => {
-            // console.log(res)
+
             res.map((response) => {
                 if(response.status === 200){
-                    // console.log(response.data.data);
-                    // console.log(response.config[0]);
                     let countData = {item:response.config[0], count:parseInt(response.data.data)}
-                    // console.log(countData)
                     statArray.push(countData);
-                    // console.log(statArray)
                 }
             })
             this.setState({statArray})
@@ -186,7 +138,6 @@ class PieChart extends React.Component {
                 from:urlSet.duration[0],
                 to:urlSet.duration[1]
             }
-            // console.log(paramsObj)
             const encodedExtraParams = Object.keys(paramsObj)
                 .map(key => key + '=' + paramsObj[key]).join('&');
 
@@ -208,15 +159,10 @@ class PieChart extends React.Component {
 
 
         axios.all(urlArray).then(res => {
-            // console.log(res)
             res.map((response) => {
                 if(response.status === 200){
-                    // console.log(response.data.data);
-                    // console.log(response.config[0]);
                     let countData = {item:response.config[0], count:parseInt(response.data.data)}
-                    // console.log(countData)
                     statArray.push(countData);
-                    // console.log(statArray)
                 }
             })
             this.setState({statArray})
@@ -235,6 +181,7 @@ class PieChart extends React.Component {
         });
     };
 
+    //Call count APIs and get count for given parameters, then create data object to build pie chart
     getEnrollmentTypeCount = (params, urlSet) => {
 
         this.setState({loading: true});
@@ -251,7 +198,6 @@ class PieChart extends React.Component {
                 from:urlSet.duration[0],
                 to:urlSet.duration[1]
             }
-            // console.log(paramsObj)
             const encodedExtraParams = Object.keys(paramsObj)
                 .map(key => key + '=' + paramsObj[key]).join('&');
             const apiUrl = window.location.origin + config.serverConfig.invoker.uri +
@@ -265,15 +211,10 @@ class PieChart extends React.Component {
 
 
         axios.all(urlArray).then(res => {
-            // console.log(res)
             res.map((response) => {
                 if(response.status === 200){
-                    // console.log(response.data.data);
-                    // console.log(response.config[0]);
                     let countData = {item:response.config[0], count:parseInt(response.data.data)}
-                    // console.log(countData)
                     statArray.push(countData);
-                    // console.log(statArray)
                 }
             })
             this.setState({statArray})
@@ -296,24 +237,7 @@ class PieChart extends React.Component {
         const { DataView } = DataSet;
         const { Html } = Guide;
         const { statArray , loading} = this.state;
-        console.log(statArray)
-        // const data = this.props.stats;
-        const data = [
-            {
-                item: "ACTIVE",
-                count: 0
-            },
-            {
-                item: "INACTIVE",
-                count: 1
-            },
-            {
-                item: "REMOVED",
-                count: 1
-            }
-        ];
-        // const data = this.state.statArray;
-        // console.log(this.state.statArray)
+        
         const dv = new DataView();
         dv.source(statArray).transform({
             type: "percent",

@@ -18,9 +18,6 @@
 
 import React from "react";
 import {
-    PageHeader,
-    Typography,
-    Breadcrumb,
     Icon,
     Col,
     Row, Select,
@@ -58,7 +55,7 @@ class ReportDurationItemList extends React.Component {
                 <Link
                     to={{
                         //Path to respective report page
-                        pathname: "/entgra/reportdetails",
+                        pathname: "/entgra/devicestatus",
                         reportData: {
                             duration: data.duration,
                             reportType: data.reportType,
@@ -73,7 +70,6 @@ class ReportDurationItemList extends React.Component {
                             <h2><b>{data.name}</b></h2>
                             <p>{data.description}</p>
                             {/*<p>{data.duration}</p>*/}
-                            {/*<ReportFilterModal/>*/}
                         </div>
                     </Card>
                 </Link>
@@ -99,8 +95,6 @@ class ReportDurationItemList extends React.Component {
                             <Icon type="desktop" style={{ fontSize: '25px', color: '#08c' }}/>
                             <h2><b>{data.name}</b></h2>
                             <p>{data.description}</p>
-                            {/*<p>{data.duration}</p>*/}
-                            {/*<ReportFilterModal/>*/}
                         </div>
                     </Card>
                 </Link>
@@ -126,8 +120,6 @@ class ReportDurationItemList extends React.Component {
                             <Icon type="desktop" style={{ fontSize: '25px', color: '#08c' }}/>
                             <h2><b>{data.name}</b></h2>
                             <p>{data.description}</p>
-                            {/*<p>{data.duration}</p>*/}
-                            {/*<ReportFilterModal/>*/}
                         </div>
                     </Card>
                 </Link>
@@ -136,24 +128,18 @@ class ReportDurationItemList extends React.Component {
         return(
             <div>
                 <div style={{borderRadius: 5}}>
-                    {/*<ReportDeviceTable paramsObject={params}/>*/}
-
                     <Row gutter={16} >
                         {itemStatus}
                     </Row>
                 </div>
 
                 <div style={{borderRadius: 5}}>
-                    {/*<ReportDeviceTable paramsObject={params}/>*/}
-
                     <Row gutter={16} >
                         {itemEnrollmentsVsUnenrollments}
                     </Row>
                 </div>
 
                 <div style={{borderRadius: 5}}>
-                    {/*<ReportDeviceTable paramsObject={params}/>*/}
-
                     <Row gutter={16} >
                         {itemEnrollmentType}
                     </Row>

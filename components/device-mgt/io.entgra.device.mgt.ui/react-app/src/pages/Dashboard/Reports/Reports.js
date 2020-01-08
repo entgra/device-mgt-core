@@ -21,17 +21,9 @@ import {
     PageHeader,
     Typography,
     Breadcrumb,
-    Icon,
-    Col,
-    Row, Select,
-    Radio, Card
+    Icon
 } from "antd";
 import {Link} from "react-router-dom";
-import ReportDeviceTable from "../../../components/Devices/ReportDevicesTable";
-import Filter from "../../../components/Reports/Filter";
-import DateRangePicker from "../../../components/Reports/DateRangePicker";
-import ReportGadget from "../../../components/Reports/ReportGadget";
-import ReportTopics from "../../../components/Reports/ReportTopics";
 import ReportDurationItemList from "./ReportDurationItemList";
 
 const {Paragraph} = Typography;
@@ -89,33 +81,6 @@ class Reports extends React.Component {
                     </Breadcrumb>
                     <div className="wrap">
                         <h3>Reports</h3>
-                            {/*<table>*/}
-                            {/*    <tbody>*/}
-                            {/*        <tr style={{fontSize:'12px'}}>*/}
-                            {/*            <td>Select Duration</td>*/}
-                            {/*            <td>Device Status</td>*/}
-                            {/*            <td>Device Ownership</td>*/}
-                            {/*        </tr>*/}
-                            {/*        <tr>*/}
-                            {/*            <td>*/}
-                            {/*                <DateRangePicker*/}
-                            {/*                    updateDurationValue={this.updateDurationValue}/>*/}
-                            {/*            </td>*/}
-                            {/*            <td>*/}
-                            {/*                <Filter*/}
-                            {/*                    updateFiltersValue={this.updateFiltersValue}*/}
-                            {/*                    dropDownItems={statusObj}*/}
-                            {/*                    dropDownName={"Device Status"}/>*/}
-                            {/*            </td>*/}
-                            {/*            <td>*/}
-                            {/*                <Filter*/}
-                            {/*                    updateFiltersValue={this.updateFiltersValue}*/}
-                            {/*                    dropDownItems={ownershipObj}*/}
-                            {/*                    dropDownName={"Device Ownership"}/>*/}
-                            {/*            </td>*/}
-                            {/*        </tr>*/}
-                            {/*    </tbody>*/}
-                            {/*</table>*/}
                             <ReportDurationItemList/>
                     </div>
                 </PageHeader>
