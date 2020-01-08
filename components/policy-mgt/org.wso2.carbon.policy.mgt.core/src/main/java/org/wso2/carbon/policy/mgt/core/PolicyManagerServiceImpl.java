@@ -252,8 +252,9 @@ public class PolicyManagerServiceImpl implements PolicyManagerService {
     }
 
     @Override
-    public PaginationResult getPolicyCompliance(PaginationRequest paginationRequest) throws PolicyComplianceException {
-        return monitoringManager.getPolicyCompliance(paginationRequest);
+    public PaginationResult getPolicyCompliance(PaginationRequest paginationRequest, boolean complianceStatus)
+            throws PolicyComplianceException {
+        return monitoringManager.getPolicyCompliance(paginationRequest, complianceStatus);
     }
 
     @Override

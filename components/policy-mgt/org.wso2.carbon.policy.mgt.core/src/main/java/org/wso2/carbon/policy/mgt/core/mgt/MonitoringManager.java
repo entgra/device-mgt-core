@@ -43,7 +43,8 @@ public interface MonitoringManager {
 
     List<String> getDeviceTypes() throws PolicyComplianceException;
 
-    PaginationResult getPolicyCompliance(PaginationRequest paginationRequest) throws PolicyComplianceException;
+    PaginationResult getPolicyCompliance(PaginationRequest paginationRequest, boolean complianceStatus)
+            throws PolicyComplianceException;
 
     List<ComplianceFeature> getNoneComplianceFeatures(int complianceStatusId)
             throws PolicyComplianceException;

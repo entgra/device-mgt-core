@@ -1908,7 +1908,7 @@ public interface DeviceManagementService {
             @Valid List<String> deviceList);
 
     @GET
-    @Path("{type}/{device-id}/compliance")
+    @Path("/compliance/{compliance-status}")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
@@ -1938,6 +1938,13 @@ public interface DeviceManagementService {
                             response = ErrorResponse.class)
             })
     Response getPolicyCompliance(
+            @ApiParam(
+                    name = "compliance-status",
+                    value = "Compliance status for devices. If true, devices which are compliant with policies. " +
+                            "If false, devices which are not compliant",
+                    required = true)
+            @PathParam("compliance-status")
+                    boolean complianceStatus,
             @ApiParam(
                     name = "offset",
                     value = "The starting pagination index for the complete list of qualified items.",

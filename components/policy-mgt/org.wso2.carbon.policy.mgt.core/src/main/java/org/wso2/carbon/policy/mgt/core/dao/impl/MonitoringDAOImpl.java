@@ -350,7 +350,8 @@ public class MonitoringDAOImpl implements MonitoringDAO {
     }
 
     @Override
-    public List<ComplianceData> getAllComplianceDevices(PaginationRequest paginationRequest) throws MonitoringDAOException {
+    public List<ComplianceData> getAllComplianceDevices(PaginationRequest paginationRequest, boolean complianceStatus)
+            throws MonitoringDAOException {
         Connection conn;
         PreparedStatement stmt = null;
         ResultSet resultSet = null;
@@ -362,11 +363,12 @@ public class MonitoringDAOImpl implements MonitoringDAO {
                     "FROM DM_POLICY_COMPLIANCE_STATUS AS POLICY, DM_DEVICE AS DEVICE, DM_ENROLMENT AS ENROLLMENT " +
                     "WHERE DEVICE.ID=POLICY.DEVICE_ID " +
                     "AND DEVICE.ID=ENROLLMENT.DEVICE_ID " +
-                    "AND POLICY.TENANT_ID = ? LIMIT ?,?";
+                    "AND POLICY.TENANT_ID = ? AND POLICY.STATUS = ? LIMIT ?,?";
             stmt = conn.prepareStatement(query);
             stmt.setInt(1, tenantId);
-            stmt.setInt(2, paginationRequest.getStartIndex());
-            stmt.setInt(3, paginationRequest.getRowCount());
+            stmt.setBoolean(2, complianceStatus);
+            stmt.setInt(3, paginationRequest.getStartIndex());
+            stmt.setInt(4, paginationRequest.getRowCount());
 
             resultSet = stmt.executeQuery();
             while (resultSet.next()) {
