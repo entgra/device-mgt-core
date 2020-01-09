@@ -42,7 +42,8 @@ class ConfigureProfile extends React.Component {
             count: 0,
             activeRadioValues: "",
             activeSelectedValues: [],
-            dataArray: []
+            dataArray: [],
+            customInputDataArray: [],
         }
     };
 
@@ -101,6 +102,21 @@ class ConfigureProfile extends React.Component {
                 this.setState({ activePanelKeys: removed });
             }
         }
+    };
+
+    handleCustomInputTable = (event)=>{
+        const { count, customInputDataArray } = this.state;
+        const newData = [{
+            key: count,
+            CERT_NAME: `${event.file.name}`
+        }];
+        this.setState({
+            customInputDataArray: [...customInputDataArray, newData],
+            count: count +1
+        });
+        console.log(customInputDataArray);
+        console.log(id);
+
     };
 
     handleAdd = (dataSource, id) => {
@@ -441,7 +457,7 @@ class ConfigureProfile extends React.Component {
                             );
                         case "inputTable":
                             let dataArray = [];
-                            const column = this.getColumns({ getFieldDecorator }, item.optional.columns);
+                            const column1 = this.getColumns({ getFieldDecorator }, item.optional.columns);
                             return (
                                 <div key={k}>
                                     <Button
@@ -450,7 +466,22 @@ class ConfigureProfile extends React.Component {
                                         style={{ marginBottom: 16 }}>
                                         <Icon type="plus-circle"/>{item.optional.button.name}
                                     </Button>
-                                    <Table id={item.id} dataSource={this.state.dataArray} columns={column}/>
+                                    <Table id={item.id} dataSource={this.state.dataArray} columns={column1}/>
+                                </div>
+                            );
+                        case "customInputTable":
+                            const column2 = this.getColumns({ getFieldDecorator }, item.optional.columns);
+                            return (
+                                <div key={k}>
+                                    <Upload onChange={this.handleCustomInputTable}>
+                                        <Button
+                                            // onClick={()=>this.handleAdd(dataArray, item.id)}
+                                            type="primary"
+                                            style={{ marginBottom: 16 }}>
+                                            <Icon type="plus-circle"/>{item.optional.button.name}
+                                        </Button>
+                                    </Upload>
+                                    <Table id={item.id} dataSource={this.state.customInputDataArray} columns={column2}/>
                                 </div>
                             );
                         default:

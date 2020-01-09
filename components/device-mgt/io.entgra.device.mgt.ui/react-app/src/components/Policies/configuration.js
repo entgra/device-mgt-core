@@ -1483,7 +1483,7 @@ const jsonResponse = {
                                         },
                                     ]
                                 },
-                                "type": "inputTable",
+                                "type": "customInputTable",
                                 "id": "CERT_LIST"
                             },
                         ],
@@ -1997,6 +1997,10 @@ const jsonResponse = {
                                     "checked": false,
                                     "subPanel": {
                                         "panelItem": [
+                                            {
+                                                "label": "Global configurations related to device.",
+                                                "type": "alert",
+                                            },
                                             {
                                                 "label": "Launcher background image",
                                                 "tooltip": "This is the image that will be displayed in kiosk background.",
@@ -2622,10 +2626,6 @@ const jsonResponse = {
                                                 },
                                                 "type": "checkbox",
                                                 "id": "ENCsdsdcxzcxsORAGE"
-                                            },
-                                            {
-                                                "label": "Global configurations related to device.",
-                                                "type": "alert",
                                             },
                                         ],
                                         "key": "DeviceGlobalConfiguration",
