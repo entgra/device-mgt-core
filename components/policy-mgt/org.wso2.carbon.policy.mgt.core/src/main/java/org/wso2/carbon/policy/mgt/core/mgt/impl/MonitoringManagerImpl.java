@@ -375,11 +375,14 @@ public class MonitoringManagerImpl implements MonitoringManager {
     }
 
     @Override
-    public PaginationResult getPolicyCompliance(PaginationRequest paginationRequest, boolean complianceStatus) throws PolicyComplianceException {
+    public PaginationResult getPolicyCompliance(
+            PaginationRequest paginationRequest, String policyId, boolean complianceStatus, boolean isPending, String fromDate, String toDate)
+            throws PolicyComplianceException {
         PaginationResult paginationResult = new PaginationResult();
         try {
             PolicyManagementDAOFactory.openConnection();
-            List<ComplianceData> complianceDataList = monitoringDAO.getAllComplianceDevices(paginationRequest, complianceStatus);
+            List<ComplianceData> complianceDataList = monitoringDAO
+                    .getAllComplianceDevices(paginationRequest, policyId, complianceStatus, isPending, fromDate, toDate);
             paginationResult.setData(complianceDataList);
             paginationResult.setRecordsTotal(complianceDataList.size());
         } catch (MonitoringDAOException e) {

@@ -84,7 +84,9 @@ public interface PolicyManagerService {
 
     boolean isCompliant(DeviceIdentifier deviceIdentifier) throws PolicyComplianceException;
 
-    PaginationResult getPolicyCompliance(PaginationRequest paginationRequest, boolean complianceStatus) throws PolicyComplianceException;
+    PaginationResult getPolicyCompliance(
+            PaginationRequest paginationRequest, String policyId, boolean complianceStatus, boolean isPending, String fromDate, String toDate)
+            throws PolicyComplianceException;
 
     List<ComplianceFeature> getNoneComplianceFeatures(int complianceStatusId) throws PolicyComplianceException;
 }

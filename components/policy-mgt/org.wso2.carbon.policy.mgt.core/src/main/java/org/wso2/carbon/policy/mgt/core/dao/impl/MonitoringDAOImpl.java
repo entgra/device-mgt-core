@@ -350,7 +350,8 @@ public class MonitoringDAOImpl implements MonitoringDAO {
     }
 
     @Override
-    public List<ComplianceData> getAllComplianceDevices(PaginationRequest paginationRequest, boolean complianceStatus)
+    public List<ComplianceData> getAllComplianceDevices(
+            PaginationRequest paginationRequest, String policyId, boolean complianceStatus, boolean isPending, String fromDate, String toDate)
             throws MonitoringDAOException {
         Connection conn;
         PreparedStatement stmt = null;
@@ -363,12 +364,41 @@ public class MonitoringDAOImpl implements MonitoringDAO {
                     "FROM DM_POLICY_COMPLIANCE_STATUS AS POLICY, DM_DEVICE AS DEVICE, DM_ENROLMENT AS ENROLLMENT " +
                     "WHERE DEVICE.ID=POLICY.DEVICE_ID " +
                     "AND DEVICE.ID=ENROLLMENT.DEVICE_ID " +
-                    "AND POLICY.TENANT_ID = ? AND POLICY.STATUS = ? LIMIT ?,?";
+                    "AND POLICY.TENANT_ID = ? AND POLICY.STATUS = ?";
+
+            if(isPending){
+                query = query + " AND POLICY.LAST_SUCCESS_TIME IS NULL AND POLICY.LAST_FAILED_TIME IS NULL";
+            }else{
+                query = query + " AND (POLICY.LAST_SUCCESS_TIME IS NOT NULL OR POLICY.LAST_FAILED_TIME IS NOT NULL)";
+            }
+
+            if(policyId!=null){
+                query = query + " AND POLICY.POLICY_ID = ?";
+            }
+
+            if(fromDate!=null && toDate!=null){
+                if(!complianceStatus){
+                    query = query + " AND POLICY.LAST_FAILED_TIME BETWEEN ? AND ?";
+                }else{
+                    query = query + " AND POLICY.LAST_SUCCEEDED_TIME BETWEEN ? AND ?";
+                }
+            }
+
+            query = query + " LIMIT ?,?";
+
             stmt = conn.prepareStatement(query);
-            stmt.setInt(1, tenantId);
-            stmt.setBoolean(2, complianceStatus);
-            stmt.setInt(3, paginationRequest.getStartIndex());
-            stmt.setInt(4, paginationRequest.getRowCount());
+            int paramIdx = 1;
+            stmt.setInt(paramIdx++, tenantId);
+            stmt.setBoolean(paramIdx++, complianceStatus);
+            if(policyId!=null){
+                stmt.setInt(paramIdx++, Integer.parseInt(policyId));
+            }
+            if(fromDate!=null && toDate!=null){
+                stmt.setString(paramIdx++, fromDate);
+                stmt.setString(paramIdx++, toDate);
+            }
+            stmt.setInt(paramIdx++, paginationRequest.getStartIndex());
+            stmt.setInt(paramIdx, paginationRequest.getRowCount());
 
             resultSet = stmt.executeQuery();
             while (resultSet.next()) {
@@ -382,9 +412,8 @@ public class MonitoringDAOImpl implements MonitoringDAO {
                 complianceData.setStatus(resultSet.getBoolean("STATUS"));
                 complianceData.setAttempts(resultSet.getInt("ATTEMPTS"));
                 complianceData.setLastRequestedTime(resultSet.getTimestamp("LAST_REQUESTED_TIME"));
-                complianceData.setLastSucceededTime(resultSet.getTimestamp("LAST_SUCCESS_TIME"));
                 complianceData.setLastFailedTime(resultSet.getTimestamp("LAST_FAILED_TIME"));
-
+                complianceData.setLastSucceededTime(resultSet.getTimestamp("LAST_SUCCESS_TIME"));
                 complianceDataList.add(complianceData);
             }
             return complianceDataList;

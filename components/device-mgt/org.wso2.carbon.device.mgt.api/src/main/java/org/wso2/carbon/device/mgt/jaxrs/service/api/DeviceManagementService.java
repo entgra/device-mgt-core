@@ -1946,6 +1946,23 @@ public interface DeviceManagementService {
             @PathParam("compliance-status")
                     boolean complianceStatus,
             @ApiParam(
+                    name = "policy",
+                    value = "Policy ID")
+            @QueryParam("policy") String policyId,
+            @ApiParam(
+                    name = "is-pending",
+                    value = "Check for devices in pending status",
+                    defaultValue = "false")
+            @QueryParam("pending") boolean isPending,
+            @ApiParam(
+                    name = "fromDate",
+                    value = "Start date of the duration")
+            @QueryParam("from") String fromDate,
+            @ApiParam(
+                    name = "toDate",
+                    value = "end date of the duration")
+            @QueryParam("to") String toDate,
+            @ApiParam(
                     name = "offset",
                     value = "The starting pagination index for the complete list of qualified items.",
                     defaultValue = "0")

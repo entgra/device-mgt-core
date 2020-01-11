@@ -1060,6 +1060,11 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
     @Path("/compliance/{compliance-status}")
     public Response getPolicyCompliance(
             @PathParam("compliance-status") boolean complianceStatus,
+            @QueryParam("policy") String policyId,
+            @DefaultValue("false")
+            @QueryParam("pending") boolean isPending,
+            @QueryParam("from") String fromDate,
+            @QueryParam("to") String toDate,
             @DefaultValue("0")
             @QueryParam("offset") int offset,
             @DefaultValue("10")
@@ -1069,15 +1074,9 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
         ComplianceDeviceList complianceDeviceList = new ComplianceDeviceList();
         PaginationResult paginationResult;
         try {
-            if(complianceStatus){
-                PolicyManagerService policyManagerService = DeviceMgtAPIUtils.getPolicyManagementService();
-                paginationResult = policyManagerService.getPolicyCompliance(request, complianceStatus);
-            } else {
-                String errorMessage = "Compliance status has not given.";
-                log.error(errorMessage);
-                return Response.status(Response.Status.BAD_REQUEST).entity(
-                        new ErrorResponse.ErrorResponseBuilder().setMessage(errorMessage).build()).build();
-            }
+
+            PolicyManagerService policyManagerService = DeviceMgtAPIUtils.getPolicyManagementService();
+            paginationResult = policyManagerService.getPolicyCompliance(request, policyId, complianceStatus, isPending, fromDate, toDate);
 
             if (paginationResult.getData().isEmpty()) {
                 String msg = "No data";

@@ -252,9 +252,10 @@ public class PolicyManagerServiceImpl implements PolicyManagerService {
     }
 
     @Override
-    public PaginationResult getPolicyCompliance(PaginationRequest paginationRequest, boolean complianceStatus)
+    public PaginationResult getPolicyCompliance(
+            PaginationRequest paginationRequest, String policyId, boolean complianceStatus, boolean isPending, String fromDate, String toDate)
             throws PolicyComplianceException {
-        return monitoringManager.getPolicyCompliance(paginationRequest, complianceStatus);
+        return monitoringManager.getPolicyCompliance(paginationRequest, policyId, complianceStatus, isPending, fromDate, toDate);
     }
 
     @Override

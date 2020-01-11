@@ -57,7 +57,8 @@ public interface MonitoringDAO {
 
     List<NonComplianceData> getCompliance() throws MonitoringDAOException;
 
-    List<ComplianceData> getAllComplianceDevices(PaginationRequest paginationRequest, boolean complianceStatus)
+    List<ComplianceData> getAllComplianceDevices(
+            PaginationRequest paginationRequest, String policyId, boolean complianceStatus, boolean isPending, String fromDate, String toDate)
             throws MonitoringDAOException;
 
     List<ComplianceFeature> getNoneComplianceFeatures(int policyComplianceStatusId) throws MonitoringDAOException;
