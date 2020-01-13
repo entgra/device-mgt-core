@@ -141,56 +141,79 @@ class ReportDurationItemList extends React.Component {
       </Col>
     ));
 
-    let itemEnrollmentType = this.durationItemArray.map(data => (
-      <Col key={data.name} span={6}>
-        <Link
-          to={{
-            // Path to respective report page
-            pathname: '/entgra/enrollmenttype',
-            reportData: {
-              duration: data.duration,
-              reportType: data.reportType,
-              params: this.state.enrollmentTypeParams,
-              paramsType: data.paramsType,
-            },
-          }}
-        >
-          <Card
-            key={data.name}
-            bordered={true}
-            hoverable={true}
-            style={{ borderRadius: 10, marginBottom: 16 }}
-          >
-            <div align="center">
-              <Icon
-                type="desktop"
-                style={{ fontSize: '25px', color: '#08c' }}
-              />
-              <h2>
-                <b>{data.name}</b>
-              </h2>
-              <p>{data.description}</p>
-            </div>
-          </Card>
-        </Link>
-      </Col>
-    ));
-    return (
-      <div>
-        <div style={{ borderRadius: 5 }}>
-          <Row gutter={16}>{itemStatus}</Row>
-        </div>
+        let itemEnrollmentType = this.durationItemArray.map((data) =>
+            <Col key={data.name} span={6}>
+                <Link
+                    to={{
+                        //Path to respective report page
+                        pathname: "/entgra/enrollmenttype",
+                        reportData: {
+                            duration: data.duration,
+                            reportType: data.reportType,
+                            params: this.state.enrollmentTypeParams,
+                            paramsType: data.paramsType
+                        }
+                    }}>
+                    <Card key={data.name} bordered={true} hoverable={true} style={{borderRadius: 10, marginBottom: 16}}>
+
+                        <div align='center'>
+                            <Icon type="desktop" style={{ fontSize: '25px', color: '#08c' }}/>
+                            <h2><b>{data.name}</b></h2>
+                            <p>{data.description}</p>
+                        </div>
+                    </Card>
+                </Link>
+            </Col>
+        );
+
+        let itemPolicy = this.durationItemArray.map((data) =>
+            <Col key={data.name} span={6}>
+                <Link
+                    to={{
+                        //Path to respective report page
+                        pathname: "/entgra/policyreport",
+                        reportData: {
+                            duration: data.duration
+                        }
+                    }}>
+                    <Card key={data.name} bordered={true} hoverable={true} style={{borderRadius: 10, marginBottom: 16}}>
+
+                        <div align='center'>
+                            <Icon type="desktop" style={{ fontSize: '25px', color: '#08c' }}/>
+                            <h2><b>{data.name}</b></h2>
+                            <p>{data.description}</p>
+                        </div>
+                    </Card>
+                </Link>
+            </Col>
+        );
+
+        return(
+            <div>
+                <div style={{borderRadius: 5}}>
+                    <Row gutter={16} >
+                        {itemStatus}
+                    </Row>
+                </div>
 
         <div style={{ borderRadius: 5 }}>
           <Row gutter={16}>{itemEnrollmentsVsUnenrollments}</Row>
         </div>
 
-        <div style={{ borderRadius: 5 }}>
-          <Row gutter={16}>{itemEnrollmentType}</Row>
-        </div>
-      </div>
-    );
-  }
+                <div style={{borderRadius: 5}}>
+                    <Row gutter={16} >
+                        {itemEnrollmentType}
+                    </Row>
+                </div>
+
+                <div style={{borderRadius: 5}}>
+                    <Row gutter={16} >
+                        {itemPolicy}
+                    </Row>
+                </div>
+            </div>
+        )
+    }
 }
 
 export default ReportDurationItemList;

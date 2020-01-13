@@ -376,7 +376,8 @@ public class MonitoringManagerImpl implements MonitoringManager {
 
     @Override
     public PaginationResult getPolicyCompliance(
-            PaginationRequest paginationRequest, String policyId, boolean complianceStatus, boolean isPending, String fromDate, String toDate)
+            PaginationRequest paginationRequest, String policyId,
+            boolean complianceStatus, boolean isPending, String fromDate, String toDate)
             throws PolicyComplianceException {
         PaginationResult paginationResult = new PaginationResult();
         try {

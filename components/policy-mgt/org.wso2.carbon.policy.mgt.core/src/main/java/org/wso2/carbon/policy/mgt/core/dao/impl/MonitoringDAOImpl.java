@@ -380,7 +380,7 @@ public class MonitoringDAOImpl implements MonitoringDAO {
                 if(!complianceStatus){
                     query = query + " AND POLICY.LAST_FAILED_TIME BETWEEN ? AND ?";
                 }else{
-                    query = query + " AND POLICY.LAST_SUCCEEDED_TIME BETWEEN ? AND ?";
+                    query = query + " AND POLICY.LAST_SUCCESS_TIME BETWEEN ? AND ?";
                 }
             }
 
