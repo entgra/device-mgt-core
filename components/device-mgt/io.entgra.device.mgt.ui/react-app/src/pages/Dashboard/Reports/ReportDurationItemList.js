@@ -190,21 +190,23 @@ class ReportDurationItemList extends React.Component {
 
         return(
             <div>
-                <div style={{borderRadius: 5}}>
-                    <Row gutter={16} >
-                        {itemStatus}
-                    </Row>
-                </div>
+                {/*<div style={{borderRadius: 5}}>*/}
+                {/*    <Row gutter={16} >*/}
+                {/*        {itemStatus}*/}
+                {/*    </Row>*/}
+                {/*</div>*/}
 
-        <div style={{ borderRadius: 5 }}>
-          <Row gutter={16}>{itemEnrollmentsVsUnenrollments}</Row>
-        </div>
+                {/*<div style={{borderRadius: 5}}>*/}
+                {/*    <Row gutter={16} >*/}
+                {/*        {itemEnrollmentsVsUnenrollments}*/}
+                {/*    </Row>*/}
+                {/*</div>*/}
 
-                <div style={{borderRadius: 5}}>
-                    <Row gutter={16} >
-                        {itemEnrollmentType}
-                    </Row>
-                </div>
+                {/*<div style={{borderRadius: 5}}>*/}
+                {/*    <Row gutter={16} >*/}
+                {/*        {itemEnrollmentType}*/}
+                {/*    </Row>*/}
+                {/*</div>*/}
 
                 <div style={{borderRadius: 5}}>
                     <Row gutter={16} >

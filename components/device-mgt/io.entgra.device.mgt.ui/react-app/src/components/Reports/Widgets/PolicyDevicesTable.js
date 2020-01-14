@@ -18,7 +18,7 @@
 
 import React from "react";
 import axios from "axios";
-import {Icon, message, notification, Table, Tag, Tooltip, Typography} from "antd";
+import {Button, Icon, message, notification, Table, Tag, Tooltip, Typography} from "antd";
 import TimeAgo from 'javascript-time-ago'
 // Load locale-specific relative date/time formatting rules.
 import en from 'javascript-time-ago/locale/en'
@@ -28,33 +28,7 @@ const {Text} = Typography;
 
 let config = null;
 
-const columns = [
-    {
-        title: 'Device',
-        dataIndex: 'deviceName',
-        width: 100,
-    },
-    {
-        title: 'Owner',
-        dataIndex: 'owner',
-        key: 'owner'
-    },
-    {
-        title: 'Policy',
-        dataIndex: 'policyId',
-        key: 'policy'
-    },
-    {
-        title: 'Last Requested Time',
-        dataIndex: 'lastRequestedTime',
-        key: 'lastRequestedTime'
-    },
-    {
-        title: 'Attempts',
-        dataIndex: 'attempts',
-        key: 'attempts'
-    }
-];
+
 
 const getTimeAgo = (time) => {
     const timeAgo = new TimeAgo('en-US');
@@ -168,13 +142,72 @@ class PolicyDevicesTable extends React.Component {
         });
     };
 
+    columns = [
+        {
+            title: 'Device',
+            dataIndex: 'deviceName',
+            width: 100,
+            sorter: (a, b) => a.deviceName.localeCompare(b.deviceName)
+        },
+        {
+            title: 'Owner',
+            dataIndex: 'owner',
+            key: 'owner'
+        },
+        {
+            title: 'Policy',
+            dataIndex: 'policyName',
+            key: 'policy',
+            sorter: (a, b) => a.policyName.localeCompare(b.policyName)
+        },
+        {
+            title: 'Last Failed Time',
+            dataIndex: 'lastFailedTime',
+            key: 'lastFailedTime'
+        },
+        {
+            title: 'Last Success Time',
+            dataIndex: 'lastSucceededTime',
+            key: 'lastSucceededTime'
+        },
+        {
+            title: 'Attempts',
+            dataIndex: 'attempts',
+            key: 'attempts'
+        },
+        {
+            title: 'Violated Features',
+            dataIndex: 'id',
+            key: 'violated_features',
+            render: (id) =>
+
+                    <Button
+                        type="primary"
+                        size={"small"}
+                        icon="book">Violated Features</Button>
+
+        },
+        {
+            title: 'Device Details',
+            dataIndex: 'id',
+            key: 'device_details',
+            render: (id) =>
+
+                <Button
+                    type="primary"
+                    size={"small"}
+                    icon="book">Device Details</Button>
+
+        }
+    ];
+
     render() {
 
         const {data, pagination, loading, selectedRows} = this.state;
         return (
             <div>
                 <Table
-                    columns={columns}
+                    columns={this.columns}
                     rowKey={record => (record.id)}
                     dataSource={data.complianceData}
                     pagination={{

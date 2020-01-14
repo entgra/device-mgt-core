@@ -32,6 +32,7 @@ public class ComplianceData {
     private String owner;
     private int enrolmentId;
     private int policyId;
+    private String policyName;
     List<ComplianceFeature> complianceFeatures;
     private boolean status;
     private Timestamp lastRequestedTime;
@@ -165,5 +166,13 @@ public class ComplianceData {
 
     public void setOwner(String owner) {
         this.owner = owner;
+    }
+
+    public String getPolicyName() {
+        return policyName;
+    }
+
+    public void setPolicyName(String policyName) {
+        this.policyName = policyName;
     }
 }

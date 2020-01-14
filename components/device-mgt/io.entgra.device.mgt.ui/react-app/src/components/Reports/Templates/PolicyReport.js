@@ -80,8 +80,9 @@ class PolicyReport extends React.Component {
                             <Radio.Button value={false}>Policy Non-Compliant Devices</Radio.Button>
                         </Radio.Group>
 
-                        <PolicyDevicesTable policyReportData={policyReportData} isCompliant={isCompliant}/>
-
+                        <div style={{backgroundColor:"#ffffff", borderRadius: 5}}>
+                            <PolicyDevicesTable policyReportData={policyReportData} isCompliant={isCompliant}/>
+                        </div>
                     </div>
 
                 </PageHeader>

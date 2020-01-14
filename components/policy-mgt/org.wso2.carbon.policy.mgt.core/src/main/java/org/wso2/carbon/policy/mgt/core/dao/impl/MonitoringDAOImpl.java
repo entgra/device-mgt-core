@@ -360,10 +360,11 @@ public class MonitoringDAOImpl implements MonitoringDAO {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         try {
             conn = this.getConnection();
-            String query = "SELECT DEVICE.NAME, ENROLLMENT.OWNER, POLICY.* " +
-                    "FROM DM_POLICY_COMPLIANCE_STATUS AS POLICY, DM_DEVICE AS DEVICE, DM_ENROLMENT AS ENROLLMENT " +
+            String query = "SELECT DEVICE.NAME, ENROLLMENT.OWNER, DM_POLICY.NAME AS POLICY_NAME, POLICY.* " +
+                    "FROM DM_POLICY_COMPLIANCE_STATUS AS POLICY, DM_DEVICE AS DEVICE, DM_ENROLMENT AS ENROLLMENT, DM_POLICY " +
                     "WHERE DEVICE.ID=POLICY.DEVICE_ID " +
                     "AND DEVICE.ID=ENROLLMENT.DEVICE_ID " +
+                    "AND POLICY.POLICY_ID=DM_POLICY.ID " +
                     "AND POLICY.TENANT_ID = ? AND POLICY.STATUS = ?";
 
             if(isPending){
@@ -409,6 +410,7 @@ public class MonitoringDAOImpl implements MonitoringDAO {
                 complianceData.setOwner(resultSet.getString("OWNER"));
                 complianceData.setEnrolmentId(resultSet.getInt("ENROLMENT_ID"));
                 complianceData.setPolicyId(resultSet.getInt("POLICY_ID"));
+                complianceData.setPolicyName(resultSet.getString("POLICY_NAME"));
                 complianceData.setStatus(resultSet.getBoolean("STATUS"));
                 complianceData.setAttempts(resultSet.getInt("ATTEMPTS"));
                 complianceData.setLastRequestedTime(resultSet.getTimestamp("LAST_REQUESTED_TIME"));
