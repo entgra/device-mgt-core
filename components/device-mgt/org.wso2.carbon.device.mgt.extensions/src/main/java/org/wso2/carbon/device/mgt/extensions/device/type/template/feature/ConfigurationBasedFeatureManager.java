@@ -40,6 +40,7 @@ package org.wso2.carbon.device.mgt.extensions.device.type.template.feature;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.apache.commons.lang.StringUtils;
 import org.wso2.carbon.device.mgt.common.Feature;
+import org.wso2.carbon.device.mgt.common.Policy;
 import org.wso2.carbon.device.mgt.common.FeatureManager;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Operation;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.config.OperationMetadata;
@@ -58,6 +59,7 @@ import java.util.regex.Pattern;
  */
 public class ConfigurationBasedFeatureManager implements FeatureManager {
     private List<Feature> features = new ArrayList<>();
+    private List<Policy> policies = new ArrayList<Policy>();
     private static final String METHOD = "method";
     private static final String URI = "uri";
     private static final String OPERATION_META = "operationMeta";
@@ -165,6 +167,7 @@ public class ConfigurationBasedFeatureManager implements FeatureManager {
         }
         return extractedFeature;
     }
+
 
     @Override
     public List<Feature> getFeatures() throws DeviceManagementException {

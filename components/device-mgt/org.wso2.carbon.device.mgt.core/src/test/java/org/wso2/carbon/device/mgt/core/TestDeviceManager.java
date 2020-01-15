@@ -36,6 +36,12 @@ public class TestDeviceManager implements DeviceManager {
     }
 
     @Override
+    public PolicyConfigurationManager getPolicyManager() {
+        return null;
+    }
+
+
+    @Override
     public boolean saveConfiguration(PlatformConfiguration configuration)
             throws DeviceManagementException {
         return false;

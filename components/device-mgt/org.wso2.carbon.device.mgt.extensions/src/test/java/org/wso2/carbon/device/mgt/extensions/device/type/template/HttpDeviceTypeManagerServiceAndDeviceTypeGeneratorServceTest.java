@@ -32,6 +32,7 @@ import org.wso2.carbon.device.mgt.common.spi.DeviceManagementService;
 import org.wso2.carbon.device.mgt.common.type.mgt.DeviceTypeMetaDefinition;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.config.DeviceTypeConfiguration;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Feature;
+import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Policy;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.config.PushNotificationProvider;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.config.exception.DeviceTypeConfigurationException;
 import org.wso2.carbon.device.mgt.extensions.utils.Utils;
@@ -217,11 +218,22 @@ public class HttpDeviceTypeManagerServiceAndDeviceTypeGeneratorServceTest {
             features.add(commonFeature);
         }
 
+        List<Policy> configurationPolicies = androidSenseDeviceTypeConfiguration.getPolicies().getPolicy();
+        List<org.wso2.carbon.device.mgt.common.Policy> policies = new ArrayList<>();
+
+        for (Policy policy : configurationPolicies) {
+            org.wso2.carbon.device.mgt.common.Policy commonPolicy = new org.wso2.carbon.device.mgt.common.Policy();
+            commonPolicy.setDescription(policy.getDescription());
+            commonPolicy.setName(policy.getName());
+            policies.add(commonPolicy);
+        }
+
         deviceTypeMetaDefinition = new DeviceTypeMetaDefinition();
         deviceTypeMetaDefinition.setPushNotificationConfig(pushNotificationConfig);
         deviceTypeMetaDefinition.setDescription("This is android_sense");
         deviceTypeMetaDefinition.setClaimable(true);
         deviceTypeMetaDefinition.setLicense(androidSenseLicense);
         deviceTypeMetaDefinition.setFeatures(features);
+        deviceTypeMetaDefinition.setPolicies(policies);
     }
 }

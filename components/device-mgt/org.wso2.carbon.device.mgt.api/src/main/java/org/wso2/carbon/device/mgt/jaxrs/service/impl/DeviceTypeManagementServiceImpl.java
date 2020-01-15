@@ -38,11 +38,14 @@ package org.wso2.carbon.device.mgt.jaxrs.service.impl;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.device.mgt.common.PolicyConfigurationManager;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
+import org.wso2.carbon.device.mgt.common.Policy;
 import org.wso2.carbon.device.mgt.common.Feature;
 import org.wso2.carbon.device.mgt.common.FeatureManager;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration;
+import org.wso2.carbon.device.mgt.common.policy.mgt.PolicyMonitoringManager;
 import org.wso2.carbon.device.mgt.common.push.notification.PushNotificationConfig;
 import org.wso2.carbon.device.mgt.common.type.mgt.DeviceTypeMetaDefinition;
 import org.wso2.carbon.device.mgt.core.dto.DeviceType;
@@ -103,6 +106,50 @@ public class DeviceTypeManagementServiceImpl implements DeviceTypeManagementServ
         } else {
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
+    }
+
+    @GET
+    @Override
+    @Path("/{type}/policies")
+    public Response getPolicies(@PathParam("type") @Size(min = 2, max = 45) String type,
+                                @QueryParam("featureType") String featureType,
+                                @QueryParam("hidden") String hidden,
+                                @HeaderParam("If-Modified-Since") String ifModifiedSince){
+        List<Policy> policies;
+        DeviceManagementProviderService dms;
+        try {
+            if (StringUtils.isEmpty(type)) {
+                return Response.status(Response.Status.BAD_REQUEST).entity(
+                        new ErrorResponse.ErrorResponseBuilder().setMessage("Type cannot be empty.").build()).build();
+            }
+            dms = DeviceMgtAPIUtils.getDeviceManagementService();
+            PolicyConfigurationManager pm = dms.getPolicyManager(type);
+
+            if (pm == null) {
+                return Response.status(Response.Status.NOT_FOUND).entity(
+                        new ErrorResponse.ErrorResponseBuilder().setMessage("No feature manager is " +
+                                "registered with the given type '" + type + "'").build()).build();
+            }
+
+            if (StringUtils.isEmpty(hidden)) {
+                policies = pm.getPolicies();
+            } else {
+                policies = pm.getPolicies();
+            }
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while retrieving the list of [" + type + "] features with params " +
+                    "{featureType: " + featureType + ", hidden: " + hidden + "}";
+            log.error(msg, e);
+            return Response.serverError().entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        } catch (DeviceTypeNotFoundException e) {
+            String msg = "No device type found with name '" + type + "'";
+            log.error(msg, e);
+            return Response.status(Response.Status.NOT_FOUND).entity(
+                    new ErrorResponse.ErrorResponseBuilder()
+                            .setMessage(msg).build()).build();
+        }
+        return Response.status(Response.Status.OK).entity(policies).build();
     }
 
     @GET
