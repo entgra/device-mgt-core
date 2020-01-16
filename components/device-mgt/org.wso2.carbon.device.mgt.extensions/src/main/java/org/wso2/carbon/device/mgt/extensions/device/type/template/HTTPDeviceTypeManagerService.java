@@ -95,8 +95,11 @@ public class HTTPDeviceTypeManagerService extends DeviceTypeManagerService imple
                     org.wso2.carbon.device.mgt.extensions.device.type.template.config.Policy configPolicy = new org
                             .wso2.carbon.device.mgt.extensions.device.type.template.config.Policy();
                     if (policy.getName() != null) {
-                        configPolicy.setDescription(policy.getDescription());
                         configPolicy.setName(policy.getName());
+                        List<String> panelValues = new ArrayList<>();
+                        for(org.wso2.carbon.device.mgt.common.Policy.DataPanels panelData: policy.getPanels()){
+                            panelValues.add(panelData.getPanel().toString());
+                        }
                         policyList.add(configPolicy);
                     }
                 }

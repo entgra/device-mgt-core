@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
+import java.util.List;
 
 /**
  * <p>Java class for Feature complex type.
@@ -26,17 +27,19 @@ import javax.xml.bind.annotation.XmlType;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "Policy", propOrder = {
         "name",
-        "description"
+//        "dataPanels"
+        "dataPanel"
 })
 public class Policy {
     @XmlElement(name = "Name", required = true)
     protected String name;
 
-    @XmlElement(name = "Description", required = true)
-    protected String description;
+//    @XmlElement(name = "Panels")
+//    private DataPanels dataPanels;
 
-    @XmlElement(name = "Panels")
-    private DataPanels dataPanels;
+    @XmlElementWrapper(name = "Panels")
+    @XmlElement(name = "Panel")
+    private List<DataPanel> dataPanel;
 
     /**
      * Gets the value of the name property.
@@ -62,36 +65,19 @@ public class Policy {
         this.name = value;
     }
 
-    /**
-     * Gets the value of the description property.
-     *
-     * @return
-     *     possible object is
-     *     {@link String }
-     *
-     */
-    public String getDescription() {
-        return description;
+//    public DataPanels getDataPanels() {
+//        return dataPanels;
+//    }
+//
+//    public void setDataPanels(DataPanels dataPanels) {
+//        this.dataPanels = dataPanels;
+//    }
+
+    public List<DataPanel> getPanels() {
+        return this.dataPanel;
     }
 
-    /**
-     * Sets the value of the description property.
-     *
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *
-     */
-    public void setDescription(String value) {
-        this.description = value;
+    public void setPanels(List<DataPanel> dataPanel) {
+        this.dataPanel = dataPanel;
     }
-
-    public DataPanels getDataPanels() {
-        return dataPanels;
-    }
-
-    public void setDataPanels(DataPanels dataPanels) {
-        this.uiParameters = dataPanels;
-    }
-
 }

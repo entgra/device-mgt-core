@@ -225,6 +225,9 @@ public class HttpDeviceTypeManagerServiceAndDeviceTypeGeneratorServceTest {
             org.wso2.carbon.device.mgt.common.Policy commonPolicy = new org.wso2.carbon.device.mgt.common.Policy();
             commonPolicy.setDescription(policy.getDescription());
             commonPolicy.setName(policy.getName());
+            org.wso2.carbon.device.mgt.common.Policy.DataPanels panelDataEntry = new org.wso2.carbon.device.mgt.common.Policy.DataPanels();
+            List<org.wso2.carbon.device.mgt.common.Policy.DataPanels> panelDataEntries = new ArrayList<>();
+            panelDataEntries.add(panelDataEntry);
             policies.add(commonPolicy);
         }
 

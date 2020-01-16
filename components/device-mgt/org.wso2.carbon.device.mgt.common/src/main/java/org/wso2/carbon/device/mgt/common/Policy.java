@@ -1,6 +1,5 @@
 package org.wso2.carbon.device.mgt.common;
 
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import io.swagger.annotations.*;
 import java.io.Serializable;
@@ -33,6 +32,13 @@ public class Policy implements Serializable {
     )
     private String description;
 
+    @ApiModelProperty(
+            name = "panels",
+            value = "Properties related to features.",
+            required = true
+    )
+    private List<DataPanels> panels;
+
     @XmlElement
     public int getId() {
         return id;
@@ -58,5 +64,26 @@ public class Policy implements Serializable {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public List<DataPanels> getPanels() {
+        return panels;
+    }
+
+    public void setPanels(List<DataPanels> panels) {
+        this.panels = panels;
+    }
+
+    public static class DataPanels implements Serializable {
+        private Object panel;
+
+        public Object getPanel() {
+            return panel;
+        }
+
+        public void setPanel(Object value) {
+            this.panel = value;
+        }
+
     }
 }
