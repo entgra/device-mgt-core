@@ -20,21 +20,179 @@ import React from "react";
 import axios from "axios";
 import {Button, Icon, message, notification, Table, Tag, Tooltip, Typography} from "antd";
 import TimeAgo from 'javascript-time-ago'
+import moment from 'moment';
 // Load locale-specific relative date/time formatting rules.
 import en from 'javascript-time-ago/locale/en'
 import {withConfigContext} from "../../../context/ConfigContext";
+import FeatureListModal from "./FeatureListModal";
 
 const {Text} = Typography;
 
 let config = null;
 
+const columnsNonCompliant = [
+    {
+        title: 'Device',
+        dataIndex: 'deviceName',
+        width: 100,
+        sorter: (a, b) => a.deviceName.localeCompare(b.deviceName)
+    },
+    {
+        title: 'Type',
+        dataIndex: 'deviceType',
+        key: 'type',
+        render: type => {
+            const defaultPlatformIcons = config.defaultPlatformIcons;
+            let icon = defaultPlatformIcons.default.icon;
+            let color = defaultPlatformIcons.default.color;
+            let theme = defaultPlatformIcons.default.theme;
 
+            if (defaultPlatformIcons.hasOwnProperty(type)) {
+                icon = defaultPlatformIcons[type].icon;
+                color = defaultPlatformIcons[type].color;
+                theme = defaultPlatformIcons[type].theme;
+            }
 
-const getTimeAgo = (time) => {
-    const timeAgo = new TimeAgo('en-US');
-    return timeAgo.format(time);
-};
+            return (
+                <span style={{fontSize: 20, color: color, textAlign: "center"}}>
+                    <Icon type={icon} theme={theme}/>
+                </span>
+            );
+        }
+    },
+    {
+        title: 'Owner',
+        dataIndex: 'owner',
+        key: 'owner'
+    },
+    {
+        title: 'Policy',
+        dataIndex: 'policyName',
+        key: 'policy',
+        sorter: (a, b) => a.policyName.localeCompare(b.policyName)
+    },
+    {
+        title: 'Last Failed Time',
+        dataIndex: 'lastFailedTime',
+        key: 'lastFailedTime',
+        render: (data) => {
+            if(data){
+                return <Tooltip title={new Date(data).toString()}>{moment(data).fromNow()}</Tooltip>;
+            } else {
+                return "Not available"
+            }
+        }
+    },
+    {
+        title: 'Last Success Time',
+        dataIndex: 'lastSucceededTime',
+        key: 'lastSucceededTime',
+        render: (data) => {
+            if(data){
+                return <Tooltip title={new Date(data).toString()}>{moment(data).fromNow()}</Tooltip>;
+            } else {
+                return "Not available"
+            }
+        }
+    },
+    {
+        title: 'Attempts',
+        dataIndex: 'attempts',
+        key: 'attempts'
+    },
+    {
+        title: 'Violated Features',
+        dataIndex: 'id',
+        key: 'violated_features',
+        render: (id) =>
 
+            <FeatureListModal id={id}/>
+
+    },
+    {
+        title: 'Device Details',
+        dataIndex: 'id',
+        key: 'device_details',
+        render: (id) =>
+
+            <Button
+                type="primary"
+                size={"small"}
+                icon="book">Device Details</Button>
+
+    }
+];
+
+const columnsCompliant = [
+    {
+        title: 'Device',
+        dataIndex: 'deviceName',
+        width: 100,
+        sorter: (a, b) => a.deviceName.localeCompare(b.deviceName)
+    },
+    {
+        title: 'Type',
+        dataIndex: 'deviceType',
+        key: 'type',
+        render: type => {
+            const defaultPlatformIcons = config.defaultPlatformIcons;
+            let icon = defaultPlatformIcons.default.icon;
+            let color = defaultPlatformIcons.default.color;
+            let theme = defaultPlatformIcons.default.theme;
+
+            if (defaultPlatformIcons.hasOwnProperty(type)) {
+                icon = defaultPlatformIcons[type].icon;
+                color = defaultPlatformIcons[type].color;
+                theme = defaultPlatformIcons[type].theme;
+            }
+
+            return (
+                <span style={{fontSize: 20, color: color, textAlign: "center"}}>
+                    <Icon type={icon} theme={theme}/>
+                </span>
+            );
+        }
+    },
+    {
+        title: 'Owner',
+        dataIndex: 'owner',
+        key: 'owner'
+    },
+    {
+        title: 'Policy',
+        dataIndex: 'policyName',
+        key: 'policy',
+        sorter: (a, b) => a.policyName.localeCompare(b.policyName)
+    },
+    {
+        title: 'Last Success Time',
+        dataIndex: 'lastSucceededTime',
+        key: 'lastSucceededTime',
+        render: (data) => {
+            if(data){
+                return <Tooltip title={new Date(data).toString()}>{moment(data).fromNow()}</Tooltip>;
+            } else {
+                return "Not available"
+            }
+        }
+    },
+    {
+        title: 'Attempts',
+        dataIndex: 'attempts',
+        key: 'attempts'
+    },
+    {
+        title: 'Device Details',
+        dataIndex: 'id',
+        key: 'device_details',
+        render: (id) =>
+
+            <Button
+                type="primary"
+                size={"small"}
+                icon="book">Device Details</Button>
+    }
+];
 
 class PolicyDevicesTable extends React.Component {
     constructor(props) {
@@ -142,72 +300,17 @@ class PolicyDevicesTable extends React.Component {
         });
     };
 
-    columns = [
-        {
-            title: 'Device',
-            dataIndex: 'deviceName',
-            width: 100,
-            sorter: (a, b) => a.deviceName.localeCompare(b.deviceName)
-        },
-        {
-            title: 'Owner',
-            dataIndex: 'owner',
-            key: 'owner'
-        },
-        {
-            title: 'Policy',
-            dataIndex: 'policyName',
-            key: 'policy',
-            sorter: (a, b) => a.policyName.localeCompare(b.policyName)
-        },
-        {
-            title: 'Last Failed Time',
-            dataIndex: 'lastFailedTime',
-            key: 'lastFailedTime'
-        },
-        {
-            title: 'Last Success Time',
-            dataIndex: 'lastSucceededTime',
-            key: 'lastSucceededTime'
-        },
-        {
-            title: 'Attempts',
-            dataIndex: 'attempts',
-            key: 'attempts'
-        },
-        {
-            title: 'Violated Features',
-            dataIndex: 'id',
-            key: 'violated_features',
-            render: (id) =>
-
-                    <Button
-                        type="primary"
-                        size={"small"}
-                        icon="book">Violated Features</Button>
-
-        },
-        {
-            title: 'Device Details',
-            dataIndex: 'id',
-            key: 'device_details',
-            render: (id) =>
-
-                <Button
-                    type="primary"
-                    size={"small"}
-                    icon="book">Device Details</Button>
-
-        }
-    ];
-
     render() {
 
-        const {data, pagination, loading, selectedRows} = this.state;
+        let {data, pagination, loading, selectedRows} = this.state;
+        const {isCompliant} = this.props;
+
+
+
         return (
             <div>
                 <Table
-                    columns={this.columns}
+                    columns={isCompliant ? columnsCompliant : columnsNonCompliant}
                     rowKey={record => (record.id)}
                     dataSource={data.complianceData}
                     pagination={{

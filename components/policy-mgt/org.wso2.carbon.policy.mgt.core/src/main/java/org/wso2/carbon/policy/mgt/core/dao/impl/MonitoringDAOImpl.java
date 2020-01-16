@@ -360,11 +360,13 @@ public class MonitoringDAOImpl implements MonitoringDAO {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         try {
             conn = this.getConnection();
-            String query = "SELECT DEVICE.NAME, ENROLLMENT.OWNER, DM_POLICY.NAME AS POLICY_NAME, POLICY.* " +
-                    "FROM DM_POLICY_COMPLIANCE_STATUS AS POLICY, DM_DEVICE AS DEVICE, DM_ENROLMENT AS ENROLLMENT, DM_POLICY " +
+            String query = "SELECT DEVICE.NAME, DM_DEVICE_TYPE.NAME AS DEVICE_TYPE, ENROLLMENT.OWNER, DM_POLICY.NAME AS POLICY_NAME, POLICY.* " +
+                    "FROM DM_POLICY_COMPLIANCE_STATUS AS POLICY, DM_DEVICE AS DEVICE, " +
+                    "DM_ENROLMENT AS ENROLLMENT, DM_POLICY, DM_DEVICE_TYPE " +
                     "WHERE DEVICE.ID=POLICY.DEVICE_ID " +
                     "AND DEVICE.ID=ENROLLMENT.DEVICE_ID " +
                     "AND POLICY.POLICY_ID=DM_POLICY.ID " +
+                    "AND DEVICE.DEVICE_TYPE_ID=DM_DEVICE_TYPE.ID " +
                     "AND POLICY.TENANT_ID = ? AND POLICY.STATUS = ?";
 
             if(isPending){
@@ -407,6 +409,7 @@ public class MonitoringDAOImpl implements MonitoringDAO {
                 complianceData.setId(resultSet.getInt("ID"));
                 complianceData.setDeviceId(resultSet.getInt("DEVICE_ID"));
                 complianceData.setDeviceName(resultSet.getString("NAME"));
+                complianceData.setDeviceType(resultSet.getString("DEVICE_TYPE"));
                 complianceData.setOwner(resultSet.getString("OWNER"));
                 complianceData.setEnrolmentId(resultSet.getInt("ENROLMENT_ID"));
                 complianceData.setPolicyId(resultSet.getInt("POLICY_ID"));

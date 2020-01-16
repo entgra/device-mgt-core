@@ -24,7 +24,7 @@ import {
     Icon,
     Tag,
     Radio, Select, Button, Card,
-    Row, Col, message, notification
+    Row, Col, message, notification, Empty
 } from "antd";
 
 import {Link} from "react-router-dom";
@@ -48,8 +48,8 @@ class PolicyReport extends React.Component {
         this.state = {
             isCompliant:true,
             policyReportData:{
-                from:reportData.duration[0],
-                to:reportData.duration[1]
+                from: reportData ? reportData.duration[0] : null,
+                to: reportData ? reportData.duration[1] : null
             }
         };
     }
@@ -63,34 +63,58 @@ class PolicyReport extends React.Component {
 
         const { isCompliant, policyReportData } = this.state;
 
-        return (
-            <div>
-                <PageHeader style={{paddingTop: 0}}>
-                    <Breadcrumb style={{paddingBottom: 16}}>
-                        <Breadcrumb.Item>
-                            <Link to="/entgra"><Icon type="home"/> Home</Link>
-                        </Breadcrumb.Item>
-                        <Breadcrumb.Item>Report</Breadcrumb.Item>
-                    </Breadcrumb>
-                    <div className="wrap" style={{marginBottom: '10px'}}>
-                        <h3>Policy Report</h3>
+        if(policyReportData.from && policyReportData.to){
+            return (
+                <div>
+                    <PageHeader style={{paddingTop: 0}}>
+                        <Breadcrumb style={{paddingBottom: 16}}>
+                            <Breadcrumb.Item>
+                                <Link to="/entgra"><Icon type="home"/> Home</Link>
+                            </Breadcrumb.Item>
+                            <Breadcrumb.Item>Report</Breadcrumb.Item>
+                        </Breadcrumb>
+                        <div className="wrap" style={{marginBottom: '10px'}}>
+                            <h3>Policy Report</h3>
 
-                        <Radio.Group onChange={this.handleModeChange} defaultValue={true} value={isCompliant} style={{ marginBottom: 8 }}>
-                            <Radio.Button value={true}>Policy Compliant Devices</Radio.Button>
-                            <Radio.Button value={false}>Policy Non-Compliant Devices</Radio.Button>
-                        </Radio.Group>
+                            <Radio.Group onChange={this.handleModeChange} defaultValue={true} value={isCompliant} style={{ marginBottom: 8 }}>
+                                <Radio.Button value={true}>Policy Compliant Devices</Radio.Button>
+                                <Radio.Button value={false}>Policy Non-Compliant Devices</Radio.Button>
+                            </Radio.Group>
 
-                        <div style={{backgroundColor:"#ffffff", borderRadius: 5}}>
-                            <PolicyDevicesTable policyReportData={policyReportData} isCompliant={isCompliant}/>
+                            <div style={{backgroundColor:"#ffffff", borderRadius: 5}}>
+                                <PolicyDevicesTable policyReportData={policyReportData} isCompliant={isCompliant}/>
+                            </div>
                         </div>
+
+                    </PageHeader>
+                    <div style={{background: '#f0f2f5', padding: 24, minHeight: 720}}>
+
                     </div>
-
-                </PageHeader>
-                <div style={{background: '#f0f2f5', padding: 24, minHeight: 720}}>
-
                 </div>
-            </div>
-        );
+            );
+        }else{
+            return (
+                <div>
+                    <PageHeader style={{paddingTop: 0}}>
+                        <Breadcrumb style={{paddingBottom: 16}}>
+                            <Breadcrumb.Item>
+                                <Link to="/entgra"><Icon type="home"/> Home</Link>
+                            </Breadcrumb.Item>
+                            <Breadcrumb.Item>Report</Breadcrumb.Item>
+                        </Breadcrumb>
+                        <div className="wrap" style={{marginBottom: '10px'}}>
+                            <h3>Policy Report</h3>
+
+                            <Empty/>
+                        </div>
+
+                    </PageHeader>
+                    <div style={{background: '#f0f2f5', padding: 24, minHeight: 720}}>
+
+                    </div>
+                </div>
+            )
+        }
     }
 }
 

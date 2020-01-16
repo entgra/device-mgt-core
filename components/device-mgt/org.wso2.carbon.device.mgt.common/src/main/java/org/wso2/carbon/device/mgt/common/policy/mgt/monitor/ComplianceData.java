@@ -29,6 +29,7 @@ public class ComplianceData {
     private int id;
     private int deviceId;
     private String deviceName;
+    private String deviceType;
     private String owner;
     private int enrolmentId;
     private int policyId;
@@ -174,5 +175,13 @@ public class ComplianceData {
 
     public void setPolicyName(String policyName) {
         this.policyName = policyName;
+    }
+
+    public String getDeviceType() {
+        return deviceType;
+    }
+
+    public void setDeviceType(String deviceType) {
+        this.deviceType = deviceType;
     }
 }
