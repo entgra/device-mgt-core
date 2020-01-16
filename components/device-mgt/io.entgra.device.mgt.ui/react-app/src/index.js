@@ -23,7 +23,6 @@ import App from './App';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
 import './index.css';
-import DeviceStatusReport from './components/Reports/Templates/DeviceStatusReport';
 import Devices from "./pages/Dashboard/Devices/Devices";
 import Reports from "./pages/Dashboard/Reports/Reports";
 import Geo from "./pages/Dashboard/Geo/Geo";
@@ -39,6 +38,7 @@ import ReportDurationItemList from "./pages/Dashboard/Reports/ReportDurationItem
 import EnrollmentsVsUnenrollmentsReport from "./components/Reports/Templates/EnrollmentsVsUnenrollmentsReport";
 import EnrollmentTypeReport from "./components/Reports/Templates/EnrollmentTypeReport";
 import PolicyReport from "./components/Reports/Templates/PolicyReport";
+import DeviceStatusReport from "./components/Reports/Templates/DeviceStatusReport";
 
 const routes = [
   {
