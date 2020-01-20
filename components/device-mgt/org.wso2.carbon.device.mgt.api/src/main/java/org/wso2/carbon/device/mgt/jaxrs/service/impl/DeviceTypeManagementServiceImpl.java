@@ -111,34 +111,30 @@ public class DeviceTypeManagementServiceImpl implements DeviceTypeManagementServ
     @GET
     @Override
     @Path("/{type}/policies")
-    public Response getPolicies(@PathParam("type") @Size(min = 2, max = 45) String type,
-                                @QueryParam("featureType") String featureType,
-                                @QueryParam("hidden") String hidden,
-                                @HeaderParam("If-Modified-Since") String ifModifiedSince){
+    public Response getPolicies(@PathParam("type") @Size(min = 2, max = 45) String type){
         List<Policy> policies;
         DeviceManagementProviderService dms;
         try {
             if (StringUtils.isEmpty(type)) {
+                String msg = "Type cannot be empty.";
+                log.error(msg);
                 return Response.status(Response.Status.BAD_REQUEST).entity(
-                        new ErrorResponse.ErrorResponseBuilder().setMessage("Type cannot be empty.").build()).build();
+                        new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
             }
             dms = DeviceMgtAPIUtils.getDeviceManagementService();
             PolicyConfigurationManager pm = dms.getPolicyManager(type);
 
             if (pm == null) {
+                String msg = "No policy manager is registered with the given type '" + type + "'";
+                log.error(msg);
                 return Response.status(Response.Status.NOT_FOUND).entity(
-                        new ErrorResponse.ErrorResponseBuilder().setMessage("No feature manager is " +
-                                "registered with the given type '" + type + "'").build()).build();
+                        new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
             }
 
-            if (StringUtils.isEmpty(hidden)) {
-                policies = pm.getPolicies();
-            } else {
-                policies = pm.getPolicies();
-            }
+            policies = pm.getPolicies();
+
         } catch (DeviceManagementException e) {
-            String msg = "Error occurred while retrieving the list of [" + type + "] features with params " +
-                    "{featureType: " + featureType + ", hidden: " + hidden + "}";
+            String msg = "Error occurred while retrieving the [" + type + "] policy details.";
             log.error(msg, e);
             return Response.serverError().entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();

@@ -100,6 +100,12 @@ import javax.ws.rs.core.Response;
                         description = "Get Config Details of a Device Type",
                         key = "perm:device-types:configs",
                         permissions = {"/device-mgt/device-type/config/view"}
+                ),
+                @Scope(
+                        name = "Getting Details of Policies",
+                        description = "Getting Details of Policies",
+                        key = "perm:policies:get-details",
+                        permissions = {"/device-mgt/policies/view"}
                 )
         }
 )
@@ -304,6 +310,18 @@ public interface DeviceTypeManagementService {
 
     @GET
     @Path("/{type}/policies")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Get Policy details of a Device Type",
+            notes = "Get the json object to generate policy configuration form from xml in plugin",
+            tags = "Device Type Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:policies:get-details")
+                    })
+            }
+    )
     @ApiResponses(
             value = {
                     @ApiResponse(
@@ -347,26 +365,7 @@ public interface DeviceTypeManagementService {
                     required = true)
             @PathParam("type")
             @Size(min = 2, max = 45)
-                    String type,
-            @ApiParam(
-                    name = "featureType",
-                    value = "Type of the feature, such as operation or policy"
-            )
-            @QueryParam("featureType")
-                    String featureType,
-            @ApiParam(
-                    name = "hidden",
-                    value = "true for hidden operations and false for non hidden operations"
-            )
-                    String hidden,
-            @ApiParam(
-                    name = "If-Modified-Since",
-                    value = "Checks if the requested variant was modified, since the specified date-time.\n" +
-                            "Provide the value in the following format: EEE, d MMM yyyy HH:mm:ss Z.\n" +
-                            "Example: Mon, 05 Jan 2014 15:10:00 +0200"
-            )
-            @HeaderParam("If-Modified-Since")
-                    String ifModifiedSince
+                    String type
     );
 
     @GET
