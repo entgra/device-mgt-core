@@ -38,9 +38,12 @@ package org.wso2.carbon.device.mgt.jaxrs.service.impl.admin;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.base.MultitenantConstants;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration;
 import org.wso2.carbon.device.mgt.common.spi.DeviceManagementService;
+import org.wso2.carbon.device.mgt.common.type.mgt.DeviceTypeMetaDefinition;
 import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.dto.DeviceTypeVersion;
 import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
@@ -110,7 +113,13 @@ public class DeviceTypeManagementAdminServiceImpl implements DeviceTypeManagemen
     @POST
     public Response addDeviceType(DeviceType deviceType) {
         if (deviceType != null && deviceType.getDeviceTypeMetaDefinition() != null) {
+            DeviceTypeMetaDefinition deviceTypeMetaDefinition = deviceType.getDeviceTypeMetaDefinition();
             try {
+                String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+                if (deviceTypeMetaDefinition.isSharedWithAllTenants() &&
+                    !MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
+                    deviceTypeMetaDefinition.setSharedWithAllTenants(false);
+                }
                 if (DeviceMgtAPIUtils.getDeviceManagementService().getDeviceType(deviceType.getName()) != null) {
                     String msg = "Device type already available, " + deviceType.getName();
                     return Response.status(Response.Status.CONFLICT).entity(msg).build();
