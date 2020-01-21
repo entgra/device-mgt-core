@@ -16,106 +16,104 @@
  * under the License.
  */
 
-import React from "react";
+import React from 'react';
 import {
-    PageHeader,
-    Typography,
-    Breadcrumb,
-    Icon,
-    Tag,
-    Radio, Select, Button, Card,
-    Row, Col, message, notification, Empty
-} from "antd";
+  PageHeader,
+  Typography,
+  Breadcrumb,
+  Icon,
+  Tag,
+  Radio,
+  Select,
+  Button,
+  Card,
+  Row,
+  Col,
+  message,
+  notification,
+  Empty,
+} from 'antd';
 
-import {Link} from "react-router-dom";
-import {withConfigContext} from "../../../context/ConfigContext";
-import PolicyDevicesTable from "../Widgets/PolicyDevicesTable";
-const {Paragraph} = Typography;
+import { Link } from 'react-router-dom';
+import { withConfigContext } from '../../../context/ConfigContext';
+import PolicyDevicesTable from '../Widgets/PolicyDevicesTable';
+const { Paragraph } = Typography;
 const { CheckableTag } = Tag;
 
 const { Option } = Select;
 let config = null;
 
-
 class PolicyReport extends React.Component {
-    routes;
+  routes;
 
-    constructor(props) {
-        super(props);
-        this.routes = props.routes;
-        config =  this.props.context;
-        const { reportData } = this.props.location;
-        this.state = {
-            isCompliant:true,
-            policyReportData:{
-                from: reportData ? reportData.duration[0] : null,
-                to: reportData ? reportData.duration[1] : null
-            }
-        };
-    }
-
-    handleModeChange = e => {
-        const isCompliant = e.target.value;
-        this.setState({ isCompliant });
+  constructor(props) {
+    super(props);
+    this.routes = props.routes;
+    config = this.props.context;
+    const { reportData } = this.props.location;
+    this.state = {
+      isCompliant: true,
+      // This object contains parameters which pass into API endpoint
+      policyReportData: {
+        policy: reportData.data ? reportData.data.policyId : null,
+        from: reportData ? reportData.duration[0] : null,
+        to: reportData ? reportData.duration[1] : null,
+      },
     };
+  }
 
-    render() {
+  handleModeChange = e => {
+    const isCompliant = e.target.value;
+    this.setState({ isCompliant });
+  };
 
-        const { isCompliant, policyReportData } = this.state;
+  render() {
+    const { isCompliant, policyReportData } = this.state;
 
-        if(policyReportData.from && policyReportData.to){
-            return (
-                <div>
-                    <PageHeader style={{paddingTop: 0}}>
-                        <Breadcrumb style={{paddingBottom: 16}}>
-                            <Breadcrumb.Item>
-                                <Link to="/entgra"><Icon type="home"/> Home</Link>
-                            </Breadcrumb.Item>
-                            <Breadcrumb.Item>Report</Breadcrumb.Item>
-                        </Breadcrumb>
-                        <div className="wrap" style={{marginBottom: '10px'}}>
-                            <h3>Policy Report</h3>
+    if (policyReportData.from && policyReportData.to) {
+      return (
+        <div>
+          <PageHeader style={{ paddingTop: 0 }}>
+            <Breadcrumb style={{ paddingBottom: 16 }}>
+              <Breadcrumb.Item>
+                <Link to="/entgra">
+                  <Icon type="home" /> Home
+                </Link>
+              </Breadcrumb.Item>
+              <Breadcrumb.Item>Report</Breadcrumb.Item>
+            </Breadcrumb>
+            <div className="wrap" style={{ marginBottom: '10px' }}>
+              <h3>Policy Report</h3>
 
-                            <Radio.Group onChange={this.handleModeChange} defaultValue={true} value={isCompliant} style={{ marginBottom: 8 }}>
-                                <Radio.Button value={true}>Policy Compliant Devices</Radio.Button>
-                                <Radio.Button value={false}>Policy Non-Compliant Devices</Radio.Button>
-                            </Radio.Group>
+              <Radio.Group
+                onChange={this.handleModeChange}
+                defaultValue={true}
+                value={isCompliant}
+                style={{ marginBottom: 8 }}
+              >
+                <Radio.Button value={true}>
+                  Policy Compliant Devices
+                </Radio.Button>
+                <Radio.Button value={false}>
+                  Policy Non-Compliant Devices
+                </Radio.Button>
+              </Radio.Group>
 
-                            <div style={{backgroundColor:"#ffffff", borderRadius: 5}}>
-                                <PolicyDevicesTable policyReportData={policyReportData} isCompliant={isCompliant}/>
-                            </div>
-                        </div>
-
-                    </PageHeader>
-                    <div style={{background: '#f0f2f5', padding: 24, minHeight: 720}}>
-
-                    </div>
-                </div>
-            );
-        }else{
-            return (
-                <div>
-                    <PageHeader style={{paddingTop: 0}}>
-                        <Breadcrumb style={{paddingBottom: 16}}>
-                            <Breadcrumb.Item>
-                                <Link to="/entgra"><Icon type="home"/> Home</Link>
-                            </Breadcrumb.Item>
-                            <Breadcrumb.Item>Report</Breadcrumb.Item>
-                        </Breadcrumb>
-                        <div className="wrap" style={{marginBottom: '10px'}}>
-                            <h3>Policy Report</h3>
-
-                            <Empty/>
-                        </div>
-
-                    </PageHeader>
-                    <div style={{background: '#f0f2f5', padding: 24, minHeight: 720}}>
-
-                    </div>
-                </div>
-            )
-        }
+              <div style={{ backgroundColor: '#ffffff', borderRadius: 5 }}>
+                <PolicyDevicesTable
+                  policyReportData={policyReportData}
+                  isCompliant={isCompliant}
+                />
+              </div>
+            </div>
+          </PageHeader>
+          <div
+            style={{ background: '#f0f2f5', padding: 24, minHeight: 720 }}
+          ></div>
+        </div>
+      );
     }
+  }
 }
 
 export default withConfigContext(PolicyReport);
