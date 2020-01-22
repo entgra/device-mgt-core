@@ -23,17 +23,8 @@ import App from './App';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
 import './index.css';
-import Devices from './pages/Dashboard/Devices/Devices';
 import Reports from './pages/Dashboard/Reports/Reports';
 import Geo from './pages/Dashboard/Geo/Geo';
-import Groups from './pages/Dashboard/Groups/Groups';
-import Users from './pages/Dashboard/Users/Users';
-import Policies from './pages/Dashboard/Policies/Policies';
-import Roles from './pages/Dashboard/Roles/Roles';
-import DeviceTypes from './pages/Dashboard/DeviceTypes/DeviceTypes';
-import DeviceEnroll from './pages/Dashboard/Devices/DeviceEnroll';
-import AddNewPolicy from './pages/Dashboard/Policies/AddNewPolicy';
-import Certificates from './pages/Dashboard/Configurations/Certificates/Certificates';
 import ReportDurationItemList from './pages/Dashboard/Reports/ReportDurationItemList';
 import EnrollmentsVsUnenrollmentsReport from './components/Reports/Templates/EnrollmentsVsUnenrollmentsReport';
 import EnrollmentTypeReport from './components/Reports/Templates/EnrollmentTypeReport';
@@ -52,16 +43,16 @@ const routes = [
     exact: false,
     component: Dashboard,
     routes: [
-      {
-        path: '/entgra/devices',
-        component: Devices,
-        exact: true,
-      },
-      {
-        path: '/entgra/devices/enroll',
-        component: DeviceEnroll,
-        exact: true,
-      },
+      // {
+      //   path: '/entgra/devices',
+      //   component: Devices,
+      //   exact: true,
+      // },
+      // {
+      //   path: '/entgra/devices/enroll',
+      //   component: DeviceEnroll,
+      //   exact: true,
+      // },
       {
         path: '/entgra/geo',
         component: Geo,
@@ -72,41 +63,41 @@ const routes = [
         component: Reports,
         exact: true,
       },
-      {
-        path: '/entgra/groups',
-        component: Groups,
-        exact: true,
-      },
-      {
-        path: '/entgra/users',
-        component: Users,
-        exact: true,
-      },
-      {
-        path: '/entgra/policies',
-        component: Policies,
-        exact: true,
-      },
-      {
-        path: '/entgra/policy/add',
-        component: AddNewPolicy,
-        exact: true,
-      },
-      {
-        path: '/entgra/roles',
-        component: Roles,
-        exact: true,
-      },
-      {
-        path: '/entgra/devicetypes',
-        component: DeviceTypes,
-        exact: true,
-      },
-      {
-        path: '/entgra/certificates',
-        component: Certificates,
-        exact: true,
-      },
+      // {
+      //   path: '/entgra/groups',
+      //   component: Groups,
+      //   exact: true,
+      // },
+      // {
+      //   path: '/entgra/users',
+      //   component: Users,
+      //   exact: true,
+      // },
+      // {
+      //   path: '/entgra/policies',
+      //   component: Policies,
+      //   exact: true,
+      // },
+      // {
+      //   path: '/entgra/policy/add',
+      //   component: AddNewPolicy,
+      //   exact: true,
+      // },
+      // {
+      //   path: '/entgra/roles',
+      //   component: Roles,
+      //   exact: true,
+      // },
+      // {
+      //   path: '/entgra/devicetypes',
+      //   component: DeviceTypes,
+      //   exact: true,
+      // },
+      // {
+      //   path: '/entgra/certificates',
+      //   component: Certificates,
+      //   exact: true,
+      // },
       {
         path: '/entgra/reportList',
         component: ReportDurationItemList,
