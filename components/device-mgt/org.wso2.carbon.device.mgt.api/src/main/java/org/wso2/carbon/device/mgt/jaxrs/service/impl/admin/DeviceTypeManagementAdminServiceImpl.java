@@ -118,7 +118,10 @@ public class DeviceTypeManagementAdminServiceImpl implements DeviceTypeManagemen
                 String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
                 if (deviceTypeMetaDefinition.isSharedWithAllTenants() &&
                     !MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
-                    deviceTypeMetaDefinition.setSharedWithAllTenants(false);
+                    String msg = "Invalid request, device type can only be shared with all the tenants " +
+                                 "only if the request is sent by the super tenant";
+                    log.error(msg);
+                    return Response.status(Response.Status.FORBIDDEN).entity(msg).build();
                 }
                 if (DeviceMgtAPIUtils.getDeviceManagementService().getDeviceType(deviceType.getName()) != null) {
                     String msg = "Device type already available, " + deviceType.getName();
