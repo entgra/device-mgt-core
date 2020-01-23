@@ -15,15 +15,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.wso2.carbon.device.mgt.extensions.device.type.template.config;
 
-package org.wso2.carbon.device.mgt.common;
+import javax.xml.bind.annotation.XmlElement;
 
-import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
+public class Buttons {
+    @XmlElement(name = "ButtonId", required = true)
+    protected String id;
 
-import java.util.List;
+    @XmlElement(name = "ButtonLabel", required = true)
+    protected String name;
 
-public interface PolicyConfigurationManager {
+    public String getButtonId() {
+        return id;
+    }
 
-    List<Policy> getPolicies() throws DeviceManagementException;
+    public void setButtonId(String id) {
+        this.id = id;
+    }
 
+    public String getButtonLabel() {
+        return name;
+    }
+
+    public void setButtonLabel(String name) {
+        this.name = name;
+    }
 }

@@ -15,32 +15,58 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.wso2.carbon.device.mgt.extensions.device.type.template.config;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
-public class Option {
-    @XmlElement(name = "OptionName", required = true)
+public class Column {
+    @XmlElement(name = "Name", required = true)
     private String name;
 
-    @XmlElement(name = "OptionValue", required = true)
-    protected String value;
 
-    public String getOptionName() {
+    @XmlAttribute(name = "type", required = true)
+    protected String type;
+
+    @XmlAttribute(name = "key", required = true)
+    protected String key;
+
+    @XmlElement(name = "Others")
+    protected OptionalData others;
+
+    public String getColumnName() {
         return name;
     }
 
-    public void setOptionName(String name) {
+    public void setColumnName(String name) {
         this.name = name;
     }
 
-    public String getOptionValue() {
-        return value;
+    public String getColumnType() {
+        return type;
     }
 
-    public void setOptionValue(String value) {
-        this.value = value;
+    public void setColumnType(String type) {
+        this.type = type;
     }
+
+    public String getColumnKey() {
+        return key;
+    }
+
+    public void setColumnKey(String key) {
+        this.key = key;
+    }
+
+    public OptionalData getOtherColumnData() {
+        return others;
+    }
+
+    public void getOtherColumnData(OptionalData others) {
+        this.others = others;
+    }
+
 }
+
+
+
