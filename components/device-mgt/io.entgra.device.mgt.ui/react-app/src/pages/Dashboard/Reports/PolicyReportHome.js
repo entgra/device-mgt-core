@@ -36,7 +36,7 @@ class PolicyReportHome extends React.Component {
               <Link
                 to={{
                   // Path to respective report page
-                  pathname: '/entgra/reportList',
+                  pathname: '/entgra/policyreport',
                   data: {
                     name: 'all_policy_compliance_report',
                   },
@@ -60,40 +60,40 @@ class PolicyReportHome extends React.Component {
                 </Card>
               </Link>
             </Col>
-            <Col span={8}>
-              <Link
-                to={{
-                  // Path to respective report page
-                  pathname: '/entgra/reportList',
-                  data: {
-                    name: 'per_policy_compliance_report',
-                  },
-                }}
-              >
-                <Card
-                  bordered={true}
-                  hoverable={true}
-                  style={{ borderRadius: 10, marginBottom: 16 }}
-                >
-                  <div align="center">
-                    <Icon
-                      type="desktop"
-                      style={{ fontSize: '25px', color: '#08c' }}
-                    />
-                    <h2>
-                      <b>Per Policy Compliance Report</b>
-                    </h2>
-                    <p>Policy compliance details for selected policy</p>
-                  </div>
-                </Card>
-              </Link>
-            </Col>
+            {/*<Col span={8}>*/}
+            {/*  <Link*/}
+            {/*    to={{*/}
+            {/*      // Path to respective report page*/}
+            {/*      pathname: '/entgra/reportList',*/}
+            {/*      data: {*/}
+            {/*        name: 'per_policy_compliance_report',*/}
+            {/*      },*/}
+            {/*    }}*/}
+            {/*  >*/}
+            {/*    <Card*/}
+            {/*      bordered={true}*/}
+            {/*      hoverable={true}*/}
+            {/*      style={{ borderRadius: 10, marginBottom: 16 }}*/}
+            {/*    >*/}
+            {/*      <div align="center">*/}
+            {/*        <Icon*/}
+            {/*          type="desktop"*/}
+            {/*          style={{ fontSize: '25px', color: '#08c' }}*/}
+            {/*        />*/}
+            {/*        <h2>*/}
+            {/*          <b>Per Policy Compliance Report</b>*/}
+            {/*        </h2>*/}
+            {/*        <p>Policy compliance details for selected policy</p>*/}
+            {/*      </div>*/}
+            {/*    </Card>*/}
+            {/*  </Link>*/}
+            {/*</Col>*/}
 
             <Col span={8}>
               <Link
                 to={{
                   // Path to respective report page
-                  pathname: '/entgra/reportList',
+                  pathname: '/entgra/enrollmentsvsunenrollments',
                   data: {
                     name: 'enrollments_vs_unenrollments_report',
                   },
@@ -122,7 +122,7 @@ class PolicyReportHome extends React.Component {
               <Link
                 to={{
                   // Path to respective report page
-                  pathname: '/entgra/reportList',
+                  pathname: '/entgra/devicestatus',
                   data: {
                     name: 'enrollment_status_report',
                   },
@@ -151,7 +151,7 @@ class PolicyReportHome extends React.Component {
               <Link
                 to={{
                   // Path to respective report page
-                  pathname: '/entgra/reportList',
+                  pathname: '/entgra/enrollmenttype',
                   data: {
                     name: 'enrollemt_type_report',
                   },

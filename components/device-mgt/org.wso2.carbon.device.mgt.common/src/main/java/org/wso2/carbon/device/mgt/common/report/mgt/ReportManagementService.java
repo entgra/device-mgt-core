@@ -17,10 +17,12 @@
  */
 package org.wso2.carbon.device.mgt.common.report.mgt;
 
+import org.wso2.carbon.device.mgt.common.Count;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
 import org.wso2.carbon.device.mgt.common.exceptions.ReportManagementException;
 
+import java.text.ParseException;
 import java.util.List;
 
 /**
@@ -43,4 +45,7 @@ public interface ReportManagementService {
 
     int getDevicesByDurationCount(List<String> statusList, String ownership, String fromDate, String toDate)
             throws ReportManagementException;
+
+    List<Count> getCountOfDevicesByDuration(PaginationRequest request, List<String> statusList, String fromDate, String toDate)
+            throws ReportManagementException, ParseException;
 }

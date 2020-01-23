@@ -16,117 +16,118 @@
  * under the License.
  */
 
-import React from "react";
-import {Button, Card, Col, Form, Input, message, Modal, notification, List, Typography} from "antd";
-import axios from "axios";
-import {withConfigContext} from "../../../context/ConfigContext";
-
-const {Text} = Typography;
-let config = null;
+import React from 'react';
+import { Button, message, Modal, notification, List, Typography } from 'antd';
+import axios from 'axios';
+import { withConfigContext } from '../../../context/ConfigContext';
 
 class FeatureListModal extends React.Component {
+  constructor(props) {
+    super(props);
+    // eslint-disable-next-line no-undef
+    config = this.props.context;
+    this.state = {
+      modalVisible: false,
+      name: '',
+      description: '',
+      features: [],
+    };
+  }
 
-    constructor(props) {
-        super(props);
-        config =  this.props.context;
-        this.state = {
-            modalVisible: false,
-            name:'',
-            description:'',
-            features:[]
+  fetchViolatedFeatures = id => {
+    const config = this.props.context;
+
+    let apiUrl =
+      window.location.origin +
+      config.serverConfig.invoker.uri +
+      config.serverConfig.invoker.deviceMgt +
+      '/devices/' +
+      id +
+      '/features';
+
+    axios
+      .get(apiUrl)
+      .then(res => {
+        if (res.status === 200) {
+          this.setState({
+            features: JSON.parse(res.data.data),
+          });
+          // console.log(res.data.data)
         }
-    }
+      })
+      .catch(error => {
+        if (error.hasOwnProperty('response') && error.response.status === 401) {
+          // todo display a popop with error
+          message.error('You are not logged in');
+          window.location.href = window.location.origin + '/entgra/login';
+        } else {
+          notification.error({
+            message: 'There was a problem',
+            duration: 0,
+            description: 'Error occurred while trying to load roles.',
+          });
+        }
+      });
+  };
 
-    fetchViolatedFeatures = (id) => {
-        const config = this.props.context;
+  openModal = () => {
+    this.fetchViolatedFeatures(this.props.id);
+    this.setState({
+      modalVisible: true,
+    });
+  };
 
-        let apiUrl = window.location.origin + config.serverConfig.invoker.uri +
-            config.serverConfig.invoker.deviceMgt +
-            "/devices/" + id + "/features";
+  handleOk = e => {
+    this.setState({
+      modalVisible: false,
+    });
+  };
 
-        axios.get(apiUrl).then(res => {
-            if (res.status === 200) {
-                this.setState({
-                    features: JSON.parse(res.data.data),
-                });
-                // console.log(res.data.data)
-            }
+  render() {
+    const { features, modalVisible } = this.state;
 
-        }).catch((error) => {
-            if (error.hasOwnProperty("response") && error.response.status === 401) {
-                //todo display a popop with error
-                message.error('You are not logged in');
-                window.location.href = window.location.origin + '/entgra/login';
-            } else {
-                notification["error"]({
-                    message: "There was a problem",
-                    duration: 0,
-                    description:"Error occurred while trying to load roles.",
-                });
-            }
-        });
-    };
+    console.log(features);
 
-    openModal = () => {
-        this.fetchViolatedFeatures(this.props.id);
-        this.setState({
-            modalVisible:true
-        });
-    };
+    let featureList = features.map(data => (
+      <List.Item key={data.featureCodes}>
+        <Typography.Text key={data.featureCodes} mark>
+          {data.featureCode}
+        </Typography.Text>
+      </List.Item>
+    ));
 
-    handleOk = e => {
-        this.setState({
-            modalVisible: false,
-        });
-    };
-
-    render() {
-        const {features,modalVisible} = this.state;
-
-        console.log(features);
-
-        let featureList = features.map((data) =>
-            <List.Item key={data.featureCodes}>
-                <Typography.Text key={data.featureCodes} mark>{data.featureCode}</Typography.Text>
-            </List.Item>
-        );
-
-        return(
-            <div>
-                <div>
-                    <Button
-                        type="primary"
-                        size={"small"}
-                        icon="book"
-                        onClick={this.openModal}>
-                        Violated Features
-                    </Button>
-                </div>
-                <div>
-                    <Modal
-                        title="VIOLATED FEATURES"
-                        width="40%"
-                        visible={modalVisible}
-                        onOk={this.handleOk}
-                        footer={[
-                            <Button key="submit" type="primary" onClick={this.handleOk}>
-                                OK
-                            </Button>,
-                        ]}
-                    >
-
-                        <List
-                            size="large"
-                            bordered
-                        >
-                            {featureList}
-                        </List>
-
-                    </Modal>
-                </div>
-            </div>
-        )
-    }
+    return (
+      <div>
+        <div>
+          <Button
+            type="primary"
+            size={'small'}
+            icon="book"
+            onClick={this.openModal}
+          >
+            Violated Features
+          </Button>
+        </div>
+        <div>
+          <Modal
+            title="VIOLATED FEATURES"
+            width="40%"
+            visible={modalVisible}
+            onOk={this.handleOk}
+            footer={[
+              <Button key="submit" type="primary" onClick={this.handleOk}>
+                OK
+              </Button>,
+            ]}
+          >
+            <List size="large" bordered>
+              {featureList}
+            </List>
+          </Modal>
+        </div>
+      </div>
+    );
+  }
 }
 
 export default withConfigContext(FeatureListModal);

@@ -35,11 +35,8 @@
 
 package org.wso2.carbon.device.mgt.core.dao;
 
-import org.wso2.carbon.device.mgt.common.Device;
-import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
-import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
+import org.wso2.carbon.device.mgt.common.*;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo.Status;
-import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceLocationHistory;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.DevicePropertyInfo;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceData;
@@ -560,6 +557,12 @@ public interface DeviceDAO {
     int getDevicesByDurationCount(
             List<String> statusList, String ownership, String fromDate, String toDate, int tenantId)
             throws DeviceManagementDAOException;
+
+    List<Count> getCountOfDevicesByDuration(PaginationRequest request,
+                                            List<String> statusList,
+                                            int tenantId,
+                                            String fromDate,
+                                            String toDate) throws DeviceManagementDAOException;
 
     /**
      * Retrieve device location information

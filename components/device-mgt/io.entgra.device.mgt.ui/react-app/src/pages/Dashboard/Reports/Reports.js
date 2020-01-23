@@ -19,7 +19,6 @@
 import React from 'react';
 import { PageHeader, Breadcrumb, Icon } from 'antd';
 import { Link } from 'react-router-dom';
-import ReportDurationItemList from './ReportDurationItemList';
 import PolicyReportHome from './PolicyReportHome';
 
 class Reports extends React.Component {

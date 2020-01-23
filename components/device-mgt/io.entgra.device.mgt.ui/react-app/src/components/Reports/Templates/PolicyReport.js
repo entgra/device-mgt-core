@@ -17,30 +17,15 @@
  */
 
 import React from 'react';
-import {
-  PageHeader,
-  Typography,
-  Breadcrumb,
-  Icon,
-  Tag,
-  Radio,
-  Select,
-  Button,
-  Card,
-  Row,
-  Col,
-  message,
-  notification,
-  Empty,
-} from 'antd';
+import { PageHeader, Breadcrumb, Icon, Radio } from 'antd';
 
 import { Link } from 'react-router-dom';
 import { withConfigContext } from '../../../context/ConfigContext';
 import PolicyDevicesTable from '../Widgets/PolicyDevicesTable';
-const { Paragraph } = Typography;
-const { CheckableTag } = Tag;
+import moment from 'moment';
+import DateRangePicker from '../DateRangePicker';
 
-const { Option } = Select;
+// eslint-disable-next-line no-unused-vars
 let config = null;
 
 class PolicyReport extends React.Component {
@@ -50,14 +35,16 @@ class PolicyReport extends React.Component {
     super(props);
     this.routes = props.routes;
     config = this.props.context;
-    const { reportData } = this.props.location;
     this.state = {
       isCompliant: true,
       // This object contains parameters which pass into API endpoint
       policyReportData: {
-        policy: reportData.data ? reportData.data.policyId : null,
-        from: reportData ? reportData.duration[0] : null,
-        to: reportData ? reportData.duration[1] : null,
+        from: moment()
+          .subtract(6, 'days')
+          .format('YYYY-MM-DD'),
+        to: moment()
+          .add(1, 'days')
+          .format('YYYY-MM-DD'),
       },
     };
   }
@@ -67,52 +54,58 @@ class PolicyReport extends React.Component {
     this.setState({ isCompliant });
   };
 
+  // Get modified value from datepicker and set it to paramsObject
+  updateDurationValue = (modifiedFromDate, modifiedToDate) => {
+    let tempParamObj = this.state.policyReportData;
+    tempParamObj.from = modifiedFromDate;
+    tempParamObj.to = modifiedToDate;
+    this.setState({ policyReportData: tempParamObj });
+  };
+
   render() {
-    const { isCompliant, policyReportData } = this.state;
+    const { isCompliant } = this.state;
+    const policyData = { ...this.state.policyReportData };
+    return (
+      <div>
+        <PageHeader style={{ paddingTop: 0 }}>
+          <Breadcrumb style={{ paddingBottom: 16 }}>
+            <Breadcrumb.Item>
+              <Link to="/entgra">
+                <Icon type="home" /> Home
+              </Link>
+            </Breadcrumb.Item>
+            <Breadcrumb.Item>Report</Breadcrumb.Item>
+          </Breadcrumb>
+          <div className="wrap" style={{ marginBottom: '10px' }}>
+            <h3>Policy Report</h3>
 
-    if (policyReportData.from && policyReportData.to) {
-      return (
-        <div>
-          <PageHeader style={{ paddingTop: 0 }}>
-            <Breadcrumb style={{ paddingBottom: 16 }}>
-              <Breadcrumb.Item>
-                <Link to="/entgra">
-                  <Icon type="home" /> Home
-                </Link>
-              </Breadcrumb.Item>
-              <Breadcrumb.Item>Report</Breadcrumb.Item>
-            </Breadcrumb>
-            <div className="wrap" style={{ marginBottom: '10px' }}>
-              <h3>Policy Report</h3>
+            <Radio.Group
+              onChange={this.handleModeChange}
+              defaultValue={true}
+              value={isCompliant}
+              style={{ marginBottom: 8, marginRight: 10 }}
+            >
+              <Radio.Button value={true}>Policy Compliant Devices</Radio.Button>
+              <Radio.Button value={false}>
+                Policy Non-Compliant Devices
+              </Radio.Button>
+            </Radio.Group>
 
-              <Radio.Group
-                onChange={this.handleModeChange}
-                defaultValue={true}
-                value={isCompliant}
-                style={{ marginBottom: 8 }}
-              >
-                <Radio.Button value={true}>
-                  Policy Compliant Devices
-                </Radio.Button>
-                <Radio.Button value={false}>
-                  Policy Non-Compliant Devices
-                </Radio.Button>
-              </Radio.Group>
+            <DateRangePicker updateDurationValue={this.updateDurationValue} />
 
-              <div style={{ backgroundColor: '#ffffff', borderRadius: 5 }}>
-                <PolicyDevicesTable
-                  policyReportData={policyReportData}
-                  isCompliant={isCompliant}
-                />
-              </div>
+            <div style={{ backgroundColor: '#ffffff', borderRadius: 5 }}>
+              <PolicyDevicesTable
+                policyReportData={policyData}
+                isCompliant={isCompliant}
+              />
             </div>
-          </PageHeader>
-          <div
-            style={{ background: '#f0f2f5', padding: 24, minHeight: 720 }}
-          ></div>
-        </div>
-      );
-    }
+          </div>
+        </PageHeader>
+        <div
+          style={{ background: '#f0f2f5', padding: 24, minHeight: 720 }}
+        ></div>
+      </div>
+    );
   }
 }
 

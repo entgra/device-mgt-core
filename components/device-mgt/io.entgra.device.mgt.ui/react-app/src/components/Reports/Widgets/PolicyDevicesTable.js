@@ -18,24 +18,13 @@
 
 import React from 'react';
 import axios from 'axios';
-import {
-  Button,
-  Icon,
-  message,
-  notification,
-  Table,
-  Tag,
-  Tooltip,
-  Typography,
-} from 'antd';
+import { Button, Icon, message, notification, Table, Tooltip } from 'antd';
 import TimeAgo from 'javascript-time-ago';
 import moment from 'moment';
 // Load locale-specific relative date/time formatting rules.
 import en from 'javascript-time-ago/locale/en';
 import { withConfigContext } from '../../../context/ConfigContext';
 import FeatureListModal from './FeatureListModal';
-
-const { Text } = Typography;
 
 let config = null;
 
@@ -51,6 +40,7 @@ const columnsNonCompliant = [
     title: 'Type',
     dataIndex: 'deviceType',
     key: 'type',
+    // eslint-disable-next-line react/display-name
     render: type => {
       const defaultPlatformIcons = config.defaultPlatformIcons;
       let icon = defaultPlatformIcons.default.icon;
@@ -120,12 +110,14 @@ const columnsNonCompliant = [
     title: 'Violated Features',
     dataIndex: 'id',
     key: 'violated_features',
+    // eslint-disable-next-line react/display-name
     render: id => <FeatureListModal id={id} />,
   },
   {
     title: 'Device Details',
     dataIndex: 'id',
     key: 'device_details',
+    // eslint-disable-next-line react/display-name
     render: id => (
       <Button type="primary" size={'small'} icon="book">
         Device Details
@@ -146,6 +138,7 @@ const columnsCompliant = [
     title: 'Type',
     dataIndex: 'deviceType',
     key: 'type',
+    // eslint-disable-next-line react/display-name
     render: type => {
       const defaultPlatformIcons = config.defaultPlatformIcons;
       let icon = defaultPlatformIcons.default.icon;
@@ -200,6 +193,7 @@ const columnsCompliant = [
     title: 'Device Details',
     dataIndex: 'id',
     key: 'device_details',
+    // eslint-disable-next-line react/display-name
     render: id => (
       <Button type="primary" size={'small'} icon="book">
         Device Details
@@ -236,7 +230,10 @@ class PolicyDevicesTable extends React.Component {
 
   // Rerender component when parameters change
   componentDidUpdate(prevProps, prevState, snapshot) {
-    if (prevProps.isCompliant !== this.props.isCompliant) {
+    if (
+      prevProps.isCompliant !== this.props.isCompliant ||
+      prevProps.policyReportData !== this.props.policyReportData
+    ) {
       this.fetchData();
     }
   }

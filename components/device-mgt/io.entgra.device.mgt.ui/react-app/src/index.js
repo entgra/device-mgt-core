@@ -123,11 +123,6 @@ const routes = [
         exact: true,
       },
       {
-        path: '/entgra/devicestatus',
-        component: DeviceStatusReport,
-        exact: true,
-      },
-      {
         path: '/entgra/policyreport',
         component: PolicyReport,
         exact: true,
@@ -135,6 +130,11 @@ const routes = [
       {
         path: '/entgra/policyreporthome',
         component: PolicyReportHome,
+        exact: true,
+      },
+      {
+        path: '/entgra/devicestatus',
+        component: DeviceStatusReport,
         exact: true,
       },
     ],
