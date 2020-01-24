@@ -36,7 +36,7 @@ class PolicyReportHome extends React.Component {
               <Link
                 to={{
                   // Path to respective report page
-                  pathname: '/entgra/policyreport',
+                  pathname: '/entgra/reports/policy/compliance',
                   data: {
                     name: 'all_policy_compliance_report',
                   },
@@ -64,7 +64,7 @@ class PolicyReportHome extends React.Component {
               <Link
                 to={{
                   // Path to respective report page
-                  pathname: '/entgra/enrollmentsvsunenrollments',
+                  pathname: '/entgra/reports/enrollments',
                   data: {
                     name: 'enrollments_vs_unenrollments_report',
                   },
@@ -93,7 +93,7 @@ class PolicyReportHome extends React.Component {
               <Link
                 to={{
                   // Path to respective report page
-                  pathname: '/entgra/devicestatus',
+                  pathname: '/entgra/reports/device-status',
                   data: {
                     name: 'enrollment_status_report',
                   },
@@ -122,7 +122,7 @@ class PolicyReportHome extends React.Component {
               <Link
                 to={{
                   // Path to respective report page
-                  pathname: '/entgra/enrollmenttype',
+                  pathname: '/entgra/reports/enrollment-type',
                   data: {
                     name: 'enrollemt_type_report',
                   },

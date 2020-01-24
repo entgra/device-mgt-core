@@ -30,6 +30,7 @@ import EnrollmentTypeReport from './components/Reports/Templates/EnrollmentTypeR
 import PolicyReport from './components/Reports/Templates/PolicyReport';
 import DeviceStatusReport from './components/Reports/Templates/DeviceStatusReport';
 import PolicyReportHome from './pages/Dashboard/Reports/PolicyReportHome';
+import ReportDurationItemList from './pages/Dashboard/Reports/ReportDurationItemList';
 
 const routes = [
   {
@@ -98,27 +99,32 @@ const routes = [
       //   exact: true,
       // },
       {
-        path: '/entgra/enrollmentsvsunenrollments',
+        path: '/entgra/reports/list',
+        component: ReportDurationItemList,
+        exact: true,
+      },
+      {
+        path: '/entgra/reports/enrollments',
         component: EnrollmentsVsUnenrollmentsReport,
         exact: true,
       },
       {
-        path: '/entgra/enrollmenttype',
+        path: '/entgra/reports/enrollment-type',
         component: EnrollmentTypeReport,
         exact: true,
       },
       {
-        path: '/entgra/policyreport',
-        component: PolicyReport,
-        exact: true,
-      },
-      {
-        path: '/entgra/policyreporthome',
+        path: '/entgra/reports/policy',
         component: PolicyReportHome,
         exact: true,
       },
       {
-        path: '/entgra/devicestatus',
+        path: '/entgra/reports/policy/compliance',
+        component: PolicyReport,
+        exact: true,
+      },
+      {
+        path: '/entgra/reports/device-status',
         component: DeviceStatusReport,
         exact: true,
       },
