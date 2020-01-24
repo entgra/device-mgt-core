@@ -21,6 +21,9 @@ import { Button, message, Modal, notification, List, Typography } from 'antd';
 import axios from 'axios';
 import { withConfigContext } from '../../../context/ConfigContext';
 
+// eslint-disable-next-line no-unused-vars
+let config = null;
+
 class FeatureListModal extends React.Component {
   constructor(props) {
     super(props);
@@ -63,7 +66,7 @@ class FeatureListModal extends React.Component {
           notification.error({
             message: 'There was a problem',
             duration: 0,
-            description: 'Error occurred while trying to load roles.',
+            description: 'Error occurred while trying to load non compliance feature list.',
           });
         }
       });

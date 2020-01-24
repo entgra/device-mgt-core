@@ -105,7 +105,8 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             @QueryParam("to") String toDate) {
         int deviceCount;
         try {
-            deviceCount = DeviceMgtAPIUtils.getReportManagementService().getDevicesByDurationCount(status, ownership, fromDate, toDate);
+            deviceCount = DeviceMgtAPIUtils.getReportManagementService()
+                    .getDevicesByDurationCount(status, ownership, fromDate, toDate);
             return Response.status(Response.Status.OK).entity(deviceCount).build();
         } catch (ReportManagementException e) {
             String errorMessage = "Error while retrieving device count.";
@@ -144,11 +145,6 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             }
         } catch (ReportManagementException e) {
             String msg = "Error occurred while retrieving device list";
-            log.error(msg, e);
-            return Response.serverError().entity(
-                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
-        } catch (ParseException e) {
-            String msg = "Error occurred while building weekly count";
             log.error(msg, e);
             return Response.serverError().entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();

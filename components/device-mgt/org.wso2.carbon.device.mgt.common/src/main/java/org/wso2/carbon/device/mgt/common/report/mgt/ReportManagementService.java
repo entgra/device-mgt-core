@@ -47,5 +47,5 @@ public interface ReportManagementService {
             throws ReportManagementException;
 
     List<Count> getCountOfDevicesByDuration(PaginationRequest request, List<String> statusList, String fromDate, String toDate)
-            throws ReportManagementException, ParseException;
+            throws ReportManagementException;
 }

@@ -702,7 +702,7 @@ public class SQLServerDeviceDAOImpl extends AbstractDeviceDAOImpl {
             sql = sql + " AND e.OWNERSHIP = ?";
         }
 
-        sql = sql + " GROUP BY SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10) LIMIT ? OFFSET ?";
+        sql = sql + " GROUP BY SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10) OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
         try (Connection conn = this.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

@@ -353,43 +353,46 @@ public class MonitoringDAOImpl implements MonitoringDAO {
     public List<ComplianceData> getAllComplianceDevices(
             PaginationRequest paginationRequest, String policyId, boolean complianceStatus, boolean isPending, String fromDate, String toDate)
             throws MonitoringDAOException {
-        Connection conn;
-        PreparedStatement stmt = null;
-        ResultSet resultSet = null;
         List<ComplianceData> complianceDataList = new ArrayList<>();
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
-        try {
-            conn = this.getConnection();
-            String query = "SELECT DEVICE.NAME, DM_DEVICE_TYPE.NAME AS DEVICE_TYPE, ENROLLMENT.OWNER, DM_POLICY.NAME AS POLICY_NAME, POLICY.* " +
-                    "FROM DM_POLICY_COMPLIANCE_STATUS AS POLICY, DM_DEVICE AS DEVICE, " +
-                    "DM_ENROLMENT AS ENROLLMENT, DM_POLICY, DM_DEVICE_TYPE " +
-                    "WHERE DEVICE.ID=POLICY.DEVICE_ID " +
-                    "AND DEVICE.ID=ENROLLMENT.DEVICE_ID " +
-                    "AND POLICY.POLICY_ID=DM_POLICY.ID " +
-                    "AND DEVICE.DEVICE_TYPE_ID=DM_DEVICE_TYPE.ID " +
-                    "AND POLICY.TENANT_ID = ? AND POLICY.STATUS = ?";
 
-            if(isPending){
-                query = query + " AND POLICY.LAST_SUCCESS_TIME IS NULL AND POLICY.LAST_FAILED_TIME IS NULL";
+        String query =
+                "SELECT " +
+                "DEVICE.NAME, " +
+                "DM_DEVICE_TYPE.NAME AS DEVICE_TYPE, " +
+                "ENROLLMENT.OWNER, " +
+                "DM_POLICY.NAME AS POLICY_NAME, " +
+                "POLICY.* " +
+                "FROM DM_POLICY_COMPLIANCE_STATUS AS POLICY, DM_DEVICE AS DEVICE, " +
+                "DM_ENROLMENT AS ENROLLMENT, DM_POLICY, DM_DEVICE_TYPE " +
+                "WHERE DEVICE.ID=POLICY.DEVICE_ID " +
+                "AND DEVICE.ID=ENROLLMENT.DEVICE_ID " +
+                "AND POLICY.POLICY_ID=DM_POLICY.ID " +
+                "AND DEVICE.DEVICE_TYPE_ID=DM_DEVICE_TYPE.ID " +
+                "AND POLICY.TENANT_ID = ? AND POLICY.STATUS = ?";
+
+        if(isPending){
+            query = query + " AND POLICY.LAST_SUCCESS_TIME IS NULL AND POLICY.LAST_FAILED_TIME IS NULL";
+        }else{
+            query = query + " AND (POLICY.LAST_SUCCESS_TIME IS NOT NULL OR POLICY.LAST_FAILED_TIME IS NOT NULL)";
+        }
+
+        if(policyId!=null){
+            query = query + " AND POLICY.POLICY_ID = ?";
+        }
+
+        if(fromDate!=null && toDate!=null){
+            if(!complianceStatus){
+                query = query + " AND POLICY.LAST_FAILED_TIME BETWEEN ? AND ?";
             }else{
-                query = query + " AND (POLICY.LAST_SUCCESS_TIME IS NOT NULL OR POLICY.LAST_FAILED_TIME IS NOT NULL)";
+                query = query + " AND POLICY.LAST_SUCCESS_TIME BETWEEN ? AND ?";
             }
+        }
 
-            if(policyId!=null){
-                query = query + " AND POLICY.POLICY_ID = ?";
-            }
+        query = query + " LIMIT ?,?";
 
-            if(fromDate!=null && toDate!=null){
-                if(!complianceStatus){
-                    query = query + " AND POLICY.LAST_FAILED_TIME BETWEEN ? AND ?";
-                }else{
-                    query = query + " AND POLICY.LAST_SUCCESS_TIME BETWEEN ? AND ?";
-                }
-            }
-
-            query = query + " LIMIT ?,?";
-
-            stmt = conn.prepareStatement(query);
+        try (Connection conn = this.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query);) {
             int paramIdx = 1;
             stmt.setInt(paramIdx++, tenantId);
             stmt.setBoolean(paramIdx++, complianceStatus);
@@ -403,30 +406,29 @@ public class MonitoringDAOImpl implements MonitoringDAO {
             stmt.setInt(paramIdx++, paginationRequest.getStartIndex());
             stmt.setInt(paramIdx, paginationRequest.getRowCount());
 
-            resultSet = stmt.executeQuery();
-            while (resultSet.next()) {
-                ComplianceData complianceData = new ComplianceData();
-                complianceData.setId(resultSet.getInt("ID"));
-                complianceData.setDeviceId(resultSet.getInt("DEVICE_ID"));
-                complianceData.setDeviceName(resultSet.getString("NAME"));
-                complianceData.setDeviceType(resultSet.getString("DEVICE_TYPE"));
-                complianceData.setOwner(resultSet.getString("OWNER"));
-                complianceData.setEnrolmentId(resultSet.getInt("ENROLMENT_ID"));
-                complianceData.setPolicyId(resultSet.getInt("POLICY_ID"));
-                complianceData.setPolicyName(resultSet.getString("POLICY_NAME"));
-                complianceData.setStatus(resultSet.getBoolean("STATUS"));
-                complianceData.setAttempts(resultSet.getInt("ATTEMPTS"));
-                complianceData.setLastRequestedTime(resultSet.getTimestamp("LAST_REQUESTED_TIME"));
-                complianceData.setLastFailedTime(resultSet.getTimestamp("LAST_FAILED_TIME"));
-                complianceData.setLastSucceededTime(resultSet.getTimestamp("LAST_SUCCESS_TIME"));
-                complianceDataList.add(complianceData);
+            try (ResultSet resultSet = stmt.executeQuery()) {
+                while (resultSet.next()) {
+                    ComplianceData complianceData = new ComplianceData();
+                    complianceData.setId(resultSet.getInt("ID"));
+                    complianceData.setDeviceId(resultSet.getInt("DEVICE_ID"));
+                    complianceData.setDeviceName(resultSet.getString("NAME"));
+                    complianceData.setDeviceType(resultSet.getString("DEVICE_TYPE"));
+                    complianceData.setOwner(resultSet.getString("OWNER"));
+                    complianceData.setEnrolmentId(resultSet.getInt("ENROLMENT_ID"));
+                    complianceData.setPolicyId(resultSet.getInt("POLICY_ID"));
+                    complianceData.setPolicyName(resultSet.getString("POLICY_NAME"));
+                    complianceData.setStatus(resultSet.getBoolean("STATUS"));
+                    complianceData.setAttempts(resultSet.getInt("ATTEMPTS"));
+                    complianceData.setLastRequestedTime(resultSet.getTimestamp("LAST_REQUESTED_TIME"));
+                    complianceData.setLastFailedTime(resultSet.getTimestamp("LAST_FAILED_TIME"));
+                    complianceData.setLastSucceededTime(resultSet.getTimestamp("LAST_SUCCESS_TIME"));
+                    complianceDataList.add(complianceData);
+                }
             }
-            return complianceDataList;
         } catch (SQLException e) {
             throw new MonitoringDAOException("Unable to retrieve compliance data from database.", e);
-        } finally {
-            PolicyManagementDAOUtil.cleanupResources(stmt, resultSet);
         }
+        return complianceDataList;
     }
 
     @Override

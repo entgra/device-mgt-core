@@ -607,7 +607,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
             sql = sql + " AND e.OWNERSHIP = ?";
         }
 
-        sql = sql + " GROUP BY SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10) LIMIT ? OFFSET ?";
+        sql = sql + " GROUP BY SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10) LIMIT ?,?";
 
         try (Connection conn = this.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
