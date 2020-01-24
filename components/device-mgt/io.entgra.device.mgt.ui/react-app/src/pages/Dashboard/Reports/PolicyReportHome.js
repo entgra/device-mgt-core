@@ -60,7 +60,7 @@ class PolicyReportHome extends React.Component {
                 </Card>
               </Link>
             </Col>
-            {/*<Col span={8}>*/}
+            {/* <Col span={8}>*/}
             {/*  <Link*/}
             {/*    to={{*/}
             {/*      // Path to respective report page*/}
@@ -87,7 +87,7 @@ class PolicyReportHome extends React.Component {
             {/*      </div>*/}
             {/*    </Card>*/}
             {/*  </Link>*/}
-            {/*</Col>*/}
+            {/* </Col>*/}
 
             <Col span={8}>
               <Link

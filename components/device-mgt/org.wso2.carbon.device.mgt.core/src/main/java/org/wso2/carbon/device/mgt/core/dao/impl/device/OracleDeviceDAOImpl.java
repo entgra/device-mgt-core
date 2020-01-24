@@ -532,22 +532,18 @@ public class OracleDeviceDAOImpl extends AbstractDeviceDAOImpl {
     public List<Count> getCountOfDevicesByDuration(PaginationRequest request, List<String> statusList, int tenantId,
                                              String fromDate, String toDate)
             throws DeviceManagementDAOException {
-        List<Device> devices;
-        List<String> dates = new ArrayList<>();
         List<Count> countList = new ArrayList<>();
         String ownership = request.getOwnership();
-        boolean isStatusProvided = false;
+        boolean isStatusProvided;
 
         String sql = "SELECT " +
                 "SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10) " +
                 "AS ENROLMENT_DATE, COUNT(SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10)) " +
                 "AS ENROLMENT_COUNT " +
-                "FROM DM_DEVICE AS d , DM_ENROLMENT AS e , DM_DEVICE_TYPE AS t " +
-                "GROUP BY SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10) " +
-                "WHERE d.ID = e.DEVICE_ID AND " +
-                "d.DEVICE_TYPE_ID = t.ID AND " +
+                "FROM DM_DEVICE AS d INNER JOIN DM_ENROLMENT AS e ON d.ID = e.DEVICE_ID " +
+                "INNER JOIN DM_DEVICE_TYPE AS t ON d.DEVICE_TYPE_ID = t.ID AND " +
                 "e.TENANT_ID = ? AND " +
-                "e.DATE_OF_ENROLMENT BETWEEN ? AND ?";
+                "e.DATE_OF_ENROLMENT BETWEEN ? AND ? ";
 
         //Add the query for status
         StringBuilder sqlBuilder = new StringBuilder(sql);
@@ -562,7 +558,7 @@ public class OracleDeviceDAOImpl extends AbstractDeviceDAOImpl {
             sql = sql + " AND e.OWNERSHIP = ?";
         }
 
-        sql = sql + " LIMIT ?,?";
+        sql = sql + " GROUP BY SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10) LIMIT ?,?";
 
         try (Connection conn = this.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -581,20 +577,7 @@ public class OracleDeviceDAOImpl extends AbstractDeviceDAOImpl {
             stmt.setInt(paramIdx++, request.getStartIndex());
             stmt.setInt(paramIdx, request.getRowCount());
             try (ResultSet rs = stmt.executeQuery()) {
-                devices = new ArrayList<>();
                 while (rs.next()) {
-//                    Device device = DeviceManagementDAOUtil.loadDevice(rs);
-//                    Device device = new Device();
-//                    device.setDeviceIdentifier(rs.getString("DEVICE_IDENTIFICATION"));
-//
-//                    EnrolmentInfo enrolmentInfo = new EnrolmentInfo();
-//                    enrolmentInfo.setDateOfEnrolment(rs.getTimestamp("DATE_OF_ENROLMENT").getTime());
-//                    device.setEnrolmentInfo(enrolmentInfo);
-//
-//                    devices.add(device);
-//                    Timestamp ts=new Timestamp(rs.getTimestamp("DATE_OF_ENROLMENT").getTime());
-//                    String timeStamp = new SimpleDateFormat("YYYY-MM-DD").format(new Date(ts.getTime()));
-//                    dates.add(timeStamp);
                     Count count = new Count(
                             rs.getString("ENROLMENT_DATE"),
                             rs.getInt("ENROLMENT_COUNT")

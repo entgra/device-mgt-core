@@ -17,26 +17,14 @@
  */
 
 import React from 'react';
-import {
-  PageHeader,
-  Breadcrumb,
-  Icon,
-  message,
-  notification,
-} from 'antd';
+import { PageHeader, Breadcrumb, Icon, message, notification } from 'antd';
 
 import { Link } from 'react-router-dom';
 import { withConfigContext } from '../../../context/ConfigContext';
 import axios from 'axios';
 import DateRangePicker from '../DateRangePicker';
 import moment from 'moment';
-import {
-  Chart,
-  Geom,
-  Axis,
-  Tooltip,
-  Legend,
-} from 'bizcharts';
+import { Chart, Geom, Axis, Tooltip, Legend } from 'bizcharts';
 import DataSet from '@antv/data-set';
 
 // eslint-disable-next-line no-unused-vars
@@ -131,7 +119,6 @@ class EnrollmentsVsUnenrollmentsReport extends React.Component {
         const finalData = [enrollmentsData, unenrollmentsData];
 
         this.setState({ data: finalData, fields: graphFields });
-
       })
       .catch(error => {
         if (error.hasOwnProperty('response') && error.response.status === 401) {
@@ -154,10 +141,8 @@ class EnrollmentsVsUnenrollmentsReport extends React.Component {
     dv.transform({
       type: 'fold',
       fields: this.state.fields,
-      // 展开字段集
-      key: '月份',
-      // key字段
-      value: '月均降雨量', // value字段
+      key: 'Time',
+      value: 'Number of Devices',
     });
 
     return (
@@ -183,8 +168,8 @@ class EnrollmentsVsUnenrollmentsReport extends React.Component {
               }}
             >
               <Chart height={400} data={dv} forceFit>
-                <Axis name="月份" />
-                <Axis name="月均降雨量" />
+                <Axis name="Time" />
+                <Axis name="Number of Devices" />
                 <Legend />
                 <Tooltip
                   crosshairs={{
@@ -193,7 +178,7 @@ class EnrollmentsVsUnenrollmentsReport extends React.Component {
                 />
                 <Geom
                   type="interval"
-                  position="月份*月均降雨量"
+                  position="Time*Number of Devices"
                   color={'name'}
                   adjust={[
                     {

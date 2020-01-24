@@ -588,9 +588,8 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                 "SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10) " +
                 "AS ENROLMENT_DATE, COUNT(SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10)) " +
                 "AS ENROLMENT_COUNT " +
-                "FROM DM_DEVICE AS d , DM_ENROLMENT AS e , DM_DEVICE_TYPE AS t " +
-                "WHERE d.ID = e.DEVICE_ID AND " +
-                "d.DEVICE_TYPE_ID = t.ID AND " +
+                "FROM DM_DEVICE AS d INNER JOIN DM_ENROLMENT AS e ON d.ID = e.DEVICE_ID " +
+                "INNER JOIN DM_DEVICE_TYPE AS t ON d.DEVICE_TYPE_ID = t.ID AND " +
                 "e.TENANT_ID = ? AND " +
                 "e.DATE_OF_ENROLMENT BETWEEN ? AND ? ";
 

@@ -138,10 +138,8 @@ class EnrollmentTypeReport extends React.Component {
     dv.transform({
       type: 'fold',
       fields: this.state.fields,
-      // 展开字段集
-      key: '月份',
-      // key字段
-      value: '月均降雨量', // value字段
+      key: 'Time',
+      value: 'Number of Devices',
     });
 
     return (
@@ -167,8 +165,8 @@ class EnrollmentTypeReport extends React.Component {
               }}
             >
               <Chart height={400} data={dv} forceFit>
-                <Axis name="月份" />
-                <Axis name="月均降雨量" />
+                <Axis name="Time" />
+                <Axis name="Number of Devices" />
                 <Legend />
                 <Tooltip
                   crosshairs={{
@@ -177,7 +175,7 @@ class EnrollmentTypeReport extends React.Component {
                 />
                 <Geom
                   type="interval"
-                  position="月份*月均降雨量"
+                  position="Time*Number of Devices"
                   color={'name'}
                   adjust={[
                     {
