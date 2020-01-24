@@ -94,31 +94,19 @@ class EnrollmentsVsUnenrollmentsReport extends React.Component {
         ),
       ])
       .then(res => {
-        let graphFields = [];
+        let keys = Object.keys(res[0].data.data);
+        let enrollments = res[0].data.data;
+        let unenrollments = res[1].data.data;
 
-        let enrollmentsData = {
-          name: 'Enrollments',
-        };
+        enrollments.name = 'Enrollments';
+        unenrollments.name = 'Unenrollments';
 
-        let unenrollmentsData = {
-          name: 'Unenrollments',
-        };
+        const finalData = [enrollments, unenrollments];
 
-        JSON.parse(res[0].data.data).map(
-          data => (
-            // eslint-disable-next-line no-sequences
-            (enrollmentsData[data.date] = data.count),
-            graphFields.push(data.date)
-          ),
-        );
-
-        JSON.parse(res[1].data.data).map(
-          data => (unenrollmentsData[data.date] = data.count),
-        );
-
-        const finalData = [enrollmentsData, unenrollmentsData];
-
-        this.setState({ data: finalData, fields: graphFields });
+        this.setState({
+          data: finalData,
+          fields: keys,
+        });
       })
       .catch(error => {
         if (error.hasOwnProperty('response') && error.response.status === 401) {

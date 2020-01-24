@@ -94,28 +94,19 @@ class EnrollmentTypeReport extends React.Component {
         ),
       ])
       .then(res => {
-        let graphFields = [];
+        let keys = Object.keys(res[0].data.data);
+        let byod = res[0].data.data;
+        let cope = res[1].data.data;
 
-        let byod = {
-          name: 'BYOD',
-        };
-        JSON.parse(res[0].data.data).map(
-          data => (
-            // eslint-disable-next-line no-sequences
-            (byod[data.date] = data.count), graphFields.push(data.date)
-          ),
-        );
-
-        let cope = {
-          name: 'COPE',
-        };
-        JSON.parse(res[1].data.data).map(
-          data => (cope[data.date] = data.count),
-        );
+        byod.name = 'BYOD';
+        cope.name = 'COPE';
 
         const finalData = [byod, cope];
 
-        this.setState({ data: finalData, fields: graphFields });
+        this.setState({
+          data: finalData,
+          fields: keys,
+        });
       })
       .catch(error => {
         if (error.hasOwnProperty('response') && error.response.status === 401) {

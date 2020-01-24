@@ -17,6 +17,7 @@
  */
 package org.wso2.carbon.device.mgt.core.report.mgt;
 
+import com.google.gson.JsonObject;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.device.mgt.common.Count;
@@ -38,9 +39,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -117,7 +116,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @Override
-    public List<Count> getCountOfDevicesByDuration(PaginationRequest request, List<String> statusList, String fromDate,
+    public JsonObject getCountOfDevicesByDuration(PaginationRequest request, List<String> statusList, String fromDate,
                                                    String toDate)
             throws ReportManagementException {
         try {
@@ -147,7 +146,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
         } catch (ParseException e) {
-            String msg = "Error occurred while building weekly count";
+            String msg = "Error occurred while building count";
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
         } finally {
@@ -156,8 +155,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     //NOTE: This is just a temporary method for retrieving device counts
-    public List<Count> buildCount(String start, String end, List<Count> countList) throws ParseException {
-        List<Count> weeklyCount = new ArrayList<>();
+    public JsonObject buildCount(String start, String end, List<Count> countList) throws ParseException {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         int prevDateAmount = 0;
         boolean isDaily = false;
@@ -176,8 +174,8 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         } else {
             prevDateAmount = -30;
         }
+        JsonObject resultObject = new JsonObject();
         if (!isDaily) {
-            Map<String, Integer> resultMap = new HashMap<>();
             //Divide date duration into week or month blocks
             while (endDate.after(startDate)) {
                 int sum = 0;
@@ -198,17 +196,16 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                     }
                 }
                 //Map date blocks and counts
-                resultMap.put(dateFormat.format(endDate) + " - " + dateFormat.format(previousDate), sum);
+                resultObject.addProperty(
+                        dateFormat.format(endDate) + " - " + dateFormat.format(previousDate), sum);
                 endDate = previousDate;
 
             }
-            //Add them into a Count object list
-            for (Map.Entry<String, Integer> entry : resultMap.entrySet()) {
-                weeklyCount.add(new Count(entry.getKey(), entry.getValue()));
-            }
         } else {
-            weeklyCount = countList;
+            for (Count count : countList) {
+                resultObject.addProperty(count.getDate(), count.getCount());
+            }
         }
-        return weeklyCount;
+        return resultObject;
     }
 }

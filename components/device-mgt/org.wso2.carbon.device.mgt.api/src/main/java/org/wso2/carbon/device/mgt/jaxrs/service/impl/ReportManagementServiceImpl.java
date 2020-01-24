@@ -18,10 +18,10 @@
 
 package org.wso2.carbon.device.mgt.jaxrs.service.impl;
 
+import com.google.gson.JsonObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.device.mgt.common.Count;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
@@ -40,7 +40,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.text.ParseException;
 import java.util.List;
 
 /**
@@ -135,9 +134,9 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 request.setOwnership(ownership);
             }
 
-            List<Count> countList = DeviceMgtAPIUtils.getReportManagementService()
+            JsonObject countList = DeviceMgtAPIUtils.getReportManagementService()
                     .getCountOfDevicesByDuration(request, status, fromDate, toDate);
-            if (countList.isEmpty()) {
+            if (countList.isJsonNull()) {
                 return Response.status(Response.Status.OK)
                         .entity("No devices have been enrolled between the given date range").build();
             } else {

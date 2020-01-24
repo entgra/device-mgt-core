@@ -530,7 +530,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
     @Override
     public int getDevicesByDurationCount(List<String> statusList, String ownership, String fromDate, String toDate, int tenantId) throws DeviceManagementDAOException {
         int deviceCount = 0;
-        boolean isStatusProvided = false;
+        boolean isStatusProvided;
 
             String sql = "SELECT " +
                     "COUNT(d.ID) AS DEVICE_COUNT " +
@@ -587,21 +587,19 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
 
         String sql =
                 "SELECT " +
-                "SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10) AS ENROLMENT_DATE, " +
-                "COUNT(SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10)) AS ENROLMENT_COUNT " +
-                "FROM DM_DEVICE AS d INNER JOIN DM_ENROLMENT AS e ON d.ID = e.DEVICE_ID " +
-                "INNER JOIN DM_DEVICE_TYPE AS t ON d.DEVICE_TYPE_ID = t.ID AND " +
-                "e.TENANT_ID = ? AND " +
-                "e.DATE_OF_ENROLMENT BETWEEN ? AND ? ";
+                    "SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10) AS ENROLMENT_DATE, " +
+                    "COUNT(SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10)) AS ENROLMENT_COUNT " +
+                "FROM DM_DEVICE AS d " +
+                    "INNER JOIN DM_ENROLMENT AS e ON d.ID = e.DEVICE_ID " +
+                    "INNER JOIN DM_DEVICE_TYPE AS t ON d.DEVICE_TYPE_ID = t.ID " +
+                    "AND e.TENANT_ID = ? " +
+                    "AND e.DATE_OF_ENROLMENT " +
+                    "BETWEEN ? AND ? ";
 
         //Add the query for status
         StringBuilder sqlBuilder = new StringBuilder(sql);
         isStatusProvided = buildStatusQuery(statusList, sqlBuilder);
         sql = sqlBuilder.toString();
-
-        if(statusList != null && !statusList.isEmpty()){
-            isStatusProvided = true;
-        }
 
         if (ownership != null) {
             sql = sql + " AND e.OWNERSHIP = ?";

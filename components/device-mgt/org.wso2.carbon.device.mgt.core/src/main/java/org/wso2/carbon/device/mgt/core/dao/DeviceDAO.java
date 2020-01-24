@@ -558,6 +558,17 @@ public interface DeviceDAO {
             List<String> statusList, String ownership, String fromDate, String toDate, int tenantId)
             throws DeviceManagementDAOException;
 
+    /**
+     * This method is used to get the device count to generate the report graph within a specific time periode
+     *
+     * @param request Pagination request to get paginated result
+     * @param statusList Status list to filter data
+     * @param tenantId ID of the current tenant
+     * @param fromDate Start date to filter devices(YYYY-MM-DD)
+     * @param toDate End date to filter devices(YYYY-MM-DD)
+     * @return returns a list of Count objects
+     * @throws DeviceManagementDAOException
+     */
     List<Count> getCountOfDevicesByDuration(PaginationRequest request,
                                             List<String> statusList,
                                             int tenantId,

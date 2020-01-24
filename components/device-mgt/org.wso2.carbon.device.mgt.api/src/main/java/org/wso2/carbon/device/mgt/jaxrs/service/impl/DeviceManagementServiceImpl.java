@@ -1114,7 +1114,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                 return Response.status(Response.Status.OK).entity(complianceFeatureList).build();
             }
         } catch (PolicyComplianceException e) {
-            String msg = "Error occurred while retrieving compliance data";
+            String msg = "Error occurred while retrieving non compliance features";
             log.error(msg, e);
             return Response.serverError().entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();

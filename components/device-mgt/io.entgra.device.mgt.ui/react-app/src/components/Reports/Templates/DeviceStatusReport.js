@@ -102,35 +102,21 @@ class DeviceStatusReport extends React.Component {
         ),
       ])
       .then(res => {
-        let graphFields = [];
+        let keys = Object.keys(res[0].data.data);
+        let active = res[0].data.data;
+        let inactive = res[1].data.data;
+        let removed = res[2].data.data;
 
-        let active = {
-          name: 'Active',
-        };
-        JSON.parse(res[0].data.data).map(
-          data => (
-            // eslint-disable-next-line no-sequences
-            (active[data.date] = data.count), graphFields.push(data.date)
-          ),
-        );
-
-        let inactive = {
-          name: 'Inactive',
-        };
-        JSON.parse(res[1].data.data).map(
-          data => (inactive[data.date] = data.count),
-        );
-
-        let removed = {
-          name: 'Removed',
-        };
-        JSON.parse(res[2].data.data).map(
-          data => (removed[data.date] = data.count),
-        );
+        active.name = 'Active';
+        inactive.name = 'Inactive';
+        removed.name = 'Removed';
 
         const finalData = [active, inactive, removed];
 
-        this.setState({ data: finalData, fields: graphFields });
+        this.setState({
+          data: finalData,
+          fields: keys,
+        });
       })
       .catch(error => {
         if (error.hasOwnProperty('response') && error.response.status === 401) {

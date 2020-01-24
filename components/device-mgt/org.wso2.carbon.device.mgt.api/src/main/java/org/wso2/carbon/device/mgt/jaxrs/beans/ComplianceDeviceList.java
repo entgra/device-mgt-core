@@ -42,7 +42,6 @@ public class ComplianceDeviceList extends BasePaginatedResult{
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("{\n");
-
         sb.append("  count: ").append(getCount()).append(",\n");
         sb.append("  devices: [").append(complianceData).append("\n");
         sb.append("]}\n");
