@@ -16,14 +16,18 @@
  * under the License.
  */
 
-package org.wso2.carbon.device.mgt.common;
+package org.wso2.carbon.device.mgt.common.ui.policy.mgt;
 
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
+import org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy;
 
 import java.util.List;
 
 public interface PolicyConfigurationManager {
 
+    /**
+     * @return Json which include Policies UI configuration details.
+     */
     List<Policy> getPolicies() throws DeviceManagementException;
 
 }

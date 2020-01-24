@@ -2,8 +2,7 @@ package org.wso2.carbon.device.mgt.common.type.mgt;
 
 import org.wso2.carbon.device.mgt.common.Feature;
 import org.wso2.carbon.device.mgt.common.InitialOperationConfig;
-import org.wso2.carbon.device.mgt.common.OperationMonitoringTaskConfig;
-import org.wso2.carbon.device.mgt.common.Policy;
+import org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy;
 import org.wso2.carbon.device.mgt.common.license.mgt.License;
 import org.wso2.carbon.device.mgt.common.push.notification.PushNotificationConfig;
 

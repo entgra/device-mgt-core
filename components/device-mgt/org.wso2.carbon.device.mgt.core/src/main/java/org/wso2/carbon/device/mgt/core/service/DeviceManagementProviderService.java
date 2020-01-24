@@ -56,6 +56,7 @@ import org.wso2.carbon.device.mgt.common.policy.mgt.PolicyMonitoringManager;
 import org.wso2.carbon.device.mgt.common.pull.notification.PullNotificationExecutionFailedException;
 import org.wso2.carbon.device.mgt.common.push.notification.NotificationStrategy;
 import org.wso2.carbon.device.mgt.common.spi.DeviceManagementService;
+import org.wso2.carbon.device.mgt.common.ui.policy.mgt.PolicyConfigurationManager;
 import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.dto.DeviceTypeVersion;
 import org.wso2.carbon.device.mgt.core.geo.GeoCluster;
@@ -561,7 +562,14 @@ public interface DeviceManagementProviderService {
 
     FeatureManager getFeatureManager(String deviceType) throws DeviceTypeNotFoundException;
 
-    PolicyConfigurationManager getPolicyManager(String deviceType) throws DeviceTypeNotFoundException;
+    /**
+     * Proxy method to get the UI configurations of Policies.
+     *
+     * @param deviceType Device platform
+     * @return Policies UI configurations of the particular device type.
+     * @throws DeviceTypeNotFoundException If device type is not registered.
+     */
+    PolicyConfigurationManager getPolicyUIConfigurationManager(String deviceType) throws DeviceTypeNotFoundException;
 
     /**
      * Proxy method to get the tenant configuration of a given platform.

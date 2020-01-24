@@ -38,7 +38,7 @@ import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.license.mgt.License;
 import org.wso2.carbon.device.mgt.common.license.mgt.LicenseManagementException;
-import org.wso2.carbon.device.mgt.common.policy.mgt.PolicyMonitoringManager;
+import org.wso2.carbon.device.mgt.common.ui.policy.mgt.PolicyConfigurationManager;
 
 import java.util.List;
 
@@ -57,9 +57,9 @@ public interface DeviceManager {
     /**
      * Method to return policy manager implementation associated with a particular platform-specific plugin.
      *
-     * @return Returns an instance of feature manager
+     * @return Returns an instance of policy configuration manager
      */
-    PolicyConfigurationManager getPolicyManager();
+    PolicyConfigurationManager getPolicyUIConfigurationManager();
 
     /**
      * Method to save platform specific Configuration.

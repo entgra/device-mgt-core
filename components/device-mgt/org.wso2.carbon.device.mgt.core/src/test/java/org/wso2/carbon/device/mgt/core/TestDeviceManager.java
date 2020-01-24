@@ -20,6 +20,7 @@ import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.license.mgt.License;
 import org.wso2.carbon.device.mgt.common.license.mgt.LicenseManagementException;
+import org.wso2.carbon.device.mgt.common.ui.policy.mgt.PolicyConfigurationManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +37,7 @@ public class TestDeviceManager implements DeviceManager {
     }
 
     @Override
-    public PolicyConfigurationManager getPolicyManager() {
+    public PolicyConfigurationManager getPolicyUIConfigurationManager() {
         return null;
     }
 

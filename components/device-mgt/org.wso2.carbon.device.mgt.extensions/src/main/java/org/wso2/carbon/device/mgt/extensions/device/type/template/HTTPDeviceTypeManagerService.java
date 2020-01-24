@@ -91,13 +91,13 @@ public class HTTPDeviceTypeManagerService extends DeviceTypeManagerService imple
                 PolicyUIConfigurations policyUIConfigurations = new PolicyUIConfigurations();
                 List<org.wso2.carbon.device.mgt.extensions.device.type.template.config.Policy> policyList
                         = new ArrayList<>();
-                for (org.wso2.carbon.device.mgt.common.Policy policy : deviceTypeMetaDefinition.getPolicies()) {
+                for (org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy policy : deviceTypeMetaDefinition.getPolicies()) {
                     org.wso2.carbon.device.mgt.extensions.device.type.template.config.Policy configPolicy = new org
                             .wso2.carbon.device.mgt.extensions.device.type.template.config.Policy();
                     if (policy.getName() != null) {
                         configPolicy.setName(policy.getName());
                         List<String> panelValues = new ArrayList<>();
-                        for(org.wso2.carbon.device.mgt.common.Policy.DataPanels panelData: policy.getPanels()){
+                        for(org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy.DataPanels panelData: policy.getPanels()){
                             panelValues.add(panelData.getPanel().toString());
                         }
                         policyList.add(configPolicy);

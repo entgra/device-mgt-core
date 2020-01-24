@@ -38,14 +38,13 @@ package org.wso2.carbon.device.mgt.jaxrs.service.impl;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.device.mgt.common.PolicyConfigurationManager;
+import org.wso2.carbon.device.mgt.common.ui.policy.mgt.PolicyConfigurationManager;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
-import org.wso2.carbon.device.mgt.common.Policy;
+import org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy;
 import org.wso2.carbon.device.mgt.common.Feature;
 import org.wso2.carbon.device.mgt.common.FeatureManager;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration;
-import org.wso2.carbon.device.mgt.common.policy.mgt.PolicyMonitoringManager;
 import org.wso2.carbon.device.mgt.common.push.notification.PushNotificationConfig;
 import org.wso2.carbon.device.mgt.common.type.mgt.DeviceTypeMetaDefinition;
 import org.wso2.carbon.device.mgt.core.dto.DeviceType;
@@ -122,7 +121,7 @@ public class DeviceTypeManagementServiceImpl implements DeviceTypeManagementServ
                         new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
             }
             dms = DeviceMgtAPIUtils.getDeviceManagementService();
-            PolicyConfigurationManager pm = dms.getPolicyManager(type);
+            PolicyConfigurationManager pm = dms.getPolicyUIConfigurationManager(type);
 
             if (pm == null) {
                 String msg = "No policy manager is registered with the given type '" + type + "'";

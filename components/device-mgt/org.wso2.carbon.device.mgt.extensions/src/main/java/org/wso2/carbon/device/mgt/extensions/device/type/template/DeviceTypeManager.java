@@ -45,7 +45,7 @@ import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration
 import org.wso2.carbon.device.mgt.common.license.mgt.License;
 import org.wso2.carbon.device.mgt.common.license.mgt.LicenseManagementException;
 import org.wso2.carbon.device.mgt.common.license.mgt.LicenseManager;
-import org.wso2.carbon.device.mgt.common.policy.mgt.PolicyMonitoringManager;
+import org.wso2.carbon.device.mgt.common.ui.policy.mgt.PolicyConfigurationManager;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.config.*;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Feature;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Policy;
@@ -56,7 +56,6 @@ import org.wso2.carbon.device.mgt.extensions.device.type.template.exception.Devi
 import org.wso2.carbon.device.mgt.extensions.device.type.template.exception.DeviceTypePluginExtensionException;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.feature.ConfigurationBasedFeatureManager;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.policy.mgt.ConfigurationBasedPolicyManager;
-import org.wso2.carbon.device.mgt.extensions.device.type.template.policy.mgt.DefaultPolicyMonitoringManager;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.util.DeviceTypePluginConstants;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.util.DeviceTypeUtils;
 import org.wso2.carbon.device.mgt.extensions.license.mgt.registry.RegistryBasedLicenseManager;
@@ -256,7 +255,7 @@ public class DeviceTypeManager implements DeviceManager {
     }
 
     @Override
-    public PolicyConfigurationManager getPolicyManager(){
+    public PolicyConfigurationManager getPolicyUIConfigurationManager(){
         return policyManager;
     }
 

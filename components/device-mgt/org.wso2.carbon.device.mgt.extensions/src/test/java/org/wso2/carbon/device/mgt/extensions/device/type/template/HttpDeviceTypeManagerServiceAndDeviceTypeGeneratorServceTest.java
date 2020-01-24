@@ -219,14 +219,14 @@ public class HttpDeviceTypeManagerServiceAndDeviceTypeGeneratorServceTest {
         }
 
         List<Policy> configurationPolicies = androidSenseDeviceTypeConfiguration.getPolicies().getPolicy();
-        List<org.wso2.carbon.device.mgt.common.Policy> policies = new ArrayList<>();
+        List<org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy> policies = new ArrayList<>();
 
         for (Policy policy : configurationPolicies) {
-            org.wso2.carbon.device.mgt.common.Policy commonPolicy = new org.wso2.carbon.device.mgt.common.Policy();
+            org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy commonPolicy = new org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy();
             commonPolicy.setDescription(policy.getDescription());
             commonPolicy.setName(policy.getName());
-            org.wso2.carbon.device.mgt.common.Policy.DataPanels panelDataEntry = new org.wso2.carbon.device.mgt.common.Policy.DataPanels();
-            List<org.wso2.carbon.device.mgt.common.Policy.DataPanels> panelDataEntries = new ArrayList<>();
+            org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy.DataPanels panelDataEntry = new org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy.DataPanels();
+            List<org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy.DataPanels> panelDataEntries = new ArrayList<>();
             panelDataEntries.add(panelDataEntry);
             policies.add(commonPolicy);
         }
