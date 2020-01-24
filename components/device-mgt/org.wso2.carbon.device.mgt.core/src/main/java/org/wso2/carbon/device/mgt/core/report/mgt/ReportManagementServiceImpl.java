@@ -149,6 +149,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         }
     }
 
+    //NOTE: This is just a temporary method for retrieving device counts
     public List<Count> buildCount(String start, String end, List<Count> countList) throws ParseException {
         List<Count> weeklyCount = new ArrayList<>();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
