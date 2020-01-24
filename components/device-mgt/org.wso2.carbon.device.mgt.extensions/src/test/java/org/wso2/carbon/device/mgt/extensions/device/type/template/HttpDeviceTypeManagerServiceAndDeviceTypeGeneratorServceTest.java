@@ -22,6 +22,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.wso2.carbon.device.mgt.common.Device;
+import org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.ConfigurationEntry;
@@ -32,7 +33,7 @@ import org.wso2.carbon.device.mgt.common.spi.DeviceManagementService;
 import org.wso2.carbon.device.mgt.common.type.mgt.DeviceTypeMetaDefinition;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.config.DeviceTypeConfiguration;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Feature;
-import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Policy;
+//import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Policy;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.config.PushNotificationProvider;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.config.exception.DeviceTypeConfigurationException;
 import org.wso2.carbon.device.mgt.extensions.utils.Utils;
@@ -218,15 +219,14 @@ public class HttpDeviceTypeManagerServiceAndDeviceTypeGeneratorServceTest {
             features.add(commonFeature);
         }
 
-        List<Policy> configurationPolicies = androidSenseDeviceTypeConfiguration.getPolicies().getPolicy();
-        List<org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy> policies = new ArrayList<>();
+        List<org.wso2.carbon.device.mgt.extensions.device.type.template.config.Policy> configurationPolicies = androidSenseDeviceTypeConfiguration.getPolicyUIConfigurations().getPolicies();
+        List<Policy> policies = new ArrayList<>();
 
-        for (Policy policy : configurationPolicies) {
-            org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy commonPolicy = new org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy();
-            commonPolicy.setDescription(policy.getDescription());
+        for (org.wso2.carbon.device.mgt.extensions.device.type.template.config.Policy policy : configurationPolicies) {
+            Policy commonPolicy = new Policy();
             commonPolicy.setName(policy.getName());
-            org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy.DataPanels panelDataEntry = new org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy.DataPanels();
-            List<org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy.DataPanels> panelDataEntries = new ArrayList<>();
+            Policy.DataPanels panelDataEntry = new Policy.DataPanels();
+            List<Policy.DataPanels> panelDataEntries = new ArrayList<>();
             panelDataEntries.add(panelDataEntry);
             policies.add(commonPolicy);
         }
