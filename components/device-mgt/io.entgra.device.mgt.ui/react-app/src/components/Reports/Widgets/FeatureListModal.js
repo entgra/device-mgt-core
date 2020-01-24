@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
+ * Copyright (c) 2020, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
  *
  * Entgra (pvt) Ltd. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -52,7 +52,6 @@ class FeatureListModal extends React.Component {
           this.setState({
             features: JSON.parse(res.data.data),
           });
-          // console.log(res.data.data)
         }
       })
       .catch(error => {
@@ -85,8 +84,6 @@ class FeatureListModal extends React.Component {
 
   render() {
     const { features, modalVisible } = this.state;
-
-    console.log(features);
 
     let featureList = features.map(data => (
       <List.Item key={data.featureCodes}>

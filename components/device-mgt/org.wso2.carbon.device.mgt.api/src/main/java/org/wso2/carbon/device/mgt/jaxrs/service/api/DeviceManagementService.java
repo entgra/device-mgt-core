@@ -1913,7 +1913,7 @@ public interface DeviceManagementService {
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
             value = "Getting Policy Compliance Status of all devices",
-            notes = "A policy is enforced on the devices that register with WSO2 IoTS. " +
+            notes = "A policy is enforced on the devices that register with Entgra IoTS. " +
                     "The server checks if the settings in the device comply with the policy that is enforced on the device using this REST API.",
             tags = "Device Management",
             extensions = {
@@ -1951,8 +1951,7 @@ public interface DeviceManagementService {
             @QueryParam("policy") String policyId,
             @ApiParam(
                     name = "is-pending",
-                    value = "Check for devices in pending status",
-                    defaultValue = "false")
+                    value = "Check for devices in pending status")
             @QueryParam("pending") boolean isPending,
             @ApiParam(
                     name = "fromDate",
@@ -1981,7 +1980,7 @@ public interface DeviceManagementService {
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
             value = "Getting Policy Compliance Status of all devices",
-            notes = "A policy is enforced on the devices that register with WSO2 IoTS. " +
+            notes = "A policy is enforced on the devices that register with Entgra IoTS. " +
                     "The server checks if the settings in the device comply with the policy that is enforced on the device using this REST API.",
             tags = "Device Management",
             extensions = {
@@ -2009,7 +2008,7 @@ public interface DeviceManagementService {
             @ApiParam(
                     name = "id",
                     value = "The device identifier of the device you wish to get details.\n" +
-                            "INFO: Make sure to add the ID of a device that is already registered with WSO2 IoTS.",
+                            "INFO: Make sure to add the ID of a device that is already registered with Entgra IoTS.",
                     required = true)
             @PathParam("id")
                     int id);

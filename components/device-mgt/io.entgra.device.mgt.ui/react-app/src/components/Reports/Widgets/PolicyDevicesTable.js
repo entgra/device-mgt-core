@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
+ * Copyright (c) 2020, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
  *
  * Entgra (pvt) Ltd. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -264,8 +264,6 @@ class PolicyDevicesTable extends React.Component {
         limit: 10,
       };
     }
-
-    console.log(extraParams);
 
     const encodedExtraParams = Object.keys(extraParams)
       .map(key => key + '=' + extraParams[key])

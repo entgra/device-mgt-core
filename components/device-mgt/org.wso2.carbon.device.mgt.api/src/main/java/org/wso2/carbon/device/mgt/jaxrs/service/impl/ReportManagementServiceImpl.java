@@ -15,9 +15,9 @@
  *   specific language governing permissions and limitations
  *   under the License.
  */
+
 package org.wso2.carbon.device.mgt.jaxrs.service.impl;
 
-import com.google.common.eventbus.AllowConcurrentEvents;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,7 +25,6 @@ import org.wso2.carbon.device.mgt.common.Count;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
-import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.ReportManagementException;
 import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
@@ -138,8 +137,8 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             List<Count> countList = DeviceMgtAPIUtils.getReportManagementService()
                     .getCountOfDevicesByDuration(request, status, fromDate, toDate);
             if (countList.isEmpty()) {
-                String msg = "No data";
-                return Response.status(Response.Status.OK).entity(msg).build();
+                return Response.status(Response.Status.OK)
+                        .entity("No devices have been enrolled between the given date range").build();
             } else {
                 return Response.status(Response.Status.OK).entity(countList).build();
             }

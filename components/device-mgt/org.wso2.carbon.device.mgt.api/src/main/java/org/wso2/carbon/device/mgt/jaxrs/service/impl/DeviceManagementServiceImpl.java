@@ -81,7 +81,12 @@ import org.wso2.carbon.device.mgt.core.operation.mgt.ProfileOperation;
 import org.wso2.carbon.device.mgt.core.search.mgt.SearchManagerService;
 import org.wso2.carbon.device.mgt.core.search.mgt.SearchMgtException;
 import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
-import org.wso2.carbon.device.mgt.jaxrs.beans.*;
+import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceCompliance;
+import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
+import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
+import org.wso2.carbon.device.mgt.jaxrs.beans.OperationList;
+import org.wso2.carbon.device.mgt.jaxrs.beans.OperationRequest;
+import org.wso2.carbon.device.mgt.jaxrs.beans.ComplianceDeviceList;
 import org.wso2.carbon.device.mgt.jaxrs.service.api.DeviceManagementService;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.InputValidationException;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.RequestValidationUtil;
@@ -1078,8 +1083,8 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             paginationResult = policyManagerService.getPolicyCompliance(request, policyId, complianceStatus, isPending, fromDate, toDate);
 
             if (paginationResult.getData().isEmpty()) {
-                String msg = "No data";
-                return Response.status(Response.Status.OK).entity(msg).build();
+                return Response.status(Response.Status.OK)
+                        .entity("No policy compliance or non compliance devices are available").build();
             } else {
                 complianceDeviceList.setList((List<ComplianceData>) paginationResult.getData());
                 complianceDeviceList.setCount(paginationResult.getRecordsTotal());
@@ -1104,8 +1109,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             complianceFeatureList = policyManagerService.getNoneComplianceFeatures(id);
 
             if (complianceFeatureList.isEmpty()) {
-                String msg = "No data";
-                return Response.status(Response.Status.OK).entity(msg).build();
+                return Response.status(Response.Status.OK).entity("No non compliance features are available").build();
             } else {
                 return Response.status(Response.Status.OK).entity(complianceFeatureList).build();
             }

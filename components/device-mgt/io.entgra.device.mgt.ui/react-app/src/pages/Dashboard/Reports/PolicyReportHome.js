@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
+ * Copyright (c) 2020, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
  *
  * Entgra (pvt) Ltd. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -60,35 +60,6 @@ class PolicyReportHome extends React.Component {
                 </Card>
               </Link>
             </Col>
-            {/* <Col span={8}>*/}
-            {/*  <Link*/}
-            {/*    to={{*/}
-            {/*      // Path to respective report page*/}
-            {/*      pathname: '/entgra/reportList',*/}
-            {/*      data: {*/}
-            {/*        name: 'per_policy_compliance_report',*/}
-            {/*      },*/}
-            {/*    }}*/}
-            {/*  >*/}
-            {/*    <Card*/}
-            {/*      bordered={true}*/}
-            {/*      hoverable={true}*/}
-            {/*      style={{ borderRadius: 10, marginBottom: 16 }}*/}
-            {/*    >*/}
-            {/*      <div align="center">*/}
-            {/*        <Icon*/}
-            {/*          type="desktop"*/}
-            {/*          style={{ fontSize: '25px', color: '#08c' }}*/}
-            {/*        />*/}
-            {/*        <h2>*/}
-            {/*          <b>Per Policy Compliance Report</b>*/}
-            {/*        </h2>*/}
-            {/*        <p>Policy compliance details for selected policy</p>*/}
-            {/*      </div>*/}
-            {/*    </Card>*/}
-            {/*  </Link>*/}
-            {/* </Col>*/}
-
             <Col span={8}>
               <Link
                 to={{

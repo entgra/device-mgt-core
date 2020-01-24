@@ -82,7 +82,7 @@ public interface ReportManagementService {
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
             value = "Getting Details of Registered Devices",
-            notes = "Provides details of all the devices enrolled with WSO2 IoT Server.",
+            notes = "Provides details of all the devices enrolled with Entgra IoT Server.",
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
@@ -166,7 +166,7 @@ public interface ReportManagementService {
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
             value = "Getting Details of Registered Devices",
-            notes = "Provides details of all the devices enrolled with WSO2 IoT Server.",
+            notes = "Provides details of all the devices enrolled with Entgra IoT Server.",
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
@@ -238,7 +238,7 @@ public interface ReportManagementService {
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
             value = "Getting Details of Registered Devices",
-            notes = "Provides details of all the devices enrolled with WSO2 IoT Server.",
+            notes = "Provides details of all the devices enrolled with Entgra IoT Server.",
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {

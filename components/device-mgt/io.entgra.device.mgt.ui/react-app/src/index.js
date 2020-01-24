@@ -25,7 +25,6 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import './index.css';
 import Reports from './pages/Dashboard/Reports/Reports';
 import Geo from './pages/Dashboard/Geo/Geo';
-import ReportDurationItemList from './pages/Dashboard/Reports/ReportDurationItemList';
 import EnrollmentsVsUnenrollmentsReport from './components/Reports/Templates/EnrollmentsVsUnenrollmentsReport';
 import EnrollmentTypeReport from './components/Reports/Templates/EnrollmentTypeReport';
 import PolicyReport from './components/Reports/Templates/PolicyReport';
@@ -98,11 +97,6 @@ const routes = [
       //   component: Certificates,
       //   exact: true,
       // },
-      {
-        path: '/entgra/reportList',
-        component: ReportDurationItemList,
-        exact: true,
-      },
       {
         path: '/entgra/enrollmentsvsunenrollments',
         component: EnrollmentsVsUnenrollmentsReport,

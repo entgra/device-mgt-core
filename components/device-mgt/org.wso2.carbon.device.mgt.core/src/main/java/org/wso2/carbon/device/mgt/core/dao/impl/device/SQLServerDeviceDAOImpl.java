@@ -680,14 +680,14 @@ public class SQLServerDeviceDAOImpl extends AbstractDeviceDAOImpl {
         String ownership = request.getOwnership();
         boolean isStatusProvided;
 
-        String sql = "SELECT " +
-                "SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10) " +
-                "AS ENROLMENT_DATE, COUNT(SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10)) " +
-                "AS ENROLMENT_COUNT " +
-                "FROM DM_DEVICE AS d INNER JOIN DM_ENROLMENT AS e ON d.ID = e.DEVICE_ID " +
-                "INNER JOIN DM_DEVICE_TYPE AS t ON d.DEVICE_TYPE_ID = t.ID AND " +
-                "e.TENANT_ID = ? AND " +
-                "e.DATE_OF_ENROLMENT BETWEEN ? AND ? ";
+        String sql =
+                "SELECT " +
+                        "SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10) AS ENROLMENT_DATE, " +
+                        "COUNT(SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10)) AS ENROLMENT_COUNT " +
+                        "FROM DM_DEVICE AS d INNER JOIN DM_ENROLMENT AS e ON d.ID = e.DEVICE_ID " +
+                        "INNER JOIN DM_DEVICE_TYPE AS t ON d.DEVICE_TYPE_ID = t.ID AND " +
+                        "e.TENANT_ID = ? AND " +
+                        "e.DATE_OF_ENROLMENT BETWEEN ? AND ? ";
 
         //Add the query for status
         StringBuilder sqlBuilder = new StringBuilder(sql);
@@ -702,7 +702,7 @@ public class SQLServerDeviceDAOImpl extends AbstractDeviceDAOImpl {
             sql = sql + " AND e.OWNERSHIP = ?";
         }
 
-        sql = sql + " GROUP BY SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10) LIMIT ?,?";
+        sql = sql + " GROUP BY SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10) LIMIT ? OFFSET ?";
 
         try (Connection conn = this.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

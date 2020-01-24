@@ -387,9 +387,13 @@ public class MonitoringManagerImpl implements MonitoringManager {
             paginationResult.setData(complianceDataList);
             paginationResult.setRecordsTotal(complianceDataList.size());
         } catch (MonitoringDAOException e) {
-            throw new PolicyComplianceException("Unable to retrieve compliance data");
+            String msg = "Unable to retrieve compliance data";
+            log.error(msg, e);
+            throw new PolicyComplianceException(msg, e);
         } catch (SQLException e) {
-            throw new PolicyComplianceException("Error occurred while opening a connection to the data source", e);
+            String msg = "Error occurred while opening a connection to the data source";
+            log.error(msg, e);
+            throw new PolicyComplianceException(msg, e);
         } finally {
             PolicyManagementDAOFactory.closeConnection();
         }
@@ -403,9 +407,13 @@ public class MonitoringManagerImpl implements MonitoringManager {
             PolicyManagementDAOFactory.openConnection();
             complianceFeatureList = monitoringDAO.getNoneComplianceFeatures(complianceStatusId);
         } catch (MonitoringDAOException e) {
-            throw new PolicyComplianceException("Unable to retrieve non compliance features");
+            String msg = "Unable to retrieve non compliance features";
+            log.error(msg, e);
+            throw new PolicyComplianceException(msg, e);
         } catch (SQLException e) {
-            throw new PolicyComplianceException("Error occurred while opening a connection to the data source", e);
+            String msg = "Error occurred while opening a connection to the data source";
+            log.error(msg, e);
+            throw new PolicyComplianceException(msg, e);
         } finally {
             PolicyManagementDAOFactory.closeConnection();
         }

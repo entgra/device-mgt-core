@@ -35,7 +35,12 @@ import org.wso2.carbon.device.mgt.core.util.DeviceManagerUtil;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Calendar;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -96,7 +101,8 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             throws ReportManagementException {
         try {
             DeviceManagementDAOFactory.openConnection();
-            return deviceDAO.getDevicesByDurationCount(statusList, ownership, fromDate, toDate, DeviceManagementDAOUtil.getTenantId());
+            return deviceDAO.getDevicesByDurationCount(
+                    statusList, ownership, fromDate, toDate, DeviceManagementDAOUtil.getTenantId());
         } catch (DeviceManagementDAOException e) {
             String msg = "Error occurred in while retrieving device count by status for " + statusList + "devices.";
             log.error(msg, e);
@@ -112,8 +118,8 @@ public class ReportManagementServiceImpl implements ReportManagementService {
 
     @Override
     public List<Count> getCountOfDevicesByDuration(PaginationRequest request, List<String> statusList, String fromDate,
-                                                 String toDate)
-            throws ReportManagementException, ParseException {
+                                                   String toDate)
+            throws ReportManagementException {
         try {
             request = DeviceManagerUtil.validateDeviceListPageSize(request);
         } catch (DeviceManagementException e) {
@@ -143,7 +149,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         } catch (ParseException e) {
             String msg = "Error occurred while building weekly count";
             log.error(msg, e);
-            throw new ParseException(msg, 0);
+            throw new ReportManagementException(msg, e);
         } finally {
             DeviceManagementDAOFactory.closeConnection();
         }
@@ -160,50 +166,49 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         Date endDate = dateFormat.parse(end);
 
         //Check duration between two given dates
-        long gap  = endDate.getTime() - startDate.getTime();
+        long gap = endDate.getTime() - startDate.getTime();
         long diffInDays = TimeUnit.MILLISECONDS.toDays(gap);
 
-        if(diffInDays < 7){
+        if (diffInDays < 7) {
             isDaily = true;
-        }else if(diffInDays < 30){
+        } else if (diffInDays < 30) {
             prevDateAmount = -7;
-        }else{
+        } else {
             prevDateAmount = -30;
         }
-
-        if(!isDaily){
+        if (!isDaily) {
             Map<String, Integer> resultMap = new HashMap<>();
             //Divide date duration into week or month blocks
-            while(endDate.after(startDate)){
+            while (endDate.after(startDate)) {
                 int sum = 0;
                 Calendar cal1 = Calendar.getInstance();
                 cal1.setTime(endDate);
                 cal1.add(Calendar.DAY_OF_YEAR, prevDateAmount);
                 Date previousDate = cal1.getTime();
-                if(startDate.after(previousDate)){
+                if (startDate.after(previousDate)) {
                     previousDate = startDate;
                 }
                 //Loop count list which came from database to add them into week or month blocks
-                for(Count count : countList){
-                    if(dateFormat.parse(count.getDate()).after(previousDate) && dateFormat.parse(count.getDate()).before(endDate)){
+                for (Count count : countList) {
+                    if (dateFormat.parse(
+                            count.getDate()).after(previousDate) &&
+                            dateFormat.parse(count.getDate()).before(endDate
+                            )) {
                         sum = sum + count.getCount();
                     }
                 }
                 //Map date blocks and counts
                 resultMap.put(dateFormat.format(endDate) + " - " + dateFormat.format(previousDate), sum);
-                endDate=previousDate;
+                endDate = previousDate;
 
             }
-
             //Add them into a Count object list
             for (Map.Entry<String, Integer> entry : resultMap.entrySet()) {
                 weeklyCount.add(new Count(entry.getKey(), entry.getValue()));
             }
-        }else{
+        } else {
             weeklyCount = countList;
         }
-
-
         return weeklyCount;
     }
 }
