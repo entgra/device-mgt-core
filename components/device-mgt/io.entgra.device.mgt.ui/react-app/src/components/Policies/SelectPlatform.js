@@ -42,10 +42,13 @@ class SelectPlatform extends React.Component {
     this.fetchUsers();
   }
 
-  onClickCard = data => {
-    console.log(data);
-    this.props.onClickType();
+  onClickCard = (e, type) => {
+      e.preventDefault();
+    // console.log(type);
+    // this.props.onClickType(type);
+      this.props.getPolicyConfigJson(type);
   };
+
 
   // fetch data from api
   fetchUsers = (params = {}) => {
@@ -108,11 +111,11 @@ class SelectPlatform extends React.Component {
     const { Meta } = Card;
     const itemCard = data.map(data => (
       <Col span={5} key={data.id}>
-        <Card
+        <a><Card
           size="default"
           style={{ width: 150 }}
           bordered={true}
-          onClick={this.onClickCard}
+          onClick={(e)=>this.onClickCard(e, data.name)}
           cover={
             <Icon
               type="android"
@@ -127,7 +130,7 @@ class SelectPlatform extends React.Component {
           }
         >
           <Meta title={data.name} />
-        </Card>
+        </Card></a>
       </Col>
     ));
     return (

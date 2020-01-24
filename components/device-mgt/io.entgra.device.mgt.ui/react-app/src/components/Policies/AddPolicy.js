@@ -17,11 +17,13 @@
  */
 
 import React from 'react';
-import { Button, Form, Row, Col, Card, Steps } from 'antd';
+import {Button, Form, Row, Col, Card, Steps, message, notification} from 'antd';
 import { withConfigContext } from '../../context/ConfigContext';
 import SelectPlatform from './SelectPlatform';
 import ConfigureProfile from './ConfigureProfile';
+import axios from "axios";
 const { Step } = Steps;
+let apiUrl;
 
 class AddPolicy extends React.Component {
   constructor(props) {
@@ -30,14 +32,49 @@ class AddPolicy extends React.Component {
     this.state = {
       isAddDeviceModalVisible: false,
       current: 0,
+      loading: false,
+      policiesList:[]
     };
   }
 
-  onClickType = () => {
-    this.setState({
-      current: 1,
-    });
-  };
+    getPolicyConfigJson = (type) => {
+        const config = this.props.context;
+        this.setState({ loading: true });
+
+        apiUrl =
+            window.location.origin +
+            config.serverConfig.invoker.uri +
+            config.serverConfig.invoker.deviceMgt +
+            '/device-types/'+ type + '/policies';
+
+        // send request to the invokers
+        axios
+            .get(apiUrl)
+            .then(res => {
+                if (res.status === 200) {
+                    const pagination = { ...this.state.pagination };
+                    this.setState({
+                        loading: false,
+                        policiesList: JSON.parse(res.data.data),
+                        current: 1,
+                    });
+                }
+            })
+            .catch(error => {
+                if (error.hasOwnProperty('response') && error.response.status === 401) {
+                    // todo display a popop with error
+                    message.error('You are not logged in');
+                    window.location.href = window.location.origin + '/entgra/login';
+                } else {
+                    notification.error({
+                        message: 'There was a problem',
+                        duration: 0,
+                        description: 'Error occurred while trying to load Policy details.',
+                    });
+                }
+                this.setState({ loading: false });
+            });
+    };
 
   next() {
     const current = this.state.current + 1;
@@ -50,7 +87,7 @@ class AddPolicy extends React.Component {
   }
 
   render() {
-    const { current } = this.state;
+    const { current, policiesList } = this.state;
     return (
       <div>
         <Row>
@@ -67,10 +104,14 @@ class AddPolicy extends React.Component {
           <Col span={16} offset={4}>
             <Card style={{ marginTop: 24 }}>
               <div style={{ display: current === 0 ? 'unset' : 'none' }}>
-                <SelectPlatform onClickType={this.onClickType} />
+                <SelectPlatform
+                    getPolicyConfigJson={this.getPolicyConfigJson}
+                />
               </div>
               <div style={{ display: current === 1 ? 'unset' : 'none' }}>
-                <ConfigureProfile />
+                <ConfigureProfile
+                    policiesList={policiesList}
+                />
               </div>
               <div style={{ display: current === 2 ? 'unset' : 'none' }}></div>
               <div style={{ display: current === 3 ? 'unset' : 'none' }}></div>

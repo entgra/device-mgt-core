@@ -1784,7 +1784,7 @@ const jsonResponse = {
 
                               },
                               "type": "select",
-                              "id": "passcodePolicyMinLengthWP"
+                              "id": "STARTTIME"
                             },
                             {
                               "label": "End Time",
@@ -2657,7 +2657,7 @@ const jsonResponse = {
           "name": "Application Restrictions",
           "panels": [{
             "panel": {
-              "panelId": "APP-RESTRICTION",
+              "panelId": "APP_RESTRICTION",
               "title": "Application Restriction Setting",
               "description": "This configuration can be used to encrypt data on an Android device, when the device is locked and make it " +
                   "readable when the passcode is entered. Once this configuration profile is installed on a device, corresponding users" +

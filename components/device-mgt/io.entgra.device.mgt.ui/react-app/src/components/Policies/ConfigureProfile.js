@@ -15,6 +15,7 @@ import {
   Table,
   Alert,
   Upload,
+  Popconfirm,
   Button,
   Radio, message, notification,
 } from 'antd';
@@ -22,7 +23,7 @@ import { withConfigContext } from '../../context/ConfigContext';
 import '../../pages/Dashboard/Policies/policies.css';
 import jsonResponse from './configuration';
 import axios from "axios";
-const { Title, Paragraph } = Typography;
+const { Text, Title, Paragraph } = Typography;
 const { TabPane } = Tabs;
 const { Option } = Select;
 const { TextArea } = Input;
@@ -44,51 +45,14 @@ class ConfigureProfile extends React.Component {
       count: 0,
       dataArray: [],
       customInputDataArray: [],
-      PoliciesList: []
+      PoliciesList: [],
+      inputTableDataSources: {},
+      addPolicyForms: null,
     };
   }
 
   componentDidMount() {
-    this.getPolicyConfigJson("android");
   }
-
-  getPolicyConfigJson = (type) => {
-    const config = this.props.context;
-    this.setState({ loading: true });
-
-    apiUrl =
-        window.location.origin +
-        config.serverConfig.invoker.uri +
-        config.serverConfig.invoker.deviceMgt +
-        '/device-types/'+ type + '/policies';
-
-    // send request to the invokers
-    axios
-        .get(apiUrl)
-        .then(res => {
-          if (res.status === 200) {
-            const pagination = { ...this.state.pagination };
-            this.setState({
-              loading: false,
-              PoliciesList: JSON.parse(res.data.data),
-            });
-          }
-        })
-        .catch(error => {
-          if (error.hasOwnProperty('response') && error.response.status === 401) {
-            // todo display a popop with error
-            message.error('You are not logged in');
-            window.location.href = window.location.origin + '/entgra/login';
-          } else {
-            notification.error({
-              message: 'There was a problem',
-              duration: 0,
-              description: 'Error occurred while trying to load Policy details.',
-            });
-          }
-          this.setState({ loading: false });
-        });
-  };
 
   //handle items which handle from radio buttons
   handleRadioPanel = (e, subPanel)=>{
@@ -100,16 +64,15 @@ class ConfigureProfile extends React.Component {
         document.getElementById(panel.value).style.display = "none";
       }
     })}
-
   };
 
   //handle items which handle from select options
   handleSelectedPanel =(e, subPanel)=>{
     {subPanel.map((panel,i) =>{
-      if(panel.key===e){
-        document.getElementById(panel.key).style.display = "block";
+      if(panel.id===e){
+        document.getElementById(panel.id).style.display = "block";
       }else {
-        document.getElementById(panel.key).style.display = "none";
+        document.getElementById(panel.id).style.display = "none";
       }
     })}
   };
@@ -156,21 +119,19 @@ class ConfigureProfile extends React.Component {
     });
     console.log(customInputDataArray);
     console.log(id);
-
   };
 
-
-  handleAdd = (dataSource, id) => {
-    const { count, dataArray } = this.state;
+  handleAdd = (dataSource, array) => {
+    const { count , inputTableDataSources} = this.state;
     const newData = [{
       key: count,
     }];
+    inputTableDataSources[array].push(newData);
+    Object.defineProperty(inputTableDataSources , array, {value: inputTableDataSources[array]});
     this.setState({
-      dataArray: [...dataArray, newData],
+      inputTableDataSources ,
       count: count +1
     });
-    console.log(dataArray);
-    console.log(id);
   };
 
   getColumns = ({ getFieldDecorator },arr) =>{
@@ -178,7 +139,7 @@ class ConfigureProfile extends React.Component {
     const actionColumn = [{
       title: '',
       dataIndex: 'operation',
-      render: (text, record) =>
+      render: (name, row) =>
           <Form.Item>
             <Popconfirm title="Sure to delete?" >
               <a><Text type="danger"><Icon type="delete"/></Text></a>
@@ -193,7 +154,7 @@ class ConfigureProfile extends React.Component {
           key: `${columnData.key}`,
           render: (name, row, i) => (
               <Form.Item>
-                {getFieldDecorator(`${columnData.key}`,{})
+                {getFieldDecorator(`${columnData.key}${i}`,{})
                 (<Input type={columnData.others.inputType} placeholder={columnData.others.placeholder}/>)}
               </Form.Item>)
         };
@@ -206,9 +167,8 @@ class ConfigureProfile extends React.Component {
           key: `${columnData.key}`,
           render: (name, row, i) => (
               <Form.Item>
-                {getFieldDecorator(`${columnData.key}`, {
-
-                })(
+                {getFieldDecorator(`${columnData.key}${i}`, {})
+                (
                     <Upload>
                       <Button>
                         <Icon type="upload" /> Choose file
@@ -225,11 +185,11 @@ class ConfigureProfile extends React.Component {
           key: `${columnData.key}`,
           render: (name, row, i) => (
               <Form.Item>
-                {getFieldDecorator(`${columnData.key}`, {
+                {getFieldDecorator(`${columnData.key}${i}`, {
                   initialValue: columnData.others.initialDataIndex
                 })(
                     <Select>
-                      {columnData.others.options.map((option,i)=>{
+                      {columnData.others.option.map((option,i)=>{
                         return(
                             <Option value={option.key}>{option.value}</Option>
                         );
@@ -240,38 +200,20 @@ class ConfigureProfile extends React.Component {
           )
         };
         columnArray.push(column);
-
       }
     });
     const columns = columnArray.concat(actionColumn);
     return(columns);
   };
 
-
-
-
-
   onChange = e => {
     console.log(`checked = ${e.target.id}`);
   };
 
-  onChecked = (e, i) => {
-    if (e) {
-      this.setState({
-        isDisplayMain: 'block',
-      });
-    } else {
-      this.setState({
-        isDisplayMain: 'none',
-      });
-    }
-  };
-
-  onClickSwitch = e => {};
-
   //generate form items
   getPanelItems = (panel)=>{
     const { getFieldDecorator } = this.props.form;
+    console.log(panel);
     return (
         panel.map((item,k)=>{
           switch(item.type){
@@ -304,7 +246,7 @@ class ConfigureProfile extends React.Component {
                       <div className={"sub-panel-container"} >
                         {item.optional.subPanel.map((panel,i) =>{
                           return(
-                              <div id={panel.key} style={{display:"none"}}>
+                              <div id={panel.id} style={{display:"none"}}>
                                 {this.getPanelItems(panel.panelItem)}
                               </div>
                           );
@@ -375,7 +317,7 @@ class ConfigureProfile extends React.Component {
                                           <Form.Item key={k}>
                                             {getFieldDecorator(`${item.id}`, {
                                               valuePropName: 'checked',
-                                              initialValue: item.optional.checked,
+                                              initialValue: item.optional.ischecked,
                                             })(
                                                 <Checkbox
                                                     onChange={this.handleSubPanel}>
@@ -391,7 +333,13 @@ class ConfigureProfile extends React.Component {
                                         }>
                           <div>
                             <div>
-                              {this.getPanelItems(item.optional.subPanel.panelItem)}
+                              {item.optional.subPanel.map((panel,i) =>{
+                                return(
+                                    <div>
+                                      {this.getPanelItems(panel.panelItem)}
+                                    </div>
+                                );
+                              })}
                             </div>
                           </div>
                         </Collapse.Panel>
@@ -403,7 +351,7 @@ class ConfigureProfile extends React.Component {
                     <Form.Item key={k}>
                       {getFieldDecorator(`${item.id}`, {
                         valuePropName: 'checked',
-                        initialValue: item.optional.checked,
+                        initialValue: item.optional.ischecked,
                       })(
                           <Checkbox>
                                         <span>
@@ -463,16 +411,25 @@ class ConfigureProfile extends React.Component {
                           </Radio.Group>
                       )}
                     </Form.Item>
-                    <div className={"radio-panels"} style={{marginTop: -10}}>
-                      {
-                        item.optional.radio.map((option,i)=>{
-                          return(
-                              <div id={option.value} style={{display:"none"}}>
-                                {this.getPanelItems(option.subPanel)}
-                              </div>
-                          );
-                        })}
-                    </div>
+                      <div className={"sub-panel-container"} >
+                          {item.optional.subPanel.map((panel,i) =>{
+                              return(
+                                  <div id={panel.id} style={(panel.id===item.optional.initialValue) ? {display:"block"}: {display:"none"}}>
+                                      {this.getPanelItems(panel.panelItem)}
+                                  </div>
+                              );
+                          })}
+                      </div>
+                    {/*<div className={"radio-panels"} style={{marginTop: -10}}>*/}
+                    {/*  {*/}
+                    {/*    item.optional.S.map((option,i)=>{*/}
+                    {/*      return(*/}
+                    {/*          <div id={option.id} style={{display:"none"}}>*/}
+                    {/*            {this.getPanelItems(option.subPanel)}*/}
+                    {/*          </div>*/}
+                    {/*      );*/}
+                    {/*    })}*/}
+                    {/*</div>*/}
                   </div>
               );
             case "title":
@@ -519,15 +476,21 @@ class ConfigureProfile extends React.Component {
             case "inputTable":
               let dataArray = [];
               const column1 = this.getColumns({ getFieldDecorator }, item.optional.columns);
+              if(!(`${item.optional.dataSource}` in this.state.inputTableDataSources)){
+                Object.defineProperty(this.state.inputTableDataSources , `${item.optional.dataSource}`, {value: [] , writable: true});
+              }
+              // this.setState({
+              //   dataArrayObject.
+              // })
               return (
                   <div key={k}>
                     <Button
-                        onClick={()=>this.handleAdd(dataArray, item.id)}
+                        onClick={()=>this.handleAdd(dataArray, item.optional.dataSource)}
                         type="primary"
                         style={{ marginBottom: 16 }}>
                       <Icon type="plus-circle"/>{item.optional.button.name}
                     </Button>
-                    <Table id={item.id} dataSource={this.state.dataArray} columns={column1}/>
+                    <Table id={item.id} dataSource={this.state.inputTableDataSources[item.optional.dataSource]} columns={column1}/>
                   </div>
               );
 
@@ -556,54 +519,12 @@ class ConfigureProfile extends React.Component {
 
 
   render() {
+      const { policiesList } = this.props;
     return (
         <div className="tab-container">
-          <Tabs tabPosition={"left"} size={"large"}>
-            { this.policies.map((element, i) =>{
-              return(
-                  <TabPane tab={<span>{element.name}</span>} key={i}  >
-                    { Object.values(element.panels).map((panel, j)=>{
-                      panel = panel.panel;
-                      return(
-                          <div key={j}>
-                            <Collapse bordered={false} activeKey={this.state.activePanelKeys}>
-                              <Collapse.Panel
-                                  key={panel.panelId}
-                                  showArrow={false}
-                                  style={{border:0}}
-                                  header={
-                                    <div>
-                                      <Row>
-                                        <Col offset={0} span={14}>
-                                          <Title level={4}> {panel.title} </Title>
-                                        </Col>
-                                        <Col offset={8}  span={1}>
-                                          <Switch
-                                              checkedChildren="ON"
-                                              unCheckedChildren="OFF"
-                                              onChange={(e)=>this.handleMainPanel(e, `${panel.panelId}`)}/>
-                                        </Col>
-                                      </Row>
-                                      <Row>{panel.description}</Row>
-                                    </div>}>
-                                <div>
-                                  <Form>
-                                    {this.getPanelItems(panel.panelItem)}
-                                  </Form>
-                                </div>
-                              </Collapse.Panel>
-                            </Collapse>
-                          </div>);
-                    })
-                    }
-                  </TabPane>)
-            })
-            }
-          </Tabs>
-
           <div style={{marginTop:40}}>
             <Tabs tabPosition={"left"} size={"large"}>
-              { this.state.PoliciesList.map((element, i) =>{
+              { policiesList.map((element, i) =>{
                 return(
                     <TabPane tab={<span>{element.name}</span>} key={i}  >
                       { Object.values(element.panels).map((panel, j)=>{
@@ -634,6 +555,7 @@ class ConfigureProfile extends React.Component {
                                     <Form>
                                       {this.getPanelItems(panel.panelItem)}
                                     </Form>
+
                                   </div>
                                 </Collapse.Panel>
                               </Collapse>
