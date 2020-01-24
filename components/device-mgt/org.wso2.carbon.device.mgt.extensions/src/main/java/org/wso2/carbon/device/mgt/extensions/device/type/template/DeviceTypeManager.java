@@ -109,9 +109,9 @@ public class DeviceTypeManager implements DeviceManager {
             List<Feature> features = deviceTypeConfiguration.getFeatures().getFeature();
             featureManager = new ConfigurationBasedFeatureManager(features);
         }
-        if (deviceTypeConfiguration.getPolicies() != null && deviceTypeConfiguration.getPolicies().
-                getPolicy() != null) {
-            List<Policy> policies = deviceTypeConfiguration.getPolicies().getPolicy();
+        if (deviceTypeConfiguration.getPolicyUIConfigurations() != null && deviceTypeConfiguration.getPolicyUIConfigurations().
+                getPolicies() != null) {
+            List<Policy> policies = deviceTypeConfiguration.getPolicyUIConfigurations().getPolicies();
             policyManager = new ConfigurationBasedPolicyManager(policies);
         }
 

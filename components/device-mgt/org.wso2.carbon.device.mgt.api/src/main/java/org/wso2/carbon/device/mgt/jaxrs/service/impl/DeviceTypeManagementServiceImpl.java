@@ -136,7 +136,7 @@ public class DeviceTypeManagementServiceImpl implements DeviceTypeManagementServ
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while retrieving the [" + type + "] policy details.";
             log.error(msg, e);
-            return Response.serverError().entity(
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
         } catch (DeviceTypeNotFoundException e) {
             String msg = "No device type found with name '" + type + "'";

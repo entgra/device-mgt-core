@@ -344,13 +344,13 @@ public interface DeviceTypeManagementService {
                             }
                     ),
                     @ApiResponse(
-                            code = 304,
-                            message =
-                                    "Not Modified. \n Empty body because the client already has the latest version " +
-                                            "of the requested resource.\n"),
+                            code = 400,
+                            message = "Bad Request. \n Invalid request.",
+                            response = ErrorResponse.class),
                     @ApiResponse(
-                            code = 406,
-                            message = "Not Acceptable.\n The requested media type is not supported"),
+                            code = 404,
+                            message = "Not Found. \n Policy Configurations data for the specified device type was not found.",
+                            response = ErrorResponse.class),
                     @ApiResponse(
                             code = 500,
                             message = "Internal Server Error. \n Server error occurred while fetching the " +

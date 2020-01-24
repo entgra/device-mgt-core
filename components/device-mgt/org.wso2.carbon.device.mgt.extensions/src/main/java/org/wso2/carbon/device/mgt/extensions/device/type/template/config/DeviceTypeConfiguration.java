@@ -57,11 +57,11 @@ import java.util.List;
  *       &lt;sequence>
  *         &lt;element name="DeviceDetails" type="{}DeviceDetails"/>
  *         &lt;element name="Features" type="{}Features"/>
+ *         &lt;element name="PolicyUIConfigurations" type="{}PolicyUIConfigurations"/>
  *         &lt;element name="ProvisioningConfig" type="{}ProvisioningConfig"/>
  *         &lt;element name="PushNotificationProviderConfig" type="{}PushNotificationProviderConfig"/>
  *         &lt;element name="License" type="{}License"/>
  *         &lt;element name="DataSource" type="{}DataSource"/>
- *         &lt;element name="Policies" type="{}Policies"/>
  *         &lt;element name="PolicyMonitoring" type="{}PolicyMonitoring"/>
  *         &lt;element name="DeviceAuthorizationConfig" type="{}DeviceAuthorizationConfig"/>
  *         &lt;element name="DeviceStatusTaskConfig" type="{}DeviceStatusTaskConfig"/>
@@ -82,8 +82,8 @@ public class DeviceTypeConfiguration {
     protected Claimable claimable;
     @XmlElement(name = "Features", required = true)
     protected Features features;
-    @XmlElement(name = "Policies", required = true)
-    protected Policies policies;
+    @XmlElement(name = "PolicyUIConfigurations", required = true)
+    protected PolicyUIConfigurations policies;
     @XmlElement(name = "ProvisioningConfig", required = true)
     protected ProvisioningConfig provisioningConfig;
     @XmlElement(name = "PushNotificationProviderConfig", required = true)
@@ -263,9 +263,9 @@ public class DeviceTypeConfiguration {
      * Gets the value of the policies property.
      *
      * @return possible object is
-     * {@link Policies }
+     * {@link PolicyUIConfigurations }
      */
-    public Policies getPolicies() {
+    public PolicyUIConfigurations getPolicyUIConfigurations() {
         return policies;
     }
 
@@ -273,9 +273,9 @@ public class DeviceTypeConfiguration {
      * Sets the value of the features property.
      *
      * @param value allowed object is
-     *              {@link Features }
+     *              {@link PolicyUIConfigurations }
      */
-    public void setPolicies(Policies value) {
+    public void setPolicyUIConfigurations(PolicyUIConfigurations value) {
         this.policies = value;
     }
     /**

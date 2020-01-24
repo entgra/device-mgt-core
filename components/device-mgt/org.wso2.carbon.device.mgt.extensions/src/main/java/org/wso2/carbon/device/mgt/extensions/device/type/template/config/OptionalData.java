@@ -166,11 +166,11 @@ public class OptionalData {
         this.row = row;
     }
 
-    public void setLabelDescription(String labelDescription){
+    public void setLabelDescriptions(String labelDescription){
         this.labelDescription = labelDescription;
     }
 
-    public String getLabelDescription(){
+    public String getLabelDescriptions(){
         return labelDescription;
     }
 

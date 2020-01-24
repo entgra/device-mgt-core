@@ -88,7 +88,7 @@ public class HTTPDeviceTypeManagerService extends DeviceTypeManagerService imple
             }
 
             if (deviceTypeMetaDefinition.getPolicies() != null && deviceTypeMetaDefinition.getPolicies().size() > 0) {
-                Policies policies = new Policies();
+                PolicyUIConfigurations policyUIConfigurations = new PolicyUIConfigurations();
                 List<org.wso2.carbon.device.mgt.extensions.device.type.template.config.Policy> policyList
                         = new ArrayList<>();
                 for (org.wso2.carbon.device.mgt.common.Policy policy : deviceTypeMetaDefinition.getPolicies()) {
@@ -103,8 +103,8 @@ public class HTTPDeviceTypeManagerService extends DeviceTypeManagerService imple
                         policyList.add(configPolicy);
                     }
                 }
-                policies.addPolicies(policyList);
-                deviceTypeConfiguration.setPolicies(policies);
+                policyUIConfigurations.addPolicies(policyList);
+                deviceTypeConfiguration.setPolicyUIConfigurations(policyUIConfigurations);
             }
 
             deviceTypeConfiguration.setName(deviceTypeName);

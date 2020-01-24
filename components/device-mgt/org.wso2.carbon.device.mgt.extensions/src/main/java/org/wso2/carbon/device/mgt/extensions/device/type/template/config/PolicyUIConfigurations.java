@@ -44,10 +44,10 @@ import java.util.List;
  *
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "Policies", propOrder = {
+@XmlType(name = "PolicyUIConfigurations", propOrder = {
         "policy"
 })
-public class Policies {
+public class PolicyUIConfigurations {
 
     @XmlElement(name = "Policy")
     protected List<Policy> policy;
@@ -61,7 +61,7 @@ public class Policies {
      *
      * @return
      */
-    public List<Policy> getPolicy() {
+    public List<Policy> getPolicies() {
         if (policy == null) {
             policy = new ArrayList<Policy>();
         }
