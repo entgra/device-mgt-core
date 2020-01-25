@@ -142,7 +142,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
         } catch (DeviceManagementDAOException e) {
-            String msg = "Error occurred while retrieving Tenant ID";
+            String msg = "Error occurred while retrieving Tenant ID between " + fromDate + " to " + toDate;
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
         } catch (ParseException e) {
@@ -179,10 +179,10 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             //Divide date duration into week or month blocks
             while (endDate.after(startDate)) {
                 int sum = 0;
-                Calendar cal1 = Calendar.getInstance();
-                cal1.setTime(endDate);
-                cal1.add(Calendar.DAY_OF_YEAR, prevDateAmount);
-                Date previousDate = cal1.getTime();
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(endDate);
+                calendar.add(Calendar.DAY_OF_YEAR, prevDateAmount);
+                Date previousDate = calendar.getTime();
                 if (startDate.after(previousDate)) {
                     previousDate = startDate;
                 }

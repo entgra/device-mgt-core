@@ -351,40 +351,47 @@ public class MonitoringDAOImpl implements MonitoringDAO {
 
     @Override
     public List<ComplianceData> getAllComplianceDevices(
-            PaginationRequest paginationRequest, String policyId, boolean complianceStatus, boolean isPending, String fromDate, String toDate)
+            PaginationRequest paginationRequest,
+            String policyId,
+            boolean complianceStatus,
+            boolean isPending,
+            String fromDate,
+            String toDate)
             throws MonitoringDAOException {
         List<ComplianceData> complianceDataList = new ArrayList<>();
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
 
         String query =
                 "SELECT " +
-                "DEVICE.NAME, " +
-                "DM_DEVICE_TYPE.NAME AS DEVICE_TYPE, " +
-                "ENROLLMENT.OWNER, " +
-                "DM_POLICY.NAME AS POLICY_NAME, " +
-                "POLICY.* " +
-                "FROM DM_POLICY_COMPLIANCE_STATUS AS POLICY, DM_DEVICE AS DEVICE, " +
-                "DM_ENROLMENT AS ENROLLMENT, DM_POLICY, DM_DEVICE_TYPE " +
-                "WHERE DEVICE.ID=POLICY.DEVICE_ID " +
-                "AND DEVICE.ID=ENROLLMENT.DEVICE_ID " +
-                "AND POLICY.POLICY_ID=DM_POLICY.ID " +
-                "AND DEVICE.DEVICE_TYPE_ID=DM_DEVICE_TYPE.ID " +
-                "AND POLICY.TENANT_ID = ? AND POLICY.STATUS = ?";
+                        "DEVICE.NAME, " +
+                        "DM_DEVICE_TYPE.NAME AS DEVICE_TYPE, " +
+                        "ENROLLMENT.OWNER, " +
+                        "DM_POLICY.NAME AS POLICY_NAME, " +
+                        "POLICY.* " +
+                        "FROM DM_POLICY_COMPLIANCE_STATUS AS POLICY, DM_DEVICE AS DEVICE, " +
+                        "DM_ENROLMENT AS ENROLLMENT, DM_POLICY, DM_DEVICE_TYPE " +
+                        "WHERE DEVICE.ID=POLICY.DEVICE_ID " +
+                        "AND DEVICE.ID=ENROLLMENT.DEVICE_ID " +
+                        "AND POLICY.POLICY_ID=DM_POLICY.ID " +
+                        "AND DEVICE.DEVICE_TYPE_ID=DM_DEVICE_TYPE.ID " +
+                        "AND POLICY.TENANT_ID = ? AND POLICY.STATUS = ?";
 
-        if(isPending){
-            query = query + " AND POLICY.LAST_SUCCESS_TIME IS NULL AND POLICY.LAST_FAILED_TIME IS NULL";
-        }else{
-            query = query + " AND (POLICY.LAST_SUCCESS_TIME IS NOT NULL OR POLICY.LAST_FAILED_TIME IS NOT NULL)";
+        if (isPending) {
+            query = query + " AND POLICY.LAST_SUCCESS_TIME IS NULL " +
+                    "AND POLICY.LAST_FAILED_TIME IS NULL";
+        } else {
+            query = query + " AND (POLICY.LAST_SUCCESS_TIME IS NOT NULL " +
+                    "OR POLICY.LAST_FAILED_TIME IS NOT NULL)";
         }
 
-        if(policyId!=null){
+        if (policyId != null) {
             query = query + " AND POLICY.POLICY_ID = ?";
         }
 
-        if(fromDate!=null && toDate!=null){
-            if(!complianceStatus){
+        if (fromDate != null && toDate != null) {
+            if (!complianceStatus) {
                 query = query + " AND POLICY.LAST_FAILED_TIME BETWEEN ? AND ?";
-            }else{
+            } else {
                 query = query + " AND POLICY.LAST_SUCCESS_TIME BETWEEN ? AND ?";
             }
         }
@@ -396,10 +403,10 @@ public class MonitoringDAOImpl implements MonitoringDAO {
             int paramIdx = 1;
             stmt.setInt(paramIdx++, tenantId);
             stmt.setBoolean(paramIdx++, complianceStatus);
-            if(policyId!=null){
+            if (policyId != null) {
                 stmt.setInt(paramIdx++, Integer.parseInt(policyId));
             }
-            if(fromDate!=null && toDate!=null){
+            if (fromDate != null && toDate != null) {
                 stmt.setString(paramIdx++, fromDate);
                 stmt.setString(paramIdx++, toDate);
             }
@@ -426,7 +433,9 @@ public class MonitoringDAOImpl implements MonitoringDAO {
                 }
             }
         } catch (SQLException e) {
-            throw new MonitoringDAOException("Unable to retrieve compliance data from database.", e);
+            String msg = "Unable to retrieve compliance data from database.";
+            log.error(msg, e);
+            throw new MonitoringDAOException(msg, e);
         }
         return complianceDataList;
     }
