@@ -17,7 +17,7 @@
  */
 
 import React from 'react';
-import { PageHeader, Breadcrumb, Icon, message, notification } from 'antd';
+import { PageHeader, Breadcrumb, Icon } from 'antd';
 
 import { Link } from 'react-router-dom';
 import { withConfigContext } from '../../../context/ConfigContext';
@@ -26,9 +26,7 @@ import DateRangePicker from '../DateRangePicker';
 import moment from 'moment';
 import { Chart, Geom, Axis, Tooltip, Legend } from 'bizcharts';
 import DataSet from '@antv/data-set';
-
-// eslint-disable-next-line no-unused-vars
-let config = null;
+import { handleApiError } from '../../../js/Utils';
 
 class EnrollmentTypeReport extends React.Component {
   routes;
@@ -36,7 +34,6 @@ class EnrollmentTypeReport extends React.Component {
   constructor(props) {
     super(props);
     this.routes = props.routes;
-    config = this.props.context;
     this.state = {
       paramsObject: {
         from: moment()
@@ -69,6 +66,7 @@ class EnrollmentTypeReport extends React.Component {
     this.setState({ loading: true });
 
     const { paramsObject } = this.state;
+    const config = this.props.context;
 
     const encodedExtraParams = Object.keys(paramsObject)
       .map(key => key + '=' + paramsObject[key])
@@ -109,17 +107,10 @@ class EnrollmentTypeReport extends React.Component {
         });
       })
       .catch(error => {
-        if (error.hasOwnProperty('response') && error.response.status === 401) {
-          // todo display a popup with error
-          message.error('You are not logged in');
-          window.location.href = window.location.origin + '/entgra/login';
-        } else {
-          notification.error({
-            message: 'There was a problem',
-            duration: 0,
-            description: 'Error occurred while trying to get device count.',
-          });
-        }
+        handleApiError(
+          error,
+          'Error occurred while trying to get device count.',
+        );
       });
   };
 

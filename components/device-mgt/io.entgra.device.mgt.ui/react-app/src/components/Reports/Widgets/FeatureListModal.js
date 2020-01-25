@@ -21,14 +21,9 @@ import { Button, message, Modal, notification, List, Typography } from 'antd';
 import axios from 'axios';
 import { withConfigContext } from '../../../context/ConfigContext';
 
-// eslint-disable-next-line no-unused-vars
-let config = null;
-
 class FeatureListModal extends React.Component {
   constructor(props) {
     super(props);
-    // eslint-disable-next-line no-undef
-    config = this.props.context;
     this.state = {
       modalVisible: false,
       name: '',
@@ -40,16 +35,15 @@ class FeatureListModal extends React.Component {
   fetchViolatedFeatures = id => {
     const config = this.props.context;
 
-    let apiUrl =
-      window.location.origin +
-      config.serverConfig.invoker.uri +
-      config.serverConfig.invoker.deviceMgt +
-      '/devices/' +
-      id +
-      '/features';
-
     axios
-      .get(apiUrl)
+      .get(
+        window.location.origin +
+          config.serverConfig.invoker.uri +
+          config.serverConfig.invoker.deviceMgt +
+          '/devices/' +
+          id +
+          '/features',
+      )
       .then(res => {
         if (res.status === 200) {
           this.setState({
@@ -66,7 +60,8 @@ class FeatureListModal extends React.Component {
           notification.error({
             message: 'There was a problem',
             duration: 0,
-            description: 'Error occurred while trying to load non compliance feature list.',
+            description:
+              'Error occurred while trying to load non compliance feature list.',
           });
         }
       });

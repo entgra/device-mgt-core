@@ -18,13 +18,14 @@
 
 import React from 'react';
 import axios from 'axios';
-import { Button, Icon, message, notification, Table, Tooltip } from 'antd';
+import { Button, Icon, Table, Tooltip } from 'antd';
 import TimeAgo from 'javascript-time-ago';
 import moment from 'moment';
 // Load locale-specific relative date/time formatting rules.
 import en from 'javascript-time-ago/locale/en';
 import { withConfigContext } from '../../../context/ConfigContext';
 import FeatureListModal from './FeatureListModal';
+import { handleApiError } from '../../../js/Utils';
 
 let config = null;
 
@@ -240,7 +241,6 @@ class PolicyDevicesTable extends React.Component {
 
   // fetch data from api
   fetchData = (params = {}) => {
-    const config = this.props.context;
     // const policyReportData = this.props;
     this.setState({ loading: true });
     // get current page
@@ -301,18 +301,7 @@ class PolicyDevicesTable extends React.Component {
         }
       })
       .catch(error => {
-        if (error.hasOwnProperty('response') && error.response.status === 401) {
-          // todo display a popop with error
-          message.error('You are not logged in');
-          window.location.href = window.location.origin + '/entgra/login';
-        } else {
-          notification.error({
-            message: 'There was a problem',
-            duration: 0,
-            description: 'Error occurred while trying to load devices.',
-          });
-        }
-
+        handleApiError(error, 'Error occurred while trying to load devices.');
         this.setState({ loading: false });
       });
   };
