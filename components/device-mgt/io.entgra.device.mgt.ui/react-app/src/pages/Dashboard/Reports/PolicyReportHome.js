@@ -53,7 +53,7 @@ class PolicyReportHome extends React.Component {
                       style={{ fontSize: '25px', color: '#08c' }}
                     />
                     <h2>
-                      <b>All Policy Compliance Report</b>
+                      <b>Policy Compliance Report</b>
                     </h2>
                     <p>Policy compliance details of all enrolled devices</p>
                   </div>
