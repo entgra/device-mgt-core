@@ -24,7 +24,6 @@ public class Column {
     @XmlElement(name = "Name", required = true)
     private String name;
 
-
     @XmlAttribute(name = "type", required = true)
     protected String type;
 

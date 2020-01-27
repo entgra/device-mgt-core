@@ -30,6 +30,7 @@ class SelectPlatform extends React.Component {
   constructor(props) {
     super(props);
     TimeAgo.addLocale(en);
+    this.config = this.props.context;
     this.state = {
       data: [],
       pagination: {},
@@ -44,21 +45,18 @@ class SelectPlatform extends React.Component {
 
   onClickCard = (e, type) => {
       e.preventDefault();
-    // console.log(type);
-    // this.props.onClickType(type);
       this.props.getPolicyConfigJson(type);
   };
 
 
   // fetch data from api
   fetchUsers = (params = {}) => {
-    const config = this.props.context;
     this.setState({ loading: true });
 
     apiUrl =
       window.location.origin +
-      config.serverConfig.invoker.uri +
-      config.serverConfig.invoker.deviceMgt +
+      this.config.serverConfig.invoker.uri +
+      this.config.serverConfig.invoker.deviceMgt +
       '/device-types';
 
     // send request to the invokerss

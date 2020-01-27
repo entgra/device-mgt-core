@@ -45,18 +45,15 @@ class ConfigureProfile extends React.Component {
       count: 0,
       dataArray: [],
       customInputDataArray: [],
-      PoliciesList: [],
       inputTableDataSources: {},
       addPolicyForms: null,
     };
   }
 
-  componentDidMount() {
-  }
+  componentDidMount() {}
 
   //handle items which handle from radio buttons
   handleRadioPanel = (e, subPanel)=>{
-    console.log(e);
     {subPanel.map((panel,i) =>{
       if(panel.value===e.target.value){
         document.getElementById(panel.value).style.display = "block";
@@ -117,8 +114,6 @@ class ConfigureProfile extends React.Component {
       customInputDataArray: [...customInputDataArray, newData],
       count: count +1
     });
-    console.log(customInputDataArray);
-    console.log(id);
   };
 
   handleAdd = (dataSource, array) => {
@@ -206,14 +201,9 @@ class ConfigureProfile extends React.Component {
     return(columns);
   };
 
-  onChange = e => {
-    console.log(`checked = ${e.target.id}`);
-  };
-
   //generate form items
   getPanelItems = (panel)=>{
     const { getFieldDecorator } = this.props.form;
-    console.log(panel);
     return (
         panel.map((item,k)=>{
           switch(item.type){
@@ -519,56 +509,53 @@ class ConfigureProfile extends React.Component {
 
 
   render() {
-      const { policiesList } = this.props;
+      const { policyUIConfigurationsList } = this.props;
     return (
         <div className="tab-container">
-          <div style={{marginTop:40}}>
             <Tabs tabPosition={"left"} size={"large"}>
-              { policiesList.map((element, i) =>{
-                return(
-                    <TabPane tab={<span>{element.name}</span>} key={i}  >
-                      { Object.values(element.panels).map((panel, j)=>{
-                        panel = panel.panel;
-                        return(
-                            <div key={j}>
-                              <Collapse bordered={false} activeKey={this.state.activePanelKeys}>
-                                <Collapse.Panel
-                                    key={panel.panelId}
-                                    showArrow={false}
-                                    style={{border:0}}
-                                    header={
-                                      <div>
-                                        <Row>
-                                          <Col offset={0} span={14}>
-                                            <Title level={4}> {panel.title} </Title>
-                                          </Col>
-                                          <Col offset={8}  span={1}>
-                                            <Switch
-                                                checkedChildren="ON"
-                                                unCheckedChildren="OFF"
-                                                onChange={(e)=>this.handleMainPanel(e, `${panel.panelId}`)}/>
-                                          </Col>
-                                        </Row>
-                                        <Row>{panel.description}</Row>
-                                      </div>}>
-                                  <div>
-                                    <Form>
-                                      {this.getPanelItems(panel.panelItem)}
-                                    </Form>
+                { policyUIConfigurationsList.map((element, i) =>{
+                    return(
+                        <TabPane tab={<span>{element.name}</span>} key={i}  >
+                            { Object.values(element.panels).map((panel, j)=>{
+                                panel = panel.panel;
+                                return(
+                                    <div key={j}>
+                                        <Collapse bordered={false} activeKey={this.state.activePanelKeys}>
+                                            <Collapse.Panel
+                                                key={panel.panelId}
+                                                showArrow={false}
+                                                style={{border:0}}
+                                                header={
+                                                    <div>
+                                                        <Row>
+                                                            <Col offset={0} span={14}>
+                                                                <Title level={4}> {panel.title} </Title>
+                                                            </Col>
+                                                            <Col offset={8}  span={1}>
+                                                                <Switch
+                                                                    checkedChildren="ON"
+                                                                    unCheckedChildren="OFF"
+                                                                    onChange={(e)=>this.handleMainPanel(e, `${panel.panelId}`)}/>
+                                                            </Col>
+                                                        </Row>
+                                                        <Row>{panel.description}</Row>
+                                                    </div>}>
+                                                <div>
+                                                    <Form>
+                                                        {this.getPanelItems(panel.panelItem)}
+                                                    </Form>
 
-                                  </div>
-                                </Collapse.Panel>
-                              </Collapse>
-                            </div>);
-                      })
-                      }
-                    </TabPane>)
-              })
-              }
+                                                </div>
+                                            </Collapse.Panel>
+                                        </Collapse>
+                                    </div>);
+                            })
+                            }
+                        </TabPane>)
+                })
+                }
             </Tabs>
-          </div>
         </div>
-
     );
   }
 }

@@ -41,7 +41,6 @@ public class TestDeviceManager implements DeviceManager {
         return null;
     }
 
-
     @Override
     public boolean saveConfiguration(PlatformConfiguration configuration)
             throws DeviceManagementException {

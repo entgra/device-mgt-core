@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
+ * Copyright (c) 2020, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
  *
  * Entgra (pvt) Ltd. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -16,12 +16,6 @@
  * under the License.
  */
 
-/*.tab-container > .ant-tabs > .ant-tabs-content > .ant-tabs-tabpane {*/
-/*    background: #fff;*/
-/*    padding: 16px;*/
-/*    border-color: transparent;*/
-/*}*/
-
 .tab-container > .ant-tabs > .ant-tabs-bar {
     border-color: #aaaaaa;
 }
@@ -35,48 +29,4 @@
     border-color: transparent;
     background: #4b92db;
     color: #fff;
-}
-
-.radio-panel-container > .ant-tabs > .ant-tabs-bar .ant-tabs-tab {
-    height: 0;
-    margin: -10px;
-}
-
-.radio-panel-container > .ant-tabs > .ant-tabs-bar {
-    border-color: transparent;
-}
-
-.radio-panel-container > .ant-tabs > .ant-tabs-bar .ant-tabs-tab-active {
-    border-color: transparent;
-    background: transparent;
-    color: transparent;
-}
-
-.subPanel-container > .ant-tabs-card > .ant-tabs-content {
-    margin-top: -20px;
-    margin-bottom: -20px;
-    border-color: #00a;
-    padding: -16px;
-
-}
-
-.sub-panel-container > .ant-tabs> .ant-tabs-content > .ant-tabs-tabpane {
-    background: transparent;
-}
-
-.sub-panel-container > .ant-tabs > .ant-tabs-bar {
-    border-color: transparent;
-    background: transparent;
-    height: 0;
-}
-
-.sub-panel-container > .ant-tabs > .ant-tabs-bar .ant-tabs-tab {
-    border-color: transparent;
-    background: transparent;
-    height: 0;
-}
-
-.sub-panel-container > .ant-tabs > .ant-tabs-bar .ant-tabs-tab-active {
-    border-color:transparent;
-    background: transparent;
 }
