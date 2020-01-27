@@ -17,13 +17,14 @@
  */
 
 import React from 'react';
-import { PageHeader, Breadcrumb, Icon, Radio } from 'antd';
+import { PageHeader, Breadcrumb, Icon, Radio, Popover, Button } from 'antd';
 
 import { Link } from 'react-router-dom';
 import { withConfigContext } from '../../../context/ConfigContext';
 import PolicyDevicesTable from '../Widgets/PolicyDevicesTable';
 import moment from 'moment';
 import DateRangePicker from '../DateRangePicker';
+import SelectPolicyDropDown from '../Widgets/SelectPolicyDropDown';
 
 // eslint-disable-next-line no-unused-vars
 let config = null;
@@ -36,22 +37,73 @@ class PolicyReport extends React.Component {
     this.routes = props.routes;
     config = this.props.context;
     this.state = {
+      durationMode: 'weekly',
       isCompliant: true,
       // This object contains parameters which pass into API endpoint
       policyReportData: {
         from: moment()
-          .subtract(6, 'days')
+          .subtract(7, 'days')
           .format('YYYY-MM-DD'),
-        to: moment()
-          .add(1, 'days')
-          .format('YYYY-MM-DD'),
+        to: moment().format('YYYY-MM-DD'),
       },
+      visible: false,
     };
   }
 
   handleModeChange = e => {
     const isCompliant = e.target.value;
     this.setState({ isCompliant });
+  };
+
+  handleDurationModeChange = e => {
+    const durationMode = e.target.value;
+    switch (durationMode) {
+      case 'daily':
+        this.updateDurationValue(
+          moment()
+            .subtract(1, 'days')
+            .format('YYYY-MM-DD'),
+          moment().format('YYYY-MM-DD'),
+        );
+        break;
+      case 'weekly':
+        this.updateDurationValue(
+          moment()
+            .subtract(7, 'days')
+            .format('YYYY-MM-DD'),
+          moment().format('YYYY-MM-DD'),
+        );
+        break;
+      case 'monthly':
+        this.updateDurationValue(
+          moment()
+            .subtract(30, 'days')
+            .format('YYYY-MM-DD'),
+          moment().format('YYYY-MM-DD'),
+        );
+        break;
+    }
+    this.setState({ durationMode });
+  };
+
+  hidePopover = () => {
+    this.setState({
+      visible: false,
+    });
+  };
+
+  handlePopoverVisibleChange = visible => {
+    this.setState({ visible });
+  };
+
+  getPolicyId = policyId => {
+    let tempParamObj = this.state.policyReportData;
+    if (policyId === 'all') {
+      delete tempParamObj.policy;
+    } else {
+      tempParamObj.policy = policyId;
+    }
+    this.setState({ policyReportData: tempParamObj });
   };
 
   // Get modified value from datepicker and set it to paramsObject
@@ -63,7 +115,7 @@ class PolicyReport extends React.Component {
   };
 
   render() {
-    const { isCompliant } = this.state;
+    const { isCompliant, durationMode } = this.state;
     const policyData = { ...this.state.policyReportData };
     return (
       <div>
@@ -91,7 +143,32 @@ class PolicyReport extends React.Component {
               </Radio.Button>
             </Radio.Group>
 
-            <DateRangePicker updateDurationValue={this.updateDurationValue} />
+            <Radio.Group
+              onChange={this.handleDurationModeChange}
+              defaultValue={'weekly'}
+              value={durationMode}
+              style={{ marginBottom: 8, marginRight: 5 }}
+            >
+              <Radio.Button value={'daily'}>Today</Radio.Button>
+              <Radio.Button value={'weekly'}>Last Week</Radio.Button>
+              <Radio.Button value={'monthly'}>Last Month</Radio.Button>
+            </Radio.Group>
+            <Popover
+              trigger="hover"
+              content={
+                <div>
+                  <DateRangePicker
+                    updateDurationValue={this.updateDurationValue}
+                  />
+                </div>
+              }
+              visible={this.state.visible}
+              onVisibleChange={this.handlePopoverVisibleChange}
+            >
+              <Button style={{ marginRight: 10 }}>Custom Date</Button>
+            </Popover>
+
+            <SelectPolicyDropDown getPolicyId={this.getPolicyId} />
 
             <div style={{ backgroundColor: '#ffffff', borderRadius: 5 }}>
               <PolicyDevicesTable

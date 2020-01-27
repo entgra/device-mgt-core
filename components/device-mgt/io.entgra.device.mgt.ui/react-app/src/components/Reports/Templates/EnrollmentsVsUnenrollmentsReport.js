@@ -17,7 +17,7 @@
  */
 
 import React from 'react';
-import { PageHeader, Breadcrumb, Icon } from 'antd';
+import { PageHeader, Breadcrumb, Icon, Radio, Popover, Button } from 'antd';
 
 import { Link } from 'react-router-dom';
 import { withConfigContext } from '../../../context/ConfigContext';
@@ -37,20 +37,55 @@ class EnrollmentsVsUnenrollmentsReport extends React.Component {
     this.state = {
       paramsObject: {
         from: moment()
-          .subtract(6, 'days')
+          .subtract(7, 'days')
           .format('YYYY-MM-DD'),
-        to: moment()
-          .add(1, 'days')
-          .format('YYYY-MM-DD'),
+        to: moment().format('YYYY-MM-DD'),
       },
       data: [],
       fields: [],
+      durationMode: 'weekly',
+      visible: false,
     };
   }
 
   componentDidMount() {
     this.fetchData();
   }
+
+  handleDurationModeChange = e => {
+    const durationMode = e.target.value;
+    switch (durationMode) {
+      case 'daily':
+        this.updateDurationValue(
+          moment().format('YYYY-MM-DD'),
+          moment()
+            .add(1, 'days')
+            .format('YYYY-MM-DD'),
+        );
+        break;
+      case 'weekly':
+        this.updateDurationValue(
+          moment()
+            .subtract(7, 'days')
+            .format('YYYY-MM-DD'),
+          moment().format('YYYY-MM-DD'),
+        );
+        break;
+      case 'monthly':
+        this.updateDurationValue(
+          moment()
+            .subtract(30, 'days')
+            .format('YYYY-MM-DD'),
+          moment().format('YYYY-MM-DD'),
+        );
+        break;
+    }
+    this.setState({ durationMode });
+  };
+
+  handlePopoverVisibleChange = visible => {
+    this.setState({ visible });
+  };
 
   // Get modified value from datepicker and set it to paramsObject
   updateDurationValue = (modifiedFromDate, modifiedToDate) => {
@@ -95,9 +130,10 @@ class EnrollmentsVsUnenrollmentsReport extends React.Component {
         let keys = Object.keys(res[0].data.data);
         let enrollments = res[0].data.data;
         let unenrollments = res[1].data.data;
-
-        enrollments.name = 'Enrollments';
-        unenrollments.name = 'Unenrollments';
+        if (Object.keys(enrollments).length != 0) {
+          enrollments.name = 'Enrollments';
+          unenrollments.name = 'Unenrollments';
+        }
 
         const finalData = [enrollments, unenrollments];
 
@@ -115,6 +151,8 @@ class EnrollmentsVsUnenrollmentsReport extends React.Component {
   };
 
   render() {
+    const { durationMode } = this.state;
+
     const ds = new DataSet();
     const dv = ds.createView().source(this.state.data);
     dv.transform({
@@ -137,7 +175,32 @@ class EnrollmentsVsUnenrollmentsReport extends React.Component {
           </Breadcrumb>
           <div className="wrap" style={{ marginBottom: '10px' }}>
             <h3>Enrollments vs Unenrollments Report</h3>
-            <DateRangePicker updateDurationValue={this.updateDurationValue} />
+
+            <Radio.Group
+              onChange={this.handleDurationModeChange}
+              defaultValue={'weekly'}
+              value={durationMode}
+              style={{ marginBottom: 8, marginRight: 5 }}
+            >
+              <Radio.Button value={'daily'}>Today</Radio.Button>
+              <Radio.Button value={'weekly'}>Last Week</Radio.Button>
+              <Radio.Button value={'monthly'}>Last Month</Radio.Button>
+            </Radio.Group>
+
+            <Popover
+              trigger="hover"
+              content={
+                <div>
+                  <DateRangePicker
+                    updateDurationValue={this.updateDurationValue}
+                  />
+                </div>
+              }
+              visible={this.state.visible}
+              onVisibleChange={this.handlePopoverVisibleChange}
+            >
+              <Button style={{ marginRight: 10 }}>Custom Date</Button>
+            </Popover>
 
             <div
               style={{
