@@ -29,5 +29,4 @@ public interface PolicyMonitoringManager {
 
     NonComplianceData checkPolicyCompliance(DeviceIdentifier deviceIdentifier, Policy policy, Object response)
             throws PolicyComplianceException;
-
 }

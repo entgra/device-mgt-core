@@ -28,7 +28,6 @@ import java.util.List;
 public class TestDeviceManager implements DeviceManager {
 
     public TestDeviceManager() {
-
     }
 
     @Override
