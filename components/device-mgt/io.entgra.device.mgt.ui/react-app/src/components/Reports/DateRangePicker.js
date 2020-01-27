@@ -37,10 +37,7 @@ class DateRangePicker extends React.Component {
         <RangePicker
           ranges={{
             Today: [moment(), moment()],
-            Yesterday: [
-              moment().subtract(1, 'days'),
-              moment().subtract(1, 'days'),
-            ],
+            Yesterday: [moment().subtract(1, 'days'), moment()],
             'Last 7 Days': [moment().subtract(7, 'days'), moment()],
             'Last 30 Days': [moment().subtract(30, 'days'), moment()],
             'This Month': [moment().startOf('month'), moment().endOf('month')],
