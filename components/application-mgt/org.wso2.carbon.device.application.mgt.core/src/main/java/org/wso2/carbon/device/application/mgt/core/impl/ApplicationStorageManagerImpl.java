@@ -20,6 +20,7 @@ package org.wso2.carbon.device.application.mgt.core.impl;
 import com.dd.plist.NSDictionary;
 import net.dongliu.apk.parser.bean.ApkMeta;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.device.application.mgt.common.ApplicationInstaller;
@@ -253,7 +254,7 @@ public class ApplicationStorageManagerImpl implements ApplicationStorageManager 
     public InputStream getFileStream(String deviceType, int tenantId)
             throws ApplicationStorageManagementException {
         String fileName = "";
-        if (deviceType.equals("android")) {
+        if (StringUtils.isNotBlank(deviceType) && deviceType.equals("android")) {
             fileName = Constants.ANDROID_AGENT;
         }
         String filePath =
