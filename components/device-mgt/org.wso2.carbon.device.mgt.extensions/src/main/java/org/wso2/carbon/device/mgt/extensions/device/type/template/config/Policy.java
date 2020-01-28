@@ -44,15 +44,11 @@ import java.util.List;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "Policy", propOrder = {
         "name",
-//        "dataPanels"
         "dataPanel"
 })
 public class Policy {
     @XmlElement(name = "Name", required = true)
     protected String name;
-
-//    @XmlElement(name = "Panels")
-//    private DataPanels dataPanels;
 
     @XmlElementWrapper(name = "Panels")
     @XmlElement(name = "Panel")
@@ -81,14 +77,6 @@ public class Policy {
     public void setName(String value) {
         this.name = value;
     }
-
-//    public DataPanels getDataPanels() {
-//        return dataPanels;
-//    }
-//
-//    public void setDataPanels(DataPanels dataPanels) {
-//        this.dataPanels = dataPanels;
-//    }
 
     public List<DataPanel> getPanels() {
         return this.dataPanel;

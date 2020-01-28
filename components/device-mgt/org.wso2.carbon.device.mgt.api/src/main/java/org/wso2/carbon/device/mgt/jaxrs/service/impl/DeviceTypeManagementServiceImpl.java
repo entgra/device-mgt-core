@@ -126,7 +126,7 @@ public class DeviceTypeManagementServiceImpl implements DeviceTypeManagementServ
             if (pm == null) {
                 String msg = "No policy manager is registered with the given type '" + type + "'";
                 log.error(msg);
-                return Response.status(Response.Status.NOT_FOUND).entity(
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
                         new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
             }
 

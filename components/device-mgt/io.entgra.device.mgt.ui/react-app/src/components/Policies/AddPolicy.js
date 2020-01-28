@@ -103,13 +103,11 @@ class AddPolicy extends React.Component {
             <Card style={{ marginTop: 24 }}>
               <div style={{ display: currentStepIndex === 0 ? 'unset' : 'none' }}>
                 <SelectPlatform
-                    getPolicyConfigJson={this.getPolicyConfigJson}
-                />
+                    getPolicyConfigJson={this.getPolicyConfigJson}/>
               </div>
               <div style={{ display: currentStepIndex === 1 ? 'unset' : 'none' }}>
                 <ConfigureProfile
-                    policyUIConfigurationsList={policyUIConfigurationsList}
-                />
+                    policyUIConfigurationsList={policyUIConfigurationsList}/>
               </div>
               <div style={{ display: currentStepIndex === 2 ? 'unset' : 'none' }}></div>
               <div style={{ display: currentStepIndex === 3 ? 'unset' : 'none' }}></div>
@@ -120,15 +118,9 @@ class AddPolicy extends React.Component {
           <Col span={16} offset={4}>
             <div style={{ marginTop: 24 }}>
               {currentStepIndex > 0 && (
-                <Button style={{ marginRight: 8 }} onClick={() => this.prev()}>
-                  Previous
-                </Button>
-              )}
+                <Button style={{ marginRight: 8 }} onClick={() => this.prev()}>Previous</Button> )}
               {currentStepIndex > 0 &&currentStepIndex < 5 && (
-                <Button type="primary" onClick={() => this.next()}>
-                  Next
-                </Button>
-              )}
+                <Button type="primary" onClick={() => this.next()}>Next</Button>)}
               {currentStepIndex === 5 && <Button type="primary">Done</Button>}
             </div>
           </Col>
