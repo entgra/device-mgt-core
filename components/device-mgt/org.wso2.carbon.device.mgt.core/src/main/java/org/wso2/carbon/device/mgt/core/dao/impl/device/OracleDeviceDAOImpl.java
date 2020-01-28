@@ -557,9 +557,8 @@ public class OracleDeviceDAOImpl extends AbstractDeviceDAOImpl {
 
         sql = sql + " GROUP BY SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10) OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
-        Connection conn;
         try {
-            conn = this.getConnection();
+            Connection conn = this.getConnection();
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 int paramIdx = 1;
                 stmt.setInt(paramIdx++, tenantId);
