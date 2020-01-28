@@ -249,6 +249,25 @@ public class ApplicationStorageManagerImpl implements ApplicationStorageManager 
         }
     }
 
+    @Override
+    public InputStream getFileStream(String deviceType, int tenantId)
+            throws ApplicationStorageManagementException {
+        String fileName = "";
+        if (deviceType.equals("android")) {
+            fileName = Constants.ANDROID_AGENT;
+        }
+        String filePath =
+                storagePath + File.separator + "agents" + File.separator + deviceType + File.separator
+                + tenantId + File.separator + fileName;
+        try {
+            return StorageManagementUtil.getInputStream(filePath);
+        } catch (IOException e) {
+            String msg = "Error occured when accessing the file in file path: " + filePath;
+            log.error(msg, e);
+            throw new ApplicationStorageManagementException(msg, e);
+        }
+    }
+
     /***
      * This method is responsible to  delete artifact file which is located in the artifact path.
      *

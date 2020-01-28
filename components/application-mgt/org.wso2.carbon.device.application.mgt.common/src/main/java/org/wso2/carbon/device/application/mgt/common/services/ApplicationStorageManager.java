@@ -110,4 +110,15 @@ public interface ApplicationStorageManager {
      */
     InputStream getFileStream(String hashVal, String folderName, String fileName, int tenantId)
             throws ApplicationStorageManagementException;
+
+    /**
+     * Get the InputStream of the file which is located in filePath
+     *
+     * @param deviceType device type name
+     * @param tenantId   local tenant's id
+     * @return {@link InputStream}
+     * @throws ApplicationStorageManagementException throws if an error occurs when accessing the file.
+     */
+    InputStream getFileStream(String deviceType, int tenantId)
+            throws ApplicationStorageManagementException;
 }

@@ -94,4 +94,24 @@ public class AppmDataHandlerImpl implements AppmDataHandler {
             ConnectionManagerUtil.closeDBConnection();
         }
     }
+
+    @Override
+    public InputStream getAgentStream(int tenantId, String deviceType)
+            throws ApplicationManagementException {
+        ApplicationStorageManager applicationStorageManager = DAOUtil.getApplicationStorageManager();
+        try {
+            InputStream inputStream = applicationStorageManager
+                    .getFileStream(deviceType, tenantId);
+            if (inputStream == null) {
+                String msg = "Couldn't file the file in the file system.";
+                log.error(msg);
+                throw new NotFoundException(msg);
+            }
+            return inputStream;
+        } catch (ApplicationStorageManagementException e) {
+            String msg = "Error occurred when getting input stream of the " + deviceType + " agent.";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        }
+    }
 }
