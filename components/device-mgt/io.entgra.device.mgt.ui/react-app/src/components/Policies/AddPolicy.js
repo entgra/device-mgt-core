@@ -119,7 +119,7 @@ class AddPolicy extends React.Component {
             <div style={{ marginTop: 24 }}>
               {currentStepIndex > 0 && (
                 <Button style={{ marginRight: 8 }} onClick={() => this.prev()}>Previous</Button> )}
-              {currentStepIndex > 0 &&currentStepIndex < 5 && (
+              {currentStepIndex > 0 && currentStepIndex < 5 && (
                 <Button type="primary" onClick={() => this.next()}>Next</Button>)}
               {currentStepIndex === 5 && <Button type="primary">Done</Button>}
             </div>
