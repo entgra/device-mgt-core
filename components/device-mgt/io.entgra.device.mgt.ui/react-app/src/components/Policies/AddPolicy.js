@@ -23,7 +23,6 @@ import SelectPlatform from './SelectPlatform';
 import ConfigureProfile from './ConfigureProfile';
 import axios from "axios";
 const { Step } = Steps;
-let apiUrl;
 
 class AddPolicy extends React.Component {
   constructor(props) {
@@ -39,7 +38,7 @@ class AddPolicy extends React.Component {
   getPolicyConfigJson = (type) => {
       this.setState({ isLoading: true });
 
-      apiUrl =
+      let apiUrl =
           window.location.origin +
           this.config.serverConfig.invoker.uri +
           this.config.serverConfig.invoker.deviceMgt +
@@ -74,15 +73,15 @@ class AddPolicy extends React.Component {
           });
     };
 
-  next = () => {
+  onHandleNext = () => {
     const currentStepIndex = this.state.currentStepIndex + 1;
     this.setState({ currentStepIndex });
-  }
+  };
 
-  prev = () => {
+  onHandlePrev = () => {
     const currentStepIndex = this.state.currentStepIndex - 1;
     this.setState({ currentStepIndex });
-  }
+  };
 
   render() {
     const { currentStepIndex, policyUIConfigurationsList } = this.state;
@@ -90,7 +89,7 @@ class AddPolicy extends React.Component {
       <div>
         <Row>
           <Col span={20} offset={2}>
-            <Steps style={{ minHeight: 32 }} currentStepIndex={currentStepIndex}>
+            <Steps style={{ minHeight: 32 }} current={currentStepIndex}>
               <Step key="Platform" title="Select a Platform" />
               <Step key="ProfileConfigure" title="Configure profile" />
               <Step key="PolicyType" title="Select policy type" />
@@ -118,9 +117,9 @@ class AddPolicy extends React.Component {
           <Col span={16} offset={4}>
             <div style={{ marginTop: 24 }}>
               {currentStepIndex > 0 && (
-                <Button style={{ marginRight: 8 }} onClick={() => this.prev()}>Previous</Button> )}
-              {currentStepIndex > 0 &&currentStepIndex < 5 && (
-                <Button type="primary" onClick={() => this.next()}>Next</Button>)}
+                <Button style={{ marginRight: 8 }} onClick={() => this.onHandlePrev()}>Previous</Button> )}
+              {currentStepIndex > 0 && currentStepIndex < 5 && (
+                <Button type="primary" onClick={() => this.onHandleNext()}>Next</Button>)}
               {currentStepIndex === 5 && <Button type="primary">Done</Button>}
             </div>
           </Col>

@@ -24,8 +24,6 @@ import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
 import { withConfigContext } from '../../context/ConfigContext';
 
-let apiUrl;
-
 class SelectPlatform extends React.Component {
   constructor(props) {
     super(props);
@@ -44,7 +42,6 @@ class SelectPlatform extends React.Component {
   }
 
   onClickCard = (e, type) => {
-      e.preventDefault();
       this.props.getPolicyConfigJson(type);
   };
 
@@ -53,7 +50,7 @@ class SelectPlatform extends React.Component {
   fetchUsers = (params = {}) => {
     this.setState({ loading: true });
 
-    apiUrl =
+    let apiUrl =
       window.location.origin +
       this.config.serverConfig.invoker.uri +
       this.config.serverConfig.invoker.deviceMgt +
