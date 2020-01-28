@@ -37,9 +37,11 @@ class EnrollmentTypeReport extends React.Component {
     this.state = {
       paramsObject: {
         from: moment()
-          .subtract(7, 'days')
+          .subtract(6, 'days')
           .format('YYYY-MM-DD'),
-        to: moment().format('YYYY-MM-DD'),
+        to: moment()
+          .add(1, 'days')
+          .format('YYYY-MM-DD'),
       },
       data: [],
       fields: [],

@@ -623,8 +623,8 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                 if (ownership != null) {
                     stmt.setString(paramIdx++, ownership);
                 }
-                stmt.setInt(paramIdx++, request.getStartIndex());
-                stmt.setInt(paramIdx, request.getRowCount());
+                stmt.setInt(paramIdx++, request.getRowCount());
+                stmt.setInt(paramIdx, request.getStartIndex());
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
                         Count count = new Count(
