@@ -44,7 +44,9 @@ class PolicyReport extends React.Component {
         from: moment()
           .subtract(7, 'days')
           .format('YYYY-MM-DD'),
-        to: moment().format('YYYY-MM-DD'),
+        to: moment()
+          .add(1, 'days')
+          .format('YYYY-MM-DD'),
       },
       visible: false,
     };
@@ -60,10 +62,10 @@ class PolicyReport extends React.Component {
     switch (durationMode) {
       case 'daily':
         this.updateDurationValue(
-          moment()
-            .subtract(1, 'days')
-            .format('YYYY-MM-DD'),
           moment().format('YYYY-MM-DD'),
+          moment()
+            .add(1, 'days')
+            .format('YYYY-MM-DD'),
         );
         break;
       case 'weekly':
@@ -71,7 +73,9 @@ class PolicyReport extends React.Component {
           moment()
             .subtract(7, 'days')
             .format('YYYY-MM-DD'),
-          moment().format('YYYY-MM-DD'),
+          moment()
+            .add(1, 'days')
+            .format('YYYY-MM-DD'),
         );
         break;
       case 'monthly':
@@ -79,7 +83,9 @@ class PolicyReport extends React.Component {
           moment()
             .subtract(30, 'days')
             .format('YYYY-MM-DD'),
-          moment().format('YYYY-MM-DD'),
+          moment()
+            .add(1, 'days')
+            .format('YYYY-MM-DD'),
         );
         break;
     }
