@@ -605,7 +605,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
             sql = sql + " AND e.OWNERSHIP = ?";
         }
 
-        sql = sql + " GROUP BY SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10) LIMIT ?,?";
+        sql = sql + " GROUP BY SUBSTRING(e.DATE_OF_ENROLMENT, 1, 10) LIMIT ? OFFSET ?";
 
         Connection conn;
         try {
