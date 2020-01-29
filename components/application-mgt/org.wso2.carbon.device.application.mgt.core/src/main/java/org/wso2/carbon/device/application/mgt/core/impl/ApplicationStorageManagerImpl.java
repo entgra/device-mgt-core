@@ -27,6 +27,7 @@ import org.wso2.carbon.device.application.mgt.common.ApplicationInstaller;
 import org.wso2.carbon.device.application.mgt.common.dto.ApplicationReleaseDTO;
 import org.wso2.carbon.device.application.mgt.common.DeviceTypes;
 import org.wso2.carbon.device.application.mgt.common.exception.ApplicationStorageManagementException;
+import org.wso2.carbon.device.application.mgt.common.exception.RequestValidatingException;
 import org.wso2.carbon.device.application.mgt.common.exception.ResourceManagementException;
 import org.wso2.carbon.device.application.mgt.common.services.ApplicationStorageManager;
 import org.wso2.carbon.device.application.mgt.core.exception.ParsingException;
@@ -252,20 +253,23 @@ public class ApplicationStorageManagerImpl implements ApplicationStorageManager 
 
     @Override
     public InputStream getFileStream(String deviceType, int tenantId)
-            throws ApplicationStorageManagementException {
-        String fileName = "";
+            throws ApplicationStorageManagementException, RequestValidatingException {
         if (StringUtils.isNotBlank(deviceType) && deviceType.equals("android")) {
-            fileName = Constants.ANDROID_AGENT;
-        }
-        String filePath =
-                storagePath + File.separator + "agents" + File.separator + deviceType + File.separator
-                + tenantId + File.separator + fileName;
-        try {
-            return StorageManagementUtil.getInputStream(filePath);
-        } catch (IOException e) {
-            String msg = "Error occured when accessing the file in file path: " + filePath;
-            log.error(msg, e);
-            throw new ApplicationStorageManagementException(msg, e);
+            String fileName = Constants.ANDROID_AGENT;
+            String filePath =
+                    storagePath + File.separator + "agents" + File.separator + deviceType + File.separator
+                    + tenantId + File.separator + fileName;
+            try {
+                return StorageManagementUtil.getInputStream(filePath);
+            } catch (IOException e) {
+                String msg = "Error occured when accessing the file in file path: " + filePath;
+                log.error(msg, e);
+                throw new ApplicationStorageManagementException(msg, e);
+            }
+        } else {
+            String msg = "Error occurred while accessing the file invalid device type: " + deviceType;
+            log.error(msg);
+            throw new RequestValidatingException(msg);
         }
     }
 

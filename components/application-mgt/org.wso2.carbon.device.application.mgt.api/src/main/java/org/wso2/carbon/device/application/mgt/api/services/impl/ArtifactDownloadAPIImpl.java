@@ -136,6 +136,10 @@ public class ArtifactDownloadAPIImpl implements ArtifactDownloadAPI {
             String msg = "Couldn't find an agent for device type: " + deviceType;
             log.error(msg, e);
             return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+        } catch (BadRequestException e){
+            String msg = "Invalid device type received: " + deviceType + ".Valid device type is android";
+            log.error(msg, e);
+            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
         } catch (ApplicationManagementException e) {
             String msg = "Error occurred while getting the application release artifact file. ";
             log.error(msg, e);
