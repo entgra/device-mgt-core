@@ -24,19 +24,19 @@ import org.wso2.carbon.device.mgt.common.InitialOperationConfig;
 import org.wso2.carbon.device.mgt.common.push.notification.PushNotificationConfig;
 import org.wso2.carbon.device.mgt.common.type.mgt.DeviceTypeDefinitionProvider;
 import org.wso2.carbon.device.mgt.common.type.mgt.DeviceTypeMetaDefinition;
-import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Claimable;
-import org.wso2.carbon.device.mgt.extensions.device.type.template.config.ConfigProperties;
-import org.wso2.carbon.device.mgt.extensions.device.type.template.config.DeviceDetails;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.config.DeviceTypeConfiguration;
-import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Features;
-import org.wso2.carbon.device.mgt.extensions.device.type.template.config.License;
-import org.wso2.carbon.device.mgt.extensions.device.type.template.config.PolicyMonitoring;
+import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Claimable;
+import org.wso2.carbon.device.mgt.extensions.device.type.template.config.DeviceDetails;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Properties;
-import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Property;
-import org.wso2.carbon.device.mgt.extensions.device.type.template.config.ProvisioningConfig;
-import org.wso2.carbon.device.mgt.extensions.device.type.template.config.PullNotificationSubscriberConfig;
-import org.wso2.carbon.device.mgt.extensions.device.type.template.config.PushNotificationProvider;
+import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Features;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.config.PolicyUIConfigurations;
+import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Policy;
+import org.wso2.carbon.device.mgt.extensions.device.type.template.config.PolicyMonitoring;
+import org.wso2.carbon.device.mgt.extensions.device.type.template.config.ProvisioningConfig;
+import org.wso2.carbon.device.mgt.extensions.device.type.template.config.PushNotificationProvider;
+import org.wso2.carbon.device.mgt.extensions.device.type.template.config.ConfigProperties;
+import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Property;
+import org.wso2.carbon.device.mgt.extensions.device.type.template.config.PullNotificationSubscriberConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -99,22 +99,21 @@ public class HTTPDeviceTypeManagerService extends DeviceTypeManagerService imple
                 deviceTypeConfiguration.setFeatures(features);
             }
 
-            if (deviceTypeMetaDefinition.getPolicies() != null && deviceTypeMetaDefinition.getPolicies().size() > 0) {
+            if (deviceTypeMetaDefinition.getPolicies() != null && !deviceTypeMetaDefinition.getPolicies().isEmpty()) {
                 PolicyUIConfigurations policyUIConfigurations = new PolicyUIConfigurations();
                 List<org.wso2.carbon.device.mgt.extensions.device.type.template.config.Policy> policyList
                         = new ArrayList<>();
-                for (org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy policy : deviceTypeMetaDefinition.getPolicies()) {
-                    org.wso2.carbon.device.mgt.extensions.device.type.template.config.Policy configPolicy = new org
-                            .wso2.carbon.device.mgt.extensions.device.type.template.config.Policy();
-                    if (policy.getName() != null) {
-                        configPolicy.setName(policy.getName());
+                deviceTypeMetaDefinition.getPolicies().forEach(policy -> {
+                    Policy policyUIconfig = new Policy();
+                    if(policy.getName() != null){
+                        policyUIconfig.setName(policy.getName());
                         List<String> panelValues = new ArrayList<>();
-                        for(org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy.DataPanels panelData: policy.getPanels()){
+                        policy.getPanels().forEach(panelData ->{
                             panelValues.add(panelData.getPanel().toString());
-                        }
-                        policyList.add(configPolicy);
+                        });
+                        policyList.add(policyUIconfig);
                     }
-                }
+                });
                 policyUIConfigurations.addPolicies(policyList);
                 deviceTypeConfiguration.setPolicyUIConfigurations(policyUIConfigurations);
             }

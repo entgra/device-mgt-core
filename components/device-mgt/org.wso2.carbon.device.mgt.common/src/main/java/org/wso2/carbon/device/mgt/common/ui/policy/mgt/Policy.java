@@ -29,6 +29,9 @@ import java.util.List;
         description = "This class carries all information related to a policies."
 )
 public class Policy implements Serializable {
+
+    private static final long serialVersionUID = -2884635400482180628L;
+
     @ApiModelProperty(
             name = "id",
             value = "Policy Id.",
