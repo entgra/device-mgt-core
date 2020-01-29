@@ -133,7 +133,7 @@ public interface ArtifactDownloadAPI {
             @PathParam("uuid") String uuid);
 
     @GET
-    @Path("/{deviceType}/{tenantId}")
+    @Path("/{deviceType}/agent/{tenantId}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @ApiOperation(
             produces = MediaType.APPLICATION_OCTET_STREAM,

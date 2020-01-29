@@ -114,7 +114,7 @@ public class ArtifactDownloadAPIImpl implements ArtifactDownloadAPI {
     @GET
     @Override
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Path("/{deviceType}/{tenantId}")
+    @Path("/{deviceType}/agent/{tenantId}")
     public Response getAndroidAgent(@PathParam("deviceType") String deviceType,
                                     @PathParam("tenantId") int tenantId) {
         AppmDataHandler dataHandler = APIUtil.getDataHandler();
