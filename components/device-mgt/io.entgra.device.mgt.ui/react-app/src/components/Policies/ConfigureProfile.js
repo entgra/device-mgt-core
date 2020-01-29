@@ -21,22 +21,16 @@ import {
 } from 'antd';
 import { withConfigContext } from '../../context/ConfigContext';
 import '../../pages/Dashboard/Policies/policies.css';
-import jsonResponse from './configuration';
-import axios from "axios";
 const { Text, Title, Paragraph } = Typography;
 const { TabPane } = Tabs;
 const { Option } = Select;
 const { TextArea } = Input;
 const {Panel} = Collapse;
-let apiUrl;
-
-const policyConfigurationsList = jsonResponse.policyConfigurations;
 
 class ConfigureProfile extends React.Component {
   constructor(props) {
     super(props);
     this.config = this.props.context;
-    this.policies = policyConfigurationsList.androidPolicy.policy;
     this.state = {
       loading: false,
       isDisplayMain: "none",
