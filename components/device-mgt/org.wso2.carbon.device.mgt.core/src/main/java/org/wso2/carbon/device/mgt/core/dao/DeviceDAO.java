@@ -634,4 +634,9 @@ public interface DeviceDAO {
      */
     int getCountOfDeviceExpiredByOSVersion(String deviceType, long osBuildDate, int tenantId)
             throws DeviceManagementDAOException;
+
+    List<Device> getAppNotInstalledDevices(PaginationRequest request,
+                                      int tenantId,
+                                      String packageName,
+                                      String version) throws DeviceManagementDAOException;
 }

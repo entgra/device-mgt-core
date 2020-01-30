@@ -270,4 +270,41 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         }
         return resultObject;
     }
+
+    @Override
+    public PaginationResult getAppNotInstalledDevices(PaginationRequest request, String packageName, String version)
+            throws ReportManagementException {
+        PaginationResult paginationResult = new PaginationResult();
+        try {
+            request = DeviceManagerUtil.validateDeviceListPageSize(request);
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while validating device list page size";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        }
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            List<Device> devices = deviceDAO.getAppNotInstalledDevices(
+                    request,
+                    DeviceManagementDAOUtil.getTenantId(),
+                    packageName,
+                    version
+            );
+            paginationResult.setData(devices);
+            //TODO: Should change the following code to a seperate count method from deviceDAO to get the count
+            paginationResult.setRecordsTotal(devices.size());
+            return paginationResult;
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection " +
+                    "to the data source";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred while retrieving Tenant ID";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
 }

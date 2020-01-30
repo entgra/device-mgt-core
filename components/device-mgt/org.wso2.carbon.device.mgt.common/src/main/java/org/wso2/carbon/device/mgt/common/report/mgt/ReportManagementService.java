@@ -59,4 +59,7 @@ public interface ReportManagementService {
      */
     PaginationResult getDevicesExpiredByOSVersion(PaginationRequest request)
             throws ReportManagementException, DeviceTypeNotFoundException;
+
+    PaginationResult getAppNotInstalledDevices(PaginationRequest request, String packageName, String version)
+            throws ReportManagementException;
 }
