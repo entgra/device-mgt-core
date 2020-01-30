@@ -218,24 +218,11 @@ public class HttpDeviceTypeManagerServiceAndDeviceTypeGeneratorServceTest {
             features.add(commonFeature);
         }
 
-        List<org.wso2.carbon.device.mgt.extensions.device.type.template.config.Policy> configurationPolicies = androidSenseDeviceTypeConfiguration.getPolicyUIConfigurations().getPolicies();
-        List<Policy> policies = new ArrayList<>();
-
-        for (org.wso2.carbon.device.mgt.extensions.device.type.template.config.Policy policy : configurationPolicies) {
-            Policy commonPolicy = new Policy();
-            commonPolicy.setName(policy.getName());
-            Policy.DataPanels panelDataEntry = new Policy.DataPanels();
-            List<Policy.DataPanels> panelDataEntries = new ArrayList<>();
-            panelDataEntries.add(panelDataEntry);
-            policies.add(commonPolicy);
-        }
-
         deviceTypeMetaDefinition = new DeviceTypeMetaDefinition();
         deviceTypeMetaDefinition.setPushNotificationConfig(pushNotificationConfig);
         deviceTypeMetaDefinition.setDescription("This is android_sense");
         deviceTypeMetaDefinition.setClaimable(true);
         deviceTypeMetaDefinition.setLicense(androidSenseLicense);
         deviceTypeMetaDefinition.setFeatures(features);
-        deviceTypeMetaDefinition.setPolicies(policies);
     }
 }
