@@ -42,9 +42,8 @@ class SelectPlatform extends React.Component {
   }
 
   onClickCard = (e, type) => {
-      this.props.getPolicyConfigJson(type);
+    this.props.getPolicyConfigJson(type);
   };
-
 
   // fetch data from api
   fetchUsers = (params = {}) => {
@@ -106,26 +105,28 @@ class SelectPlatform extends React.Component {
     const { Meta } = Card;
     const itemCard = data.map(data => (
       <Col span={5} key={data.id}>
-        <a><Card
-          size="default"
-          style={{ width: 150 }}
-          bordered={true}
-          onClick={(e)=>this.onClickCard(e, data.name)}
-          cover={
-            <Icon
-              type="android"
-              key="device-types"
-              style={{
-                color: '#ffffff',
-                backgroundColor: '#4b92db',
-                fontSize: '100px',
-                padding: '20px',
-              }}
-            />
-          }
-        >
-          <Meta title={data.name} />
-        </Card></a>
+        <a>
+          <Card
+            size="default"
+            style={{ width: 150 }}
+            bordered={true}
+            onClick={e => this.onClickCard(e, data.name)}
+            cover={
+              <Icon
+                type="android"
+                key="device-types"
+                style={{
+                  color: '#ffffff',
+                  backgroundColor: '#4b92db',
+                  fontSize: '100px',
+                  padding: '20px',
+                }}
+              />
+            }
+          >
+            <Meta title={data.name} />
+          </Card>
+        </a>
       </Col>
     ));
     return (

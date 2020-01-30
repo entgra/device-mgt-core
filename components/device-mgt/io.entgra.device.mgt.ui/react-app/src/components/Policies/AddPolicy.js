@@ -17,11 +17,20 @@
  */
 
 import React from 'react';
-import {Button, Form, Row, Col, Card, Steps, message, notification} from 'antd';
+import {
+  Button,
+  Form,
+  Row,
+  Col,
+  Card,
+  Steps,
+  message,
+  notification,
+} from 'antd';
 import { withConfigContext } from '../../context/ConfigContext';
 import SelectPlatform from './SelectPlatform';
 import ConfigureProfile from './ConfigureProfile';
-import axios from "axios";
+import axios from 'axios';
 const { Step } = Steps;
 
 class AddPolicy extends React.Component {
@@ -31,47 +40,47 @@ class AddPolicy extends React.Component {
     this.state = {
       currentStepIndex: 0,
       isLoading: false,
-      policyUIConfigurationsList:[]
+      policyUIConfigurationsList: [],
     };
   }
 
-  getPolicyConfigJson = (type) => {
-      this.setState({ isLoading: true });
+  getPolicyConfigJson = type => {
+    this.setState({ isLoading: true });
 
-      let apiUrl =
-          window.location.origin +
-          this.config.serverConfig.invoker.uri +
-          this.config.serverConfig.invoker.deviceMgt +
-          '/device-types/'+ type + '/policies';
-
-      // send request to the invokers
-      axios
-          .get(apiUrl)
-          .then(res => {
-              if (res.status === 200) {
-                  const pagination = { ...this.state.pagination };
-                  this.setState({
-                      isLoading: false,
-                      policyUIConfigurationsList: JSON.parse(res.data.data),
-                      currentStepIndex: 1,
-                  });
-              }
-          })
-          .catch(error => {
-              if (error.hasOwnProperty('response') && error.response.status === 401) {
-                  // todo display a popop with error
-                  message.error('You are not logged in');
-                  window.location.href = window.location.origin + '/entgra/login';
-              } else {
-                  notification.error({
-                      message: 'There was a problem',
-                      duration: 0,
-                      description: 'Error occurred while trying to load Policy details.',
-                  })
-                }
-              this.setState({ isLoading: false });
+    let apiUrl =
+      window.location.origin +
+      this.config.serverConfig.invoker.uri +
+      this.config.serverConfig.invoker.deviceMgt +
+      '/device-types/' +
+      type +
+      '/policies';
+    // send request to the invokers
+    axios
+      .get(apiUrl)
+      .then(res => {
+        if (res.status === 200) {
+          this.setState({
+            isLoading: false,
+            policyUIConfigurationsList: JSON.parse(res.data.data),
+            currentStepIndex: 1,
           });
-    };
+        }
+      })
+      .catch(error => {
+        if (error.hasOwnProperty('response') && error.response.status === 401) {
+          // todo display a popop with error
+          message.error('You are not logged in');
+          window.location.href = window.location.origin + '/entgra/login';
+        } else {
+          notification.error({
+            message: 'There was a problem',
+            duration: 0,
+            description: 'Error occurred while trying to load Policy details.',
+          });
+        }
+        this.setState({ isLoading: false });
+      });
+  };
 
   onHandleNext = () => {
     const currentStepIndex = this.state.currentStepIndex + 1;
@@ -100,26 +109,49 @@ class AddPolicy extends React.Component {
           </Col>
           <Col span={16} offset={4}>
             <Card style={{ marginTop: 24 }}>
-              <div style={{ display: currentStepIndex === 0 ? 'unset' : 'none' }}>
+              <div
+                style={{ display: currentStepIndex === 0 ? 'unset' : 'none' }}
+              >
                 <SelectPlatform
-                    getPolicyConfigJson={this.getPolicyConfigJson}/>
+                  getPolicyConfigJson={this.getPolicyConfigJson}
+                />
               </div>
-              <div style={{ display: currentStepIndex === 1 ? 'unset' : 'none' }}>
+              <div
+                style={{ display: currentStepIndex === 1 ? 'unset' : 'none' }}
+              >
                 <ConfigureProfile
-                    policyUIConfigurationsList={policyUIConfigurationsList}/>
+                  policyUIConfigurationsList={policyUIConfigurationsList}
+                />
               </div>
-              <div style={{ display: currentStepIndex === 2 ? 'unset' : 'none' }}></div>
-              <div style={{ display: currentStepIndex === 3 ? 'unset' : 'none' }}></div>
-              <div style={{ display: currentStepIndex === 4 ? 'unset' : 'none' }}></div>
-              <div style={{ display: currentStepIndex === 5 ? 'unset' : 'none' }}></div>
+              <div
+                style={{ display: currentStepIndex === 2 ? 'unset' : 'none' }}
+              ></div>
+              <div
+                style={{ display: currentStepIndex === 3 ? 'unset' : 'none' }}
+              ></div>
+              <div
+                style={{ display: currentStepIndex === 4 ? 'unset' : 'none' }}
+              ></div>
+              <div
+                style={{ display: currentStepIndex === 5 ? 'unset' : 'none' }}
+              ></div>
             </Card>
           </Col>
           <Col span={16} offset={4}>
             <div style={{ marginTop: 24 }}>
               {currentStepIndex > 0 && (
-                <Button style={{ marginRight: 8 }} onClick={() => this.onHandlePrev()}>Previous</Button> )}
+                <Button
+                  style={{ marginRight: 8 }}
+                  onClick={() => this.onHandlePrev()}
+                >
+                  Previous
+                </Button>
+              )}
               {currentStepIndex > 0 && currentStepIndex < 5 && (
-                <Button type="primary" onClick={() => this.onHandleNext()}>Next</Button>)}
+                <Button type="primary" onClick={() => this.onHandleNext()}>
+                  Next
+                </Button>
+              )}
               {currentStepIndex === 5 && <Button type="primary">Done</Button>}
             </div>
           </Col>
