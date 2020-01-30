@@ -53,7 +53,7 @@ class AddPolicy extends React.Component {
       this.config.serverConfig.invoker.deviceMgt +
       '/device-types/' +
       type +
-      '/policies';
+      '/ui-policy-configurations';
     // send request to the invokers
     axios
       .get(apiUrl)
