@@ -109,13 +109,13 @@ public class DeviceTypeManagementServiceImpl implements DeviceTypeManagementServ
 
     @GET
     @Override
-    @Path("/{type}/policies")
+    @Path("/{type}/ui-policy-configurations")
     public Response getPolicies(@PathParam("type") @Size(min = 2, max = 45) String type){
         List<Policy> policies;
         DeviceManagementProviderService dms;
         try {
             if (StringUtils.isEmpty(type)) {
-                String msg = "Type cannot be empty.";
+                String msg = "Device Type cannot be empty.";
                 log.error(msg);
                 return Response.status(Response.Status.BAD_REQUEST).entity(
                         new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
@@ -124,7 +124,7 @@ public class DeviceTypeManagementServiceImpl implements DeviceTypeManagementServ
             PolicyConfigurationManager pm = dms.getPolicyUIConfigurationManager(type);
 
             if (pm == null) {
-                String msg = "No policy manager is registered with the given type '" + type + "'";
+                String msg = "No policy manager is registered with the given device type '" + type + "'";
                 log.error(msg);
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
                         new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();

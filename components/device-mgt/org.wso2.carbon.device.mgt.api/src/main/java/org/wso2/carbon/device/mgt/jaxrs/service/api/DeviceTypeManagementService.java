@@ -309,7 +309,7 @@ public interface DeviceTypeManagementService {
 
 
     @GET
-    @Path("/{type}/policies")
+    @Path("/{type}/ui-policy-configurations")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
