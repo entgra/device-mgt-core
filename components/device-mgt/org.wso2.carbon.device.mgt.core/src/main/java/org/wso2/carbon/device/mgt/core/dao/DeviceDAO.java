@@ -611,4 +611,15 @@ public interface DeviceDAO {
      */
     int getSubscribedDeviceCount(List<Integer> deviceIds, int tenantId, String status)
             throws DeviceManagementDAOException;
+
+    /**
+     * Get a list of devices older than the given OS version of a device type
+     *
+     * @param request  Object with device type and OS version info
+     * @param tenantId Id of the current tenant.
+     * @return {@link List<Device>}
+     * @throws DeviceManagementDAOException Thrown if error occurs while database transactions
+     */
+    List<Device> getDevicesExpiredByOSVersion(PaginationRequest request, int tenantId)
+            throws DeviceManagementDAOException;
 }
