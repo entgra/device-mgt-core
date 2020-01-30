@@ -130,7 +130,7 @@ class Dashboard extends React.Component {
                 {/*    <span>Users</span>*/}
                 {/*  </Link>*/}
                 {/* </Menu.Item>*/}
-                {/*<SubMenu*/}
+                {/* <SubMenu*/}
                 {/*  key="policies"*/}
                 {/*  title={*/}
                 {/*    <span>*/}
@@ -138,7 +138,7 @@ class Dashboard extends React.Component {
                 {/*      <span>Policies</span>*/}
                 {/*    </span>*/}
                 {/*  }*/}
-                {/*>*/}
+                {/* >*/}
                 {/*  <Menu.Item key="policiesList">*/}
                 {/*    <Link to="/entgra/policies">*/}
                 {/*      <span>View</span>*/}
@@ -149,7 +149,7 @@ class Dashboard extends React.Component {
                 {/*      <span>Add New Policy</span>*/}
                 {/*    </Link>*/}
                 {/*  </Menu.Item>*/}
-                {/*</SubMenu>*/}
+                {/* </SubMenu>*/}
                 {/* <Menu.Item key="roles">*/}
                 {/*  <Link to="/entgra/roles">*/}
                 {/*    <Icon type="book" />*/}
