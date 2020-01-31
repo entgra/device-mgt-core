@@ -1847,8 +1847,47 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 }
             }
         } catch (SQLException e) {
-            String msg = "Error occurred while retrieving information of devices with an older OS date " +
-                         "than the minimum date";
+            String msg = "Error occurred while building or executing queries to retrieve information " +
+                         "of devices with an older OS build date";
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public int getCountOfDeviceExpiredByOSVersion(String deviceType, long osBuildDate, int tenantId)
+            throws DeviceManagementDAOException {
+        try {
+            Connection conn = getConnection();
+            String sql = "SELECT " +
+                         "COUNT(dd.DEVICE_ID) AS DEVICE_COUNT " +
+                         "FROM DM_DEVICE d, " +
+                         "DM_DEVICE_DETAIL dd, " +
+                         "(SELECT ID " +
+                         "FROM DM_DEVICE_TYPE " +
+                         "WHERE NAME = ? " +
+                         "AND PROVIDER_TENANT_ID = ?) dt " +
+                         "WHERE d.DEVICE_TYPE_ID = dt.ID " +
+                         "AND d.ID = dd.DEVICE_ID " +
+                         "AND dd.OS_BUILD_DATE < ?";
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                int paramIdx = 1;
+                ps.setString(paramIdx++, deviceType);
+                ps.setInt(paramIdx++, tenantId);
+                ps.setLong(paramIdx, osBuildDate);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    int deviceCount = 0;
+                    if (rs.next()) {
+                        deviceCount = rs.getInt("DEVICE_COUNT");
+                    }
+                    return deviceCount;
+                }
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while building or executing queries to retrieve the count " +
+                         "of devices with an older OS build date";
             log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
