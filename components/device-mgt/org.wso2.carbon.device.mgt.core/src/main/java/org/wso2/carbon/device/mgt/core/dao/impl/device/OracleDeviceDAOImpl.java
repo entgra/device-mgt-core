@@ -846,6 +846,7 @@ public class OracleDeviceDAOImpl extends AbstractDeviceDAOImpl {
                 Connection conn = getConnection();
                 String sql = "SELECT " +
                              "dt.NAME AS DEVICE_TYPE, " +
+                             "d.ID AS DEVICE_ID, " +
                              "d.NAME AS DEVICE_NAME, " +
                              "d.DESCRIPTION, " +
                              "d.DEVICE_IDENTIFICATION, " +
@@ -871,6 +872,7 @@ public class OracleDeviceDAOImpl extends AbstractDeviceDAOImpl {
                              "ORDER BY ENROLMENT_ID " +
                              "OFFSET ? ROWS " +
                              "FETCH NEXT ? ROWS ONLY";
+
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     int paramIDx = 1;
                     ps.setString(paramIDx++, request.getDeviceType());
@@ -878,6 +880,7 @@ public class OracleDeviceDAOImpl extends AbstractDeviceDAOImpl {
                     ps.setLong(paramIDx++, osBuildDate);
                     ps.setInt(paramIDx++, request.getStartIndex());
                     ps.setInt(paramIDx, request.getRowCount());
+
                     try (ResultSet rs = ps.executeQuery()) {
                         List<Device> devices = new ArrayList<>();
                         DeviceInfo deviceInfo = new DeviceInfo();
