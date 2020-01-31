@@ -47,4 +47,14 @@ public interface ReportManagementService {
 
     JsonObject getCountOfDevicesByDuration(PaginationRequest request, List<String> statusList, String fromDate, String toDate)
             throws ReportManagementException;
+
+    /**
+     * Get a list of devices with the count which are older than the given OS version
+     *
+     * @param request {@link PaginationRequest}
+     * @return {@link PaginationResult}
+     * @throws ReportManagementException Might occur during the business logic or building database query
+     */
+    PaginationResult getDevicesExpiredByOSVersion(PaginationRequest request)
+            throws ReportManagementException;
 }
