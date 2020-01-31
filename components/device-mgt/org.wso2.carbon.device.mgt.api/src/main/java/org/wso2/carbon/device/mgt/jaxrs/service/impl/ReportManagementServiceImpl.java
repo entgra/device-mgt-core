@@ -36,6 +36,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -161,6 +162,29 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             log.error(msg, e);
             return Response.serverError().entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        }
+    }
+
+    @GET
+    @Path("expired-devices/{deviceType}")
+    @Override
+    public Response getExpiredDevicesByOSVersion(@PathParam("deviceType") String deviceType,
+                                                 @QueryParam("osBuildDate") Long osBuildDate,
+                                                 @DefaultValue("0")
+                                                 @QueryParam("offset") int offset,
+                                                 @QueryParam("limit") int limit) {
+        PaginationRequest request = new PaginationRequest(offset, limit);
+        request.setDeviceType(deviceType);
+        request.setProperty("osBuildDate", osBuildDate);
+        try {
+            PaginationResult paginationResult = DeviceMgtAPIUtils
+                    .getReportManagementService()
+                    .getDevicesExpiredByOSVersion(request);
+            return Response.ok().entity(paginationResult).build();
+        } catch (ReportManagementException e) {
+            String msg = "Error occurred while retrieving devices list with out-dated OS build versions";
+            log.error(msg, e);
+            return Response.serverError().entity(msg).build();
         }
     }
 }
