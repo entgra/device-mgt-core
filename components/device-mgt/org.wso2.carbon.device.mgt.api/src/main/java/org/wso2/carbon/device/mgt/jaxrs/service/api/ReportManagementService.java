@@ -373,7 +373,7 @@ public interface ReportManagementService {
                     int limit);
 
     @GET
-    @Path("/{device-type}/{package-name}/not-installed")
+    @Path("/devices/{device-type}/{package-name}/not-installed")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",

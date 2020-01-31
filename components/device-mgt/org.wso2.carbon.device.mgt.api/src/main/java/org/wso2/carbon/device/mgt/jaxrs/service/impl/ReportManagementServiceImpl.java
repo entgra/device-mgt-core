@@ -201,7 +201,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @GET
-    @Path("/{device-type}/{package-name}/not-installed")
+    @Path("/devices/{device-type}/{package-name}/not-installed")
     @Override
     public Response getAppNotInstalledDevices(
             @PathParam("device-type") @Size(max = 45) String deviceType,
@@ -224,7 +224,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             result = DeviceMgtAPIUtils.getReportManagementService()
                     .getAppNotInstalledDevices(request, packageName, version);
             if (result.getData().isEmpty()) {
-                String msg = "No devices";
+                String msg = "App with package name " + packageName + " is installed in all enrolled devices";
                 return Response.status(Response.Status.OK).entity(msg).build();
             } else {
                 devices.setList((List<Device>) result.getData());
