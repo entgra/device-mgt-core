@@ -39,6 +39,7 @@ import {
 } from 'antd';
 import { withConfigContext } from '../../context/ConfigContext';
 import '../../pages/Dashboard/Policies/policies.css';
+import moment from 'moment';
 const { Text, Title, Paragraph } = Typography;
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -62,6 +63,66 @@ class ConfigureProfile extends React.Component {
   }
 
   componentDidMount() {}
+
+  // convert time from 24h format to 12h format
+  timeConverter = time => {
+    time = time
+      .toString()
+      .match(/^([01]\d|2[0-3])(:)([0-5]\d)(:[0-5]\d)?$/) || [time];
+    if (time.length > 1) {
+      time = time.slice(1);
+      time[5] = +time[0] < 12 ? ' AM' : ' PM';
+      time[0] = +time[0] % 12 || 12;
+    }
+    return time.join('');
+  };
+
+  // get Option value from start Time, end Time and time difference between 2 values
+  getOptionForTimeSelectors = (startTimeValue, endTimeValue, timeIncrement) => {
+    let timeOptions = [];
+    let time = new Date(
+      moment()
+        .startOf('day')
+        .format('YYYY/MM/DD'),
+    );
+    let tempValue = startTimeValue;
+    time.setMinutes(time.getMinutes() + tempValue);
+    let startOption = (
+      <Option value={String(tempValue)}>
+        {this.timeConverter(
+          `${String(time)
+            .split(' ')[4]
+            .substring(0, 5)}`,
+        )}
+      </Option>
+    );
+    timeOptions.push(startOption);
+
+    while (tempValue !== endTimeValue) {
+      time = new Date(
+        moment()
+          .startOf('day')
+          .format('YYYY/MM/DD'),
+      );
+      tempValue += timeIncrement;
+      if (tempValue > 1440) {
+        tempValue = 0;
+        continue;
+      }
+      time.setMinutes(time.getMinutes() + tempValue);
+      let option = (
+        <Option value={String(tempValue)}>
+          {this.timeConverter(
+            `${String(time)
+              .split(' ')[4]
+              .substring(0, 5)}`,
+          )}
+        </Option>
+      );
+      timeOptions.push(option);
+    }
+    return timeOptions;
+  };
 
   // handle items which handle from radio buttons
   handleRadioPanel = (e, subPanel) => {
@@ -278,7 +339,15 @@ class ConfigureProfile extends React.Component {
                 <div className={'sub-panel-container'}>
                   {item.optional.subPanel.map((panel, i) => {
                     return (
-                      <div id={panel.id} key={i} style={{ display: 'none' }}>
+                      <div
+                        id={panel.id}
+                        key={i}
+                        style={
+                          panel.id === item.optional.initialDataIndex
+                            ? { display: 'block' }
+                            : { display: 'none' }
+                        }
+                      >
                         {this.getPanelItems(panel.panelItem)}
                       </div>
                     );
@@ -315,7 +384,34 @@ class ConfigureProfile extends React.Component {
               )}
             </Form.Item>
           );
-
+        case 'timeSelector':
+          return (
+            <Form.Item
+              key={k}
+              label={
+                <span>
+                  {item.label}&nbsp;
+                  <Tooltip title={item.tooltip} placement="right">
+                    <Icon type="question-circle-o" />
+                  </Tooltip>
+                </span>
+              }
+              style={{ display: 'block' }}
+            >
+              {getFieldDecorator(`${item.id}`, {
+                // valuePropName: 'option',
+                initialValue: item.optional.initialDataIndex,
+              })(
+                <Select>
+                  {this.getOptionForTimeSelectors(
+                    item.optional.firstOptionValue,
+                    item.optional.lastOptionValue,
+                    item.optional.valueDifference,
+                  )}
+                </Select>,
+              )}
+            </Form.Item>
+          );
         case 'input':
           return (
             <Form.Item
@@ -577,6 +673,11 @@ class ConfigureProfile extends React.Component {
     const { policyUIConfigurationsList } = this.props;
     return (
       <div className="tab-container">
+        {/* <div>*/}
+        {/*  <Select style={{ width: 200 }}>*/}
+        {/*    {this.getOptionForTimeSelectors(1440, 1410, 30)}*/}
+        {/*  </Select>*/}
+        {/* </div>*/}
         <Tabs tabPosition={'left'} size={'large'}>
           {policyUIConfigurationsList.map((element, i) => {
             return (

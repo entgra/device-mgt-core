@@ -69,6 +69,14 @@ public class OptionalData {
     @XmlElement(name = "LabelDescription")
     private String labelDescription;
 
+    @XmlElement(name = "StartOptionValue")
+    private int firstOptionValue;
+
+    @XmlElement(name = "LastOptionValue")
+    private int lastOptionValue;
+
+    @XmlElement(name = "ValueDifference")
+    private int valueDifference;
 
     public boolean getChecked() {
         return ischecked;
@@ -172,6 +180,30 @@ public class OptionalData {
 
     public String getLabelDescriptions(){
         return labelDescription;
+    }
+
+    public void setStartOption(int firstOptionValue){
+        this.firstOptionValue = firstOptionValue;
+    }
+
+    public int getStartOption(){
+        return firstOptionValue;
+    }
+
+    public void setLastOption(int lastOptionValue){
+        this.lastOptionValue = lastOptionValue;
+    }
+
+    public int getLastOption(){
+        return lastOptionValue;
+    }
+
+    public void setDifference(int valueDifference){
+        this.valueDifference = valueDifference;
+    }
+
+    public int getDifference(){
+        return valueDifference;
     }
 
 }
