@@ -362,7 +362,7 @@ public interface ReportManagementService {
             @ApiParam(
                     name = "limit",
                     value = "Limit of the number of deices that should be returned.",
-                    required = true)
+                    defaultValue = "5")
             @QueryParam("limit")
                     int limit);
 }

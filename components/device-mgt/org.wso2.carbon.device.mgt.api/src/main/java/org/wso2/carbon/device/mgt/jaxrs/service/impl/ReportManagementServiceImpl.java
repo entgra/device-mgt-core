@@ -172,6 +172,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                                                  @QueryParam("osBuildDate") Long osBuildDate,
                                                  @DefaultValue("0")
                                                  @QueryParam("offset") int offset,
+                                                 @DefaultValue("5")
                                                  @QueryParam("limit") int limit) {
         PaginationRequest request = new PaginationRequest(offset, limit);
         request.setDeviceType(deviceType);
