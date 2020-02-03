@@ -833,66 +833,56 @@ public class OracleDeviceDAOImpl extends AbstractDeviceDAOImpl {
     public List<Device> getDevicesExpiredByOSVersion(PaginationRequest request, int tenantId)
             throws DeviceManagementDAOException {
         try {
-            if (!request.getProperties().containsKey("osBuildDate") ||
-                (Long) request.getProperty("osBuildDate") == 0 ||
-                StringUtils.isBlank(request.getDeviceType())) {
+            Long osBuildDate = (Long) request.getProperty("osBuildDate");
+            Connection conn = getConnection();
+            String sql = "SELECT " +
+                         "dt.NAME AS DEVICE_TYPE, " +
+                         "d.ID AS DEVICE_ID, " +
+                         "d.NAME AS DEVICE_NAME, " +
+                         "d.DESCRIPTION, " +
+                         "d.DEVICE_IDENTIFICATION, " +
+                         "dd.OS_VERSION, " +
+                         "dd.OS_BUILD_DATE, " +
+                         "e.ID AS ENROLMENT_ID, " +
+                         "e.OWNER, " +
+                         "e.OWNERSHIP, " +
+                         "e.STATUS, " +
+                         "e.DATE_OF_LAST_UPDATE, " +
+                         "e.DATE_OF_ENROLMENT " +
+                         "FROM DM_DEVICE d, " +
+                         "DM_DEVICE_DETAIL dd, " +
+                         "DM_ENROLMENT e, " +
+                         "(SELECT ID, NAME " +
+                         "FROM DM_DEVICE_TYPE " +
+                         "WHERE NAME = ? " +
+                         "AND PROVIDER_TENANT_ID = ?) dt " +
+                         "WHERE dt.ID = d.DEVICE_TYPE_ID " +
+                         "AND d.ID = e.DEVICE_ID " +
+                         "AND d.ID = dd.DEVICE_ID " +
+                         "AND dd.OS_BUILD_DATE < ? " +
+                         "ORDER BY ENROLMENT_ID " +
+                         "OFFSET ? ROWS " +
+                         "FETCH NEXT ? ROWS ONLY";
 
-                String msg = "Error invalid data found while building the query. \n" +
-                             "osBuildDate cannot be null or 0 and device type cannot be blank";
-                log.error(msg);
-                throw new DeviceManagementDAOException(msg);
-            } else {
-                Long osBuildDate = (Long) request.getProperty("osBuildDate");
-                Connection conn = getConnection();
-                String sql = "SELECT " +
-                             "dt.NAME AS DEVICE_TYPE, " +
-                             "d.ID AS DEVICE_ID, " +
-                             "d.NAME AS DEVICE_NAME, " +
-                             "d.DESCRIPTION, " +
-                             "d.DEVICE_IDENTIFICATION, " +
-                             "dd.OS_VERSION, " +
-                             "dd.OS_BUILD_DATE, " +
-                             "e.ID AS ENROLMENT_ID, " +
-                             "e.OWNER, " +
-                             "e.OWNERSHIP, " +
-                             "e.STATUS, " +
-                             "e.DATE_OF_LAST_UPDATE, " +
-                             "e.DATE_OF_ENROLMENT " +
-                             "FROM DM_DEVICE d, " +
-                             "DM_DEVICE_DETAIL dd, " +
-                             "DM_ENROLMENT e, " +
-                             "(SELECT ID, NAME " +
-                             "FROM DM_DEVICE_TYPE " +
-                             "WHERE NAME = ? " +
-                             "AND PROVIDER_TENANT_ID = ?) dt " +
-                             "WHERE dt.ID = d.DEVICE_TYPE_ID " +
-                             "AND d.ID = e.DEVICE_ID " +
-                             "AND d.ID = dd.DEVICE_ID " +
-                             "AND dd.OS_BUILD_DATE < ? " +
-                             "ORDER BY ENROLMENT_ID " +
-                             "OFFSET ? ROWS " +
-                             "FETCH NEXT ? ROWS ONLY";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                int paramIDx = 1;
+                ps.setString(paramIDx++, request.getDeviceType());
+                ps.setInt(paramIDx++, tenantId);
+                ps.setLong(paramIDx++, osBuildDate);
+                ps.setInt(paramIDx++, request.getStartIndex());
+                ps.setInt(paramIDx, request.getRowCount());
 
-                try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    int paramIDx = 1;
-                    ps.setString(paramIDx++, request.getDeviceType());
-                    ps.setInt(paramIDx++, tenantId);
-                    ps.setLong(paramIDx++, osBuildDate);
-                    ps.setInt(paramIDx++, request.getStartIndex());
-                    ps.setInt(paramIDx, request.getRowCount());
-
-                    try (ResultSet rs = ps.executeQuery()) {
-                        List<Device> devices = new ArrayList<>();
-                        DeviceInfo deviceInfo = new DeviceInfo();
-                        if (rs.next()) {
-                            Device device = DeviceManagementDAOUtil.loadDevice(rs);
-                            deviceInfo.setOsVersion(rs.getString("OS_VERSION"));
-                            deviceInfo.setOsBuildDate(rs.getString("OS_BUILD_DATE"));
-                            device.setDeviceInfo(deviceInfo);
-                            devices.add(device);
-                        }
-                        return devices;
+                try (ResultSet rs = ps.executeQuery()) {
+                    List<Device> devices = new ArrayList<>();
+                    DeviceInfo deviceInfo = new DeviceInfo();
+                    if (rs.next()) {
+                        Device device = DeviceManagementDAOUtil.loadDevice(rs);
+                        deviceInfo.setOsVersion(rs.getString("OS_VERSION"));
+                        deviceInfo.setOsBuildDate(rs.getString("OS_BUILD_DATE"));
+                        device.setDeviceInfo(deviceInfo);
+                        devices.add(device);
                     }
+                    return devices;
                 }
             }
         } catch (SQLException e) {
