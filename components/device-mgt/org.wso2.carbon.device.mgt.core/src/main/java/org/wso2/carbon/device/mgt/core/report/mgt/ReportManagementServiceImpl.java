@@ -26,7 +26,7 @@ import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
-import org.wso2.carbon.device.mgt.common.exceptions.DeviceNotFoundException;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
 import org.wso2.carbon.device.mgt.common.exceptions.ReportManagementException;
 import org.wso2.carbon.device.mgt.common.report.mgt.ReportManagementService;
 import org.wso2.carbon.device.mgt.core.dao.DeviceDAO;
@@ -158,7 +158,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
 
     @Override
     public PaginationResult getDevicesExpiredByOSVersion(PaginationRequest request)
-            throws ReportManagementException, DeviceNotFoundException {
+            throws ReportManagementException, DeviceTypeNotFoundException {
         if (request == null ||
             StringUtils.isBlank(request.getDeviceType()) ||
             !request.getProperties().containsKey("osBuildDate") ||
@@ -181,7 +181,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             if (deviceTypeObj == null) {
                 String msg = "Error, device of type: " + deviceType + " does not exist";
                 log.error(msg);
-                throw new DeviceNotFoundException(msg);
+                throw new DeviceTypeNotFoundException(msg);
             }
 
             try {

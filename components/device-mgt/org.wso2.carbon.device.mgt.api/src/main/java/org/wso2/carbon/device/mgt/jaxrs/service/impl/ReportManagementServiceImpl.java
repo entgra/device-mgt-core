@@ -25,7 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
-import org.wso2.carbon.device.mgt.common.exceptions.DeviceNotFoundException;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
 import org.wso2.carbon.device.mgt.common.exceptions.ReportManagementException;
 import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
@@ -185,7 +185,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                     .getDevicesExpiredByOSVersion(request);
 
             return Response.ok().entity(paginationResult).build();
-        } catch (DeviceNotFoundException e) {
+        } catch (DeviceTypeNotFoundException e) {
             String msg = "Error occurred while retrieving devices list. Device type: " + deviceType +
                          "is not valid";
             log.error(msg);

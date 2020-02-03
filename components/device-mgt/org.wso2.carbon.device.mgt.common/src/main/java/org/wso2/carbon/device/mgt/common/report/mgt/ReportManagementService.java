@@ -20,7 +20,7 @@ package org.wso2.carbon.device.mgt.common.report.mgt;
 import com.google.gson.JsonObject;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
-import org.wso2.carbon.device.mgt.common.exceptions.DeviceNotFoundException;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
 import org.wso2.carbon.device.mgt.common.exceptions.ReportManagementException;
 
 import java.util.List;
@@ -55,8 +55,8 @@ public interface ReportManagementService {
      * @param request {@link PaginationRequest}
      * @return {@link PaginationResult}
      * @throws ReportManagementException Might occur during the business logic or building database query
-     * @throws DeviceNotFoundException Might occur while validating the device type
+     * @throws DeviceTypeNotFoundException Might occur while validating the device type
      */
     PaginationResult getDevicesExpiredByOSVersion(PaginationRequest request)
-            throws ReportManagementException, DeviceNotFoundException;
+            throws ReportManagementException, DeviceTypeNotFoundException;
 }
