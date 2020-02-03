@@ -184,7 +184,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                     .getReportManagementService()
                     .getDevicesExpiredByOSVersion(request);
 
-            return Response.ok().entity(paginationResult).build();
+            return Response.status(Response.Status.OK).entity(paginationResult).build();
         } catch (DeviceTypeNotFoundException e) {
             String msg = "Error occurred while retrieving devices list. Device type: " + deviceType +
                          "is not valid";
@@ -193,7 +193,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         } catch (ReportManagementException e) {
             String msg = "Error occurred while retrieving devices list with out-dated OS build versions";
             log.error(msg, e);
-            return Response.serverError().entity(msg).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
 }
