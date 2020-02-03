@@ -169,36 +169,38 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         } else {
             try {
                 DeviceManagerUtil.validateDeviceListPageSize(request);
-
                 int tenantId = DeviceManagementDAOUtil.getTenantId();
                 PaginationResult paginationResult = new PaginationResult();
-                DeviceManagementDAOFactory.openConnection();
-                List<Device> devices = deviceDAO.getDevicesExpiredByOSVersion(request, tenantId);
-                int deviceCount = deviceDAO.getCountOfDeviceExpiredByOSVersion(
-                        request.getDeviceType(),
-                        (Long) request.getProperty("osBuildDate"),
-                        tenantId);
 
-                paginationResult.setData(devices);
-                paginationResult.setRecordsFiltered(devices.size());
-                paginationResult.setRecordsTotal(deviceCount);
+                try {
+                    DeviceManagementDAOFactory.openConnection();
+                    List<Device> devices = deviceDAO.getDevicesExpiredByOSVersion(request, tenantId);
+                    int deviceCount = deviceDAO.getCountOfDeviceExpiredByOSVersion(
+                            request.getDeviceType(),
+                            (Long) request.getProperty("osBuildDate"),
+                            tenantId);
+                    paginationResult.setData(devices);
+                    paginationResult.setRecordsFiltered(devices.size());
+                    paginationResult.setRecordsTotal(deviceCount);
 
-                return paginationResult;
+                    return paginationResult;
+                } catch (SQLException e) {
+                    String msg = "Error occurred while opening a connection to the data source";
+                    log.error(msg, e);
+                    throw new ReportManagementException(msg, e);
+                } finally {
+                    DeviceManagementDAOFactory.closeConnection();
+                }
+
             } catch (DeviceManagementDAOException e) {
                 String msg = "Error occurred while retrieving expired devices by a OS build date " +
                              "for the tenant";
-                log.error(msg, e);
-                throw new ReportManagementException(msg, e);
-            } catch (SQLException e) {
-                String msg = "Error occurred while opening a connection to the data source";
                 log.error(msg, e);
                 throw new ReportManagementException(msg, e);
             } catch (DeviceManagementException e) {
                 String msg = "Error occurred while validating Pagination request";
                 log.error(msg, e);
                 throw new ReportManagementException(msg, e);
-            } finally {
-                DeviceManagementDAOFactory.closeConnection();
             }
         }
     }
