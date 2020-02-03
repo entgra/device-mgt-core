@@ -334,8 +334,12 @@ public interface ReportManagementService {
                             responseHeaders = {
                                     @ResponseHeader(
                                             name = "Content-Type",
-                                            description = "The content type of the body")
-                            }),
+                                            description = "The content type of the body")}),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. " +
+                                      "\n Device type does not exist",
+                            response = ErrorResponse.class),
                     @ApiResponse(
                             code = 500,
                             message = "Internal Server Error. " +

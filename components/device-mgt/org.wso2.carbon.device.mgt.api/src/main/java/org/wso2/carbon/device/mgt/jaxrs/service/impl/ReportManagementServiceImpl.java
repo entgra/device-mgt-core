@@ -25,7 +25,10 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.ReportManagementException;
+import org.wso2.carbon.device.mgt.core.dto.DeviceType;
+import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
 import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
 import org.wso2.carbon.device.mgt.jaxrs.service.api.ReportManagementService;
@@ -174,14 +177,29 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                                                  @QueryParam("offset") int offset,
                                                  @DefaultValue("5")
                                                  @QueryParam("limit") int limit) {
-        PaginationRequest request = new PaginationRequest(offset, limit);
-        request.setDeviceType(deviceType);
-        request.setProperty("osBuildDate", osBuildDate);
         try {
+            DeviceManagementProviderService deviceManagementProviderService =
+                    DeviceMgtAPIUtils.getDeviceManagementService();
+            DeviceType deviceTypeObj = deviceManagementProviderService.getDeviceType(deviceType);
+            if (deviceTypeObj == null) {
+                String msg = "Error, device of type: " + deviceType + " does not exist";
+                log.error(msg);
+                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+            }
+
+            PaginationRequest request = new PaginationRequest(offset, limit);
+            request.setDeviceType(deviceType);
+            request.setProperty("osBuildDate", osBuildDate);
+
             PaginationResult paginationResult = DeviceMgtAPIUtils
                     .getReportManagementService()
                     .getDevicesExpiredByOSVersion(request);
+
             return Response.ok().entity(paginationResult).build();
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while trying to validate the existence of " + deviceType;
+            log.error(msg, e);
+            return Response.serverError().entity(msg).build();
         } catch (ReportManagementException e) {
             String msg = "Error occurred while retrieving devices list with out-dated OS build versions";
             log.error(msg, e);
