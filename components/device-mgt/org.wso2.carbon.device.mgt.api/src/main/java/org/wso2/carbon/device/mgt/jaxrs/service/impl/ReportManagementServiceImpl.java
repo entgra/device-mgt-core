@@ -27,6 +27,7 @@ import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
 import org.wso2.carbon.device.mgt.common.exceptions.ReportManagementException;
+import org.wso2.carbon.device.mgt.core.report.mgt.Constants;
 import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
 import org.wso2.carbon.device.mgt.jaxrs.service.api.ReportManagementService;
@@ -178,7 +179,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         try {
             PaginationRequest request = new PaginationRequest(offset, limit);
             request.setDeviceType(deviceType);
-            request.setProperty("osBuildDate", osBuildDate);
+            request.setProperty(Constants.OS_BUILD_DATE, osBuildDate);
 
             PaginationResult paginationResult = DeviceMgtAPIUtils
                     .getReportManagementService()

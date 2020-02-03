@@ -54,6 +54,7 @@ import org.wso2.carbon.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.geo.GeoCluster;
 import org.wso2.carbon.device.mgt.core.geo.geoHash.GeoCoordinate;
+import org.wso2.carbon.device.mgt.core.report.mgt.Constants;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -1796,7 +1797,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
     public List<Device> getDevicesExpiredByOSVersion(PaginationRequest request, int tenantId)
             throws DeviceManagementDAOException {
         try {
-            Long osBuildDate = (Long) request.getProperty("osBuildDate");
+            Long osBuildDate = (Long) request.getProperty(Constants.OS_BUILD_DATE);
             Connection conn = getConnection();
             String sql = "SELECT " +
                          "dt.NAME AS DEVICE_TYPE, " +
@@ -1838,8 +1839,8 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                     DeviceInfo deviceInfo = new DeviceInfo();
                     if (rs.next()) {
                         Device device = DeviceManagementDAOUtil.loadDevice(rs);
-                        deviceInfo.setOsVersion(rs.getString("OS_VERSION"));
-                        deviceInfo.setOsBuildDate(rs.getString("OS_BUILD_DATE"));
+                        deviceInfo.setOsVersion(rs.getString(Constants.OS_VERSION));
+                        deviceInfo.setOsBuildDate(rs.getString(Constants.OS_BUILD_DATE));
                         device.setDeviceInfo(deviceInfo);
                         devices.add(device);
                     }

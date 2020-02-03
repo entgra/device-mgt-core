@@ -161,8 +161,9 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             throws ReportManagementException, DeviceTypeNotFoundException {
         if (request == null ||
             StringUtils.isBlank(request.getDeviceType()) ||
-            !request.getProperties().containsKey("osBuildDate") ||
-            (Long) request.getProperty("osBuildDate") == 0) {
+            StringUtils.isBlank(request.getDeviceType()) ||
+            !request.getProperties().containsKey(Constants.OS_BUILD_DATE) ||
+            (Long) request.getProperty(Constants.OS_BUILD_DATE) == 0) {
 
             String msg = "Error Invalid data received from the request.\n" +
                          "osBuildDate cannot be null or 0 and device type cannot be null or empty";
@@ -189,7 +190,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 List<Device> devices = deviceDAO.getDevicesExpiredByOSVersion(request, tenantId);
                 int deviceCount = deviceDAO.getCountOfDeviceExpiredByOSVersion(
                         deviceType,
-                        (Long) request.getProperty("osBuildDate"),
+                        (Long) request.getProperty(Constants.OS_BUILD_DATE),
                         tenantId);
                 paginationResult.setData(devices);
                 paginationResult.setRecordsFiltered(devices.size());
