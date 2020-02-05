@@ -35,7 +35,6 @@ import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.RequestValidationUtil;
 import org.wso2.carbon.device.mgt.jaxrs.util.DeviceMgtAPIUtils;
 
 import javax.validation.constraints.Size;
-import javax.ws.rs.*;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -216,10 +215,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             PaginationRequest request = new PaginationRequest(offset, limit);
             PaginationResult result;
             DeviceList devices = new DeviceList();
-
-            if (!StringUtils.isBlank(deviceType)) {
-                request.setDeviceType(deviceType);
-            }
+            request.setDeviceType(deviceType);
 
             result = DeviceMgtAPIUtils.getReportManagementService()
                     .getAppNotInstalledDevices(request, packageName, version);
@@ -231,6 +227,11 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 devices.setCount(result.getRecordsTotal());
                 return Response.status(Response.Status.OK).entity(devices).build();
             }
+        } catch (DeviceTypeNotFoundException e) {
+            String msg = "Error occurred while retrieving devices list. Device type: " + deviceType +
+                    "is not valid";
+            log.error(msg);
+            return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
         } catch (ReportManagementException e) {
             String msg = "Error occurred while retrieving device list";
             log.error(msg, e);
