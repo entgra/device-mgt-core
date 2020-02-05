@@ -60,6 +60,16 @@ public interface ReportManagementService {
     PaginationResult getDevicesExpiredByOSVersion(PaginationRequest request)
             throws ReportManagementException, DeviceTypeNotFoundException;
 
+    /**
+     * This method is used to get devices which have not installed the app with the given package name
+     *
+     * @param request Request object with device type
+     * @param packageName Package name of the application
+     * @param version Version of the application
+     * @return {@link PaginationResult}
+     * @throws ReportManagementException
+     * @throws DeviceTypeNotFoundException
+     */
     PaginationResult getAppNotInstalledDevices(PaginationRequest request, String packageName, String version)
-            throws ReportManagementException;
+            throws ReportManagementException, DeviceTypeNotFoundException;
 }

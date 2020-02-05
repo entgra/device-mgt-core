@@ -273,38 +273,60 @@ public class ReportManagementServiceImpl implements ReportManagementService {
 
     @Override
     public PaginationResult getAppNotInstalledDevices(PaginationRequest request, String packageName, String version)
-            throws ReportManagementException {
+            throws ReportManagementException, DeviceTypeNotFoundException {
         PaginationResult paginationResult = new PaginationResult();
-        try {
-            request = DeviceManagerUtil.validateDeviceListPageSize(request);
-        } catch (DeviceManagementException e) {
-            String msg = "Error occurred while validating device list page size";
-            log.error(msg, e);
-            throw new ReportManagementException(msg, e);
+        if(StringUtils.isBlank(packageName)){
+            String msg = "Error, application package name is not given";
+            log.error(msg);
+            throw new ReportManagementException(msg);
         }
         try {
-            DeviceManagementDAOFactory.openConnection();
-            List<Device> devices = deviceDAO.getAppNotInstalledDevices(
-                    request,
-                    DeviceManagementDAOUtil.getTenantId(),
-                    packageName,
-                    version
-            );
-            paginationResult.setData(devices);
-            //TODO: Should change the following code to a seperate count method from deviceDAO to get the count
-            paginationResult.setRecordsTotal(devices.size());
-            return paginationResult;
-        } catch (SQLException e) {
-            String msg = "Error occurred while opening a connection " +
-                    "to the data source";
+            int tenantId = DeviceManagementDAOUtil.getTenantId();
+            request = DeviceManagerUtil.validateDeviceListPageSize(request);
+
+            String deviceType = request.getDeviceType();
+            DeviceType deviceTypeObj = DeviceManagerUtil.getDeviceType(
+                    deviceType, tenantId);
+            if (deviceTypeObj == null) {
+                String msg = "Error, device of type: " + deviceType + " does not exist";
+                log.error(msg);
+                throw new DeviceTypeNotFoundException(msg);
+            }
+
+            try {
+                DeviceManagementDAOFactory.openConnection();
+                List<Device> devices = deviceDAO.getAppNotInstalledDevices(
+                        request,
+                        tenantId,
+                        packageName,
+                        version
+                );
+                paginationResult.setData(devices);
+                int deviceCount = deviceDAO.getCountOfAppNotInstalledDevices(
+                        request,
+                        tenantId,
+                        packageName,
+                        version);
+                paginationResult.setRecordsTotal(deviceCount);
+                return paginationResult;
+            } catch (SQLException e) {
+                String msg = "Error occurred while opening a connection " +
+                        "to the data source";
+                log.error(msg, e);
+                throw new ReportManagementException(msg, e);
+            }  finally {
+                DeviceManagementDAOFactory.closeConnection();
+            }
+
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while validating device list page size";
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
         } catch (DeviceManagementDAOException e) {
             String msg = "Error occurred while retrieving Tenant ID";
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
-        } finally {
-            DeviceManagementDAOFactory.closeConnection();
         }
+
     }
 }
