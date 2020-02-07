@@ -24,14 +24,14 @@ import { withConfigContext } from '../../../context/ConfigContext';
 
 import AppListDropDown from '../Widgets/AppListDropDown';
 import ReportDevicesTable from '../Widgets/ReportDevicesTable';
+import AppVersionDropDown from '../Widgets/AppVersionDropDown';
 
 // eslint-disable-next-line no-unused-vars
 let config = null;
 let url;
-let externalAppPackageName;
-let externalAppVersion;
 
-const InputGroup = Input.Group;
+let packageName;
+let version;
 
 class AppNotInstalledDevicesReport extends React.Component {
   routes;
@@ -43,42 +43,42 @@ class AppNotInstalledDevicesReport extends React.Component {
     this.state = {
       apiUrl: null,
       visible: false,
-      isExternalApp: false,
+      isOtherApp: false,
+      packageName: null,
+      version: null,
     };
   }
 
   getAppList = appPackageName => {
-    url =
-      window.location.origin +
-      config.serverConfig.invoker.uri +
-      config.serverConfig.invoker.deviceMgt +
-      '/reports/android/' +
-      appPackageName +
-      '/not-installed?';
+    packageName = appPackageName;
+    this.setState({ packageName });
+  };
+
+  getVersion = appVersion => {
+    version = appVersion;
+    this.setState({ version });
   };
 
   onClickGenerateButton = () => {
-    const { isExternalApp } = this.state;
-    if (isExternalApp) {
-      if (externalAppVersion) {
-        url =
-          window.location.origin +
-          config.serverConfig.invoker.uri +
-          config.serverConfig.invoker.deviceMgt +
-          '/reports/android/' +
-          externalAppPackageName +
-          '/not-installed?app-version=' +
-          externalAppVersion +
-          '&';
-      } else {
-        url =
-          window.location.origin +
-          config.serverConfig.invoker.uri +
-          config.serverConfig.invoker.deviceMgt +
-          '/reports/android/' +
-          externalAppPackageName +
-          '/not-installed?';
-      }
+    const { packageName, version } = this.state;
+    if (version === 'all') {
+      url =
+        window.location.origin +
+        config.serverConfig.invoker.uri +
+        config.serverConfig.invoker.deviceMgt +
+        '/reports/devices/android/' +
+        packageName +
+        '/not-installed?';
+    } else {
+      url =
+        window.location.origin +
+        config.serverConfig.invoker.uri +
+        config.serverConfig.invoker.deviceMgt +
+        '/reports/devices/android/' +
+        packageName +
+        '/not-installed?app-version=' +
+        version +
+        '&';
     }
     this.setState({ apiUrl: url });
   };
@@ -88,19 +88,20 @@ class AppNotInstalledDevicesReport extends React.Component {
   };
 
   onChangePackageName = e => {
-    externalAppPackageName = e.currentTarget.value;
-  };
-
-  onChangeVersion = e => {
-    externalAppVersion = e.currentTarget.value;
+    packageName = e.currentTarget.value;
+    this.setState({ packageName });
   };
 
   onClickSetButton = () => {
-    this.setState({ isExternalApp: true, visible: false });
+    this.setState({ isOtherApp: true, visible: false });
+  };
+
+  onClickEnterpriceApp = () => {
+    this.setState({ isOtherApp: false });
   };
 
   render() {
-    const { apiUrl, isExternalApp } = this.state;
+    const { apiUrl, isOtherApp, packageName } = this.state;
     return (
       <div>
         <PageHeader style={{ paddingTop: 0 }}>
@@ -119,43 +120,28 @@ class AppNotInstalledDevicesReport extends React.Component {
             <h3>Policy Report</h3>
 
             <div style={{ display: 'flex', marginBottom: '10px' }}>
-              <div
-                style={{ display: !isExternalApp ? 'inline-block' : 'none' }}
-              >
+              <div style={{ display: !isOtherApp ? 'inline-block' : 'none' }}>
                 <AppListDropDown getAppList={this.getAppList} />
               </div>
 
-              <div style={{ display: isExternalApp ? 'inline-block' : 'none' }}>
-                <InputGroup compact>
-                  <Input
-                    value={externalAppPackageName}
-                    style={{ width: '60%' }}
-                    placeholder={'Package Name'}
-                  />
-                  <Input
-                    value={externalAppVersion}
-                    style={{ width: '40%' }}
-                    placeholder={'App Version'}
-                  />
-                </InputGroup>
+              <div style={{ display: isOtherApp ? 'inline-block' : 'none' }}>
+                <Input value={packageName} placeholder={'Package Name'} />
               </div>
 
+              <div style={{ marginLeft: '10px' }}>
+                <AppVersionDropDown
+                  getVersion={this.getVersion}
+                  packageName={packageName}
+                />
+              </div>
               <Popover
                 trigger="click"
                 content={
                   <div style={{ display: 'flex' }}>
-                    <InputGroup compact>
-                      <Input
-                        style={{ width: '60%' }}
-                        placeholder={'Package Name'}
-                        onChange={this.onChangePackageName}
-                      />
-                      <Input
-                        style={{ width: '40%' }}
-                        placeholder={'App Version'}
-                        onChange={this.onChangeVersion}
-                      />
-                    </InputGroup>
+                    <Input
+                      placeholder={'Package Name'}
+                      onChange={this.onChangePackageName}
+                    />
 
                     <Button
                       type="primary"
@@ -169,10 +155,26 @@ class AppNotInstalledDevicesReport extends React.Component {
                 visible={this.state.visible}
                 onVisibleChange={this.handlePopoverVisibleChange}
               >
-                <Button type="default" style={{ marginLeft: '10px' }}>
-                  External App
+                <Button
+                  type="default"
+                  style={{
+                    marginLeft: '10px',
+                    display: !isOtherApp ? 'inline-block' : 'none',
+                  }}
+                >
+                  Other App
                 </Button>
               </Popover>
+              <Button
+                type="default"
+                style={{
+                  marginLeft: '10px',
+                  display: isOtherApp ? 'inline-block' : 'none',
+                }}
+                onClick={this.onClickEnterpriceApp}
+              >
+                Enterprice App
+              </Button>
 
               <Button
                 type="primary"

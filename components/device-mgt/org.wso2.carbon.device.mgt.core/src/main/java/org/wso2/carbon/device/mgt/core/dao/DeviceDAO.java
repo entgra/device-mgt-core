@@ -654,4 +654,6 @@ public interface DeviceDAO {
                                            int tenantId,
                                            String packageName,
                                            String version) throws DeviceManagementDAOException;
+
+    List<String> getAppVersions(int tenantId, String packageName) throws DeviceManagementDAOException;
 }

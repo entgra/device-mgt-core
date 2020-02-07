@@ -39,7 +39,6 @@ import org.wso2.carbon.device.mgt.core.util.DeviceManagerUtil;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Calendar;
@@ -327,6 +326,33 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
         }
+    }
 
+    @Override
+    public List<String> getAppVersions(String packageName) throws ReportManagementException {
+        if(StringUtils.isBlank(packageName)){
+            String msg = "Error, application package name is not given";
+            log.error(msg);
+            throw new ReportManagementException(msg);
+        }
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            List<String> versions = deviceDAO.getAppVersions(
+                    DeviceManagementDAOUtil.getTenantId(),
+                    packageName
+            );
+            return versions;
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection " +
+                    "to the data source";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred while retrieving Tenant ID";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        }  finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
     }
 }
