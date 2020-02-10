@@ -20,6 +20,7 @@ package org.wso2.carbon.device.mgt.common.report.mgt;
 import com.google.gson.JsonObject;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
+import org.wso2.carbon.device.mgt.common.app.mgt.ApplicationManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
 import org.wso2.carbon.device.mgt.common.exceptions.ReportManagementException;
 
@@ -72,6 +73,4 @@ public interface ReportManagementService {
      */
     PaginationResult getAppNotInstalledDevices(PaginationRequest request, String packageName, String version)
             throws ReportManagementException, DeviceTypeNotFoundException;
-
-    List<String> getAppVersions(String packageName) throws ReportManagementException;
 }

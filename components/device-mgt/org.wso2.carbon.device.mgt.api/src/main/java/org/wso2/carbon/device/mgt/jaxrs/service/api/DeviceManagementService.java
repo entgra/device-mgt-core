@@ -80,7 +80,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Device related REST-API. This can be used to manipulated device related details.
@@ -2028,4 +2027,126 @@ public interface DeviceManagementService {
                     required = true)
             @PathParam("id")
                     int id);
+
+    @GET
+    @Path("/{platform}/applications")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Getting Details of Applications",
+            notes = "Provides details of installed applications in all the devices enrolled with Entgra IoT Server.",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:applications")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully fetched the list of applications.",
+                            response = DeviceList.class,
+                            responseHeaders = {
+                                    @ResponseHeader(
+                                            name = "Content-Type",
+                                            description = "The content type of the body"),
+                                    @ResponseHeader(
+                                            name = "ETag",
+                                            description = "Entity Tag of the response resource.\n" +
+                                                    "Used by caches, or in conditional requests."),
+                                    @ResponseHeader(
+                                            name = "Last-Modified",
+                                            description = "Date and time the resource was last modified.\n" +
+                                                    "Used by caches, or in conditional requests."),
+                            }),
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK",
+                            response = NonComplianceData.class),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. \n Invalid request or validation error.",
+                            response = ErrorResponse.class),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Error occurred while getting the application data.",
+                            response = ErrorResponse.class)
+            })
+    Response getApplications(
+            @ApiParam(
+                    name = "platform",
+                    value = "Platform of the application",
+                    required = true)
+            @PathParam("platform")
+            @Size(max = 45)
+                    String platform,
+            @ApiParam(
+                    name = "offset",
+                    value = "The starting pagination index for the complete list of qualified items.",
+                    defaultValue = "0")
+            @QueryParam("offset")
+                    int offset,
+            @ApiParam(
+                    name = "limit",
+                    value = "Provide how many device details you require from the starting pagination index/offset.",
+                    defaultValue = "10")
+            @QueryParam("limit")
+                    int limit);
+
+    @GET
+    @Path("/application/{package-name}/versions")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Getting versions of a given application",
+            notes = "Provides versions of a given application installed in devices of Entgra IoT Server.",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:applications")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully fetched the list of devices.",
+                            response = DeviceList.class,
+                            responseHeaders = {
+                                    @ResponseHeader(
+                                            name = "Content-Type",
+                                            description = "The content type of the body"),
+                                    @ResponseHeader(
+                                            name = "ETag",
+                                            description = "Entity Tag of the response resource.\n" +
+                                                    "Used by caches, or in conditional requests."),
+                                    @ResponseHeader(
+                                            name = "Last-Modified",
+                                            description = "Date and time the resource was last modified.\n" +
+                                                    "Used by caches, or in conditional requests."),
+                            }),
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK",
+                            response = NonComplianceData.class),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. \n Invalid request or validation error.",
+                            response = ErrorResponse.class),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Error occurred while getting the version data.",
+                            response = ErrorResponse.class)
+            })
+    Response getAppVersions(
+            @ApiParam(
+                    name = "package-name",
+                    value = "The package name of the app.",
+                    required = true)
+            @PathParam("package-name")
+            @Size(max = 45)
+                    String packageName);
 }

@@ -53,7 +53,7 @@ class AppVersionDropDown extends React.Component {
         window.location.origin +
           config.serverConfig.invoker.uri +
           config.serverConfig.invoker.deviceMgt +
-          '/reports/application/' +
+          '/devices/application/' +
           this.props.packageName +
           '/versions',
       )
