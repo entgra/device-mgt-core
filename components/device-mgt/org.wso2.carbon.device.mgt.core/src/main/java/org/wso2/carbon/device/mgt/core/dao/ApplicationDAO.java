@@ -18,6 +18,7 @@
  */
 package org.wso2.carbon.device.mgt.core.dao;
 
+import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.app.mgt.Application;
 
 import java.util.List;
@@ -38,4 +39,9 @@ public interface ApplicationDAO {
             throws DeviceManagementDAOException;
 
     List<Application> getInstalledApplications(int deviceId, int enrolmentId) throws DeviceManagementDAOException;
+
+    List<Application> getApplications(PaginationRequest request, int tenantId, String platform)
+            throws DeviceManagementDAOException;
+
+    List<String> getAppVersions(int tenantId, String packageName) throws DeviceManagementDAOException;
 }

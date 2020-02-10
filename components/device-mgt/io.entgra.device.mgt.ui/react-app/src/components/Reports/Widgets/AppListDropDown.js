@@ -32,25 +32,24 @@ class AppListDropDown extends React.Component {
   }
 
   componentDidMount() {
-    this.fetchAppList();
+    this.fetchFullAppList();
   }
 
-  fetchAppList = () => {
+  fetchFullAppList = () => {
     const config = this.props.context;
     axios
-      .post(
+      .get(
         window.location.origin +
           config.serverConfig.invoker.uri +
-          config.serverConfig.invoker.applicationMgtStore +
-          '/applications/',
-        { offset: 0, limit: 30, deviceType: 'android' },
+          config.serverConfig.invoker.deviceMgt +
+          '/devices/android/applications?offset=0&limit=-1',
       )
       .then(res => {
         if (res.status === 200) {
           let selectItem;
-          selectItem = res.data.data.applications.map(data => (
-            <Option value={data.packageName} key={data.packageName}>
-              {data.name}
+          selectItem = res.data.data.applicationList.map(data => (
+            <Option value={data.id} key={data.applicationIdentifier}>
+              {data.name.replace('%', ' ')}
             </Option>
           ));
           this.setState({ selectItem });
@@ -72,8 +71,8 @@ class AppListDropDown extends React.Component {
       });
   };
 
-  onChange = value => {
-    this.props.getAppList(value);
+  onChange = (value, data) => {
+    this.props.getAppList(data.key);
   };
 
   render() {

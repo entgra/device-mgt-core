@@ -239,21 +239,4 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
         }
     }
-
-    @GET
-    @Path("/application/{package-name}/versions")
-    @Override
-    public Response getAppVersions(
-            @PathParam("package-name") @Size(max = 45) String packageName) {
-        try {
-            List<String> versions = DeviceMgtAPIUtils.getReportManagementService()
-                    .getAppVersions(packageName);
-            return Response.status(Response.Status.OK).entity(versions).build();
-        } catch (ReportManagementException e) {
-            String msg = "Error occurred while retrieving device list";
-            log.error(msg, e);
-            return Response.serverError().entity(
-                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
-        }
-    }
 }

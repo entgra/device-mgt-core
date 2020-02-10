@@ -2010,35 +2010,6 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
-    @Override
-    public List<String> getAppVersions(int tenantId, String packageName) throws DeviceManagementDAOException {
-        String sql = "SELECT " +
-                    "VERSION " +
-                    "FROM DM_APPLICATION " +
-                    "WHERE TENANT_ID=? " +
-                    "AND APP_IDENTIFIER=?";
-        try {
-            Connection conn = this.getConnection();
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setInt(1, tenantId);
-                stmt.setString(2, packageName);
-
-                try (ResultSet rs = stmt.executeQuery()) {
-                    List<String> versions = new ArrayList<>();
-                    while (rs.next()) {
-                        versions.add(rs.getString("VERSION"));
-                    }
-                    return versions;
-                }
-            }
-        } catch (SQLException e) {
-            String msg = "Error occurred while retrieving information of all " +
-                    "registered apps under tenant id " + tenantId;
-            log.error(msg, e);
-            throw new DeviceManagementDAOException(msg, e);
-        }
-    }
-
     /***
      * This method removes records of a given list of devices from the DM_DEVICE_DETAIL table
      * @param conn Connection object

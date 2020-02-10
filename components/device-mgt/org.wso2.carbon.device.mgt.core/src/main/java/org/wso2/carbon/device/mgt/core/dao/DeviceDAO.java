@@ -643,17 +643,25 @@ public interface DeviceDAO {
      * @param packageName Package name of the application
      * @param version Version of the application
      * @return A list of device objects
-     * @throws DeviceManagementDAOException
+     * @throws DeviceManagementDAOException Thrown if error occurs while database transactions
      */
     List<Device> getAppNotInstalledDevices(PaginationRequest request,
                                       int tenantId,
                                       String packageName,
                                       String version) throws DeviceManagementDAOException;
 
+    /**
+     * This method is used to get count if devices which have not installed the app with the given package name
+     *
+     * @param request Request object with device type
+     * @param tenantId ID of the current tenant
+     * @param packageName Package name of the application
+     * @param version Version of the application
+     * @return Device count
+     * @throws DeviceManagementDAOException Thrown if error occurs while database transactions
+     */
     int getCountOfAppNotInstalledDevices(PaginationRequest request,
                                            int tenantId,
                                            String packageName,
                                            String version) throws DeviceManagementDAOException;
-
-    List<String> getAppVersions(int tenantId, String packageName) throws DeviceManagementDAOException;
 }

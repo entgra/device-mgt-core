@@ -17,7 +17,7 @@
  */
 
 import React from 'react';
-import { PageHeader, Breadcrumb, Icon, Button, Popover, Input } from 'antd';
+import { PageHeader, Breadcrumb, Icon, Button } from 'antd';
 
 import { Link } from 'react-router-dom';
 import { withConfigContext } from '../../../context/ConfigContext';
@@ -43,7 +43,6 @@ class AppNotInstalledDevicesReport extends React.Component {
     this.state = {
       apiUrl: null,
       visible: false,
-      isOtherApp: false,
       packageName: null,
       version: null,
     };
@@ -83,25 +82,8 @@ class AppNotInstalledDevicesReport extends React.Component {
     this.setState({ apiUrl: url });
   };
 
-  handlePopoverVisibleChange = visible => {
-    this.setState({ visible });
-  };
-
-  onChangePackageName = e => {
-    packageName = e.currentTarget.value;
-    this.setState({ packageName });
-  };
-
-  onClickSetButton = () => {
-    this.setState({ isOtherApp: true, visible: false });
-  };
-
-  onClickEnterpriceApp = () => {
-    this.setState({ isOtherApp: false });
-  };
-
   render() {
-    const { apiUrl, isOtherApp, packageName } = this.state;
+    const { apiUrl, packageName } = this.state;
     return (
       <div>
         <PageHeader style={{ paddingTop: 0 }}>
@@ -120,12 +102,8 @@ class AppNotInstalledDevicesReport extends React.Component {
             <h3>Policy Report</h3>
 
             <div style={{ display: 'flex', marginBottom: '10px' }}>
-              <div style={{ display: !isOtherApp ? 'inline-block' : 'none' }}>
+              <div>
                 <AppListDropDown getAppList={this.getAppList} />
-              </div>
-
-              <div style={{ display: isOtherApp ? 'inline-block' : 'none' }}>
-                <Input value={packageName} placeholder={'Package Name'} />
               </div>
 
               <div style={{ marginLeft: '10px' }}>
@@ -134,47 +112,6 @@ class AppNotInstalledDevicesReport extends React.Component {
                   packageName={packageName}
                 />
               </div>
-              <Popover
-                trigger="click"
-                content={
-                  <div style={{ display: 'flex' }}>
-                    <Input
-                      placeholder={'Package Name'}
-                      onChange={this.onChangePackageName}
-                    />
-
-                    <Button
-                      type="primary"
-                      onClick={this.onClickSetButton}
-                      style={{ marginLeft: '5px' }}
-                    >
-                      Set
-                    </Button>
-                  </div>
-                }
-                visible={this.state.visible}
-                onVisibleChange={this.handlePopoverVisibleChange}
-              >
-                <Button
-                  type="default"
-                  style={{
-                    marginLeft: '10px',
-                    display: !isOtherApp ? 'inline-block' : 'none',
-                  }}
-                >
-                  Other App
-                </Button>
-              </Popover>
-              <Button
-                type="default"
-                style={{
-                  marginLeft: '10px',
-                  display: isOtherApp ? 'inline-block' : 'none',
-                }}
-                onClick={this.onClickEnterpriceApp}
-              >
-                Enterprice App
-              </Button>
 
               <Button
                 type="primary"
