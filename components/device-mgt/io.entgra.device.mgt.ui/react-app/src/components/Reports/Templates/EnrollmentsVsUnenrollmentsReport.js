@@ -180,7 +180,9 @@ class EnrollmentsVsUnenrollmentsReport extends React.Component {
             <Breadcrumb.Item>
               <Link to="/entgra/reports">Reports</Link>
             </Breadcrumb.Item>
-            <Breadcrumb.Item>Enrollments vs Unenrollments Report</Breadcrumb.Item>
+            <Breadcrumb.Item>
+              Enrollments vs Unenrollments Report
+            </Breadcrumb.Item>
           </Breadcrumb>
           <div className="wrap" style={{ marginBottom: '10px' }}>
             <h3>Enrollments vs Unenrollments Report</h3>
