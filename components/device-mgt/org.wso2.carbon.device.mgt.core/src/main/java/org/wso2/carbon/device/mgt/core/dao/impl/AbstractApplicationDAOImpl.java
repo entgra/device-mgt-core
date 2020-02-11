@@ -275,32 +275,33 @@ public abstract class AbstractApplicationDAOImpl implements ApplicationDAO {
     @Override
     public List<Application> getApplications(PaginationRequest request, int tenantId, String platform)
             throws DeviceManagementDAOException {
-        Connection conn;
-        PreparedStatement stmt = null;
         List<Application> applications = new ArrayList<>();
         Application application;
-        ResultSet rs = null;
+        String sql = "Select " +
+                        "ID, NAME, APP_IDENTIFIER, PLATFORM, CATEGORY, VERSION, TYPE, " +
+                        "LOCATION_URL, IMAGE_URL, APP_PROPERTIES, MEMORY_USAGE, IS_ACTIVE, TENANT_ID " +
+                     "From DM_APPLICATION " +
+                     "WHERE PLATFORM = ? " +
+                     "AND TENANT_ID = ? LIMIT ? OFFSET ?";
         try {
-            conn = this.getConnection();
-            stmt = conn.prepareStatement("Select ID, NAME, APP_IDENTIFIER, PLATFORM, CATEGORY, VERSION, TYPE, " +
-                    "LOCATION_URL, IMAGE_URL, APP_PROPERTIES, MEMORY_USAGE, IS_ACTIVE, " +
-                    "TENANT_ID From DM_APPLICATION WHERE PLATFORM = ? AND TENANT_ID = ? LIMIT ? OFFSET ?");
-
-            stmt.setString(1, platform);
-            stmt.setInt(2, tenantId);
-            stmt.setInt(3, request.getRowCount());
-            stmt.setInt(4, request.getStartIndex());
-            rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                application = loadApplication(rs);
-                applications.add(application);
+            Connection conn = this.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, platform);
+                stmt.setInt(2, tenantId);
+                stmt.setInt(3, request.getRowCount());
+                stmt.setInt(4, request.getStartIndex());
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        application = loadApplication(rs);
+                        applications.add(application);
+                    }
+                }
             }
         } catch (SQLException e) {
-            throw new DeviceManagementDAOException("SQL Error occurred while retrieving the list of Applications " +
-                    "installed in all enrolled devices for " + platform + " under tenant id " + tenantId, e);
-        } finally {
-            DeviceManagementDAOUtil.cleanupResources(stmt, rs);
+            String msg = "SQL Error occurred while retrieving the list of Applications " +
+                    "installed in all enrolled devices for " + platform + " under tenant id " + tenantId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
         }
         return applications;
     }

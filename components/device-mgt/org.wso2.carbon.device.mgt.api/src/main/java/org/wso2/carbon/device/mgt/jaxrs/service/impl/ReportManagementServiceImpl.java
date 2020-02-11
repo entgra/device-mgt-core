@@ -213,11 +213,10 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         try {
             RequestValidationUtil.validatePaginationParameters(offset, limit);
             PaginationRequest request = new PaginationRequest(offset, limit);
-            PaginationResult result;
             DeviceList devices = new DeviceList();
             request.setDeviceType(deviceType);
 
-            result = DeviceMgtAPIUtils.getReportManagementService()
+            PaginationResult result = DeviceMgtAPIUtils.getReportManagementService()
                     .getAppNotInstalledDevices(request, packageName, version);
             if (result.getData().isEmpty()) {
                 String msg = "App with package name " + packageName + " is installed in all enrolled devices";
