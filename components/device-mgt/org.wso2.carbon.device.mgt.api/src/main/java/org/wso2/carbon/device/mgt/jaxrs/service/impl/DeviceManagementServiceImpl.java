@@ -1117,10 +1117,9 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             @DefaultValue("10")
             @QueryParam("limit") int limit) {
         PaginationRequest request = new PaginationRequest(offset, limit);
-        PaginationResult paginationResult;
         ApplicationList applicationList = new ApplicationList();
         try {
-            paginationResult = DeviceMgtAPIUtils
+            PaginationResult paginationResult = DeviceMgtAPIUtils
                     .getDeviceManagementService()
                     .getApplications(request, platform);
 
