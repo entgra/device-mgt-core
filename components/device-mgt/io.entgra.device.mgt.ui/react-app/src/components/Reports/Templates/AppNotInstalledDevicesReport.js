@@ -44,7 +44,7 @@ class AppNotInstalledDevicesReport extends React.Component {
       apiUrl: null,
       visible: false,
       packageName: null,
-      version: null,
+      version: 'all',
     };
   }
 
