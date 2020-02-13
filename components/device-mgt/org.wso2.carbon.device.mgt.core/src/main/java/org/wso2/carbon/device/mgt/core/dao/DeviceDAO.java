@@ -40,6 +40,7 @@ import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo.Status;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
+import org.wso2.carbon.device.mgt.common.Count;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceLocationHistory;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.DevicePropertyInfo;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceData;
@@ -253,7 +254,7 @@ public interface DeviceDAO {
      * @return returns the device object.
      * @throws DeviceManagementDAOException
      */
-    Device getDevice(DeviceIdentifier deviceIdentifier, EnrolmentInfo.Status status,int tenantId)
+    Device getDevice(DeviceIdentifier deviceIdentifier, EnrolmentInfo.Status status, int tenantId)
             throws DeviceManagementDAOException;
 
     /**
@@ -292,7 +293,6 @@ public interface DeviceDAO {
      * @throws DeviceManagementDAOException
      */
     List<Device> getDevices(PaginationRequest request, int tenantId) throws DeviceManagementDAOException;
-
 
     /**
      * This method is used to search for devices within a specific group.
@@ -556,6 +556,27 @@ public interface DeviceDAO {
                                       String fromDate,
                                       String toDate) throws DeviceManagementDAOException;
 
+    int getDevicesByDurationCount(
+            List<String> statusList, String ownership, String fromDate, String toDate, int tenantId)
+            throws DeviceManagementDAOException;
+
+    /**
+     * This method is used to get the device count to generate the report graph within a specific time periode
+     *
+     * @param request Pagination request to get paginated result
+     * @param statusList Status list to filter data
+     * @param tenantId ID of the current tenant
+     * @param fromDate Start date to filter devices(YYYY-MM-DD)
+     * @param toDate End date to filter devices(YYYY-MM-DD)
+     * @return returns a list of Count objects
+     * @throws DeviceManagementDAOException
+     */
+    List<Count> getCountOfDevicesByDuration(PaginationRequest request,
+                                            List<String> statusList,
+                                            int tenantId,
+                                            String fromDate,
+                                            String toDate) throws DeviceManagementDAOException;
+
     /**
      * Retrieve device location information
      * @param deviceIdentifier Device Identifier object
@@ -589,5 +610,28 @@ public interface DeviceDAO {
      * @throws DeviceManagementDAOException if error occurred while processing the SQL statement.
      */
     int getSubscribedDeviceCount(List<Integer> deviceIds, int tenantId, String status)
+            throws DeviceManagementDAOException;
+
+    /**
+     * Get a list of devices older than the given OS version of a device type
+     *
+     * @param request  Object with device type and OS version info
+     * @param tenantId Id of the current tenant.
+     * @return {@link List<Device>}
+     * @throws DeviceManagementDAOException Thrown if error occurs while database transactions
+     */
+    List<Device> getDevicesExpiredByOSVersion(PaginationRequest request, int tenantId)
+            throws DeviceManagementDAOException;
+
+    /**
+     * Count the number of devices older than the given OS version of a device type
+     *
+     * @param deviceType Device type name
+     * @param osBuildDate BUild date off the current OS version
+     * @param tenantId Id of the current tenant.
+     * @return {@link Integer}
+     * @throws DeviceManagementDAOException Thrown if error occurs while database transactions
+     */
+    int getCountOfDeviceExpiredByOSVersion(String deviceType, long osBuildDate, int tenantId)
             throws DeviceManagementDAOException;
 }

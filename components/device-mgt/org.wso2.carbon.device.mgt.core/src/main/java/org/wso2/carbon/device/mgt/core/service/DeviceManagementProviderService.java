@@ -36,21 +36,21 @@
 package org.wso2.carbon.device.mgt.core.service;
 
 import org.wso2.carbon.device.mgt.common.Device;
+import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
+import org.wso2.carbon.device.mgt.common.FeatureManager;
+import org.wso2.carbon.device.mgt.common.PaginationRequest;
+import org.wso2.carbon.device.mgt.common.PaginationResult;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.DeviceTransferRequest;
+import org.wso2.carbon.device.mgt.common.MonitoringOperation;
+import org.wso2.carbon.device.mgt.common.StartupOperationConfig;
+import org.wso2.carbon.device.mgt.common.OperationMonitoringTaskConfig;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceNotFoundException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
-import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
-import org.wso2.carbon.device.mgt.common.FeatureManager;
 import org.wso2.carbon.device.mgt.common.exceptions.InvalidDeviceException;
-import org.wso2.carbon.device.mgt.common.MonitoringOperation;
-import org.wso2.carbon.device.mgt.common.OperationMonitoringTaskConfig;
-import org.wso2.carbon.device.mgt.common.PaginationRequest;
-import org.wso2.carbon.device.mgt.common.PaginationResult;
 import org.wso2.carbon.device.mgt.common.exceptions.UnauthorizedDeviceAccessException;
 import org.wso2.carbon.device.mgt.common.exceptions.UserNotFoundException;
-import org.wso2.carbon.device.mgt.common.StartupOperationConfig;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.AmbiguousConfigurationException;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.ConfigurationManagementException;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.DeviceConfiguration;
@@ -65,6 +65,7 @@ import org.wso2.carbon.device.mgt.common.policy.mgt.PolicyMonitoringManager;
 import org.wso2.carbon.device.mgt.common.pull.notification.PullNotificationExecutionFailedException;
 import org.wso2.carbon.device.mgt.common.push.notification.NotificationStrategy;
 import org.wso2.carbon.device.mgt.common.spi.DeviceManagementService;
+import org.wso2.carbon.device.mgt.common.ui.policy.mgt.PolicyConfigurationManager;
 import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.dto.DeviceTypeVersion;
 import org.wso2.carbon.device.mgt.core.geo.GeoCluster;
@@ -571,6 +572,15 @@ public interface DeviceManagementProviderService {
     FeatureManager getFeatureManager(String deviceType) throws DeviceTypeNotFoundException;
 
     /**
+     * Proxy method to get the UI configurations of Policies.
+     *
+     * @param deviceType Device platform
+     * @return Policies UI configurations of the particular device type.
+     * @throws DeviceTypeNotFoundException If device type is not registered.
+     */
+    PolicyConfigurationManager getPolicyUIConfigurationManager(String deviceType) throws DeviceTypeNotFoundException;
+
+    /**
      * Proxy method to get the tenant configuration of a given platform.
      *
      * @param deviceType Device platform
@@ -708,7 +718,7 @@ public interface DeviceManagementProviderService {
      */
     boolean changeDeviceStatus(DeviceIdentifier deviceIdentifier, EnrolmentInfo.Status newStatus)
             throws DeviceManagementException;
-    
+
     /**
      * This will handle add and update of device type services.
      * @param deviceManagementService
@@ -722,11 +732,21 @@ public interface DeviceManagementProviderService {
      */
     DeviceType getDeviceType(String deviceType) throws DeviceManagementException;
 
+
     /**
-     * This retrieves the device type info for the given type
-     * @throws DeviceManagementException
+     * This method will return device type list without filtering or limiting
+     * @return DeviceTypeList
+     * @throws DeviceManagementException will be thrown when Error in Backend occurs
      */
     List<DeviceType> getDeviceTypes() throws DeviceManagementException;
+
+    /**
+     * This method will return device type list using limit and filtering provided
+     * @param paginationRequest request parameters to filter devices
+     * @return filterd device types
+     * @throws DeviceManagementException
+     */
+    List<DeviceType> getDeviceTypes(PaginationRequest paginationRequest) throws DeviceManagementException;
 
     /**
      * This retrieves the device location histories
@@ -771,6 +791,35 @@ public interface DeviceManagementProviderService {
 
     DeviceTypeVersion getDeviceTypeVersion(String deviceTypeName, String version) throws
             DeviceManagementException;
+
+    /**
+     * Remove all versions of a device type
+     *
+     * @param deviceType Device type object
+     * @return True if device type versions are removed
+     * @throws DeviceManagementException Will be thrown if any service level or DAO level error occurs
+     */
+    boolean deleteDeviceTypeVersions(DeviceType deviceType)
+            throws DeviceManagementException;
+
+    /**
+     * Dis-enroll all devices passed
+     *
+     * @param devices List of devices to dis-enroll
+     * @throws DeviceManagementException Will be thrown if any service level or DAO level error occurs
+     */
+    void disEnrollDevices(List<Device> devices) throws DeviceManagementException;
+
+    /**
+     * Permanently delete a device type with all it's devices
+     *
+     * @param deviceTypeName Device type name
+     * @param deviceType Device type object
+     * @return True if device type successfully removed
+     * @throws DeviceManagementException Will be thrown if any service level or DAO level error occurs
+     */
+    boolean deleteDeviceType(String deviceTypeName, DeviceType deviceType) throws DeviceManagementException;
+
     /**
      * Retrieves a list of configurations of a specific device
      * using the device's properties

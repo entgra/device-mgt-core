@@ -15,15 +15,19 @@
  *   specific language governing permissions and limitations
  *   under the License.
  */
+
 package org.wso2.carbon.device.mgt.jaxrs.service.impl;
 
+import com.google.gson.JsonObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
 import org.wso2.carbon.device.mgt.common.exceptions.ReportManagementException;
+import org.wso2.carbon.device.mgt.core.report.mgt.Constants;
 import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
 import org.wso2.carbon.device.mgt.jaxrs.service.api.ReportManagementService;
@@ -34,6 +38,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -54,13 +59,13 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     @Path("/devices")
     @Override
     public Response getDevicesByDuration(
-            @QueryParam("status") String status,
+            @QueryParam("status") List<String> status,
             @QueryParam("ownership") String ownership,
             @QueryParam("from") String fromDate,
             @QueryParam("to") String toDate,
             @DefaultValue("0")
             @QueryParam("offset") int offset,
-            @DefaultValue("5")
+            @DefaultValue("10")
             @QueryParam("limit") int limit) {
         try {
             RequestValidationUtil.validatePaginationParameters(offset, limit);
@@ -68,11 +73,22 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             PaginationResult result;
             DeviceList devices = new DeviceList();
 
-            if (!StringUtils.isBlank(status)) {
-                request.setStatus(status);
-            }
             if (!StringUtils.isBlank(ownership)) {
                 request.setOwnership(ownership);
+            }
+
+            if (status != null && !status.isEmpty()) {
+                boolean isStatusEmpty = true;
+                for (String statusString : status){
+                    if (StringUtils.isNotBlank(statusString)){
+                        isStatusEmpty = false;
+                        break;
+                    }
+                }
+                if (!isStatusEmpty) {
+                    RequestValidationUtil.validateStatus(status);
+                    request.setStatusList(status);
+                }
             }
 
             result = DeviceMgtAPIUtils.getReportManagementService()
@@ -92,6 +108,93 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             log.error(msg, e);
             return Response.serverError().entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        }
+    }
+
+    @GET
+    @Path("/devices/count")
+    @Override
+    public Response getDevicesByDurationCount(
+            @QueryParam("status") List<String> status,
+            @QueryParam("ownership") String ownership,
+            @QueryParam("from") String fromDate,
+            @QueryParam("to") String toDate) {
+        int deviceCount;
+        try {
+            deviceCount = DeviceMgtAPIUtils.getReportManagementService()
+                    .getDevicesByDurationCount(status, ownership, fromDate, toDate);
+            return Response.status(Response.Status.OK).entity(deviceCount).build();
+        } catch (ReportManagementException e) {
+            String errorMessage = "Error while retrieving device count.";
+            log.error(errorMessage, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(errorMessage).build()).build();
+        }
+    }
+
+    @GET
+    @Path("/count")
+    @Override
+    public Response getCountOfDevicesByDuration(
+            @QueryParam("status") List<String> status,
+            @QueryParam("ownership") String ownership,
+            @QueryParam("from") String fromDate,
+            @QueryParam("to") String toDate,
+            @DefaultValue("0")
+            @QueryParam("offset") int offset,
+            @QueryParam("limit") int limit) {
+        try {
+            RequestValidationUtil.validatePaginationParameters(offset, limit);
+            PaginationRequest request = new PaginationRequest(offset, limit);
+
+            if (!StringUtils.isBlank(ownership)) {
+                request.setOwnership(ownership);
+            }
+
+            JsonObject countList = DeviceMgtAPIUtils.getReportManagementService()
+                    .getCountOfDevicesByDuration(request, status, fromDate, toDate);
+            if (countList.isJsonNull()) {
+                return Response.status(Response.Status.OK)
+                        .entity("No devices have been enrolled between the given date range").build();
+            } else {
+                return Response.status(Response.Status.OK).entity(countList).build();
+            }
+        } catch (ReportManagementException e) {
+            String msg = "Error occurred while retrieving device list";
+            log.error(msg, e);
+            return Response.serverError().entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        }
+    }
+
+    @GET
+    @Path("expired-devices/{deviceType}")
+    @Override
+    public Response getExpiredDevicesByOSVersion(@PathParam("deviceType") String deviceType,
+                                                 @QueryParam("osBuildDate") Long osBuildDate,
+                                                 @DefaultValue("0")
+                                                 @QueryParam("offset") int offset,
+                                                 @DefaultValue("5")
+                                                 @QueryParam("limit") int limit) {
+        try {
+            PaginationRequest request = new PaginationRequest(offset, limit);
+            request.setDeviceType(deviceType);
+            request.setProperty(Constants.OS_BUILD_DATE, osBuildDate);
+
+            PaginationResult paginationResult = DeviceMgtAPIUtils
+                    .getReportManagementService()
+                    .getDevicesExpiredByOSVersion(request);
+
+            return Response.status(Response.Status.OK).entity(paginationResult).build();
+        } catch (DeviceTypeNotFoundException e) {
+            String msg = "Error occurred while retrieving devices list. Device type: " + deviceType +
+                         "is not valid";
+            log.error(msg);
+            return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+        } catch (ReportManagementException e) {
+            String msg = "Error occurred while retrieving devices list with out-dated OS build versions";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
 }

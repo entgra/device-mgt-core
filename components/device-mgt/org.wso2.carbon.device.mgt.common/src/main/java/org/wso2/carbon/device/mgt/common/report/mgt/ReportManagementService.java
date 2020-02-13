@@ -17,9 +17,13 @@
  */
 package org.wso2.carbon.device.mgt.common.report.mgt;
 
+import com.google.gson.JsonObject;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
 import org.wso2.carbon.device.mgt.common.exceptions.ReportManagementException;
+
+import java.util.List;
 
 /**
  * This is the service class for reports which connects with DAO layer
@@ -38,4 +42,21 @@ public interface ReportManagementService {
      */
     PaginationResult getDevicesByDuration(PaginationRequest request, String fromDate, String toDate)
             throws ReportManagementException;
+
+    int getDevicesByDurationCount(List<String> statusList, String ownership, String fromDate, String toDate)
+            throws ReportManagementException;
+
+    JsonObject getCountOfDevicesByDuration(PaginationRequest request, List<String> statusList, String fromDate, String toDate)
+            throws ReportManagementException;
+
+    /**
+     * Get a list of devices with the count which are older than the given OS version
+     *
+     * @param request {@link PaginationRequest}
+     * @return {@link PaginationResult}
+     * @throws ReportManagementException Might occur during the business logic or building database query
+     * @throws DeviceTypeNotFoundException Might occur while validating the device type
+     */
+    PaginationResult getDevicesExpiredByOSVersion(PaginationRequest request)
+            throws ReportManagementException, DeviceTypeNotFoundException;
 }

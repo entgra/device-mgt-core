@@ -38,8 +38,11 @@ package org.wso2.carbon.device.mgt.jaxrs.service.impl;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.device.mgt.common.ui.policy.mgt.PolicyConfigurationManager;
+import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
+import org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy;
 import org.wso2.carbon.device.mgt.common.Feature;
 import org.wso2.carbon.device.mgt.common.FeatureManager;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration;
@@ -49,6 +52,8 @@ import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
 import org.wso2.carbon.device.mgt.jaxrs.service.api.DeviceTypeManagementService;
+import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.InputValidationException;
+import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.RequestValidationUtil;
 import org.wso2.carbon.device.mgt.jaxrs.util.DeviceMgtAPIUtils;
 
 import javax.validation.constraints.Size;
@@ -68,9 +73,26 @@ public class DeviceTypeManagementServiceImpl implements DeviceTypeManagementServ
 
     @GET
     @Override
-    public Response getDeviceTypes(@HeaderParam("If-Modified-Since") String ifModifiedSince) {
+    public Response getDeviceTypes(@HeaderParam("If-Modified-Since") String ifModifiedSince,
+                                   @QueryParam("offset") int offset,
+                                   @QueryParam("limit") int limit,
+                                   @QueryParam("filter") String filter) {
+
         try {
-            List<DeviceType> deviceTypes = DeviceMgtAPIUtils.getDeviceManagementService().getDeviceTypes();
+            RequestValidationUtil.validatePaginationParameters(offset, limit);
+            List<DeviceType> deviceTypes;
+            if (offset == 0 && limit == 0 && StringUtils.isEmpty(filter)) {
+                deviceTypes = DeviceMgtAPIUtils.getDeviceManagementService()
+                        .getDeviceTypes();
+            } else {
+                PaginationRequest paginationRequest = new PaginationRequest(offset, limit);
+                if (!StringUtils.isEmpty(filter)) {
+                    paginationRequest.setFilter(filter);
+                }
+                deviceTypes = DeviceMgtAPIUtils.getDeviceManagementService()
+                        .getDeviceTypes(paginationRequest);
+            }
+
             List<DeviceType> filteredDeviceTypes = new ArrayList<>();
             for (DeviceType deviceType : deviceTypes) {
                 filteredDeviceTypes.add(clearMetaEntryInfo(deviceType));
@@ -80,7 +102,12 @@ public class DeviceTypeManagementServiceImpl implements DeviceTypeManagementServ
             String msg = "Error occurred at server side while fetching device type.";
             log.error(msg, e);
             return Response.serverError().entity(msg).build();
+        }  catch (InputValidationException e) {
+            String msg = "Invalid pagination parameters";
+            log.error(msg, e);
+            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
         }
+
     }
 
     @Override
@@ -103,6 +130,46 @@ public class DeviceTypeManagementServiceImpl implements DeviceTypeManagementServ
         } else {
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
+    }
+
+    @GET
+    @Override
+    @Path("/{type}/ui-policy-configurations")
+    public Response getPolicies(@PathParam("type") @Size(min = 2, max = 45) String type){
+        List<Policy> policies;
+        DeviceManagementProviderService dms;
+        try {
+            if (StringUtils.isEmpty(type)) {
+                String msg = "Device Type cannot be empty.";
+                log.error(msg);
+                return Response.status(Response.Status.BAD_REQUEST).entity(
+                        new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+            }
+            dms = DeviceMgtAPIUtils.getDeviceManagementService();
+            PolicyConfigurationManager pm = dms.getPolicyUIConfigurationManager(type);
+
+            if (pm == null) {
+                String msg = "No policy manager is registered with the given device type '" + type + "'";
+                log.error(msg);
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
+                        new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+            }
+
+            policies = pm.getPolicies();
+
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while retrieving the [" + type + "] policy details.";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        } catch (DeviceTypeNotFoundException e) {
+            String msg = "No device type found with name '" + type + "'";
+            log.error(msg, e);
+            return Response.status(Response.Status.NOT_FOUND).entity(
+                    new ErrorResponse.ErrorResponseBuilder()
+                            .setMessage(msg).build()).build();
+        }
+        return Response.status(Response.Status.OK).entity(policies).build();
     }
 
     @GET

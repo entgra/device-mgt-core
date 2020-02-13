@@ -2,7 +2,7 @@ package org.wso2.carbon.device.mgt.common.type.mgt;
 
 import org.wso2.carbon.device.mgt.common.Feature;
 import org.wso2.carbon.device.mgt.common.InitialOperationConfig;
-import org.wso2.carbon.device.mgt.common.OperationMonitoringTaskConfig;
+import org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy;
 import org.wso2.carbon.device.mgt.common.license.mgt.License;
 import org.wso2.carbon.device.mgt.common.push.notification.PushNotificationConfig;
 
@@ -12,12 +12,14 @@ public class DeviceTypeMetaDefinition {
 
     private List<String> properties;
     private List<Feature> features;
+    private List<Policy> policies;
     private boolean claimable;
     private PushNotificationConfig pushNotificationConfig;
     private boolean policyMonitoringEnabled;
     private InitialOperationConfig initialOperationConfig;
     private License license;
     private String description;
+    private boolean isSharedWithAllTenants;
 
     public String getDescription() {
         return description;
@@ -41,6 +43,14 @@ public class DeviceTypeMetaDefinition {
 
     public void setFeatures(List<Feature> features) {
         this.features = features;
+    }
+
+    public List<Policy> getPolicies() {
+        return policies;
+    }
+
+    public void setPolicies(List<Policy> policies) {
+        this.policies = policies;
     }
 
     public boolean isClaimable() {
@@ -82,5 +92,13 @@ public class DeviceTypeMetaDefinition {
 
     public void setLicense(License license) {
         this.license = license;
+    }
+
+    public boolean isSharedWithAllTenants() {
+        return isSharedWithAllTenants;
+    }
+
+    public void setSharedWithAllTenants(boolean sharedWithAllTenants) {
+        isSharedWithAllTenants = sharedWithAllTenants;
     }
 }

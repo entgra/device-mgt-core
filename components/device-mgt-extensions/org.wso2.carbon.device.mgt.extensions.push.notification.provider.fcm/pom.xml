@@ -22,7 +22,7 @@
     <parent>
         <artifactId>device-mgt-extensions</artifactId>
         <groupId>org.wso2.carbon.devicemgt</groupId>
-        <version>4.1.6-SNAPSHOT</version>
+        <version>4.1.7-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -139,7 +139,7 @@
                             org.wso2.carbon.device.mgt.common.operation.mgt,
                             org.wso2.carbon.device.mgt.common.push.notification,
                             org.apache.commons.logging,
-                            org.wso2.carbon.device.mgt.common,
+                            org.wso2.carbon.device.mgt.common.*,
                             org.wso2.carbon.device.mgt.core.service
                         </Import-Package>
                     </instructions>

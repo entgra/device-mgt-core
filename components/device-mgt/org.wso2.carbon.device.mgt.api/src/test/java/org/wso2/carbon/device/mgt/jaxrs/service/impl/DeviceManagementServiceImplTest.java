@@ -75,11 +75,14 @@ import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.DeviceMgtAPITestHelper
 import org.wso2.carbon.device.mgt.jaxrs.util.DeviceMgtAPIUtils;
 import org.wso2.carbon.policy.mgt.common.PolicyManagementException;
 import org.wso2.carbon.policy.mgt.core.PolicyManagerService;
+import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
 import javax.ws.rs.core.Response;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -89,8 +92,8 @@ import static org.mockito.MockitoAnnotations.initMocks;
  */
 @PowerMockIgnore({"javax.ws.rs.*", "org.apache.log4j.*"})
 @SuppressStaticInitializationFor({"org.wso2.carbon.device.mgt.jaxrs.util.DeviceMgtAPIUtils",
-        "org.wso2.carbon.context.CarbonContext"})
-@PrepareForTest({DeviceMgtAPIUtils.class, MultitenantUtils.class, CarbonContext.class})
+        "org.wso2.carbon.context.CarbonContext", "org.wso2.carbon.user.core.service.RealmService"})
+@PrepareForTest({DeviceMgtAPIUtils.class, MultitenantUtils.class, CarbonContext.class, RealmService.class})
 public class DeviceManagementServiceImplTest {
 
     private static final Log log = LogFactory.getLog(DeviceManagementServiceImplTest.class);
@@ -101,8 +104,7 @@ public class DeviceManagementServiceImplTest {
     private static final String TENANT_AWARE_USERNAME = "admin@carbon.super";
     private static final String DEFAULT_ROLE = "admin";
     private static final String DEFAULT_OWNERSHIP = "BYOD";
-    private static final String DEFAULT_STATUS = "ACTIVE";
-    private static final String DEFAULT_EXCLUDED_STATUS = "REMOVED";
+    private static final List<String> DEFAULT_STATUS_LIST = new ArrayList<>();
     private static final String DEFAULT_DATE_FORMAT = "EEE, d MMM yyyy HH:mm:ss Z";
     private DeviceManagementService deviceManagementService;
     private DeviceAccessAuthorizationService deviceAccessAuthorizationService;
@@ -123,6 +125,8 @@ public class DeviceManagementServiceImplTest {
         this.deviceManagementService = new DeviceManagementServiceImpl();
         this.deviceAccessAuthorizationService = Mockito.mock(DeviceAccessAuthorizationServiceImpl.class);
         demoDevice = DeviceMgtAPITestHelper.generateDummyDevice(TEST_DEVICE_TYPE, TEST_DEVICE_IDENTIFIER);
+        DEFAULT_STATUS_LIST.add("ACTIVE");
+        DEFAULT_STATUS_LIST.add("REMOVED");
     }
 
     @Test(description = "Testing if the device is enrolled when the device is enrolled.")
@@ -171,7 +175,7 @@ public class DeviceManagementServiceImplTest {
                 .toReturn(this.deviceAccessAuthorizationService);
         Response response = this.deviceManagementService
                 .getDevices(TEST_DEVICE_NAME, TEST_DEVICE_TYPE, DEFAULT_USERNAME, null, DEFAULT_ROLE, DEFAULT_OWNERSHIP,
-                        DEFAULT_EXCLUDED_STATUS, DEFAULT_STATUS, 1, null, null, false, 10, 5);
+                         DEFAULT_STATUS_LIST, 1, null, null, false, 10, 5);
         Assert.assertEquals(response.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
     }
 
@@ -185,22 +189,24 @@ public class DeviceManagementServiceImplTest {
                 .toReturn(TENANT_AWARE_USERNAME);
         PowerMockito.stub(PowerMockito.method(CarbonContext.class, "getThreadLocalCarbonContext"))
                 .toReturn(Mockito.mock(CarbonContext.class, Mockito.RETURNS_MOCKS));
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getRealmService"))
+                .toReturn(Mockito.mock(RealmService.class, Mockito.RETURNS_MOCKS));
 
         Response response = this.deviceManagementService
                 .getDevices(null, TEST_DEVICE_TYPE, DEFAULT_USERNAME, null, DEFAULT_ROLE, DEFAULT_OWNERSHIP,
-                        DEFAULT_EXCLUDED_STATUS, DEFAULT_STATUS, 1, null, null, false, 10, 5);
+                         DEFAULT_STATUS_LIST, 1, null, null, false, 10, 5);
         Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         response = this.deviceManagementService
                 .getDevices(TEST_DEVICE_NAME, TEST_DEVICE_TYPE, DEFAULT_USERNAME, null, null, DEFAULT_OWNERSHIP,
-                        DEFAULT_EXCLUDED_STATUS, DEFAULT_STATUS, 1, null, null, false, 10, 5);
+                         DEFAULT_STATUS_LIST, 1, null, null, false, 10, 5);
         Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         response = this.deviceManagementService
                 .getDevices(TEST_DEVICE_NAME, TEST_DEVICE_TYPE, null, null, null, DEFAULT_OWNERSHIP,
-                        DEFAULT_EXCLUDED_STATUS, DEFAULT_STATUS, 1, null, null, false, 10, 5);
+                         DEFAULT_STATUS_LIST, 1, null, null, false, 10, 5);
         Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         response = this.deviceManagementService
                 .getDevices(TEST_DEVICE_NAME, TEST_DEVICE_TYPE, null, null, null, DEFAULT_OWNERSHIP,
-                        DEFAULT_EXCLUDED_STATUS, DEFAULT_STATUS, 1, null, null, true, 10, 5);
+                         DEFAULT_STATUS_LIST, 1, null, null, true, 10, 5);
         Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
     }
 
@@ -271,11 +277,13 @@ public class DeviceManagementServiceImplTest {
         CarbonContext carbonContext = Mockito.mock(CarbonContext.class, Mockito.RETURNS_MOCKS);
         PowerMockito.stub(PowerMockito.method(CarbonContext.class, "getThreadLocalCarbonContext"))
                 .toReturn(carbonContext);
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getRealmService"))
+                .toReturn(Mockito.mock(RealmService.class, Mockito.RETURNS_MOCKS));
         Mockito.when(carbonContext.getTenantId()).thenReturn(-1234);
         Mockito.when(carbonContext.getUsername()).thenReturn(DEFAULT_USERNAME);
         Mockito.when(deviceAccessAuthorizationService.isDeviceAdminUser()).thenReturn(true);
 
-        this.deviceManagementService.getDeviceByID(TEST_DEVICE_IDENTIFIER, ifModifiedSince,true);
+        this.deviceManagementService.getDeviceByID(TEST_DEVICE_IDENTIFIER, ifModifiedSince, true);
 
     }
 
@@ -294,6 +302,8 @@ public class DeviceManagementServiceImplTest {
                 .toReturn(deviceAccessAuthorizationService);
         PowerMockito.stub(PowerMockito.method(CarbonContext.class, "getThreadLocalCarbonContext"))
                 .toReturn(carbonContext);
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getRealmService"))
+                .toReturn(Mockito.mock(RealmService.class, Mockito.RETURNS_MOCKS));
         Mockito.when(carbonContext.getTenantId()).thenReturn(-1234);
         Mockito.when(carbonContext.getUsername()).thenReturn(DEFAULT_USERNAME);
         Mockito.when(deviceAccessAuthorizationService.isDeviceAdminUser()).thenReturn(true);
@@ -301,16 +311,16 @@ public class DeviceManagementServiceImplTest {
         this.deviceManagementService.getDeviceByID(TEST_DEVICE_IDENTIFIER, ifModifiedSince,true);
     }
 
-    @Test(description = "Testing get devices when DeviceAccessAuthorizationService is not available")
-    public void testGetDevicesWithErroneousDeviceAccessAuthorizationService() {
+    @Test(description = "Testing get devices when DeviceAccessAuthorizationService is not available",
+            expectedExceptions = NoClassDefFoundError.class)
+    public void testGetDevicesWithErroneousDeviceAccessAuthorizationService()
+            throws DeviceAccessAuthorizationException {
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getDeviceManagementService"))
                 .toReturn(this.deviceManagementProviderService);
-        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getDeviceAccessAuthorizationService"))
-                .toReturn(null);
-        Response response = this.deviceManagementService
-                .getDevices(null, TEST_DEVICE_TYPE, DEFAULT_USERNAME, null, DEFAULT_ROLE, DEFAULT_OWNERSHIP,
-                        DEFAULT_EXCLUDED_STATUS, DEFAULT_STATUS, 1, null, null, false, 10, 5);
-        Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+        Mockito.when(deviceAccessAuthorizationService.isDeviceAdminUser()).thenReturn(true);
+        deviceManagementService.getDevices(null, TEST_DEVICE_TYPE, DEFAULT_USERNAME, null,
+                                           DEFAULT_ROLE, DEFAULT_OWNERSHIP, DEFAULT_STATUS_LIST, 1,
+                                           null, null, false, 10, 5);
     }
 
     @Test(description = "Testing get devices when user is the device admin")
@@ -323,15 +333,17 @@ public class DeviceManagementServiceImplTest {
                 .toReturn(TENANT_AWARE_USERNAME);
         PowerMockito.stub(PowerMockito.method(CarbonContext.class, "getThreadLocalCarbonContext"))
                 .toReturn(Mockito.mock(CarbonContext.class, Mockito.RETURNS_MOCKS));
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getRealmService"))
+                .toReturn(Mockito.mock(RealmService.class, Mockito.RETURNS_MOCKS));
         Mockito.when(deviceAccessAuthorizationService.isDeviceAdminUser()).thenReturn(true);
 
         Response response = this.deviceManagementService
-                .getDevices(null, TEST_DEVICE_TYPE, DEFAULT_USERNAME, null, DEFAULT_ROLE, DEFAULT_OWNERSHIP,
-                        DEFAULT_EXCLUDED_STATUS, DEFAULT_STATUS, 1, null, null, false, 10, 5);
+                .getDevices(null, TEST_DEVICE_TYPE, DEFAULT_USERNAME, null, DEFAULT_ROLE, DEFAULT_OWNERSHIP
+                        , DEFAULT_STATUS_LIST, 1, null, null, false, 10, 5);
         Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         response = this.deviceManagementService
-                .getDevices(null, TEST_DEVICE_TYPE, null, DEFAULT_USERNAME, DEFAULT_ROLE, DEFAULT_OWNERSHIP,
-                        DEFAULT_EXCLUDED_STATUS, DEFAULT_STATUS, 1, null, null, false, 10, 5);
+                .getDevices(null, TEST_DEVICE_TYPE, null, DEFAULT_USERNAME, DEFAULT_ROLE, DEFAULT_OWNERSHIP
+                        , DEFAULT_STATUS_LIST, 1, null, null, false, 10, 5);
         Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
     }
 
@@ -348,10 +360,12 @@ public class DeviceManagementServiceImplTest {
                 .when(MultitenantUtils.class, "getTenantAwareUsername", DEFAULT_USERNAME);
         PowerMockito.doReturn("newuser@carbon.super").when(MultitenantUtils.class, "getTenantAwareUsername", "newuser");
         Mockito.when(this.deviceAccessAuthorizationService.isDeviceAdminUser()).thenReturn(false);
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getRealmService"))
+                .toReturn(Mockito.mock(RealmService.class, Mockito.RETURNS_MOCKS));
 
         Response response = this.deviceManagementService
-                .getDevices(null, TEST_DEVICE_TYPE, "newuser", null, DEFAULT_ROLE, DEFAULT_OWNERSHIP, DEFAULT_EXCLUDED_STATUS,
-                        DEFAULT_STATUS, 1, null, null, false, 10, 5);
+                .getDevices(null, TEST_DEVICE_TYPE, "newuser", null, DEFAULT_ROLE, DEFAULT_OWNERSHIP,
+                            DEFAULT_STATUS_LIST, 0, null, null, false, 10, 5);
         Assert.assertEquals(response.getStatus(), Response.Status.UNAUTHORIZED.getStatusCode());
         Mockito.reset(this.deviceAccessAuthorizationService);
     }
@@ -367,18 +381,20 @@ public class DeviceManagementServiceImplTest {
                 .toReturn(TENANT_AWARE_USERNAME);
         PowerMockito.stub(PowerMockito.method(CarbonContext.class, "getThreadLocalCarbonContext"))
                 .toReturn(Mockito.mock(CarbonContext.class, Mockito.RETURNS_MOCKS));
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getRealmService"))
+                .toReturn(Mockito.mock(RealmService.class, Mockito.RETURNS_MOCKS));
 
         Response response = this.deviceManagementService
                 .getDevices(null, TEST_DEVICE_TYPE, DEFAULT_USERNAME, null, DEFAULT_ROLE, DEFAULT_OWNERSHIP,
-                        DEFAULT_EXCLUDED_STATUS, DEFAULT_STATUS, 1, null, ifModifiedSince, false, 10, 5);
+                            DEFAULT_STATUS_LIST, 0, null, ifModifiedSince, false, 10, 5);
         Assert.assertEquals(response.getStatus(), Response.Status.NOT_MODIFIED.getStatusCode());
         response = this.deviceManagementService
                 .getDevices(null, TEST_DEVICE_TYPE, DEFAULT_USERNAME, null, DEFAULT_ROLE, DEFAULT_OWNERSHIP,
-                        DEFAULT_EXCLUDED_STATUS, DEFAULT_STATUS, 1, null, ifModifiedSince, true, 10, 5);
+                            DEFAULT_STATUS_LIST, 0, null, ifModifiedSince, true, 10, 5);
         Assert.assertEquals(response.getStatus(), Response.Status.NOT_MODIFIED.getStatusCode());
         response = this.deviceManagementService
                 .getDevices(null, TEST_DEVICE_TYPE, DEFAULT_USERNAME, null, DEFAULT_ROLE, DEFAULT_OWNERSHIP,
-                        DEFAULT_EXCLUDED_STATUS, DEFAULT_STATUS, 1, null, "ErrorModifiedSince", false, 10, 5);
+                            DEFAULT_STATUS_LIST, 0, null, "ErrorModifiedSince", false, 10, 5);
         Assert.assertEquals(response.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
     }
 
@@ -393,18 +409,20 @@ public class DeviceManagementServiceImplTest {
                 .toReturn(TENANT_AWARE_USERNAME);
         PowerMockito.stub(PowerMockito.method(CarbonContext.class, "getThreadLocalCarbonContext"))
                 .toReturn(Mockito.mock(CarbonContext.class, Mockito.RETURNS_MOCKS));
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getRealmService"))
+                .toReturn(Mockito.mock(RealmService.class, Mockito.RETURNS_MOCKS));
 
         Response response = this.deviceManagementService
                 .getDevices(null, TEST_DEVICE_TYPE, DEFAULT_USERNAME, null, DEFAULT_ROLE, DEFAULT_OWNERSHIP,
-                        DEFAULT_EXCLUDED_STATUS, DEFAULT_STATUS, 1, since, null, false, 10, 5);
+                         DEFAULT_STATUS_LIST, 0, since, null, false, 10, 5);
         Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         response = this.deviceManagementService
                 .getDevices(null, TEST_DEVICE_TYPE, DEFAULT_USERNAME, null, DEFAULT_ROLE, DEFAULT_OWNERSHIP,
-                        DEFAULT_EXCLUDED_STATUS, DEFAULT_STATUS, 1, since, null, true, 10, 5);
+                         DEFAULT_STATUS_LIST, 0, since, null, true, 10, 5);
         Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         response = this.deviceManagementService
                 .getDevices(null, TEST_DEVICE_TYPE, DEFAULT_USERNAME, null, DEFAULT_ROLE, DEFAULT_OWNERSHIP,
-                        DEFAULT_EXCLUDED_STATUS, DEFAULT_STATUS, 1, "ErrorSince", null, false, 10, 5);
+                         DEFAULT_STATUS_LIST, 0, "ErrorSince", null, false, 10, 5);
         Assert.assertEquals(response.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
     }
 
@@ -418,13 +436,15 @@ public class DeviceManagementServiceImplTest {
                 .toReturn(TENANT_AWARE_USERNAME);
         PowerMockito.stub(PowerMockito.method(CarbonContext.class, "getThreadLocalCarbonContext"))
                 .toReturn(Mockito.mock(CarbonContext.class, Mockito.RETURNS_MOCKS));
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getRealmService"))
+                .toReturn(Mockito.mock(RealmService.class, Mockito.RETURNS_MOCKS));
         Mockito.when(this.deviceManagementProviderService
                 .getAllDevices(Mockito.any(PaginationRequest.class), Mockito.anyBoolean()))
                 .thenThrow(new DeviceManagementException());
 
         Response response = this.deviceManagementService
                 .getDevices(null, TEST_DEVICE_TYPE, DEFAULT_USERNAME, null, DEFAULT_ROLE, DEFAULT_OWNERSHIP,
-                        DEFAULT_EXCLUDED_STATUS, DEFAULT_STATUS, 1, null, null, false, 10, 5);
+                         DEFAULT_STATUS_LIST, 1, null, null, false, 10, 5);
         Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
         Mockito.reset(this.deviceManagementProviderService);
     }
@@ -439,12 +459,14 @@ public class DeviceManagementServiceImplTest {
                 .toReturn(TENANT_AWARE_USERNAME);
         PowerMockito.stub(PowerMockito.method(CarbonContext.class, "getThreadLocalCarbonContext"))
                 .toReturn(Mockito.mock(CarbonContext.class, Mockito.RETURNS_MOCKS));
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getRealmService"))
+                .toReturn(Mockito.mock(RealmService.class, Mockito.RETURNS_MOCKS));
         Mockito.when(this.deviceAccessAuthorizationService.isDeviceAdminUser())
                 .thenThrow(new DeviceAccessAuthorizationException());
 
         Response response = this.deviceManagementService
                 .getDevices(null, TEST_DEVICE_TYPE, DEFAULT_USERNAME, null, DEFAULT_ROLE, DEFAULT_OWNERSHIP,
-                        DEFAULT_EXCLUDED_STATUS, DEFAULT_STATUS, 1, null, null, false, 10, 5);
+                         DEFAULT_STATUS_LIST, 1, null, null, false, 10, 5);
         Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
         Mockito.reset(this.deviceAccessAuthorizationService);
     }

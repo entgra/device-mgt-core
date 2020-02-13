@@ -15,8 +15,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/*
+ *   Copyright (c) 2019, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
+ *
+ *   Entgra (pvt) Ltd. licenses this file to you under the Apache License,
+ *   Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing,
+ *   software distributed under the License is distributed on an
+ *   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *   KIND, either express or implied. See the License for the
+ *   specific language governing permissions and limitations
+ *   under the License.
+ */
 package org.wso2.carbon.device.mgt.core.dao;
 
+import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.dto.DeviceTypeVersion;
 
@@ -127,5 +145,23 @@ public interface DeviceTypeDAO {
 	boolean updateDeviceTypeVersion(DeviceTypeVersion deviceTypeVersion) throws DeviceManagementDAOException;
 
 	DeviceTypeVersion getDeviceTypeVersion(int deviceTypeId, String version)
+			throws DeviceManagementDAOException;
+
+	/**
+	 * Permanently remove a device type
+	 *
+	 * @param tenantId   current tenant's id
+	 * @param deviceTypeId device type id
+	 * @throws DeviceManagementDAOException Might occur while executing database queries
+	 */
+	void deleteDeviceType(int tenantId, int deviceTypeId) throws DeviceManagementDAOException;
+
+	/**
+	 *
+	 * @param tenantId current tenant's ID
+	 * @param paginationRequest request object for filter data. Using only offset limit and filter
+	 * @return List of filtered device types
+	 */
+	List<DeviceType> getDeviceTypes(int tenantId, PaginationRequest paginationRequest)
 			throws DeviceManagementDAOException;
 }
