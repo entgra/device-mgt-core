@@ -29,7 +29,6 @@ import AppVersionDropDown from '../Widgets/AppVersionDropDown';
 // eslint-disable-next-line no-unused-vars
 let config = null;
 let url;
-
 let packageName;
 let version;
 

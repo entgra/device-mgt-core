@@ -273,7 +273,7 @@ public abstract class AbstractApplicationDAOImpl implements ApplicationDAO {
     }
 
     @Override
-    public List<Application> getApplications(PaginationRequest request, int tenantId, String platform)
+    public List<Application> getApplications(PaginationRequest request, int tenantId)
             throws DeviceManagementDAOException {
         List<Application> applications = new ArrayList<>();
         Application application;
@@ -297,7 +297,7 @@ public abstract class AbstractApplicationDAOImpl implements ApplicationDAO {
         try {
             Connection conn = this.getConnection();
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, platform);
+                stmt.setString(1, request.getDeviceType());
                 stmt.setInt(2, tenantId);
                 stmt.setInt(3, request.getRowCount());
                 stmt.setInt(4, request.getStartIndex());
@@ -310,7 +310,8 @@ public abstract class AbstractApplicationDAOImpl implements ApplicationDAO {
             }
         } catch (SQLException e) {
             String msg = "SQL Error occurred while retrieving the list of Applications " +
-                    "installed in all enrolled devices for " + platform + " under tenant id " + tenantId;
+                    "installed in all enrolled devices for device type " + request.getDeviceType() +
+                    " under tenant id " + tenantId;
             log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }

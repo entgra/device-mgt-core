@@ -861,11 +861,11 @@ public interface DeviceManagementProviderService {
      * This method is used to get a list of applications installed in all enrolled devices
      *
      * @param request Request object with limit and offset
-     * @param platform The platform application list belongs to. Ex: android, ios
      * @return {@link PaginationResult}
      * @throws ApplicationManagementException if any service level or DAO level error occurs.
      */
-    PaginationResult getApplications(PaginationRequest request, String platform) throws ApplicationManagementException;
+    PaginationResult getApplications(PaginationRequest request)
+            throws ApplicationManagementException, DeviceTypeNotFoundException;
 
     /**
      * This method is used to get a list of app versions when app package name is given.

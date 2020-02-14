@@ -220,7 +220,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                     .getAppNotInstalledDevices(request, packageName, version);
             if (result.getData().isEmpty()) {
                 return Response.status(Response.Status.OK)
-                        .entity("App with package name " + packageName + 
+                        .entity("App with package name " + packageName +
                                 " is installed in all enrolled devices").build();
             } else {
                 devices.setList((List<Device>) result.getData());

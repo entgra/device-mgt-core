@@ -6,8 +6,7 @@
   "serverConfig": {
     "invoker": {
       "uri": "/entgra-ui-request-handler/invoke",
-      "deviceMgt" : "/device-mgt/v1.0",
-      "applicationMgtStore" : "/application-mgt-store/v1.0"
+      "deviceMgt" : "/device-mgt/v1.0"
     },
     "loginUri": "/entgra-ui-request-handler/login",
     "logoutUri": "/entgra-ui-request-handler/logout",

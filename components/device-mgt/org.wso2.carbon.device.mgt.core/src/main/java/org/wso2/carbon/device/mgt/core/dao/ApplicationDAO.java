@@ -46,11 +46,10 @@ public interface ApplicationDAO {
      *
      * @param request Request object with limit and offset
      * @param tenantId ID of the current tenant
-     * @param platform The platform application list belongs to. Ex: android, ios
      * @return List of {@link Application} objects
      * @throws DeviceManagementDAOException If any database error occured
      */
-    List<Application> getApplications(PaginationRequest request, int tenantId, String platform)
+    List<Application> getApplications(PaginationRequest request, int tenantId)
             throws DeviceManagementDAOException;
 
     /**

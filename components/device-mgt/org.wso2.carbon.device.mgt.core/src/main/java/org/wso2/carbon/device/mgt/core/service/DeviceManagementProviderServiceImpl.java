@@ -64,7 +64,13 @@ import org.wso2.carbon.device.mgt.common.DevicePropertyNotification;
 import org.wso2.carbon.device.mgt.common.DeviceEnrollmentInfoNotification;
 import org.wso2.carbon.device.mgt.common.DeviceNotification;
 import org.wso2.carbon.device.mgt.common.app.mgt.ApplicationManagementException;
-import org.wso2.carbon.device.mgt.common.exceptions.*;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceNotFoundException;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
+import org.wso2.carbon.device.mgt.common.exceptions.InvalidDeviceException;
+import org.wso2.carbon.device.mgt.common.exceptions.TransactionManagementException;
+import org.wso2.carbon.device.mgt.common.exceptions.UnauthorizedDeviceAccessException;
+import org.wso2.carbon.device.mgt.common.exceptions.UserNotFoundException;
 import org.wso2.carbon.device.mgt.common.app.mgt.Application;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.AmbiguousConfigurationException;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.ConfigurationEntry;
@@ -3964,19 +3970,27 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public PaginationResult getApplications(PaginationRequest request, String platform)
-            throws ApplicationManagementException {
+    public PaginationResult getApplications(PaginationRequest request)
+            throws ApplicationManagementException, DeviceTypeNotFoundException {
         PaginationResult paginationResult = new PaginationResult();
         try {
             int tenantId = DeviceManagementDAOUtil.getTenantId();
             request = DeviceManagerUtil.validateDeviceListPageSize(request);
 
+            String deviceType = request.getDeviceType();
+            DeviceType deviceTypeObj = DeviceManagerUtil.getDeviceType(
+                    deviceType, tenantId);
+            if (deviceTypeObj == null) {
+                String msg = "Error, device of type (application platform): " + deviceType + " does not exist";
+                log.error(msg);
+                throw new DeviceTypeNotFoundException(msg);
+            }
+
             try {
                 DeviceManagementDAOFactory.openConnection();
                 List<Application> applicationList = applicationDAO.getApplications(
                         request,
-                        tenantId,
-                        platform
+                        tenantId
                 );
                 paginationResult.setData(applicationList);
                 paginationResult.setRecordsTotal(applicationList.size());

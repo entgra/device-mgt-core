@@ -2073,8 +2073,8 @@ public interface DeviceManagementService {
             })
     Response getApplications(
             @ApiParam(
-                    name = "platform",
-                    value = "Platform of the application",
+                    name = "device-type",
+                    value = "Device type (platform) of the application",
                     required = true)
             @PathParam("platform")
             @Size(max = 45)
