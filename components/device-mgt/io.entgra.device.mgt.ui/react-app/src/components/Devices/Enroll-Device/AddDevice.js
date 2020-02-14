@@ -38,7 +38,6 @@ class AddDevice extends React.Component {
   }
 
   getDeviceType = deviceType => {
-    console.log(deviceType);
     this.setState({
       current: 1,
       deviceType: deviceType,

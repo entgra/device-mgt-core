@@ -96,7 +96,6 @@ class EnrollDevice extends React.Component {
   };
 
   onChange = value => {
-    console.log(value);
     this.generateQRCode(value);
   };
 
