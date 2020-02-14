@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
+ * Copyright (c) 2020, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
  *
  * Entgra (pvt) Ltd. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -233,11 +233,9 @@ class ReportDeviceTable extends React.Component {
           pagination={{
             ...pagination,
             size: 'small',
-            // position: "top",
             total: data.count,
             showTotal: (total, range) =>
               `showing ${range[0]}-${range[1]} of ${total} devices`,
-            // showQuickJumper: true
           }}
           loading={loading}
           onChange={this.handleTableChange}
