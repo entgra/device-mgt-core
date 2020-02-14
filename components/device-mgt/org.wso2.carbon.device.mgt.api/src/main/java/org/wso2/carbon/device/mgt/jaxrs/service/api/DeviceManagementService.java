@@ -2030,7 +2030,7 @@ public interface DeviceManagementService {
                     int id);
 
     @GET
-    @Path("/{platform}/applications")
+    @Path("/{device-type}/applications")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
@@ -2077,7 +2077,6 @@ public interface DeviceManagementService {
                     value = "Device type (platform) of the application",
                     required = true)
             @PathParam("platform")
-            @Size(max = 45)
                     String platform,
             @ApiParam(
                     name = "offset",
