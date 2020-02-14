@@ -1157,8 +1157,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
         } catch (ApplicationManagementException e) {
             String msg = "Error occurred while retrieving version list for app with package name " + packageName;
             log.error(msg, e);
-            return Response.serverError().entity(
-                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
 }

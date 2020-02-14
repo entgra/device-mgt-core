@@ -235,8 +235,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         } catch (ReportManagementException e) {
             String msg = "Error occurred while retrieving device list";
             log.error(msg, e);
-            return Response.serverError().entity(
-                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
 }

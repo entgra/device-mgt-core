@@ -1923,11 +1923,11 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 "WHERE a.APP_IDENTIFIER = ?";
 
         if (!StringUtils.isBlank(version)) {
-            sql = sql + " AND a.VERSION = ? ) LIMIT ? OFFSET ?";
+            sql = sql + " AND a.VERSION = ? ";
             isVersionProvided = true;
-        } else {
-            sql = sql + ") LIMIT ? OFFSET ?";
         }
+
+        sql = sql + ") LIMIT ? OFFSET ?";
 
         try {
             Connection conn = this.getConnection();
@@ -1979,7 +1979,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                         "WHERE a.APP_IDENTIFIER = ?";
 
         if (!StringUtils.isBlank(version)) {
-            sql = sql + " AND a.VERSION = ? )";
+            sql = sql + " AND a.VERSION = ? ";
             isVersionProvided = true;
         }
 

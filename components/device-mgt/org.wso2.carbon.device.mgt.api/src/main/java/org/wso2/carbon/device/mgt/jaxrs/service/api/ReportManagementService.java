@@ -405,11 +405,6 @@ public interface ReportManagementService {
                                                     "Used by caches, or in conditional requests."),
                             }),
                     @ApiResponse(
-                            code = 400,
-                            message = "Bad Request. \n Invalid device status type received. \n" +
-                                    "Valid status types are NEW | CHECKED",
-                            response = ErrorResponse.class),
-                    @ApiResponse(
                             code = 404,
                             message = "Not Found. \n There are no devices.",
                             response = ErrorResponse.class),

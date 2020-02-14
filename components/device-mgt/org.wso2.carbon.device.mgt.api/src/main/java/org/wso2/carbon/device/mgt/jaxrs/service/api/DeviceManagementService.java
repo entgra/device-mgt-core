@@ -2063,8 +2063,8 @@ public interface DeviceManagementService {
                                                     "Used by caches, or in conditional requests."),
                             }),
                     @ApiResponse(
-                            code = 400,
-                            message = "Bad Request. \n Invalid request or validation error.",
+                            code = 404,
+                            message = "Not Found. \n There are no applications.",
                             response = ErrorResponse.class),
                     @ApiResponse(
                             code = 500,
@@ -2124,10 +2124,6 @@ public interface DeviceManagementService {
                                             description = "Date and time the resource was last modified.\n" +
                                                     "Used by caches, or in conditional requests."),
                             }),
-                    @ApiResponse(
-                            code = 400,
-                            message = "Bad Request. \n Invalid request or validation error.",
-                            response = ErrorResponse.class),
                     @ApiResponse(
                             code = 500,
                             message = "Error occurred while getting the version data.",
