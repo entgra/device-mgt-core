@@ -2076,7 +2076,7 @@ public interface DeviceManagementService {
                     name = "device-type",
                     value = "Device type (platform) of the application",
                     required = true)
-            @PathParam("platform")
+            @PathParam("device-type")
                     String platform,
             @ApiParam(
                     name = "offset",
