@@ -273,20 +273,31 @@ public abstract class AbstractApplicationDAOImpl implements ApplicationDAO {
     }
 
     @Override
-    public List<Application> getApplications(PaginationRequest request, int tenantId, String platform)
+    public List<Application> getApplications(PaginationRequest request, int tenantId)
             throws DeviceManagementDAOException {
         List<Application> applications = new ArrayList<>();
         Application application;
         String sql = "Select " +
-                        "ID, NAME, APP_IDENTIFIER, PLATFORM, CATEGORY, VERSION, TYPE, " +
-                        "LOCATION_URL, IMAGE_URL, APP_PROPERTIES, MEMORY_USAGE, IS_ACTIVE, TENANT_ID " +
+                        "ID," +
+                        " NAME, " +
+                        "APP_IDENTIFIER, " +
+                        "PLATFORM, " +
+                        "CATEGORY, " +
+                        "VERSION, " +
+                        "TYPE, " +
+                        "LOCATION_URL, " +
+                        "IMAGE_URL, " +
+                        "APP_PROPERTIES, " +
+                        "MEMORY_USAGE, " +
+                        "IS_ACTIVE, " +
+                        "TENANT_ID " +
                      "From DM_APPLICATION " +
                      "WHERE PLATFORM = ? " +
                      "AND TENANT_ID = ? LIMIT ? OFFSET ?";
         try {
             Connection conn = this.getConnection();
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, platform);
+                stmt.setString(1, request.getDeviceType());
                 stmt.setInt(2, tenantId);
                 stmt.setInt(3, request.getRowCount());
                 stmt.setInt(4, request.getStartIndex());
@@ -299,7 +310,8 @@ public abstract class AbstractApplicationDAOImpl implements ApplicationDAO {
             }
         } catch (SQLException e) {
             String msg = "SQL Error occurred while retrieving the list of Applications " +
-                    "installed in all enrolled devices for " + platform + " under tenant id " + tenantId;
+                    "installed in all enrolled devices for device type " + request.getDeviceType() +
+                    " under tenant id " + tenantId;
             log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
@@ -308,7 +320,8 @@ public abstract class AbstractApplicationDAOImpl implements ApplicationDAO {
 
     @Override
     public List<String> getAppVersions(int tenantId, String packageName) throws DeviceManagementDAOException {
-        String sql = "SELECT VERSION " +
+        String sql = "SELECT " +
+                        "VERSION " +
                      "FROM DM_APPLICATION " +
                      "WHERE TENANT_ID=? " +
                      "AND APP_IDENTIFIER=?";

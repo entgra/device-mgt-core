@@ -60,6 +60,7 @@ import org.wso2.carbon.device.mgt.common.policy.mgt.Policy;
 import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.NonComplianceData;
 import org.wso2.carbon.device.mgt.common.search.PropertyMap;
 import org.wso2.carbon.device.mgt.common.search.SearchContext;
+import org.wso2.carbon.device.mgt.jaxrs.beans.ApplicationList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
 import org.wso2.carbon.device.mgt.jaxrs.beans.OperationRequest;
@@ -2029,7 +2030,7 @@ public interface DeviceManagementService {
                     int id);
 
     @GET
-    @Path("/{platform}/applications")
+    @Path("/{device-type}/applications")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
@@ -2047,7 +2048,7 @@ public interface DeviceManagementService {
                     @ApiResponse(
                             code = 200,
                             message = "OK. \n Successfully fetched the list of applications.",
-                            response = DeviceList.class,
+                            response = ApplicationList.class,
                             responseHeaders = {
                                     @ResponseHeader(
                                             name = "Content-Type",
@@ -2062,12 +2063,8 @@ public interface DeviceManagementService {
                                                     "Used by caches, or in conditional requests."),
                             }),
                     @ApiResponse(
-                            code = 200,
-                            message = "OK",
-                            response = NonComplianceData.class),
-                    @ApiResponse(
-                            code = 400,
-                            message = "Bad Request. \n Invalid request or validation error.",
+                            code = 404,
+                            message = "Not Found. \n There are no applications.",
                             response = ErrorResponse.class),
                     @ApiResponse(
                             code = 500,
@@ -2076,12 +2073,11 @@ public interface DeviceManagementService {
             })
     Response getApplications(
             @ApiParam(
-                    name = "platform",
-                    value = "Platform of the application",
+                    name = "device-type",
+                    value = "Device type (platform) of the application",
                     required = true)
-            @PathParam("platform")
-            @Size(max = 45)
-                    String platform,
+            @PathParam("device-type")
+                    String deviceType,
             @ApiParam(
                     name = "offset",
                     value = "The starting pagination index for the complete list of qualified items.",
@@ -2113,8 +2109,7 @@ public interface DeviceManagementService {
             value = {
                     @ApiResponse(
                             code = 200,
-                            message = "OK. \n Successfully fetched the list of devices.",
-                            response = DeviceList.class,
+                            message = "OK. \n Successfully fetched the list of app versions.",
                             responseHeaders = {
                                     @ResponseHeader(
                                             name = "Content-Type",
@@ -2129,14 +2124,6 @@ public interface DeviceManagementService {
                                                     "Used by caches, or in conditional requests."),
                             }),
                     @ApiResponse(
-                            code = 200,
-                            message = "OK",
-                            response = NonComplianceData.class),
-                    @ApiResponse(
-                            code = 400,
-                            message = "Bad Request. \n Invalid request or validation error.",
-                            response = ErrorResponse.class),
-                    @ApiResponse(
                             code = 500,
                             message = "Error occurred while getting the version data.",
                             response = ErrorResponse.class)
@@ -2147,6 +2134,5 @@ public interface DeviceManagementService {
                     value = "The package name of the app.",
                     required = true)
             @PathParam("package-name")
-            @Size(max = 45)
                     String packageName);
 }

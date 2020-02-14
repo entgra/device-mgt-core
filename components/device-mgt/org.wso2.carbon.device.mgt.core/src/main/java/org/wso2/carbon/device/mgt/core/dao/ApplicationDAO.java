@@ -19,6 +19,7 @@
 package org.wso2.carbon.device.mgt.core.dao;
 
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
+import org.wso2.carbon.device.mgt.common.PaginationResult;
 import org.wso2.carbon.device.mgt.common.app.mgt.Application;
 
 import java.util.List;
@@ -40,8 +41,24 @@ public interface ApplicationDAO {
 
     List<Application> getInstalledApplications(int deviceId, int enrolmentId) throws DeviceManagementDAOException;
 
-    List<Application> getApplications(PaginationRequest request, int tenantId, String platform)
+    /**
+     * This method is used to get a list of applications installed in all enrolled devices
+     *
+     * @param request Request object with limit and offset
+     * @param tenantId ID of the current tenant
+     * @return List of {@link Application} objects
+     * @throws DeviceManagementDAOException If any database error occured
+     */
+    List<Application> getApplications(PaginationRequest request, int tenantId)
             throws DeviceManagementDAOException;
 
+    /**
+     * This method is used to get a list of app versions when app package name is given.
+     *
+     * @param tenantId ID of the current tenant
+     * @param packageName Package name of the application
+     * @return String list of app versions
+     * @throws DeviceManagementDAOException If any database error occured
+     */
     List<String> getAppVersions(int tenantId, String packageName) throws DeviceManagementDAOException;
 }

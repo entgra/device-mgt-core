@@ -1109,33 +1109,39 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
 
     @GET
     @Override
-    @Path("/{platform}/applications")
+    @Path("/{device-type}/applications")
     public Response getApplications(
-            @PathParam("platform") String platform,
+            @PathParam("device-type") String deviceType,
             @DefaultValue("0")
             @QueryParam("offset") int offset,
             @DefaultValue("10")
             @QueryParam("limit") int limit) {
         PaginationRequest request = new PaginationRequest(offset, limit);
         ApplicationList applicationList = new ApplicationList();
+        request.setDeviceType(deviceType);
         try {
             PaginationResult paginationResult = DeviceMgtAPIUtils
                     .getDeviceManagementService()
-                    .getApplications(request, platform);
+                    .getApplications(request);
 
             if (paginationResult.getData().isEmpty()) {
                 return Response.status(Response.Status.OK)
-                        .entity("No applications are available under " + platform + " platform.").build();
+                        .entity("No applications are available under " + deviceType + " platform.").build();
             } else {
                 applicationList.setList((List<Application>) paginationResult.getData());
                 applicationList.setCount(paginationResult.getRecordsTotal());
                 return Response.status(Response.Status.OK).entity(applicationList).build();
             }
+        } catch (DeviceTypeNotFoundException e) {
+            String msg = "Error occurred while retrieving application list." +
+                    " Device type (Application Platform): " + deviceType +
+                    "is not valid";
+            log.error(msg);
+            return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
         } catch (ApplicationManagementException e) {
             String msg = "Error occurred while retrieving application list";
             log.error(msg, e);
-            return Response.serverError().entity(
-                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
 
@@ -1143,7 +1149,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
     @Path("/application/{package-name}/versions")
     @Override
     public Response getAppVersions(
-            @PathParam("package-name") @Size(max = 45) String packageName) {
+            @PathParam("package-name") String packageName) {
         try {
             List<String> versions = DeviceMgtAPIUtils.getDeviceManagementService()
                     .getAppVersions(packageName);
@@ -1151,8 +1157,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
         } catch (ApplicationManagementException e) {
             String msg = "Error occurred while retrieving version list for app with package name " + packageName;
             log.error(msg, e);
-            return Response.serverError().entity(
-                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
 }
