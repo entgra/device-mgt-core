@@ -2077,7 +2077,7 @@ public interface DeviceManagementService {
                     value = "Device type (platform) of the application",
                     required = true)
             @PathParam("device-type")
-                    String platform,
+                    String deviceType,
             @ApiParam(
                     name = "offset",
                     value = "The starting pagination index for the complete list of qualified items.",
