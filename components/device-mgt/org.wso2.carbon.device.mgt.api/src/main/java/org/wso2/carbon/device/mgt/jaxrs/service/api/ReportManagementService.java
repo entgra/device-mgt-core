@@ -376,7 +376,7 @@ public interface ReportManagementService {
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
-            value = "Getting Details of Registered Devices",
+            value = "Getting Details of Application Not Installed Devices",
             notes = "Provides details of all the devices enrolled with Entgra IoT Server.",
             tags = "Device Management",
             extensions = {
@@ -425,14 +425,12 @@ public interface ReportManagementService {
                     value = "The device type name, such as ios, android, windows, or fire-alarm.",
                     required = true)
             @PathParam("device-type")
-            @Size(max = 45)
                     String deviceType,
             @ApiParam(
                     name = "package-name",
                     value = "The package name of the app.",
                     required = true)
             @PathParam("package-name")
-            @Size(max = 45)
                     String packageName,
             @ApiParam(
                     name = "app-version",

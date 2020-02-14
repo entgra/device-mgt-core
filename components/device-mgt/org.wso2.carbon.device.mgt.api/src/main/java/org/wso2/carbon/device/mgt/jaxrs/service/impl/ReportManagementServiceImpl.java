@@ -203,8 +203,8 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     @Path("/devices/{device-type}/{package-name}/not-installed")
     @Override
     public Response getAppNotInstalledDevices(
-            @PathParam("device-type") @Size(max = 45) String deviceType,
-            @PathParam("package-name") @Size(max = 45) String packageName,
+            @PathParam("device-type") String deviceType,
+            @PathParam("package-name") String packageName,
             @QueryParam("app-version") String version,
             @DefaultValue("0")
             @QueryParam("offset") int offset,
@@ -219,8 +219,9 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             PaginationResult result = DeviceMgtAPIUtils.getReportManagementService()
                     .getAppNotInstalledDevices(request, packageName, version);
             if (result.getData().isEmpty()) {
-                String msg = "App with package name " + packageName + " is installed in all enrolled devices";
-                return Response.status(Response.Status.OK).entity(msg).build();
+                return Response.status(Response.Status.OK)
+                        .entity("App with package name " + packageName + 
+                                " is installed in all enrolled devices").build();
             } else {
                 devices.setList((List<Device>) result.getData());
                 devices.setCount(result.getRecordsTotal());

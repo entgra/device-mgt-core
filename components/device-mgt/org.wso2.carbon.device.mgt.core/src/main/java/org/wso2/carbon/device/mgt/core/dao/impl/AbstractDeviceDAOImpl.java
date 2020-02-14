@@ -1968,21 +1968,22 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
 
         String sql = "SELECT " +
                         "COUNT(d.ID) AS DEVICE_COUNT " +
-                        "FROM DM_DEVICE AS d " +
-                        "INNER JOIN DM_ENROLMENT AS e ON d.ID = e.DEVICE_ID " +
-                        "INNER JOIN  DM_DEVICE_TYPE AS t ON d.DEVICE_TYPE_ID = t.ID " +
-                        "WHERE t.NAME = ? AND e.TENANT_ID = ? AND d.ID " +
-                        "NOT IN (SELECT m.DEVICE_ID " +
-                    "FROM DM_DEVICE_APPLICATION_MAPPING AS m " +
-                    "INNER JOIN DM_APPLICATION AS a ON m.APPLICATION_ID=a.ID " +
-                    "WHERE a.APP_IDENTIFIER = ?";
+                    "FROM DM_DEVICE AS d " +
+                    "INNER JOIN DM_ENROLMENT AS e ON d.ID = e.DEVICE_ID " +
+                    "INNER JOIN  DM_DEVICE_TYPE AS t ON d.DEVICE_TYPE_ID = t.ID " +
+                    "WHERE t.NAME = ? AND e.TENANT_ID = ? AND d.ID " +
+                    "NOT IN " +
+                    "(SELECT m.DEVICE_ID " +
+                        "FROM DM_DEVICE_APPLICATION_MAPPING AS m " +
+                        "INNER JOIN DM_APPLICATION AS a ON m.APPLICATION_ID=a.ID " +
+                        "WHERE a.APP_IDENTIFIER = ?";
 
         if (!StringUtils.isBlank(version)) {
             sql = sql + " AND a.VERSION = ? )";
             isVersionProvided = true;
-        }else{
-            sql = sql + ")";
         }
+
+        sql = sql + ")";
 
         try {
             Connection conn = this.getConnection();

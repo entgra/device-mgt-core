@@ -278,8 +278,19 @@ public abstract class AbstractApplicationDAOImpl implements ApplicationDAO {
         List<Application> applications = new ArrayList<>();
         Application application;
         String sql = "Select " +
-                        "ID, NAME, APP_IDENTIFIER, PLATFORM, CATEGORY, VERSION, TYPE, " +
-                        "LOCATION_URL, IMAGE_URL, APP_PROPERTIES, MEMORY_USAGE, IS_ACTIVE, TENANT_ID " +
+                        "ID," +
+                        " NAME, " +
+                        "APP_IDENTIFIER, " +
+                        "PLATFORM, " +
+                        "CATEGORY, " +
+                        "VERSION, " +
+                        "TYPE, " +
+                        "LOCATION_URL, " +
+                        "IMAGE_URL, " +
+                        "APP_PROPERTIES, " +
+                        "MEMORY_USAGE, " +
+                        "IS_ACTIVE, " +
+                        "TENANT_ID " +
                      "From DM_APPLICATION " +
                      "WHERE PLATFORM = ? " +
                      "AND TENANT_ID = ? LIMIT ? OFFSET ?";
@@ -308,7 +319,8 @@ public abstract class AbstractApplicationDAOImpl implements ApplicationDAO {
 
     @Override
     public List<String> getAppVersions(int tenantId, String packageName) throws DeviceManagementDAOException {
-        String sql = "SELECT VERSION " +
+        String sql = "SELECT " +
+                        "VERSION " +
                      "FROM DM_APPLICATION " +
                      "WHERE TENANT_ID=? " +
                      "AND APP_IDENTIFIER=?";

@@ -1143,7 +1143,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
     @Path("/application/{package-name}/versions")
     @Override
     public Response getAppVersions(
-            @PathParam("package-name") @Size(max = 45) String packageName) {
+            @PathParam("package-name") String packageName) {
         try {
             List<String> versions = DeviceMgtAPIUtils.getDeviceManagementService()
                     .getAppVersions(packageName);

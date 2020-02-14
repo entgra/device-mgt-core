@@ -60,6 +60,7 @@ import org.wso2.carbon.device.mgt.common.policy.mgt.Policy;
 import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.NonComplianceData;
 import org.wso2.carbon.device.mgt.common.search.PropertyMap;
 import org.wso2.carbon.device.mgt.common.search.SearchContext;
+import org.wso2.carbon.device.mgt.jaxrs.beans.ApplicationList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
 import org.wso2.carbon.device.mgt.jaxrs.beans.OperationRequest;
@@ -2047,7 +2048,7 @@ public interface DeviceManagementService {
                     @ApiResponse(
                             code = 200,
                             message = "OK. \n Successfully fetched the list of applications.",
-                            response = DeviceList.class,
+                            response = ApplicationList.class,
                             responseHeaders = {
                                     @ResponseHeader(
                                             name = "Content-Type",
@@ -2061,10 +2062,6 @@ public interface DeviceManagementService {
                                             description = "Date and time the resource was last modified.\n" +
                                                     "Used by caches, or in conditional requests."),
                             }),
-                    @ApiResponse(
-                            code = 200,
-                            message = "OK",
-                            response = NonComplianceData.class),
                     @ApiResponse(
                             code = 400,
                             message = "Bad Request. \n Invalid request or validation error.",
@@ -2113,8 +2110,7 @@ public interface DeviceManagementService {
             value = {
                     @ApiResponse(
                             code = 200,
-                            message = "OK. \n Successfully fetched the list of devices.",
-                            response = DeviceList.class,
+                            message = "OK. \n Successfully fetched the list of app versions.",
                             responseHeaders = {
                                     @ResponseHeader(
                                             name = "Content-Type",
@@ -2128,10 +2124,6 @@ public interface DeviceManagementService {
                                             description = "Date and time the resource was last modified.\n" +
                                                     "Used by caches, or in conditional requests."),
                             }),
-                    @ApiResponse(
-                            code = 200,
-                            message = "OK",
-                            response = NonComplianceData.class),
                     @ApiResponse(
                             code = 400,
                             message = "Bad Request. \n Invalid request or validation error.",
@@ -2147,6 +2139,5 @@ public interface DeviceManagementService {
                     value = "The package name of the app.",
                     required = true)
             @PathParam("package-name")
-            @Size(max = 45)
                     String packageName);
 }
