@@ -33,7 +33,11 @@ import en from 'javascript-time-ago/locale/en';
 import { withConfigContext } from '../../../context/ConfigContext';
 import axios from 'axios';
 import QRCode from 'qrcode.react';
-import QRPlaceholder from '../../../../public/images/avatar-2.png';
+import QRPlaceholder from '../../../../public/images/qr-code.png';
+import installAgent from '../../../../public/images/install_agent.png';
+import register from '../../../../public/images/register.png';
+import registration from '../../../../public/images/registration.png';
+import setProfile from '../../../../public/images/set_profile.png';
 
 const { Option } = Select;
 
@@ -118,10 +122,12 @@ class EnrollDevice extends React.Component {
                 Let's start by installing the Android agent on your device. Open
                 the downloaded file, and tap INSTALL.
               </p>
+              <img src={installAgent} />
             </Col>
             <Col span={6}>
               <h1>Step 2</h1>
               <p>Tap Skip to proceed with the default enrollment process.</p>
+              <img src={setProfile} />
             </Col>
             <Col span={6}>
               <h1>Step 3</h1>
@@ -129,15 +135,17 @@ class EnrollDevice extends React.Component {
                 Enter the server address based on your environment, in the text
                 box provided.
               </p>
+              <img src={registration} />
             </Col>
             <Col span={6}>
               <h1>Step 4</h1>
               <p>Enter your:</p>
-              <ul>
-                <li>Organization: carbon.super</li>
-                <li>Username: admin</li>
-                <li>Password: Your password</li>
-              </ul>
+              <div>
+                <p>Organization: carbon.super</p>
+                <p>Username: admin</p>
+                <p>Password: Your password</p>
+              </div>
+              <img src={register} />
             </Col>
           </Row>
         </div>

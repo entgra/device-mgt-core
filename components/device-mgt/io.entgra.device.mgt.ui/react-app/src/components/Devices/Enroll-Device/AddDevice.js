@@ -51,6 +51,12 @@ class AddDevice extends React.Component {
     });
   };
 
+  goBackToDeviceType = () => {
+    this.setState({
+      current: 0,
+    });
+  };
+
   goBackToDownloadAgent = () => {
     this.setState({
       current: 1,
@@ -89,7 +95,11 @@ class AddDevice extends React.Component {
                 <DeviceType getDeviceType={this.getDeviceType} />
               </div>
               <div style={{ display: current === 1 ? 'unset' : 'none' }}>
-                <DownloadAgent deviceType={deviceType} goNext={this.goNext} />
+                <DownloadAgent
+                  deviceType={deviceType}
+                  goNext={this.goNext}
+                  goBack={this.goBackToDeviceType}
+                />
               </div>
               <div style={{ display: current === 2 ? 'unset' : 'none' }}>
                 <SelectEnrollmentType

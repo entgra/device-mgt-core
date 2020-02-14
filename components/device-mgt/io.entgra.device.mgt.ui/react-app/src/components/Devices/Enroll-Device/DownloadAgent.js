@@ -38,8 +38,12 @@ class SelectEnrollmentType extends React.Component {
     };
   }
 
-  onClick = () => {
+  onClickSkip = () => {
     this.props.goNext();
+  };
+
+  onClickGoBack = () => {
+    this.props.goBack();
   };
 
   onClickDownloadAgent = () => {
@@ -149,8 +153,16 @@ class SelectEnrollmentType extends React.Component {
           </p>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <Button type="primary" size={'default'} onClick={this.onClick}>
+          <Button type="primary" size={'default'} onClick={this.onClickSkip}>
             {skipButtonTitle}
+          </Button>
+          <Button
+            style={{ marginLeft: 10 }}
+            type="default"
+            size={'default'}
+            onClick={this.onClickGoBack}
+          >
+            Back
           </Button>
         </div>
       </div>

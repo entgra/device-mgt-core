@@ -82,7 +82,7 @@ class Dashboard extends React.Component {
                   }
                 >
                   <Menu.Item key="devices">
-                    <Link to="/entgra/devicess">
+                    <Link to="/entgra/devices">
                       <span>View</span>
                     </Link>
                   </Menu.Item>
@@ -130,26 +130,26 @@ class Dashboard extends React.Component {
                 {/*    <span>Users</span>*/}
                 {/*  </Link>*/}
                 {/* </Menu.Item>*/}
-                <SubMenu
-                  key="policies"
-                  title={
-                    <span>
-                      <Icon type="audit" />
-                      <span>Policies</span>
-                    </span>
-                  }
-                >
-                  <Menu.Item key="policiesList">
-                    <Link to="/entgra/policies">
-                      <span>View</span>
-                    </Link>
-                  </Menu.Item>
-                  <Menu.Item key="addPolicy">
-                    <Link to="/entgra/policy/add">
-                      <span>Add New Policy</span>
-                    </Link>
-                  </Menu.Item>
-                </SubMenu>
+                {/* <SubMenu*/}
+                {/*  key="policies"*/}
+                {/*  title={*/}
+                {/*    <span>*/}
+                {/*      <Icon type="audit" />*/}
+                {/*      <span>Policies</span>*/}
+                {/*    </span>*/}
+                {/*  }*/}
+                {/* >*/}
+                {/*  <Menu.Item key="policiesList">*/}
+                {/*    <Link to="/entgra/policies">*/}
+                {/*      <span>View</span>*/}
+                {/*    </Link>*/}
+                {/*  </Menu.Item>*/}
+                {/*  <Menu.Item key="addPolicy">*/}
+                {/*    <Link to="/entgra/policy/add">*/}
+                {/*      <span>Add New Policy</span>*/}
+                {/*    </Link>*/}
+                {/*  </Menu.Item>*/}
+                {/* </SubMenu>*/}
                 {/* <Menu.Item key="roles">*/}
                 {/*  <Link to="/entgra/roles">*/}
                 {/*    <Icon type="book" />*/}

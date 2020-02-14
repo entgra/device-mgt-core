@@ -32,8 +32,6 @@ import DeviceStatusReport from './components/Reports/Templates/DeviceStatusRepor
 import PolicyReportHome from './pages/Dashboard/Reports/PolicyReportHome';
 import ReportDurationItemList from './pages/Dashboard/Reports/ReportDurationItemList';
 import AppNotInstalledDevicesReport from './components/Reports/Templates/AppNotInstalledDevicesReport';
-import Policies from './pages/Dashboard/Policies/Policies';
-import AddNewPolicy from './pages/Dashboard/Policies/AddNewPolicy';
 import Devices from './pages/Dashboard/Devices/Devices';
 import DeviceEnroll from './pages/Dashboard/Devices/DeviceEnroll';
 
@@ -49,7 +47,7 @@ const routes = [
     component: Dashboard,
     routes: [
       {
-        path: '/entgra/devicess',
+        path: '/entgra/devices',
         component: Devices,
         exact: true,
       },
@@ -78,16 +76,16 @@ const routes = [
       //   component: Users,
       //   exact: true,
       // },
-      {
-        path: '/entgra/policies',
-        component: Policies,
-        exact: true,
-      },
-      {
-        path: '/entgra/policy/add',
-        component: AddNewPolicy,
-        exact: true,
-      },
+      // {
+      //   path: '/entgra/policies',
+      //   component: Policies,
+      //   exact: true,
+      // },
+      // {
+      //   path: '/entgra/policy/add',
+      //   component: AddNewPolicy,
+      //   exact: true,
+      // },
       // {
       //   path: '/entgra/roles',
       //   component: Roles,
