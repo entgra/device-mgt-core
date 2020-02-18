@@ -897,7 +897,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                 DeviceManagementDAOFactory.openConnection();
                 if(request.getGroupId()!=0){
                     allDevices = deviceDAO.searchDevicesInGroup(request, tenantId);
-                    count = deviceDAO.getCountSearchDevicesInGroup(request, tenantId);
+                    count = deviceDAO.getCountOfDevicesInGroup(request, tenantId);
                 } else{
                     allDevices = deviceDAO.getDevices(request, tenantId);
                     count = deviceDAO.getDeviceCount(request, tenantId);

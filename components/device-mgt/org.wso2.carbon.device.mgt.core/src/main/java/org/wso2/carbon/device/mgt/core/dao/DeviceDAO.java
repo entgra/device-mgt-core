@@ -312,7 +312,7 @@ public interface DeviceDAO {
      * @return Device count
      * @throws DeviceManagementDAOException
      */
-    int getCountSearchDevicesInGroup(PaginationRequest request, int tenantId) throws DeviceManagementDAOException;
+    int getCountOfDevicesInGroup(PaginationRequest request, int tenantId) throws DeviceManagementDAOException;
 
     /**
      * This method is used to retrieve all the devices of a given tenant and device type.

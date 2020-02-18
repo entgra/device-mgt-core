@@ -843,7 +843,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
     }
 
     @Override
-    public int getCountSearchDevicesInGroup(PaginationRequest request, int tenantId)
+    public int getCountOfDevicesInGroup(PaginationRequest request, int tenantId)
             throws DeviceManagementDAOException {
         int deviceCount = 0;
         int groupId = request.getGroupId();
