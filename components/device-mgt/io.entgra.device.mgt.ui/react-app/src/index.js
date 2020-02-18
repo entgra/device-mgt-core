@@ -34,6 +34,7 @@ import ReportDurationItemList from './pages/Dashboard/Reports/ReportDurationItem
 import AppNotInstalledDevicesReport from './components/Reports/Templates/AppNotInstalledDevicesReport';
 import Devices from './pages/Dashboard/Devices/Devices';
 import DeviceEnroll from './pages/Dashboard/Devices/DeviceEnroll';
+import Groups from './pages/Dashboard/Groups/Groups';
 
 const routes = [
   {
@@ -66,11 +67,11 @@ const routes = [
         component: Reports,
         exact: true,
       },
-      // {
-      //   path: '/entgra/groups',
-      //   component: Groups,
-      //   exact: true,
-      // },
+      {
+        path: '/entgra/groups',
+        component: Groups,
+        exact: true,
+      },
       // {
       //   path: '/entgra/users',
       //   component: Users,

@@ -118,12 +118,12 @@ class Dashboard extends React.Component {
                     <span>Reports</span>
                   </Link>
                 </Menu.Item>
-                {/* <Menu.Item key="groups">*/}
-                {/*  <Link to="/entgra/groups">*/}
-                {/*    <Icon type="deployment-unit" />*/}
-                {/*    <span>Groups</span>*/}
-                {/*  </Link>*/}
-                {/* </Menu.Item>*/}
+                 <Menu.Item key="groups">
+                  <Link to="/entgra/groups">
+                    <Icon type="deployment-unit" />
+                    <span>Groups</span>
+                  </Link>
+                 </Menu.Item>
                 {/* <Menu.Item key="users">*/}
                 {/*  <Link to="/entgra/users">*/}
                 {/*    <Icon type="user" />*/}
