@@ -85,9 +85,11 @@ const columns = [
     key: 'imei',
     render: properties => {
       let imei = 'not-found';
-      for (let i = 0; i < properties.length; i++) {
-        if (properties[i].name === 'IMEI') {
-          imei = properties[i].value;
+      if (properties) {
+        for (let i = 0; i < properties.length; i++) {
+          if (properties[i].name === 'IMEI') {
+            imei = properties[i].value;
+          }
         }
       }
       return imei;
@@ -136,17 +138,17 @@ class DeviceUninstall extends React.Component {
     const extraParams = {
       offset: 10 * (currentPage - 1), // calculate the offset
       limit: 10,
-      status: 'ACTIVE',
     };
 
     if (deviceType !== 'ANY') {
       extraParams.type = deviceType;
     }
 
-    // note: encode with '%26' not '&'
-    const encodedExtraParams = Object.keys(extraParams)
+    let encodedExtraParams = Object.keys(extraParams)
       .map(key => key + '=' + extraParams[key])
       .join('&');
+
+    encodedExtraParams += '&status=ACTIVE&status=INACTIVE'; // fetch only active and inactive devices
 
     const uuid = this.props.uuid;
     axios

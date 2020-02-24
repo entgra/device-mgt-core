@@ -25,17 +25,21 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
 import org.wso2.carbon.device.mgt.common.exceptions.ReportManagementException;
+import org.wso2.carbon.device.mgt.core.report.mgt.Constants;
 import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
 import org.wso2.carbon.device.mgt.jaxrs.service.api.ReportManagementService;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.RequestValidationUtil;
 import org.wso2.carbon.device.mgt.jaxrs.util.DeviceMgtAPIUtils;
 
+import javax.validation.constraints.Size;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -161,6 +165,77 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             log.error(msg, e);
             return Response.serverError().entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        }
+    }
+
+    @GET
+    @Path("expired-devices/{deviceType}")
+    @Override
+    public Response getExpiredDevicesByOSVersion(@PathParam("deviceType") String deviceType,
+                                                 @QueryParam("osBuildDate") Long osBuildDate,
+                                                 @DefaultValue("0")
+                                                 @QueryParam("offset") int offset,
+                                                 @DefaultValue("5")
+                                                 @QueryParam("limit") int limit) {
+        try {
+            PaginationRequest request = new PaginationRequest(offset, limit);
+            request.setDeviceType(deviceType);
+            request.setProperty(Constants.OS_BUILD_DATE, osBuildDate);
+
+            PaginationResult paginationResult = DeviceMgtAPIUtils
+                    .getReportManagementService()
+                    .getDevicesExpiredByOSVersion(request);
+
+            return Response.status(Response.Status.OK).entity(paginationResult).build();
+        } catch (DeviceTypeNotFoundException e) {
+            String msg = "Error occurred while retrieving devices list. Device type: " + deviceType +
+                         "is not valid";
+            log.error(msg);
+            return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+        } catch (ReportManagementException e) {
+            String msg = "Error occurred while retrieving devices list with out-dated OS build versions";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
+    @GET
+    @Path("/devices/{device-type}/{package-name}/not-installed")
+    @Override
+    public Response getAppNotInstalledDevices(
+            @PathParam("device-type") String deviceType,
+            @PathParam("package-name") String packageName,
+            @QueryParam("app-version") String version,
+            @DefaultValue("0")
+            @QueryParam("offset") int offset,
+            @DefaultValue("10")
+            @QueryParam("limit") int limit) {
+        try {
+            RequestValidationUtil.validatePaginationParameters(offset, limit);
+            PaginationRequest request = new PaginationRequest(offset, limit);
+            DeviceList devices = new DeviceList();
+            request.setDeviceType(deviceType);
+
+            PaginationResult result = DeviceMgtAPIUtils.getReportManagementService()
+                    .getAppNotInstalledDevices(request, packageName, version);
+            if (result.getData().isEmpty()) {
+                return Response.status(Response.Status.OK)
+                        .entity("App with package name " + packageName +
+                                " is installed in all enrolled devices").build();
+            } else {
+                devices.setList((List<Device>) result.getData());
+                devices.setCount(result.getRecordsTotal());
+                return Response.status(Response.Status.OK).entity(devices).build();
+            }
+        } catch (DeviceTypeNotFoundException e) {
+            String msg = "Error occurred while retrieving devices list. Device type: " + deviceType +
+                    "is not valid";
+            log.error(msg);
+            return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+        } catch (ReportManagementException e) {
+            String msg = "Error occurred while retrieving device list";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
 }

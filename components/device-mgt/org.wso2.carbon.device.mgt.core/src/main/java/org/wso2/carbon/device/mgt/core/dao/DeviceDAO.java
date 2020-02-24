@@ -305,6 +305,16 @@ public interface DeviceDAO {
     List<Device> searchDevicesInGroup(PaginationRequest request, int tenantId) throws DeviceManagementDAOException;
 
     /**
+     * This method is used to get device count within a specific group.
+     *
+     * @param request PaginationRequest object holding the data for pagination
+     * @param tenantId tenant id
+     * @return Device count
+     * @throws DeviceManagementDAOException
+     */
+    int getCountOfDevicesInGroup(PaginationRequest request, int tenantId) throws DeviceManagementDAOException;
+
+    /**
      * This method is used to retrieve all the devices of a given tenant and device type.
      *
      * @param type device type.
@@ -611,4 +621,57 @@ public interface DeviceDAO {
      */
     int getSubscribedDeviceCount(List<Integer> deviceIds, int tenantId, String status)
             throws DeviceManagementDAOException;
+
+    /**
+     * Get a list of devices older than the given OS version of a device type
+     *
+     * @param request  Object with device type and OS version info
+     * @param tenantId Id of the current tenant.
+     * @return {@link List<Device>}
+     * @throws DeviceManagementDAOException Thrown if error occurs while database transactions
+     */
+    List<Device> getDevicesExpiredByOSVersion(PaginationRequest request, int tenantId)
+            throws DeviceManagementDAOException;
+
+    /**
+     * Count the number of devices older than the given OS version of a device type
+     *
+     * @param deviceType Device type name
+     * @param osBuildDate BUild date off the current OS version
+     * @param tenantId Id of the current tenant.
+     * @return {@link Integer}
+     * @throws DeviceManagementDAOException Thrown if error occurs while database transactions
+     */
+    int getCountOfDeviceExpiredByOSVersion(String deviceType, long osBuildDate, int tenantId)
+            throws DeviceManagementDAOException;
+
+    /**
+     * This method is used to get devices which have not installed the app with the given package name
+     *
+     * @param request Request object with device type
+     * @param tenantId ID of the current tenant
+     * @param packageName Package name of the application
+     * @param version Version of the application
+     * @return A list of device objects
+     * @throws DeviceManagementDAOException Thrown if error occurs while database transactions
+     */
+    List<Device> getAppNotInstalledDevices(PaginationRequest request,
+                                      int tenantId,
+                                      String packageName,
+                                      String version) throws DeviceManagementDAOException;
+
+    /**
+     * This method is used to get count if devices which have not installed the app with the given package name
+     *
+     * @param request Request object with device type
+     * @param tenantId ID of the current tenant
+     * @param packageName Package name of the application
+     * @param version Version of the application
+     * @return Device count
+     * @throws DeviceManagementDAOException Thrown if error occurs while database transactions
+     */
+    int getCountOfAppNotInstalledDevices(PaginationRequest request,
+                                           int tenantId,
+                                           String packageName,
+                                           String version) throws DeviceManagementDAOException;
 }
