@@ -818,21 +818,22 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
             Connection connection = GroupManagementDAOFactory.getConnection();
             String sql =
                     "Select\n" +
-                    "  A.ID AS DEVICE_ID,\n" +
-                    "  A.NAME AS DEVICE_NAME,\n" +
-                    "  A.DESCRIPTION,\n" +
-                    "  C.ID AS ENROLMENT_ID,\n" +
-                    "  C.OWNER,\n" +
-                    "  C.OWNERSHIP,\n" +
-                    "  C.DATE_OF_ENROLMENT,\n" +
-                    "  C.DATE_OF_LAST_UPDATE,\n" +
-                    "  C.STATUS,\n" +
-                    "  D.NAME AS DEVICE_TYPE\n" +
+                    "    A.ID AS DEVICE_ID,\n" +
+                    "    A.NAME AS DEVICE_NAME,\n" +
+                    "    A.DESCRIPTION,\n" +
+                    "    C.ID AS ENROLMENT_ID,\n" +
+                    "    C.OWNER,\n" +
+                    "    C.OWNERSHIP,\n" +
+                    "    C.DATE_OF_ENROLMENT,\n" +
+                    "    C.DATE_OF_LAST_UPDATE,\n" +
+                    "    C.STATUS,\n" +
+                    "    D.NAME AS DEVICE_TYPE,\n" +
+                    "    A.DEVICE_IDENTIFICATION\n" +
                     "from\n" +
-                    "  DM_DEVICE AS A\n" +
-                    "  INNER JOIN DM_DEVICE_GROUP_MAP AS B ON A.ID = B.DEVICE_ID\n" +
-                    "  INNER JOIN DM_ENROLMENT AS C ON A.ID = C.DEVICE_ID\n" +
-                    "  INNER JOIN DM_DEVICE_TYPE AS D ON A.ID = D.ID WHERE A.ID < 3";
+                    "    DM_DEVICE AS A\n" +
+                    "        INNER JOIN DM_DEVICE_GROUP_MAP AS B ON A.ID = B.DEVICE_ID\n" +
+                    "        INNER JOIN DM_ENROLMENT AS C ON A.ID = C.DEVICE_ID\n" +
+                    "        INNER JOIN DM_DEVICE_TYPE AS D ON A.ID = D.ID WHERE A.ID < 3";
 
             PreparedStatement stmt = connection.prepareStatement(sql);
 
