@@ -34,7 +34,6 @@ import org.wso2.carbon.device.mgt.jaxrs.service.api.ReportManagementService;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.RequestValidationUtil;
 import org.wso2.carbon.device.mgt.jaxrs.util.DeviceMgtAPIUtils;
 
-import javax.validation.constraints.Size;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -234,6 +233,26 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
         } catch (ReportManagementException e) {
             String msg = "Error occurred while retrieving device list";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
+    @GET
+    @Path("/group-unassigned-device")
+    public Response getGroupUnAssignedDevices(@DefaultValue("0")
+                                              @QueryParam("offset") int offset,
+                                              @DefaultValue("10")
+                                              @QueryParam("limit") int limit) {
+        try {
+            RequestValidationUtil.validatePaginationParameters(offset, limit);
+            PaginationRequest request = new PaginationRequest(offset, limit);
+            PaginationResult paginationResult =
+                    DeviceMgtAPIUtils.getReportManagementService().getDeviceNotAssignedToGroups(request);
+            return Response.status(Response.Status.OK).entity(paginationResult).build();
+        } catch (ReportManagementException e) {
+            String msg = "Error occurred while retrieving device list that are unassigned to " +
+                         "groups";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }

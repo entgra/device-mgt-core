@@ -443,4 +443,53 @@ public interface ReportManagementService {
                     defaultValue = "5")
             @QueryParam("limit")
                     int limit);
+
+    @Path("/group-unassigned-device")
+    @GET
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Getting devices list that are not assigned under any groups",
+            notes = "Devices are assigned to default groups during enrollmnt. This api gives the list of devices that are assigend to groups other that default groups.",
+            tags = "Devices that are unassigned to Group Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                    })
+            }
+    )
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK.",
+                    responseHeaders = {
+                            @ResponseHeader(
+                                    name = "Content-Type",
+                                    description = "The content type of the body"),
+                            @ResponseHeader(
+                                    name = "ETag",
+                                    description = "Entity Tag of the response resource.\n" +
+                                                  "Used by caches, or in conditional requests."),
+                            @ResponseHeader(
+                                    name = "Last-Modified",
+                                    description = "Date and time the resource has been modified the last time.\n" +
+                                                  "Used by caches, or in conditional requests."),
+                    }),
+            @ApiResponse(
+                    code = 500,
+                    message = "Internal Server Error. \n Server error occurred.",
+                    response = ErrorResponse.class)
+    })
+    Response getGroupUnAssignedDevices(
+            @ApiParam(
+                    name = "offset",
+                    value = "The starting pagination index for the complete list of grouped " +
+                            "devides",
+                    defaultValue = "0")
+            @QueryParam("offset")
+                    int offset,
+            @ApiParam(
+                    name = "limit",
+                    value = "Provide how many device details you require from the starting pagination index/offset.",
+                    defaultValue = "5")
+            @QueryParam("limit")
+                    int limit);
 }

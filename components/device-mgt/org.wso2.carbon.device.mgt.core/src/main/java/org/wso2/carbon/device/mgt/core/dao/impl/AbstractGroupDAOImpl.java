@@ -21,6 +21,7 @@ package org.wso2.carbon.device.mgt.core.dao.impl;
 import org.apache.solr.common.StringUtils;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.GroupPaginationRequest;
+import org.wso2.carbon.device.mgt.common.device.details.DeviceInfo;
 import org.wso2.carbon.device.mgt.common.group.mgt.DeviceGroup;
 import org.wso2.carbon.device.mgt.core.dao.GroupDAO;
 import org.wso2.carbon.device.mgt.core.dao.GroupManagementDAOException;
@@ -808,5 +809,45 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
                     + " which belongs to the given group name.", e);
         }
         return devices;
+    }
+
+    @Override
+    public List<Device> getGroupUnassignedDevices()  throws GroupManagementDAOException{
+        List<Device> groupUnassignedDeviceList;
+        try {
+            Connection connection = GroupManagementDAOFactory.getConnection();
+            String sql =
+                    "Select\n" +
+                    "  A.ID AS DEVICE_ID,\n" +
+                    "  A.NAME AS DEVICE_NAME,\n" +
+                    "  A.DESCRIPTION,\n" +
+                    "  C.ID AS ENROLMENT_ID,\n" +
+                    "  C.OWNER,\n" +
+                    "  C.OWNERSHIP,\n" +
+                    "  C.DATE_OF_ENROLMENT,\n" +
+                    "  C.DATE_OF_LAST_UPDATE,\n" +
+                    "  C.STATUS,\n" +
+                    "  D.NAME AS DEVICE_TYPE\n" +
+                    "from\n" +
+                    "  DM_DEVICE AS A\n" +
+                    "  INNER JOIN DM_DEVICE_GROUP_MAP AS B ON A.ID = B.DEVICE_ID\n" +
+                    "  INNER JOIN DM_ENROLMENT AS C ON A.ID = C.DEVICE_ID\n" +
+                    "  INNER JOIN DM_DEVICE_TYPE AS D ON A.ID = D.ID WHERE A.ID < 3";
+
+            PreparedStatement stmt = connection.prepareStatement(sql);
+
+            ResultSet resultSet = stmt.executeQuery();
+            groupUnassignedDeviceList = new ArrayList<>();
+            while (resultSet.next()) {
+                Device device = DeviceManagementDAOUtil.loadDevice(resultSet);
+
+                groupUnassignedDeviceList.add(device);
+            }
+
+        } catch (SQLException e) {
+            throw new GroupManagementDAOException("Error occurred while retrieving information of" +
+                                                  " group unassigned devices", e);
+        }
+        return groupUnassignedDeviceList;
     }
 }

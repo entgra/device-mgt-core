@@ -32,6 +32,9 @@ import org.wso2.carbon.device.mgt.common.report.mgt.ReportManagementService;
 import org.wso2.carbon.device.mgt.core.dao.DeviceDAO;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOException;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOFactory;
+import org.wso2.carbon.device.mgt.core.dao.GroupDAO;
+import org.wso2.carbon.device.mgt.core.dao.GroupManagementDAOException;
+import org.wso2.carbon.device.mgt.core.dao.GroupManagementDAOFactory;
 import org.wso2.carbon.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.util.DeviceManagerUtil;
@@ -53,9 +56,11 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     private static final Log log = LogFactory.getLog(ReportManagementServiceImpl.class);
 
     private DeviceDAO deviceDAO;
+    private GroupDAO groupDAO;
 
     public ReportManagementServiceImpl() {
         this.deviceDAO = DeviceManagementDAOFactory.getDeviceDAO();
+        this.groupDAO = GroupManagementDAOFactory.getGroupDAO();
     }
 
     @Override
@@ -326,5 +331,27 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
         }
+    }
+
+    @Override
+    public PaginationResult getDeviceNotAssignedToGroups(PaginationRequest request) throws ReportManagementException{
+        PaginationResult paginationResult = new PaginationResult();
+        try {
+            GroupManagementDAOFactory.openConnection();
+            List<Device> devices = groupDAO.getGroupUnassignedDevices();
+            paginationResult.setData(devices);
+            paginationResult.setRecordsTotal(devices.size());
+            return paginationResult;
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        } catch (GroupManagementDAOException e) {
+            e.printStackTrace();
+        } finally {
+            GroupManagementDAOFactory.closeConnection();
+        }
+
+        return paginationResult;
     }
 }

@@ -326,4 +326,12 @@ public interface GroupDAO {
      */
     int getOwnGroupsCount(String username, int tenantId) throws GroupManagementDAOException;
 
+/**
+ * Get device Ids of devices which are assigned to groups.
+ *
+ * @return details of devices that are unassigned to groups.
+ * @throws GroupManagementDAOException
+ */
+
+List<Device> getGroupUnassignedDevices() throws GroupManagementDAOException;
 }
