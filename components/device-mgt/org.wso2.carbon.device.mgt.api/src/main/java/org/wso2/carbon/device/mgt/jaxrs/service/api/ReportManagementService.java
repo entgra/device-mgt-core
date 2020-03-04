@@ -444,7 +444,7 @@ public interface ReportManagementService {
             @QueryParam("limit")
                     int limit);
 
-    @Path("/group-unassigned-device")
+    @Path("/{device-type}/group-unassigned-device")
     @GET
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
@@ -479,6 +479,12 @@ public interface ReportManagementService {
                     response = ErrorResponse.class)
     })
     Response getGroupUnAssignedDevices(
+            @ApiParam(
+                    name = "device-type",
+                    value = "The device type name, such as ios, android, windows, or fire-alarm.",
+                    required = true)
+            @PathParam("device-type")
+                    String deviceType,
             @ApiParam(
                     name = "offset",
                     value = "The starting pagination index for the complete list of grouped " +

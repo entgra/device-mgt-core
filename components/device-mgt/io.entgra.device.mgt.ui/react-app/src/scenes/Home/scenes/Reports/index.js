@@ -214,6 +214,34 @@ class Reports extends React.Component {
                     </Card>
                   </Link>
                 </Col>
+
+                <Col span={8}>
+                  <Link
+                    to={{
+                      pathname: '/entgra/reports/group-unassigned-device',
+                      data: {
+                        name: 'group_unassigned_devices_report',
+                      },
+                    }}
+                  >
+                    <Card
+                      bordered={true}
+                      hoverable={true}
+                      style={{ borderRadius: 10, marginBottom: 16 }}
+                    >
+                      <div align="center">
+                        <Icon
+                          type="desktop"
+                          style={{ fontSize: '25px', color: '#08c' }}
+                        />
+                        <h2>
+                          <b>Group Unassigned Devices Report</b>
+                        </h2>
+                        <p>Report for all device types</p>
+                      </div>
+                    </Card>
+                  </Link>
+                </Col>
               </Row>
             </div>
           </div>

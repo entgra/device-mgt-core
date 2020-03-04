@@ -239,17 +239,30 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @GET
-    @Path("/group-unassigned-device")
-    public Response getGroupUnAssignedDevices(@DefaultValue("0")
+    @Path("/{device-type}/group-unassigned-device")
+    public Response getGroupUnAssignedDevices(
+            @PathParam("device-type") String deviceType,
+            @DefaultValue("0")
                                               @QueryParam("offset") int offset,
                                               @DefaultValue("10")
                                               @QueryParam("limit") int limit) {
         try {
             RequestValidationUtil.validatePaginationParameters(offset, limit);
             PaginationRequest request = new PaginationRequest(offset, limit);
+            DeviceList deviceList = new DeviceList();
+            request.setDeviceType(deviceType);
             PaginationResult paginationResult =
                     DeviceMgtAPIUtils.getReportManagementService().getDeviceNotAssignedToGroups(request);
-            return Response.status(Response.Status.OK).entity(paginationResult).build();
+
+            if (paginationResult.getData().isEmpty()) {
+                return Response.status(Response.Status.OK).entity("Enrolled devices are " +
+                                                                  "assigned to groups").build();
+            } else {
+                deviceList.setList((List<Device>) paginationResult.getData());
+                deviceList.setCount(paginationResult.getRecordsTotal());
+                return Response.status(Response.Status.OK).entity(deviceList).build();
+            }
+
         } catch (ReportManagementException e) {
             String msg = "Error occurred while retrieving device list that are unassigned to " +
                          "groups";
