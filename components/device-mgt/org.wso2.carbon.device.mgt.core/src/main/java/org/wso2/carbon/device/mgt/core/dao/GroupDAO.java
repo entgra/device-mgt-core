@@ -20,6 +20,7 @@ package org.wso2.carbon.device.mgt.core.dao;
 
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.GroupPaginationRequest;
+import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.group.mgt.DeviceGroup;
 
 import java.util.List;
@@ -333,5 +334,5 @@ public interface GroupDAO {
  * @throws GroupManagementDAOException
  */
 
-List<Device> getGroupUnassignedDevices() throws GroupManagementDAOException;
+List<Device> getGroupUnassignedDevices(PaginationRequest paginationRequest) throws GroupManagementDAOException;
 }

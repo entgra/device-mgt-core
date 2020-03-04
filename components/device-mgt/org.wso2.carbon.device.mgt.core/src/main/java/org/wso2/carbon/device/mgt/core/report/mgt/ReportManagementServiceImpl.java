@@ -334,11 +334,11 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @Override
-    public PaginationResult getDeviceNotAssignedToGroups(PaginationRequest request) throws ReportManagementException{
+    public PaginationResult getDeviceNotAssignedToGroups(PaginationRequest paginationRequest) throws ReportManagementException{
         PaginationResult paginationResult = new PaginationResult();
         try {
             GroupManagementDAOFactory.openConnection();
-            List<Device> devices = groupDAO.getGroupUnassignedDevices();
+            List<Device> devices = groupDAO.getGroupUnassignedDevices(paginationRequest);
             paginationResult.setData(devices);
             paginationResult.setRecordsTotal(devices.size());
             return paginationResult;
