@@ -30,6 +30,7 @@ import PolicyReport from './scenes/Home/scenes/Reports/scenes/PolicyCompliance';
 import DeviceStatusReport from './scenes/Home/scenes/Reports/scenes/DeviceStatus';
 import AppNotInstalledDevicesReport from './scenes/Home/scenes/Reports/scenes/AppNotInstalledDevices';
 import Geo from './scenes/Home/scenes/Geo';
+import EncryptionStatus from './scenes/Home/scenes/Reports/scenes/EncryptionStatus';
 import GroupUnassignedDevices from './scenes/Home/scenes/Reports/scenes/GroupUnassignedDevices';
 
 const routes = [
@@ -51,11 +52,6 @@ const routes = [
       // {
       //   path: '/entgra/devices/enroll',
       //   component: DeviceEnroll,
-      //   exact: true,
-      // },
-      // {
-      //   path: '/entgra/geo',
-      //   component: Geo,
       //   exact: true,
       // },
       // {
@@ -141,6 +137,11 @@ const routes = [
       {
         path: '/entgra/reports/group-unassigned-device',
         component: GroupUnassignedDevices,
+        exact: true,
+      },
+      {
+        path: '/entgra/reports/encryption-status',
+        component: EncryptionStatus,
         exact: true,
       },
     ],
