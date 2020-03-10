@@ -673,11 +673,6 @@ class ConfigureProfile extends React.Component {
     const { policyUIConfigurationsList } = this.props;
     return (
       <div className="tab-container">
-        {/* <div>*/}
-        {/*  <Select style={{ width: 200 }}>*/}
-        {/*    {this.getOptionForTimeSelectors(1440, 1410, 30)}*/}
-        {/*  </Select>*/}
-        {/* </div>*/}
         <Tabs tabPosition={'left'} size={'large'}>
           {policyUIConfigurationsList.map((element, i) => {
             return (

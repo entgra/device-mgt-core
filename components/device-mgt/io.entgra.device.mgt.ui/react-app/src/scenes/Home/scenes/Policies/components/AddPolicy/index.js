@@ -30,6 +30,9 @@ import {
 import { withConfigContext } from '../../../../../../components/ConfigContext';
 import SelectPlatform from './components/SelectPlatform';
 import ConfigureProfile from './components/ConfigureProfile';
+import SelectPolicyType from './components/SelectPolicyType';
+import AssignGroups from './components/AssignGroups';
+import PublishDevices from './components/PublishDevices';
 import axios from 'axios';
 const { Step } = Steps;
 
@@ -104,7 +107,6 @@ class AddPolicy extends React.Component {
               <Step key="PolicyType" title="Select policy type" />
               <Step key="AssignGroups" title="Assign to groups" />
               <Step key="Publish" title="Publish to devices" />
-              <Step key="Result" title="Result" />
             </Steps>
           </Col>
           <Col span={16} offset={4}>
@@ -125,16 +127,19 @@ class AddPolicy extends React.Component {
               </div>
               <div
                 style={{ display: currentStepIndex === 2 ? 'unset' : 'none' }}
-              ></div>
+              >
+                <SelectPolicyType />
+              </div>
               <div
                 style={{ display: currentStepIndex === 3 ? 'unset' : 'none' }}
-              ></div>
+              >
+                <AssignGroups />
+              </div>
               <div
                 style={{ display: currentStepIndex === 4 ? 'unset' : 'none' }}
-              ></div>
-              <div
-                style={{ display: currentStepIndex === 5 ? 'unset' : 'none' }}
-              ></div>
+              >
+                <PublishDevices />
+              </div>
             </Card>
           </Col>
           <Col span={16} offset={4}>
@@ -147,12 +152,12 @@ class AddPolicy extends React.Component {
                   Previous
                 </Button>
               )}
-              {currentStepIndex > 0 && currentStepIndex < 5 && (
+              {currentStepIndex > 0 && currentStepIndex < 4 && (
                 <Button type="primary" onClick={() => this.onHandleNext()}>
                   Next
                 </Button>
               )}
-              {currentStepIndex === 5 && <Button type="primary">Done</Button>}
+              {currentStepIndex === 4 && <Button type="primary">Done</Button>}
             </div>
           </Col>
         </Row>

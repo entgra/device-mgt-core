@@ -45,10 +45,7 @@ import org.wso2.carbon.device.mgt.common.DeviceTransferRequest;
 import org.wso2.carbon.device.mgt.common.MonitoringOperation;
 import org.wso2.carbon.device.mgt.common.StartupOperationConfig;
 import org.wso2.carbon.device.mgt.common.OperationMonitoringTaskConfig;
-<<<<<<< HEAD
-=======
 import org.wso2.carbon.device.mgt.common.app.mgt.ApplicationManagementException;
->>>>>>> 0f5c62938a2a39e004a3813a8034d12a0d4c9baa
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceNotFoundException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
