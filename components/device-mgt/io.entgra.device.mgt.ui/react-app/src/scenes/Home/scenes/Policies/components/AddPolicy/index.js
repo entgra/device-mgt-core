@@ -85,12 +85,12 @@ class AddPolicy extends React.Component {
       });
   };
 
-  onHandleNext = () => {
+  getNextStep = () => {
     const currentStepIndex = this.state.currentStepIndex + 1;
     this.setState({ currentStepIndex });
   };
 
-  onHandlePrev = () => {
+  getPrevStep = () => {
     const currentStepIndex = this.state.currentStepIndex - 1;
     this.setState({ currentStepIndex });
   };
@@ -123,42 +123,32 @@ class AddPolicy extends React.Component {
               >
                 <ConfigureProfile
                   policyUIConfigurationsList={policyUIConfigurationsList}
+                  getPrevStep={() => this.getPrevStep()}
+                  getNextStep={() => this.getNextStep()}
                 />
               </div>
               <div
                 style={{ display: currentStepIndex === 2 ? 'unset' : 'none' }}
               >
-                <SelectPolicyType />
+                <SelectPolicyType
+                  getPrevStep={() => this.getPrevStep()}
+                  getNextStep={() => this.getNextStep()}
+                />
               </div>
               <div
                 style={{ display: currentStepIndex === 3 ? 'unset' : 'none' }}
               >
-                <AssignGroups />
+                <AssignGroups
+                  getPrevStep={() => this.getPrevStep()}
+                  getNextStep={() => this.getNextStep()}
+                />
               </div>
               <div
                 style={{ display: currentStepIndex === 4 ? 'unset' : 'none' }}
               >
-                <PublishDevices />
+                <PublishDevices getPrevStep={() => this.getPrevStep()} />
               </div>
             </Card>
-          </Col>
-          <Col span={16} offset={4}>
-            <div style={{ marginTop: 24 }}>
-              {currentStepIndex > 0 && (
-                <Button
-                  style={{ marginRight: 8 }}
-                  onClick={() => this.onHandlePrev()}
-                >
-                  Previous
-                </Button>
-              )}
-              {currentStepIndex > 0 && currentStepIndex < 4 && (
-                <Button type="primary" onClick={() => this.onHandleNext()}>
-                  Next
-                </Button>
-              )}
-              {currentStepIndex === 4 && <Button type="primary">Done</Button>}
-            </div>
           </Col>
         </Row>
       </div>

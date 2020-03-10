@@ -1,14 +1,6 @@
 import React from 'react';
 import { withConfigContext } from '../../../../../../../../components/ConfigContext';
-import {
-  Form,
-  Icon,
-  message,
-  notification,
-  Radio,
-  Select,
-  Tooltip,
-} from 'antd';
+import { Button, Col, Form, message, notification, Radio, Select } from 'antd';
 import axios from 'axios';
 const { Option } = Select;
 
@@ -27,8 +19,16 @@ class AssignGroups extends React.Component {
     this.fetchGroups();
   }
 
+  onHandlePrev() {
+    this.props.getPrevStep();
+  }
+
+  onHandleContinue() {
+    this.props.getNextStep();
+  }
+
   handleSetUserRoleFormItem = event => {
-    if (event.target.value === 'roles') {
+    if (event.target.value === 'roleSelector') {
       document.getElementById('roleSelector').style.display = 'block';
       document.getElementById('userSelector').style.display = 'none';
     } else {
@@ -162,14 +162,22 @@ class AssignGroups extends React.Component {
     return (
       <div>
         <div>
-          <Radio.Group onChange={this.handleSetUserRoleFormItem}>
+          <Radio.Group
+            defaultValue={'roleSelector'}
+            onChange={this.handleSetUserRoleFormItem}
+          >
             <Radio value="roleSelector">Set User role(s)</Radio>
             <Radio value="userSelector">Set User(s)</Radio>
           </Radio.Group>
           <div id={'roleSelector'} style={{ display: 'block' }}>
             <Form.Item>
               {getFieldDecorator('roles', {})(
-                <Select mode="multiple" style={{ width: '100%' }}>
+                <Select
+                  mode="multiple"
+                  style={{ width: '100%' }}
+                  defaultActiveFirstOption={true}
+                >
+                  <Option value={'ANY'}>Any</Option>
                   {this.state.roles}
                 </Select>,
               )}
@@ -192,10 +200,24 @@ class AssignGroups extends React.Component {
         <Form.Item label={'Select Groups'} style={{ display: 'block' }}>
           {getFieldDecorator('deviceGroups', {})(
             <Select mode="multiple" style={{ width: '100%' }}>
+              <Option value={'NONE'}>NONE</Option>
               {this.state.groups}
             </Select>,
           )}
         </Form.Item>
+        <Col span={16} offset={20}>
+          <div style={{ marginTop: 24 }}>
+            <Button
+              style={{ marginRight: 8 }}
+              onClick={() => this.onHandlePrev()}
+            >
+              Back
+            </Button>
+            <Button type="primary" onClick={() => this.onHandleContinue()}>
+              Continue
+            </Button>
+          </div>
+        </Col>
       </div>
     );
   }

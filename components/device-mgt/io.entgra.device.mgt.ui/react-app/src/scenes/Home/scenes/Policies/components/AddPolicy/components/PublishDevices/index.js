@@ -1,6 +1,6 @@
 import React from 'react';
 import { withConfigContext } from '../../../../../../../../components/ConfigContext';
-import { Form, Input } from 'antd';
+import { Button, Col, Form, Input } from 'antd';
 const { TextArea } = Input;
 
 class PublishDevices extends React.Component {
@@ -10,6 +10,10 @@ class PublishDevices extends React.Component {
     this.state = {};
   }
   componentDidMount() {}
+
+  onHandlePrev() {
+    this.props.getPrevStep();
+  }
 
   render() {
     const { getFieldDecorator } = this.props.form;
@@ -31,6 +35,20 @@ class PublishDevices extends React.Component {
         <Form.Item label={'Add a Description'} style={{ display: 'block' }}>
           {getFieldDecorator('description', {})(<TextArea rows={8} />)}
         </Form.Item>
+        <Col span={16} offset={18}>
+          <div style={{ marginTop: 24 }}>
+            <Button
+              style={{ marginRight: 8 }}
+              onClick={() => this.onHandlePrev()}
+            >
+              Back
+            </Button>
+            <Button type="primary" style={{ marginRight: 8 }}>
+              Save & Publish
+            </Button>
+            <Button type="primary">Save</Button>
+          </div>
+        </Col>
       </div>
     );
   }
