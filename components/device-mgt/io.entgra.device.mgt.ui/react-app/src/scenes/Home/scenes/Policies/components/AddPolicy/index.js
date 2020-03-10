@@ -17,16 +17,7 @@
  */
 
 import React from 'react';
-import {
-  Button,
-  Form,
-  Row,
-  Col,
-  Card,
-  Steps,
-  message,
-  notification,
-} from 'antd';
+import { Form, Row, Col, Card, Steps, message, notification } from 'antd';
 import { withConfigContext } from '../../../../../../components/ConfigContext';
 import SelectPlatform from './components/SelectPlatform';
 import ConfigureProfile from './components/ConfigureProfile';
