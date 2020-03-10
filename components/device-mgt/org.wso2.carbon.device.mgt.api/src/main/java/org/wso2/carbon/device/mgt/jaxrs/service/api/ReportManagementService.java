@@ -313,12 +313,12 @@ public interface ReportManagementService {
                     int limit) throws ReportManagementException;
 
     @GET
-    @Path("expired-devices/{deviceType}")
+    @Path("/expired-devices/{deviceType}")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
-            value = "Getting Details of Registered Devices filtered by OS version build date",
-            notes = "Provides details of devices that have a version build date older than the provided date.",
+            value = "Getting Details of Registered Devices filtered by OS version",
+            notes = "Provides details of devices that have a OS version older than the provided version.",
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
@@ -337,9 +337,9 @@ public interface ReportManagementService {
                                             name = "Content-Type",
                                             description = "The content type of the body")}),
                     @ApiResponse(
-                            code = 404,
-                            message = "Not Found. " +
-                                      "\n Device type does not exist",
+                            code = 400,
+                            message = "Bad Request. " +
+                                      "\n Contents of the request are invalid",
                             response = ErrorResponse.class),
                     @ApiResponse(
                             code = 500,
@@ -354,10 +354,60 @@ public interface ReportManagementService {
                     required = true)
             @PathParam("deviceType") String deviceType,
             @ApiParam(
-                    name = "osBuildDate",
-                    value = "Minimum OS version build date which is used to filter the devices.",
+                    name = "osVersion",
+                    value = "Minimum OS version which is used to filter the devices.",
                     required = true)
-            @QueryParam("osBuildDate") Long osBuildDate,
+            @QueryParam("osVersion") String osVersion,
+            @ApiParam(
+                    name = "offset",
+                    value = "The starting pagination index for the list of filtered devices.",
+                    defaultValue = "0")
+            @QueryParam("offset")
+                    int offset,
+            @ApiParam(
+                    name = "limit",
+                    value = "Limit of the number of deices that should be returned.",
+                    defaultValue = "5")
+            @QueryParam("limit")
+                    int limit);
+
+    @GET
+    @Path("/encryption-status")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Getting Details of Registered Devices filtered by encryption status",
+            notes = "Provides details of devices which is in provided encryption status",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully fetched the list of devices.",
+                            response = DeviceList.class,
+                            responseHeaders = {
+                                    @ResponseHeader(
+                                            name = "Content-Type",
+                                            description = "The content type of the body")}),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. " +
+                                      "\n Server error occurred while fetching the devices.",
+                            response = ErrorResponse.class)
+            })
+    Response getDevicesByEncryptionStatus(
+            @ApiParam(
+                    name = "isEncrypted",
+                    value = "The encryption states which used to filter the devices",
+                    required = true)
+            @QueryParam("isEncrypted")
+                    boolean isEncrypted,
             @ApiParam(
                     name = "offset",
                     value = "The starting pagination index for the list of filtered devices.",

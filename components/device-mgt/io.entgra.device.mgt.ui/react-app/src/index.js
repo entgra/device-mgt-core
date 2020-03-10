@@ -30,6 +30,8 @@ import PolicyReport from './scenes/Home/scenes/Reports/scenes/PolicyCompliance';
 import DeviceStatusReport from './scenes/Home/scenes/Reports/scenes/DeviceStatus';
 import AppNotInstalledDevicesReport from './scenes/Home/scenes/Reports/scenes/AppNotInstalledDevices';
 import Geo from './scenes/Home/scenes/Geo';
+import EncryptionStatus from './scenes/Home/scenes/Reports/scenes/EncryptionStatus';
+import OutdatedOSversionReport from './scenes/Home/scenes/Reports/scenes/OutdatedOSVersion';
 
 const routes = [
   {
@@ -50,11 +52,6 @@ const routes = [
       // {
       //   path: '/entgra/devices/enroll',
       //   component: DeviceEnroll,
-      //   exact: true,
-      // },
-      // {
-      //   path: '/entgra/geo',
-      //   component: Geo,
       //   exact: true,
       // },
       // {
@@ -118,6 +115,11 @@ const routes = [
         exact: true,
       },
       {
+        path: '/entgra/reports/expired-devices',
+        component: OutdatedOSversionReport,
+        exact: true,
+      },
+      {
         path: '/entgra/reports/enrollment-type',
         component: EnrollmentTypeReport,
         exact: true,
@@ -135,6 +137,11 @@ const routes = [
       {
         path: '/entgra/reports/app-not-installed',
         component: AppNotInstalledDevicesReport,
+        exact: true,
+      },
+      {
+        path: '/entgra/reports/encryption-status',
+        component: EncryptionStatus,
         exact: true,
       },
     ],

@@ -1915,108 +1915,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             throw new DeviceManagementDAOException(msg, e);
         }
     }
-
-    @Override
-    public List<Device> getDevicesExpiredByOSVersion(PaginationRequest request, int tenantId)
-            throws DeviceManagementDAOException {
-        try {
-            Long osBuildDate = (Long) request.getProperty(Constants.OS_BUILD_DATE);
-            Connection conn = getConnection();
-            String sql = "SELECT " +
-                         "dt.NAME AS DEVICE_TYPE, " +
-                         "d.ID AS DEVICE_ID, " +
-                         "d.NAME AS DEVICE_NAME, " +
-                         "d.DESCRIPTION, " +
-                         "d.DEVICE_IDENTIFICATION, " +
-                         "dd.OS_VERSION, " +
-                         "dd.OS_BUILD_DATE, " +
-                         "e.ID AS ENROLMENT_ID, " +
-                         "e.OWNER, " +
-                         "e.OWNERSHIP, " +
-                         "e.STATUS, " +
-                         "e.DATE_OF_LAST_UPDATE, " +
-                         "e.DATE_OF_ENROLMENT " +
-                         "FROM DM_DEVICE d, " +
-                         "DM_DEVICE_DETAIL dd, " +
-                         "DM_ENROLMENT e, " +
-                         "(SELECT ID, NAME " +
-                         "FROM DM_DEVICE_TYPE " +
-                         "WHERE NAME = ? " +
-                         "AND PROVIDER_TENANT_ID = ?) dt " +
-                         "WHERE dt.ID = d.DEVICE_TYPE_ID " +
-                         "AND d.ID = e.DEVICE_ID " +
-                         "AND d.ID = dd.DEVICE_ID " +
-                         "AND dd.OS_BUILD_DATE < ? " +
-                         "LIMIT ? OFFSET ?";
-
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                int paramIDx = 1;
-                ps.setString(paramIDx++, request.getDeviceType());
-                ps.setInt(paramIDx++, tenantId);
-                ps.setLong(paramIDx++, osBuildDate);
-                ps.setInt(paramIDx++, request.getRowCount());
-                ps.setInt(paramIDx, request.getStartIndex());
-
-                try (ResultSet rs = ps.executeQuery()) {
-                    List<Device> devices = new ArrayList<>();
-                    DeviceInfo deviceInfo = new DeviceInfo();
-                    while (rs.next()) {
-                        Device device = DeviceManagementDAOUtil.loadDevice(rs);
-                        deviceInfo.setOsVersion(rs.getString(Constants.OS_VERSION));
-                        deviceInfo.setOsBuildDate(rs.getString(Constants.OS_BUILD_DATE));
-                        device.setDeviceInfo(deviceInfo);
-                        devices.add(device);
-                    }
-                    return devices;
-                }
-            }
-        } catch (SQLException e) {
-            String msg = "Error occurred while building or executing queries to retrieve information " +
-                         "of devices with an older OS build date";
-            log.error(msg, e);
-            throw new DeviceManagementDAOException(msg, e);
-        }
-    }
-
-    @Override
-    public int getCountOfDeviceExpiredByOSVersion(String deviceType, long osBuildDate, int tenantId)
-            throws DeviceManagementDAOException {
-        try {
-            Connection conn = getConnection();
-            String sql = "SELECT " +
-                         "COUNT(dd.DEVICE_ID) AS DEVICE_COUNT " +
-                         "FROM DM_DEVICE d, " +
-                         "DM_DEVICE_DETAIL dd, " +
-                         "(SELECT ID " +
-                         "FROM DM_DEVICE_TYPE " +
-                         "WHERE NAME = ? " +
-                         "AND PROVIDER_TENANT_ID = ?) dt " +
-                         "WHERE d.DEVICE_TYPE_ID = dt.ID " +
-                         "AND d.ID = dd.DEVICE_ID " +
-                         "AND dd.OS_BUILD_DATE < ?";
-
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                int paramIdx = 1;
-                ps.setString(paramIdx++, deviceType);
-                ps.setInt(paramIdx++, tenantId);
-                ps.setLong(paramIdx, osBuildDate);
-
-                try (ResultSet rs = ps.executeQuery()) {
-                    int deviceCount = 0;
-                    if (rs.next()) {
-                        deviceCount = rs.getInt("DEVICE_COUNT");
-                    }
-                    return deviceCount;
-                }
-            }
-        } catch (SQLException e) {
-            String msg = "Error occurred while building or executing queries to retrieve the count " +
-                         "of devices with an older OS build date";
-            log.error(msg, e);
-            throw new DeviceManagementDAOException(msg, e);
-        }
-    }
-
+    
     @Override
     public List<Device> getAppNotInstalledDevices(
             PaginationRequest request, int tenantId, String packageName, String version)
@@ -2129,6 +2028,108 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         } catch (SQLException e) {
             String msg = "Error occurred while retrieving information of all " +
                     "registered devices under tenant id " + tenantId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public List<Device> getDevicesByEncryptionStatus(PaginationRequest request, int tenantId, boolean isEncrypted)
+            throws DeviceManagementDAOException {
+        try {
+            Connection conn = getConnection();
+            String sql = "" +
+                    "SELECT e1.owner," +
+                    "e1.ownership," +
+                    "e1.enrolment_id," +
+                    "e1.device_id," +
+                    "e1.status," +
+                    "e1.date_of_last_update," +
+                    "e1.date_of_enrolment," +
+                    "d.description," +
+                    "d.NAME AS DEVICE_NAME," +
+                    "d.device_identification," +
+                    "t.NAME AS DEVICE_TYPE " +
+                    "FROM dm_device d," +
+                    "(SELECT e.owner," +
+                    "e.ownership," +
+                    "e.id AS ENROLMENT_ID," +
+                    "e.device_id," +
+                    "e.status, " +
+                    "e.date_of_last_update, " +
+                    "e.date_of_enrolment " +
+                    "FROM dm_enrolment e " +
+                    "INNER JOIN " +
+                    "(SELECT DEVICE_ID " +
+                    "FROM DM_DEVICE_INFO " +
+                    "WHERE " +
+                    "KEY_FIELD = 'encryptionEnabled' " +
+                    "AND VALUE_FIELD = ?) AS di " +
+                    "ON di.DEVICE_ID = e.DEVICE_ID " +
+                    "WHERE e.tenant_id = ?) e1, " +
+                    "dm_device_type t " +
+                    "WHERE d.id = e1.device_id " +
+                    "AND t.id = d.device_type_id " +
+                    "ORDER BY e1.date_of_last_update DESC " +
+                    "LIMIT ? OFFSET ?";
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setBoolean(1, isEncrypted);
+                ps.setInt(2, tenantId);
+                ps.setInt(3, request.getRowCount());
+                ps.setInt(4, request.getStartIndex());
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    List<Device> devices = new ArrayList<>();
+                    if (rs.next()) {
+                        Device device = DeviceManagementDAOUtil.loadDevice(rs);
+                        devices.add(device);
+                    }
+                    return devices;
+                }
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while building or executing queries to retrieve information " +
+                    "of devices filtered by encryption status: " + isEncrypted;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public int getCountOfDevicesByEncryptionStatus(int tenantId, boolean isEncrypted)
+            throws DeviceManagementDAOException {
+        try {
+            Connection conn = getConnection();
+            String sql = "" +
+                    "SELECT " +
+                    "COUNT(e1.DEVICE_ID) AS DEVICE_COUNT " +
+                    "FROM dm_device d," +
+                    "(SELECT e.id AS ENROLMENT_ID, " +
+                    "e.device_id " +
+                    "FROM dm_enrolment e " +
+                    "INNER JOIN " +
+                    "(SELECT DEVICE_ID " +
+                    "FROM DM_DEVICE_INFO " +
+                    "WHERE KEY_FIELD = 'encryptionEnabled' " +
+                    "AND VALUE_FIELD = ?) AS di " +
+                    "ON di.DEVICE_ID = e.DEVICE_ID " +
+                    "WHERE e.tenant_id = ?) e1, " +
+                    "dm_device_type t " +
+                    "WHERE d.id = e1.device_id " +
+                    "AND t.id = d.device_type_id ";
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setBoolean(1, isEncrypted);
+                ps.setInt(2, tenantId);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    return rs.next() ? rs.getInt("DEVICE_COUNT") : 0;
+                }
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while building or executing queries to retrieve the count of devices " +
+                    "in the provided encryption status: " + isEncrypted;
             log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
@@ -2616,5 +2617,26 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         statusList.stream().map(status -> "?").forEach(joiner::add);
 
         return joiner.toString();
+    }
+
+    public int getFunctioningDevicesInSystem() throws DeviceManagementDAOException {
+        Connection conn;
+        PreparedStatement stmt = null;
+        int deviceCount = 0;
+        try {
+            conn = this.getConnection();
+            String sql = "SELECT COUNT(e.DEVICE_ID) AS DEVICE_COUNT FROM DM_ENROLMENT e WHERE STATUS != 'REMOVED'";
+            stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                deviceCount = rs.getInt("DEVICE_COUNT");
+            }
+        } catch (SQLException e) {
+            throw new DeviceManagementDAOException("Error occurred while fetching count of functioning devices", e);
+        } finally {
+            DeviceManagementDAOUtil.cleanupResources(stmt, null);
+        }
+        return deviceCount;
     }
 }
