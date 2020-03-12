@@ -62,8 +62,6 @@ class ConfigureProfile extends React.Component {
     };
   }
 
-  componentDidMount() {}
-
   // convert time from 24h format to 12h format
   timeConverter = time => {
     time = time

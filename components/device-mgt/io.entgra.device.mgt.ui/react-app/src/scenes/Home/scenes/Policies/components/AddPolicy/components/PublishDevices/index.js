@@ -7,9 +7,7 @@ class PublishDevices extends React.Component {
   constructor(props) {
     super(props);
     this.config = this.props.context;
-    this.state = {};
   }
-  componentDidMount() {}
 
   onHandlePrev() {
     this.props.getPrevStep();

@@ -8,6 +8,8 @@ class AssignGroups extends React.Component {
   constructor(props) {
     super(props);
     this.config = this.props.context;
+    this.userSelector = React.createRef();
+    this.roleSelector = React.createRef();
     this.state = {
       roles: [],
       users: [],
@@ -15,8 +17,8 @@ class AssignGroups extends React.Component {
     };
   }
   componentDidMount() {
-    this.getRole();
-    this.fetchGroups();
+    this.getRolesList();
+    this.getGroupsList();
   }
 
   onHandlePrev() {
@@ -29,15 +31,15 @@ class AssignGroups extends React.Component {
 
   handleSetUserRoleFormItem = event => {
     if (event.target.value === 'roleSelector') {
-      document.getElementById('roleSelector').style.display = 'block';
-      document.getElementById('userSelector').style.display = 'none';
+      this.roleSelector.current.style.cssText = 'display: block;';
+      this.userSelector.current.style.cssText = 'display: none;';
     } else {
-      document.getElementById('userSelector').style.display = 'block';
-      document.getElementById('roleSelector').style.display = 'none';
+      this.roleSelector.current.style.cssText = 'display: none;';
+      this.userSelector.current.style.cssText = 'display: block;';
     }
   };
 
-  getRole = () => {
+  getRolesList = () => {
     let apiURL =
       window.location.origin +
       this.config.serverConfig.invoker.uri +
@@ -57,7 +59,7 @@ class AssignGroups extends React.Component {
             );
           }
           this.setState({
-            roles: roles,
+            roles,
           });
         }
       })
@@ -77,7 +79,7 @@ class AssignGroups extends React.Component {
       });
   };
 
-  loadUsersList = value => {
+  getUsersList = value => {
     let apiURL =
       window.location.origin +
       this.config.serverConfig.invoker.uri +
@@ -97,7 +99,7 @@ class AssignGroups extends React.Component {
             );
           }
           this.setState({
-            users: users,
+            users,
           });
         }
       })
@@ -117,7 +119,7 @@ class AssignGroups extends React.Component {
   };
 
   // fetch data from api
-  fetchGroups = () => {
+  getGroupsList = () => {
     let apiUrl =
       window.location.origin +
       this.config.serverConfig.invoker.uri +
@@ -138,7 +140,7 @@ class AssignGroups extends React.Component {
             );
           }
           this.setState({
-            groups: groups,
+            groups,
           });
         }
       })
@@ -169,7 +171,11 @@ class AssignGroups extends React.Component {
             <Radio value="roleSelector">Set User role(s)</Radio>
             <Radio value="userSelector">Set User(s)</Radio>
           </Radio.Group>
-          <div id={'roleSelector'} style={{ display: 'block' }}>
+          <div
+            id={'roleSelector'}
+            ref={this.roleSelector}
+            style={{ display: 'block' }}
+          >
             <Form.Item>
               {getFieldDecorator('roles', {})(
                 <Select
@@ -183,13 +189,17 @@ class AssignGroups extends React.Component {
               )}
             </Form.Item>
           </div>
-          <div id={'userSelector'} style={{ display: 'none' }}>
+          <div
+            id={'userSelector'}
+            ref={this.userSelector}
+            style={{ display: 'none' }}
+          >
             <Form.Item>
               {getFieldDecorator('users', {})(
                 <Select
                   mode="multiple"
                   style={{ width: '100%' }}
-                  onSearch={this.loadUsersList}
+                  onSearch={this.getUsersList}
                 >
                   {this.state.users}
                 </Select>,
