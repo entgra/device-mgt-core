@@ -239,20 +239,20 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @GET
-    @Path("/{device-type}/group-unassigned-device")
-    public Response getGroupUnAssignedDevices(
+    @Path("/{device-type}/ungrouped-device")
+    public Response getUngroupedDevices(
             @PathParam("device-type") String deviceType,
             @DefaultValue("0")
-                                              @QueryParam("offset") int offset,
-                                              @DefaultValue("10")
-                                              @QueryParam("limit") int limit) {
+            @QueryParam("groupName") List<String> groupName,
+            @QueryParam("offset") int offset,
+            @DefaultValue("10")
+            @QueryParam("limit") int limit) {
         try {
             RequestValidationUtil.validatePaginationParameters(offset, limit);
             PaginationRequest request = new PaginationRequest(offset, limit);
             DeviceList deviceList = new DeviceList();
             request.setDeviceType(deviceType);
-            PaginationResult paginationResult =
-                    DeviceMgtAPIUtils.getReportManagementService().getDeviceNotAssignedToGroups(request);
+            PaginationResult paginationResult = DeviceMgtAPIUtils.getReportManagementService().getDeviceNotAssignedToGroups(request);
 
             if (paginationResult.getData().isEmpty()) {
                 return Response.status(Response.Status.OK).entity("Enrolled devices are " +

@@ -494,13 +494,14 @@ public interface ReportManagementService {
             @QueryParam("limit")
                     int limit);
 
-    @Path("/{device-type}/group-unassigned-device")
+    @Path("/{device-type}/ungrouped-device")
     @GET
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
             value = "Getting devices list that are not assigned under any groups",
-            notes = "Devices are assigned to default groups during enrollmnt. This api gives the list of devices that are assigend to groups other that default groups.",
+            notes = "Devices are assigned to default groups during enrollmnt. This api gives the " +
+                    "list of devices that are assigned to groups other that default groups.",
             tags = "Devices that are unassigned to Group Management",
             extensions = {
                     @Extension(properties = {
@@ -528,13 +529,19 @@ public interface ReportManagementService {
                     message = "Internal Server Error. \n Server error occurred.",
                     response = ErrorResponse.class)
     })
-    Response getGroupUnAssignedDevices(
+    Response getUngroupedDevices(
             @ApiParam(
                     name = "device-type",
                     value = "The device type name, such as ios, android, windows, or fire-alarm.",
                     required = true)
             @PathParam("device-type")
                     String deviceType,
+            @ApiParam(
+                    name = "groupName",
+                    value = "The default group names available",
+                    defaultValue = "BYOD")
+            @QueryParam("groupName")
+                    List<String> groupName,
             @ApiParam(
                     name = "offset",
                     value = "The starting pagination index for the complete list of grouped " +

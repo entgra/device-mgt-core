@@ -22,14 +22,14 @@ import { Breadcrumb, Icon, PageHeader } from 'antd';
 import { Link } from 'react-router-dom';
 import DevicesTable from '../../components/DevicesTable';
 
-class GroupUnassignedDevices extends React.Component {
+class UngroupedDevices extends React.Component {
   render() {
     const config = this.props.context;
     const apiURL =
       window.location.origin +
       config.serverConfig.invoker.uri +
       config.serverConfig.invoker.deviceMgt +
-      '/reports/android/group-unassigned-device?';
+      '/reports/android/ungrouped-device?';
 
     return (
       <div>
@@ -57,4 +57,4 @@ class GroupUnassignedDevices extends React.Component {
   }
 }
 
-export default withConfigContext(GroupUnassignedDevices);
+export default withConfigContext(UngroupedDevices);

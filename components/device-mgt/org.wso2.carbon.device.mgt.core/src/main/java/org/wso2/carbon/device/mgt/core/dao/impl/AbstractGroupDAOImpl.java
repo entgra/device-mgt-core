@@ -817,25 +817,26 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
         try {
             Connection connection = GroupManagementDAOFactory.getConnection();
             String sql =
-                    "Select " +
-                        "A.ID AS DEVICE_ID," +
-                        "A.NAME AS DEVICE_NAME," +
-                        "A.DESCRIPTION, C.ID AS ENROLMENT_ID, " +
-                        "C.OWNER," +
-                        "C.OWNERSHIP," +
-                        "C.DATE_OF_ENROLMENT," +
-                        "C.DATE_OF_LAST_UPDATE," +
-                        "C.STATUS," +
-                        "D.NAME AS DEVICE_TYPE," +
-                        "A.DEVICE_IDENTIFICATION " +
-                    "from " +
-                        "DM_DEVICE AS A " +
-                        "INNER JOIN DM_DEVICE_GROUP_MAP AS B ON A.ID = B.DEVICE_ID" +
-                        "INNER JOIN DM_ENROLMENT AS C ON A.ID = C.DEVICE_ID " +
-                        "INNER JOIN DM_DEVICE_TYPE AS D ON A.ID = D.ID " +
-                    "WHERE" +
-                        "B.GROUP_ID < 3 " +
-                        "LIMIT ? OFFSET ?";
+                    "SELECT " +
+                        "A.ID, " +
+                        "A.GROUP_NAME, " +
+                        "B.DEVICE_ID, " +
+                        "C.NAME AS DEVICE_TYPE, " +
+                        "D.ID AS DEVICE_ID, " +
+                        "D.NAME AS DEVICE_NAME, " +
+                        "D.DESCRIPTION," +
+                        "D.DEVICE_IDENTIFICATION, " +
+                        "F.OWNERSHIP AS OWNER,  " +
+                        "F.DATE_OF_ENROLMENT, " +
+                        "F.DATE_OF_LAST_UPDATE, " +
+                        "F.STATUS, " +
+                        "F.ID AS ENROLMENT_ID " +
+                    "FROM DM_GROUP AS A " +
+                        "INNER JOIN DM_DEVICE_GROUP_MAP AS B ON A.ID = B.GROUP_ID " +
+                        "INNER JOIN DM_DEVICE_TYPE AS C ON B.DEVICE_ID = C.ID " +
+                        "INNER JOIN DM_DEVICE AS D ON D.ID = C.ID " +
+                        "INNER JOIN DM_ENROLMENT AS F ON F.DEVICE_ID = D.ID " +
+                    "WHERE NOT D.ID IN (SELECT ID FROM DM_GROUP WHERE GROUP_NAME NOT IN (?, ?))";
 
 
             PreparedStatement stmt = connection.prepareStatement(sql);

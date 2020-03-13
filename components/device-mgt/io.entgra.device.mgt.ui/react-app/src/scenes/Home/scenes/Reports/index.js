@@ -218,9 +218,9 @@ class Reports extends React.Component {
                 <Col span={8}>
                   <Link
                     to={{
-                      pathname: '/entgra/reports/group-unassigned-device',
+                      pathname: '/entgra/reports/ungrouped-device',
                       data: {
-                        name: 'group_unassigned_devices_report',
+                        name: 'ungrouped_devices_report',
                       },
                     }}
                   >
@@ -235,7 +235,7 @@ class Reports extends React.Component {
                           style={{ fontSize: '25px', color: '#08c' }}
                         />
                         <h2>
-                          <b>Group Unassigned Devices Report</b>
+                          <b>Ungrouped Devices Report</b>
                         </h2>
                         <p>Report for all device types</p>
                       </div>

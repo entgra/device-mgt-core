@@ -102,7 +102,8 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @Override
-    public int getDevicesByDurationCount(List<String> statusList, String ownership, String fromDate, String toDate)
+    public int getDevicesByDurationCount(List<String> statusList, String ownership, String fromDate,
+                                         String toDate)
             throws ReportManagementException {
         try {
             DeviceManagementDAOFactory.openConnection();
@@ -122,8 +123,9 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @Override
-    public JsonObject getCountOfDevicesByDuration(PaginationRequest request, List<String> statusList, String fromDate,
-                                                   String toDate)
+    public JsonObject getCountOfDevicesByDuration(PaginationRequest request,
+                                                  List<String> statusList, String fromDate,
+                                                  String toDate)
             throws ReportManagementException {
         try {
             request = DeviceManagerUtil.validateDeviceListPageSize(request);
@@ -144,7 +146,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             return buildCount(fromDate, toDate, dateList);
         } catch (SQLException e) {
             String msg = "Error occurred while opening a connection " +
-                    "to the data source";
+                         "to the data source";
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
         } catch (DeviceManagementDAOException e) {
@@ -221,7 +223,8 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @Override
-    public PaginationResult getDevicesByEncryptionStatus(PaginationRequest request, boolean isEncrypted)
+    public PaginationResult getDevicesByEncryptionStatus(PaginationRequest request,
+                                                         boolean isEncrypted)
             throws ReportManagementException {
         if (request == null) {
             String msg = "Error. The request must be a not null value.";
@@ -263,7 +266,8 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     //NOTE: This is just a temporary method for retrieving device counts
-    public JsonObject buildCount(String start, String end, List<Count> countList) throws ParseException {
+    public JsonObject buildCount(String start, String end, List<Count> countList)
+            throws ParseException {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         int prevDateAmount = 0;
         boolean isDaily = false;
@@ -298,8 +302,8 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 for (Count count : countList) {
                     if (dateFormat.parse(
                             count.getDate()).after(previousDate) &&
-                            dateFormat.parse(count.getDate()).before(endDate
-                            )) {
+                        dateFormat.parse(count.getDate()).before(endDate
+                        )) {
                         sum = sum + count.getCount();
                     }
                 }
@@ -318,10 +322,11 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @Override
-    public PaginationResult getAppNotInstalledDevices(PaginationRequest request, String packageName, String version)
+    public PaginationResult getAppNotInstalledDevices(PaginationRequest request, String packageName,
+                                                      String version)
             throws ReportManagementException, DeviceTypeNotFoundException {
         PaginationResult paginationResult = new PaginationResult();
-        if(StringUtils.isBlank(packageName)){
+        if (StringUtils.isBlank(packageName)) {
             String msg = "Error, application package name is not given";
             log.error(msg);
             throw new ReportManagementException(msg);
@@ -357,10 +362,10 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 return paginationResult;
             } catch (SQLException e) {
                 String msg = "Error occurred while opening a connection " +
-                        "to the data source";
+                             "to the data source";
                 log.error(msg, e);
                 throw new ReportManagementException(msg, e);
-            }  finally {
+            } finally {
                 DeviceManagementDAOFactory.closeConnection();
             }
 
@@ -376,24 +381,43 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @Override
-    public PaginationResult getDeviceNotAssignedToGroups(PaginationRequest paginationRequest) throws ReportManagementException{
+    public PaginationResult getDeviceNotAssignedToGroups(PaginationRequest paginationRequest)
+            throws ReportManagementException {
         PaginationResult paginationResult = new PaginationResult();
         try {
-            GroupManagementDAOFactory.openConnection();
-            List<Device> devices = groupDAO.getGroupUnassignedDevices(paginationRequest);
-            paginationResult.setData(devices);
-            paginationResult.setRecordsTotal(devices.size());
-            return paginationResult;
-        } catch (SQLException e) {
-            String msg = "Error occurred while opening a connection to the data source";
+            int tenantId = DeviceManagementDAOUtil.getTenantId();
+            paginationRequest = DeviceManagerUtil.validateDeviceListPageSize(paginationRequest);
+            String deviceType = paginationRequest.getDeviceType();
+            DeviceType deviceTypeObj = DeviceManagerUtil.getDeviceType(
+                    deviceType, tenantId);
+            if (deviceTypeObj == null) {
+                String msg = "Error, device of type: " + deviceType + " does not exist";
+                log.error(msg);
+            }
+            try {
+                GroupManagementDAOFactory.openConnection();
+                List<Device> devices = groupDAO.getGroupUnassignedDevices(paginationRequest);
+                paginationResult.setData(devices);
+                return paginationResult;
+            } catch (SQLException e) {
+                String msg = "Error occurred while opening a connection " +
+                             "to the data source";
+                log.error(msg, e);
+                throw new ReportManagementException(msg, e);
+            } catch (GroupManagementDAOException e) {
+                e.printStackTrace();
+            } finally {
+                GroupManagementDAOFactory.closeConnection();
+            }
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred while retrieving Tenant ID";
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
-        } catch (GroupManagementDAOException e) {
-            e.printStackTrace();
-        } finally {
-            GroupManagementDAOFactory.closeConnection();
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while validating device list page size";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
         }
-
         return paginationResult;
     }
 }
