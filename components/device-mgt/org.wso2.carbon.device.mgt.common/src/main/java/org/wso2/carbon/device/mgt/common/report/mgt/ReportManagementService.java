@@ -84,4 +84,18 @@ public interface ReportManagementService {
      */
     PaginationResult getAppNotInstalledDevices(PaginationRequest request, String packageName, String version)
             throws ReportManagementException, DeviceTypeNotFoundException;
+
+    /**
+     * This method is used to get devices which have not assigned to groups.
+     *
+     * @param paginationRequest Request object with offset and limit
+     * @param groupNames default group names that should be ommited when checking the device
+     *                  whether they have been assigned to groups
+     * @return {@link PaginationResult}
+     * @throws ReportManagementException
+     */
+
+    PaginationResult getDeviceNotAssignedToGroups(PaginationRequest paginationRequest,
+                                                  List<String> groupNames)
+            throws ReportManagementException;
 }
