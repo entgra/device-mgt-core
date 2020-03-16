@@ -185,6 +185,17 @@ class deviceTable extends React.Component {
       .then(res => {
         if (res.status === 200) {
           const pagination = { ...this.state.pagination };
+          if (
+            res.data.data.devices.length &&
+            res.data.data.devices[0].hasOwnProperty('deviceInfo')
+          ) {
+            columns.push({
+              title: 'OS Version',
+              dataIndex: 'deviceInfo',
+              key: 'osVersion',
+              render: deviceInfo => deviceInfo.osVersion,
+            });
+          }
           this.setState({
             loading: false,
             data: res.data.data,

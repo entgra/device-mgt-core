@@ -105,8 +105,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @Override
-    public int getDevicesByDurationCount(List<String> statusList, String ownership, String fromDate,
-                                         String toDate)
+    public int getDevicesByDurationCount(List<String> statusList, String ownership, String fromDate, String toDate)
             throws ReportManagementException {
         try {
             DeviceManagementDAOFactory.openConnection();
@@ -126,9 +125,8 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @Override
-    public JsonObject getCountOfDevicesByDuration(PaginationRequest request,
-                                                  List<String> statusList, String fromDate,
-                                                  String toDate)
+    public JsonObject getCountOfDevicesByDuration(PaginationRequest request, List<String> statusList, String fromDate,
+                                                   String toDate)
             throws ReportManagementException {
         try {
             request = DeviceManagerUtil.validateDeviceListPageSize(request);
@@ -149,7 +147,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             return buildCount(fromDate, toDate, dateList);
         } catch (SQLException e) {
             String msg = "Error occurred while opening a connection " +
-                         "to the data source";
+                    "to the data source";
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
         } catch (DeviceManagementDAOException e) {
@@ -167,12 +165,12 @@ public class ReportManagementServiceImpl implements ReportManagementService {
 
     @Override
     public PaginationResult getDevicesExpiredByOSVersion(PaginationRequest request)
-            throws ReportManagementException, BadRequestException {
+            throws ReportManagementException, DeviceTypeNotFoundException {
         if (request == null ||
             StringUtils.isBlank(request.getDeviceType()) ||
-            request.getProperties() == null ||
-            !request.getProperties().containsKey(Constants.OS_VERSION) ||
-            StringUtils.isBlank((String) request.getProperty(Constants.OS_VERSION))) {
+            !request.getProperties().containsKey(Constants.OS_BUILD_DATE) ||
+            (Long) request.getProperty(Constants.OS_BUILD_DATE) == 0) {
+
             String msg = "Error Invalid data received from the request.\n" +
                          "osVersion and device type cannot be null or empty.";
             log.error(msg);
@@ -184,7 +182,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             String msg = "Error Invalid device type:" + deviceType + " received. Valid device types " +
                          "are android and ios.";
             log.error(msg);
-            throw new BadRequestException(msg);
+            throw new ReportManagementException(msg);
         }
 
         try {
@@ -192,30 +190,28 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             PaginationResult paginationResult = new PaginationResult();
             DeviceManagerUtil.validateDeviceListPageSize(request);
 
-            String osVersion = (String) request.getProperty(Constants.OS_VERSION);
-            Long osVersionValue = DeviceManagerUtil.generateOSVersionValue(osVersion);
-            if (osVersionValue == null){
-                String msg = "Failed to generate OS value, received OS version: " + osVersion +
-                             " is in incorrect format([0-9]+([.][0-9]+)*) or version is invalid.";
+            DeviceType deviceTypeObj = DeviceManagerUtil.getDeviceType(
+                    deviceType, tenantId);
+            if (deviceTypeObj == null) {
+                String msg = "Error, device of type: " + deviceType + " does not exist";
                 log.error(msg);
-                throw new BadRequestException(msg);
+                throw new DeviceTypeNotFoundException(msg);
             }
-            request.setProperty(Constants.OS_VALUE, osVersionValue);
 
             try {
                 DeviceManagementDAOFactory.openConnection();
-
-                List<Device> devices = deviceDAO.getDevicesExpiredByOSVersion(
-                        request, tenantId);
+                List<Device> devices = deviceDAO.getDevicesExpiredByOSVersion(request, tenantId);
                 int deviceCount = deviceDAO.getCountOfDeviceExpiredByOSVersion(
-                        deviceType, osVersionValue, tenantId);
+                        deviceType,
+                        (Long) request.getProperty(Constants.OS_BUILD_DATE),
+                        tenantId);
                 paginationResult.setData(devices);
                 paginationResult.setRecordsFiltered(devices.size());
                 paginationResult.setRecordsTotal(deviceCount);
 
                 return paginationResult;
             } catch (SQLException e) {
-                String msg = "Error occurred while opening a connection to the data source.";
+                String msg = "Error occurred while opening a connection to the data source";
                 log.error(msg, e);
                 throw new ReportManagementException(msg, e);
             } finally {
@@ -223,20 +219,19 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             }
 
         } catch (DeviceManagementDAOException e) {
-            String msg = "Error occurred while retrieving expired devices by a OS version " +
-                         "for the tenant.";
+            String msg = "Error occurred while retrieving expired devices by a OS build date " +
+                         "for the tenant";
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
         } catch (DeviceManagementException e) {
-            String msg = "Error occurred while validating the request.";
+            String msg = "Error occurred while validating the request";
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
         }
     }
 
     @Override
-    public PaginationResult getDevicesByEncryptionStatus(PaginationRequest request,
-                                                         boolean isEncrypted)
+    public PaginationResult getDevicesByEncryptionStatus(PaginationRequest request, boolean isEncrypted)
             throws ReportManagementException {
         if (request == null) {
             String msg = "Error. The request must be a not null value.";
@@ -278,8 +273,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     //NOTE: This is just a temporary method for retrieving device counts
-    public JsonObject buildCount(String start, String end, List<Count> countList)
-            throws ParseException {
+    public JsonObject buildCount(String start, String end, List<Count> countList) throws ParseException {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         int prevDateAmount = 0;
         boolean isDaily = false;
@@ -314,8 +308,8 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 for (Count count : countList) {
                     if (dateFormat.parse(
                             count.getDate()).after(previousDate) &&
-                        dateFormat.parse(count.getDate()).before(endDate
-                        )) {
+                            dateFormat.parse(count.getDate()).before(endDate
+                            )) {
                         sum = sum + count.getCount();
                     }
                 }
@@ -334,11 +328,10 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @Override
-    public PaginationResult getAppNotInstalledDevices(PaginationRequest request, String packageName,
-                                                      String version)
+    public PaginationResult getAppNotInstalledDevices(PaginationRequest request, String packageName, String version)
             throws ReportManagementException, DeviceTypeNotFoundException {
         PaginationResult paginationResult = new PaginationResult();
-        if (StringUtils.isBlank(packageName)) {
+        if(StringUtils.isBlank(packageName)){
             String msg = "Error, application package name is not given";
             log.error(msg);
             throw new ReportManagementException(msg);
@@ -374,10 +367,10 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 return paginationResult;
             } catch (SQLException e) {
                 String msg = "Error occurred while opening a connection " +
-                             "to the data source";
+                        "to the data source";
                 log.error(msg, e);
                 throw new ReportManagementException(msg, e);
-            } finally {
+            }  finally {
                 DeviceManagementDAOFactory.closeConnection();
             }
 
