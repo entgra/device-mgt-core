@@ -29,7 +29,7 @@ class UngroupedDevices extends React.Component {
       window.location.origin +
       config.serverConfig.invoker.uri +
       config.serverConfig.invoker.deviceMgt +
-      '/reports/android/ungrouped-device?&groupName=BYOD&groupName=COPE';
+      '/reports/android/ungrouped-device?groupName=BYOD&groupName=COPE&';
 
     return (
       <div>

@@ -822,10 +822,15 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
                                 "DEVICE.NAME AS DEVICE_NAME, " +
                                 "DEVICE_TYPE.NAME AS DEVICE_TYPE, " +
                                 "DEVICE.DESCRIPTION, " +
-                                "DEVICE.DEVICE_IDENTIFICATION " +
-                         "FROM DM_DEVICE AS DEVICE " +
-                                    "INNER JOIN DM_DEVICE_TYPE AS DEVICE_TYPE ON DEVICE.ID = " +
-                         "DEVICE_TYPE.ID " +
+                                "DEVICE.DEVICE_IDENTIFICATION, " +
+                                "ENROLMENT.ID AS ENROLMENT_ID, " +
+                                "ENROLMENT.OWNER, " +
+                                "ENROLMENT.OWNERSHIP, " +
+                                "ENROLMENT.DATE_OF_ENROLMENT, " +
+                                "ENROLMENT.DATE_OF_LAST_UPDATE, " +
+                                "ENROLMENT.STATUS " +
+                         "FROM DM_DEVICE AS DEVICE, DM_DEVICE_TYPE AS DEVICE_TYPE, DM_ENROLMENT " +
+                         "AS ENROLMENT " +
                          "WHERE DEVICE.ID NOT IN " +
                                 "(SELECT DEVICE_ID " +
                                 "FROM DM_DEVICE_GROUP_MAP " +
@@ -837,7 +842,7 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
             ResultSet resultSet = stmt.executeQuery();
             groupUnassignedDeviceList = new ArrayList<>();
             while (resultSet.next()) {
-                Device device = DeviceManagementDAOUtil.loadUnGroupedDevice(resultSet);
+                Device device = DeviceManagementDAOUtil.loadDevice(resultSet);
                 groupUnassignedDeviceList.add(device);
             }
 
