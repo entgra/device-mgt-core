@@ -812,41 +812,32 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
     }
 
     @Override
-    public List<Device> getGroupUnassignedDevices(PaginationRequest paginationRequest) throws GroupManagementDAOException{
+    public List<Device> getGroupUnassignedDevices(PaginationRequest paginationRequest,
+                                                  List<String> groupName)
+            throws GroupManagementDAOException {
         List<Device> groupUnassignedDeviceList;
         try {
             Connection connection = GroupManagementDAOFactory.getConnection();
-            String sql =
-                    "SELECT " +
-                        "A.ID, " +
-                        "A.GROUP_NAME, " +
-                        "B.DEVICE_ID, " +
-                        "C.NAME AS DEVICE_TYPE, " +
-                        "D.ID AS DEVICE_ID, " +
-                        "D.NAME AS DEVICE_NAME, " +
-                        "D.DESCRIPTION," +
-                        "D.DEVICE_IDENTIFICATION, " +
-                        "F.OWNERSHIP AS OWNER,  " +
-                        "F.DATE_OF_ENROLMENT, " +
-                        "F.DATE_OF_LAST_UPDATE, " +
-                        "F.STATUS, " +
-                        "F.ID AS ENROLMENT_ID " +
-                    "FROM DM_GROUP AS A " +
-                        "INNER JOIN DM_DEVICE_GROUP_MAP AS B ON A.ID = B.GROUP_ID " +
-                        "INNER JOIN DM_DEVICE_TYPE AS C ON B.DEVICE_ID = C.ID " +
-                        "INNER JOIN DM_DEVICE AS D ON D.ID = C.ID " +
-                        "INNER JOIN DM_ENROLMENT AS F ON F.DEVICE_ID = D.ID " +
-                    "WHERE NOT D.ID IN (SELECT ID FROM DM_GROUP WHERE GROUP_NAME NOT IN (?, ?))";
-
+            String sql = "SELECT DEVICE.ID AS DEVICE_ID, " +
+                                "DEVICE.NAME AS DEVICE_NAME, " +
+                                "DEVICE_TYPE.NAME AS DEVICE_TYPE, " +
+                                "DEVICE.DESCRIPTION, " +
+                                "DEVICE.DEVICE_IDENTIFICATION " +
+                         "FROM DM_DEVICE AS DEVICE " +
+                                    "INNER JOIN DM_DEVICE_TYPE AS DEVICE_TYPE ON DEVICE.ID = " +
+                         "DEVICE_TYPE.ID " +
+                         "WHERE DEVICE.ID NOT IN " +
+                                "(SELECT DEVICE_ID " +
+                                "FROM DM_DEVICE_GROUP_MAP " +
+                                "WHERE GROUP_ID IN (SELECT ID FROM DM_GROUP WHERE GROUP_NAME NOT IN (?, ?)))";
 
             PreparedStatement stmt = connection.prepareStatement(sql);
-            stmt.setInt(1, paginationRequest.getRowCount());
-            stmt.setInt(2, paginationRequest.getStartIndex());
-
+            stmt.setString(1, groupName.get(0));
+            stmt.setString(2, groupName.get(1));
             ResultSet resultSet = stmt.executeQuery();
             groupUnassignedDeviceList = new ArrayList<>();
             while (resultSet.next()) {
-                Device device = DeviceManagementDAOUtil.loadDevice(resultSet);
+                Device device = DeviceManagementDAOUtil.loadUnGroupedDevice(resultSet);
                 groupUnassignedDeviceList.add(device);
             }
 

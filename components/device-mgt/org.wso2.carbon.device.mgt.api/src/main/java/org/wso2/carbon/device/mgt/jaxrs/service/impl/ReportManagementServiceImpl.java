@@ -256,7 +256,8 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             PaginationRequest request = new PaginationRequest(offset, limit);
             DeviceList deviceList = new DeviceList();
             request.setDeviceType(deviceType);
-            PaginationResult paginationResult = DeviceMgtAPIUtils.getReportManagementService().getDeviceNotAssignedToGroups(request);
+            PaginationResult paginationResult =
+                    DeviceMgtAPIUtils.getReportManagementService().getDeviceNotAssignedToGroups(request, groupName);
 
             if (paginationResult.getData().isEmpty()) {
                 return Response.status(Response.Status.OK).entity("Enrolled devices are " +

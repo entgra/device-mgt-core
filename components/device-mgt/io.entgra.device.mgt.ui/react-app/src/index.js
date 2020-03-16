@@ -150,6 +150,11 @@ const routes = [
         component: EncryptionStatus,
         exact: true,
       },
+      {
+        path: '/entgra/reports/ungrouped-device',
+        component: UngroupedDevices,
+        exact: true,
+      },
     ],
   },
 ];

@@ -334,5 +334,6 @@ public interface GroupDAO {
  * @throws GroupManagementDAOException
  */
 
-List<Device> getGroupUnassignedDevices(PaginationRequest paginationRequest) throws GroupManagementDAOException;
+List<Device> getGroupUnassignedDevices(PaginationRequest paginationRequest,
+                                       List<String> groupName) throws GroupManagementDAOException;
 }

@@ -393,43 +393,43 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @Override
-    public PaginationResult getDeviceNotAssignedToGroups(PaginationRequest paginationRequest)
+    public PaginationResult getDeviceNotAssignedToGroups(PaginationRequest paginationRequest ,
+                                                         List<String> groupName)
             throws ReportManagementException {
         PaginationResult paginationResult = new PaginationResult();
         try {
             int tenantId = DeviceManagementDAOUtil.getTenantId();
-            paginationRequest = DeviceManagerUtil.validateDeviceListPageSize(paginationRequest);
+            DeviceManagerUtil.validateDeviceListPageSize(paginationRequest);
             String deviceType = paginationRequest.getDeviceType();
-            DeviceType deviceTypeObj = DeviceManagerUtil.getDeviceType(
-                    deviceType, tenantId);
+            DeviceType deviceTypeObj = DeviceManagerUtil.getDeviceType(deviceType, tenantId);
             if (deviceTypeObj == null) {
                 String msg = "Error, device of type: " + deviceType + " does not exist";
                 log.error(msg);
             }
             try {
                 GroupManagementDAOFactory.openConnection();
-                List<Device> devices = groupDAO.getGroupUnassignedDevices(paginationRequest);
+                List<Device> devices = groupDAO.getGroupUnassignedDevices(paginationRequest , groupName);
                 paginationResult.setData(devices);
                 return paginationResult;
             } catch (SQLException e) {
-                String msg = "Error occurred while opening a connection " +
-                             "to the data source";
+                String msg = "Error occurred while opening a connection to the data source";
                 log.error(msg, e);
                 throw new ReportManagementException(msg, e);
             } catch (GroupManagementDAOException e) {
-                e.printStackTrace();
+                String msg = "Error occurred while retrieving ungrouped devices";
+                log.error(msg, e);
+                throw new ReportManagementException(msg, e);
             } finally {
                 GroupManagementDAOFactory.closeConnection();
             }
-        } catch (DeviceManagementDAOException e) {
-            String msg = "Error occurred while retrieving Tenant ID";
-            log.error(msg, e);
-            throw new ReportManagementException(msg, e);
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while validating device list page size";
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred while retrieving Tenant ID";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
         }
-        return paginationResult;
     }
 }

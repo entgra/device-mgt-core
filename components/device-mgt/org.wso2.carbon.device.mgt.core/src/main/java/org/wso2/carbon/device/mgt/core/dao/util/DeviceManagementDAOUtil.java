@@ -266,4 +266,14 @@ public final class DeviceManagementDAOUtil {
         return deviceLocationHistory;
     }
 
+    public static Device loadUnGroupedDevice(ResultSet rs) throws SQLException {
+        Device device = new Device();
+        device.setId(rs.getInt("DEVICE_ID"));
+        device.setName(rs.getString("DEVICE_NAME"));
+        device.setDescription(rs.getString("DESCRIPTION"));
+        device.setType(rs.getString("DEVICE_TYPE"));
+        device.setDeviceIdentifier(rs.getString("DEVICE_IDENTIFICATION"));
+        return device;
+    }
+
 }

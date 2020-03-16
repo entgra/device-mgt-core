@@ -85,6 +85,7 @@ public interface ReportManagementService {
     PaginationResult getAppNotInstalledDevices(PaginationRequest request, String packageName, String version)
             throws ReportManagementException, DeviceTypeNotFoundException;
 
-    PaginationResult getDeviceNotAssignedToGroups(PaginationRequest paginationRequest)
+    PaginationResult getDeviceNotAssignedToGroups(PaginationRequest paginationRequest,
+                                                  List<String> groupName)
             throws ReportManagementException;
 }
