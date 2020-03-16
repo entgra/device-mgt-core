@@ -21,6 +21,7 @@ package org.wso2.carbon.device.mgt.core.dao.impl;
 import org.apache.solr.common.StringUtils;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.GroupPaginationRequest;
+import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.group.mgt.DeviceGroup;
 import org.wso2.carbon.device.mgt.core.dao.GroupDAO;
 import org.wso2.carbon.device.mgt.core.dao.GroupManagementDAOException;
@@ -808,5 +809,47 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
                     + " which belongs to the given group name.", e);
         }
         return devices;
+    }
+
+    @Override
+    public List<Device> getGroupUnassignedDevices(PaginationRequest paginationRequest,
+                                                  List<String> groupName)
+            throws GroupManagementDAOException {
+        List<Device> groupUnassignedDeviceList;
+        try {
+            Connection connection = GroupManagementDAOFactory.getConnection();
+            String sql = "SELECT DEVICE.ID AS DEVICE_ID, " +
+                                "DEVICE.NAME AS DEVICE_NAME, " +
+                                "DEVICE_TYPE.NAME AS DEVICE_TYPE, " +
+                                "DEVICE.DESCRIPTION, " +
+                                "DEVICE.DEVICE_IDENTIFICATION, " +
+                                "ENROLMENT.ID AS ENROLMENT_ID, " +
+                                "ENROLMENT.OWNER, " +
+                                "ENROLMENT.OWNERSHIP, " +
+                                "ENROLMENT.DATE_OF_ENROLMENT, " +
+                                "ENROLMENT.DATE_OF_LAST_UPDATE, " +
+                                "ENROLMENT.STATUS " +
+                         "FROM DM_DEVICE AS DEVICE, DM_DEVICE_TYPE AS DEVICE_TYPE, DM_ENROLMENT " +
+                         "AS ENROLMENT " +
+                         "WHERE DEVICE.ID NOT IN " +
+                                "(SELECT DEVICE_ID " +
+                                "FROM DM_DEVICE_GROUP_MAP " +
+                                "WHERE GROUP_ID IN (SELECT ID FROM DM_GROUP WHERE GROUP_NAME NOT IN (?, ?)))";
+
+            PreparedStatement stmt = connection.prepareStatement(sql);
+            stmt.setString(1, groupName.get(0));
+            stmt.setString(2, groupName.get(1));
+            ResultSet resultSet = stmt.executeQuery();
+            groupUnassignedDeviceList = new ArrayList<>();
+            while (resultSet.next()) {
+                Device device = DeviceManagementDAOUtil.loadDevice(resultSet);
+                groupUnassignedDeviceList.add(device);
+            }
+
+        } catch (SQLException e) {
+            throw new GroupManagementDAOException("Error occurred while retrieving information of" +
+                                                  " group unassigned devices", e);
+        }
+        return groupUnassignedDeviceList;
     }
 }

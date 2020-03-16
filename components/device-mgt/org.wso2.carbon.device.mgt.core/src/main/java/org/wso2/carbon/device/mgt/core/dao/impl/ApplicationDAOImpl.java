@@ -301,8 +301,6 @@ public class ApplicationDAOImpl implements ApplicationDAO {
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, request.getDeviceType());
                 stmt.setInt(2, tenantId);
-                stmt.setInt(3, request.getRowCount());
-                stmt.setInt(4, request.getStartIndex());
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
                         application = loadApplication(rs);

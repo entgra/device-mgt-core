@@ -35,7 +35,6 @@ import org.wso2.carbon.device.mgt.jaxrs.service.api.ReportManagementService;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.RequestValidationUtil;
 import org.wso2.carbon.device.mgt.jaxrs.util.DeviceMgtAPIUtils;
 
-import javax.validation.constraints.Size;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -238,6 +237,40 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
         } catch (ReportManagementException e) {
             String msg = "Error occurred while retrieving device list";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
+    @GET
+    @Path("/{device-type}/ungrouped-device")
+    public Response getUngroupedDevices(
+            @PathParam("device-type") String deviceType,
+            @DefaultValue("0")
+            @QueryParam("groupName") List<String> groupName,
+            @QueryParam("offset") int offset,
+            @DefaultValue("10")
+            @QueryParam("limit") int limit) {
+        try {
+            RequestValidationUtil.validatePaginationParameters(offset, limit);
+            PaginationRequest request = new PaginationRequest(offset, limit);
+            DeviceList deviceList = new DeviceList();
+            request.setDeviceType(deviceType);
+            PaginationResult paginationResult =
+                    DeviceMgtAPIUtils.getReportManagementService().getDeviceNotAssignedToGroups(request, groupName);
+
+            if (paginationResult.getData().isEmpty()) {
+                return Response.status(Response.Status.OK).entity("Enrolled devices are " +
+                                                                  "assigned to groups").build();
+            } else {
+                deviceList.setList((List<Device>) paginationResult.getData());
+                deviceList.setCount(paginationResult.getRecordsTotal());
+                return Response.status(Response.Status.OK).entity(deviceList).build();
+            }
+
+        } catch (ReportManagementException e) {
+            String msg = "Error occurred while retrieving device list that are unassigned to " +
+                         "groups";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }

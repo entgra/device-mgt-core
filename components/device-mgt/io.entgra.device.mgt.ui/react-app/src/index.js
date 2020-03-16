@@ -32,6 +32,7 @@ import AppNotInstalledDevicesReport from './scenes/Home/scenes/Reports/scenes/Ap
 import Geo from './scenes/Home/scenes/Geo';
 import EncryptionStatus from './scenes/Home/scenes/Reports/scenes/EncryptionStatus';
 import OutdatedOSversionReport from './scenes/Home/scenes/Reports/scenes/OutdatedOSVersion';
+import UngroupedDevices from './scenes/Home/scenes/Reports/scenes/UngroupedDevices';
 
 const routes = [
   {
@@ -115,11 +116,6 @@ const routes = [
         exact: true,
       },
       {
-        path: '/entgra/reports/expired-devices',
-        component: OutdatedOSversionReport,
-        exact: true,
-      },
-      {
         path: '/entgra/reports/enrollment-type',
         component: EnrollmentTypeReport,
         exact: true,
@@ -137,6 +133,11 @@ const routes = [
       {
         path: '/entgra/reports/app-not-installed',
         component: AppNotInstalledDevicesReport,
+        exact: true,
+      },
+      {
+        path: '/entgra/reports/ungrouped-device',
+        component: UngroupedDevices,
         exact: true,
       },
       {

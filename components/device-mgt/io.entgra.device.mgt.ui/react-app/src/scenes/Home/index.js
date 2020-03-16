@@ -201,7 +201,7 @@ class Home extends React.Component {
               </Switch>
             </Content>
 
-            <Footer style={{ textAlign: 'center' }}>©2019 entgra.io</Footer>
+            <Footer style={{ textAlign: 'center' }}>©2020 entgra.io</Footer>
           </Layout>
         </Layout>
       </div>

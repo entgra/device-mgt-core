@@ -35,6 +35,9 @@ import org.wso2.carbon.device.mgt.common.report.mgt.ReportManagementService;
 import org.wso2.carbon.device.mgt.core.dao.DeviceDAO;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOException;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOFactory;
+import org.wso2.carbon.device.mgt.core.dao.GroupDAO;
+import org.wso2.carbon.device.mgt.core.dao.GroupManagementDAOException;
+import org.wso2.carbon.device.mgt.core.dao.GroupManagementDAOFactory;
 import org.wso2.carbon.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.util.DeviceManagerUtil;
@@ -56,9 +59,11 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     private static final Log log = LogFactory.getLog(ReportManagementServiceImpl.class);
 
     private DeviceDAO deviceDAO;
+    private GroupDAO groupDAO;
 
     public ReportManagementServiceImpl() {
         this.deviceDAO = DeviceManagementDAOFactory.getDeviceDAO();
+        this.groupDAO = GroupManagementDAOFactory.getGroupDAO();
     }
 
     @Override
@@ -160,12 +165,12 @@ public class ReportManagementServiceImpl implements ReportManagementService {
 
     @Override
     public PaginationResult getDevicesExpiredByOSVersion(PaginationRequest request)
-            throws ReportManagementException, BadRequestException {
+            throws ReportManagementException, DeviceTypeNotFoundException {
         if (request == null ||
             StringUtils.isBlank(request.getDeviceType()) ||
-            request.getProperties() == null ||
-            !request.getProperties().containsKey(Constants.OS_VERSION) ||
-            StringUtils.isBlank((String) request.getProperty(Constants.OS_VERSION))) {
+            !request.getProperties().containsKey(Constants.OS_BUILD_DATE) ||
+            (Long) request.getProperty(Constants.OS_BUILD_DATE) == 0) {
+
             String msg = "Error Invalid data received from the request.\n" +
                          "osVersion and device type cannot be null or empty.";
             log.error(msg);
@@ -177,7 +182,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             String msg = "Error Invalid device type:" + deviceType + " received. Valid device types " +
                          "are android and ios.";
             log.error(msg);
-            throw new BadRequestException(msg);
+            throw new ReportManagementException(msg);
         }
 
         try {
@@ -185,30 +190,28 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             PaginationResult paginationResult = new PaginationResult();
             DeviceManagerUtil.validateDeviceListPageSize(request);
 
-            String osVersion = (String) request.getProperty(Constants.OS_VERSION);
-            Long osVersionValue = DeviceManagerUtil.generateOSVersionValue(osVersion);
-            if (osVersionValue == null){
-                String msg = "Failed to generate OS value, received OS version: " + osVersion +
-                             " is in incorrect format([0-9]+([.][0-9]+)*) or version is invalid.";
+            DeviceType deviceTypeObj = DeviceManagerUtil.getDeviceType(
+                    deviceType, tenantId);
+            if (deviceTypeObj == null) {
+                String msg = "Error, device of type: " + deviceType + " does not exist";
                 log.error(msg);
-                throw new BadRequestException(msg);
+                throw new DeviceTypeNotFoundException(msg);
             }
-            request.setProperty(Constants.OS_VALUE, osVersionValue);
 
             try {
                 DeviceManagementDAOFactory.openConnection();
-
-                List<Device> devices = deviceDAO.getDevicesExpiredByOSVersion(
-                        request, tenantId);
+                List<Device> devices = deviceDAO.getDevicesExpiredByOSVersion(request, tenantId);
                 int deviceCount = deviceDAO.getCountOfDeviceExpiredByOSVersion(
-                        deviceType, osVersionValue, tenantId);
+                        deviceType,
+                        (Long) request.getProperty(Constants.OS_BUILD_DATE),
+                        tenantId);
                 paginationResult.setData(devices);
                 paginationResult.setRecordsFiltered(devices.size());
                 paginationResult.setRecordsTotal(deviceCount);
 
                 return paginationResult;
             } catch (SQLException e) {
-                String msg = "Error occurred while opening a connection to the data source.";
+                String msg = "Error occurred while opening a connection to the data source";
                 log.error(msg, e);
                 throw new ReportManagementException(msg, e);
             } finally {
@@ -216,12 +219,12 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             }
 
         } catch (DeviceManagementDAOException e) {
-            String msg = "Error occurred while retrieving expired devices by a OS version " +
-                         "for the tenant.";
+            String msg = "Error occurred while retrieving expired devices by a OS build date " +
+                         "for the tenant";
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
         } catch (DeviceManagementException e) {
-            String msg = "Error occurred while validating the request.";
+            String msg = "Error occurred while validating the request";
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
         }
@@ -371,6 +374,47 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 DeviceManagementDAOFactory.closeConnection();
             }
 
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while validating device list page size";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred while retrieving Tenant ID";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        }
+    }
+
+    @Override
+    public PaginationResult getDeviceNotAssignedToGroups(PaginationRequest paginationRequest ,
+                                                         List<String> groupName)
+            throws ReportManagementException {
+        PaginationResult paginationResult = new PaginationResult();
+        try {
+            int tenantId = DeviceManagementDAOUtil.getTenantId();
+            DeviceManagerUtil.validateDeviceListPageSize(paginationRequest);
+            String deviceType = paginationRequest.getDeviceType();
+            DeviceType deviceTypeObj = DeviceManagerUtil.getDeviceType(deviceType, tenantId);
+            if (deviceTypeObj == null) {
+                String msg = "Error, device of type: " + deviceType + " does not exist";
+                log.error(msg);
+            }
+            try {
+                GroupManagementDAOFactory.openConnection();
+                List<Device> devices = groupDAO.getGroupUnassignedDevices(paginationRequest , groupName);
+                paginationResult.setData(devices);
+                return paginationResult;
+            } catch (SQLException e) {
+                String msg = "Error occurred while opening a connection to the data source";
+                log.error(msg, e);
+                throw new ReportManagementException(msg, e);
+            } catch (GroupManagementDAOException e) {
+                String msg = "Error occurred while retrieving ungrouped devices";
+                log.error(msg, e);
+                throw new ReportManagementException(msg, e);
+            } finally {
+                GroupManagementDAOFactory.closeConnection();
+            }
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while validating device list page size";
             log.error(msg, e);
