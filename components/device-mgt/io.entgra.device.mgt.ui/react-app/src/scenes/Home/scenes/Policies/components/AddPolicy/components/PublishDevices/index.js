@@ -9,10 +9,6 @@ class PublishDevices extends React.Component {
     this.config = this.props.context;
   }
 
-  onHandlePrev() {
-    this.props.getPrevStep();
-  }
-
   render() {
     const { getFieldDecorator } = this.props.form;
     return (
@@ -35,10 +31,7 @@ class PublishDevices extends React.Component {
         </Form.Item>
         <Col span={16} offset={18}>
           <div style={{ marginTop: 24 }}>
-            <Button
-              style={{ marginRight: 8 }}
-              onClick={() => this.onHandlePrev()}
-            >
+            <Button style={{ marginRight: 8 }} onClick={this.props.getPrevStep}>
               Back
             </Button>
             <Button type="primary" style={{ marginRight: 8 }}>

@@ -27,14 +27,6 @@ class SelectPolicyType extends React.Component {
     this.fetchPolicies();
   }
 
-  onHandlePrev() {
-    this.props.getPrevStep();
-  }
-
-  onHandleContinue() {
-    this.props.getNextStep();
-  }
-
   fetchPolicies = () => {
     let apiUrl =
       window.location.origin +
@@ -130,13 +122,10 @@ class SelectPolicyType extends React.Component {
         </div>
         <Col span={16} offset={20}>
           <div style={{ marginTop: 24 }}>
-            <Button
-              style={{ marginRight: 8 }}
-              onClick={() => this.onHandlePrev()}
-            >
+            <Button style={{ marginRight: 8 }} onClick={this.props.getPrevStep}>
               Back
             </Button>
-            <Button type="primary" onClick={() => this.onHandleContinue()}>
+            <Button type="primary" onClick={this.props.getNextStep}>
               Continue
             </Button>
           </div>

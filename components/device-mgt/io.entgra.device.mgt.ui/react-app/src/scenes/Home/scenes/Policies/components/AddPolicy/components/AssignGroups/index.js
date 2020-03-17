@@ -21,14 +21,6 @@ class AssignGroups extends React.Component {
     this.getGroupsList();
   }
 
-  onHandlePrev() {
-    this.props.getPrevStep();
-  }
-
-  onHandleContinue() {
-    this.props.getNextStep();
-  }
-
   handleSetUserRoleFormItem = event => {
     if (event.target.value === 'roleSelector') {
       this.roleSelector.current.style.cssText = 'display: block;';
@@ -50,16 +42,8 @@ class AssignGroups extends React.Component {
       .get(apiURL)
       .then(res => {
         if (res.status === 200) {
-          const roles = [];
-          for (let i = 0; i < res.data.data.roles.length; i++) {
-            roles.push(
-              <Option key={res.data.data.roles[i]}>
-                {res.data.data.roles[i]}
-              </Option>,
-            );
-          }
           this.setState({
-            roles,
+            roles: res.data.data.roles,
           });
         }
       })
@@ -91,13 +75,7 @@ class AssignGroups extends React.Component {
       .get(apiURL)
       .then(res => {
         if (res.status === 200) {
-          let user = JSON.parse(res.data.data);
-          let users = [];
-          for (let i = 0; i < user.length; i++) {
-            users.push(
-              <Option key={user[i].username}>{user[i].username}</Option>,
-            );
-          }
+          let users = JSON.parse(res.data.data);
           this.setState({
             users,
           });
@@ -131,16 +109,8 @@ class AssignGroups extends React.Component {
       .get(apiUrl)
       .then(res => {
         if (res.status === 200) {
-          let groups = [];
-          for (let i = 0; i < res.data.data.deviceGroups.length; i++) {
-            groups.push(
-              <Option key={res.data.data.deviceGroups[i].name}>
-                {res.data.data.deviceGroups[i].name}
-              </Option>,
-            );
-          }
           this.setState({
-            groups,
+            groups: res.data.data.deviceGroups,
           });
         }
       })
@@ -184,7 +154,11 @@ class AssignGroups extends React.Component {
                   defaultActiveFirstOption={true}
                 >
                   <Option value={'ANY'}>Any</Option>
-                  {this.state.roles}
+                  {this.state.roles.map(role => (
+                    <Option key={role} value={role}>
+                      {role}
+                    </Option>
+                  ))}
                 </Select>,
               )}
             </Form.Item>
@@ -201,7 +175,11 @@ class AssignGroups extends React.Component {
                   style={{ width: '100%' }}
                   onSearch={this.getUsersList}
                 >
-                  {this.state.users}
+                  {this.state.users.map(user => (
+                    <Option key={user.username} value={user.username}>
+                      {user.username}
+                    </Option>
+                  ))}
                 </Select>,
               )}
             </Form.Item>
@@ -211,19 +189,20 @@ class AssignGroups extends React.Component {
           {getFieldDecorator('deviceGroups', {})(
             <Select mode="multiple" style={{ width: '100%' }}>
               <Option value={'NONE'}>NONE</Option>
-              {this.state.groups}
+              {this.state.groups.map(group => (
+                <Option key={group.name} value={group.name}>
+                  {group.name}
+                </Option>
+              ))}
             </Select>,
           )}
         </Form.Item>
         <Col span={16} offset={20}>
           <div style={{ marginTop: 24 }}>
-            <Button
-              style={{ marginRight: 8 }}
-              onClick={() => this.onHandlePrev()}
-            >
+            <Button style={{ marginRight: 8 }} onClick={this.props.getPrevStep}>
               Back
             </Button>
-            <Button type="primary" onClick={() => this.onHandleContinue()}>
+            <Button type="primary" onClick={this.props.getNextStep}>
               Continue
             </Button>
           </div>
