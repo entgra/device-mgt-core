@@ -114,30 +114,30 @@ class AddPolicy extends React.Component {
               >
                 <ConfigureProfile
                   policyUIConfigurationsList={policyUIConfigurationsList}
-                  getPrevStep={() => this.getPrevStep()}
-                  getNextStep={() => this.getNextStep()}
+                  getPrevStep={this.getPrevStep}
+                  getNextStep={this.getNextStep}
                 />
               </div>
               <div
                 style={{ display: currentStepIndex === 2 ? 'unset' : 'none' }}
               >
                 <SelectPolicyType
-                  getPrevStep={() => this.getPrevStep()}
-                  getNextStep={() => this.getNextStep()}
+                  getPrevStep={this.getPrevStep}
+                  getNextStep={this.getNextStep}
                 />
               </div>
               <div
                 style={{ display: currentStepIndex === 3 ? 'unset' : 'none' }}
               >
                 <AssignGroups
-                  getPrevStep={() => this.getPrevStep()}
-                  getNextStep={() => this.getNextStep()}
+                  getPrevStep={this.getPrevStep}
+                  getNextStep={this.getNextStep}
                 />
               </div>
               <div
                 style={{ display: currentStepIndex === 4 ? 'unset' : 'none' }}
               >
-                <PublishDevices getPrevStep={() => this.getPrevStep()} />
+                <PublishDevices getPrevStep={this.getPrevStep} />
               </div>
             </Card>
           </Col>
