@@ -66,7 +66,7 @@ const routes = [
         exact: true,
       },
       {
-        path: '/entgra/geo',
+        path: '/entgra/geo/history/:deviceType/:deviceIdentifier',
         component: Geo,
         exact: true,
       },
