@@ -27,6 +27,7 @@ import UsersDevices from './components/UserDevices';
 import AddUser from './components/AddUser';
 import UserActions from './components/UserActions';
 import Filter from '../../../../components/Filter';
+import ExternalDevicesModal from './components/ExternalDevicesModal';
 const ButtonGroup = Button.Group;
 
 let apiUrl;
@@ -224,6 +225,7 @@ class UsersTable extends React.Component {
         title: 'First Name',
         dataIndex: 'firstname',
         key: 'firstname',
+        width: 200,
       },
       {
         title: 'Last Name',
@@ -259,6 +261,12 @@ class UsersTable extends React.Component {
             </Button>
           </ButtonGroup>
         ),
+      },
+      {
+        title: 'External Device Claims',
+        dataIndex: 'claims',
+        key: 'claims',
+        render: (id, row) => <ExternalDevicesModal user={row.username} />,
       },
       {
         title: 'Action',
