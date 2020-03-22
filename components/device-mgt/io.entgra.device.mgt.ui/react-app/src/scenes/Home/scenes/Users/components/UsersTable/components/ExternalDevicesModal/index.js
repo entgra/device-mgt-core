@@ -19,24 +19,16 @@
 import React from 'react';
 import {
   Button,
-  Divider,
   Form,
-  Icon,
   Input,
   message,
   Modal,
   notification,
-  Popconfirm,
-  Select,
-  Tooltip,
-  Typography,
   Col,
   Row,
 } from 'antd';
 import axios from 'axios';
 import { withConfigContext } from '../../../../../../../../components/ConfigContext';
-const { Option } = Select;
-const { Text } = Typography;
 const InputGroup = Input.Group;
 
 class ExternalDevicesModal extends React.Component {
@@ -153,16 +145,9 @@ class ExternalDevicesModal extends React.Component {
   render() {
     const { getFieldDecorator } = this.props.form;
     const { metaData } = this.state;
-
-    const data = [['aa', 'ww']];
     return (
       <div>
         <div>
-          {/* <Tooltip placement="top" title={'Edit User'}>*/}
-          {/*  <a>*/}
-          {/*    <Icon type="edit" onClick={this.openDeviceEditModal} />*/}
-          {/*  </a>*/}
-          {/* </Tooltip>*/}
           <Button
             type="primary"
             size={'small'}

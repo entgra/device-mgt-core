@@ -42,7 +42,6 @@ import Roles from './scenes/Home/scenes/Roles';
 import DeviceTypes from './scenes/Home/scenes/DeviceTypes';
 import Certificates from './scenes/Home/scenes/Configurations/scenes/Certificates';
 import Devices from './scenes/Home/scenes/Devices';
-import UserConfigurations from "./scenes/Home/scenes/Configurations/scenes/UserConfigurations";
 
 const routes = [
   {
@@ -108,11 +107,6 @@ const routes = [
       {
         path: '/entgra/configurations/certificates',
         component: Certificates,
-        exact: true,
-      },
-      {
-        path: '/entgra/configurations/user-configurations',
-        component: UserConfigurations,
         exact: true,
       },
       {

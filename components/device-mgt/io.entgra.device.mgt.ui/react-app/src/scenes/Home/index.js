@@ -155,11 +155,6 @@ class Home extends React.Component {
                       <span>Certificates</span>
                     </Link>
                   </Menu.Item>
-                  <Menu.Item key="user-configurations">
-                    <Link to="/entgra/configurations/user-configurations">
-                      <span>User Configurations</span>
-                    </Link>
-                  </Menu.Item>
                 </SubMenu>
                 <Menu.Item className="profile" key="Notifications">
                   <Link to="/entgra/notifications">

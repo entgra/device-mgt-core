@@ -1030,7 +1030,7 @@ public interface UserManagementService {
     @ApiResponses(value = {
             @ApiResponse(
                     code = 200,
-                    message = "OK. \n Successfully fetched the details of the specified user.",
+                    message = "OK. \n Successfully updated external device claims of user.",
                     response = BasicUserInfo.class,
                     responseHeaders = {
                             @ResponseHeader(
@@ -1046,16 +1046,8 @@ public interface UserManagementService {
                                             "Used by caches, or in conditional requests."),
                     }),
             @ApiResponse(
-                    code = 304,
-                    message = "Not Modified. \n Empty body because the client already has the latest version of the " +
-                            "requested resource."),
-            @ApiResponse(
                     code = 404,
                     message = "Not Found. \n The specified resource does not exist.",
-                    response = ErrorResponse.class),
-            @ApiResponse(
-                    code = 406,
-                    message = "Not Acceptable.\n The requested media type is not supported",
                     response = ErrorResponse.class),
             @ApiResponse(
                     code = 500,
@@ -1098,7 +1090,7 @@ public interface UserManagementService {
     @ApiResponses(value = {
             @ApiResponse(
                     code = 200,
-                    message = "OK. \n Successfully fetched the details of the specified user.",
+                    message = "OK. \n Successfully fetched external device claims of user.",
                     response = BasicUserInfo.class,
                     responseHeaders = {
                             @ResponseHeader(
@@ -1114,16 +1106,8 @@ public interface UserManagementService {
                                             "Used by caches, or in conditional requests."),
                     }),
             @ApiResponse(
-                    code = 304,
-                    message = "Not Modified. \n Empty body because the client already has the latest version of the " +
-                            "requested resource."),
-            @ApiResponse(
                     code = 404,
                     message = "Not Found. \n The specified resource does not exist.",
-                    response = ErrorResponse.class),
-            @ApiResponse(
-                    code = 406,
-                    message = "Not Acceptable.\n The requested media type is not supported",
                     response = ErrorResponse.class),
             @ApiResponse(
                     code = 500,
@@ -1162,7 +1146,7 @@ public interface UserManagementService {
     @ApiResponses(value = {
             @ApiResponse(
                     code = 200,
-                    message = "OK. \n Successfully fetched the details of the specified user.",
+                    message = "OK. \n Successfully deleted external device claims of user.",
                     response = BasicUserInfo.class,
                     responseHeaders = {
                             @ResponseHeader(
@@ -1178,16 +1162,8 @@ public interface UserManagementService {
                                             "Used by caches, or in conditional requests."),
                     }),
             @ApiResponse(
-                    code = 304,
-                    message = "Not Modified. \n Empty body because the client already has the latest version of the " +
-                            "requested resource."),
-            @ApiResponse(
                     code = 404,
                     message = "Not Found. \n The specified resource does not exist.",
-                    response = ErrorResponse.class),
-            @ApiResponse(
-                    code = 406,
-                    message = "Not Acceptable.\n The requested media type is not supported",
                     response = ErrorResponse.class),
             @ApiResponse(
                     code = 500,
