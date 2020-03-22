@@ -923,7 +923,7 @@ public class UserManagementServiceImpl implements UserManagementService {
 
     @PUT
     @Override
-    @Path("/claims/update/{username}")
+    @Path("/claims/{username}")
     public Response updateUserClaimsForDevices(
             @PathParam("username") String username,
             @QueryParam("domain") String domain,
@@ -985,7 +985,7 @@ public class UserManagementServiceImpl implements UserManagementService {
 
     @DELETE
     @Override
-    @Path("/claims/delete/{username}")
+    @Path("/claims/{username}")
     public Response deleteUserClaimsForDevices(
             @PathParam("username") String username,
             @QueryParam("domain") String domain) {

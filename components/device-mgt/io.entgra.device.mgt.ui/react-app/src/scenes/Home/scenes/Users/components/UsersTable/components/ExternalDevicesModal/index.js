@@ -95,7 +95,7 @@ class ExternalDevicesModal extends React.Component {
       window.location.origin +
       this.config.serverConfig.invoker.uri +
       this.config.serverConfig.invoker.deviceMgt +
-      `/users/claims/update/${userName}`;
+      `/users/claims/${userName}`;
 
     axios
       .put(apiURL, payload)

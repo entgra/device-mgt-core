@@ -1013,7 +1013,7 @@ public interface UserManagementService {
             @HeaderParam("If-Modified-Since") String ifModifiedSince);
 
     @PUT
-    @Path("/claims/update/{username}")
+    @Path("/claims/{username}")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "PUT",
@@ -1129,7 +1129,7 @@ public interface UserManagementService {
             @QueryParam("domain") String domain);
 
     @DELETE
-    @Path("/claims/delete/{username}")
+    @Path("/claims/{username}")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "DELETE",
