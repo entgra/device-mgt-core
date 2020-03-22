@@ -5,9 +5,7 @@ import SimChangedTable from './components/SimChangedTable';
 
 import { Breadcrumb, Icon, PageHeader, DatePicker, Radio } from 'antd';
 import { Link } from 'react-router-dom';
-import DeviceSelect from "./components/DeviceSelect";
-
-let config = null;
+import DeviceSelect from './components/DeviceSelect';
 
 const { RangePicker } = DatePicker;
 
@@ -17,16 +15,15 @@ class SimChanged extends React.Component {
   constructor(props) {
     super(props);
     this.routes = props.routes;
-    config = this.props.context;
     this.state = {
       api: 'devices',
       dateFilters: {
         from: null,
-        to: null
+        to: null,
       },
       deviceId: null,
-      devicesListAll: null
-    }
+      devicesListAll: null,
+    };
   }
 
   handleRangePickerChange = (value, dateString) => {
@@ -36,22 +33,22 @@ class SimChanged extends React.Component {
     this.setState(dateFilters);
   };
 
-  handleApiRadioChange = (e) => {
+  handleApiRadioChange = e => {
     let api = e.target.value;
     this.setState({
-      api: api
+      api: api,
     });
   };
 
-  handleDeviceChange = (e) => {
+  handleDeviceChange = e => {
     this.setState({
-      deviceId: e
-    })
+      deviceId: e,
+    });
   };
 
-  handleDevices = (e) => {
+  handleDevices = e => {
     this.setState({
-      devicesListAll: e
+      devicesListAll: e,
     });
   };
 
@@ -77,31 +74,37 @@ class SimChanged extends React.Component {
           </Breadcrumb>
           <div className="wrap" style={{ marginBottom: '10px' }}>
             <Radio.Group
-                defaultValue="devices"
-                style={{ marginBottom: 8, marginRight: 5 }}
-                onChange={this.handleApiRadioChange}
+              defaultValue="devices"
+              style={{ marginBottom: 8, marginRight: 5 }}
+              onChange={this.handleApiRadioChange}
             >
               <Radio.Button value="devices">Specific Device</Radio.Button>
               <Radio.Button value="all">All Devices</Radio.Button>
             </Radio.Group>
             <RangePicker
-                format="YYYY/MM/DD"
-                onChange={this.handleRangePickerChange}
-                style={{ marginBottom: 8, marginRight: 5 }}
+              format="YYYY/MM/DD"
+              onChange={this.handleRangePickerChange}
+              style={{ marginBottom: 8, marginRight: 5 }}
             />
-            {
-              this.state.api === 'devices' ?
-                  <DeviceSelect
-                      style={{ marginBottom: 8, marginRight: 5 }}
-                      value={this.onChange}
-                      onDeviceChange={this.handleDeviceChange}
-                      devices={this.handleDevices}
-                  /> : false
-            }
+            {this.state.api === 'devices' ? (
+              <DeviceSelect
+                style={{ marginBottom: 8, marginRight: 5 }}
+                value={this.onChange}
+                onDeviceChange={this.handleDeviceChange}
+                devices={this.handleDevices}
+              />
+            ) : (
+              false
+            )}
           </div>
           <div className="wrap" style={{ marginBottom: '10px' }}>
             <div style={{ backgroundColor: '#ffffff', borderRadius: 5 }}>
-              <SimChangedTable dateFilters={dateFilters} api={api} deviceId={deviceId} devicesListAll={devicesListAll} />
+              <SimChangedTable
+                dateFilters={dateFilters}
+                api={api}
+                deviceId={deviceId}
+                devicesListAll={devicesListAll}
+              />
             </div>
           </div>
         </PageHeader>

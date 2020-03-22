@@ -96,6 +96,6 @@
     "build_dev": "cross-env NODE_ENV=development webpack -d --watch ",
     "server": "node-env-run server --exec nodemon | pino-colada",
     "dev2": "run-p server start",
-    "lint": "eslint \"src/**/*.js\""
+    "lint": "eslint \"src/**/*.js\" --fix"
   }
 }
