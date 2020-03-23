@@ -1018,7 +1018,7 @@ public interface UserManagementService {
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "PUT",
             value = "Updating external device claims of user",
-            notes = "Update external device claims of a user registered with WSO2 IoTS using the REST API.",
+            notes = "Update external device claims of a user registered with Entgra IoTS using the REST API.",
             response = BasicUserInfo.class,
             tags = "User Management",
             extensions = {
@@ -1064,8 +1064,7 @@ public interface UserManagementService {
             @PathParam("username") String username,
             @ApiParam(
                     name = "domain",
-                    value = "The domain name of the user store.",
-                    required = false)
+                    value = "The domain name of the user store.")
             @QueryParam("domain") String domain,
             @ApiParam(
                     name = "device list",
@@ -1078,7 +1077,7 @@ public interface UserManagementService {
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
             value = "Getting external device claims of user",
-            notes = "Get external device claims of a user registered with WSO2 IoTS using the REST API.",
+            notes = "Get external device claims of a user registered with Entgra IoTS using the REST API.",
             response = BasicUserInfo.class,
             tags = "User Management",
             extensions = {
@@ -1124,8 +1123,7 @@ public interface UserManagementService {
             @PathParam("username") String username,
             @ApiParam(
                     name = "domain",
-                    value = "The domain name of the user store.",
-                    required = false)
+                    value = "The domain name of the user store.")
             @QueryParam("domain") String domain);
 
     @DELETE
@@ -1134,7 +1132,7 @@ public interface UserManagementService {
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "DELETE",
             value = "Deleting external device claims of user",
-            notes = "Delete external device claims of user registered with WSO2 IoTS using the REST API.",
+            notes = "Delete external device claims of user registered with Entgra IoTS using the REST API.",
             response = BasicUserInfo.class,
             tags = "User Management",
             extensions = {
@@ -1180,7 +1178,6 @@ public interface UserManagementService {
             @PathParam("username") String username,
             @ApiParam(
                     name = "domain",
-                    value = "The domain name of the user store.",
-                    required = false)
+                    value = "The domain name of the user store.")
             @QueryParam("domain") String domain);
 }

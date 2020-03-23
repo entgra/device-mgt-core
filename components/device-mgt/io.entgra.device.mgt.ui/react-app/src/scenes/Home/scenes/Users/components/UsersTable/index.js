@@ -115,8 +115,6 @@ class UsersTable extends React.Component {
             data: res.data.data.users,
             pagination,
           });
-
-          console.log(res.data.data);
         }
       })
       .catch(error => {

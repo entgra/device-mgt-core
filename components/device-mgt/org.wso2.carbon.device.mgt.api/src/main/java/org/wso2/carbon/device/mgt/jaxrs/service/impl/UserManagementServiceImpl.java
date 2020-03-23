@@ -929,7 +929,7 @@ public class UserManagementServiceImpl implements UserManagementService {
             @QueryParam("domain") String domain,
             JsonArray deviceList) {
         if (!StringUtils.isBlank(domain)) {
-            username = domain + '/' + username;
+            username = domain + Constants.FORWARD_SLASH + username;
         }
         try {
             UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
@@ -960,7 +960,7 @@ public class UserManagementServiceImpl implements UserManagementService {
             @PathParam("username") String username,
             @QueryParam("domain") String domain) {
         if (!StringUtils.isBlank(domain)) {
-            username = domain + '/' + username;
+            username = domain + Constants.FORWARD_SLASH + username;
         }
         try {
             UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
@@ -1027,6 +1027,16 @@ public class UserManagementServiceImpl implements UserManagementService {
         return defaultUserClaims;
     }
 
+    /**
+     * This method is used to build String map for user claims with updated external device details
+     *
+     * @param username username of the particular user
+     * @param domain domain of the particular user
+     * @param deviceList Array of external device details
+     * @param userStoreManager {@link UserStoreManager} instance
+     * @return String map
+     * @throws UserStoreException If any error occurs while calling into UserStoreManager service
+     */
     private Map<String, String> buildExternalDevicesUserClaims(
             String username,
             String domain,

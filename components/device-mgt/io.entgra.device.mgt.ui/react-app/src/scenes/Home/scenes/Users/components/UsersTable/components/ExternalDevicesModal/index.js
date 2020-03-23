@@ -21,7 +21,6 @@ import {
   Button,
   Form,
   Input,
-  message,
   Modal,
   notification,
   Col,
@@ -29,6 +28,7 @@ import {
 } from 'antd';
 import axios from 'axios';
 import { withConfigContext } from '../../../../../../../../components/ConfigContext';
+import { handleApiError } from '../../../../../../../../services/utils/errorHandler';
 const InputGroup = Input.Group;
 
 class ExternalDevicesModal extends React.Component {
@@ -65,7 +65,7 @@ class ExternalDevicesModal extends React.Component {
       .get(apiURL)
       .then(res => {
         if (res.status === 200) {
-          if (res.data.data['http://wso2.org/claims/devices']) {
+          if (res.data.data.hasOwnProperty('http://wso2.org/claims/devices')) {
             this.setState({
               metaData: JSON.parse(
                 res.data.data['http://wso2.org/claims/devices'],
@@ -75,18 +75,10 @@ class ExternalDevicesModal extends React.Component {
         }
       })
       .catch(error => {
-        if (error.hasOwnProperty('response') && error.response.status === 401) {
-          // todo display a popop with error
-
-          message.error('You are not logged in');
-          window.location.href = window.location.origin + '/entgra/login';
-        } else {
-          notification.error({
-            message: 'There was a problem',
-            duration: 0,
-            description: 'Error occurred while trying to load roles.',
-          });
-        }
+        handleApiError(
+          error,
+          'Error occurred while trying to retrieve claims.',
+        );
       });
   };
 
@@ -112,25 +104,13 @@ class ExternalDevicesModal extends React.Component {
         });
       })
       .catch(error => {
-        if (error.hasOwnProperty('response') && error.response.status === 401) {
-          // todo display a popop with error
-
-          message.error('You are not logged in');
-          window.location.href = window.location.origin + '/entgra/login';
-        } else {
-          notification.error({
-            message: 'There was a problem',
-            duration: 0,
-            description: 'Error occurred while trying to load roles.',
-          });
-        }
+        handleApiError(error, 'Error occurred while trying to update claims.');
       });
   };
 
-  handleEditOk = e => {
+  onSubmitClaims = e => {
     this.props.form.validateFields(['meta'], (err, values) => {
       if (!err) {
-        console.log(this.state.metaData);
         this.setExternalDevicesForUser(this.props.user, this.state.metaData);
       }
     });
@@ -138,7 +118,55 @@ class ExternalDevicesModal extends React.Component {
 
   addNewMetaData = () => {
     this.setState({
-      metaData: this.state.metaData.concat({ deviceName: '', id: '' }),
+      metaData: [...this.state.metaData, { deviceName: '', id: '' }],
+    });
+  };
+
+  buildInputGroup = metaData => {
+    metaData.map((data, index) => {
+      return (
+        <InputGroup key={index}>
+          <Row gutter={8}>
+            <Col span={5}>
+              <Input
+                placeholder="key"
+                defaultValue={data.deviceName}
+                onChange={e => {
+                  metaData[index].deviceName = e.currentTarget.value;
+                  this.setState({
+                    metaData,
+                  });
+                }}
+              />
+            </Col>
+            <Col span={8}>
+              <Input
+                placeholder="value"
+                defaultValue={data.id}
+                onChange={e => {
+                  metaData[index].id = e.currentTarget.value;
+                  this.setState({
+                    metaData,
+                  });
+                }}
+              />
+            </Col>
+            <Col span={3}>
+              <Button
+                type="dashed"
+                shape="circle"
+                icon="minus"
+                onClick={() => {
+                  metaData.splice(index, 1);
+                  this.setState({
+                    metaData,
+                  });
+                }}
+              />
+            </Col>
+          </Row>
+        </InputGroup>
+      );
     });
   };
 
@@ -162,13 +190,13 @@ class ExternalDevicesModal extends React.Component {
             title="EDIT EXTERNAL DEVICE CLAIMS"
             width="40%"
             visible={this.state.isDeviceEditModalVisible}
-            onOk={this.handleEditOk}
+            onOk={this.onSubmitClaims}
             onCancel={this.onCancelHandler}
             footer={[
               <Button key="cancel" onClick={this.onCancelHandler}>
                 Cancel
               </Button>,
-              <Button key="submit" type="primary" onClick={this.handleEditOk}>
+              <Button key="submit" type="primary" onClick={this.onSubmitClaims}>
                 Update
               </Button>,
             ]}
@@ -230,7 +258,7 @@ class ExternalDevicesModal extends React.Component {
                         icon="plus"
                         onClick={this.addNewMetaData}
                       >
-                        Add
+                        Addd
                       </Button>
                     </div>,
                   )}
@@ -245,5 +273,5 @@ class ExternalDevicesModal extends React.Component {
 }
 
 export default withConfigContext(
-  Form.create({ name: 'user-actions' })(ExternalDevicesModal),
+  Form.create({ name: 'external-device-modal' })(ExternalDevicesModal),
 );

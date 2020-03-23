@@ -52,6 +52,7 @@ public class Constants {
 	public static final String JDBC_USERSTOREMANAGER = "org.wso2.carbon.user.core.jdbc.JDBCUserStoreManager";
 	public static final String DEFAULT_SIMPLE_DATE_FORMAT = "EEE, d MMM yyyy HH:mm:ss Z";
 	public static final int DEFAULT_PAGE_LIMIT = 50;
+	public static final String FORWARD_SLASH = "/";
 
 
 	public final class ErrorMessages {
