@@ -122,54 +122,6 @@ class ExternalDevicesModal extends React.Component {
     });
   };
 
-  buildInputGroup = metaData => {
-    metaData.map((data, index) => {
-      return (
-        <InputGroup key={index}>
-          <Row gutter={8}>
-            <Col span={5}>
-              <Input
-                placeholder="key"
-                defaultValue={data.deviceName}
-                onChange={e => {
-                  metaData[index].deviceName = e.currentTarget.value;
-                  this.setState({
-                    metaData,
-                  });
-                }}
-              />
-            </Col>
-            <Col span={8}>
-              <Input
-                placeholder="value"
-                defaultValue={data.id}
-                onChange={e => {
-                  metaData[index].id = e.currentTarget.value;
-                  this.setState({
-                    metaData,
-                  });
-                }}
-              />
-            </Col>
-            <Col span={3}>
-              <Button
-                type="dashed"
-                shape="circle"
-                icon="minus"
-                onClick={() => {
-                  metaData.splice(index, 1);
-                  this.setState({
-                    metaData,
-                  });
-                }}
-              />
-            </Col>
-          </Row>
-        </InputGroup>
-      );
-    });
-  };
-
   render() {
     const { getFieldDecorator } = this.props.form;
     const { metaData } = this.state;
