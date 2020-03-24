@@ -72,6 +72,7 @@ import org.wso2.carbon.user.api.RealmConfiguration;
 import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.api.UserStoreManager;
+import org.wso2.carbon.user.core.UserCoreConstants;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.CarbonUtils;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
@@ -926,12 +927,16 @@ public class UserManagementServiceImpl implements UserManagementService {
     @Path("/claims/{username}")
     public Response updateUserClaimsForDevices(
             @PathParam("username") String username,
-            @QueryParam("domain") String domain,
             JsonArray deviceList) {
-        if (!StringUtils.isBlank(domain)) {
-            username = domain + Constants.FORWARD_SLASH + username;
-        }
         try {
+            RealmConfiguration realmConfiguration = PrivilegedCarbonContext.getThreadLocalCarbonContext()
+                    .getUserRealm()
+                    .getRealmConfiguration();
+            String domain = realmConfiguration
+                    .getUserStoreProperty(UserCoreConstants.RealmConfig.PROPERTY_DOMAIN_NAME);
+            if (!StringUtils.isBlank(domain)) {
+                username = domain + Constants.FORWARD_SLASH + username;
+            }
             UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
             if (!userStoreManager.isExistingUser(username)) {
                 if (log.isDebugEnabled()) {
@@ -957,12 +962,16 @@ public class UserManagementServiceImpl implements UserManagementService {
     @Override
     @Path("/claims/{username}")
     public Response getUserClaimsForDevices(
-            @PathParam("username") String username,
-            @QueryParam("domain") String domain) {
-        if (!StringUtils.isBlank(domain)) {
-            username = domain + Constants.FORWARD_SLASH + username;
-        }
+            @PathParam("username") String username) {
         try {
+            RealmConfiguration realmConfiguration = PrivilegedCarbonContext.getThreadLocalCarbonContext()
+                    .getUserRealm()
+                    .getRealmConfiguration();
+            String domain = realmConfiguration
+                    .getUserStoreProperty(UserCoreConstants.RealmConfig.PROPERTY_DOMAIN_NAME);
+            if (!StringUtils.isBlank(domain)) {
+                username = domain + Constants.FORWARD_SLASH + username;
+            }
             UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
             if (!userStoreManager.isExistingUser(username)) {
                 if (log.isDebugEnabled()) {
@@ -987,9 +996,16 @@ public class UserManagementServiceImpl implements UserManagementService {
     @Override
     @Path("/claims/{username}")
     public Response deleteUserClaimsForDevices(
-            @PathParam("username") String username,
-            @QueryParam("domain") String domain) {
+            @PathParam("username") String username) {
         try {
+            RealmConfiguration realmConfiguration = PrivilegedCarbonContext.getThreadLocalCarbonContext()
+                    .getUserRealm()
+                    .getRealmConfiguration();
+            String domain = realmConfiguration
+                    .getUserStoreProperty(UserCoreConstants.RealmConfig.PROPERTY_DOMAIN_NAME);
+            if (!StringUtils.isBlank(domain)) {
+                username = domain + Constants.FORWARD_SLASH + username;
+            }
             UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
             if (!userStoreManager.isExistingUser(username)) {
                 if (log.isDebugEnabled()) {
@@ -1000,7 +1016,10 @@ public class UserManagementServiceImpl implements UserManagementService {
                                 "User doesn't exist.").build()).build();
             }
             String[] claimArray = {Constants.USER_CLAIM_DEVICES};
-            userStoreManager.deleteUserClaimValues(username, claimArray, domain);
+            userStoreManager.deleteUserClaimValues(
+                    username,
+                    claimArray,
+                    domain);
             return Response.status(Response.Status.OK).entity(claimArray).build();
         } catch (UserStoreException e) {
             String msg = "Error occurred while deleting external device claims of the user '" + username + "'";

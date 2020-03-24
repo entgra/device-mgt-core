@@ -1063,10 +1063,6 @@ public interface UserManagementService {
                     defaultValue = "admin")
             @PathParam("username") String username,
             @ApiParam(
-                    name = "domain",
-                    value = "The domain name of the user store.")
-            @QueryParam("domain") String domain,
-            @ApiParam(
                     name = "device list",
                     value = "Array of objects with device details",
                     required = true) JsonArray deviceList);
@@ -1120,11 +1116,7 @@ public interface UserManagementService {
                     value = "Provide the username of the user.",
                     required = true,
                     defaultValue = "admin")
-            @PathParam("username") String username,
-            @ApiParam(
-                    name = "domain",
-                    value = "The domain name of the user store.")
-            @QueryParam("domain") String domain);
+            @PathParam("username") String username);
 
     @DELETE
     @Path("/claims/{username}")
@@ -1175,9 +1167,5 @@ public interface UserManagementService {
                     value = "Provide the username of the user.",
                     required = true,
                     defaultValue = "admin")
-            @PathParam("username") String username,
-            @ApiParam(
-                    name = "domain",
-                    value = "The domain name of the user store.")
-            @QueryParam("domain") String domain);
+            @PathParam("username") String username);
 }
