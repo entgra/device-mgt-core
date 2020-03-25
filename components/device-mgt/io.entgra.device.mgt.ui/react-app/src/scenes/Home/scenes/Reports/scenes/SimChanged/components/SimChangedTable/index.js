@@ -22,7 +22,7 @@ import axios from 'axios';
 
 import { withConfigContext } from '../../../../../../../../components/ConfigContext';
 
-import { Icon, Table, Tooltip } from 'antd';
+import { Icon, Table, Tooltip, notification, message } from 'antd';
 import moment from 'moment';
 import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
@@ -30,9 +30,8 @@ import { REPORTING_HOST } from '../../../../../../../../services/utils/constants
 import { handleApiError } from '../../../../../../../../services/utils/errorHandler';
 
 let config = null;
-let api, startTime, endTime;
 
-const columnsSimChanged = [
+const columns = [
   {
     title: 'Device',
     dataIndex: 'deviceName',
@@ -96,57 +95,39 @@ class SimChangedTable extends React.Component {
     this.state = {
       data: [],
       pagination: {},
-      loading: false,
+      isLoading: false,
       selectedRows: [],
       paramsObj: {},
       deviceId: null,
-      devicesListAll: null,
+      deviceDataComplete: null,
+      pageableData: {
+        totalCount: null,
+        pageSize: 10,
+        pageNumber: 0,
+      },
     };
   }
 
-  componentDidMount() {
-    api = this.props.api;
-    startTime = this.props.dateFilters.from;
-    endTime = this.props.dateFilters.to;
-    switch (api) {
-      case 'all':
-        if (startTime != null && endTime != null) {
-          this.fetchData();
-        }
-        break;
-      case 'devices':
-        if (
-          startTime != null &&
-          endTime != null &&
-          this.props.deviceId != null
-        ) {
-          this.fetchData();
-        }
-        break;
-      default:
-        break;
-    }
-  }
-
   componentDidUpdate(prevProps, prevState, snapshot) {
-    if (
-      prevProps.dateFilters !== this.props.dateFilters ||
-      prevProps.api !== this.props.api
-    ) {
-      api = this.props.api;
-      startTime = this.props.dateFilters.from;
-      endTime = this.props.dateFilters.to;
-      switch (api) {
+    const { dateFilters, deviceFilters } = this.props;
+    let reportType = 'all';
+    if (prevProps.deviceDataComplete != this.props.deviceDataComplete) {
+      this.setState({
+        deviceDataComplete: this.props.deviceDataComplete,
+      });
+    }
+    if (prevProps != this.props) {
+      switch (reportType) {
         case 'all':
-          if (startTime != null && endTime != null) {
+          if (dateFilters.from != null && dateFilters.to != null) {
             this.fetchData();
           }
           break;
         case 'devices':
           if (
-            startTime != null &&
-            endTime != null &&
-            this.props.deviceId != null
+            dateFilters.from != null &&
+            dateFilters.to != null &&
+            deviceFilters.deviceId != null
           ) {
             this.fetchData();
           }
@@ -154,51 +135,47 @@ class SimChangedTable extends React.Component {
         default:
           break;
       }
-      this.setState({
-        devicesListAll: this.props.devicesListAll,
-      });
     }
   }
 
   handleTableChange = (pagination, filters, sorter) => {
     const pager = { ...this.state.pagination };
     pager.current = pagination.current;
+    const pageableData = this.state.pageableData;
+    pageableData.pageNumber = pager.current - 1;
     this.setState({
       pagination: pager,
+      pageableData: pageableData,
     });
-    this.fetchData({
-      results: pagination.pageSize,
-      page: pagination.current,
-      sortField: sorter.field,
-      sortOrder: sorter.order,
-      ...filters,
-    });
+    this.fetchData();
   };
 
-  fetchData = () => {
-    api = this.props.api;
-    startTime = this.props.dateFilters.from;
-    endTime = this.props.dateFilters.to;
-    let url = REPORTING_HOST + '/sim-changed/' + api;
-
-    if (api === 'devices') {
-      let deviceId = this.props.deviceId;
+  fetchData() {
+    const { dateFilters, deviceFilters } = this.props;
+    let reportType;
+    if (deviceFilters.deviceId == 'all') {
+      reportType = 'all';
+    } else {
+      reportType = 'devices';
+    }
+    let url = REPORTING_HOST + '/sim-changed/' + reportType;
+    if (reportType == 'devices') {
+      let deviceId = deviceFilters.deviceId;
       if (deviceId != null) {
-        url += '/' + this.props.deviceId;
+        url += '/' + deviceFilters.deviceId;
       }
     }
 
-    if (startTime != null && endTime != null) {
+    if (dateFilters.from != null && dateFilters.to != null) {
       let config = {
         headers: {
           tenantId: '0',
-          'Access-Control-Allow-Origin': '*',
         },
         params: {
-          startTime: startTime,
-          endTime: endTime,
-          count: 25,
-          offset: 0,
+          startTime: dateFilters.from,
+          endTime: dateFilters.to,
+          count: this.state.pageableData.pageSize,
+          offset: this.state.pageableData.pageNumber,
         },
       };
 
@@ -206,27 +183,50 @@ class SimChangedTable extends React.Component {
         .get(url, config)
         .then(res => {
           if (res.status === 200) {
-            const pagination = { ...this.state.pagination };
             this.setState({
-              loading: false,
+              isLoading: false,
               data: res.data.content,
-              pagination,
+              pageableData: {
+                totalCount: res.data.totalElements,
+                pageSize: res.data.pageable.pageSize,
+                pageNumber: res.data.pageable.pageNumber,
+              },
             });
           }
         })
         .catch(error => {
-          if (error.response.status == 404) {
-            handleApiError(error, error.response.data.message);
+          if (!error.response) {
+            notification.error({
+              message: 'There was a problem',
+              duration: 0,
+              description:
+                'Error occurred while trying to load non compliance feature list.'
+            });
+          } else {
+            if (
+              error.hasOwnProperty('response') &&
+              error.response.status === 401
+            ) {
+              message.error('You are not logged in');
+              window.location.href = window.location.origin + '/entgra/login';
+            }
+            if (
+              error.hasOwnProperty('response') &&
+              error.response.status == 404
+            ) {
+              handleApiError(error, error.response.data.message);
+            }
           }
         });
     }
-  };
+  }
 
   render() {
-    let { data, pagination, loading, devicesListAll } = this.state;
-    let dataAll = [];
+    let { data, pagination, isLoading, deviceDataComplete } = this.state;
+    let devicesData = [];
     let deviceName;
     let deviceType;
+    let rowKey = 0;
 
     /**
      * This map is used to merge the device names with deviceData from device
@@ -235,14 +235,18 @@ class SimChangedTable extends React.Component {
      * @var deviceData: contains device info from report-gen api (doesnt have device name)
      * @var device: contains device info from device-mgt api (contains device name)
      * **/
-    data.map(deviceData => {
-      devicesListAll.map(device => {
+    data.forEach(deviceData => {
+      deviceDataComplete.forEach(device => {
         if (device.deviceIdentifier === deviceData.deviceId) {
           deviceName = device.name;
           deviceType = device.type;
+        } else {
+          deviceName = deviceData.deviceId;
+          deviceType = null;
         }
       });
-      dataAll.push({
+      devicesData.push({
+        key: ++rowKey,
         deviceName: deviceName,
         deviceType: deviceType,
         dateOfChange: deviceData.dateOfChange,
@@ -254,18 +258,18 @@ class SimChangedTable extends React.Component {
     return (
       <div>
         <Table
-          columns={columnsSimChanged}
-          rowKey={record => record.id}
-          dataSource={dataAll}
+          columns={columns}
+          rowKey="key"
+          dataSource={devicesData}
           pagination={{
             ...pagination,
             size: 'small',
-            total: data.count,
+            total: this.state.pageableData.totalCount,
             showTotal: (total, range) =>
               `showing ${range[0]}-${range[1]} of ${total} devices`,
             showQuickJumper: true,
           }}
-          loading={loading}
+          isLoading={isLoading}
           onChange={this.handleTableChange}
           rowSelection={this.rowSelection}
         />

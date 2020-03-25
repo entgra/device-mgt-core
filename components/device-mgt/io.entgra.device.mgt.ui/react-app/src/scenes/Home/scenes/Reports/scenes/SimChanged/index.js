@@ -19,30 +19,42 @@
 import React from 'react';
 
 import { withConfigContext } from '../../../../../../components/ConfigContext';
-import { Breadcrumb, Icon, PageHeader, DatePicker, Radio } from 'antd';
+import { Breadcrumb, Icon, PageHeader, DatePicker } from 'antd';
 import { Link } from 'react-router-dom';
 
 import SimChangedTable from './components/SimChangedTable';
-import DeviceSelect from './components/DeviceSelect';
+import DeviceFilter from '../../components/DeviceFilter';
 
 const { RangePicker } = DatePicker;
 
 class SimChanged extends React.Component {
-  routes;
-
   constructor(props) {
     super(props);
-    this.routes = props.routes;
     this.state = {
-      api: 'devices',
+      reportType: 'devices',
+      deviceId: null,
+      deviceDataComplete: null,
+      deviceFilters: {
+        deviceStatus: null,
+        deviceType: null,
+        deviceId: null,
+      },
       dateFilters: {
         from: null,
         to: null,
       },
-      deviceId: null,
-      devicesListAll: null,
     };
   }
+
+  onDeviceFilterChange = deviceFilters => {
+    this.setState({
+      deviceFilters: {
+        deviceStatus: deviceFilters.deviceStatus,
+        deviceType: deviceFilters.deviceType,
+        deviceId: deviceFilters.deviceId,
+      },
+    });
+  };
 
   handleRangePickerChange = (value, dateString) => {
     let dateFilters = this.state.dateFilters;
@@ -51,31 +63,13 @@ class SimChanged extends React.Component {
     this.setState(dateFilters);
   };
 
-  handleApiRadioChange = e => {
-    let api = e.target.value;
-    this.setState({
-      api: api,
-    });
-  };
-
-  handleDeviceChange = e => {
-    this.setState({
-      deviceId: e,
-    });
-  };
-
   handleDevices = e => {
     this.setState({
-      devicesListAll: e,
+      deviceDataComplete: e,
     });
   };
 
   render() {
-    let api = this.state.api;
-    let dateFilters = { ...this.state.dateFilters };
-    let deviceId = this.state.deviceId;
-    let devicesListAll = this.state.devicesListAll;
-
     return (
       <div>
         <PageHeader style={{ paddingTop: 0 }}>
@@ -91,37 +85,22 @@ class SimChanged extends React.Component {
             <Breadcrumb.Item>Sim Changed Report</Breadcrumb.Item>
           </Breadcrumb>
           <div className="wrap" style={{ marginBottom: '10px' }}>
-            <Radio.Group
-              defaultValue="devices"
-              style={{ marginBottom: 8, marginRight: 5 }}
-              onChange={this.handleApiRadioChange}
-            >
-              <Radio.Button value="devices">Specific Device</Radio.Button>
-              <Radio.Button value="all">All Devices</Radio.Button>
-            </Radio.Group>
+            <DeviceFilter
+              devices={this.handleDevices}
+              onDeviceFilterChange={this.onDeviceFilterChange}
+            />
             <RangePicker
               format="YYYY/MM/DD"
               onChange={this.handleRangePickerChange}
               style={{ marginBottom: 8, marginRight: 5 }}
             />
-            {this.state.api === 'devices' ? (
-              <DeviceSelect
-                style={{ marginBottom: 8, marginRight: 5 }}
-                value={this.onChange}
-                onDeviceChange={this.handleDeviceChange}
-                devices={this.handleDevices}
-              />
-            ) : (
-              false
-            )}
           </div>
           <div className="wrap" style={{ marginBottom: '10px' }}>
             <div style={{ backgroundColor: '#ffffff', borderRadius: 5 }}>
               <SimChangedTable
-                dateFilters={dateFilters}
-                api={api}
-                deviceId={deviceId}
-                devicesListAll={devicesListAll}
+                dateFilters={this.state.dateFilters}
+                deviceDataComplete={this.state.deviceDataComplete}
+                deviceFilters={this.state.deviceFilters}
               />
             </div>
           </div>

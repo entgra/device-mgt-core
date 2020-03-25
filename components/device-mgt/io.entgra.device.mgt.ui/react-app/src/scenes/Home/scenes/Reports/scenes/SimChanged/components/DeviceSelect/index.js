@@ -21,14 +21,13 @@ import axios from 'axios';
 import { Select } from 'antd';
 import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
+import { withConfigContext } from '../../../../../../../../components/ConfigContext';
 
 const { Option } = Select;
 
 class DeviceSelect extends React.Component {
   constructor(props) {
     super(props);
-    // eslint-disable-next-line no-undef
-    config = this.props.context;
     TimeAgo.addLocale(en);
     this.state = {
       devices: [],
@@ -47,10 +46,13 @@ class DeviceSelect extends React.Component {
   }
 
   fetchData = () => {
+    const config = this.props.context;
     axios
       .get(
         window.location.origin +
-          '/entgra-ui-request-handler/invoke/device-mgt/v1.0/devices',
+          config.serverConfig.invoker.uri +
+          config.serverConfig.invoker.deviceMgt +
+          '/devices',
       )
       .then(res => {
         if (res.status === 200) {
@@ -82,4 +84,4 @@ class DeviceSelect extends React.Component {
   }
 }
 
-export default DeviceSelect;
+export default withConfigContext(DeviceSelect);
