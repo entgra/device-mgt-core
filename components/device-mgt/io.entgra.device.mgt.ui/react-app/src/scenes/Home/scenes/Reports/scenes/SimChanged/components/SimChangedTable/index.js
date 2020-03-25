@@ -200,7 +200,7 @@ class SimChangedTable extends React.Component {
               message: 'There was a problem',
               duration: 0,
               description:
-                'Error occurred while trying to load non compliance feature list.'
+                'Error occurred while trying to load non compliance feature list.',
             });
           } else {
             if (
