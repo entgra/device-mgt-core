@@ -45,6 +45,8 @@ const { TabPane } = Tabs;
 const { Option } = Select;
 const { TextArea } = Input;
 
+const subPanelpayloadAttributes = {};
+
 class ConfigureProfile extends React.Component {
   constructor(props) {
     super(props);
@@ -54,6 +56,8 @@ class ConfigureProfile extends React.Component {
       isDisplayMain: 'none',
       activePanelKeys: [],
       activeSubPanelKeys: [],
+      subFormList: [],
+      subPanelpayloadAttributes: {},
       count: 0,
       dataArray: [],
       customInputDataArray: [],
@@ -178,37 +182,37 @@ class ConfigureProfile extends React.Component {
     }
   };
 
-  handleCustomInputTable = event => {
-    const { count, customInputDataArray } = this.state;
-
-    const newData = [
-      {
-        key: count,
-        CERT_NAME: `${event.file.name}`,
-      },
-    ];
-    this.setState({
-      customInputDataArray: [...customInputDataArray, newData],
-      count: count + 1,
-    });
-  };
-
-  handleAdd = array => {
-    const { count, inputTableDataSources } = this.state;
-    const newData = [
-      {
-        key: count,
-      },
-    ];
-    inputTableDataSources[array].push(newData);
-    Object.defineProperty(inputTableDataSources, array, {
-      value: inputTableDataSources[array],
-    });
-    this.setState({
-      inputTableDataSources,
-      count: count + 1,
-    });
-  };
+  // handleCustomInputTable = event => {
+  //   const { count, customInputDataArray } = this.state;
+  //
+  //   const newData = [
+  //     {
+  //       key: count,
+  //       CERT_NAME: `${event.file.name}`,
+  //     },
+  //   ];
+  //   this.setState({
+  //     customInputDataArray: [...customInputDataArray, newData],
+  //     count: count + 1,
+  //   });
+  // };
+  //
+  // handleAdd = array => {
+  //   const { count, inputTableDataSources } = this.state;
+  //   const newData = [
+  //     {
+  //       key: count,
+  //     },
+  //   ];
+  //   inputTableDataSources[array].push(newData);
+  //   Object.defineProperty(inputTableDataSources, array, {
+  //     value: inputTableDataSources[array],
+  //   });
+  //   this.setState({
+  //     inputTableDataSources,
+  //     count: count + 1,
+  //   });
+  // };
 
   getColumns = ({ getFieldDecorator }, arr) => {
     const columnArray = [];
@@ -297,17 +301,72 @@ class ConfigureProfile extends React.Component {
 
   // generate payload by adding policy configurations
   onHandleContinue = (e, formname) => {
-    this.props.form.validateFields((err, values) => {
+    const allFields = this.props.form.getFieldsValue();
+    let activeFields = [];
+    console.log(this.state.activeSubPanelKeys);
+    console.log(subPanelpayloadAttributes);
+    // get currently active field list
+    for (let i = 0; i < this.state.activePanelKeys.length; i++) {
+      Object.keys(allFields).map(key => {
+        if (key.includes(`${this.state.activePanelKeys[i]}-`)) {
+          // console.log(key);
+          if (
+            subPanelpayloadAttributes.hasOwnProperty(
+              `${this.state.activePanelKeys[i]}`,
+            )
+          ) {
+            Object.keys(
+              subPanelpayloadAttributes[this.state.activePanelKeys[i]],
+            ).map(subPanel => {
+              if (`${this.state.activePanelKeys[i]}-${subPanel}` === true) {
+                console.log(`${this.state.activePanelKeys[i]}-${subPanel}`);
+                if (key.includes(`-${subPanel}-`)) {
+                  activeFields.push(key);
+                }
+              } else if (!key.includes(`-${subPanel}-`)) {
+                activeFields.push(key);
+              }
+            });
+          } else {
+            activeFields.push(key);
+          }
+
+          // activeFields.push(key);
+        }
+      });
+    }
+    console.log(activeFields);
+    // validate fields and get profile features list
+    this.props.form.validateFields(activeFields, (err, values) => {
       if (!err) {
-        this.props.getPolicyPayloadData(formname, values);
+        let profileFeaturesList = [];
+        for (let i = 0; i < this.state.activePanelKeys.length; i++) {
+          let content = {};
+          Object.entries(values).map(([key, value]) => {
+            if (key.includes(`${this.state.activePanelKeys[i]}-`)) {
+              content[
+                key.replace(`${this.state.activePanelKeys[i]}-`, '')
+              ] = value;
+            }
+          });
+          let feature = {
+            featureCode: this.state.activePanelKeys[i],
+            deviceType: 'android',
+            content: content,
+          };
+          profileFeaturesList.push(feature);
+        }
+        // console.log(profileFeaturesList);
+        this.props.getPolicyPayloadData(formname, profileFeaturesList);
         this.props.getNextStep();
       }
     });
   };
 
   // generate form items
-  getPanelItems = panel => {
+  getPanelItems = (panel, panelId) => {
     const { getFieldDecorator } = this.props.form;
+    const subPanelList = {};
     return panel.map((item, k) => {
       switch (item.type) {
         case 'select':
@@ -446,6 +505,10 @@ class ConfigureProfile extends React.Component {
           );
         case 'checkbox':
           if (item.optional.hasOwnProperty('subPanel')) {
+            // sdfgh[item.optional.subPanel.others.itemSwitch] =
+            //   item.optional.subPanel.others.itemPayload;
+            // console.log(sdfgh);
+            // console.log(item.optional.subPanel);
             return (
               <div key={k}>
                 <Collapse
@@ -477,9 +540,22 @@ class ConfigureProfile extends React.Component {
                     <div>
                       <div>
                         {item.optional.subPanel.map((panel, i) => {
+                          subPanelList[panel.others.itemSwitch] =
+                            panel.others.itemPayload;
+                          console.log();
+                          if (
+                            subPanelpayloadAttributes.hasOwnProperty(panelId)
+                          ) {
+                            Object.assign(
+                              subPanelpayloadAttributes[panelId],
+                              subPanelList,
+                            );
+                          } else {
+                            subPanelpayloadAttributes[panelId] = subPanelList;
+                          }
                           return (
                             <div key={i}>
-                              {this.getPanelItems(panel.panelItem)}
+                              {this.getPanelItems(panel.panelItem, panelId)}
                             </div>
                           );
                         })}
@@ -507,7 +583,6 @@ class ConfigureProfile extends React.Component {
               )}
             </Form.Item>
           );
-
         case 'textArea':
           return (
             <Form.Item
@@ -522,7 +597,9 @@ class ConfigureProfile extends React.Component {
               }
               style={{ display: 'block' }}
             >
-              {getFieldDecorator(`${item.id}`, {})(
+              {getFieldDecorator(`${item.id}`, {
+                initialValue: null,
+              })(
                 <TextArea
                   placeholder={item.optional.placeholder}
                   rows={item.optional.row}
@@ -679,6 +756,8 @@ class ConfigureProfile extends React.Component {
 
   render() {
     const { policyUIConfigurationsList } = this.props;
+    const { getFieldDecorator } = this.props.form;
+    // let aqwer = {};
     return (
       <div className="tab-container">
         <Tabs tabPosition={'left'} size={'large'}>
@@ -722,7 +801,17 @@ class ConfigureProfile extends React.Component {
                         >
                           {panel.hasOwnProperty('panelItem') && (
                             <div>
-                              <Form>{this.getPanelItems(panel.panelItem)}</Form>
+                              <Form name={panel.panelId}>
+                                <Form.Item style={{ display: 'none' }}>
+                                  {getFieldDecorator(`${panel.panelId}`, {
+                                    initialValue: ' ',
+                                  })(<Input />)}
+                                </Form.Item>
+                                {this.getPanelItems(
+                                  panel.panelItem,
+                                  panel.panelId,
+                                )}
+                              </Form>
                             </div>
                           )}
                           {panel.hasOwnProperty('subFormLists') && (
@@ -730,7 +819,12 @@ class ConfigureProfile extends React.Component {
                               {Object.values(panel.subFormLists).map(
                                 (form, i) => {
                                   return (
-                                    <Form key={i}>
+                                    <Form name={form.id} key={i}>
+                                      <Form.Item style={{ display: 'none' }}>
+                                        {getFieldDecorator(`${form.id}`, {
+                                          initialValue: ' ',
+                                        })(<Input />)}
+                                      </Form.Item>
                                       {this.getPanelItems(form.panelItem)}
                                     </Form>
                                   );
