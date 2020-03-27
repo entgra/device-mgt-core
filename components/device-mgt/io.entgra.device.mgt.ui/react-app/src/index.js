@@ -40,7 +40,7 @@ import Policies from './scenes/Home/scenes/Policies';
 import AddNewPolicy from './scenes/Home/scenes/Policies/scenes/AddNewPolicy';
 import Roles from './scenes/Home/scenes/Roles';
 import DeviceTypes from './scenes/Home/scenes/DeviceTypes';
-import Certificates from './scenes/Home/scenes/Certificates';
+import Certificates from './scenes/Home/scenes/Configurations/scenes/Certificates';
 import Devices from './scenes/Home/scenes/Devices';
 import ViewPolicy from './scenes/Home/scenes/Policies/scenes/ViewPolicy';
 import EditSelectedPolicy from './scenes/Home/scenes/Policies/scenes/EditSelectedPolicy';
@@ -67,7 +67,7 @@ const routes = [
         exact: true,
       },
       {
-        path: '/entgra/geo',
+        path: '/entgra/geo/history/:deviceType/:deviceIdentifier',
         component: Geo,
         exact: true,
       },
@@ -117,7 +117,7 @@ const routes = [
         exact: true,
       },
       {
-        path: '/entgra/certificates',
+        path: '/entgra/configurations/certificates',
         component: Certificates,
         exact: true,
       },
