@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2020, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
+ *
+ * Entgra (pvt) Ltd. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 import React from 'react';
 import {
   Alert,
@@ -38,11 +56,10 @@ class PolicyInfo extends React.Component {
       policyFeatureList: [],
       activePanelKeys: [],
       profilePreviewKey: '',
+      customInputDataArray: [],
+      inputTableDataSources: {},
+      isInfoPreview: false,
     };
-  }
-
-  componentDidMount() {
-    // this.setProfileInfo();
   }
 
   setProfileInfo = e => {
@@ -53,7 +70,6 @@ class PolicyInfo extends React.Component {
       activePolicies.push(element.featureCode);
       let featureData = JSON.parse(element.content);
       Object.keys(featureData).map(key => {
-        // let pattern = `${element.featureCode}.+${key}`;
         let regex = new RegExp(`${element.featureCode}.+${key}`, 'g');
         Object.keys(allFields).map(fieldName => {
           if (fieldName.match(regex) != null) {
@@ -414,7 +430,6 @@ class PolicyInfo extends React.Component {
                         {item.optional.subPanel.map((panel, i) => {
                           subPanelList[panel.others.itemSwitch] =
                             panel.others.itemPayload;
-                          console.log();
                           if (
                             subPanelpayloadAttributes.hasOwnProperty(panelId)
                           ) {
@@ -613,9 +628,10 @@ class PolicyInfo extends React.Component {
     });
   };
 
-  onPreview = () => {
+  onPreview = e => {
     this.setState({
       profilePreviewKey: 'profileInfo',
+      isInfoPreview: true,
     });
   };
 
@@ -623,21 +639,35 @@ class PolicyInfo extends React.Component {
     const { policyUIConfigurationsList } = this.props;
     const { getFieldDecorator } = this.props.form;
     return (
-      <div>
-        <Collapse bordered={false} activeKey={this.state.profilePreviewKey}>
+      <div style={{ marginTop: 20 }}>
+        <Row>
+          <Col span={4}>
+            <Title level={4}>Profile Information</Title>
+          </Col>
+          <Col span={16}>
+            <Button type="link" icon="eye" onClick={this.onPreview}>
+              <Text
+                style={{
+                  fontSize: 'small',
+                  display: this.state.isInfoPreview ? 'none' : 'inline',
+                }}
+              >
+                (Click to view policy information)
+              </Text>
+            </Button>
+          </Col>
+        </Row>
+        <Collapse
+          bordered={false}
+          activeKey={this.state.profilePreviewKey}
+          style={{ display: this.state.isInfoPreview ? 'block' : 'none' }}
+        >
           <Collapse.Panel
             key={'profileInfo'}
-            style={{ border: 0 }}
-            header={
-              <Row>
-                <Col span={4}>
-                  <Title level={4}>Profile Information</Title>
-                </Col>
-                <Col span={16}>
-                  <Button type="link" icon="eye"  onClick={this.onPreview} />
-                </Col>
-              </Row>
-            }
+            showArrow={false}
+            style={{
+              border: 0,
+            }}
           >
             <div className="tab-container">
               <Tabs

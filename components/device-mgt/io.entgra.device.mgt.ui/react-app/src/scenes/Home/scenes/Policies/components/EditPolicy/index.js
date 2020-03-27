@@ -63,13 +63,13 @@ class EditPolicy extends React.Component {
       policyTypeData,
       groupData,
     } = this.state.payloadData;
-    let profile = {
+    const profile = {
       profileName: publishDevicesData.policyName,
       deviceType: this.state.deviceType,
       profileFeaturesList: configureProfileData,
     };
 
-    let payload = {
+    const payload = {
       ...publishDevicesData,
       compliance: 'enforce',
       ownershipType: null,
@@ -77,7 +77,6 @@ class EditPolicy extends React.Component {
       profile: profile,
       ...groupData,
     };
-    console.log(payload);
     this.onEditPolicy(JSON.stringify(payload));
   };
 
@@ -154,7 +153,6 @@ class EditPolicy extends React.Component {
   };
 
   onEditPolicy = value => {
-    console.log(value);
     axios
       .put(
         window.location.origin +
@@ -183,7 +181,7 @@ class EditPolicy extends React.Component {
           notification.error({
             message: 'There was a problem',
             duration: 0,
-            description: 'Error occurred while trying to add New Policy.',
+            description: 'Error occurred while trying to Updated the Policy.',
           });
         }
       });

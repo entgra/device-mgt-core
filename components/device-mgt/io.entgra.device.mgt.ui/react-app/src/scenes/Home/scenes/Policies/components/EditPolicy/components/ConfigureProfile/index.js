@@ -53,16 +53,12 @@ class ConfigureProfile extends React.Component {
     this.config = this.props.context;
     this.state = {
       loading: false,
-      isDisplayMain: 'none',
       activePanelKeys: [],
       activeSubPanelKeys: [],
       subFormList: [],
       subPanelpayloadAttributes: {},
-      count: 0,
-      dataArray: [],
       customInputDataArray: [],
       inputTableDataSources: {},
-      addPolicyForms: null,
     };
   }
 

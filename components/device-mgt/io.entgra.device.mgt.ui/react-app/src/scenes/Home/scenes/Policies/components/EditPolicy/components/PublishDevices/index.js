@@ -26,7 +26,7 @@ class PublishDevices extends React.Component {
     this.config = this.props.context;
   }
 
-  onClickSavePolicy = (event, isPublish, formName) => {
+  onClickSavePolicy = (event, formName) => {
     this.props.form.validateFields((err, values) => {
       if (!err) {
         this.props.getPolicyPayloadData(formName, values);

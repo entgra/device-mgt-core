@@ -52,24 +52,16 @@ class AssignGroups extends React.Component {
   onHandleContinue = (e, formName) => {
     this.props.form.validateFields((err, values) => {
       if (!err) {
-        console.log(values);
-        console.log(typeof values.roles);
         if (typeof values.roles === 'string') {
           values.roles = [values.roles];
         }
         if (!values.users) {
-          // values.users = [];
           delete values.users;
         }
 
         if (values.deviceGroups === 'NONE') {
           delete values.deviceGroups;
         }
-
-        // let aaaaaa = {
-        //   users: values.users,
-        //   roles: values.roles,
-        // };
 
         this.props.getPolicyPayloadData(formName, values);
         this.props.getNextStep();

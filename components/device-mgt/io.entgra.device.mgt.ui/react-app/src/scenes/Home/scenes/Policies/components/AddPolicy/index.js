@@ -59,13 +59,13 @@ class AddPolicy extends React.Component {
       policyTypeData,
       groupData,
     } = this.state.payloadData;
-    let profile = {
+    const profile = {
       profileName: publishDevicesData.policyName,
       deviceType: selectedPlatformData.deviceType,
       profileFeaturesList: configureProfileData,
     };
 
-    let payload = {
+    const payload = {
       policyName: publishDevicesData.policyName,
       description: publishDevicesData.description,
       compliance: 'enforce',
@@ -117,7 +117,6 @@ class AddPolicy extends React.Component {
   };
 
   onAddNewPolicy = value => {
-    console.log(value);
     axios
       .post(
         window.location.origin +

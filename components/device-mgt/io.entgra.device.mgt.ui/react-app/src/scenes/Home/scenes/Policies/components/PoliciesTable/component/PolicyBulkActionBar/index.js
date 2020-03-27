@@ -66,11 +66,7 @@ class BulkActionBar extends React.Component {
     return (
       <div>
         <div style={{ padding: '8px' }}>
-          <Tooltip
-            placement="bottom"
-            title={'Apply Changes to Device'}
-            // autoAdjustOverflow={true}
-          >
+          <Tooltip placement="bottom" title={'Apply Changes to Device'}>
             <Popconfirm
               placement="topLeft"
               title={'Do you really want to apply changes to all policies?'}
@@ -83,7 +79,6 @@ class BulkActionBar extends React.Component {
                 shape="circle"
                 icon="check-circle"
                 size={'default'}
-                // onClick={this.onCheckPolicyStatus}
                 style={{ margin: '2px' }}
               />
             </Popconfirm>

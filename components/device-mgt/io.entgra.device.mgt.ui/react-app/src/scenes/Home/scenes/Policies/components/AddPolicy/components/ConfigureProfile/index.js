@@ -182,37 +182,37 @@ class ConfigureProfile extends React.Component {
     }
   };
 
-  // handleCustomInputTable = event => {
-  //   const { count, customInputDataArray } = this.state;
-  //
-  //   const newData = [
-  //     {
-  //       key: count,
-  //       CERT_NAME: `${event.file.name}`,
-  //     },
-  //   ];
-  //   this.setState({
-  //     customInputDataArray: [...customInputDataArray, newData],
-  //     count: count + 1,
-  //   });
-  // };
-  //
-  // handleAdd = array => {
-  //   const { count, inputTableDataSources } = this.state;
-  //   const newData = [
-  //     {
-  //       key: count,
-  //     },
-  //   ];
-  //   inputTableDataSources[array].push(newData);
-  //   Object.defineProperty(inputTableDataSources, array, {
-  //     value: inputTableDataSources[array],
-  //   });
-  //   this.setState({
-  //     inputTableDataSources,
-  //     count: count + 1,
-  //   });
-  // };
+  handleCustomInputTable = event => {
+    const { count, customInputDataArray } = this.state;
+
+    const newData = [
+      {
+        key: count,
+        CERT_NAME: `${event.file.name}`,
+      },
+    ];
+    this.setState({
+      customInputDataArray: [...customInputDataArray, newData],
+      count: count + 1,
+    });
+  };
+
+  handleAdd = array => {
+    const { count, inputTableDataSources } = this.state;
+    const newData = [
+      {
+        key: count,
+      },
+    ];
+    inputTableDataSources[array].push(newData);
+    Object.defineProperty(inputTableDataSources, array, {
+      value: inputTableDataSources[array],
+    });
+    this.setState({
+      inputTableDataSources,
+      count: count + 1,
+    });
+  };
 
   getColumns = ({ getFieldDecorator }, arr) => {
     const columnArray = [];
@@ -303,13 +303,10 @@ class ConfigureProfile extends React.Component {
   onHandleContinue = (e, formname) => {
     const allFields = this.props.form.getFieldsValue();
     let activeFields = [];
-    console.log(this.state.activeSubPanelKeys);
-    console.log(subPanelpayloadAttributes);
     // get currently active field list
     for (let i = 0; i < this.state.activePanelKeys.length; i++) {
       Object.keys(allFields).map(key => {
         if (key.includes(`${this.state.activePanelKeys[i]}-`)) {
-          // console.log(key);
           if (
             subPanelpayloadAttributes.hasOwnProperty(
               `${this.state.activePanelKeys[i]}`,
@@ -319,7 +316,6 @@ class ConfigureProfile extends React.Component {
               subPanelpayloadAttributes[this.state.activePanelKeys[i]],
             ).map(subPanel => {
               if (`${this.state.activePanelKeys[i]}-${subPanel}` === true) {
-                console.log(`${this.state.activePanelKeys[i]}-${subPanel}`);
                 if (key.includes(`-${subPanel}-`)) {
                   activeFields.push(key);
                 }
@@ -330,12 +326,9 @@ class ConfigureProfile extends React.Component {
           } else {
             activeFields.push(key);
           }
-
-          // activeFields.push(key);
         }
       });
     }
-    console.log(activeFields);
     // validate fields and get profile features list
     this.props.form.validateFields(activeFields, (err, values) => {
       if (!err) {
@@ -356,7 +349,6 @@ class ConfigureProfile extends React.Component {
           };
           profileFeaturesList.push(feature);
         }
-        // console.log(profileFeaturesList);
         this.props.getPolicyPayloadData(formname, profileFeaturesList);
         this.props.getNextStep();
       }
@@ -505,10 +497,6 @@ class ConfigureProfile extends React.Component {
           );
         case 'checkbox':
           if (item.optional.hasOwnProperty('subPanel')) {
-            // sdfgh[item.optional.subPanel.others.itemSwitch] =
-            //   item.optional.subPanel.others.itemPayload;
-            // console.log(sdfgh);
-            // console.log(item.optional.subPanel);
             return (
               <div key={k}>
                 <Collapse
@@ -542,7 +530,6 @@ class ConfigureProfile extends React.Component {
                         {item.optional.subPanel.map((panel, i) => {
                           subPanelList[panel.others.itemSwitch] =
                             panel.others.itemPayload;
-                          console.log();
                           if (
                             subPanelpayloadAttributes.hasOwnProperty(panelId)
                           ) {

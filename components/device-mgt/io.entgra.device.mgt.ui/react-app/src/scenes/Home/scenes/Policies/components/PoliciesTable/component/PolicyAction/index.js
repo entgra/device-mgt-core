@@ -28,8 +28,6 @@ class PolicyAction extends React.Component {
   }
 
   render() {
-    // console.log(this.props.selectedPolicyData.id);
-    // const { getFieldDecorator } = this.props.form;
     return (
       <div>
         <div>

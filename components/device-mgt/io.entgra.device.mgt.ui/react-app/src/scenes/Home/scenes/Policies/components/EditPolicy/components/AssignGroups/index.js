@@ -52,8 +52,6 @@ class AssignGroups extends React.Component {
   onHandleContinue = (e, formName) => {
     this.props.form.validateFields((err, values) => {
       if (!err) {
-        console.log(values);
-        console.log(typeof values.roles);
         if (typeof values.roles === 'string') {
           values.roles = [values.roles];
         }
