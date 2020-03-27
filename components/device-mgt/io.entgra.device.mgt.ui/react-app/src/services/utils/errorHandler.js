@@ -43,3 +43,11 @@ export const handleApiError = (
     });
   }
 };
+
+export const handleReportingApiError = errorMessage => {
+  notification.error({
+    message: 'There was a problem',
+    duration: 10,
+    description: errorMessage,
+  });
+};

@@ -33,7 +33,7 @@ class SimChanged extends React.Component {
     this.state = {
       reportType: 'devices',
       deviceId: null,
-      deviceDataComplete: null,
+      deviceDataDeviceMgt: null,
       deviceFilters: {
         deviceStatus: null,
         deviceType: null,
@@ -65,7 +65,7 @@ class SimChanged extends React.Component {
 
   handleDevices = e => {
     this.setState({
-      deviceDataComplete: e,
+      deviceDataDeviceMgt: e,
     });
   };
 
@@ -99,7 +99,7 @@ class SimChanged extends React.Component {
             <div style={{ backgroundColor: '#ffffff', borderRadius: 5 }}>
               <SimChangedTable
                 dateFilters={this.state.dateFilters}
-                deviceDataComplete={this.state.deviceDataComplete}
+                deviceDataDeviceMgt={this.state.deviceDataDeviceMgt}
                 deviceFilters={this.state.deviceFilters}
               />
             </div>

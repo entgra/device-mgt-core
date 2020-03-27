@@ -22,12 +22,14 @@ import axios from 'axios';
 
 import { withConfigContext } from '../../../../../../../../components/ConfigContext';
 
-import { Icon, Table, Tooltip, notification, message } from 'antd';
+import { Icon, Table, Tooltip, message } from 'antd';
 import moment from 'moment';
 import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
-import { REPORTING_HOST } from '../../../../../../../../services/utils/constants';
-import { handleApiError } from '../../../../../../../../services/utils/errorHandler';
+import {
+  handleApiError,
+  handleReportingApiError,
+} from '../../../../../../../../services/utils/errorHandler';
 
 let config = null;
 
@@ -99,7 +101,7 @@ class SimChangedTable extends React.Component {
       selectedRows: [],
       paramsObj: {},
       deviceId: null,
-      deviceDataComplete: null,
+      deviceDataDeviceMgt: null,
       pageableData: {
         totalCount: null,
         pageSize: 10,
@@ -111,9 +113,9 @@ class SimChangedTable extends React.Component {
   componentDidUpdate(prevProps, prevState, snapshot) {
     const { dateFilters, deviceFilters } = this.props;
     let reportType = 'all';
-    if (prevProps.deviceDataComplete != this.props.deviceDataComplete) {
+    if (prevProps.deviceDataDeviceMgt != this.props.deviceDataDeviceMgt) {
       this.setState({
-        deviceDataComplete: this.props.deviceDataComplete,
+        deviceDataDeviceMgt: this.props.deviceDataDeviceMgt,
       });
     }
     if (prevProps != this.props) {
@@ -154,12 +156,16 @@ class SimChangedTable extends React.Component {
     const { dateFilters, deviceFilters } = this.props;
     let reportType;
     if (deviceFilters.deviceId == 'all') {
-      reportType = 'all';
+      reportType = '/all';
     } else {
-      reportType = 'devices';
+      reportType = '/devices';
     }
-    let url = REPORTING_HOST + '/sim-changed/' + reportType;
-    if (reportType == 'devices') {
+    let url =
+      config.reportingServerConfig.invoker.uri +
+      config.reportingServerConfig.invoker.simChanged +
+      reportType;
+
+    if (reportType == '/devices') {
       let deviceId = deviceFilters.deviceId;
       if (deviceId != null) {
         url += '/' + deviceFilters.deviceId;
@@ -167,7 +173,7 @@ class SimChangedTable extends React.Component {
     }
 
     if (dateFilters.from != null && dateFilters.to != null) {
-      let config = {
+      let ApiConfig = {
         headers: {
           tenantId: '0',
         },
@@ -180,7 +186,7 @@ class SimChangedTable extends React.Component {
       };
 
       axios
-        .get(url, config)
+        .get(url, ApiConfig)
         .then(res => {
           if (res.status === 200) {
             this.setState({
@@ -196,12 +202,9 @@ class SimChangedTable extends React.Component {
         })
         .catch(error => {
           if (!error.response) {
-            notification.error({
-              message: 'There was a problem',
-              duration: 0,
-              description:
-                'Error occurred while trying to load non compliance feature list.',
-            });
+            handleReportingApiError(
+              'Error occurred while trying to load the reports',
+            );
           } else {
             if (
               error.hasOwnProperty('response') &&
@@ -222,26 +225,26 @@ class SimChangedTable extends React.Component {
   }
 
   render() {
-    let { data, pagination, isLoading, deviceDataComplete } = this.state;
+    let { data, pagination, isLoading, deviceDataDeviceMgt } = this.state;
     let devicesData = [];
-    let deviceName;
-    let deviceType;
     let rowKey = 0;
 
     /**
      * This map is used to merge the device names with deviceData from device
      * by using deviceIdentifier as the key
      *
-     * @var deviceData: contains device info from report-gen api (doesnt have device name)
-     * @var device: contains device info from device-mgt api (contains device name)
+     * @var deviceDataReporting: contains device info from report-gen api (doesnt have device name)
+     * @var deviceDataDeviceMgt: contains device info from device-mgt api (contains device name)
      * **/
-    data.forEach(deviceData => {
-      deviceDataComplete.forEach(device => {
-        if (device.deviceIdentifier === deviceData.deviceId) {
+    data.forEach(deviceDataReporting => {
+      let deviceName;
+      let deviceType;
+      deviceDataDeviceMgt.forEach(device => {
+        if (device.deviceIdentifier === deviceDataReporting.deviceId) {
           deviceName = device.name;
           deviceType = device.type;
         } else {
-          deviceName = deviceData.deviceId;
+          deviceName = deviceDataReporting.deviceId;
           deviceType = null;
         }
       });
@@ -249,9 +252,9 @@ class SimChangedTable extends React.Component {
         key: ++rowKey,
         deviceName: deviceName,
         deviceType: deviceType,
-        dateOfChange: deviceData.dateOfChange,
-        newSimImsi: deviceData.newSimImsi,
-        newSimNumber: deviceData.newSimNumber,
+        dateOfChange: deviceDataReporting.dateOfChange,
+        newSimImsi: deviceDataReporting.newSimImsi,
+        newSimNumber: deviceDataReporting.newSimNumber,
       });
     });
 

@@ -18,11 +18,14 @@
 
 import React from 'react';
 
-import { Select, message, notification } from 'antd';
+import { Select, message } from 'antd';
 import axios from 'axios';
 
 import { withConfigContext } from '../../../../../../components/ConfigContext';
-import { handleApiError } from '../../../../../../services/utils/errorHandler';
+import {
+  handleApiError,
+  handleReportingApiError,
+} from '../../../../../../services/utils/errorHandler';
 
 const { Option } = Select;
 let deviceFilters;
@@ -36,8 +39,9 @@ class DeviceFilter extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      devices: null,
-      filteredDevices: null,
+      devices: [],
+      filteredDevices: [],
+      deviceTypes: [],
       deviceFilters: {
         deviceStatus: 'any',
         deviceType: 'any',
@@ -62,7 +66,7 @@ class DeviceFilter extends React.Component {
       {
         deviceFilters: deviceFilters,
       },
-      () => this.handleDeviceFilterChange(),
+      this.handleDeviceFilterChange(),
     );
     this.updateDevices();
   };
@@ -74,7 +78,7 @@ class DeviceFilter extends React.Component {
       {
         deviceFilters: deviceFilters,
       },
-      () => this.handleDeviceFilterChange(),
+      this.handleDeviceFilterChange(),
     );
   };
 
@@ -103,17 +107,15 @@ class DeviceFilter extends React.Component {
         if (error.hasOwnProperty('response') && error.response.status == 404) {
           handleApiError(error, error.response.data.message);
         } else {
-          notification.error({
-            message: 'There was a problem',
-            duration: 0,
-            description:
-              'Error occurred while trying to load non compliance feature list.',
-          });
+          handleReportingApiError(
+            'Error occurred while trying to load device types',
+          );
         }
       });
   }
 
   getDevices() {
+    let devices = this.state.devices;
     const config = this.props.context;
     axios
       .get(
@@ -128,7 +130,7 @@ class DeviceFilter extends React.Component {
             devices: res.data.data.devices,
             filteredDevices: res.data.data.devices,
           });
-          this.handleDevices(res.data.data.devices);
+          this.props.devices(devices);
         }
       })
       .catch(error => {
@@ -139,32 +141,25 @@ class DeviceFilter extends React.Component {
         if (error.hasOwnProperty('response') && error.response.status == 404) {
           handleApiError(error, error.response.data.message);
         } else {
-          notification.error({
-            message: 'There was a problem',
-            duration: 0,
-            description:
-              'Error occurred while trying to load non compliance feature list.',
-          });
+          handleReportingApiError(
+            'Error occurred while trying to load the devices list',
+          );
         }
       });
   }
 
-  handleDevices = devices => {
-    this.props.devices(devices);
-  };
-
-  updateDevices() {
+  updateDevices = () => {
     let devices = this.state.devices;
     let filteredDevices = [];
-    const { deviceStatus, deviceType } = { ...this.state.deviceFilters };
+    const { deviceStatus, deviceType } = this.state.deviceFilters;
     devices.forEach(device => {
       if (deviceStatus == 'any' && deviceType == 'any') {
         filteredDevices.push(device);
-      } else if (deviceStatus != 'any' && deviceType == 'any') {
+      } else if (deviceType == 'any' && deviceStatus != 'any') {
         if (device.enrolmentInfo.status == deviceStatus) {
           filteredDevices.push(device);
         }
-      } else if (deviceType != 'any' && deviceStatus == 'any') {
+      } else if (deviceStatus == 'any' && deviceType != 'any') {
         if (device.type == deviceType) {
           filteredDevices.push(device);
         }
@@ -176,7 +171,7 @@ class DeviceFilter extends React.Component {
       }
     });
     this.setState({ filteredDevices: filteredDevices });
-  }
+  };
 
   onDeviceTypeChange = type => {
     deviceFilters = this.state.deviceFilters;
@@ -193,13 +188,16 @@ class DeviceFilter extends React.Component {
   render() {
     let deviceTypes = this.state.deviceTypes;
     let devicesTypeOptions;
-    if (deviceTypes != null) {
-      devicesTypeOptions = deviceTypes.map(deviceType => (
-        <Option key={deviceType.id} value={deviceType.name}>
-          {deviceType.name.charAt(0).toUpperCase() + deviceType.name.slice(1)}
-        </Option>
-      ));
-    }
+
+    devicesTypeOptions = deviceTypes.map(deviceType => (
+      <Option
+        key={deviceType.id}
+        value={deviceType.name}
+        style={{ textTransform: 'capitalize' }}
+      >
+        {deviceType.name}
+      </Option>
+    ));
 
     let devices = this.state.filteredDevices;
     let devicesList;
@@ -263,7 +261,7 @@ class DeviceFilter extends React.Component {
 
         <Select
           showSearch
-          style={{ width: 200, marginRight: 5 }}
+          style={{ width: 200, marginRight: 5, textTransform: 'capitalize' }}
           placeholder="Select a device"
           initialValue="all"
           optionFilterProp="children"
