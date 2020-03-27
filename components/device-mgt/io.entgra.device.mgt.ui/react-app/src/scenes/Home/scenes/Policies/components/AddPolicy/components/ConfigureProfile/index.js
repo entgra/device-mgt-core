@@ -458,7 +458,6 @@ class ConfigureProfile extends React.Component {
               style={{ display: 'block' }}
             >
               {getFieldDecorator(`${item.id}`, {
-                // valuePropName: 'option',
                 initialValue: item.optional.initialDataIndex,
               })(
                 <Select>
@@ -744,7 +743,6 @@ class ConfigureProfile extends React.Component {
   render() {
     const { policyUIConfigurationsList } = this.props;
     const { getFieldDecorator } = this.props.form;
-    // let aqwer = {};
     return (
       <div className="tab-container">
         <Tabs tabPosition={'left'} size={'large'}>
