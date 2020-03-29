@@ -29,6 +29,7 @@ import EnrollmentTypeReport from './scenes/Home/scenes/Reports/scenes/Enrollment
 import PolicyReport from './scenes/Home/scenes/Reports/scenes/PolicyCompliance';
 import DeviceStatusReport from './scenes/Home/scenes/Reports/scenes/DeviceStatus';
 import AppNotInstalledDevicesReport from './scenes/Home/scenes/Reports/scenes/AppNotInstalledDevices';
+import SimChanged from './scenes/Home/scenes/Reports/scenes/SimChanged';
 import Geo from './scenes/Home/scenes/Geo';
 import EncryptionStatus from './scenes/Home/scenes/Reports/scenes/EncryptionStatus';
 import OutdatedOSversionReport from './scenes/Home/scenes/Reports/scenes/OutdatedOSVersion';
@@ -159,6 +160,11 @@ const routes = [
       {
         path: '/entgra/reports/encryption-status',
         component: EncryptionStatus,
+        exact: true,
+      },
+      {
+        path: '/entgra/reports/sim-changed',
+        component: SimChanged,
         exact: true,
       },
     ],

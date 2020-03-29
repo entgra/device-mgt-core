@@ -12,6 +12,12 @@
     "logoutUri": "/entgra-ui-request-handler/logout",
     "platform": "entgra"
   },
+  "reportingServerConfig": {
+    "invoker": {
+      "uri": "http://localhost:8081",
+      "simChanged": "/sim-changed"
+    }
+  },
   "defaultPlatformIcons": {
     "default": {
       "icon": "hdd",
