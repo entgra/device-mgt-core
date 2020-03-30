@@ -362,9 +362,7 @@ class ConfigureProfile extends React.Component {
                     ] = value;
                   }
                 });
-              } else if (
-                this.state.activePanelKeys[i] in formContainers
-              ) {
+              } else if (this.state.activePanelKeys[i] in formContainers) {
                 formContainers[this.state.activePanelKeys[i]].forEach(
                   subFeature => {
                     if (
