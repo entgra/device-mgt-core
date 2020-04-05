@@ -62,7 +62,7 @@ public class SCEPManagerImpl implements SCEPManager {
         SingletonMap deviceMap;
 
         try {
-            deviceMap = dms.getTenantedDevice(deviceIdentifier, true);
+            deviceMap = dms.getTenantedDevice(deviceIdentifier, false);
             if (deviceMap == null) {
                 String msg = "Lookup device not found for the device identifier " + deviceIdentifier.getId() +
                              " of device type " + deviceIdentifier.getType();
