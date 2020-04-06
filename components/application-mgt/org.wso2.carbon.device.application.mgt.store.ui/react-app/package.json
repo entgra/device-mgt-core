@@ -85,7 +85,7 @@
     "start": "webpack-dev-server --mode development --open",
     "dev": "webpack --mode development",
     "build": "webpack --mode production",
-    "watch": "webpack --watch --mode development",
+    "watch": "webpack --watch --mode development --progress --colors",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "build_prod": "cross-env NODE_ENV=production NODE_OPTIONS=--max_old_space_size=4096 webpack -p --display errors-only --hide-modules",
