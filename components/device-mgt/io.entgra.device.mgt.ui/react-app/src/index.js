@@ -36,6 +36,7 @@ import Certificates from './scenes/Home/scenes/Configurations/scenes/Certificate
 import Devices from './scenes/Home/scenes/Devices';
 import ViewPolicy from './scenes/Home/scenes/Policies/scenes/ViewPolicy';
 import EditSelectedPolicy from './scenes/Home/scenes/Policies/scenes/EditSelectedPolicy';
+import PoliciesNew from './scenes/Home/scenes/PoliciesNew';
 
 const routes = [
   {
@@ -76,6 +77,11 @@ const routes = [
       {
         path: '/entgra/policies',
         component: Policies,
+        exact: true,
+      },
+      {
+        path: '/entgra/newpolicies',
+        component: PoliciesNew,
         exact: true,
       },
       {
