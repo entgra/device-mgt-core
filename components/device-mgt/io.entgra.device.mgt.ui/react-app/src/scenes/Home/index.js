@@ -123,6 +123,12 @@ class Home extends React.Component {
                     </Link>
                   </Menu.Item>
                 </SubMenu>
+                <Menu.Item key="newPolicies">
+                  <Link to="/entgra/newpolicies">
+                    <Icon type="book" />
+                    <span>Policies New</span>
+                  </Link>
+                </Menu.Item>
                 <Menu.Item key="roles">
                   <Link to="/entgra/roles">
                     <Icon type="book" />
