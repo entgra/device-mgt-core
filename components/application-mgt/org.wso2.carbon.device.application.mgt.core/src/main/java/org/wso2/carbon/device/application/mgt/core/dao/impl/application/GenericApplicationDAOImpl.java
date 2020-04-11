@@ -94,107 +94,101 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
     }
 
     @Override
-    public List<ApplicationDTO> getApplications(Filter filter,int deviceTypeId, int tenantId) throws ApplicationManagementDAOException {
+    public List<ApplicationDTO> getApplications(Filter filter, int deviceTypeId, int tenantId) throws ApplicationManagementDAOException {
         if (log.isDebugEnabled()) {
             log.debug("Getting application data from the database");
             log.debug(String.format("Filter: limit=%s, offset=%s", filter.getLimit(), filter.getOffset()));
         }
-        String sql = "SELECT "
-                + "AP_APP.ID AS APP_ID, "
-                + "AP_APP.NAME AS APP_NAME, "
-                + "AP_APP.DESCRIPTION AS APP_DESCRIPTION, "
-                + "AP_APP.TYPE AS APP_TYPE, "
-                + "AP_APP.STATUS AS APP_STATUS, "
-                + "AP_APP.SUB_TYPE AS APP_SUB_TYPE, "
-                + "AP_APP.CURRENCY AS APP_CURRENCY, "
-                + "AP_APP.RATING AS APP_RATING, "
-                + "AP_APP.DEVICE_TYPE_ID AS APP_DEVICE_TYPE_ID, "
-                + "AP_APP_RELEASE.ID AS RELEASE_ID, "
-                + "AP_APP_RELEASE.DESCRIPTION AS RELEASE_DESCRIPTION, "
-                + "AP_APP_RELEASE.VERSION AS RELEASE_VERSION, "
-                + "AP_APP_RELEASE.UUID AS RELEASE_UUID, "
-                + "AP_APP_RELEASE.RELEASE_TYPE AS RELEASE_TYPE, "
-                + "AP_APP_RELEASE.INSTALLER_LOCATION AS AP_RELEASE_STORED_LOC, "
-                + "AP_APP_RELEASE.ICON_LOCATION AS AP_RELEASE_ICON_LOC, "
-                + "AP_APP_RELEASE.BANNER_LOCATION AS AP_RELEASE_BANNER_LOC, "
-                + "AP_APP_RELEASE.SC_1_LOCATION AS AP_RELEASE_SC1, "
-                + "AP_APP_RELEASE.SC_2_LOCATION AS AP_RELEASE_SC2, "
-                + "AP_APP_RELEASE.SC_3_LOCATION AS AP_RELEASE_SC3, "
-                + "AP_APP_RELEASE.APP_HASH_VALUE AS RELEASE_HASH_VALUE, "
-                + "AP_APP_RELEASE.APP_PRICE AS RELEASE_PRICE, "
-                + "AP_APP_RELEASE.APP_META_INFO AS RELEASE_META_INFO, "
-                + "AP_APP_RELEASE.PACKAGE_NAME AS PACKAGE_NAME, "
-                + "AP_APP_RELEASE.SUPPORTED_OS_VERSIONS AS RELEASE_SUP_OS_VERSIONS, "
-                + "AP_APP_RELEASE.RATING AS RELEASE_RATING, "
-                + "AP_APP_RELEASE.CURRENT_STATE AS RELEASE_CURRENT_STATE, "
-                + "AP_APP_RELEASE.RATED_USERS AS RATED_USER_COUNT "
-                + "FROM AP_APP "
-                + "INNER JOIN AP_APP_RELEASE ON "
-                + "AP_APP.ID = AP_APP_RELEASE.AP_APP_ID "
-                + "INNER JOIN (SELECT ID FROM AP_APP WHERE AP_APP.TENANT_ID = ? LIMIT ? OFFSET ? ) AS app_data ON app_data.ID = AP_APP.ID "
-                + "WHERE AP_APP.TENANT_ID = ?";
-
+        StringBuilder sql = new StringBuilder(
+                "SELECT "
+                        + "AP_APP.ID AS APP_ID, "
+                        + "AP_APP.NAME AS APP_NAME, "
+                        + "AP_APP.DESCRIPTION AS APP_DESCRIPTION, "
+                        + "AP_APP.TYPE AS APP_TYPE, "
+                        + "AP_APP.STATUS AS APP_STATUS, "
+                        + "AP_APP.SUB_TYPE AS APP_SUB_TYPE, "
+                        + "AP_APP.CURRENCY AS APP_CURRENCY, "
+                        + "AP_APP.RATING AS APP_RATING, "
+                        + "AP_APP.DEVICE_TYPE_ID AS APP_DEVICE_TYPE_ID, "
+                        + "AP_APP_RELEASE.ID AS RELEASE_ID, "
+                        + "AP_APP_RELEASE.DESCRIPTION AS RELEASE_DESCRIPTION, "
+                        + "AP_APP_RELEASE.VERSION AS RELEASE_VERSION, "
+                        + "AP_APP_RELEASE.UUID AS RELEASE_UUID, "
+                        + "AP_APP_RELEASE.RELEASE_TYPE AS RELEASE_TYPE, "
+                        + "AP_APP_RELEASE.INSTALLER_LOCATION AS AP_RELEASE_STORED_LOC, "
+                        + "AP_APP_RELEASE.ICON_LOCATION AS AP_RELEASE_ICON_LOC, "
+                        + "AP_APP_RELEASE.BANNER_LOCATION AS AP_RELEASE_BANNER_LOC, "
+                        + "AP_APP_RELEASE.SC_1_LOCATION AS AP_RELEASE_SC1, "
+                        + "AP_APP_RELEASE.SC_2_LOCATION AS AP_RELEASE_SC2, "
+                        + "AP_APP_RELEASE.SC_3_LOCATION AS AP_RELEASE_SC3, "
+                        + "AP_APP_RELEASE.APP_HASH_VALUE AS RELEASE_HASH_VALUE, "
+                        + "AP_APP_RELEASE.APP_PRICE AS RELEASE_PRICE, "
+                        + "AP_APP_RELEASE.APP_META_INFO AS RELEASE_META_INFO, "
+                        + "AP_APP_RELEASE.PACKAGE_NAME AS PACKAGE_NAME, "
+                        + "AP_APP_RELEASE.SUPPORTED_OS_VERSIONS AS RELEASE_SUP_OS_VERSIONS, "
+                        + "AP_APP_RELEASE.RATING AS RELEASE_RATING, "
+                        + "AP_APP_RELEASE.CURRENT_STATE AS RELEASE_CURRENT_STATE, "
+                        + "AP_APP_RELEASE.RATED_USERS AS RATED_USER_COUNT "
+                        + "FROM AP_APP "
+                        + "INNER JOIN AP_APP_RELEASE ON "
+                        + "AP_APP.ID = AP_APP_RELEASE.AP_APP_ID "
+                        + "INNER JOIN (SELECT AP_APP.ID FROM AP_APP ");
         if (filter == null) {
             String msg = "Filter is not instantiated.";
             log.error(msg);
             throw new ApplicationManagementDAOException(msg);
         }
+        if (!StringUtils.isEmpty(filter.getVersion()) || !StringUtils.isEmpty(filter.getAppReleaseState())
+                || !StringUtils.isEmpty(filter.getAppReleaseType())) {
+            sql.append("INNER JOIN AP_APP_RELEASE ON AP_APP.ID = AP_APP_RELEASE.AP_APP_ID ");
+        }
+        sql.append("WHERE AP_APP.TENANT_ID = ? ");
 
         if (!StringUtils.isEmpty(filter.getAppType())) {
-            sql += " AND AP_APP.TYPE = ?";
+            sql.append(" AND AP_APP.TYPE = ?");
         }
         if (!StringUtils.isEmpty(filter.getAppName())) {
-            sql += " AND LOWER (AP_APP.NAME) ";
+            sql.append(" AND LOWER (AP_APP.NAME) ");
             if (filter.isFullMatch()) {
-                sql += "= ?";
+                sql.append("= ?");
             } else {
-                sql += "LIKE ?";
+                sql.append("LIKE ?");
             }
         }
         if (!StringUtils.isEmpty(filter.getSubscriptionType())) {
-            sql += " AND AP_APP.SUB_TYPE = ?";
+            sql.append(" AND AP_APP.SUB_TYPE = ?");
         }
         if (filter.getMinimumRating() > 0) {
-            sql += " AND AP_APP.RATING >= ?";
+            sql.append(" AND AP_APP.RATING >= ?");
         }
         if (!StringUtils.isEmpty(filter.getVersion())) {
-            sql += " AND AP_APP_RELEASE.VERSION = ?";
+            sql.append(" AND AP_APP_RELEASE.VERSION = ?");
         }
         if (!StringUtils.isEmpty(filter.getAppReleaseType())) {
-            sql += " AND AP_APP_RELEASE.RELEASE_TYPE = ?";
+            sql.append(" AND AP_APP_RELEASE.RELEASE_TYPE = ?");
         }
         if (!StringUtils.isEmpty(filter.getAppReleaseState())) {
-            sql += " AND AP_APP_RELEASE.CURRENT_STATE = ?";
+            sql.append(" AND AP_APP_RELEASE.CURRENT_STATE = ?");
         }
         if (deviceTypeId != -1) {
-            sql += " AND AP_APP.DEVICE_TYPE_ID = ?";
+            sql.append(" AND AP_APP.DEVICE_TYPE_ID = ?");
         }
-
-        if (filter.getLimit() == -1) {
-            sql = sql.replace("LIMIT ? OFFSET ?", "");
-        }
-
-        String sortingOrder = "ASC";
-        if (!StringUtils.isEmpty(filter.getSortBy() )) {
+        sql.append(" GROUP BY AP_APP.ID");
+        String sortingOrder = "ASC ";
+        if (!StringUtils.isEmpty(filter.getSortBy())) {
             sortingOrder = filter.getSortBy();
         }
-        sql += " ORDER BY APP_ID " + sortingOrder;
-
+        sql.append(" ORDER BY ID ").append(sortingOrder);
+        if (filter.getLimit() != -1) {
+            sql.append("LIMIT ? OFFSET ? ");
+        }
+        sql.append(") AS app_data ON app_data.ID = AP_APP.ID " +
+                "WHERE AP_APP.TENANT_ID = ?");
         try {
             Connection conn = this.getDBConnection();
-            try (PreparedStatement stmt = conn.prepareStatement(sql)){
+            try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
                 int paramIndex = 1;
                 stmt.setInt(paramIndex++, tenantId);
-                if (filter.getLimit() != -1) {
-                    if (filter.getLimit() == 0) {
-                        stmt.setInt(paramIndex++, 100);
-                    } else {
-                        stmt.setInt(paramIndex++, filter.getLimit());
-                    }
-                    stmt.setInt(paramIndex++, filter.getOffset());
-                }
-                stmt.setInt(paramIndex++, tenantId);
-
                 if (filter.getAppType() != null && !filter.getAppType().isEmpty()) {
                     stmt.setString(paramIndex++, filter.getAppType());
                 }
@@ -220,10 +214,19 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                 if (!StringUtils.isEmpty(filter.getAppReleaseState())) {
                     stmt.setString(paramIndex++, filter.getAppReleaseState());
                 }
-                if (deviceTypeId > 0 ) {
-                    stmt.setInt(paramIndex, deviceTypeId);
+                if (deviceTypeId > 0) {
+                    stmt.setInt(paramIndex++, deviceTypeId);
                 }
-                try (ResultSet rs = stmt.executeQuery() ) {
+                if (filter.getLimit() != -1) {
+                    if (filter.getLimit() == 0) {
+                        stmt.setInt(paramIndex++, 100);
+                    } else {
+                        stmt.setInt(paramIndex++, filter.getLimit());
+                    }
+                    stmt.setInt(paramIndex++, filter.getOffset());
+                }
+                stmt.setInt(paramIndex, tenantId);
+                try (ResultSet rs = stmt.executeQuery()) {
                     return DAOUtil.loadApplications(rs);
                 }
             }
