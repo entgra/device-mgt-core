@@ -3102,7 +3102,8 @@ public class ApplicationManagerImpl implements ApplicationManager {
             Filter filter = new Filter();
             filter.setFullMatch(true);
             filter.setAppName(appName);
-            filter.setLimit(-1);
+            filter.setOffset(0);
+            filter.setLimit(1);
             List<ApplicationDTO> applicationList = applicationDAO.getApplications(filter, deviceTypeId, tenantId);
             if (!applicationList.isEmpty()) {
                 String msg =
