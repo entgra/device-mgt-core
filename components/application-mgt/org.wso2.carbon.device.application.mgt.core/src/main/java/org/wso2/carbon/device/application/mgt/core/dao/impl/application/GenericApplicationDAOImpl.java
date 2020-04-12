@@ -177,7 +177,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
             sql += "ORDER BY ID " + filter.getSortBy() +" ";
         }
         if (filter.getLimit() != -1) {
-            sql += "LIMIT ? OFFSET ? ";
+            sql += " LIMIT ? OFFSET ? ";
         }
         sql += ") AS app_data ON app_data.ID = AP_APP.ID " +
                 "WHERE AP_APP.TENANT_ID = ?";
@@ -215,11 +215,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                     stmt.setInt(paramIndex++, deviceTypeId);
                 }
                 if (filter.getLimit() != -1) {
-                    if (filter.getLimit() == 0) {
-                        stmt.setInt(paramIndex++, 100);
-                    } else {
-                        stmt.setInt(paramIndex++, filter.getLimit());
-                    }
+                    stmt.setInt(paramIndex++, filter.getLimit());
                     stmt.setInt(paramIndex++, filter.getOffset());
                 }
                 stmt.setInt(paramIndex, tenantId);
