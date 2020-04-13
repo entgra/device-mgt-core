@@ -30,6 +30,7 @@ import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.annotations.Tag;
 import org.wso2.carbon.apimgt.annotations.api.Scope;
 import org.wso2.carbon.apimgt.annotations.api.Scopes;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
 import org.wso2.carbon.device.mgt.common.exceptions.ReportManagementException;
 import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
@@ -527,6 +528,10 @@ public interface ReportManagementService {
             @ApiResponse(
                     code = 500,
                     message = "Internal Server Error. \n Server error occurred.",
+                    response = ErrorResponse.class),
+            @ApiResponse(
+                    code = 204,
+                    message = "Internal Server Error. \n Server error occurred.",
                     response = ErrorResponse.class)
     })
     Response getUngroupedDevices(
@@ -538,7 +543,7 @@ public interface ReportManagementService {
                     String deviceType,
             @ApiParam(
                     name = "groupNames",
-                    value = "The default group names available",
+                    value = "The group names available",
                     defaultValue = "BYOD")
             @QueryParam("groupName")
                     List<String> groupNames,
@@ -554,5 +559,5 @@ public interface ReportManagementService {
                     value = "Provide how many device details you require from the starting pagination index/offset.",
                     defaultValue = "10")
             @QueryParam("limit")
-                    int limit);
+                    int limit) throws DeviceTypeNotFoundException;
 }

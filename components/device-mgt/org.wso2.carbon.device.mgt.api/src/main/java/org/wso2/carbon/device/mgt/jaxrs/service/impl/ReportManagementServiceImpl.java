@@ -276,7 +276,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             @DefaultValue("0")
             @QueryParam("offset") int offset,
             @DefaultValue("10")
-            @QueryParam("limit") int limit) {
+            @QueryParam("limit") int limit) throws DeviceTypeNotFoundException {
         try {
             RequestValidationUtil.validatePaginationParameters(offset, limit);
             PaginationRequest request = new PaginationRequest(offset, limit);
@@ -286,7 +286,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                     DeviceMgtAPIUtils.getReportManagementService().getDeviceNotAssignedToGroups(request, groupNames);
 
             if (paginationResult.getData().isEmpty()) {
-                String msg = "There is no device without groups";
+                String msg = "There is no " + deviceType + "device without groups";
                 return Response.status(Response.Status.NO_CONTENT).entity(msg).build();
             } else {
                 deviceList.setList((List<Device>) paginationResult.getData());
