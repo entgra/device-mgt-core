@@ -388,7 +388,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     @Override
     public PaginationResult getDeviceNotAssignedToGroups(PaginationRequest paginationRequest ,
                                                          List<String> groupNames)
-            throws ReportManagementException {
+            throws ReportManagementException, DeviceTypeNotFoundException {
         PaginationResult paginationResult = new PaginationResult();
         try {
             int tenantId = DeviceManagementDAOUtil.getTenantId();
@@ -398,6 +398,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             if (deviceTypeObj == null) {
                 String msg = "Error, device of type: " + deviceType + " does not exist";
                 log.error(msg);
+                throw new DeviceTypeNotFoundException(msg);
             }
             try {
                 GroupManagementDAOFactory.openConnection();
@@ -407,10 +408,6 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 return paginationResult;
             } catch (SQLException e) {
                 String msg = "Error occurred while opening a connection to the data source";
-                log.error(msg, e);
-                throw new ReportManagementException(msg, e);
-            } catch (GroupManagementDAOException e) {
-                String msg = "Error occurred while retrieving ungrouped devices";
                 log.error(msg, e);
                 throw new ReportManagementException(msg, e);
             } finally {

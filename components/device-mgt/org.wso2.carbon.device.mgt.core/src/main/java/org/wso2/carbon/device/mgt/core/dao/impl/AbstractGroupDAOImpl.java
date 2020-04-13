@@ -24,12 +24,11 @@ import org.apache.solr.common.StringUtils;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.GroupPaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
+import org.wso2.carbon.device.mgt.common.exceptions.ReportManagementException;
 import org.wso2.carbon.device.mgt.common.group.mgt.DeviceGroup;
 import org.wso2.carbon.device.mgt.core.dao.GroupDAO;
 import org.wso2.carbon.device.mgt.core.dao.GroupManagementDAOException;
 import org.wso2.carbon.device.mgt.core.dao.GroupManagementDAOFactory;
-import static org.wso2.carbon.device.mgt.core.dao.util.DeviceManagementDAOUtil.loadDevice;
-
 import org.wso2.carbon.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import org.wso2.carbon.device.mgt.core.dao.util.GroupManagementDAOUtil;
 
@@ -821,8 +820,9 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
 
     @Override
     public List<Device> getGroupUnassignedDevices(PaginationRequest paginationRequest,
-                                                  List<String> groupNames) {
-        List<Device> groupUnassignedDeviceList = null;
+                                                  List<String> groupNames)
+            throws ReportManagementException {
+        List<Device> groupUnassignedDeviceList;
         try {
             Connection connection = GroupManagementDAOFactory.getConnection();
             StringJoiner sql = new StringJoiner(",",
@@ -846,8 +846,7 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
                                                 ")))");
 
             groupNames.stream().map(e -> "?").forEach(sql::add);
-            String query = sql.toString();
-            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            try (PreparedStatement stmt = connection.prepareStatement(String.valueOf(sql))) {
                 int index = 1;
                 for (String groupName : groupNames) {
                     stmt.setString(index++, groupName);
@@ -855,12 +854,13 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
                 ResultSet resultSet = stmt.executeQuery();
                 groupUnassignedDeviceList = new ArrayList<>();
                 while (resultSet.next()) {
-                    groupUnassignedDeviceList.add(loadDevice(resultSet));
+                    groupUnassignedDeviceList.add(DeviceManagementDAOUtil.loadDevice(resultSet));
                 }
             }
         } catch (SQLException e) {
             String msg = "Error occurred while retrieving information of group unassigned devices";
             log.error(msg, e);
+            throw new ReportManagementException(msg,e);
         }
         return groupUnassignedDeviceList;
     }

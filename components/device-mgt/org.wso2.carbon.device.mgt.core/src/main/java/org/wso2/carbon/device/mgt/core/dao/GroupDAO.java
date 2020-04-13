@@ -21,6 +21,7 @@ package org.wso2.carbon.device.mgt.core.dao;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.GroupPaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
+import org.wso2.carbon.device.mgt.common.exceptions.ReportManagementException;
 import org.wso2.carbon.device.mgt.common.group.mgt.DeviceGroup;
 
 import java.util.List;
@@ -330,11 +331,16 @@ public interface GroupDAO {
     /**
      * Get device Ids of devices which are assigned to groups.
      *
+     * @param paginationRequest Request object with offset and limit.
+     * @param groupNames default group names that should be omitted when checking the device
+     *                   whether they have been assigned to groups
+     * @throws ReportManagementException Might occur while retrieving information of group
+     * unassigned devices
      * @return details of devices that are unassigned to groups.
-     * @throws GroupManagementDAOException
      */
 
     List<Device> getGroupUnassignedDevices(PaginationRequest paginationRequest,
-                                           List<String> groupNames) throws GroupManagementDAOException;
+                                           List<String> groupNames)
+            throws ReportManagementException;
 
 }

@@ -89,13 +89,14 @@ public interface ReportManagementService {
      * This method is used to get devices which have not assigned to groups.
      *
      * @param paginationRequest Request object with offset and limit
-     * @param groupNames default group names that should be ommited when checking the device
+     * @param groupNames default group names that should be omitted when checking the device
      *                  whether they have been assigned to groups
      * @return {@link PaginationResult}
-     * @throws ReportManagementException
+     * @throws ReportManagementException Might occur when opening a connection to the data source.
+     * @throws DeviceTypeNotFoundException Might occur when required device type is not found.
      */
 
     PaginationResult getDeviceNotAssignedToGroups(PaginationRequest paginationRequest,
                                                   List<String> groupNames)
-            throws ReportManagementException;
+            throws ReportManagementException, DeviceTypeNotFoundException;
 }
