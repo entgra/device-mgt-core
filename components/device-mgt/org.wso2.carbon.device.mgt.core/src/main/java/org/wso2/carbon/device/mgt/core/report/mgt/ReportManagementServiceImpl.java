@@ -61,6 +61,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
 
     public ReportManagementServiceImpl() {
         this.deviceDAO = DeviceManagementDAOFactory.getDeviceDAO();
+        this.groupDAO = GroupManagementDAOFactory.getGroupDAO();
     }
 
     @Override

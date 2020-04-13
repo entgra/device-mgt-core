@@ -537,7 +537,7 @@ public interface ReportManagementService {
             @PathParam("device-type")
                     String deviceType,
             @ApiParam(
-                    name = "groupName",
+                    name = "groupNames",
                     value = "The default group names available",
                     defaultValue = "BYOD")
             @QueryParam("groupName")

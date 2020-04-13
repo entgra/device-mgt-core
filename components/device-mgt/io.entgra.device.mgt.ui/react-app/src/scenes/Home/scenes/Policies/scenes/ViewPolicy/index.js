@@ -34,14 +34,6 @@ class ViewPolicy extends Component {
       policyId: '',
     };
   }
-class UngroupedDevices extends React.Component {
-  render() {
-    const config = this.props.context;
-    const apiURL =
-      window.location.origin +
-      config.serverConfig.invoker.uri +
-      config.serverConfig.invoker.deviceMgt +
-      `/reports/${deviceType}/ungrouped-device?groupName=BYOD&groupName=COPE&`;
 
   render() {
     const {

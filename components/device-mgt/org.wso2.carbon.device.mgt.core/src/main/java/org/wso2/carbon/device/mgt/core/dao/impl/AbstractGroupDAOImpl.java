@@ -825,36 +825,38 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
         List<Device> groupUnassignedDeviceList = null;
         try {
             Connection connection = GroupManagementDAOFactory.getConnection();
-            String sql = "SELECT DEVICE.ID AS DEVICE_ID, " +
-                                "DEVICE.NAME AS DEVICE_NAME, " +
-                                "DEVICE_TYPE.NAME AS DEVICE_TYPE, " +
-                                "DEVICE.DESCRIPTION, " +
-                                "DEVICE.DEVICE_IDENTIFICATION, " +
-                                "ENROLMENT.ID AS ENROLMENT_ID, " +
-                                "ENROLMENT.OWNER, " +
-                                "ENROLMENT.OWNERSHIP, " +
-                                "ENROLMENT.DATE_OF_ENROLMENT, " +
-                                "ENROLMENT.DATE_OF_LAST_UPDATE, " +
-                                "ENROLMENT.STATUS " +
-                         "FROM DM_DEVICE AS DEVICE, DM_DEVICE_TYPE AS DEVICE_TYPE, DM_ENROLMENT " +
-                         "AS ENROLMENT " +
-                         "WHERE DEVICE.ID NOT IN " +
-                         "(SELECT DEVICE_ID " +
-                         "FROM DM_DEVICE_GROUP_MAP " +
-                         "WHERE GROUP_ID IN (SELECT ID FROM DM_GROUP WHERE GROUP_NAME NOT IN (";
+            StringJoiner sql = new StringJoiner(",",
+                                                "SELECT DEVICE.ID AS DEVICE_ID, " +
+                                                "DEVICE.NAME AS DEVICE_NAME, " +
+                                                "DEVICE_TYPE.NAME AS DEVICE_TYPE, " +
+                                                "DEVICE.DESCRIPTION, " +
+                                                "DEVICE.DEVICE_IDENTIFICATION, " +
+                                                "ENROLMENT.ID AS ENROLMENT_ID, " +
+                                                "ENROLMENT.OWNER, " +
+                                                "ENROLMENT.OWNERSHIP, " +
+                                                "ENROLMENT.DATE_OF_ENROLMENT, " +
+                                                "ENROLMENT.DATE_OF_LAST_UPDATE, " +
+                                                "ENROLMENT.STATUS " +
+                                                "FROM DM_DEVICE AS DEVICE, DM_DEVICE_TYPE AS DEVICE_TYPE, DM_ENROLMENT " +
+                                                "AS ENROLMENT " +
+                                                "WHERE DEVICE.ID NOT IN " +
+                                                "(SELECT DEVICE_ID " +
+                                                "FROM DM_DEVICE_GROUP_MAP " +
+                                                "WHERE GROUP_ID IN (SELECT ID FROM DM_GROUP WHERE GROUP_NAME NOT IN (",
+                                                ")))");
 
-
-            StringJoiner stringJoiner = new StringJoiner ( "," , sql ,")))");
-            groupNames.stream().map(ignored -> "?").forEach(stringJoiner::add);
-            sql = stringJoiner.toString();
-            PreparedStatement stmt = connection.prepareStatement(sql);
-            while(groupNames.size()==)
-            stmt.setString(1, groupNames.get(0));
-            stmt.setString(2, groupNames.get(1));
-            ResultSet resultSet = stmt.executeQuery();
-            groupUnassignedDeviceList = new ArrayList<>();
-            while (resultSet.next()) {
-                groupUnassignedDeviceList.add(loadDevice(resultSet));
+            groupNames.stream().map(e -> "?").forEach(sql::add);
+            String query = sql.toString();
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                int index = 1;
+                for (String groupName : groupNames) {
+                    stmt.setString(index++, groupName);
+                }
+                ResultSet resultSet = stmt.executeQuery();
+                groupUnassignedDeviceList = new ArrayList<>();
+                while (resultSet.next()) {
+                    groupUnassignedDeviceList.add(loadDevice(resultSet));
+                }
             }
         } catch (SQLException e) {
             String msg = "Error occurred while retrieving information of group unassigned devices";

@@ -272,7 +272,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     @Path("/{device-type}/ungrouped-devices")
     public Response getUngroupedDevices(
             @PathParam("device-type") String deviceType,
-            @QueryParam("groupName") List<String> groupNames,
+            @QueryParam("groupNames") List<String> groupNames,
             @DefaultValue("0")
             @QueryParam("offset") int offset,
             @DefaultValue("10")
@@ -286,8 +286,8 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                     DeviceMgtAPIUtils.getReportManagementService().getDeviceNotAssignedToGroups(request, groupNames);
 
             if (paginationResult.getData().isEmpty()) {
-                return Response.status(Response.Status.NO_CONTENT).entity("Enrolled devices are " +
-                                                                  "assigned to groups").build();
+                String msg = "There is no device without groups";
+                return Response.status(Response.Status.NO_CONTENT).entity(msg).build();
             } else {
                 deviceList.setList((List<Device>) paginationResult.getData());
                 return Response.status(Response.Status.OK).entity(deviceList).build();
