@@ -297,6 +297,12 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                          "groups";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (DeviceTypeNotFoundException e) {
+            String msg = "Error occurred while retrieving devices list. Device type: " + deviceType +
+                         "is not valid";
+            log.error(msg, e);
+            return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+
         }
     }
 }
