@@ -419,7 +419,8 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 GroupManagementDAOFactory.closeConnection();
             }
         } catch (DeviceManagementException e) {
-            String msg = "Error occurred while validating device list page size";
+            String msg = "Error occurred while validating device list page size or loading  " +
+                         "device types";
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
         } catch (DeviceManagementDAOException e) {
