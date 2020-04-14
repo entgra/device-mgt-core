@@ -276,7 +276,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             @DefaultValue("0")
             @QueryParam("offset") int offset,
             @DefaultValue("10")
-            @QueryParam("limit") int limit) throws DeviceTypeNotFoundException {
+            @QueryParam("limit") int limit) {
         try {
             RequestValidationUtil.validatePaginationParameters(offset, limit);
             PaginationRequest request = new PaginationRequest(offset, limit);

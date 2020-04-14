@@ -40,6 +40,7 @@ import org.wso2.carbon.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.util.DeviceManagerUtil;
 
+import javax.ws.rs.core.Response;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -421,6 +422,10 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             String msg = "Error occurred while retrieving Tenant ID";
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
+        } catch (DeviceTypeNotFoundException e) {
+            String msg = "Error occurred while retrieving device list. Device type is invalid";
+            log.error(msg, e);
+            throw new DeviceTypeNotFoundException(msg,e);
         }
     }
 }

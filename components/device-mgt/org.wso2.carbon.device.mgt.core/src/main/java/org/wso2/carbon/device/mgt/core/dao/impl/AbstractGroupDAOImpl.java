@@ -842,7 +842,7 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
                                                 "(SELECT DEVICE_ID " +
                                                 "FROM DM_DEVICE_GROUP_MAP " +
                                                 "WHERE GROUP_ID IN (SELECT ID FROM DM_GROUP WHERE GROUP_NAME NOT IN (",
-                                                "))) GROUP BY DEVICE_ID");
+                                                "))GROUP BY DEVICE_ID)");
 
             groupNames.stream().map(e -> "?").forEach(sql::add);
             try (PreparedStatement stmt = connection.prepareStatement(String.valueOf(sql))) {

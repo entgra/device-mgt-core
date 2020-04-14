@@ -500,10 +500,11 @@ public interface ReportManagementService {
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
-            value = "Getting devices list that is not assigned to the default groups passed" +
-                    " by the user.",
-            notes = "Devices are automatically assigned to default groups during enrollment. This" +
-                    " API filters the list of devices that are assigned to groups that are .",
+            value = "Getting devices list that is only assigned to the querying groups.",
+            notes = "Devices are automatically assigned to default groups during the device " +
+                    "enrollment. This API filters the list of devices that are only assigned to " +
+                    "querying groups by a user.",
+            tags = "Device Management",
             extensions = {
                     @Extension(properties = {
                             @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
@@ -518,11 +519,11 @@ public interface ReportManagementService {
                                     description = "The content type of the body"),
                             @ResponseHeader(
                                     name = "ETag",
-                                    description = "Entity Tag of the response resource.\n" +
+                                    description = "Entity Tag of the response resource." +
                                                   "Used by caches, or in conditional requests."),
                             @ResponseHeader(
                                     name = "Last-Modified",
-                                    description = "Date and time the resource has been modified the last time.\n" +
+                                    description = "Date and time the resource has been modified the last time." +
                                                   "Used by caches, or in conditional requests."),
                     }),
             @ApiResponse(
@@ -531,25 +532,24 @@ public interface ReportManagementService {
                     response = ErrorResponse.class),
             @ApiResponse(
                     code = 204,
-                    message = "There is no device without groups assigned.")
+                    message = "No content\n There is no device without groups assigned.")
     })
     Response getUngroupedDevices(
             @ApiParam(
                     name = "device-type",
-                    value = "The device type name, such as ios, android, windows, or fire-alarm.",
+                    value = "The device type name, such as ios, android, windows etc",
                     required = true)
             @PathParam("device-type")
                     String deviceType,
             @ApiParam(
                     name = "groupNames",
-                    value = "The group names available",
-                    defaultValue = "BYOD")
+                    value = "The group names available")
             @QueryParam("groupName")
                     List<String> groupNames,
             @ApiParam(
                     name = "offset",
                     value = "The starting pagination index for the complete list of grouped " +
-                            "devides",
+                            "devices",
                     defaultValue = "0")
             @QueryParam("offset")
                     int offset,
@@ -558,5 +558,5 @@ public interface ReportManagementService {
                     value = "Provide how many device details you require from the starting pagination index/offset.",
                     defaultValue = "10")
             @QueryParam("limit")
-                    int limit) throws DeviceTypeNotFoundException;
+                    int limit);
 }
