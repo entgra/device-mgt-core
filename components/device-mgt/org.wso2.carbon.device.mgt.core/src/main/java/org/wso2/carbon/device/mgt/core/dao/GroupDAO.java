@@ -334,13 +334,13 @@ public interface GroupDAO {
      * @param paginationRequest Request object with offset and limit.
      * @param groupNames default group names that should be omitted when checking the device
      *                   whether they have been assigned to groups
-     * @throws ReportManagementException Might occur while retrieving information of group
+     * @throws GroupManagementDAOException Might occur while retrieving information of group
      * unassigned devices
      * @return details of devices that are unassigned to groups.
      */
 
     List<Device> getGroupUnassignedDevices(PaginationRequest paginationRequest,
                                            List<String> groupNames)
-            throws ReportManagementException;
+            throws GroupManagementDAOException;
 
 }

@@ -24,7 +24,6 @@ import org.apache.solr.common.StringUtils;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.GroupPaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
-import org.wso2.carbon.device.mgt.common.exceptions.ReportManagementException;
 import org.wso2.carbon.device.mgt.common.group.mgt.DeviceGroup;
 import org.wso2.carbon.device.mgt.core.dao.GroupDAO;
 import org.wso2.carbon.device.mgt.core.dao.GroupManagementDAOException;
@@ -820,7 +819,7 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
     @Override
     public List<Device> getGroupUnassignedDevices(PaginationRequest paginationRequest,
                                                   List<String> groupNames)
-            throws ReportManagementException {
+            throws GroupManagementDAOException {
         List<Device> groupUnassignedDeviceList;
         try {
             Connection connection = GroupManagementDAOFactory.getConnection();
@@ -842,7 +841,7 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
                                                 "(SELECT DEVICE_ID " +
                                                 "FROM DM_DEVICE_GROUP_MAP " +
                                                 "WHERE GROUP_ID IN (SELECT ID FROM DM_GROUP WHERE GROUP_NAME NOT IN (",
-                                                "))GROUP BY DEVICE_ID)");
+                                                ")) GROUP BY DEVICE_ID)");
 
             groupNames.stream().map(e -> "?").forEach(sql::add);
             try (PreparedStatement stmt = connection.prepareStatement(String.valueOf(sql))) {
@@ -860,7 +859,7 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
         } catch (SQLException e) {
             String msg = "Error occurred while retrieving information of group unassigned devices";
             log.error(msg, e);
-            throw new ReportManagementException(msg,e);
+            throw new GroupManagementDAOException(msg,e);
         }
         return groupUnassignedDeviceList;
     }
