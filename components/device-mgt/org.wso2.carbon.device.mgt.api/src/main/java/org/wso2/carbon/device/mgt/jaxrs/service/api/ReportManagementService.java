@@ -500,10 +500,10 @@ public interface ReportManagementService {
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
-            value = "Getting devices list that are not assigned under any groups",
-            notes = "Devices are assigned to default groups during enrollmnt. This api gives the " +
-                    "list of devices that are assigned to groups other that default groups.",
-            tags = "Devices that are unassigned to Group Management",
+            value = "Getting devices list that is not assigned to the default groups passed" +
+                    " by the user.",
+            notes = "Devices are automatically assigned to default groups during enrollment. This" +
+                    " API filters the list of devices that are assigned to groups that are .",
             extensions = {
                     @Extension(properties = {
                             @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
@@ -531,8 +531,7 @@ public interface ReportManagementService {
                     response = ErrorResponse.class),
             @ApiResponse(
                     code = 204,
-                    message = "Internal Server Error. \n Server error occurred.",
-                    response = ErrorResponse.class)
+                    message = "There is no device without groups assigned.")
     })
     Response getUngroupedDevices(
             @ApiParam(

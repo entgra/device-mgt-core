@@ -42,7 +42,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
-
 /**
  * This class represents implementation of GroupDAO
  */
@@ -843,7 +842,7 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
                                                 "(SELECT DEVICE_ID " +
                                                 "FROM DM_DEVICE_GROUP_MAP " +
                                                 "WHERE GROUP_ID IN (SELECT ID FROM DM_GROUP WHERE GROUP_NAME NOT IN (",
-                                                ")))");
+                                                "))) GROUP BY DEVICE_ID");
 
             groupNames.stream().map(e -> "?").forEach(sql::add);
             try (PreparedStatement stmt = connection.prepareStatement(String.valueOf(sql))) {
@@ -851,10 +850,11 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
                 for (String groupName : groupNames) {
                     stmt.setString(index++, groupName);
                 }
-                ResultSet resultSet = stmt.executeQuery();
-                groupUnassignedDeviceList = new ArrayList<>();
-                while (resultSet.next()) {
-                    groupUnassignedDeviceList.add(DeviceManagementDAOUtil.loadDevice(resultSet));
+                try (ResultSet resultSet = stmt.executeQuery()) {
+                    groupUnassignedDeviceList = new ArrayList<>();
+                    while (resultSet.next()) {
+                        groupUnassignedDeviceList.add(DeviceManagementDAOUtil.loadDevice(resultSet));
+                    }
                 }
             }
         } catch (SQLException e) {
