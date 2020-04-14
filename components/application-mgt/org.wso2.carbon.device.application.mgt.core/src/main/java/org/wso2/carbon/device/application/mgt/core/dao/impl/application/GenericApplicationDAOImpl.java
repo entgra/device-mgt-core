@@ -94,7 +94,8 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
     }
 
     @Override
-    public List<ApplicationDTO> getApplications(Filter filter, int deviceTypeId, int tenantId) throws ApplicationManagementDAOException {
+    public List<ApplicationDTO> getApplications(Filter filter, int deviceTypeId, int tenantId) throws
+            ApplicationManagementDAOException {
         if (filter == null) {
             String msg = "Filter is not instantiated for tenant "+tenantId;
             log.error(msg);
