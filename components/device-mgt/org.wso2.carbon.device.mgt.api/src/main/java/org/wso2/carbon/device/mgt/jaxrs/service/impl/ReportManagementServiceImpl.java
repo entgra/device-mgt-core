@@ -302,7 +302,6 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                          "is not valid";
             log.error(msg, e);
             return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
-
         }
     }
 }
