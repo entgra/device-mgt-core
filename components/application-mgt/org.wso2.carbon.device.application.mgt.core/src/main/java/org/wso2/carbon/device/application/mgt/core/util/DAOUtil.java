@@ -80,6 +80,7 @@ public class DAOUtil {
                 application.setStatus(rs.getString("APP_STATUS"));
                 application.setAppRating(rs.getDouble("APP_RATING"));
                 application.setDeviceTypeId(rs.getInt("APP_DEVICE_TYPE_ID"));
+                application.setAdamId(rs.getString("APP_ADAM_ID"));
                 application.setPackageName(rs.getString("PACKAGE_NAME"));
                 application.getApplicationReleaseDTOs().add(constructAppReleaseDTO(rs));
             } else {

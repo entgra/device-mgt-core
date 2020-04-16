@@ -96,6 +96,18 @@ public class ApplicationDTO {
             value = "package name of the application")
     private String packageName;
 
+    @ApiModelProperty(name = "adamId",
+            value = "adamID is the asset ID given by iTunes")
+    private String adamId;
+
+    public String getAdamId() {
+        return adamId;
+    }
+
+    public void setAdamId(String adamId) {
+        this.adamId = adamId;
+    }
+
     public String getPackageName() {
         return packageName;
     }
