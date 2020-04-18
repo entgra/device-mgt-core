@@ -59,7 +59,6 @@ import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.HEAD;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -386,17 +385,16 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
     }
 
     @Override
-    @HEAD
-    @Path("/device-type/{deviceType}/app-name/{appName}")
+    @GET
     public Response isExistingApplication(
-            @PathParam("deviceType") String deviceType,
-            @PathParam("appName") String appName ){
+            @QueryParam("deviceType") String deviceType,
+            @QueryParam("appName") String appName){
         try {
             ApplicationManager applicationManager = APIUtil.getApplicationManager();
             if (applicationManager.isExistingAppName(appName, deviceType)) {
-                return Response.status(Response.Status.OK).build();
+                return Response.status(Response.Status.CONFLICT).build();
             }
-            return Response.status(Response.Status.NOT_FOUND).build();
+            return Response.status(Response.Status.OK).build();
         } catch (BadRequestException e) {
             log.error("Found invalid device type to check application existence.", e);
             return Response.status(Response.Status.BAD_REQUEST).build();

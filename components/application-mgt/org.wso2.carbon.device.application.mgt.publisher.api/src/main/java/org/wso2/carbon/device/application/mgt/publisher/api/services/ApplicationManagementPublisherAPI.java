@@ -53,7 +53,6 @@ import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.HEAD;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -716,10 +715,9 @@ public interface ApplicationManagementPublisherAPI {
             @Multipart(value = "screenshot3") Attachment screenshot3
     );
 
-    @HEAD
-    @Path("/device-type/{deviceType}/app-name/{appName}")
+    @GET
     @ApiOperation(
-            httpMethod = "HEAD",
+            httpMethod = "GET",
             value = "Check the application existence",
             notes = "This API is responsible to check whether application exist or not for the given device type and "
                     + "application name.",
@@ -753,12 +751,12 @@ public interface ApplicationManagementPublisherAPI {
                     name = "deviceType",
                     value = "Application compatible device type name",
                     required = true)
-            @PathParam("deviceType") String deviceType,
+            @QueryParam("deviceType") String deviceType,
             @ApiParam(
                     name = "appName",
                     value = "Application name",
                     required = true)
-            @PathParam("appName") String appName
+            @QueryParam("appName") String appName
     );
 
     @PUT
