@@ -732,11 +732,10 @@ public interface ApplicationManagementPublisherAPI {
             value = {
                     @ApiResponse(
                             code = 200,
-                            message = "OK. \n Application exists."),
+                            message = "OK. \n Application doesn't exists."),
                     @ApiResponse(
-                            code = 404,
-                            message = "NOT FOUND. \n Could.t find an application for given device type and application "
-                                    + "name."),
+                            code = 409,
+                            message = "CONFLICT. \n Application exists"),
                     @ApiResponse(
                             code = 400,
                             message = "Bad Request. \n Found invalid device type with the request."),
