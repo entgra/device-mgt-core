@@ -386,9 +386,10 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
 
     @Override
     @GET
+    @Path("/device-type/{deviceType}/app-name/{appName}")
     public Response isExistingApplication(
-            @QueryParam("deviceType") String deviceType,
-            @QueryParam("appName") String appName){
+            @PathParam("deviceType") String deviceType,
+            @PathParam("appName") String appName ){
         try {
             ApplicationManager applicationManager = APIUtil.getApplicationManager();
             if (applicationManager.isExistingAppName(appName, deviceType)) {
