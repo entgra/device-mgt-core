@@ -22,7 +22,6 @@ import axios from 'axios';
 import { withConfigContext } from '../../../../../../../../components/ConfigContext';
 import { handleApiError } from '../../../../../../../../services/utils/errorHandler';
 import debounce from 'lodash.debounce';
-import Authorized from '../../../../../../../../components/Authorized/Authorized';
 
 const formItemLayout = {
   labelCol: {
@@ -47,6 +46,12 @@ class NewAppDetailsForm extends React.Component {
       fetching: false,
       roleSearchValue: [],
       unrestrictedRoles: [],
+      forbiddenErrors: {
+        categories: false,
+        tags: false,
+        deviceTypes: false,
+        roles: false,
+      },
     };
     this.lastFetchId = 0;
     this.fetchRoles = debounce(this.fetchRoles, 800);
@@ -86,10 +91,54 @@ class NewAppDetailsForm extends React.Component {
           application.type = 'WEB_CLIP';
           application.deviceType = 'ALL';
         }
-
-        this.props.onSuccessApplicationData(application);
+        this.validateAppName(name, application.deviceType, application);
       }
     });
+  };
+
+  validateAppName = (name, deviceType, application) => {
+    const config = this.props.context;
+    axios
+      .get(
+        window.location.origin +
+          config.serverConfig.invoker.uri +
+          config.serverConfig.invoker.publisher +
+          `/applications/device-type/${deviceType}/app-name/${name}`,
+      )
+      .then(res => {
+        if (res.status === 200) {
+          this.props.onSuccessApplicationData(application);
+          console.log(res.status);
+        }
+      })
+      .catch(error => {
+        if (error.hasOwnProperty('response') && error.response.status === 403) {
+          const { forbiddenErrors } = this.state;
+          forbiddenErrors.categories = true;
+          this.setState({
+            forbiddenErrors,
+            loading: false,
+          });
+        } else if (
+          error.hasOwnProperty('response') &&
+          error.response.status === 409
+        ) {
+          this.props.form.setFields({
+            name: {
+              value: name,
+              errors: [
+                new Error('App name already exists, Please try another'),
+              ],
+            },
+          });
+        } else {
+          handleApiError(
+            error,
+            'Error occurred while trying to validate app name.',
+            true,
+          );
+        }
+      });
   };
 
   componentDidMount() {
@@ -122,9 +171,18 @@ class NewAppDetailsForm extends React.Component {
           'Error occurred while trying to load categories.',
           true,
         );
-        this.setState({
-          loading: false,
-        });
+        if (error.hasOwnProperty('response') && error.response.status === 403) {
+          const { forbiddenErrors } = this.state;
+          forbiddenErrors.categories = true;
+          this.setState({
+            forbiddenErrors,
+            loading: false,
+          });
+        } else {
+          this.setState({
+            loading: false,
+          });
+        }
       });
   };
 
@@ -152,9 +210,18 @@ class NewAppDetailsForm extends React.Component {
           'Error occurred while trying to load tags.',
           true,
         );
-        this.setState({
-          loading: false,
-        });
+        if (error.hasOwnProperty('response') && error.response.status === 403) {
+          const { forbiddenErrors } = this.state;
+          forbiddenErrors.tags = true;
+          this.setState({
+            forbiddenErrors,
+            loading: false,
+          });
+        } else {
+          this.setState({
+            loading: false,
+          });
+        }
       });
   };
 
@@ -256,9 +323,18 @@ class NewAppDetailsForm extends React.Component {
           'Error occurred while trying to load roles.',
           true,
         );
-        this.setState({
-          fetching: false,
-        });
+        if (error.hasOwnProperty('response') && error.response.status === 403) {
+          const { forbiddenErrors } = this.state;
+          forbiddenErrors.roles = true;
+          this.setState({
+            forbiddenErrors,
+            fetching: false,
+          });
+        } else {
+          this.setState({
+            fetching: false,
+          });
+        }
       });
   };
 
@@ -278,6 +354,7 @@ class NewAppDetailsForm extends React.Component {
       deviceTypes,
       fetching,
       unrestrictedRoles,
+      forbiddenErrors,
     } = this.state;
     const { getFieldDecorator } = this.props.form;
 
@@ -293,17 +370,14 @@ class NewAppDetailsForm extends React.Component {
             >
               {formConfig.installationType !== 'WEB_CLIP' && (
                 <div>
-                  <Authorized
-                    permission="/permission/admin/device-mgt/admin/device-type/view"
-                    no={
-                      <Alert
-                        message="You don't have permission to view device types."
-                        type="warning"
-                        banner
-                        closable
-                      />
-                    }
-                  />
+                  {forbiddenErrors.deviceTypes && (
+                    <Alert
+                      message="You don't have permission to view device types."
+                      type="warning"
+                      banner
+                      closable
+                    />
+                  )}
                   <Form.Item {...formItemLayout} label="Device Type">
                     {getFieldDecorator('deviceType', {
                       rules: [
@@ -336,7 +410,7 @@ class NewAppDetailsForm extends React.Component {
                   rules: [
                     {
                       required: true,
-                      message: 'Please input a name',
+                      message: 'Please inputt a name',
                     },
                   ],
                 })(<Input placeholder="ex: Lorem App" />)}
@@ -357,16 +431,14 @@ class NewAppDetailsForm extends React.Component {
               </Form.Item>
 
               {/* Unrestricted Roles*/}
-              <Authorized
-                permission="/permission/admin/device-mgt/roles/view"
-                no={
-                  <Alert
-                    message="You don't have permission to view roles."
-                    type="warning"
-                    banner
-                  />
-                }
-              />
+              {forbiddenErrors.roles && (
+                <Alert
+                  message="You don't have permission to view roles."
+                  type="warning"
+                  banner
+                  closable
+                />
+              )}
               <Form.Item {...formItemLayout} label="Visible Roles">
                 {getFieldDecorator('unrestrictedRoles', {
                   rules: [],
@@ -389,6 +461,14 @@ class NewAppDetailsForm extends React.Component {
                   </Select>,
                 )}
               </Form.Item>
+              {forbiddenErrors.categories && (
+                <Alert
+                  message="You don't have permission to view categories."
+                  type="warning"
+                  banner
+                  closable
+                />
+              )}
               <Form.Item {...formItemLayout} label="Categories">
                 {getFieldDecorator('categories', {
                   rules: [
@@ -414,6 +494,14 @@ class NewAppDetailsForm extends React.Component {
                   </Select>,
                 )}
               </Form.Item>
+              {forbiddenErrors.tags && (
+                <Alert
+                  message="You don't have permission to view tags."
+                  type="warning"
+                  banner
+                  closable
+                />
+              )}
               <Form.Item {...formItemLayout} label="Tags">
                 {getFieldDecorator('tags', {
                   rules: [
