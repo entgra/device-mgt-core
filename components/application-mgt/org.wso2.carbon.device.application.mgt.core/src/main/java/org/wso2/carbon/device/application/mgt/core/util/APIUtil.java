@@ -43,6 +43,7 @@ import org.wso2.carbon.device.application.mgt.common.wrapper.WebAppWrapper;
 import org.wso2.carbon.device.application.mgt.core.config.ConfigurationManager;
 import org.wso2.carbon.device.application.mgt.core.exception.BadRequestException;
 import org.wso2.carbon.device.application.mgt.core.exception.UnexpectedServerErrorException;
+import org.wso2.carbon.device.application.mgt.core.internal.DataHolder;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 
@@ -87,19 +88,25 @@ public class APIUtil {
      * @return ApplicationStoreManager instance in the current osgi context.
      */
     public static ApplicationStorageManager getApplicationStorageManager() {
-        if (applicationStorageManager == null) {
-            synchronized (APIUtil.class) {
-                if (applicationStorageManager == null) {
-                    PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
-                    applicationStorageManager = (ApplicationStorageManager) ctx
-                            .getOSGiService(ApplicationStorageManager.class, null);
+
+        try {
+            if (applicationStorageManager == null) {
+                synchronized (DAOUtil.class) {
                     if (applicationStorageManager == null) {
-                        String msg = "ApplicationDTO Storage Manager service has not initialized.";
-                        log.error(msg);
-                        throw new IllegalStateException(msg);
+                        applicationStorageManager = ApplicationManagementUtil
+                                .getApplicationStorageManagerInstance();
+                        if (applicationStorageManager == null) {
+                            String msg = "ApplicationDTO Storage Manager service has not initialized.";
+                            log.error(msg);
+                            throw new IllegalStateException(msg);
+                        }
                     }
                 }
             }
+        } catch (Exception e) {
+            String msg = "Error occurred while getting the application store manager";
+            log.error(msg);
+            throw new IllegalStateException(msg);
         }
         return applicationStorageManager;
     }
@@ -191,7 +198,7 @@ public class APIUtil {
             throws BadRequestException, UnexpectedServerErrorException {
         List<DeviceType> deviceTypes;
         try {
-            deviceTypes = DAOUtil.getDeviceManagementService().getDeviceTypes();
+            deviceTypes = DataHolder.getInstance().getDeviceManagementService().getDeviceTypes();
             if (deviceTypeAttr instanceof String) {
                 for (DeviceType dt : deviceTypes) {
                     if (dt.getName().equals(deviceTypeAttr)) {
