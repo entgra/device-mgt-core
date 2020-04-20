@@ -107,10 +107,7 @@ class NewAppDetailsForm extends React.Component {
       })
       .catch(error => {
         if (error.hasOwnProperty('response') && error.response.status === 403) {
-          const { forbiddenErrors } = this.state;
-          forbiddenErrors.categories = true;
           this.setState({
-            forbiddenErrors,
             loading: false,
           });
         } else if (
@@ -374,6 +371,18 @@ class NewAppDetailsForm extends React.Component {
               )}
 
               {/* app name*/}
+              <Authorized
+                permission="/permission/admin/app-mgt/publisher/application/view"
+                no={
+                  <Alert
+                    message="You don't have permission to compare application names. If you have update permission,
+                    you still can add application but app name should be unique."
+                    type="warning"
+                    banner
+                    closable
+                  />
+                }
+              />
               <Form.Item {...formItemLayout} label="App Name">
                 {getFieldDecorator('name', {
                   rules: [
