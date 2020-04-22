@@ -23,6 +23,7 @@ import { BrowserRouter as Router, Redirect, Switch } from 'react-router-dom';
 import axios from 'axios';
 import { Layout, Spin, Result } from 'antd';
 import ConfigContext from './components/context/ConfigContext';
+import { Localizer } from './components/Localizer';
 
 const { Content } = Layout;
 const loadingView = (
@@ -161,14 +162,14 @@ class App extends React.Component {
     const applicationView = (
       <Router>
         <ConfigContext.Provider value={this.state.config}>
-          <div>
+          <Localizer>
             <Switch>
               <Redirect exact from="/store" to="/store/android" />
               {this.props.routes.map(route => (
                 <RouteWithSubRoutes key={route.path} {...route} />
               ))}
             </Switch>
-          </div>
+          </Localizer>
         </ConfigContext.Provider>
       </Router>
     );

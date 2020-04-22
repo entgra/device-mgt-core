@@ -31,6 +31,8 @@ import {
 import './styles.css';
 import axios from 'axios';
 import { withConfigContext } from '../../components/context/ConfigContext';
+import { withTranslation } from 'react-i18next';
+import LanguageChooser from '../../components/LocaleChooser';
 
 const { Title } = Typography;
 const { Text } = Typography;
@@ -38,6 +40,8 @@ const { Text } = Typography;
 class Login extends React.Component {
   render() {
     const config = this.props.context;
+    const { t } = this.props;
+
     return (
       <div className="login">
         <div className="background"></div>
@@ -56,8 +60,9 @@ class Login extends React.Component {
                   />
                 </Col>
               </Row>
-              <Title level={2}>Login</Title>
+              <Title level={2}>{t('login_login')}</Title>
               <WrappedNormalLoginForm />
+              <LanguageChooser />
             </Col>
           </Row>
           <Row>
@@ -140,6 +145,7 @@ class NormalLoginForm extends React.Component {
 
   render() {
     const { getFieldDecorator } = this.props.form;
+    const { t } = this.props;
     let errorMsg = '';
     if (this.state.inValid) {
       errorMsg = <Text type="danger">Invalid Login Details</Text>;
@@ -158,7 +164,7 @@ class NormalLoginForm extends React.Component {
               name="username"
               style={{ height: 32 }}
               prefix={<Icon type="user" style={{ color: 'rgba(0,0,0,.25)' }} />}
-              placeholder="Username"
+              placeholder={t('login_username')}
             />,
           )}
         </Form.Item>
@@ -171,7 +177,7 @@ class NormalLoginForm extends React.Component {
               style={{ height: 32 }}
               prefix={<Icon type="lock" style={{ color: 'rgba(0,0,0,.25)' }} />}
               type="password"
-              placeholder="Password"
+              placeholder={t('login_password')}
             />,
           )}
         </Form.Item>
@@ -181,10 +187,10 @@ class NormalLoginForm extends React.Component {
           {getFieldDecorator('remember', {
             valuePropName: 'checked',
             initialValue: true,
-          })(<Checkbox>Remember me</Checkbox>)}
+          })(<Checkbox>{t('login_rememberMe')}</Checkbox>)}
           <br />
           <a className="login-form-forgot" href="">
-            Forgot password
+            {t('login_forgotPassword')}
           </a>
           <Button
             loading={this.state.loading}
@@ -193,7 +199,7 @@ class NormalLoginForm extends React.Component {
             htmlType="submit"
             className="login-form-button"
           >
-            Log in
+            {t('login_login')}
           </Button>
         </Form.Item>
       </Form>
@@ -202,7 +208,7 @@ class NormalLoginForm extends React.Component {
 }
 
 const WrappedNormalLoginForm = withConfigContext(
-  Form.create({ name: 'normal_login' })(NormalLoginForm),
+  Form.create({ name: 'normal_login' })(withTranslation()(NormalLoginForm)),
 );
 
-export default withConfigContext(Login);
+export default withConfigContext(withTranslation()(Login));

@@ -1,0 +1,11 @@
+{
+  "login_login": "ログインする",
+  "login_username": "ユーザー名",
+  "login_password": "パスワード",
+  "login_rememberMe": "私を覚えてますか",
+  "login_forgotPassword": "パスワードをお忘れですか？",
+  "home_webClips": "ウェブクリップ",
+  "home_noApps": "まだアプリはありません。",
+  "home_noAppsDescription": "まだアプリはありません！ 管理がアップロードすると、アプリがここに表示されます。",
+  "gen_android": "アンドロイド"
+}

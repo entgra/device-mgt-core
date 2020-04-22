@@ -23,6 +23,7 @@ import axios from 'axios';
 import { withConfigContext } from '../../../../../../components/context/ConfigContext';
 import { handleApiError } from '../../../../../../services/utils/errorHandler';
 import InfiniteScroll from 'react-infinite-scroller';
+import { withTranslation } from 'react-i18next';
 
 const limit = 30;
 
@@ -130,6 +131,7 @@ class AppList extends React.Component {
 
   render() {
     const { apps, loading, hasMore } = this.state;
+    const { t } = this.props;
 
     return (
       <div>
@@ -145,8 +147,8 @@ class AppList extends React.Component {
             {apps.length === 0 && (
               <Result
                 status="404"
-                title="No apps, yet."
-                subTitle="No apps available, yet! When the administration uploads, apps will show up here."
+                title={t('home_noApps')}
+                subTitle={t('home_noAppsDescription')}
               />
             )}
             {apps.map(app => (
@@ -161,4 +163,4 @@ class AppList extends React.Component {
   }
 }
 
-export default withConfigContext(AppList);
+export default withConfigContext(withTranslation()(AppList));

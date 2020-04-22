@@ -1,0 +1,11 @@
+{
+  "login_login": "Login",
+  "login_username": "Username",
+  "login_password": "Password",
+  "login_rememberMe": "Remember me",
+  "login_forgotPassword": "Forgot Password?",
+  "home_webClips": "Web Clips",
+  "home_noApps": "No apps, yet.",
+  "home_noAppsDescription": "No apps available, yet! When the administration uploads, apps will show up here.",
+  "gen_android": "Android"
+}

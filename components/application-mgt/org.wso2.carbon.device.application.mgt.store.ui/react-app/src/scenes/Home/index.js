@@ -28,6 +28,8 @@ import './styles.css';
 import { withConfigContext } from '../../components/context/ConfigContext';
 import Logout from './components/Logout';
 import { handleApiError } from '../../services/utils/errorHandler';
+import LanguageChooser from '../../components/LocaleChooser';
+import { withTranslation } from 'react-i18next';
 
 const { SubMenu } = Menu;
 
@@ -114,6 +116,7 @@ class Dashboard extends React.Component {
   render() {
     const config = this.props.context;
     const { selectedKeys, deviceTypes, forbiddenErrors } = this.state;
+    const { t } = this.props;
 
     const DeviceTypesData = deviceTypes.map(deviceType => {
       const platform = deviceType.name;
@@ -128,7 +131,7 @@ class Dashboard extends React.Component {
         <Menu.Item key={platform}>
           <Link to={'/store/' + platform}>
             <Icon type={icon} theme={theme} />
-            {platform}
+            {t('gen_' + platform)}
           </Link>
         </Menu.Item>
       );
@@ -158,14 +161,12 @@ class Dashboard extends React.Component {
                 style={{ lineHeight: '64px' }}
               >
                 {DeviceTypesData}
-
                 <Menu.Item key="web-clip">
                   <Link to="/store/web-clip">
                     <Icon type="upload" />
-                    Web Clips
+                    {t('home_webClips')}
                   </Link>
                 </Menu.Item>
-
                 <SubMenu
                   className="profile"
                   title={
@@ -177,6 +178,7 @@ class Dashboard extends React.Component {
                 >
                   <Logout />
                 </SubMenu>
+                <SubMenu className="profile" title={<LanguageChooser />} />
               </Menu>
             </div>
           </Header>
@@ -225,6 +227,7 @@ class Dashboard extends React.Component {
                 Web Clips
               </Link>
             </Menu.Item>
+            <SubMenu title={<LanguageChooser />} />
           </Menu>
         </Drawer>
         <Layout className="mobile-layout">
@@ -265,7 +268,6 @@ class Dashboard extends React.Component {
               ))}
             </Switch>
           </Content>
-
           <Footer style={{ textAlign: 'center' }}>{this.footerText}</Footer>
         </Layout>
       </div>
@@ -273,4 +275,4 @@ class Dashboard extends React.Component {
   }
 }
 
-export default withConfigContext(Dashboard);
+export default withConfigContext(withTranslation()(Dashboard));
