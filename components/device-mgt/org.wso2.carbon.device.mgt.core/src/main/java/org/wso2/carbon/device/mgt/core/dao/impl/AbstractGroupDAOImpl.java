@@ -837,7 +837,7 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
                                                 "ENROLMENT.STATUS " +
                                                 "FROM DM_DEVICE AS DEVICE, DM_DEVICE_TYPE AS DEVICE_TYPE, DM_ENROLMENT " +
                                                 "AS ENROLMENT " +
-                                                "WHERE DEVICE_TYPE.NAME IN (?) AND DEVICE" +
+                                                "WHERE DEVICE_TYPE.NAME = ? AND DEVICE" +
                                                 ".ID " +
                                                 "NOT IN " +
                                                 "(SELECT DEVICE_ID " +
