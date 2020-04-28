@@ -980,7 +980,9 @@ public class UserManagementServiceImpl implements UserManagementService {
                 if (log.isDebugEnabled()) {
                     log.debug("User by username: " + username + " does not exist.");
                 }
-                return Response.status(Response.Status.NOT_FOUND).entity("User doesn't exist.").build();
+                String msg = "User by username: " + username + " does not exist.";
+                log.error(msg);
+                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
             }
             Map<String, String> userClaims =
                     this.buildExternalDevicesUserClaims(username, domain, deviceList, userStoreManager);
@@ -1014,14 +1016,17 @@ public class UserManagementServiceImpl implements UserManagementService {
             UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
             String[] allUserClaims = userStoreManager.getClaimManager().getAllClaimUris();
             if (!Arrays.asList(allUserClaims).contains(Constants.USER_CLAIM_DEVICES)) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .entity("Claim attribute for external device doesn't exist.").build();
+                String msg = "Claim attribute for external device doesn't exist.";
+                log.error(msg);
+                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
             }
             if (!userStoreManager.isExistingUser(username)) {
                 if (log.isDebugEnabled()) {
                     log.debug("User by username: " + username + " does not exist.");
                 }
-                return Response.status(Response.Status.NOT_FOUND).entity("User doesn't exist.").build();
+                String msg = "User by username: " + username + " does not exist.";
+                log.error(msg);
+                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
             }
             String[] claimArray = {Constants.USER_CLAIM_DEVICES};
             Map<String, String> claims = userStoreManager.getUserClaimValues(username, claimArray, domain);
@@ -1050,14 +1055,17 @@ public class UserManagementServiceImpl implements UserManagementService {
             UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
             String[] allUserClaims = userStoreManager.getClaimManager().getAllClaimUris();
             if (!Arrays.asList(allUserClaims).contains(Constants.USER_CLAIM_DEVICES)) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .entity("Claim attribute for external device doesn't exist.").build();
+                String msg = "Claim attribute for external device doesn't exist.";
+                log.error(msg);
+                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
             }
             if (!userStoreManager.isExistingUser(username)) {
                 if (log.isDebugEnabled()) {
                     log.debug("User by username: " + username + " does not exist.");
                 }
-                return Response.status(Response.Status.NOT_FOUND).entity("User doesn't exist.").build();
+                String msg = "User by username: " + username + " does not exist.";
+                log.error(msg);
+                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
             }
             String[] claimArray = {Constants.USER_CLAIM_DEVICES};
             userStoreManager.deleteUserClaimValues(
