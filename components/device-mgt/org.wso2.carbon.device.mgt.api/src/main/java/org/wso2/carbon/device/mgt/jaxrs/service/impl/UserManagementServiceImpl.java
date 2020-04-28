@@ -42,12 +42,14 @@ import org.apache.http.HttpStatus;
 import org.eclipse.wst.common.uriresolver.internal.util.URIEncoder;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.ConfigurationManagementException;
 import org.wso2.carbon.device.mgt.common.operation.mgt.Activity;
 import org.wso2.carbon.device.mgt.common.operation.mgt.OperationManagementException;
 import org.wso2.carbon.device.mgt.core.DeviceManagementConstants;
+import org.wso2.carbon.device.mgt.core.internal.DeviceManagementDataHolder;
 import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
 import org.wso2.carbon.device.mgt.core.service.EmailMetaInfo;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ActivityList;
@@ -67,13 +69,15 @@ import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.RequestValidationUtil;
 import org.wso2.carbon.device.mgt.jaxrs.util.Constants;
 import org.wso2.carbon.device.mgt.jaxrs.util.CredentialManagementResponseBuilder;
 import org.wso2.carbon.device.mgt.jaxrs.util.DeviceMgtAPIUtils;
+import org.wso2.carbon.identity.claim.metadata.mgt.ClaimMetadataManagementAdminService;
+import org.wso2.carbon.identity.claim.metadata.mgt.ClaimMetadataManagementService;
+import org.wso2.carbon.identity.claim.metadata.mgt.dto.AttributeMappingDTO;
+import org.wso2.carbon.identity.claim.metadata.mgt.dto.ClaimPropertyDTO;
+import org.wso2.carbon.identity.claim.metadata.mgt.dto.LocalClaimDTO;
+import org.wso2.carbon.identity.claim.metadata.mgt.exception.ClaimMetadataException;
 import org.wso2.carbon.identity.user.store.count.UserStoreCountRetriever;
 import org.wso2.carbon.identity.user.store.count.exception.UserStoreCounterException;
-import org.wso2.carbon.user.api.Permission;
-import org.wso2.carbon.user.api.RealmConfiguration;
-import org.wso2.carbon.user.api.UserRealm;
-import org.wso2.carbon.user.api.UserStoreException;
-import org.wso2.carbon.user.api.UserStoreManager;
+import org.wso2.carbon.user.api.*;
 import org.wso2.carbon.user.core.UserCoreConstants;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.user.mgt.UserRealmProxy;
@@ -81,6 +85,8 @@ import org.wso2.carbon.user.mgt.common.UIPermissionNode;
 import org.wso2.carbon.user.mgt.common.UserAdminException;
 import org.wso2.carbon.utils.CarbonUtils;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
+import serp.bytecode.Local;
+
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -943,6 +949,34 @@ public class UserManagementServiceImpl implements UserManagementService {
                 username = domain + Constants.FORWARD_SLASH + username;
             }
             UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
+
+            ClaimMetadataManagementAdminService
+                    claimMetadataManagementAdminService = new ClaimMetadataManagementAdminService();
+            //Get all available claim URIs
+            String[] allUserClaims = userStoreManager.getClaimManager().getAllClaimUris();
+            //Check they contains a claim attribute for external devices
+            if (!Arrays.asList(allUserClaims).contains(Constants.USER_CLAIM_DEVICES)) {
+                List<ClaimPropertyDTO> claimPropertyDTOList = new ArrayList<>();
+                claimPropertyDTOList
+                        .add(DeviceMgtAPIUtils.buildClaimPropertyDTO
+                                (Constants.ATTRIBUTE_DISPLAY_NAME, Constants.EXTERNAL_DEVICE_CLAIM_DISPLAY_NAME));
+                claimPropertyDTOList
+                        .add(DeviceMgtAPIUtils.buildClaimPropertyDTO
+                                (Constants.ATTRIBUTE_DESCRIPTION, Constants.EXTERNAL_DEVICE_CLAIM_DESCRIPTION));
+
+                LocalClaimDTO localClaimDTO = new LocalClaimDTO();
+                localClaimDTO.setLocalClaimURI(Constants.USER_CLAIM_DEVICES);
+                localClaimDTO.setClaimProperties(claimPropertyDTOList.toArray(
+                        new ClaimPropertyDTO[claimPropertyDTOList.size()]));
+
+                AttributeMappingDTO attributeMappingDTO = new AttributeMappingDTO();
+                attributeMappingDTO.setAttributeName(Constants.DEVICES);
+                attributeMappingDTO.setUserStoreDomain(domain);
+                localClaimDTO.setAttributeMappings(new AttributeMappingDTO[]{attributeMappingDTO});
+
+                claimMetadataManagementAdminService.addLocalClaim(localClaimDTO);
+            }
+
             if (!userStoreManager.isExistingUser(username)) {
                 if (log.isDebugEnabled()) {
                     log.debug("User by username: " + username + " does not exist.");
@@ -955,7 +989,7 @@ public class UserManagementServiceImpl implements UserManagementService {
                     this.buildExternalDevicesUserClaims(username, domain, deviceList, userStoreManager);
             userStoreManager.setUserClaimValues(username, userClaims, domain);
             return Response.status(Response.Status.OK).entity(userClaims).build();
-        } catch (UserStoreException e) {
+        } catch (UserStoreException | ClaimMetadataException e) {
             String msg = "Error occurred while updating external device claims of the user '" + username + "'";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
@@ -978,6 +1012,12 @@ public class UserManagementServiceImpl implements UserManagementService {
                 username = domain + Constants.FORWARD_SLASH + username;
             }
             UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
+            String[] allUserClaims = userStoreManager.getClaimManager().getAllClaimUris();
+            if (!Arrays.asList(allUserClaims).contains(Constants.USER_CLAIM_DEVICES)) {
+                return Response.status(Response.Status.NOT_FOUND).entity(
+                        new ErrorResponse.ErrorResponseBuilder().setMessage(
+                                "Claim attribute for external device doesn't exist.").build()).build();
+            }
             if (!userStoreManager.isExistingUser(username)) {
                 if (log.isDebugEnabled()) {
                     log.debug("User by username: " + username + " does not exist.");
@@ -1012,6 +1052,12 @@ public class UserManagementServiceImpl implements UserManagementService {
                 username = domain + Constants.FORWARD_SLASH + username;
             }
             UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
+            String[] allUserClaims = userStoreManager.getClaimManager().getAllClaimUris();
+            if (!Arrays.asList(allUserClaims).contains(Constants.USER_CLAIM_DEVICES)) {
+                return Response.status(Response.Status.NOT_FOUND).entity(
+                        new ErrorResponse.ErrorResponseBuilder().setMessage(
+                                "Claim attribute for external device doesn't exist.").build()).build();
+            }
             if (!userStoreManager.isExistingUser(username)) {
                 if (log.isDebugEnabled()) {
                     log.debug("User by username: " + username + " does not exist.");
