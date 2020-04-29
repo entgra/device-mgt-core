@@ -296,15 +296,17 @@ class Cluster extends React.Component {
       return (
         <div className="product">
           <div className="arrow">
-            <button
-              disabled={index === 0}
-              className="btn"
-              onClick={() => {
-                this.swapProduct(index, index - 1);
-              }}
-            >
-              <Icon type="caret-left" theme="filled" />
-            </button>
+            {this.props.hasPermissionToManage && (
+              <button
+                disabled={index === 0}
+                className="btn"
+                onClick={() => {
+                  this.swapProduct(index, index - 1);
+                }}
+              >
+                <Icon type="caret-left" theme="filled" />
+              </button>
+            )}
           </div>
           <div className="product-icon">
             <img src={imageSrc} />
@@ -312,27 +314,31 @@ class Cluster extends React.Component {
               <div className="title">{packageId}</div>
             </Tooltip>
           </div>
-          <div className="arrow">
-            <button
-              disabled={index === products.length - 1}
-              onClick={() => {
-                this.swapProduct(index, index + 1);
-              }}
-              className="btn btn-right"
-            >
-              <Icon type="caret-right" theme="filled" />
-            </button>
-          </div>
-          <div className="delete-btn">
-            <button
-              className="btn"
-              onClick={() => {
-                this.removeProduct(index);
-              }}
-            >
-              <Icon type="close-circle" theme="filled" />
-            </button>
-          </div>
+          {this.props.hasPermissionToManage && (
+            <>
+              <div className="arrow">
+                <button
+                  disabled={index === products.length - 1}
+                  onClick={() => {
+                    this.swapProduct(index, index + 1);
+                  }}
+                  className="btn btn-right"
+                >
+                  <Icon type="caret-right" theme="filled" />
+                </button>
+              </div>
+              <div className="delete-btn">
+                <button
+                  className="btn"
+                  onClick={() => {
+                    this.removeProduct(index);
+                  }}
+                >
+                  <Icon type="close-circle" theme="filled" />
+                </button>
+              </div>
+            </>
+          )}
         </div>
       );
     };
@@ -342,12 +348,17 @@ class Cluster extends React.Component {
         <Spin spinning={loading}>
           <Row>
             <Col span={16}>
-              <Title editable={{ onChange: this.handleNameChange }} level={4}>
-                {name}
-              </Title>
+              {this.props.hasPermissionToManage && (
+                <Title editable={{ onChange: this.handleNameChange }} level={4}>
+                  {name}
+                </Title>
+              )}
+              {!this.props.hasPermissionToManage && (
+                <Title level={4}>{name}</Title>
+              )}
             </Col>
             <Col span={8}>
-              {!isTemporary && (
+              {!isTemporary && this.props.hasPermissionToManage && (
                 <div style={{ float: 'right' }}>
                   <Tooltip title="Move Up">
                     <Button
@@ -391,10 +402,12 @@ class Cluster extends React.Component {
             </Col>
           </Row>
           <div className="products-row">
-            <AddAppsToClusterModal
-              addSelectedProducts={this.addSelectedProducts}
-              unselectedProducts={unselectedProducts}
-            />
+            {this.props.hasPermissionToManage && (
+              <AddAppsToClusterModal
+                addSelectedProducts={this.addSelectedProducts}
+                unselectedProducts={unselectedProducts}
+              />
+            )}
             {products.map((product, index) => {
               return (
                 <Product
@@ -405,51 +418,55 @@ class Cluster extends React.Component {
               );
             })}
           </div>
-          <Row>
-            <Col>
-              {isTemporary && (
-                <div>
-                  <Button onClick={this.cancelAddingNewCluster}>Cancel</Button>
-                  <Divider type="vertical" />
-                  <Tooltip
-                    title={
-                      products.length === 0
-                        ? 'You must add applications to the cluster before saving'
-                        : ''
-                    }
-                  >
+          {this.props.hasPermissionToManage && (
+            <Row>
+              <Col>
+                {isTemporary && (
+                  <div>
+                    <Button onClick={this.cancelAddingNewCluster}>
+                      Cancel
+                    </Button>
+                    <Divider type="vertical" />
+                    <Tooltip
+                      title={
+                        products.length === 0
+                          ? 'You must add applications to the cluster before saving'
+                          : ''
+                      }
+                    >
+                      <Button
+                        disabled={products.length === 0}
+                        onClick={this.saveNewCluster}
+                        htmlType="button"
+                        type="primary"
+                      >
+                        Save
+                      </Button>
+                    </Tooltip>
+                  </div>
+                )}
+                {!isTemporary && (
+                  <div>
                     <Button
-                      disabled={products.length === 0}
-                      onClick={this.saveNewCluster}
+                      onClick={this.resetChanges}
+                      disabled={!this.state.isSaveable}
+                    >
+                      Cancel
+                    </Button>
+                    <Divider type="vertical" />
+                    <Button
+                      onClick={this.updateCluster}
                       htmlType="button"
                       type="primary"
+                      disabled={!this.state.isSaveable}
                     >
                       Save
                     </Button>
-                  </Tooltip>
-                </div>
-              )}
-              {!isTemporary && (
-                <div>
-                  <Button
-                    onClick={this.resetChanges}
-                    disabled={!this.state.isSaveable}
-                  >
-                    Cancel
-                  </Button>
-                  <Divider type="vertical" />
-                  <Button
-                    onClick={this.updateCluster}
-                    htmlType="button"
-                    type="primary"
-                    disabled={!this.state.isSaveable}
-                  >
-                    Save
-                  </Button>
-                </div>
-              )}
-            </Col>
-          </Row>
+                  </div>
+                )}
+              </Col>
+            </Row>
+          )}
         </Spin>
       </div>
     );
