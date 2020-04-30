@@ -48,6 +48,7 @@ import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.InputStreamBody;
 import org.wso2.carbon.device.application.mgt.common.ProxyResponse;
+import org.wso2.carbon.device.mgt.common.general.TenantDetail;
 
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -110,6 +111,10 @@ public class InvokerHandler extends HttpServlet {
                 HttpGet getRequest = new HttpGet(generateBackendRequestURL(req));
                 copyRequestHeaders(req, getRequest, false);
                 getRequest.setHeader(HttpHeaders.AUTHORIZATION, HandlerConstants.BEARER + authData.getAccessToken());
+                if ("reports".equalsIgnoreCase(req.getHeader("appName"))){
+                    TenantDetail tenant = new TenantDetail();
+                    getRequest.setHeader("tenantId", String.valueOf(tenant.getId()));
+                }
                 ProxyResponse proxyResponse = HandlerUtil.execute(getRequest);
                 if (HandlerConstants.TOKEN_IS_EXPIRED.equals(proxyResponse.getExecutorResponse())) {
                     proxyResponse = retryRequestWithRefreshedToken(req, resp, getRequest);
@@ -254,8 +259,13 @@ public class InvokerHandler extends HttpServlet {
      */
     private String generateBackendRequestURL(HttpServletRequest req) {
         StringBuilder urlBuilder = new StringBuilder();
-        urlBuilder.append(apiEndpoint).append(HandlerConstants.API_COMMON_CONTEXT)
-                .append(req.getPathInfo().replace(" ", "%20"));
+        if ("reports".equalsIgnoreCase(req.getHeader("appName"))){
+            urlBuilder.append(apiEndpoint)
+                    .append(req.getPathInfo().replace(" ", "%20"));
+        } else {
+            urlBuilder.append(apiEndpoint).append(HandlerConstants.API_COMMON_CONTEXT)
+                    .append(req.getPathInfo().replace(" ", "%20"));
+        }
         if (StringUtils.isNotEmpty(req.getQueryString())) {
             urlBuilder.append("?").append(req.getQueryString());
         }
