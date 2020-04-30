@@ -32,8 +32,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/*
+ *  Copyright (c) 2020, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
+ *
+ *  Entgra (pvt) Ltd. licenses this file to you under the Apache License,
+ *  Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied. See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
+ */
+
 package org.wso2.carbon.device.mgt.core.service;
 
+import org.apache.commons.collections.map.SingletonMap;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -64,6 +83,8 @@ import org.wso2.carbon.device.mgt.common.DevicePropertyNotification;
 import org.wso2.carbon.device.mgt.common.DeviceEnrollmentInfoNotification;
 import org.wso2.carbon.device.mgt.common.DeviceNotification;
 import org.wso2.carbon.device.mgt.common.app.mgt.ApplicationManagementException;
+import org.wso2.carbon.device.mgt.common.configuration.mgt.EnrollmentConfiguration;
+import org.wso2.carbon.device.mgt.common.device.details.DeviceLocationHistorySnapshot;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceNotFoundException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
@@ -81,7 +102,6 @@ import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration
 import org.wso2.carbon.device.mgt.common.device.details.DeviceData;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceInfo;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceLocation;
-import org.wso2.carbon.device.mgt.common.device.details.DeviceLocationHistory;
 import org.wso2.carbon.device.mgt.common.enrollment.notification.EnrollmentNotificationConfiguration;
 import org.wso2.carbon.device.mgt.common.enrollment.notification.EnrollmentNotifier;
 import org.wso2.carbon.device.mgt.common.enrollment.notification.EnrollmentNotifierException;
@@ -242,20 +262,33 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             log.error(msg);
             throw new DeviceManagementException(msg);
         }
+        DeviceManager deviceManager = this.getDeviceManager(device.getType());
+        if (deviceManager == null) {
+            if (log.isDebugEnabled()) {
+                log.debug("Device Manager associated with the device type '" + device.getType() + "' is null. " +
+                          "Therefore, not attempting method 'enrollDevice'");
+            }
+            return false;
+        }
+        EnrollmentConfiguration enrollmentConfiguration = DeviceManagerUtil.getEnrollmentConfigurationEntry(
+                this.getConfiguration(device.getType()));
+        String deviceSerialNumber = null;
+        if (enrollmentConfiguration != null) {
+            deviceSerialNumber = DeviceManagerUtil.getPropertyString(device.getProperties(),
+                                                                     DeviceManagementConstants.Common.SERIAL);
+            if (!DeviceManagerUtil.isDeviceEnrollable(enrollmentConfiguration, deviceSerialNumber)) {
+                String msg = "Serial number based enrollment has been enabled and device having the serial number '"
+                             + deviceSerialNumber + "' is not configured to be enrolled.";
+                log.error(msg);
+                throw new DeviceManagementException(msg);
+            }
+        }
         if (log.isDebugEnabled()) {
             log.debug("Enrolling the device " + device.getId() + "of type '" + device.getType() + "'");
         }
         boolean status = false;
         DeviceIdentifier deviceIdentifier = new DeviceIdentifier(device.getDeviceIdentifier(), device.getType());
 
-        DeviceManager deviceManager = this.getDeviceManager(device.getType());
-        if (deviceManager == null) {
-            if (log.isDebugEnabled()) {
-                log.debug("Device Manager associated with the device type '" + device.getType() + "' is null. " +
-                        "Therefore, not attempting method 'enrollDevice'");
-            }
-            return false;
-        }
         deviceManager.enrollDevice(device);
         if (deviceManager.isClaimable(deviceIdentifier)) {
             device.getEnrolmentInfo().setStatus(EnrolmentInfo.Status.INACTIVE);
@@ -385,6 +418,10 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         }
         if (status) {
             addDeviceToGroups(deviceIdentifier, device.getEnrolmentInfo().getOwnership());
+            if (enrollmentConfiguration != null) {
+                DeviceManagerUtil.addDeviceToConfiguredGroup(enrollmentConfiguration, deviceSerialNumber,
+                                                             deviceIdentifier);
+            }
             addInitialOperations(deviceIdentifier, device.getType());
             sendNotification(device);
         }
@@ -1174,46 +1211,49 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public HashMap<Integer, Device> getTenantedDevice(DeviceIdentifier deviceIdentifier) throws DeviceManagementException {
+    public SingletonMap getTenantedDevice(DeviceIdentifier deviceIdentifier, boolean requireDeviceInfo)
+            throws DeviceManagementException {
         if (deviceIdentifier == null) {
             String msg = "Received null deviceIdentifier for getTenantedDevice";
             log.error(msg);
             throw new DeviceManagementException(msg);
         }
         if (log.isDebugEnabled()) {
-            log.debug("Get tenanted device with id: " + deviceIdentifier.getId() + " of type '" +
-                    deviceIdentifier.getType() + "'");
+            log.debug("Get tenanted device with id: " + deviceIdentifier.getId() + " of type " +
+                      deviceIdentifier.getType());
         }
-        HashMap<Integer, Device> deviceHashMap;
+
+        SingletonMap deviceMap;
         try {
             DeviceManagementDAOFactory.openConnection();
-            deviceHashMap = deviceDAO.getDevice(deviceIdentifier);
-            if (deviceHashMap == null) {
+            deviceMap = deviceDAO.getDevice(deviceIdentifier);
+            if (deviceMap == null) {
                 if (log.isDebugEnabled()) {
-                    log.debug("No device is found upon the type '" + deviceIdentifier.getType() + "' and id '" +
-                            deviceIdentifier.getId() + "'");
+                    log.debug("Unable to find device for type " + deviceIdentifier.getType() +
+                              " and id " + deviceIdentifier.getId());
                 }
-                return null;
             }
+
         } catch (DeviceManagementDAOException e) {
-            String msg = "Error occurred while obtaining the device for id '" + deviceIdentifier.getId() + "'";
+            String msg = "Error occurred while obtaining the device for id " + deviceIdentifier.getId();
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
         } catch (SQLException e) {
-            String msg = "Error occurred while opening a connection to the data source";
-            log.error(msg, e);
-            throw new DeviceManagementException(msg, e);
-        } catch (Exception e) {
-            String msg = "Error occurred in getTenantedDevice device: " + deviceIdentifier.getId();
+            String msg = "Error occurred while opening a connection for the data source";
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
         } finally {
             DeviceManagementDAOFactory.closeConnection();
         }
-        return deviceHashMap;
+
+        if (requireDeviceInfo && deviceMap != null) {
+            getAllDeviceInfo((Device) deviceMap.getValue());
+        }
+        return deviceMap;
     }
 
     @Override
+    @Deprecated
     public Device getDevice(DeviceIdentifier deviceId) throws DeviceManagementException {
         return this.getDevice(deviceId, true);
     }
@@ -3013,14 +3053,14 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public List<DeviceLocationHistory> getDeviceLocationInfo(DeviceIdentifier deviceIdentifier, long from, long to)
+    public List<DeviceLocationHistorySnapshot> getDeviceLocationInfo(DeviceIdentifier deviceIdentifier, long from, long to)
             throws DeviceManagementException {
 
         if (log.isDebugEnabled()) {
             log.debug("Get device location information");
         }
 
-        List<DeviceLocationHistory> deviceLocationHistory;
+        List<DeviceLocationHistorySnapshot> deviceLocationHistory;
         String errMessage;
 
         try {
@@ -3043,15 +3083,15 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public void notifyPullNotificationSubscriber(DeviceIdentifier deviceIdentifier, Operation operation)
+    public void notifyPullNotificationSubscriber(Device device, Operation operation)
             throws PullNotificationExecutionFailedException {
         if (log.isDebugEnabled()) {
             log.debug("Notify pull notification subscriber");
         }
         DeviceManagementService dms =
-                pluginRepository.getDeviceManagementService(deviceIdentifier.getType(), this.getTenantId());
+                pluginRepository.getDeviceManagementService(device.getType(), this.getTenantId());
         if (dms == null) {
-            String message = "Device type '" + deviceIdentifier.getType() + "' does not have an associated " +
+            String message = "Device type '" + device.getType() + "' does not have an associated " +
                     "device management plugin registered within the framework";
             log.error(message);
             throw new PullNotificationExecutionFailedException(message);
@@ -3059,11 +3099,11 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         PullNotificationSubscriber pullNotificationSubscriber = dms.getPullNotificationSubscriber();
         if (pullNotificationSubscriber == null) {
             String message = "Pull Notification Subscriber is not configured " +
-                    "for device type" + deviceIdentifier.getType();
+                    "for device type" + device.getType();
             log.error(message);
             throw new PullNotificationExecutionFailedException(message);
         }
-        pullNotificationSubscriber.execute(deviceIdentifier, operation);
+        pullNotificationSubscriber.execute(device, operation);
     }
 
     /**
@@ -3427,7 +3467,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                     deviceLocation.setDistance(Double.parseDouble(distance));
                     deviceLocation.setSpeed(Float.parseFloat(speed));
                     deviceLocation.setBearing(Float.parseFloat(bearing));
-                    deviceInformationManager.addDeviceLocation(deviceLocation);
+                    deviceInformationManager.addDeviceLocation(device, deviceLocation);
                 } catch (Exception e) {
                     //We are not failing the execution since this is not critical for the functionality. But logging as
                     // a warning for reference.

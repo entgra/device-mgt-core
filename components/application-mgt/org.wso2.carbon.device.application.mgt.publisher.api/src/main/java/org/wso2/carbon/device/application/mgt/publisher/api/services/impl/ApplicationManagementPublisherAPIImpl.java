@@ -75,7 +75,7 @@ import javax.ws.rs.core.Response;
 @Path("/applications")
 public class ApplicationManagementPublisherAPIImpl implements ApplicationManagementPublisherAPI {
 
-    private static Log log = LogFactory.getLog(ApplicationManagementPublisherAPIImpl.class);
+    private static final Log log = LogFactory.getLog(ApplicationManagementPublisherAPIImpl.class);
 
     @POST
     @Override
@@ -97,7 +97,7 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
             return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
         } catch (UnexpectedServerErrorException e) {
             String msg = "Error Occured when getting supported device types by Entgra IoTS";
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         } catch (ApplicationManagementException e) {
             String msg = "Error occurred while getting the application list for publisher ";
@@ -116,9 +116,9 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
         try {
             Application application = applicationManager.getApplicationById(appId, state);
             if (application == null){
-                String msg = "Could not found an application release which is in " + state + " state.";
+                String msg = "Could not found an active application which has Id: " + appId;
                 log.error(msg);
-                return Response.status(Response.Status.OK).entity(msg).build();
+                return Response.status(Response.Status.CONFLICT).entity(msg).build();
             }
             return Response.status(Response.Status.OK).entity(application).build();
         } catch (NotFoundException e) {
@@ -127,7 +127,7 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
             return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
         } catch(ForbiddenException e){
             String msg = "You don't have permission to access the application. application id: " + appId;
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.FORBIDDEN).entity(msg).build();
         }
         catch (ApplicationManagementException e) {
@@ -148,7 +148,7 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
             if (application == null){
                 String msg = "Application release is in the end state of the application lifecycle flow.";
                 log.error(msg);
-                return Response.status(Response.Status.OK).entity(msg).build();
+                return Response.status(Response.Status.CONFLICT).entity(msg).build();
             }
             return Response.status(Response.Status.OK).entity(application).build();
         } catch (NotFoundException e) {
@@ -158,7 +158,7 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
         } catch(ForbiddenException e){
             String msg = "You don't have permission to access the application release. application release UUID: : "
                     + uuid;
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.FORBIDDEN).entity(msg).build();
         }
         catch (ApplicationManagementException e) {
@@ -319,22 +319,22 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
             applicationManager.validateBinaryArtifact(binaryFile);
             applicationManager.validateImageArtifacts(iconFile, bannerFile, attachmentList);
 
-            // Created new Ent App
+            // Created new Custom App
             Application application = applicationManager.createCustomApp(customAppWrapper,
                     constructApplicationArtifact(binaryFile, iconFile, bannerFile, attachmentList));
             if (application != null) {
                 return Response.status(Response.Status.CREATED).entity(application).build();
             } else {
-                String msg = "Application creation is failed";
+                String msg = "Custom app creation is failed";
                 log.error(msg);
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
             }
         } catch (BadRequestException e) {
-            String msg = "Found incompatible payload with pub custom creating request.";
+            String msg = "Found incompatible payload with custom app creating request.";
             log.error(msg, e);
             return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
         } catch (ApplicationManagementException e) {
-            String msg = "Error occurred while creating the application";
+            String msg = "Error occurred while creating a costom application";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         } catch (RequestValidatingException e) {
@@ -385,6 +385,27 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
     }
 
     @Override
+    @GET
+    @Path("/device-type/{deviceType}/app-name/{appName}")
+    public Response isExistingApplication(
+            @PathParam("deviceType") String deviceType,
+            @PathParam("appName") String appName ){
+        try {
+            ApplicationManager applicationManager = APIUtil.getApplicationManager();
+            if (applicationManager.isExistingAppName(appName, deviceType)) {
+                return Response.status(Response.Status.CONFLICT).build();
+            }
+            return Response.status(Response.Status.OK).build();
+        } catch (BadRequestException e) {
+            log.error("Found invalid device type to check application existence.", e);
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        } catch (ApplicationManagementException e) {
+            log.error("Internal Error occurred while checking the application existence.", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @Override
     @PUT
     @Consumes({"multipart/mixed", MediaType.MULTIPART_FORM_DATA})
     @Produces(MediaType.APPLICATION_JSON)
@@ -405,10 +426,10 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
                     .entity("Successfully uploaded artifacts for the application " + applicationReleaseUuid).build();
         } catch (NotFoundException e) {
             String msg = "Couldn't found an application release which has application release UUID "
-                    + applicationReleaseUuid + ". HEnce please verify the application release UUID again and execute "
+                    + applicationReleaseUuid + ". Hence please verify the application release UUID again and execute "
                     + "the operation";
             log.error(msg, e);
-            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+            return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
         } catch (ApplicationManagementException e) {
             String msg = "Error occurred while updating the application image artifacts for application release uuid: "
                     + applicationReleaseUuid;
@@ -420,7 +441,7 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
     @Override
     @PUT
     @Consumes({"multipart/mixed", MediaType.MULTIPART_FORM_DATA})
-    @Path("/ent-app-artifact/{deviceType}//{uuid}")
+    @Path("/ent-app-artifact/{deviceType}/{uuid}")
     public Response updateApplicationArtifact(
             @PathParam("deviceType") String deviceType,
             @PathParam("uuid") String applicationReleaseUuid,
@@ -435,15 +456,24 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
                     .entity("Successfully uploaded artifacts for the application release. UUID is "
                             + applicationReleaseUuid).build();
         } catch (RequestValidatingException e) {
-            log.error(e.getMessage(), e);
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+            String msg =
+                    "Couldn't find the binary file with the request. Hence invoke the API with updating application"
+                            + " artifact";
+            log.error(msg, e);
+            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
         } catch (NotFoundException e) {
-            log.error(e.getMessage(), e);
-            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+            String msg = "Couldn't find an application which has application release UUID: " + applicationReleaseUuid;
+            log.error(msg, e);
+            return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+        } catch (BadRequestException e) {
+            String msg = "Found an invalid device type: " + deviceType + " with the request";
+            log.error(msg);
+            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
         } catch (ApplicationManagementException e) {
-            log.error("Error occurred while updating the image artifacts of the application with the uuid "
-                    + applicationReleaseUuid, e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+            String msg = "Error occurred while updating the image artifacts of the application with the uuid "
+                    + applicationReleaseUuid;
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
 
@@ -458,8 +488,9 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
             Application application = applicationManager.updateApplication(applicationId, applicationUpdateWrapper);
             return Response.status(Response.Status.OK).entity(application).build();
         } catch (NotFoundException e) {
-            log.error(e.getMessage());
-            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+            String msg = "Couldn't find an application for application id: " + applicationId;
+            log.error(msg, e);
+            return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
         } catch (BadRequestException e) {
             String msg = "Error occurred while modifying the application. Found bad request payload for updating the "
                     + "application";
@@ -655,31 +686,6 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
         }
     }
 
-    @PUT
-    @Path("/retire/{appId}")
-    public Response retireApplication(
-            @PathParam("appId") int applicationId) {
-        ApplicationManager applicationManager = APIUtil.getApplicationManager();
-        try {
-            applicationManager.retireApplication(applicationId);
-            return Response.status(Response.Status.OK)
-                    .entity("Successfully deleted the application for application ID: " + applicationId).build();
-        } catch (NotFoundException e) {
-            String msg =
-                    "Couldn't found application for application id: " + applicationId + " to delete the application";
-            log.error(msg, e);
-            return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
-        } catch (ForbiddenException e) {
-            String msg = "You don't have require permission to delete the application which has ID " + applicationId;
-            log.error(msg, e);
-            return Response.status(Response.Status.FORBIDDEN).entity(msg).build();
-        } catch (ApplicationManagementException e) {
-            String msg = "Error occurred while deleting the application: " + applicationId;
-            log.error(msg, e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
-        }
-    }
-
     @GET
     @Path("/life-cycle/state-changes/{uuid}")
     public Response getLifecycleStates(
@@ -690,11 +696,10 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
             return Response.status(Response.Status.OK).entity(lifecycleStates).build();
         } catch (NotFoundException e) {
             String msg = "Couldn't found an application release for UUID: " + releaseUuid;
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
         } catch (ApplicationManagementException e) {
-            String msg =
-                    "Error occurred while getting lifecycle states for application release UUID: " + releaseUuid;
+            String msg = "Error occurred while getting lifecycle states for application release UUID: " + releaseUuid;
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
@@ -740,7 +745,7 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
             return Response.status(Response.Status.OK).entity(dataHandler.getLifecycleConfiguration()).build();
         } catch (LifecycleManagementException e) {
             String msg = "Error Occurred while accessing lifecycle manager.";
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
@@ -756,7 +761,7 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
             return Response.status(Response.Status.OK).entity(tags).build();
         } catch (ApplicationManagementException e) {
             String msg = "Error Occurred while getting registered tags.";
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
@@ -775,15 +780,15 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
             return Response.status(Response.Status.OK).entity(msg).build();
         } catch (NotFoundException e) {
             String msg = e.getMessage();
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
         } catch (BadRequestException e) {
             String msg = e.getMessage();
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
         } catch (ApplicationManagementException e) {
             String msg = "Error Occurred while deleting registered tag.";
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
@@ -801,15 +806,15 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
             return Response.status(Response.Status.OK).entity(msg).build();
         } catch (NotFoundException e) {
             String msg = e.getMessage();
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
         } catch (ForbiddenException e) {
             String msg = e.getMessage();
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.FORBIDDEN).entity(msg).build();
         } catch (ApplicationManagementException e) {
             String msg = "Error Occurred while deleting unused tag.";
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
@@ -828,15 +833,15 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
             return Response.status(Response.Status.OK).entity(msg).build();
         } catch (BadRequestException e) {
             String msg = e.getMessage();
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
         } catch (NotFoundException e) {
             String msg = e.getMessage();
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
         } catch (ApplicationManagementException e) {
             String msg = "Error Occurred while updating registered tag.";
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
@@ -853,11 +858,11 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
             return Response.status(Response.Status.OK).entity(tags).build();
         } catch (BadRequestException e) {
             String msg = e.getMessage();
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
         } catch (ApplicationManagementException e) {
             String msg = "Error Occurred while adding new tag.";
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
@@ -875,11 +880,11 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
             return Response.status(Response.Status.OK).entity(applicationTags).build();
         } catch (NotFoundException e) {
             String msg = e.getMessage();
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
         } catch (ApplicationManagementException e) {
             String msg = "Error Occurred while adding new tags for application which has application ID: " + appId + ".";
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
@@ -895,7 +900,7 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
             return Response.status(Response.Status.OK).entity(categories).build();
         } catch (ApplicationManagementException e) {
             String msg = "Error Occurred while getting registered categories.";
-            log.error(msg);
+            log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }

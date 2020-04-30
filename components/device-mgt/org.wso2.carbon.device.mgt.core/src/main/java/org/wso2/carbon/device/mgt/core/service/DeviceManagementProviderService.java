@@ -32,9 +32,27 @@
  *   specific language governing permissions and limitations
  *   under the License.
  */
+/*
+ *  Copyright (c) 2020, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
+ *
+ *  Entgra (pvt) Ltd. licenses this file to you under the Apache License,
+ *  Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied. See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
+ */
 
 package org.wso2.carbon.device.mgt.core.service;
 
+import org.apache.commons.collections.map.SingletonMap;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
 import org.wso2.carbon.device.mgt.common.FeatureManager;
@@ -46,6 +64,7 @@ import org.wso2.carbon.device.mgt.common.MonitoringOperation;
 import org.wso2.carbon.device.mgt.common.StartupOperationConfig;
 import org.wso2.carbon.device.mgt.common.OperationMonitoringTaskConfig;
 import org.wso2.carbon.device.mgt.common.app.mgt.ApplicationManagementException;
+import org.wso2.carbon.device.mgt.common.device.details.DeviceLocationHistorySnapshot;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceNotFoundException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
@@ -56,7 +75,6 @@ import org.wso2.carbon.device.mgt.common.configuration.mgt.AmbiguousConfiguratio
 import org.wso2.carbon.device.mgt.common.configuration.mgt.ConfigurationManagementException;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.DeviceConfiguration;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration;
-import org.wso2.carbon.device.mgt.common.device.details.DeviceLocationHistory;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceData;
 import org.wso2.carbon.device.mgt.common.license.mgt.License;
 import org.wso2.carbon.device.mgt.common.operation.mgt.Activity;
@@ -67,13 +85,14 @@ import org.wso2.carbon.device.mgt.common.pull.notification.PullNotificationExecu
 import org.wso2.carbon.device.mgt.common.push.notification.NotificationStrategy;
 import org.wso2.carbon.device.mgt.common.spi.DeviceManagementService;
 import org.wso2.carbon.device.mgt.common.ui.policy.mgt.PolicyConfigurationManager;
+import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOException;
 import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.dto.DeviceTypeVersion;
 import org.wso2.carbon.device.mgt.core.geo.GeoCluster;
 import org.wso2.carbon.device.mgt.core.geo.geoHash.GeoCoordinate;
 
+import java.sql.SQLException;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -197,6 +216,7 @@ public interface DeviceManagementProviderService {
      * @return Device returns null when device is not available.
      * @throws DeviceManagementException
      */
+    @Deprecated
     Device getDevice(DeviceIdentifier deviceId) throws DeviceManagementException;
 
     /**
@@ -563,7 +583,18 @@ public interface DeviceManagementProviderService {
      */
     int getDeviceCount(EnrolmentInfo.Status status) throws DeviceManagementException;
 
-    HashMap<Integer, Device> getTenantedDevice(DeviceIdentifier deviceIdentifier) throws DeviceManagementException;
+    /**
+     * This method is used to retrieve a device of a given identifier with it's tenant id
+     *
+     * @param deviceIdentifier  device identifier
+     * @param requireDeviceInfo boolean indicating whether the device info and properties
+     *                          is also required
+     * @return {@link SingletonMap} with a device and it's corresponding tenant id
+     * @throws DeviceManagementException will be thrown in case of a {@link SQLException}
+     *                                   or {@link DeviceManagementDAOException}
+     */
+    SingletonMap getTenantedDevice(DeviceIdentifier deviceIdentifier, boolean requireDeviceInfo)
+            throws DeviceManagementException;
 
     void sendEnrolmentInvitation(String templateName, EmailMetaInfo metaInfo) throws DeviceManagementException,
             ConfigurationManagementException;
@@ -656,7 +687,6 @@ public interface DeviceManagementProviderService {
     PaginationResult getOperations(DeviceIdentifier deviceId,
                                    PaginationRequest request) throws OperationManagementException;
 
-    @Deprecated
     List<? extends Operation> getPendingOperations(
             DeviceIdentifier deviceId) throws OperationManagementException;
 
@@ -765,20 +795,19 @@ public interface DeviceManagementProviderService {
      * @throws DeviceManagementException
      * @return list of device's location histories
      */
-    List<DeviceLocationHistory> getDeviceLocationInfo(DeviceIdentifier deviceIdentifier, long from, long to)
+    List<DeviceLocationHistorySnapshot> getDeviceLocationInfo(DeviceIdentifier deviceIdentifier, long from, long to)
             throws DeviceManagementException;
 
     /**
      * This retrieves the device pull notification payload and passes to device type pull notification subscriber.
-     * @throws PullNotificationExecutionFailedException
      */
-    void notifyPullNotificationSubscriber(DeviceIdentifier deviceIdentifier, Operation operation)
+    void notifyPullNotificationSubscriber(Device device, Operation operation)
             throws PullNotificationExecutionFailedException;
 
     List<Integer> getDeviceEnrolledTenants() throws DeviceManagementException;
 
     List<GeoCluster> findGeoClusters(String deviceType, GeoCoordinate southWest, GeoCoordinate northEast,
-                                            int geohashLength) throws DeviceManagementException;
+                                     int geohashLength) throws DeviceManagementException;
 
     int getDeviceCountOfTypeByStatus(String deviceType, String deviceStatus) throws DeviceManagementException;
 

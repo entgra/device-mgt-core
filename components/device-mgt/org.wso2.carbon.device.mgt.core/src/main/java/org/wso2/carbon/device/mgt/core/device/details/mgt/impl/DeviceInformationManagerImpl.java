@@ -48,6 +48,7 @@ import org.wso2.carbon.device.mgt.core.internal.DeviceManagementDataHolder;
 
 import org.wso2.carbon.device.mgt.core.service.GroupManagementProviderService;
 import org.wso2.carbon.device.mgt.core.report.mgt.Constants;
+import org.wso2.carbon.device.mgt.core.service.GroupManagementProviderService;
 import org.wso2.carbon.device.mgt.core.util.DeviceManagerUtil;
 import org.wso2.carbon.device.mgt.core.util.HttpReportingUtil;
 import org.wso2.carbon.user.api.UserRealm;
@@ -68,7 +69,6 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
     private static final Log log = LogFactory.getLog(DeviceInformationManagerImpl.class);
     private static final String LOCATION_EVENT_STREAM_DEFINITION = "org.wso2.iot.LocationStream";
     private static final String DEVICE_INFO_EVENT_STREAM_DEFINITION = "org.wso2.iot.DeviceInfoStream";
-    private static final String IS_EVENT_PUBLISHING_ENABED = "isEventPublishingEnabled";
 
     public DeviceInformationManagerImpl() {
         this.deviceDAO = DeviceManagementDAOFactory.getDeviceDAO();
@@ -90,6 +90,7 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
     @Override
     public void addDeviceInfo(Device device, DeviceInfo deviceInfo) throws DeviceDetailsMgtException {
         try {
+
             publishEvents(device, deviceInfo);
             DeviceManagementDAOFactory.beginTransaction();
             DeviceInfo newDeviceInfo;
@@ -181,7 +182,8 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
 
     private void publishEvents(Device device, DeviceInfo deviceInfo)  {
         String reportingHost = HttpReportingUtil.getReportingHost();
-        if (!StringUtils.isBlank(reportingHost) && isPublishingEnabledForTenant()) {
+        if (!StringUtils.isBlank(reportingHost)
+                && HttpReportingUtil.isPublishingEnabledForTenant()) {
             try {
                 DeviceDetailsWrapper deviceDetailsWrapper = new DeviceDetailsWrapper();
                 deviceDetailsWrapper.setDevice(device);
@@ -216,14 +218,6 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
                         + DeviceManagerUtil.getTenantId());
             }
         }
-    }
-
-    private boolean isPublishingEnabledForTenant() {
-        Object configuration = DeviceManagerUtil.getConfiguration(IS_EVENT_PUBLISHING_ENABED);
-        if (configuration != null) {
-            return Boolean.valueOf(configuration.toString());
-        }
-        return false;
     }
 
     @Override
@@ -289,6 +283,7 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
     }
 
     @Override
+    @Deprecated
     public void addDeviceLocation(DeviceLocation deviceLocation) throws DeviceDetailsMgtException {
         try {
             Device device = DeviceManagementDataHolder.getInstance().
@@ -312,6 +307,8 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
             } else {
                 deviceDetailsDAO.updateDeviceLocation(deviceLocation, device.getEnrolmentInfo().getId());
             }
+            deviceDetailsDAO.addDeviceLocationInfo(device, deviceLocation,
+                    CarbonContext.getThreadLocalCarbonContext().getTenantId());
             if (DeviceManagerUtil.isPublishLocationResponseEnabled()) {
                 Object[] metaData = {device.getDeviceIdentifier(), device.getEnrolmentInfo().getOwner(), device.getType()};
                 Object[] payload = new Object[]{
@@ -469,21 +466,6 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
     }
 
 
-    private String[] getRolesOfUser(String userName) throws UserStoreException {
-        UserRealm userRealm = CarbonContext.getThreadLocalCarbonContext().getUserRealm();
-        String[] roleList;
-        if (userRealm != null) {
-            userRealm.getUserStoreManager().getRoleNames();
-            roleList = userRealm.getUserStoreManager().getRoleListOfUser(userName);
-        } else {
-            String msg = "User realm is not initiated. Logged in user: " + userName;
-            log.error(msg);
-            throw new UserStoreException(msg);
-        }
-        return roleList;
-    }
-
-
     /**
      * Generate and add a value depending on the device's OS version included in device info
      *
@@ -518,5 +500,20 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
             }
         }
     }
+
+    private String[] getRolesOfUser(String userName) throws UserStoreException {
+        UserRealm userRealm = CarbonContext.getThreadLocalCarbonContext().getUserRealm();
+        String[] roleList;
+        if (userRealm != null) {
+            userRealm.getUserStoreManager().getRoleNames();
+            roleList = userRealm.getUserStoreManager().getRoleListOfUser(userName);
+        } else {
+            String msg = "User realm is not initiated. Logged in user: " + userName;
+            log.error(msg);
+            throw new UserStoreException(msg);
+        }
+        return roleList;
+    }
+
 }
 

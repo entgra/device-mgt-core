@@ -36,6 +36,8 @@
 
 package org.wso2.carbon.device.mgt.jaxrs.service.impl;
 
+import java.util.LinkedList;
+import java.util.Queue;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -46,6 +48,8 @@ import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
 import org.wso2.carbon.device.mgt.common.Feature;
 import org.wso2.carbon.device.mgt.common.FeatureManager;
+import org.wso2.carbon.device.mgt.common.MonitoringOperation;
+import org.wso2.carbon.device.mgt.common.OperationMonitoringTaskConfig;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
 import org.wso2.carbon.device.mgt.common.app.mgt.Application;
@@ -56,6 +60,7 @@ import org.wso2.carbon.device.mgt.common.device.details.DeviceData;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceInfo;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceLocation;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceLocationHistory;
+import org.wso2.carbon.device.mgt.common.device.details.DeviceLocationHistorySnapshot;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
 import org.wso2.carbon.device.mgt.common.exceptions.InvalidConfigurationException;
@@ -75,6 +80,7 @@ import org.wso2.carbon.device.mgt.common.search.SearchContext;
 import org.wso2.carbon.device.mgt.core.app.mgt.ApplicationManagementProviderService;
 import org.wso2.carbon.device.mgt.core.device.details.mgt.DeviceDetailsMgtException;
 import org.wso2.carbon.device.mgt.core.device.details.mgt.DeviceInformationManager;
+import org.wso2.carbon.device.mgt.core.internal.DeviceManagementDataHolder;
 import org.wso2.carbon.device.mgt.core.operation.mgt.CommandOperation;
 import org.wso2.carbon.device.mgt.core.operation.mgt.ConfigOperation;
 import org.wso2.carbon.device.mgt.core.operation.mgt.ProfileOperation;
@@ -369,9 +375,9 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
 
     @DELETE
     @Override
-    @Path("/type/{device-type}/id/{device-id}")
-    public Response deleteDevice(@PathParam("device-type") String deviceType,
-                                 @PathParam("device-id") String deviceId) {
+    @Path("/type/{deviceType}/id/{deviceId}")
+    public Response deleteDevice(@PathParam("deviceType") String deviceType,
+                                 @PathParam("deviceId") String deviceId) {
         DeviceManagementProviderService deviceManagementProviderService =
                 DeviceMgtAPIUtils.getDeviceManagementService();
         try {
@@ -394,9 +400,9 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
 
     @POST
     @Override
-    @Path("/type/{device-type}/id/{device-id}/rename")
-    public Response renameDevice(Device device, @PathParam("device-type") String deviceType,
-                                 @PathParam("device-id") String deviceId) {
+    @Path("/type/{deviceType}/id/{deviceId}/rename")
+    public Response renameDevice(Device device, @PathParam("deviceType") String deviceType,
+                                 @PathParam("deviceId") String deviceId) {
         DeviceManagementProviderService deviceManagementProviderService = DeviceMgtAPIUtils.getDeviceManagementService();
         try {
             Device persistedDevice = deviceManagementProviderService.getDevice(new DeviceIdentifier
@@ -494,8 +500,8 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                                           @PathParam("deviceId") String deviceId,
                                           @QueryParam("from") long from, @QueryParam("to") long to) {
 
-        List<DeviceLocationHistory> deviceLocationHistory;
         String errorMessage;
+        DeviceLocationHistory deviceLocationHistory = new DeviceLocationHistory();
 
         try {
             RequestValidationUtil.validateDeviceIdentifier(deviceType, deviceId);
@@ -521,7 +527,46 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                         new ErrorResponse.ErrorResponseBuilder().setCode(400l).setMessage(errorMessage)).build();
             }
 
-            deviceLocationHistory = dms.getDeviceLocationInfo(deviceIdentifier, from, to);
+            List<List<DeviceLocationHistorySnapshot>> locationHistorySnapshotList = new ArrayList<>();
+            // Get the location history snapshots for the given period
+            List<DeviceLocationHistorySnapshot> deviceLocationHistorySnapshots = dms.getDeviceLocationInfo(deviceIdentifier, from, to);
+
+            OperationMonitoringTaskConfig operationMonitoringTaskConfig = dms.getDeviceMonitoringConfig(deviceType);
+            int taskFrequency = operationMonitoringTaskConfig.getFrequency();
+            int operationRecurrentTimes = 0;
+
+            List<MonitoringOperation> monitoringOperations = operationMonitoringTaskConfig.getMonitoringOperation();
+            for (MonitoringOperation monitoringOperation :
+                    monitoringOperations) {
+                if (monitoringOperation.getTaskName().equals("DEVICE_LOCATION")) {
+                    operationRecurrentTimes = monitoringOperation.getRecurrentTimes();
+                    break;
+                }
+            }
+            // Device Location operation frequency in milliseconds. Adding 100000 ms as an error
+            long operationFrequency = taskFrequency * operationRecurrentTimes + 100000;
+
+            Queue<DeviceLocationHistorySnapshot> deviceLocationHistorySnapshotsQueue = new LinkedList<>(deviceLocationHistorySnapshots);
+
+            while (deviceLocationHistorySnapshotsQueue.size() > 0) {
+                List<DeviceLocationHistorySnapshot> snapshots = new ArrayList<>();
+                // Make a copy of remaining snapshots
+                List<DeviceLocationHistorySnapshot> cachedSnapshots = new ArrayList<>(deviceLocationHistorySnapshotsQueue);
+
+                for (int i = 0; i < cachedSnapshots.size(); i++) {
+                    DeviceLocationHistorySnapshot currentSnapshot = deviceLocationHistorySnapshotsQueue.poll();
+                    snapshots.add(currentSnapshot);
+                    if (deviceLocationHistorySnapshotsQueue.size() > 0) {
+                        DeviceLocationHistorySnapshot nextSnapshot = deviceLocationHistorySnapshotsQueue.peek();
+                        if (nextSnapshot.getUpdatedTime().getTime() - currentSnapshot.getUpdatedTime().getTime() > operationFrequency) {
+                            break;
+                        }
+                    }
+                }
+                locationHistorySnapshotList.add(snapshots);
+            }
+            deviceLocationHistory.setLocationHistorySnapshots(locationHistorySnapshotList);
+
 
         } catch (DeviceManagementException e) {
             errorMessage = "Error occurred while fetching the device information.";
@@ -766,12 +811,18 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
         ApplicationManagementProviderService amc;
         try {
             RequestValidationUtil.validateDeviceIdentifier(type, id);
-
+            Device device = DeviceMgtAPIUtils.getDeviceManagementService().getDevice(id, false);
             amc = DeviceMgtAPIUtils.getAppManagementService();
-            applications = amc.getApplicationListForDevice(new DeviceIdentifier(id, type));
+            applications = amc.getApplicationListForDevice(device);
             return Response.status(Response.Status.OK).entity(applications).build();
         } catch (ApplicationManagementException e) {
             String msg = "Error occurred while fetching the apps of the '" + type + "' device, which carries " +
+                    "the id '" + id + "'";
+            log.error(msg, e);
+            return Response.serverError().entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while getting '" + type + "' device, which carries " +
                     "the id '" + id + "'";
             log.error(msg, e);
             return Response.serverError().entity(
@@ -824,14 +875,20 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                                                @HeaderParam("If-Modified-Since") String ifModifiedSince) {
         try {
             RequestValidationUtil.validateDeviceIdentifier(type, id);
-
+            Device device = DeviceMgtAPIUtils.getDeviceManagementService()
+                    .getDevice(new DeviceIdentifier(id, type), false);
             PolicyManagerService policyManagementService = DeviceMgtAPIUtils.getPolicyManagementService();
-            Policy policy = policyManagementService.getAppliedPolicyToDevice(new DeviceIdentifier(id, type));
+            Policy policy = policyManagementService.getAppliedPolicyToDevice(device);
 
             return Response.status(Response.Status.OK).entity(policy).build();
         } catch (PolicyManagementException e) {
             String msg = "Error occurred while retrieving the current policy associated with the '" + type +
                     "' device, which carries the id '" + id + "'";
+            log.error(msg, e);
+            return Response.serverError().entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while retrieving '" + type + "' device, which carries the id '" + id + "'";
             log.error(msg, e);
             return Response.serverError().entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
@@ -844,13 +901,23 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                                               @PathParam("id") @Size(max = 45) String id) {
 
         RequestValidationUtil.validateDeviceIdentifier(type, id);
+        Device device;
+        try {
+            device = DeviceMgtAPIUtils.getDeviceManagementService()
+                    .getDevice(new DeviceIdentifier(id, type), false);
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while retrieving '" + type + "' device, which carries the id '" + id + "'";
+            log.error(msg, e);
+            return Response.serverError().entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        }
         PolicyManagerService policyManagementService = DeviceMgtAPIUtils.getPolicyManagementService();
         Policy policy;
         NonComplianceData complianceData;
         DeviceCompliance deviceCompliance = new DeviceCompliance();
 
         try {
-            policy = policyManagementService.getAppliedPolicyToDevice(new DeviceIdentifier(id, type));
+            policy = policyManagementService.getAppliedPolicyToDevice(device);
         } catch (PolicyManagementException e) {
             String msg = "Error occurred while retrieving the current policy associated with the '" + type +
                     "' device, which carries the id '" + id + "'";
@@ -866,8 +933,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
         } else {
             try {
                 policyManagementService = DeviceMgtAPIUtils.getPolicyManagementService();
-                complianceData = policyManagementService.getDeviceCompliance(
-                        new DeviceIdentifier(id, type));
+                complianceData = policyManagementService.getDeviceCompliance(device);
                 deviceCompliance.setDeviceID(id);
                 deviceCompliance.setComplianceData(complianceData);
                 return Response.status(Response.Status.OK).entity(deviceCompliance).build();
@@ -1046,9 +1112,9 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
 
     @GET
     @Override
-    @Path("/compliance/{compliance-status}")
+    @Path("/compliance/{complianceStatus}")
     public Response getPolicyCompliance(
-            @PathParam("compliance-status") boolean complianceStatus,
+            @PathParam("complianceStatus") boolean complianceStatus,
             @QueryParam("policy") String policyId,
             @DefaultValue("false")
             @QueryParam("pending") boolean isPending,
@@ -1108,9 +1174,9 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
 
     @GET
     @Override
-    @Path("/{device-type}/applications")
+    @Path("/{deviceType}/applications")
     public Response getApplications(
-            @PathParam("device-type") String deviceType,
+            @PathParam("deviceType") String deviceType,
             @DefaultValue("0")
             @QueryParam("offset") int offset,
             @DefaultValue("10")
@@ -1145,10 +1211,10 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
     }
 
     @GET
-    @Path("/application/{package-name}/versions")
+    @Path("/application/{packageName}/versions")
     @Override
     public Response getAppVersions(
-            @PathParam("package-name") String packageName) {
+            @PathParam("packageName") String packageName) {
         try {
             List<String> versions = DeviceMgtAPIUtils.getDeviceManagementService()
                     .getAppVersions(packageName);

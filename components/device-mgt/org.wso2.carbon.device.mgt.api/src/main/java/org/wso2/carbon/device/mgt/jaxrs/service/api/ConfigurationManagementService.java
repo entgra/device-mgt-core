@@ -191,5 +191,4 @@ public interface ConfigurationManagementService {
                     value = "The properties required to update the platform configurations.",
                     required = true)
                     PlatformConfiguration configuration);
-
 }

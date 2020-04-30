@@ -23,6 +23,8 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.ConfigurationEntry;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.ConfigurationManagementException;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration;
+import org.wso2.carbon.device.mgt.core.config.ui.UIConfiguration;
+import org.wso2.carbon.device.mgt.core.config.ui.UIConfigurationManager;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
 import org.wso2.carbon.device.mgt.jaxrs.service.api.ConfigurationManagementService;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.RequestValidationUtil;
@@ -31,6 +33,7 @@ import org.wso2.carbon.device.mgt.common.MDMAppConstants;
 import org.wso2.carbon.policy.mgt.common.PolicyManagementException;
 import org.wso2.carbon.policy.mgt.core.util.PolicyManagerUtil;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.PUT;
@@ -90,5 +93,4 @@ public class ConfigurationServiceImpl implements ConfigurationManagementService 
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
         }
     }
-
 }
