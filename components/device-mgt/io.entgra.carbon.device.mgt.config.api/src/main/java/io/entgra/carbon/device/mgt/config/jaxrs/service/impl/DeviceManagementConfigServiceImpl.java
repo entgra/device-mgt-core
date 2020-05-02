@@ -224,6 +224,7 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
     @Override
     @Path("/tenants")
     @GET
+    @Produces(MediaType.APPLICATION_JSON)
     public Response getTenants() {
         List<TenantDetail> tenantDetails;
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
@@ -232,7 +233,12 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
             try {
                 Tenant[] tenants = realmService.getTenantManager().getAllTenants();
                 tenantDetails = new ArrayList<>();
-                Tenant superTenant = realmService.getTenantManager().getTenant(MultitenantConstants.SUPER_TENANT_ID);
+                Tenant superTenant = new Tenant();
+                superTenant.setId(MultitenantConstants.SUPER_TENANT_ID);
+                superTenant.setDomain(MultitenantConstants.SUPER_TENANT_DOMAIN_NAME);
+                superTenant.setAdminName(realmService.getTenantUserRealm(MultitenantConstants.SUPER_TENANT_ID)
+                        .getRealmConfiguration().getAdminUserName());
+                superTenant.setActive(true);
                 tenantDetails.add(getTenantDetail(superTenant));
                 if (tenants != null && tenants.length > 0) {
                     for (Tenant tenant : tenants) {

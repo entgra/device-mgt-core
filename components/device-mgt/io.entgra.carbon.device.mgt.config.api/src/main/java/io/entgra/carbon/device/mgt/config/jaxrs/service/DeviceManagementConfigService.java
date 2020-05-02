@@ -325,5 +325,6 @@ public interface DeviceManagementConfigService {
                             "adding permission to the tree.",
                     response = ErrorResponse.class)
     })
+    @Produces(MediaType.APPLICATION_JSON)
     Response addPermission(List<String> permissions);
 }
