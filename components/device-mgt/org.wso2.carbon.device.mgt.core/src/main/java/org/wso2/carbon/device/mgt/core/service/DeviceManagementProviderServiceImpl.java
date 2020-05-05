@@ -211,6 +211,14 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             log.error(msg);
             throw new DeviceManagementException(msg);
         }
+        if (device.getEnrolmentInfo() == null) {
+            String msg = "Received device without valid enrollment info for device enrollment";
+            log.error(msg);
+            throw new DeviceManagementException(msg);
+        }
+        if (device.getEnrolmentInfo().getStatus() == null) {
+            device.getEnrolmentInfo().setStatus(EnrolmentInfo.Status.ACTIVE);
+        }
         if (log.isDebugEnabled()) {
             log.debug("Enrolling the device " + device.getId() + "of type '" + device.getType() + "'");
         }
@@ -330,9 +338,6 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             }
         } else {
             deviceManager.enrollDevice(device);
-            if (device.getEnrolmentInfo().getStatus() == null) {
-                device.getEnrolmentInfo().setStatus(EnrolmentInfo.Status.ACTIVE);
-            }
             EnrolmentInfo enrollment;
             try {
                 DeviceManagementDAOFactory.beginTransaction();

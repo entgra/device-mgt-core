@@ -1357,19 +1357,10 @@ public class OperationManagerImpl implements OperationManager {
         if (!isUserAuthorized) {
             return null;
         }
-        EnrolmentInfo enrolmentInfo = null;
+        EnrolmentInfo enrolmentInfo;
         try {
             DeviceManagementDAOFactory.openConnection();
-            if (this.isSameUser(user, request.getOwner())) {
-                enrolmentInfo = deviceDAO.getEnrolment(deviceId, request, tenantId);
-            } else {
-                boolean isAdminUser = DeviceManagementDataHolder.getInstance().getDeviceAccessAuthorizationService().
-                        isDeviceAdminUser();
-                if (isAdminUser) {
-                    enrolmentInfo = deviceDAO.getEnrolment(deviceId, request, tenantId);
-                }
-                //TODO : Add a check for group admin if this fails
-            }
+            enrolmentInfo = deviceDAO.getEnrolment(deviceId, request, tenantId);
         } catch (DeviceManagementDAOException e) {
             throw new OperationManagementException("Error occurred while retrieving enrollment data of '" +
                     deviceId.getType() + "' device carrying the identifier '" +
@@ -1377,10 +1368,6 @@ public class OperationManagerImpl implements OperationManager {
         } catch (SQLException e) {
             throw new OperationManagementException(
                     "Error occurred while opening a connection to the data source", e);
-        } catch (DeviceAccessAuthorizationException e) {
-            throw new OperationManagementException("Error occurred while checking the device access permissions for '" +
-                    deviceId.getType() + "' device carrying the identifier '" +
-                    deviceId.getId() + "' of owner '" + request.getOwner() + "'", e);
         } finally {
             DeviceManagementDAOFactory.closeConnection();
         }
