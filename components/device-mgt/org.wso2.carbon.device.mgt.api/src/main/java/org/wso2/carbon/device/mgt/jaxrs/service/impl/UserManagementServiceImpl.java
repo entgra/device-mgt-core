@@ -939,6 +939,15 @@ public class UserManagementServiceImpl implements UserManagementService {
             @PathParam("username") String username,
             JsonArray deviceList) {
         try {
+            UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
+            if (!userStoreManager.isExistingUser(username)) {
+                if (log.isDebugEnabled()) {
+                    log.debug("User by username: " + username + " does not exist.");
+                }
+                String msg = "User by username: " + username + " does not exist.";
+                log.error(msg);
+                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+            }
             RealmConfiguration realmConfiguration = PrivilegedCarbonContext.getThreadLocalCarbonContext()
                     .getUserRealm()
                     .getRealmConfiguration();
@@ -947,8 +956,6 @@ public class UserManagementServiceImpl implements UserManagementService {
             if (!StringUtils.isBlank(domain)) {
                 username = domain + Constants.FORWARD_SLASH + username;
             }
-            UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
-
             ClaimMetadataManagementAdminService
                     claimMetadataManagementAdminService = new ClaimMetadataManagementAdminService();
             //Get all available claim URIs
@@ -975,15 +982,6 @@ public class UserManagementServiceImpl implements UserManagementService {
 
                 claimMetadataManagementAdminService.addLocalClaim(localClaimDTO);
             }
-
-            if (!userStoreManager.isExistingUser(username)) {
-                if (log.isDebugEnabled()) {
-                    log.debug("User by username: " + username + " does not exist.");
-                }
-                String msg = "User by username: " + username + " does not exist.";
-                log.error(msg);
-                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
-            }
             Map<String, String> userClaims =
                     this.buildExternalDevicesUserClaims(username, domain, deviceList, userStoreManager);
             userStoreManager.setUserClaimValues(username, userClaims, domain);
@@ -1005,6 +1003,15 @@ public class UserManagementServiceImpl implements UserManagementService {
     public Response getUserClaimsForDevices(
             @PathParam("username") String username) {
         try {
+            UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
+            if (!userStoreManager.isExistingUser(username)) {
+                if (log.isDebugEnabled()) {
+                    log.debug("User by username: " + username + " does not exist.");
+                }
+                String msg = "User by username: " + username + " does not exist.";
+                log.error(msg);
+                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+            }
             RealmConfiguration realmConfiguration = PrivilegedCarbonContext.getThreadLocalCarbonContext()
                     .getUserRealm()
                     .getRealmConfiguration();
@@ -1013,20 +1020,11 @@ public class UserManagementServiceImpl implements UserManagementService {
             if (!StringUtils.isBlank(domain)) {
                 username = domain + Constants.FORWARD_SLASH + username;
             }
-            UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
             String[] allUserClaims = userStoreManager.getClaimManager().getAllClaimUris();
             if (!Arrays.asList(allUserClaims).contains(Constants.USER_CLAIM_DEVICES)) {
                 String msg = "Claim attribute for external device doesn't exist.";
                 log.error(msg);
-                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
-            }
-            if (!userStoreManager.isExistingUser(username)) {
-                if (log.isDebugEnabled()) {
-                    log.debug("User by username: " + username + " does not exist.");
-                }
-                String msg = "User by username: " + username + " does not exist.";
-                log.error(msg);
-                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+                return Response.status(Response.Status.OK).build();
             }
             String[] claimArray = {Constants.USER_CLAIM_DEVICES};
             Map<String, String> claims = userStoreManager.getUserClaimValues(username, claimArray, domain);
@@ -1044,6 +1042,15 @@ public class UserManagementServiceImpl implements UserManagementService {
     public Response deleteUserClaimsForDevices(
             @PathParam("username") String username) {
         try {
+            UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
+            if (!userStoreManager.isExistingUser(username)) {
+                if (log.isDebugEnabled()) {
+                    log.debug("User by username: " + username + " does not exist.");
+                }
+                String msg = "User by username: " + username + " does not exist.";
+                log.error(msg);
+                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+            }
             RealmConfiguration realmConfiguration = PrivilegedCarbonContext.getThreadLocalCarbonContext()
                     .getUserRealm()
                     .getRealmConfiguration();
@@ -1052,20 +1059,11 @@ public class UserManagementServiceImpl implements UserManagementService {
             if (!StringUtils.isBlank(domain)) {
                 username = domain + Constants.FORWARD_SLASH + username;
             }
-            UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
             String[] allUserClaims = userStoreManager.getClaimManager().getAllClaimUris();
             if (!Arrays.asList(allUserClaims).contains(Constants.USER_CLAIM_DEVICES)) {
                 String msg = "Claim attribute for external device doesn't exist.";
                 log.error(msg);
-                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
-            }
-            if (!userStoreManager.isExistingUser(username)) {
-                if (log.isDebugEnabled()) {
-                    log.debug("User by username: " + username + " does not exist.");
-                }
-                String msg = "User by username: " + username + " does not exist.";
-                log.error(msg);
-                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+                return Response.status(Response.Status.OK).build();
             }
             String[] claimArray = {Constants.USER_CLAIM_DEVICES};
             userStoreManager.deleteUserClaimValues(
