@@ -898,6 +898,15 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     }
                 }
 
+                //adding licenses
+                if (applicationDTO.getLicenses() != null && !applicationDTO.getLicenses().isEmpty()) {
+                    this.applicationDAO.addLicenses(applicationDTO.getLicenses(), tenantId);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Licenses added to AP_LICENSE table. App Id:" + appId +
+                                " AdamId : " + applicationDTO.getAdamId());
+                    }
+                }
+
                 //adding application tags
                 if (tags != null && !tags.isEmpty()) {
                     List<TagDTO> registeredTags = applicationDAO.getAllTags(tenantId);
