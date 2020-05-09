@@ -96,6 +96,17 @@ public interface DeviceInformationManager {
      */
     List<DeviceLocation> getDeviceLocations(List<DeviceIdentifier> deviceIdentifiers) throws DeviceDetailsMgtException;
 
+    /**
+     * Send events to reporting backend
+     * @param deviceId device identifier of the reporting device
+     * @param payload payload of the event
+     * @param deviceType device type of an device
+     * @return Http status code if a call is made and if failed to make a call 0
+     * @throws DeviceDetailsMgtException
+     */
+     int publishEvents(String deviceId, String payload, String deviceType) throws
+            DeviceDetailsMgtException;
+
 //    /**
 //     * This method will manage the storing of device application list.
 //     * @param deviceApplication - Device application list.
