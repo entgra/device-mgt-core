@@ -1004,6 +1004,7 @@ public class UserManagementServiceImpl implements UserManagementService {
             @PathParam("username") String username) {
         try {
             UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
+            Map<String, String> claims = new HashMap<>();
             if (!userStoreManager.isExistingUser(username)) {
                 if (log.isDebugEnabled()) {
                     log.debug("User by username: " + username + " does not exist.");
@@ -1024,10 +1025,10 @@ public class UserManagementServiceImpl implements UserManagementService {
             if (!Arrays.asList(allUserClaims).contains(Constants.USER_CLAIM_DEVICES)) {
                 String msg = "Claim attribute for external device doesn't exist.";
                 log.error(msg);
-                return Response.status(Response.Status.OK).build();
+                return Response.status(Response.Status.OK).entity(claims).build();
             }
             String[] claimArray = {Constants.USER_CLAIM_DEVICES};
-            Map<String, String> claims = userStoreManager.getUserClaimValues(username, claimArray, domain);
+            claims = userStoreManager.getUserClaimValues(username, claimArray, domain);
             return Response.status(Response.Status.OK).entity(claims).build();
         } catch (UserStoreException e) {
             String msg = "Error  occurred while retrieving external device claims of the user '" + username + "'";
