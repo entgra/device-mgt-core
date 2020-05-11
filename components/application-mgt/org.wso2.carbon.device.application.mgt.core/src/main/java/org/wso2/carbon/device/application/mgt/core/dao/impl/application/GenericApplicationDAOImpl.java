@@ -63,8 +63,9 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                 + "TYPE, "
                 + "SUB_TYPE, "
                 + "TENANT_ID, "
-                + "DEVICE_TYPE_ID,"
-                + "ADAM_ID) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                + "DEVICE_TYPE_ID, "
+                + "RATING, "
+                + "ADAM_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         int applicationId = -1;
         try {
             Connection conn = this.getDBConnection();
@@ -75,11 +76,8 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                 stmt.setString(4, applicationDTO.getSubType());
                 stmt.setInt(5, tenantId);
                 stmt.setInt(6, applicationDTO.getDeviceTypeId());
-                if(!StringUtils.isEmpty(applicationDTO.getAdamId())){
-                    stmt.setString(7, applicationDTO.getAdamId());
-                } else{
-                    stmt.setString(7, null);
-                }
+                stmt.setDouble(7, applicationDTO.getAppRating());
+                stmt.setString(8, applicationDTO.getAdamId());
                 stmt.executeUpdate();
                 try (ResultSet rs = stmt.getGeneratedKeys()) {
                     if (rs.next()) {
@@ -402,6 +400,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                 + "AP_APP.CURRENCY AS APP_CURRENCY, "
                 + "AP_APP.RATING AS APP_RATING, "
                 + "AP_APP.DEVICE_TYPE_ID AS APP_DEVICE_TYPE_ID, "
+                + "AP_APP.ADAM_ID AS APP_ADAM_ID, "
                 + "AP_APP_RELEASE.ID AS RELEASE_ID, "
                 + "AP_APP_RELEASE.DESCRIPTION AS RELEASE_DESCRIPTION, "
                 + "AP_APP_RELEASE.VERSION AS RELEASE_VERSION, "
@@ -475,6 +474,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                 + "AP_APP.CURRENCY AS APP_CURRENCY, "
                 + "AP_APP.RATING AS APP_RATING, "
                 + "AP_APP.DEVICE_TYPE_ID AS APP_DEVICE_TYPE_ID, "
+                + "AP_APP.ADAM_ID AS APP_ADAM_ID, "
                 + "AP_APP_RELEASE.ID AS RELEASE_ID, "
                 + "AP_APP_RELEASE.DESCRIPTION AS RELEASE_DESCRIPTION, "
                 + "AP_APP_RELEASE.VERSION AS RELEASE_VERSION, "
@@ -552,6 +552,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                             + "AP_APP.CURRENCY AS APP_CURRENCY, "
                             + "AP_APP.RATING AS APP_RATING, "
                             + "AP_APP.DEVICE_TYPE_ID AS APP_DEVICE_TYPE_ID, "
+                            + "AP_APP.ADAM_ID AS APP_ADAM_ID, "
                             + "AP_APP_RELEASE.ID AS RELEASE_ID, "
                             + "AP_APP_RELEASE.DESCRIPTION AS RELEASE_DESCRIPTION, "
                             + "AP_APP_RELEASE.VERSION AS RELEASE_VERSION, "
@@ -622,6 +623,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                 + "AP_APP.CURRENCY AS APP_CURRENCY, "
                 + "AP_APP.RATING AS APP_RATING, "
                 + "AP_APP.DEVICE_TYPE_ID AS APP_DEVICE_TYPE_ID, "
+                + "AP_APP.ADAM_ID AS APP_ADAM_ID, "
                 + "AP_APP_RELEASE.ID AS RELEASE_ID, "
                 + "AP_APP_RELEASE.DESCRIPTION AS RELEASE_DESCRIPTION, "
                 + "AP_APP_RELEASE.VERSION AS RELEASE_VERSION, "
