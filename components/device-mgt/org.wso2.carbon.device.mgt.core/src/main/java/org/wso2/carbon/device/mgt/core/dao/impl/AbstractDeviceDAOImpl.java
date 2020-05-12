@@ -1912,6 +1912,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 removeEnrollmentDeviceDetail(conn, enrollmentIds);
                 removeEnrollmentDeviceLocation(conn, enrollmentIds);
                 removeEnrollmentDeviceInfo(conn, enrollmentIds);
+                deleteLargePayloadRecords(conn, enrollmentIds);
                 removeDeviceOperationResponse(conn, enrollmentIds);
                 removeEnrollmentOperationMapping(conn, enrollmentIds);
                 if (log.isDebugEnabled()) {
@@ -2397,8 +2398,8 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
      */
     private void removeDeviceOperationResponse(Connection conn, List<Integer> enrollmentIds)
             throws DeviceManagementDAOException {
-        String sql = "DELETE FROM DM_DEVICE_OPERATION_RESPONSE WHERE ENROLMENT_ID = ?";
         try {
+            String sql = "DELETE FROM DM_DEVICE_OPERATION_RESPONSE WHERE ENROLMENT_ID = ?";
             if (!executeBatchOperation(conn, sql, enrollmentIds)) {
                 String msg = "Failed to remove device operation response of devices with enrollmentIds : "
                         + enrollmentIds + " while executing batch operation";
@@ -2408,6 +2409,29 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         } catch (SQLException e) {
             String msg = "SQL error occurred while removing device operation response of devices with enrollmentIds : "
                     + enrollmentIds;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        }
+    }
+
+    private void deleteLargePayloadRecords(Connection conn, List<Integer> enrollmentIds)
+            throws DeviceManagementDAOException {
+        String sql = "DELETE DM_DEVICE_OPERATION_RESPONSE_LARGE " +
+                "FROM DM_DEVICE_OPERATION_RESPONSE_LARGE " +
+                "INNER JOIN DM_DEVICE_OPERATION_RESPONSE ON DM_DEVICE_OPERATION_RESPONSE_LARGE.ID = " +
+                "DM_DEVICE_OPERATION_RESPONSE.ID " +
+                "WHERE ENROLMENT_ID = ?";
+        try {
+            if (!executeBatchOperation(conn, sql, enrollmentIds)) {
+                String msg = "Failed to remove device large operation response of devices with " +
+                        "enrollmentIds : "
+                        + enrollmentIds + " while executing batch operation";
+                log.error(msg);
+                throw new DeviceManagementDAOException(msg);
+            }
+        } catch (SQLException e) {
+            String msg = "SQL error occurred while removing large device operation response of " +
+                    "devices with enrollmentIds : " + enrollmentIds;
             log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
