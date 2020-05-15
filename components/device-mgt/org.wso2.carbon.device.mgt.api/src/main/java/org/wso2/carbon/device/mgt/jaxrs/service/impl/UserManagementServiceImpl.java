@@ -1017,8 +1017,9 @@ public class UserManagementServiceImpl implements UserManagementService {
             }
             String[] allUserClaims = userStoreManager.getClaimManager().getAllClaimUris();
             if (!Arrays.asList(allUserClaims).contains(Constants.USER_CLAIM_DEVICES)) {
-                String msg = "Claim attribute for external device doesn't exist.";
-                log.error(msg);
+                if (log.isDebugEnabled()) {
+                    log.debug("Claim attribute for external device doesn't exist.");
+                }
                 return Response.status(Response.Status.OK).entity(claims).build();
             }
             String[] claimArray = {Constants.USER_CLAIM_DEVICES};
@@ -1037,6 +1038,7 @@ public class UserManagementServiceImpl implements UserManagementService {
     public Response deleteUserClaimsForDevices(
             @PathParam("username") String username) {
         try {
+            String[] claimArray = new String[1];
             UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
             if (!userStoreManager.isExistingUser(username)) {
                 String msg = "User by username: " + username + " does not exist.";
@@ -1053,11 +1055,12 @@ public class UserManagementServiceImpl implements UserManagementService {
             }
             String[] allUserClaims = userStoreManager.getClaimManager().getAllClaimUris();
             if (!Arrays.asList(allUserClaims).contains(Constants.USER_CLAIM_DEVICES)) {
-                String msg = "Claim attribute for external device doesn't exist.";
-                log.error(msg);
-                return Response.status(Response.Status.OK).build();
+                if (log.isDebugEnabled()) {
+                    log.debug("Claim attribute for external device doesn't exist.");
+                }
+                return Response.status(Response.Status.OK).entity(claimArray).build();
             }
-            String[] claimArray = {Constants.USER_CLAIM_DEVICES};
+            claimArray[0] = Constants.USER_CLAIM_DEVICES;
             userStoreManager.deleteUserClaimValues(
                     username,
                     claimArray,
