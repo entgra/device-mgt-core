@@ -941,9 +941,6 @@ public class UserManagementServiceImpl implements UserManagementService {
         try {
             UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
             if (!userStoreManager.isExistingUser(username)) {
-                if (log.isDebugEnabled()) {
-                    log.debug("User by username: " + username + " does not exist.");
-                }
                 String msg = "User by username: " + username + " does not exist.";
                 log.error(msg);
                 return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
@@ -1006,9 +1003,6 @@ public class UserManagementServiceImpl implements UserManagementService {
             UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
             Map<String, String> claims = new HashMap<>();
             if (!userStoreManager.isExistingUser(username)) {
-                if (log.isDebugEnabled()) {
-                    log.debug("User by username: " + username + " does not exist.");
-                }
                 String msg = "User by username: " + username + " does not exist.";
                 log.error(msg);
                 return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
@@ -1045,9 +1039,6 @@ public class UserManagementServiceImpl implements UserManagementService {
         try {
             UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
             if (!userStoreManager.isExistingUser(username)) {
-                if (log.isDebugEnabled()) {
-                    log.debug("User by username: " + username + " does not exist.");
-                }
                 String msg = "User by username: " + username + " does not exist.";
                 log.error(msg);
                 return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
