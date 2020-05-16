@@ -99,13 +99,14 @@ public interface DeviceInformationManager {
     /**
      * Send events to reporting backend
      * @param deviceId device identifier of the reporting device
-     * @param payload payload of the event
      * @param deviceType device type of an device
+     * @param payload payload of the event
+     * @param eventType Event type being sent
      * @return Http status code if a call is made and if failed to make a call 0
      * @throws DeviceDetailsMgtException
      */
-     int publishEvents(String deviceId, String payload, String deviceType) throws
-            DeviceDetailsMgtException;
+     int publishEvents(String deviceId, String deviceType, String payload, String eventType)
+             throws DeviceDetailsMgtException;
 
 //    /**
 //     * This method will manage the storing of device application list.
