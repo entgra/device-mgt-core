@@ -94,7 +94,7 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
 
             DeviceDetailsWrapper deviceDetailsWrapper = new DeviceDetailsWrapper();
             deviceDetailsWrapper.setDeviceInfo(deviceInfo);
-            publishEvents(device, deviceDetailsWrapper);
+            publishEvents(device, deviceDetailsWrapper, DeviceManagementConstants.Report.DEVICE_INFO_PARAM);
 
             DeviceManagementDAOFactory.beginTransaction();
             DeviceInfo newDeviceInfo;
@@ -184,8 +184,8 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
         }
     }
 
-    public int publishEvents(String deviceId, String payload, String deviceType) throws
-            DeviceDetailsMgtException {
+    public int publishEvents(String deviceId, String deviceType, String payload, String eventType)
+            throws DeviceDetailsMgtException {
 
         DeviceIdentifier deviceIdentifier = new DeviceIdentifier(deviceId, deviceType);
 
@@ -194,7 +194,7 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
                     getDeviceManagementProvider().getDevice(deviceIdentifier, false);
             DeviceDetailsWrapper deviceDetailsWrapper = new DeviceDetailsWrapper();
             deviceDetailsWrapper.setEvents(payload);
-            return publishEvents(device, deviceDetailsWrapper);
+            return publishEvents(device, deviceDetailsWrapper, eventType);
         } catch (DeviceManagementException e) {
             DeviceManagementDAOFactory.rollbackTransaction();
             throw new DeviceDetailsMgtException("Could not get device " + deviceId, e);
@@ -206,7 +206,8 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
      * @param device Device that is sending event
      * @param deviceDetailsWrapper Payload to send(example, deviceinfo, applist, raw events)
      */
-    private int publishEvents(Device device, DeviceDetailsWrapper deviceDetailsWrapper)  {
+    private int publishEvents(Device device, DeviceDetailsWrapper deviceDetailsWrapper, String
+            eventType)  {
         String reportingHost = HttpReportingUtil.getReportingHost();
         if (!StringUtils.isBlank(reportingHost)
                 && HttpReportingUtil.isPublishingEnabledForTenant()) {
@@ -228,8 +229,9 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
                     deviceDetailsWrapper.setRole(rolesOfUser);
                 }
 
-                return HttpReportingUtil.invokeApi(deviceDetailsWrapper.getJSONString(),
-                        reportingHost + DeviceManagementConstants.Report.DEVICE_INFO_ENDPOINT);
+                String eventUrl = reportingHost + DeviceManagementConstants.Report
+                        .REPORTING_CONTEXT + "/" + eventType;
+                return HttpReportingUtil.invokeApi(deviceDetailsWrapper.getJSONString(), eventUrl);
             } catch (EventPublishingException e) {
                 log.error("Error occurred while sending events", e);
             } catch (GroupManagementException e) {

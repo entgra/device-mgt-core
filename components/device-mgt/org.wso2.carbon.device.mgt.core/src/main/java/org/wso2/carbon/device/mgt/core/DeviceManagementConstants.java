@@ -164,8 +164,8 @@ public final class DeviceManagementConstants {
             throw new AssertionError();
         }
         public static final String REPORTING_EVENT_HOST = "iot.reporting.event.host";
-        public static final String REPORTING_CONTEXT = "/event";
-        public static final String DEVICE_INFO_ENDPOINT = REPORTING_CONTEXT + "/device-info";
+        public static final String REPORTING_CONTEXT = "/reporting/api/analyticsadmin/v1.0/event";
+        public static final String DEVICE_INFO_PARAM =  "device-info";
         public static final String APP_USAGE_ENDPOINT = REPORTING_CONTEXT + "/app-usage";
     }
 }
