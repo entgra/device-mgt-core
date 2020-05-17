@@ -232,7 +232,7 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
                 }
 
                 String eventUrl = reportingHost + DeviceManagementConstants.Report
-                        .REPORTING_CONTEXT + "/" + eventType;
+                        .REPORTING_CONTEXT + DeviceManagementConstants.URL_SEPERATOR + eventType;
                 return HttpReportingUtil.invokeApi(deviceDetailsWrapper.getJSONString(), eventUrl);
             } catch (EventPublishingException e) {
                 log.error("Error occurred while sending events", e);
