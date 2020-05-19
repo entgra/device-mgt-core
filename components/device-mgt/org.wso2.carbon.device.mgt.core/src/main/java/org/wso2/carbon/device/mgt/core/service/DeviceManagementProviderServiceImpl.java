@@ -1912,16 +1912,9 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                             device.getType());
         }
         try {
-            DeviceIdentifier deviceIdentifier = new DeviceIdentifier(device.getDeviceIdentifier(), device.getType());
-            if (!pluginRepository.getOperationManager(device.getType(), this.getTenantId())
-                    .isOperationExist(deviceIdentifier, operation.getId())) {
-                String msg = "Operation with operation id: " + operation.getId()
-                        + " does not exist.";
-                log.error(msg);
-                throw new BadRequestException(msg);
-            }
             pluginRepository.getOperationManager(device.getType(), this.getTenantId())
-                    .updateOperation(deviceIdentifier, operation);
+                    .updateOperation(device.getEnrolmentInfo().getId(), operation,
+                            new DeviceIdentifier(device.getDeviceIdentifier(), device.getType()));
             if (DeviceManagerUtil.isPublishOperationResponseEnabled()) {
                 List<String> permittedOperations = DeviceManagerUtil.getEnabledOperationsForResponsePublish();
                 if (permittedOperations.contains(operation.getCode())
@@ -1946,10 +1939,6 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             throw new OperationManagementException(msg, e);
         } catch (DataPublisherConfigurationException e) {
             String msg = "Error occurred while publishing event.";
-            log.error(msg, e);
-            throw new OperationManagementException(msg, e);
-        } catch (BadRequestException e) {
-            String msg = "Error occurred due to invalid request";
             log.error(msg, e);
             throw new OperationManagementException(msg, e);
         }
@@ -4176,5 +4165,24 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     public boolean isOperationExist(DeviceIdentifier deviceId, int operationId) throws OperationManagementException {
         return pluginRepository.getOperationManager(deviceId.getType(), this.getTenantId())
                 .isOperationExist(deviceId, operationId);
+    }
+
+    @Override
+    public List<Device> getDeviceByIdList(List<String> deviceIdentifiers) throws DeviceManagementException {
+        int tenantId = this.getTenantId();
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            return deviceDAO.getDevicesByIdentifiers(deviceIdentifiers, tenantId);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred while retrieving device list.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
     }
 }

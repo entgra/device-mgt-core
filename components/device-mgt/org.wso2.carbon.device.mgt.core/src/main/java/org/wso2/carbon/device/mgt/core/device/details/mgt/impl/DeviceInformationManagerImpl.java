@@ -197,7 +197,9 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
             return publishEvents(device, deviceDetailsWrapper, eventType);
         } catch (DeviceManagementException e) {
             DeviceManagementDAOFactory.rollbackTransaction();
-            throw new DeviceDetailsMgtException("Could not get device " + deviceId, e);
+            String msg = "Event publishing error. Could not get device " + deviceId;
+            log.error(msg, e);
+            throw new DeviceDetailsMgtException(msg, e);
         }
     }
 
@@ -230,7 +232,7 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
                 }
 
                 String eventUrl = reportingHost + DeviceManagementConstants.Report
-                        .REPORTING_CONTEXT + "/" + eventType;
+                        .REPORTING_CONTEXT + DeviceManagementConstants.URL_SEPERATOR + eventType;
                 return HttpReportingUtil.invokeApi(deviceDetailsWrapper.getJSONString(), eventUrl);
             } catch (EventPublishingException e) {
                 log.error("Error occurred while sending events", e);
