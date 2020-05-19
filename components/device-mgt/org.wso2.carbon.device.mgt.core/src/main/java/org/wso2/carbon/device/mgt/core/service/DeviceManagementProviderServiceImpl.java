@@ -4185,7 +4185,6 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             DeviceManagementDAOFactory.openConnection();
             return deviceDAO.getDevicesByIdentifiers(deviceIdentifiers, tenantId);
         } catch (DeviceManagementDAOException e) {
-            DeviceManagementDAOFactory.rollbackTransaction();
             String msg = "Error occurred while retrieving device list.";
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);

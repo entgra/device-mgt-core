@@ -722,10 +722,6 @@ public interface DeviceManagementService {
                             message = "Bad Request. \n Invalid request or validation error.",
                             response = ErrorResponse.class),
                     @ApiResponse(
-                            code = 404,
-                            message = "Not Found. \n A deviceType with the specified device type was not found.",
-                            response = ErrorResponse.class),
-                    @ApiResponse(
                             code = 500,
                             message = "Internal Server Error. \n " +
                                     "Server error occurred while retrieving the device details.",

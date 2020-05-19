@@ -668,14 +668,13 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
     public Response getDeviceByIdList(List<String> deviceIds) {
         DeviceManagementProviderService deviceManagementProviderService =
                 DeviceMgtAPIUtils.getDeviceManagementService();
-        List<Device> devices;
         if (deviceIds == null || deviceIds.isEmpty()) {
             String msg = "Required values of device identifiers are not set..";
             log.error(msg);
-            return Response.status(Response.Status.NOT_FOUND).build();
+            return Response.status(Response.Status.BAD_REQUEST).build();
         }
         try {
-            devices = deviceManagementProviderService.getDeviceByIdList(deviceIds);
+            List<Device> devices = deviceManagementProviderService.getDeviceByIdList(deviceIds);
             return Response.status(Response.Status.OK).entity(devices).build();
         } catch (DeviceManagementException e) {
             String msg = "Error encountered while retrieving devices";
