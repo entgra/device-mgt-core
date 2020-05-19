@@ -926,5 +926,5 @@ public interface DeviceManagementProviderService {
      * @throws {@link InvalidDeviceException}
      */
     List<Device> getDeviceByIdList(List<String> deviceIdentifiers)
-            throws DeviceManagementException, InvalidDeviceException;
+            throws DeviceManagementException;
 }

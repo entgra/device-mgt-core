@@ -4179,15 +4179,8 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public List<Device> getDeviceByIdList(List<String> deviceIdentifiers) throws DeviceManagementException,
-            InvalidDeviceException {
-        if (deviceIdentifiers == null || deviceIdentifiers.isEmpty()) {
-            String msg = "Required values of device identifiers are not set..";
-            log.error(msg);
-            throw new InvalidDeviceException(msg);
-        }
+    public List<Device> getDeviceByIdList(List<String> deviceIdentifiers) throws DeviceManagementException {
         int tenantId = this.getTenantId();
-
         try {
             DeviceManagementDAOFactory.openConnection();
             return deviceDAO.getDevicesByIdentifiers(deviceIdentifiers, tenantId);
