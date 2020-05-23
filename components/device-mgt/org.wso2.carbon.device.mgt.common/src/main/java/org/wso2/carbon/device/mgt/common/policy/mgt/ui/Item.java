@@ -40,6 +40,7 @@ public class Item {
     private RadioGroup radioGroup;
     private List<Notification> notifications;
     private Upload upload;
+    private APITable apiTable;
 
     @XmlElement(name = "Label")
     public String getLabel() {
@@ -156,5 +157,14 @@ public class Item {
 
     public void setUpload(Upload upload) {
         this.upload = upload;
+    }
+
+    @XmlElement(name = "APITable")
+    public APITable getApiTable() {
+        return apiTable;
+    }
+
+    public void setApiTable(APITable apiTable) {
+        this.apiTable = apiTable;
     }
 }
