@@ -57,6 +57,7 @@ import org.wso2.carbon.device.mgt.common.configuration.mgt.DevicePropertyInfo;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.EnrollmentConfiguration;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceData;
+import org.wso2.carbon.device.mgt.common.device.details.DeviceDetailsWrapper;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceInfo;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceLocation;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceLocationHistorySnapshot;
@@ -67,6 +68,7 @@ import org.wso2.carbon.device.mgt.common.exceptions.BadRequestException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceNotFoundException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
+import org.wso2.carbon.device.mgt.common.exceptions.EventPublishingException;
 import org.wso2.carbon.device.mgt.common.exceptions.InvalidDeviceException;
 import org.wso2.carbon.device.mgt.common.exceptions.TransactionManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.UnauthorizedDeviceAccessException;
@@ -114,6 +116,7 @@ import org.wso2.carbon.device.mgt.core.internal.DeviceManagementServiceComponent
 import org.wso2.carbon.device.mgt.core.internal.PluginInitializationListener;
 import org.wso2.carbon.device.mgt.core.operation.mgt.CommandOperation;
 import org.wso2.carbon.device.mgt.core.util.DeviceManagerUtil;
+import org.wso2.carbon.device.mgt.core.util.HttpReportingUtil;
 import org.wso2.carbon.email.sender.core.ContentProviderInfo;
 import org.wso2.carbon.email.sender.core.EmailContext;
 import org.wso2.carbon.email.sender.core.EmailSendingFailedException;
@@ -395,6 +398,8 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             }
             addInitialOperations(deviceIdentifier, device.getType());
             sendNotification(device);
+            Runnable task = () -> syncReportingApp(device, tenantId);
+            new Thread(task).start();
         }
         extractDeviceLocationToUpdate(device);
         try {
@@ -4184,6 +4189,28 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             throw new DeviceManagementException(msg, e);
         } finally {
             DeviceManagementDAOFactory.closeConnection();
+        }
+    }
+
+    /**
+     * Sync with reporting App
+     *
+     * @param device Enrolling Device
+     * @param tenantId Tenant Id
+     */
+    private void syncReportingApp (Device device, int tenantId) {
+
+        String reportingHost = HttpReportingUtil.getReportingHost();
+        if (StringUtils.isNotBlank(reportingHost) && HttpReportingUtil.isPublishingEnabledForTenant()) {
+            DeviceDetailsWrapper deviceDetailsWrapper = new DeviceDetailsWrapper();
+            deviceDetailsWrapper.setTenantId(tenantId);
+            deviceDetailsWrapper.setDevice(device);
+            try {
+                HttpReportingUtil.invokeApi(deviceDetailsWrapper.getJSONString(),
+                        reportingHost + DeviceManagementConstants.Report.ENROLLMENT_INFO_ENDPOINT);
+            } catch (EventPublishingException e) {
+                log.warn("Error occurred while syncing with reporting app");
+            }
         }
     }
 }
