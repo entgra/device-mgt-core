@@ -168,5 +168,6 @@ public final class DeviceManagementConstants {
         public static final String REPORTING_CONTEXT = "/reporting/api/analyticsadmin/v1.0/event";
         public static final String DEVICE_INFO_PARAM =  "device-info";
         public static final String APP_USAGE_ENDPOINT = REPORTING_CONTEXT + "/app-usage";
+        public static final String ENROLLMENT_INFO_ENDPOINT = REPORTING_CONTEXT + "/enrolment-info";
     }
 }
