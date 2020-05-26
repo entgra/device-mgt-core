@@ -17,7 +17,6 @@
 
 package org.wso2.carbon.device.mgt.common.policy.mgt.ui;
 
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
