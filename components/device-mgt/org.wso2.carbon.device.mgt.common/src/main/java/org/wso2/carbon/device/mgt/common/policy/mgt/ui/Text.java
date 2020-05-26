@@ -17,35 +17,11 @@
 
 package org.wso2.carbon.device.mgt.common.policy.mgt.ui;
 
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
-@XmlRootElement(name = "Modal")
-public class Modal {
-
-    private List<Attribute> attributes;
-    private List<SubContent> subContents;
-
-    @XmlElementWrapper(name = "Attributes")
-    @XmlElement(name = "Attribute")
-    public List<Attribute> getAttributes() {
-        return attributes;
-    }
-
-    public void setAttributes(List<Attribute> attributes) {
-        this.attributes = attributes;
-    }
-
-    @XmlElementWrapper(name = "SubContents")
-    @XmlElement(name = "SubContent")
-    public List<SubContent> getSubContents() {
-        return subContents;
-    }
-
-    public void setSubContents(List<SubContent> subContents) {
-        this.subContents = subContents;
-    }
+@XmlRootElement(name = "Text")
+public class Text {
 }

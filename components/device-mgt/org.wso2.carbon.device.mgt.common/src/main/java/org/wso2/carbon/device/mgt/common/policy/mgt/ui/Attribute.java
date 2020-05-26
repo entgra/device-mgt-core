@@ -28,6 +28,7 @@ public class Attribute {
     private String subAttribute;
     private String arrayName;
     private int arrayIndex;
+    private Item item;
 
     @XmlElement(name = "Key")
     public String getKey() {
@@ -63,5 +64,14 @@ public class Attribute {
 
     public void setArrayIndex(int arrayIndex) {
         this.arrayIndex = arrayIndex;
+    }
+
+    @XmlElement(name = "Item")
+    public Item getItem() {
+        return item;
+    }
+
+    public void setItem(Item item) {
+        this.item = item;
     }
 }
