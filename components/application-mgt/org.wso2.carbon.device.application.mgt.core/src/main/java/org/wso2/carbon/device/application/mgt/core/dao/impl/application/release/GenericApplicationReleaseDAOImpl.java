@@ -66,8 +66,10 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
                 + "APP_META_INFO,"
                 + "SUPPORTED_OS_VERSIONS,"
                 + "CURRENT_STATE,"
+                + "RATING,"
+                + "RATED_USERS,"
                 + "AP_APP_ID) "
-                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
         try {
             Connection connection = this.getDBConnection();
@@ -90,7 +92,9 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
                 statement.setString(16, applicationReleaseDTO.getMetaData());
                 statement.setString(17, applicationReleaseDTO.getSupportedOsVersions());
                 statement.setString(18, applicationReleaseDTO.getCurrentState().toUpperCase());
-                statement.setInt(19, appId);
+                statement.setDouble(19, applicationReleaseDTO.getRating());
+                statement.setInt(20, applicationReleaseDTO.getRatedUsers());
+                statement.setInt(21, appId);
                 statement.executeUpdate();
                 try(ResultSet resultSet = statement.getGeneratedKeys()){
                     if (resultSet.next()) {

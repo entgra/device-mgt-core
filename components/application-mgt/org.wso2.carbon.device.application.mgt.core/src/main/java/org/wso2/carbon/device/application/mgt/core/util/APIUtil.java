@@ -40,6 +40,8 @@ import org.wso2.carbon.device.application.mgt.common.wrapper.PublicAppReleaseWra
 import org.wso2.carbon.device.application.mgt.common.wrapper.PublicAppWrapper;
 import org.wso2.carbon.device.application.mgt.common.wrapper.WebAppReleaseWrapper;
 import org.wso2.carbon.device.application.mgt.common.wrapper.WebAppWrapper;
+import org.wso2.carbon.device.application.mgt.common.wrapper.VPPAppReleaseWrapper;
+import org.wso2.carbon.device.application.mgt.common.wrapper.VPPAppWrapper;
 import org.wso2.carbon.device.application.mgt.core.config.ConfigurationManager;
 import org.wso2.carbon.device.application.mgt.core.exception.BadRequestException;
 import org.wso2.carbon.device.application.mgt.core.exception.UnexpectedServerErrorException;
@@ -275,6 +277,23 @@ public class APIUtil {
             List<ApplicationReleaseDTO> applicationReleaseEntities = publicAppWrapper.getPublicAppReleaseWrappers()
                     .stream().map(APIUtil::releaseWrapperToReleaseDTO).collect(Collectors.toList());
             applicationDTO.setApplicationReleaseDTOs(applicationReleaseEntities);
+        } else if (param instanceof VPPAppWrapper) {
+            VPPAppWrapper vppAppWrapper = (VPPAppWrapper) param;
+            DeviceType deviceType = getDeviceTypeData(vppAppWrapper.getDeviceType());
+            applicationDTO.setAdamId(vppAppWrapper.getAdamId());
+            applicationDTO.setName(vppAppWrapper.getName());
+            applicationDTO.setDescription(vppAppWrapper.getDescription());
+            applicationDTO.setAppCategories(vppAppWrapper.getCategories());
+            applicationDTO.setType(ApplicationType.PUBLIC.toString());
+            applicationDTO.setSubType(vppAppWrapper.getSubMethod());
+            applicationDTO.setPaymentCurrency(vppAppWrapper.getPaymentCurrency());
+            applicationDTO.setTags(vppAppWrapper.getTags());
+            applicationDTO.setUnrestrictedRoles(vppAppWrapper.getUnrestrictedRoles());
+            applicationDTO.setDeviceTypeId(deviceType.getId());
+            applicationDTO.setAppRating(vppAppWrapper.getRating());
+            List<ApplicationReleaseDTO> applicationReleaseEntities = vppAppWrapper.getVppAppReleaseWrappers()
+                    .stream().map(APIUtil::releaseWrapperToReleaseDTO).collect(Collectors.toList());
+            applicationDTO.setApplicationReleaseDTOs(applicationReleaseEntities);
         } else if (param instanceof CustomAppWrapper){
             CustomAppWrapper customAppWrapper = (CustomAppWrapper) param;
             DeviceType deviceType = getDeviceTypeData(customAppWrapper.getDeviceType());
@@ -325,6 +344,21 @@ public class APIUtil {
             applicationReleaseDTO.setIsSharedWithAllTenants(publicAppReleaseWrapper.getIsSharedWithAllTenants());
             applicationReleaseDTO.setMetaData(publicAppReleaseWrapper.getMetaData());
             applicationReleaseDTO.setSupportedOsVersions(publicAppReleaseWrapper.getSupportedOsVersions());
+        } else if (param instanceof VPPAppReleaseWrapper) {
+            VPPAppReleaseWrapper vppAppReleaseWrapper = (VPPAppReleaseWrapper) param;
+            applicationReleaseDTO.setDescription(vppAppReleaseWrapper.getDescription());
+            applicationReleaseDTO.setReleaseType(vppAppReleaseWrapper.getReleaseType());
+            applicationReleaseDTO.setVersion(vppAppReleaseWrapper.getVersion());
+            applicationReleaseDTO.setPackageName(vppAppReleaseWrapper.getPackageName());
+            applicationReleaseDTO.setPrice(vppAppReleaseWrapper.getPrice());
+            applicationReleaseDTO.setIsSharedWithAllTenants(vppAppReleaseWrapper.getIsSharedWithAllTenants());
+            applicationReleaseDTO.setMetaData(vppAppReleaseWrapper.getMetaData());
+            applicationReleaseDTO.setSupportedOsVersions(vppAppReleaseWrapper.getSupportedOsVersions());
+            applicationReleaseDTO.setIconName(vppAppReleaseWrapper.getSmallIconName());
+            applicationReleaseDTO.setScreenshotName1(vppAppReleaseWrapper.getSmallIconName());
+            applicationReleaseDTO.setInstallerName(vppAppReleaseWrapper.getInstallerName());
+            applicationReleaseDTO.setRatedUsers(vppAppReleaseWrapper.getRatedUsers());
+            applicationReleaseDTO.setRating(vppAppReleaseWrapper.getRating());
         } else if (param instanceof CustomAppReleaseWrapper) {
             CustomAppReleaseWrapper customAppReleaseWrapper = (CustomAppReleaseWrapper) param;
             applicationReleaseDTO.setDescription(customAppReleaseWrapper.getDescription());
@@ -362,6 +396,9 @@ public class APIUtil {
         if (ApplicationType.PUBLIC.toString().equals(applicationDTO.getType()) && application.getCategories()
                 .contains("GooglePlaySyncedApp")) {
             application.setAndroidEnterpriseApp(true);
+        }
+        if (!StringUtils.isEmpty(applicationDTO.getAdamId())) {
+            application.setAdamId(applicationDTO.getAdamId());
         }
         for (ApplicationReleaseDTO applicationReleaseDTO : applicationDTO.getApplicationReleaseDTOs()) {
             applicationReleases.add(releaseDtoToRelease(applicationReleaseDTO));

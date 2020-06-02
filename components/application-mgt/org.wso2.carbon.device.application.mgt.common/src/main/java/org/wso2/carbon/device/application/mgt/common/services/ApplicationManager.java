@@ -36,6 +36,7 @@ import org.wso2.carbon.device.application.mgt.common.wrapper.ApplicationUpdateWr
 import org.wso2.carbon.device.application.mgt.common.wrapper.ApplicationWrapper;
 import org.wso2.carbon.device.application.mgt.common.wrapper.PublicAppReleaseWrapper;
 import org.wso2.carbon.device.application.mgt.common.wrapper.PublicAppWrapper;
+import org.wso2.carbon.device.application.mgt.common.wrapper.VPPAppWrapper;
 import org.wso2.carbon.device.application.mgt.common.wrapper.WebAppReleaseWrapper;
 import org.wso2.carbon.device.application.mgt.common.wrapper.WebAppWrapper;
 
@@ -65,6 +66,15 @@ public interface ApplicationManager {
 
     Application createCustomApp(CustomAppWrapper customAppWrapper, ApplicationArtifact applicationArtifact)
             throws ApplicationManagementException;
+
+    /**
+     * The method is responsible to add new VPP Asset into entgra App Manager.
+     *
+     * @param vppAppWrapper Asset that need to be created.
+     * @return {@link Application}
+     * @throws ApplicationManagementException Catch all other throwing exceptions and throw {@link ApplicationManagementException}
+     */
+    Application createVPPApp(VPPAppWrapper vppAppWrapper) throws ApplicationManagementException;
 
     /**
      * Check the existence of an application for given application name and the device type.

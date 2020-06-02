@@ -63,6 +63,8 @@ import org.wso2.carbon.device.application.mgt.common.wrapper.ApplicationUpdateWr
 import org.wso2.carbon.device.application.mgt.common.wrapper.ApplicationWrapper;
 import org.wso2.carbon.device.application.mgt.common.wrapper.PublicAppReleaseWrapper;
 import org.wso2.carbon.device.application.mgt.common.wrapper.PublicAppWrapper;
+import org.wso2.carbon.device.application.mgt.common.wrapper.VPPAppReleaseWrapper;
+import org.wso2.carbon.device.application.mgt.common.wrapper.VPPAppWrapper;
 import org.wso2.carbon.device.application.mgt.common.wrapper.WebAppReleaseWrapper;
 import org.wso2.carbon.device.application.mgt.common.wrapper.WebAppWrapper;
 import org.wso2.carbon.device.application.mgt.core.config.ConfigurationManager;
@@ -227,6 +229,42 @@ public class ApplicationManagerImpl implements ApplicationManager {
             String msg = "Error Occured when uploading artifacts of the public app: " + publicAppWrapper.getName();
             log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
+        }
+        //insert application data into database
+        return addAppDataIntoDB(applicationDTO, tenantId);
+    }
+
+    @Override
+    public Application createVPPApp(VPPAppWrapper vppAppWrapper)
+            throws ApplicationManagementException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+
+        if (log.isDebugEnabled()) {
+            log.debug("VPP app creating request is received. App name: " + vppAppWrapper.getName()
+                    + " Adam ID: " + vppAppWrapper.getAdamId());
+        }
+        ApplicationDTO applicationDTO = APIUtil.convertToAppDTO(vppAppWrapper);
+        ApplicationReleaseDTO applicationReleaseDTO = applicationDTO.getApplicationReleaseDTOs().get(0);
+        applicationReleaseDTO.setUuid(UUID.randomUUID().toString());
+        applicationReleaseDTO.setAppHashValue(DigestUtils.md5Hex(applicationReleaseDTO.getPackageName()));
+
+        try {
+            ConnectionManagerUtil.openDBConnection();
+            List<ApplicationReleaseDTO> exitingPubAppReleases = applicationReleaseDAO
+                    .getReleaseByPackages(Collections.singletonList(applicationReleaseDTO.getPackageName()), tenantId);
+            if (!exitingPubAppReleases.isEmpty()) {
+                String msg = "VPP app release exists for package name " + applicationReleaseDTO.getPackageName()
+                        + ". Hence you can't add new VPP app for package name "
+                        + applicationReleaseDTO.getPackageName();
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+        } catch (ApplicationManagementDAOException e) {
+            String msg = "Error Occurred when fetching release: " + vppAppWrapper.getName();
+            log.error(msg);
+            throw new ApplicationManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
         }
         //insert application data into database
         return addAppDataIntoDB(applicationDTO, tenantId);
@@ -890,6 +928,15 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     if (log.isDebugEnabled()) {
                         log.debug("New restricted roles to app ID mapping added to AP_UNRESTRICTED_ROLE table."
                                 + " App Id:" + appId);
+                    }
+                }
+
+                //adding licenses
+                if (applicationDTO.getLicenses() != null && !applicationDTO.getLicenses().isEmpty()) {
+                    this.applicationDAO.addLicenses(applicationDTO.getLicenses(), tenantId);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Licenses added to AP_LICENSE table. App Id:" + appId +
+                                " AdamId : " + applicationDTO.getAdamId());
                     }
                 }
 
@@ -3189,6 +3236,48 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 throw new BadRequestException(msg);
             }
             unrestrictedRoles = publicAppWrapper.getUnrestrictedRoles();
+        } else if (param instanceof VPPAppWrapper) {
+            VPPAppWrapper vppAppWrapper = (VPPAppWrapper) param;
+            appName = vppAppWrapper.getName();
+            if (StringUtils.isEmpty(appName)) {
+                String msg = "Application name cannot be empty for VPP app.";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+            if (StringUtils.isEmpty(vppAppWrapper.getAdamId())) {
+                String msg = "Adam ID cannot be empty for VPP Asset.";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+            appCategories = vppAppWrapper.getCategories();
+            if (appCategories == null) {
+                String msg = "Application category can't be null.";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+            if (appCategories.isEmpty()) {
+                String msg = "Application category can't be empty.";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+            if (StringUtils.isEmpty(vppAppWrapper.getDeviceType())) {
+                String msg = "Device type can't be empty for the VPP application.";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+            DeviceType deviceType = APIUtil.getDeviceTypeData(vppAppWrapper.getDeviceType());
+            deviceTypeId = deviceType.getId();
+
+            List<VPPAppReleaseWrapper> vppAppReleaseWrappers;
+            vppAppReleaseWrappers = vppAppWrapper.getVppAppReleaseWrappers();
+
+            if (vppAppReleaseWrappers == null || vppAppReleaseWrappers.size() != 1) {
+                String msg = "Invalid VPP app creating request. Request must have single release. Application name:"
+                        + vppAppWrapper.getName() + "Adam ID: " + vppAppWrapper.getAdamId() + ".";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+            unrestrictedRoles = vppAppWrapper.getUnrestrictedRoles();
         } else if (param instanceof CustomAppWrapper) {
             CustomAppWrapper customAppWrapper = (CustomAppWrapper) param;
             appName = customAppWrapper.getName();
@@ -3363,6 +3452,45 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 throw new BadRequestException(msg);
             }
             if (isInvalidOsVersionRange(publicAppReleaseWrapper.getSupportedOsVersions(), deviceType)) {
+                String msg = "You are trying to create application which has an application release contains invalid or "
+                        + "unsupported OS versions in the supportedOsVersions section. Hence, please re-evaluate the "
+                        + "request payload.";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+        } else if (param instanceof VPPAppReleaseWrapper) {
+            VPPAppReleaseWrapper vppAppReleaseWrapper = (VPPAppReleaseWrapper) param;
+            if (StringUtils.isEmpty(vppAppReleaseWrapper.getSupportedOsVersions())) {
+                String msg = "Supported OS Version shouldn't be null or empty for VPP app release creating request.";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+            if (StringUtils.isEmpty(vppAppReleaseWrapper.getVersion())) {
+                String msg = "Version shouldn't be empty or null for the VPP App release creating request.";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+            if (StringUtils.isEmpty(vppAppReleaseWrapper.getPackageName())) {
+                String msg = "Package name shouldn't be empty or null for the VPP App release creating request.";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+            if (StringUtils.isEmpty(vppAppReleaseWrapper.getInstallerName())) {
+                String msg = "Installer name name shouldn't be empty or null for the VPP App release creating request.";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+            if (StringUtils.isEmpty(vppAppReleaseWrapper.getSmallIconName())) {
+                String msg = "Small Icon shouldn't be empty or null for the VPP App release creating request.";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+            if (StringUtils.isEmpty(vppAppReleaseWrapper.getLargeIconName())) {
+                String msg = "Large Icon shouldn't be empty or null for the VPP App release creating request.";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+            if (isInvalidOsVersionRange(vppAppReleaseWrapper.getSupportedOsVersions(), deviceType)) {
                 String msg = "You are trying to create application which has an application release contains invalid or "
                         + "unsupported OS versions in the supportedOsVersions section. Hence, please re-evaluate the "
                         + "request payload.";

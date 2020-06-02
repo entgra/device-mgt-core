@@ -20,7 +20,9 @@ package org.wso2.carbon.device.application.mgt.core.dao;
 import org.wso2.carbon.device.application.mgt.common.*;
 import org.wso2.carbon.device.application.mgt.common.dto.ApplicationDTO;
 import org.wso2.carbon.device.application.mgt.common.dto.CategoryDTO;
-import org.wso2.carbon.device.application.mgt.common.dto.TagDTO;
+import org.wso2.carbon.device.application.mgt.common.dto.VPPDeviceDTO;
+import org.wso2.carbon.device.application.mgt.common.dto.LicenseDTO;
+import org.wso2.carbon.device.application.mgt.common.dto.TagDTO;;
 import org.wso2.carbon.device.application.mgt.core.exception.ApplicationManagementDAOException;
 
 import java.util.List;
@@ -38,6 +40,10 @@ public interface ApplicationDAO {
      * @throws ApplicationManagementDAOException if error occurred wile executing query to inser app data into database.
      */
     int createApplication(ApplicationDTO applicationDTO, int tenantId) throws ApplicationManagementDAOException;
+
+    int createVPPDevice(VPPDeviceDTO vppDeviceDTO, int tenantId) throws ApplicationManagementDAOException;
+
+    void addLicenses(List<LicenseDTO> licenses, int tenantId) throws ApplicationManagementDAOException;
 
     /**
      * To add tags for a particular application.

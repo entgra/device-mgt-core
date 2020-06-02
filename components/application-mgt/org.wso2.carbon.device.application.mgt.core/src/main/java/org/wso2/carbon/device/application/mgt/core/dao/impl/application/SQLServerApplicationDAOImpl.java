@@ -61,6 +61,7 @@ public class SQLServerApplicationDAOImpl extends GenericApplicationDAOImpl {
                 + "AP_APP.CURRENCY AS APP_CURRENCY, "
                 + "AP_APP.RATING AS APP_RATING, "
                 + "AP_APP.DEVICE_TYPE_ID AS APP_DEVICE_TYPE_ID, "
+                + "AP_APP.ADAM_ID AS APP_ADAM_ID, "
                 + "AP_APP_RELEASE.ID AS RELEASE_ID, "
                 + "AP_APP_RELEASE.DESCRIPTION AS RELEASE_DESCRIPTION, "
                 + "AP_APP_RELEASE.VERSION AS RELEASE_VERSION, "

@@ -23,6 +23,8 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.device.application.mgt.common.AppLifecycleState;
 import org.wso2.carbon.device.application.mgt.common.dto.ApplicationDTO;
 import org.wso2.carbon.device.application.mgt.common.dto.CategoryDTO;
+import org.wso2.carbon.device.application.mgt.common.dto.VPPDeviceDTO;
+import org.wso2.carbon.device.application.mgt.common.dto.LicenseDTO;
 import org.wso2.carbon.device.application.mgt.common.Filter;
 import org.wso2.carbon.device.application.mgt.common.dto.TagDTO;
 import org.wso2.carbon.device.application.mgt.common.exception.DBConnectionException;
@@ -61,7 +63,9 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                 + "TYPE, "
                 + "SUB_TYPE, "
                 + "TENANT_ID, "
-                + "DEVICE_TYPE_ID) VALUES (?, ?, ?, ?, ?, ?)";
+                + "DEVICE_TYPE_ID, "
+                + "RATING, "
+                + "ADAM_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         int applicationId = -1;
         try {
             Connection conn = this.getDBConnection();
@@ -72,6 +76,8 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                 stmt.setString(4, applicationDTO.getSubType());
                 stmt.setInt(5, tenantId);
                 stmt.setInt(6, applicationDTO.getDeviceTypeId());
+                stmt.setDouble(7, applicationDTO.getAppRating());
+                stmt.setString(8, applicationDTO.getAdamId());
                 stmt.executeUpdate();
                 try (ResultSet rs = stmt.getGeneratedKeys()) {
                     if (rs.next()) {
@@ -88,6 +94,45 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
         } catch (SQLException e) {
             String msg = "Error occurred while executing SQL to create an application which has application name "
                     + applicationDTO.getName();
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public int createVPPDevice(VPPDeviceDTO vppDeviceDTO, int tenantId) throws ApplicationManagementDAOException {
+        if (log.isDebugEnabled()) {
+            log.debug("Request received in DAO Layer to create a VPP Device");
+            log.debug("VPPDeviceDTO Details : ");
+            log.debug("Serial number : " + vppDeviceDTO.getSerialNumber() + " User ID : " + vppDeviceDTO.getUserId());
+        }
+        String sql = "INSERT INTO AP_VPP_DEVICE "
+                + "(SERIAL_NUMBER, "
+                + "USER_ID, "
+                + "TENANT_ID) VALUES (?, ?, ?)";
+        int deviceId = -1;
+        try {
+            Connection conn = this.getDBConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                stmt.setString(1, vppDeviceDTO.getSerialNumber());
+                stmt.setString(2, vppDeviceDTO.getUserId());
+                stmt.setInt(3, tenantId);
+                stmt.executeUpdate();
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        deviceId = rs.getInt(1);
+                    }
+                    return deviceId;
+                }
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection to create a VPP Device which has "
+                    + "Serial number : " + vppDeviceDTO.getSerialNumber();
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred while executing SQL to create a VPP Device which has Serial number : "
+                    + vppDeviceDTO.getSerialNumber();
             log.error(msg, e);
             throw new ApplicationManagementDAOException(msg, e);
         }
@@ -115,6 +160,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                 + "AP_APP.CURRENCY AS APP_CURRENCY, "
                 + "AP_APP.RATING AS APP_RATING, "
                 + "AP_APP.DEVICE_TYPE_ID AS APP_DEVICE_TYPE_ID, "
+                + "AP_APP.ADAM_ID AS APP_ADAM_ID, "
                 + "AP_APP_RELEASE.ID AS RELEASE_ID, "
                 + "AP_APP_RELEASE.DESCRIPTION AS RELEASE_DESCRIPTION, "
                 + "AP_APP_RELEASE.VERSION AS RELEASE_VERSION, "
@@ -354,6 +400,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                 + "AP_APP.CURRENCY AS APP_CURRENCY, "
                 + "AP_APP.RATING AS APP_RATING, "
                 + "AP_APP.DEVICE_TYPE_ID AS APP_DEVICE_TYPE_ID, "
+                + "AP_APP.ADAM_ID AS APP_ADAM_ID, "
                 + "AP_APP_RELEASE.ID AS RELEASE_ID, "
                 + "AP_APP_RELEASE.DESCRIPTION AS RELEASE_DESCRIPTION, "
                 + "AP_APP_RELEASE.VERSION AS RELEASE_VERSION, "
@@ -427,6 +474,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                 + "AP_APP.CURRENCY AS APP_CURRENCY, "
                 + "AP_APP.RATING AS APP_RATING, "
                 + "AP_APP.DEVICE_TYPE_ID AS APP_DEVICE_TYPE_ID, "
+                + "AP_APP.ADAM_ID AS APP_ADAM_ID, "
                 + "AP_APP_RELEASE.ID AS RELEASE_ID, "
                 + "AP_APP_RELEASE.DESCRIPTION AS RELEASE_DESCRIPTION, "
                 + "AP_APP_RELEASE.VERSION AS RELEASE_VERSION, "
@@ -504,6 +552,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                             + "AP_APP.CURRENCY AS APP_CURRENCY, "
                             + "AP_APP.RATING AS APP_RATING, "
                             + "AP_APP.DEVICE_TYPE_ID AS APP_DEVICE_TYPE_ID, "
+                            + "AP_APP.ADAM_ID AS APP_ADAM_ID, "
                             + "AP_APP_RELEASE.ID AS RELEASE_ID, "
                             + "AP_APP_RELEASE.DESCRIPTION AS RELEASE_DESCRIPTION, "
                             + "AP_APP_RELEASE.VERSION AS RELEASE_VERSION, "
@@ -574,6 +623,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                 + "AP_APP.CURRENCY AS APP_CURRENCY, "
                 + "AP_APP.RATING AS APP_RATING, "
                 + "AP_APP.DEVICE_TYPE_ID AS APP_DEVICE_TYPE_ID, "
+                + "AP_APP.ADAM_ID AS APP_ADAM_ID, "
                 + "AP_APP_RELEASE.ID AS RELEASE_ID, "
                 + "AP_APP_RELEASE.DESCRIPTION AS RELEASE_DESCRIPTION, "
                 + "AP_APP_RELEASE.VERSION AS RELEASE_VERSION, "
@@ -742,6 +792,40 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
             throw new ApplicationManagementDAOException(msg, e);
         } catch (SQLException e) {
             String msg = "SQL Error occurred while adding tags. Executed Query: " + sql;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public void addLicenses(List<LicenseDTO> licenses, int tenantId) throws ApplicationManagementDAOException {
+        if (log.isDebugEnabled()) {
+            log.debug("Request received in DAO Layer to add Licenses");
+        }
+        String sql = "INSERT INTO AP_LICENSE "
+                + "(LICENSE_ID, "
+                + "ADAM_ID, "
+                + "STATUS, "
+                + "TENANT_ID) "
+                + "VALUES (?, ?, ?, ?)";
+        try {
+            Connection conn = this.getDBConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                for (LicenseDTO license : licenses) {
+                    stmt.setString(1, license.getLicenseId());
+                    stmt.setString(2, license.getAdamId());
+                    stmt.setString(3, license.getStatus());
+                    stmt.setInt(4, tenantId);
+                    stmt.addBatch();
+                }
+                stmt.executeBatch();
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection when adding licenses";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "SQL Error occurred while adding licenses. Executed Query: " + sql;
             log.error(msg, e);
             throw new ApplicationManagementDAOException(msg, e);
         }

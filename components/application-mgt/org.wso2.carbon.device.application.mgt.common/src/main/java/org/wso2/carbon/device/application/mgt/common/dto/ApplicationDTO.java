@@ -96,6 +96,30 @@ public class ApplicationDTO {
             value = "package name of the application")
     private String packageName;
 
+    @ApiModelProperty(name = "adamId",
+            value = "The unique identifier for a product in the iTunes Store")
+    private String adamId;
+
+    @ApiModelProperty(name = "licenses",
+            value = "List of application licenses")
+    private List<LicenseDTO> licenses;
+
+    public String getAdamId() {
+        return adamId;
+    }
+
+    public void setAdamId(String adamId) {
+        this.adamId = adamId;
+    }
+
+    public List<LicenseDTO> getLicenses() {
+        return licenses;
+    }
+
+    public void setLicenses(List<LicenseDTO> licenses) {
+        this.licenses = licenses;
+    }
+
     public String getPackageName() {
         return packageName;
     }

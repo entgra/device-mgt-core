@@ -26,6 +26,11 @@ public class Application {
             required = true)
     private int id;
 
+    @ApiModelProperty(name = "adamId",
+            value = "The unique identifier for a product in the iTunes Store",
+            required = true)
+    private String adamId;
+
     @ApiModelProperty(name = "name",
             value = "Name of the application",
             required = true)
@@ -105,6 +110,14 @@ public class Application {
 
     public void setPackageName(String packageName) {
         this.packageName = packageName;
+    }
+
+    public String getAdamId() {
+        return adamId;
+    }
+
+    public void setAdamId(String  adamId) {
+        this.adamId = adamId;
     }
 
     public int getId() { return id; }
