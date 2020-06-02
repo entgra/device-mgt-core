@@ -21,7 +21,7 @@ package io.entgra.ui.request.interceptor.util;
 public class HandlerConstants {
     public static final String PUBLISHER_APPLICATION_NAME = "application-mgt-publisher";
     public static final String APP_REG_ENDPOINT = "/api-application-registration/register";
-    public static final String UI_CONFIG_ENDPOINT = "/api/application-mgt/v1.0/config/ui-config";
+    public static final String UI_CONFIG_ENDPOINT = "/api/device-mgt-config/v1.0/configurations/ui-config";
     public static final String TOKEN_ENDPOINT = "/token";
     public static final String INTROSPECT_ENDPOINT = "/oauth2/introspect";
     public static final String LOGIN_PAGE = "/login";
@@ -37,12 +37,12 @@ public class HandlerConstants {
     public static final String API_COMMON_CONTEXT = "/api";
     public static final String EXECUTOR_EXCEPTION_PREFIX = "ExecutorException-";
     public static final String TOKEN_IS_EXPIRED = "ACCESS_TOKEN_IS_EXPIRED";
+    public static final String REPORTS = "Reports";
+    public static final String APP_NAME = "App-Name";
 
     public static final String SCHEME_SEPARATOR = "://";
     public static final String COLON = ":";
     public static final String HTTP_PROTOCOL = "http";
-
-    public static final String[] SKIPPING_API_CONTEXT = {"artifact", "conf"};
 
     public static final int INTERNAL_ERROR_CODE = 500;
     public static final long TIMEOUT = 1200;

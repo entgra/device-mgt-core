@@ -165,10 +165,13 @@ public interface ApplicationManagementPublisherAPI {
                             response = ApplicationDTO.class),
                     @ApiResponse(
                             code = 403,
-                            message = "Don't have permission to access the application"),
+                            message = "Forbidden. \n Don't have permission to access the application"),
                     @ApiResponse(
                             code = 404,
-                            message = "Application not found"),
+                            message = "Not Found. \n Application not found"),
+                    @ApiResponse(
+                            code = 409,
+                            message = "Conflict. \n Couldn't find an active application"),
                     @ApiResponse(
                             code = 500,
                             message = "Internal Server Error. \n Error occurred while getting relevant application.",
@@ -211,10 +214,13 @@ public interface ApplicationManagementPublisherAPI {
                             response = ApplicationDTO.class),
                     @ApiResponse(
                             code = 403,
-                            message = "Don't have permission to access the application release"),
+                            message = "Forbidden. \n Don't have permission to access the application release"),
                     @ApiResponse(
                             code = 404,
-                            message = "Application release not found"),
+                            message = "Not Found. \n Application release not found"),
+                    @ApiResponse(
+                            code = 409,
+                            message = "Conflict. \n Application release is in the end state of lifecycle flow"),
                     @ApiResponse(
                             code = 500,
                             message = "Internal Server Error. \n Error occurred while getting relevant application release.",
@@ -617,47 +623,6 @@ public interface ApplicationManagementPublisherAPI {
     );
 
     @PUT
-    @Consumes("application/json")
-    @Path("/retire/{appId}")
-    @ApiOperation(
-            consumes = MediaType.APPLICATION_JSON,
-            produces = MediaType.APPLICATION_JSON,
-            httpMethod = "PUT",
-            value = "Retire the application with the given UUID",
-            notes = "This will retire the application with the given UUID",
-            tags = "ApplicationDTO Management",
-            extensions = {
-                    @Extension(properties = {
-                            @ExtensionProperty(name = SCOPE, value = "perm:app:publisher:update")
-                    })
-            }
-    )
-    @ApiResponses(
-            value = {
-                    @ApiResponse(
-                            code = 200,
-                            message = "OK. \n Successfully deleted the application identified by UUID.",
-                            response = List.class),
-                    @ApiResponse(
-                            code = 500,
-                            message = "Internal Server Error. \n Error occurred while deleting the application.",
-                            response = ErrorResponse.class),
-                    @ApiResponse(
-                            code = 403,
-                            message = "Don't have permission to delete the application"),
-                    @ApiResponse(
-                            code = 404,
-                            message = "Application not found"),
-            })
-    Response retireApplication(
-            @ApiParam(
-                    name = "UUID",
-                    value = "Unique identifier of the ApplicationDTO",
-                    required = true)
-            @PathParam("appId") int applicationId
-    );
-
-    @PUT
     @Path("/image-artifacts/{uuid}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes({"multipart/mixed", MediaType.MULTIPART_FORM_DATA})
@@ -715,6 +680,50 @@ public interface ApplicationManagementPublisherAPI {
             @Multipart(value = "screenshot3") Attachment screenshot3
     );
 
+    @GET
+    @Path("/device-type/{deviceType}/app-name/{appName}")
+    @ApiOperation(
+            httpMethod = "GET",
+            value = "Check the application existence",
+            notes = "This API is responsible to check whether application exist or not for the given device type and "
+                    + "application name.",
+            tags = "Application Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = SCOPE, value = "perm:app:publisher:view")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Application doesn't exists."),
+                    @ApiResponse(
+                            code = 409,
+                            message = "CONFLICT. \n Application exists"),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. \n Found invalid device type with the request."),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n Error occurred while checking the application existence"
+                                    + " for given application name and device type name the application list.",
+                            response = ErrorResponse.class)
+            })
+    Response isExistingApplication(
+            @ApiParam(
+                    name = "deviceType",
+                    value = "Application compatible device type name",
+                    required = true)
+            @PathParam("deviceType") String deviceType,
+            @ApiParam(
+                    name = "appName",
+                    value = "Application name",
+                    required = true)
+            @PathParam("appName") String appName
+    );
+
     @PUT
     @Path("/ent-app-artifacts/{deviceType}/{appId}/{uuid}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -743,7 +752,8 @@ public interface ApplicationManagementPublisherAPI {
                                     "ApplicationDTO artifact updating payload contains unacceptable or vulnerable data"),
                     @ApiResponse(
                             code = 404,
-                            message = "NOT FOUND. \n Couldn't found application/application release to update applocation release artifact."),
+                            message = "NOT FOUND. \n Couldn't found application/application release to update "
+                                    + "application release artifact."),
                     @ApiResponse(
                             code = 500,
                             message = "Internal Server Error. \n Error occurred while getting the application list.",

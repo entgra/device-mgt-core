@@ -48,6 +48,7 @@ import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
 import org.wso2.carbon.device.mgt.jaxrs.beans.PolicyList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.PolicyWrapper;
 import org.wso2.carbon.device.mgt.jaxrs.beans.PriorityUpdatedPolicyWrapper;
+import org.wso2.carbon.device.mgt.jaxrs.beans.ProfileFeature;
 import org.wso2.carbon.device.mgt.jaxrs.service.api.PolicyManagementService;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.FilteringUtil;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.RequestValidationUtil;
@@ -78,7 +79,12 @@ public class PolicyManagementServiceImpl implements PolicyManagementService {
     @POST
     @Override
     public Response addPolicy(@Valid PolicyWrapper policyWrapper) {
-        RequestValidationUtil.validatePolicyDetails(policyWrapper);
+        List<org.wso2.carbon.policy.mgt.common.ProfileFeature> features = RequestValidationUtil
+                .validatePolicyDetails(policyWrapper);
+        // validation failure results;
+        if (!features.isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(features).build();
+        }
         PolicyManagerService policyManagementService = DeviceMgtAPIUtils.getPolicyManagementService();
 
         try {
@@ -213,7 +219,12 @@ public class PolicyManagementServiceImpl implements PolicyManagementService {
     @Path("/{id}")
     @Override
     public Response updatePolicy(@PathParam("id") int id, @Valid PolicyWrapper policyWrapper) {
-        RequestValidationUtil.validatePolicyDetails(policyWrapper);
+        List<org.wso2.carbon.policy.mgt.common.ProfileFeature> features = RequestValidationUtil
+                .validatePolicyDetails(policyWrapper);
+        // validation failure results;
+        if (!features.isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(features).build();
+        }
         PolicyManagerService policyManagementService = DeviceMgtAPIUtils.getPolicyManagementService();
         try {
             Policy policy = this.getPolicyFromWrapper(policyWrapper);
@@ -406,7 +417,17 @@ public class PolicyManagementServiceImpl implements PolicyManagementService {
             DeviceIdentifier deviceIdentifier = new DeviceIdentifier();
             deviceIdentifier.setId(deviceId);
             deviceIdentifier.setType(deviceType);
-            policy = policyManagementService.getAppliedPolicyToDevice(deviceIdentifier);
+            Device device;
+            try {
+                device = DeviceMgtAPIUtils.getDeviceManagementService().getDevice(deviceIdentifier, false);
+            } catch (DeviceManagementException e) {
+                String msg = "Error occurred while retrieving '" + deviceType + "' device, which carries the id '"
+                        + deviceId + "'";
+                log.error(msg, e);
+                return Response.serverError().entity(
+                        new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+            }
+            policy = policyManagementService.getAppliedPolicyToDevice(device);
             if (policy == null) {
                 return Response.status(Response.Status.NOT_FOUND).entity(
                         new ErrorResponse.ErrorResponseBuilder().setMessage(
@@ -450,4 +471,19 @@ public class PolicyManagementServiceImpl implements PolicyManagementService {
 
         return Response.status(Response.Status.OK).entity(targetPolicies).build();
     }
+
+    @POST
+    @Path("/validate")
+    @Override
+    public Response validatePolicy(List<ProfileFeature> profileFeaturesList) {
+        List<org.wso2.carbon.policy.mgt.common.ProfileFeature> features
+                = RequestValidationUtil.validateProfileFeatures(profileFeaturesList);
+        // validation failure results;
+        if (!features.isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(features).build();
+        }
+        return Response.status(Response.Status.OK).entity("Valid request").build();
+
+    }
+
 }

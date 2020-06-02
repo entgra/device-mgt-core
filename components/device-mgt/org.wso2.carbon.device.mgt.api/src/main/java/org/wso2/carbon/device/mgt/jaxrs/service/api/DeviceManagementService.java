@@ -64,6 +64,7 @@ import org.wso2.carbon.device.mgt.jaxrs.beans.ApplicationList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
 import org.wso2.carbon.device.mgt.jaxrs.beans.OperationRequest;
+import org.wso2.carbon.device.mgt.jaxrs.beans.OperationStatusBean;
 import org.wso2.carbon.device.mgt.jaxrs.util.Constants;
 
 import javax.validation.Valid;
@@ -628,6 +629,52 @@ public interface DeviceManagementService {
             @QueryParam("requireDeviceInfo")
                     boolean requireDeviceInfo);
 
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/type/any/list")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "POST",
+            value = "Getting Details of Devices",
+            notes = "Get the details of devices by specifying the device identifiers.",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:details")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully fetched the details of the device.",
+                            response = Device.class,
+                            responseHeaders = {
+                                    @ResponseHeader(
+                                            name = "Content-Type",
+                                            description = "The content type of the body"),
+                                    @ResponseHeader(
+                                            name = "ETag",
+                                            description = "Entity Tag of the response resource.\n" +
+                                                    "Used by caches, or in conditional requests."),
+                                    @ResponseHeader(
+                                            name = "Last-Modified",
+                                            description = "Date and time the resource was last modified.\n" +
+                                                    "Used by caches, or in conditional requests."),
+                            }),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. \n Invalid request or validation error.",
+                            response = ErrorResponse.class),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n " +
+                                    "Server error occurred while retrieving the device details.",
+                            response = ErrorResponse.class)
+            })
+    Response getDeviceByIdList(List<String> deviceIds);
+
 
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
@@ -843,7 +890,7 @@ public interface DeviceManagementService {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/type/{device-type}/id/{device-id}/rename")
+    @Path("/type/{deviceType}/id/{deviceId}/rename")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             consumes = MediaType.APPLICATION_JSON,
@@ -904,14 +951,14 @@ public interface DeviceManagementService {
                     name = "device-type",
                     value = "The device type, such as ios, android, or windows.",
                     required = true)
-            @PathParam("device-type")
+            @PathParam("deviceType")
             @Size(max = 45)
                     String deviceType,
             @ApiParam(
                     name = "device-id",
                     value = "The device identifier of the device.",
                     required = true)
-            @PathParam("device-id")
+            @PathParam("deviceId")
             @Size(max = 45)
                     String deviceId);
 
@@ -919,7 +966,7 @@ public interface DeviceManagementService {
     //DELETE devices/type/virtual_firealarm/id/us06ww93auzp
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/type/{device-type}/id/{device-id}")
+    @Path("/type/{deviceType}/id/{deviceId}")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "DELETE",
@@ -974,14 +1021,14 @@ public interface DeviceManagementService {
                     name = "device-type",
                     value = "The device type, such as ios, android, or windows.",
                     required = true)
-            @PathParam("device-type")
+            @PathParam("deviceType")
             @Size(max = 45)
                     String deviceType,
             @ApiParam(
                     name = "device-id",
                     value = "The device identifier of the device.",
                     required = true)
-            @PathParam("device-id")
+            @PathParam("deviceId")
             @Size(max = 45)
                     String deviceId);
 
@@ -1923,7 +1970,7 @@ public interface DeviceManagementService {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/compliance/{compliance-status}")
+    @Path("/compliance/{complianceStatus}")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
@@ -1958,7 +2005,7 @@ public interface DeviceManagementService {
                     value = "Compliance status for devices. If true, devices which are compliant with policies. " +
                             "If false, devices which are not compliant",
                     required = true)
-            @PathParam("compliance-status")
+            @PathParam("complianceStatus")
                     boolean complianceStatus,
             @ApiParam(
                     name = "policy",
@@ -2030,7 +2077,7 @@ public interface DeviceManagementService {
                     int id);
 
     @GET
-    @Path("/{device-type}/applications")
+    @Path("/{deviceType}/applications")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
@@ -2076,7 +2123,7 @@ public interface DeviceManagementService {
                     name = "device-type",
                     value = "Device type (platform) of the application",
                     required = true)
-            @PathParam("device-type")
+            @PathParam("deviceType")
                     String deviceType,
             @ApiParam(
                     name = "offset",
@@ -2092,7 +2139,7 @@ public interface DeviceManagementService {
                     int limit);
 
     @GET
-    @Path("/application/{package-name}/versions")
+    @Path("/application/{packageName}/versions")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
@@ -2133,6 +2180,97 @@ public interface DeviceManagementService {
                     name = "package-name",
                     value = "The package name of the app.",
                     required = true)
-            @PathParam("package-name")
+            @PathParam("packageName")
                     String packageName);
+
+    @PUT
+    @Path("/{deviceType}/{id}/operation")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "PUT",
+            value = "Update status of a given opeation",
+            notes = "Updates the status of a given operation of a given device in Entgra IoT Server.",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:operations")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully updated the operation status.",
+                            responseHeaders = {
+                                    @ResponseHeader(
+                                            name = "Content-Type",
+                                            description = "The content type of the body"),
+                                    @ResponseHeader(
+                                            name = "ETag",
+                                            description = "Entity Tag of the response resource.\n" +
+                                                    "Used by caches, or in conditional requests."),
+                                    @ResponseHeader(
+                                            name = "Last-Modified",
+                                            description = "Date and time the resource was last modified.\n" +
+                                                    "Used by caches, or in conditional requests."),
+                            }),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. \n Invalid request or validation error.",
+                            response = ErrorResponse.class),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Error occurred while updating operation status.",
+                            response = ErrorResponse.class)
+            })
+    Response updateOperationStatus(
+            @ApiParam(
+                    name = "device-type",
+                    value = "The device type, such as ios, android, or windows.")
+            @PathParam("deviceType") String deviceType,
+            @ApiParam(
+                    name = "id",
+                    value = "The device identifier")
+            @PathParam("id") String deviceId,
+            OperationStatusBean operationStatusBean);
+
+    @GET
+    @Path("/filters")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Retrieving filters of device.",
+            notes = "Provides filters in devices of Entgra IoT Server which can be used in UI for filtering.",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully fetched the device filters.",
+                            responseHeaders = {
+                                    @ResponseHeader(
+                                            name = "Content-Type",
+                                            description = "The content type of the body"),
+                                    @ResponseHeader(
+                                            name = "ETag",
+                                            description = "Entity Tag of the response resource.\n" +
+                                                          "Used by caches, or in conditional requests."),
+                                    @ResponseHeader(
+                                            name = "Last-Modified",
+                                            description = "Date and time the resource was last modified.\n" +
+                                                          "Used by caches, or in conditional requests."),
+                            }),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Error occurred while getting the version data.",
+                            response = ErrorResponse.class)
+            })
+    Response getDeviceFilters();
 }

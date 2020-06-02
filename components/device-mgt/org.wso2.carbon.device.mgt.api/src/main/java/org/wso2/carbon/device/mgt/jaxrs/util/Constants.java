@@ -45,13 +45,35 @@ public class Constants {
 	public static final String USER_CLAIM_LAST_NAME = "http://wso2.org/claims/lastname";
 	public static final String USER_CLAIM_CREATED = "http://wso2.org/claims/created";
 	public static final String USER_CLAIM_MODIFIED = "http://wso2.org/claims/modified";
+	public static final String USER_CLAIM_DEVICES = "http://wso2.org/claims/devices";
 	public static final String PRIMARY_USER_STORE = "PRIMARY";
     public static final String DEFAULT_STREAM_VERSION = "1.0.0";
 	public static final String SCOPE = "scope";
 	public static final String JDBC_USERSTOREMANAGER = "org.wso2.carbon.user.core.jdbc.JDBCUserStoreManager";
 	public static final String DEFAULT_SIMPLE_DATE_FORMAT = "EEE, d MMM yyyy HH:mm:ss Z";
 	public static final int DEFAULT_PAGE_LIMIT = 50;
+	public static final String FORWARD_SLASH = "/";
+	public static final String ANDROID = "android";
+	public static final String ANDROID_POLICY_VALIDATOR = "io.entgra.proprietary.platform.android." +
+			"core.polcy.AndroidPolicyPayloadValidator";
+	public static final String IOS = "ios";
+	public static final String WINDOWS = "windows";
 
+
+	public final class OperationStatus {
+		private OperationStatus () { throw new AssertionError(); }
+		public static final String COMPLETED = "completed";
+		public static final String ERROR = "error";
+		public static final String IN_PROGRESS = "in_progress";
+		public static final String PENDING = "pending";
+		public static final String NOTNOW = "notnow";
+		public static final String REPEATED = "repeated";
+	}
+	public static final String DEVICES = "devices";
+	public static final String ATTRIBUTE_DISPLAY_NAME = "DisplayName";
+	public static final String ATTRIBUTE_DESCRIPTION = "Description";
+	public static final String EXTERNAL_DEVICE_CLAIM_DISPLAY_NAME = "Devices";
+	public static final String EXTERNAL_DEVICE_CLAIM_DESCRIPTION = "Device list";
 
 	public final class ErrorMessages {
 		private ErrorMessages () { throw new AssertionError(); }

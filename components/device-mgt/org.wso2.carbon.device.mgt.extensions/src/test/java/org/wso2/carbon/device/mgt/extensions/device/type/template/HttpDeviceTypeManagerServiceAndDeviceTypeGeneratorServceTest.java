@@ -22,7 +22,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.wso2.carbon.device.mgt.common.Device;
-import org.wso2.carbon.device.mgt.common.ui.policy.mgt.Policy;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.ConfigurationEntry;
@@ -221,7 +220,6 @@ public class HttpDeviceTypeManagerServiceAndDeviceTypeGeneratorServceTest {
         deviceTypeMetaDefinition = new DeviceTypeMetaDefinition();
         deviceTypeMetaDefinition.setPushNotificationConfig(pushNotificationConfig);
         deviceTypeMetaDefinition.setDescription("This is android_sense");
-        deviceTypeMetaDefinition.setClaimable(true);
         deviceTypeMetaDefinition.setLicense(androidSenseLicense);
         deviceTypeMetaDefinition.setFeatures(features);
     }

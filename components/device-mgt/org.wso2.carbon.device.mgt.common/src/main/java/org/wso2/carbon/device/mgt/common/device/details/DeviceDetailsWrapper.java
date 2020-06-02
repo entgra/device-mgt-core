@@ -20,8 +20,10 @@ package org.wso2.carbon.device.mgt.common.device.details;
 import com.google.gson.Gson;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.app.mgt.Application;
+import org.wso2.carbon.device.mgt.common.group.mgt.DeviceGroup;
 
 import java.util.List;
+import java.util.Map;
 
 public class DeviceDetailsWrapper {
 
@@ -29,7 +31,27 @@ public class DeviceDetailsWrapper {
     Device device;
     List<Application> applications;
     DeviceLocation location;
+    String events;
     int tenantId;
+
+    List<DeviceGroup> groups;
+    String [] role;
+
+    public List<DeviceGroup> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(List<DeviceGroup> groups) {
+        this.groups = groups;
+    }
+
+    public String [] getRole() {
+        return role;
+    }
+
+    public void setRole(String [] role) {
+        this.role = role;
+    }
 
     public int getTenantId() {
         return tenantId;
@@ -69,6 +91,14 @@ public class DeviceDetailsWrapper {
 
     public void setLocation(DeviceLocation location) {
         this.location = location;
+    }
+
+    public String getEvents() {
+        return events;
+    }
+
+    public void setEvents(String events) {
+        this.events = events;
     }
 
     public String getJSONString() {

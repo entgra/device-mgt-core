@@ -41,13 +41,17 @@ public class OracleApplicationDAOImpl extends GenericApplicationDAOImpl {
     private static final Log log = LogFactory.getLog(OracleApplicationDAOImpl.class);
 
     @Override
-    public List<ApplicationDTO> getApplications(Filter filter,int deviceTypeId, int tenantId) throws
+    public List<ApplicationDTO> getApplications(Filter filter, int deviceTypeId, int tenantId) throws
             ApplicationManagementDAOException {
+        if (filter == null) {
+            String msg = "Filter is not instantiated for tenant " + tenantId;
+            log.error(msg);
+            throw new ApplicationManagementDAOException(msg);
+        }
         if (log.isDebugEnabled()) {
             log.debug("Getting application data from the database");
             log.debug(String.format("Filter: limit=%s, offset=%s", filter.getLimit(), filter.getOffset()));
         }
-        int paramIndex = 1;
         String sql = "SELECT "
                 + "AP_APP.ID AS APP_ID, "
                 + "AP_APP.NAME AS APP_NAME, "
@@ -80,98 +84,87 @@ public class OracleApplicationDAOImpl extends GenericApplicationDAOImpl {
                 + "FROM AP_APP "
                 + "INNER JOIN AP_APP_RELEASE ON "
                 + "AP_APP.ID = AP_APP_RELEASE.AP_APP_ID "
-                + "INNER JOIN (SELECT ID FROM AP_APP ORDER BY ID OFFSET ? ROWS FETCH NEXT ? ROWS ONLY) AS app_data ON app_data.ID = AP_APP.ID "
-                + "WHERE AP_APP.TENANT_ID = ?";
-
-        if (filter == null) {
-            String msg = "Filter is not instantiated.";
-            log.error(msg);
-            throw new ApplicationManagementDAOException(msg);
+                + "INNER JOIN (SELECT AP_APP.ID FROM AP_APP ORDER BY ID ";
+        if (StringUtils.isNotEmpty(filter.getVersion()) || StringUtils.isNotEmpty(filter.getAppReleaseState())
+                || StringUtils.isNotEmpty(filter.getAppReleaseType())) {
+            sql += "INNER JOIN AP_APP_RELEASE ON AP_APP.ID = AP_APP_RELEASE.AP_APP_ID ";
         }
-
-        if (!StringUtils.isEmpty(filter.getAppType())) {
-            sql += " AND AP_APP.TYPE = ?";
+        if (StringUtils.isNotEmpty(filter.getAppType())) {
+            sql += "AND AP_APP.TYPE = ? ";
         }
-        if (!StringUtils.isEmpty(filter.getAppName())) {
+        if (StringUtils.isNotEmpty(filter.getAppName())) {
             sql += " AND LOWER (AP_APP.NAME) ";
             if (filter.isFullMatch()) {
-                sql += "= ?";
+                sql += "= ? ";
             } else {
-                sql += "LIKE ?";
+                sql += "LIKE ? ";
             }
         }
-        if (!StringUtils.isEmpty(filter.getSubscriptionType())) {
-            sql += " AND AP_APP.SUB_TYPE = ?";
+        if (StringUtils.isNotEmpty(filter.getSubscriptionType())) {
+            sql += "AND AP_APP.SUB_TYPE = ? ";
         }
         if (filter.getMinimumRating() > 0) {
-            sql += " AND AP_APP.RATING >= ?";
+            sql += "AND AP_APP.RATING >= ? ";
         }
-        if (!StringUtils.isEmpty(filter.getVersion())) {
-            sql += " AND AP_APP_RELEASE.VERSION = ?";
+        if (StringUtils.isNotEmpty(filter.getVersion())) {
+            sql += "AND AP_APP_RELEASE.VERSION = ? ";
         }
-        if (!StringUtils.isEmpty(filter.getAppReleaseType())) {
-            sql += " AND AP_APP_RELEASE.RELEASE_TYPE = ?";
+        if (StringUtils.isNotEmpty(filter.getAppReleaseType())) {
+            sql += "AND AP_APP_RELEASE.RELEASE_TYPE = ? ";
         }
-        if (!StringUtils.isEmpty(filter.getAppReleaseState())) {
-            sql += " AND AP_APP_RELEASE.CURRENT_STATE = ?";
+        if (StringUtils.isNotEmpty(filter.getAppReleaseState())) {
+            sql += "AND AP_APP_RELEASE.CURRENT_STATE = ? ";
         }
         if (deviceTypeId != -1) {
-            sql += " AND AP_APP.DEVICE_TYPE_ID = ?";
+            sql += "AND AP_APP.DEVICE_TYPE_ID = ? ";
         }
-
-        if (filter.getLimit() == -1) {
-            sql = sql.replace("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", "");
+        sql += "GROUP BY AP_APP.ID ";
+        if (StringUtils.isNotEmpty(filter.getSortBy())) {
+            sql += "ORDER BY ID " + filter.getSortBy() + " ";
         }
-
-        String sortingOrder = "ASC";
-        if (!StringUtils.isEmpty(filter.getSortBy() )) {
-            sortingOrder = filter.getSortBy();
+        if (filter.getLimit() != -1) {
+            sql += "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ";
         }
-        sql += " ORDER BY APP_ID " + sortingOrder;
-
+        sql += ") AS app_data ON app_data.ID = AP_APP.ID " +
+                "WHERE AP_APP.TENANT_ID = ?";
         try {
             Connection conn = this.getDBConnection();
-            try (PreparedStatement stmt = conn.prepareStatement(sql);
-            ){
-                if (filter.getLimit() != -1) {
-                    stmt.setInt(paramIndex++, filter.getOffset());
-                    if (filter.getLimit() == 0) {
-                        stmt.setInt(paramIndex++, 100);
-                    } else {
-                        stmt.setInt(paramIndex++, filter.getLimit());
-                    }
-                }
-                stmt.setInt(paramIndex++, tenantId);
-
-                if (filter.getAppType() != null && !filter.getAppType().isEmpty()) {
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                int paramIndex = 1;
+                if (StringUtils.isNotEmpty(filter.getAppType())) {
                     stmt.setString(paramIndex++, filter.getAppType());
                 }
-                if (filter.getAppName() != null && !filter.getAppName().isEmpty()) {
+                if (StringUtils.isNotEmpty(filter.getAppName())) {
                     if (filter.isFullMatch()) {
                         stmt.setString(paramIndex++, filter.getAppName().toLowerCase());
                     } else {
                         stmt.setString(paramIndex++, "%" + filter.getAppName().toLowerCase() + "%");
                     }
                 }
-                if (!StringUtils.isEmpty(filter.getSubscriptionType())) {
+                if (StringUtils.isNotEmpty(filter.getSubscriptionType())) {
                     stmt.setString(paramIndex++, filter.getSubscriptionType());
                 }
                 if (filter.getMinimumRating() > 0) {
                     stmt.setInt(paramIndex++, filter.getMinimumRating());
                 }
-                if (!StringUtils.isEmpty(filter.getVersion())) {
+                if (StringUtils.isNotEmpty(filter.getVersion())) {
                     stmt.setString(paramIndex++, filter.getVersion());
                 }
-                if (!StringUtils.isEmpty(filter.getAppReleaseType())) {
+                if (StringUtils.isNotEmpty(filter.getAppReleaseType())) {
                     stmt.setString(paramIndex++, filter.getAppReleaseType());
                 }
-                if (!StringUtils.isEmpty(filter.getAppReleaseState())) {
+                if (StringUtils.isNotEmpty(filter.getAppReleaseState())) {
                     stmt.setString(paramIndex++, filter.getAppReleaseState());
                 }
-                if (deviceTypeId > 0 ) {
-                    stmt.setInt(paramIndex, deviceTypeId);
+                if (deviceTypeId > 0) {
+                    stmt.setInt(paramIndex++, deviceTypeId);
                 }
-                try (ResultSet rs = stmt.executeQuery() ) {
+                if (filter.getLimit() != -1) {
+                    stmt.setInt(paramIndex++, filter.getOffset());
+                    stmt.setInt(paramIndex++, filter.getLimit());
+                }
+                stmt.setInt(paramIndex, tenantId);
+                try (ResultSet rs = stmt.executeQuery()) {
                     return DAOUtil.loadApplications(rs);
                 }
             }

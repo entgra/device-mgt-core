@@ -60,6 +60,8 @@ public interface DeviceInformationManager {
      */
     DeviceInfo getDeviceInfo(DeviceIdentifier deviceIdentifier) throws DeviceDetailsMgtException;
 
+    DeviceInfo getDeviceInfo(Device device) throws DeviceDetailsMgtException;
+
     /**
      * This method will return device information for the supplied devices list.
      * @param deviceIdentifiers
@@ -73,6 +75,7 @@ public interface DeviceInformationManager {
      * @param deviceLocation - Device location object.
      * @throws DeviceDetailsMgtException
      */
+    @Deprecated
     void addDeviceLocation(DeviceLocation deviceLocation) throws DeviceDetailsMgtException;
 
     void addDeviceLocation(Device device, DeviceLocation deviceLocation) throws DeviceDetailsMgtException;
@@ -92,6 +95,18 @@ public interface DeviceInformationManager {
      * @throws DeviceDetailsMgtException
      */
     List<DeviceLocation> getDeviceLocations(List<DeviceIdentifier> deviceIdentifiers) throws DeviceDetailsMgtException;
+
+    /**
+     * Send events to reporting backend
+     * @param deviceId device identifier of the reporting device
+     * @param deviceType device type of an device
+     * @param payload payload of the event
+     * @param eventType Event type being sent
+     * @return Http status code if a call is made and if failed to make a call 0
+     * @throws DeviceDetailsMgtException
+     */
+     int publishEvents(String deviceId, String deviceType, String payload, String eventType)
+             throws DeviceDetailsMgtException;
 
 //    /**
 //     * This method will manage the storing of device application list.

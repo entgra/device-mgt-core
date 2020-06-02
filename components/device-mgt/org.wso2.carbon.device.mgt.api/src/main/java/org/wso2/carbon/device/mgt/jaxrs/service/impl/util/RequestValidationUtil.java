@@ -22,14 +22,27 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpStatus;
-import org.wso2.carbon.device.mgt.core.dao.impl.device.GenericDeviceDAOImpl;
-import org.wso2.carbon.device.mgt.jaxrs.beans.Scope;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
+import org.wso2.carbon.device.mgt.common.metadata.mgt.Metadata;
 import org.wso2.carbon.device.mgt.common.notification.mgt.Notification;
-import org.wso2.carbon.device.mgt.jaxrs.beans.*;
+import org.wso2.carbon.device.mgt.core.dto.DeviceType;
+import org.wso2.carbon.device.mgt.jaxrs.beans.ApplicationWrapper;
+import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
+import org.wso2.carbon.device.mgt.jaxrs.beans.OldPasswordResetWrapper;
+import org.wso2.carbon.device.mgt.jaxrs.beans.PolicyWrapper;
+import org.wso2.carbon.device.mgt.jaxrs.beans.ProfileFeature;
+import org.wso2.carbon.device.mgt.jaxrs.beans.RoleInfo;
+import org.wso2.carbon.device.mgt.jaxrs.beans.Scope;
+import org.wso2.carbon.device.mgt.jaxrs.util.Constants;
+import org.wso2.carbon.device.mgt.jaxrs.util.DeviceMgtAPIUtils;
+import org.wso2.carbon.policy.mgt.common.PolicyPayloadValidator;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class RequestValidationUtil {
@@ -273,12 +286,116 @@ public class RequestValidationUtil {
         }
     }
 
-    public static void validatePolicyDetails(PolicyWrapper policyWrapper) {
+    public static List<org.wso2.carbon.policy.mgt.common.ProfileFeature> validatePolicyDetails(
+            PolicyWrapper policyWrapper) {
         if (policyWrapper == null) {
+            String msg = "Found an empty policy";
+            log.error(msg);
             throw new InputValidationException(
-                    new ErrorResponse.ErrorResponseBuilder().setCode(400l).setMessage("Policy is empty.").build());
+                    new ErrorResponse.ErrorResponseBuilder().setCode(HttpStatus.SC_BAD_REQUEST).setMessage(msg)
+                            .build());
+        }
+        return validateProfileFeatures(policyWrapper.getProfile().getProfileFeaturesList());
+    }
+
+    public static List<org.wso2.carbon.policy.mgt.common.ProfileFeature> validateProfileFeatures
+            (List<ProfileFeature> profileFeatures) {
+
+        if (profileFeatures.isEmpty()) {
+            String msg = "Found Empty Policy Feature list to validate.";
+            log.error(msg);
+            throw new InputValidationException(new ErrorResponse.ErrorResponseBuilder()
+                    .setCode(HttpStatus.SC_BAD_REQUEST).setMessage(msg).build());
+        } else {
+            List<org.wso2.carbon.policy.mgt.common.ProfileFeature> features = new ArrayList<>();
+            String deviceType = null;
+            for (ProfileFeature profileFeature : profileFeatures) {
+                if (StringUtils.isBlank(profileFeature.getDeviceTypeId())) {
+                    String msg = "Found an invalid policy feature with empty device type data.";
+                    log.error(msg);
+                    throw new InputValidationException(new ErrorResponse.ErrorResponseBuilder()
+                            .setCode(HttpStatus.SC_BAD_REQUEST).setMessage(msg).build());
+                }
+                if (deviceType != null && !deviceType.equals(profileFeature.getDeviceTypeId())) {
+                    String msg = "Found two different device types in profile feature list.";
+                    log.error(msg);
+                    throw new InputValidationException(new ErrorResponse.ErrorResponseBuilder()
+                            .setCode(HttpStatus.SC_BAD_REQUEST).setMessage(msg).build());
+                }
+                deviceType = profileFeature.getDeviceTypeId();
+                org.wso2.carbon.policy.mgt.common.ProfileFeature feature = new org.wso2.carbon.policy.mgt.common.ProfileFeature();
+                feature.setContent(profileFeature.getContent());
+                feature.setDeviceType(profileFeature.getDeviceTypeId());
+                feature.setFeatureCode(profileFeature.getFeatureCode());
+                feature.setPayLoad(profileFeature.getPayLoad());
+                features.add(feature);
+            }
+
+            try {
+                DeviceType deviceTypeObj = DeviceMgtAPIUtils.getDeviceManagementService().getDeviceType(deviceType);
+                if (deviceTypeObj == null) {
+                    String msg = "Found an unsupported device type to validate profile feature.";
+                    log.error(msg);
+                    throw new InputValidationException(
+                            new ErrorResponse.ErrorResponseBuilder().setCode(HttpStatus.SC_BAD_REQUEST).setMessage(msg)
+                                    .build());
+                }
+
+                Class<?> clz;
+                switch (deviceTypeObj.getName()) {
+                case Constants.ANDROID:
+                    clz = Class.forName(Constants.ANDROID_POLICY_VALIDATOR);
+                    PolicyPayloadValidator enrollmentNotifier = (PolicyPayloadValidator) clz.getDeclaredConstructor()
+                            .newInstance();
+                    return enrollmentNotifier.validate(features);
+                case Constants.IOS:
+                    //todo
+                    features = new ArrayList<>();
+                    break;
+                case Constants.WINDOWS:
+                    //todo
+                    features = new ArrayList<>();
+                    break;
+                default:
+                    log.error("No policy validator found for device type  " + deviceType);
+                    break;
+                }
+            } catch (DeviceManagementException e) {
+                String msg = "Error occurred when validating whether device type is valid one or not " + deviceType;
+                log.error(msg, e);
+                throw new InputValidationException(
+                        new ErrorResponse.ErrorResponseBuilder().setCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
+                                .setMessage(msg).build());
+            } catch (InstantiationException e) {
+                if (log.isDebugEnabled()) {
+                    String msg = "Error when creating an instance of validator related to deviceType " + deviceType;
+                    log.debug(msg, e);
+                }
+            } catch (IllegalAccessException e) {
+                if (log.isDebugEnabled()) {
+                    String msg = "Error when accessing an instance of validator related to deviceType " + deviceType;
+                    log.debug(msg, e);
+                }
+            } catch (ClassNotFoundException e) {
+                if (log.isDebugEnabled()) {
+                    String msg = "Error when loading an instance of validator related to deviceType " + deviceType;
+                    log.debug(msg, e);
+                }
+            } catch (NoSuchMethodException e) {
+                if (log.isDebugEnabled()) {
+                    String msg = "Error occurred while constructing validator related to deviceType " + deviceType;
+                    log.debug(msg, e);
+                }
+            } catch (InvocationTargetException e) {
+                if (log.isDebugEnabled()) {
+                    String msg = "Error occurred while instantiating validator related to deviceType " + deviceType;
+                    log.debug(msg, e);
+                }
+            }
+            return features;
         }
     }
+
 
     public static void validatePolicyIds(List<Integer> policyIds) {
         if (policyIds == null || policyIds.size() == 0) {
@@ -357,6 +474,49 @@ public class RequestValidationUtil {
                     new ErrorResponse.ErrorResponseBuilder().setCode(400l).setMessage("Request parameter owner should" +
                             " be non empty.").build());
         }
+    }
+
+    /**
+     * Validate if the metaData and metaKey values are non empty & in proper format.
+     *
+     * @param metadata a Metadata instance, which contains user submitted values
+     */
+    public static void validateMetadata(Metadata metadata) {
+        if (StringUtils.isEmpty(metadata.getMetaKey())) {
+            String msg = "Request parameter metaKey should be non empty.";
+            log.error(msg);
+            throw new InputValidationException(
+                    new ErrorResponse.ErrorResponseBuilder()
+                            .setCode(HttpStatus.SC_BAD_REQUEST).setMessage(msg).build());
+        }
+        String regex = "^[a-zA-Z0-9_.]*$";
+        if (!metadata.getMetaKey().matches(regex)) {
+            String msg = "Request parameter metaKey should only contain period, " +
+                    "underscore and alphanumeric characters.";
+            log.error(msg);
+            throw new InputValidationException(
+                    new ErrorResponse.ErrorResponseBuilder()
+                            .setCode(HttpStatus.SC_BAD_REQUEST).setMessage(msg).build());
+        }
+        if (metadata.getMetaValue() == null) {
+            String msg = "Request parameter metaValue should be non empty.";
+            log.error(msg);
+            throw new InputValidationException(
+                    new ErrorResponse.ErrorResponseBuilder()
+                            .setCode(HttpStatus.SC_BAD_REQUEST).setMessage(msg).build());
+        }
+        if (metadata.getDataType() != null) {
+            for (Metadata.DataType dataType : Metadata.DataType.values()) {
+                if (dataType.name().equals(metadata.getDataType().name())) {
+                    return;
+                }
+            }
+        }
+        String msg = "Request parameter dataType should  only contain one of following:" +
+                Arrays.asList(Metadata.DataType.values());
+        log.error(msg);
+        throw new InputValidationException(
+                new ErrorResponse.ErrorResponseBuilder().setCode(HttpStatus.SC_BAD_REQUEST).setMessage(msg).build());
     }
 
     public static boolean isNonFilterRequest(String username, String firstName, String lastName, String emailAddress) {

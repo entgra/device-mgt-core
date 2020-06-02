@@ -29,9 +29,7 @@ import org.wso2.carbon.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -90,7 +88,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
             conn = this.getConnection();
             stmt = conn.prepareStatement("UPDATE DM_APPLICATION SET NAME = ?, PLATFORM = ?, CATEGORY = ?, " +
                     "VERSION = ?, TYPE = ?, LOCATION_URL = ?, IMAGE_URL = ?, MEMORY_USAGE = ?, IS_ACTIVE = ? " +
-                    "WHERE APP_IDENTIFIER = ? AND DEVICE_ID = ? AND ENROLMENT_ID = ? AND TENANT_ID = ?");
+                    "WHERE ID = ?");
 
             for (Application application : applications) {
                 stmt.setString(1, application.getName());
@@ -102,10 +100,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
                 stmt.setString(7, application.getImageUrl());
                 stmt.setInt(8, application.getMemoryUsage());
                 stmt.setBoolean(9, application.isActive());
-                stmt.setString(10, application.getApplicationIdentifier());
-                stmt.setInt(11, deviceId);
-                stmt.setInt(12, enrolmentId);
-                stmt.setInt(13, tenantId);
+                stmt.setInt(10, application.getId());
                 stmt.addBatch();
             }
             stmt.executeBatch();
@@ -125,14 +120,10 @@ public class ApplicationDAOImpl implements ApplicationDAO {
         try {
             conn = this.getConnection();
             conn.setAutoCommit(false);
-            stmt = conn.prepareStatement("DELETE FROM DM_APPLICATION WHERE APP_IDENTIFIER = ? AND DEVICE_ID = ? " +
-                    "AND ENROLMENT_ID = ? AND TENANT_ID = ?");
+            stmt = conn.prepareStatement("DELETE FROM DM_APPLICATION WHERE ID = ?");
 
             for (Application app : apps) {
-                stmt.setString(1, app.getApplicationIdentifier());
-                stmt.setInt(2, deviceId);
-                stmt.setInt(3, enrolmentId);
-                stmt.setInt(4, tenantId);
+                stmt.setInt(1, app.getId());
                 stmt.addBatch();
             }
             stmt.executeBatch();
@@ -279,9 +270,9 @@ public class ApplicationDAOImpl implements ApplicationDAO {
             throws DeviceManagementDAOException {
         List<Application> applications = new ArrayList<>();
         Application application;
-        String sql = "Select " +
-                        "ID," +
-                        " NAME, " +
+        String sql = "SELECT " +
+                        "ID, " +
+                        "NAME, " +
                         "APP_IDENTIFIER, " +
                         "PLATFORM, " +
                         "CATEGORY, " +
@@ -293,9 +284,15 @@ public class ApplicationDAOImpl implements ApplicationDAO {
                         "MEMORY_USAGE, " +
                         "IS_ACTIVE, " +
                         "TENANT_ID " +
-                     "From DM_APPLICATION " +
-                     "WHERE PLATFORM = ? " +
-                     "AND TENANT_ID = ? LIMIT ? OFFSET ?";
+                    "FROM DM_APPLICATION  " +
+                    "WHERE NOT EXISTS " +
+                        "(SELECT " +
+                            "ID " +
+                        "FROM DM_APPLICATION A " +
+                        "WHERE A.NAME = DM_APPLICATION.NAME " +
+                        "AND A.ID < DM_APPLICATION.ID) " +
+                    "AND PLATFORM = ? " +
+                    "AND TENANT_ID = ?  LIMIT ? OFFSET ?";
         try {
             Connection conn = this.getConnection();
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -322,7 +319,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
 
     @Override
     public List<String> getAppVersions(int tenantId, String packageName) throws DeviceManagementDAOException {
-        String sql = "SELECT " +
+        String sql = "SELECT DISTINCT " +
                         "VERSION " +
                      "FROM DM_APPLICATION " +
                      "WHERE TENANT_ID=? " +

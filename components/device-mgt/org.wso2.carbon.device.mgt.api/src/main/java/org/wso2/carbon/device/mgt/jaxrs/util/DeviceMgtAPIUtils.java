@@ -38,6 +38,7 @@ import org.wso2.carbon.core.util.Utils;
 import org.wso2.carbon.device.mgt.analytics.data.publisher.service.EventsPublisherService;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
+import org.wso2.carbon.device.mgt.common.exceptions.BadRequestException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
 import org.wso2.carbon.device.mgt.common.authorization.DeviceAccessAuthorizationService;
@@ -45,7 +46,10 @@ import org.wso2.carbon.device.mgt.common.configuration.mgt.ConfigurationEntry;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfigurationManagementService;
 import org.wso2.carbon.device.mgt.common.geo.service.GeoLocationProviderService;
+import org.wso2.carbon.device.mgt.common.metadata.mgt.MetadataManagementService;
 import org.wso2.carbon.device.mgt.common.notification.mgt.NotificationManagementService;
+import org.wso2.carbon.device.mgt.common.operation.mgt.Operation;
+import org.wso2.carbon.device.mgt.common.permission.mgt.PermissionManagerService;
 import org.wso2.carbon.device.mgt.common.report.mgt.ReportManagementService;
 import org.wso2.carbon.device.mgt.common.spi.DeviceTypeGeneratorService;
 import org.wso2.carbon.device.mgt.core.app.mgt.ApplicationManagementProviderService;
@@ -57,12 +61,14 @@ import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
 import org.wso2.carbon.device.mgt.core.service.GroupManagementProviderService;
 import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceTypeVersionWrapper;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
+import org.wso2.carbon.device.mgt.jaxrs.beans.OperationStatusBean;
 import org.wso2.carbon.device.mgt.jaxrs.beans.analytics.EventAttributeList;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.InputValidationException;
 import org.wso2.carbon.event.processor.stub.EventProcessorAdminServiceStub;
 import org.wso2.carbon.event.publisher.stub.EventPublisherAdminServiceStub;
 import org.wso2.carbon.event.receiver.stub.EventReceiverAdminServiceStub;
 import org.wso2.carbon.event.stream.stub.EventStreamAdminServiceStub;
+import org.wso2.carbon.identity.claim.metadata.mgt.dto.ClaimPropertyDTO;
 import org.wso2.carbon.identity.jwt.client.extension.JWTClient;
 import org.wso2.carbon.identity.jwt.client.extension.exception.JWTClientException;
 import org.wso2.carbon.identity.jwt.client.extension.service.JWTClientManagerService;
@@ -82,6 +88,7 @@ import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.api.UserStoreManager;
 import org.wso2.carbon.user.core.jdbc.JDBCUserStoreManager;
 import org.wso2.carbon.user.core.service.RealmService;
+import org.wso2.carbon.user.mgt.common.UIPermissionNode;
 
 import javax.cache.Cache;
 import javax.cache.Caching;
@@ -133,6 +140,7 @@ public class DeviceMgtAPIUtils {
     private static char[] keyStorePassword;
 
     private static IntegrationClientService integrationClientService;
+    private static MetadataManagementService metadataManagementService;
 
     static {
         String keyStorePassword = ServerConfiguration.getInstance().getFirstProperty("Security.KeyStore.Password");
@@ -215,14 +223,11 @@ public class DeviceMgtAPIUtils {
     }
 
     public static boolean isValidDeviceIdentifier(DeviceIdentifier deviceIdentifier) throws DeviceManagementException {
-        Device device = getDeviceManagementService().getDevice(deviceIdentifier);
+        Device device = getDeviceManagementService().getDevice(deviceIdentifier, false);
         if (device == null || device.getDeviceIdentifier() == null ||
                 device.getDeviceIdentifier().isEmpty() || device.getEnrolmentInfo() == null) {
             return false;
-        } else if (EnrolmentInfo.Status.REMOVED.equals(device.getEnrolmentInfo().getStatus())) {
-            return false;
-        }
-        return true;
+        } else return !EnrolmentInfo.Status.REMOVED.equals(device.getEnrolmentInfo().getStatus());
     }
 
 
@@ -433,6 +438,28 @@ public class DeviceMgtAPIUtils {
     }
 
     /**
+     * Initializing and accessing method for MetadataManagementService.
+     *
+     * @return MetadataManagementService instance
+     * @throws IllegalStateException if metadataManagementService cannot be initialized
+     */
+    public static MetadataManagementService getMetadataManagementService() {
+        if (metadataManagementService == null) {
+            synchronized (DeviceMgtAPIUtils.class) {
+                if (metadataManagementService == null) {
+                    PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+                    metadataManagementService = (MetadataManagementService) ctx.getOSGiService(
+                            MetadataManagementService.class, null);
+                    if (metadataManagementService == null) {
+                        throw new IllegalStateException("Metadata Management service not initialized.");
+                    }
+                }
+            }
+        }
+        return metadataManagementService;
+    }
+
+    /**
      * Method for initializing ReportManagementService
      * @return ReportManagementServie Instance
      */
@@ -468,6 +495,16 @@ public class DeviceMgtAPIUtils {
             throw new IllegalStateException("DeviceImpl search manager service is not initialized.");
         }
         return searchManagerService;
+    }
+
+    public static PermissionManagerService getPermissionManagerService() {
+        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        PermissionManagerService PermissionManagerService =
+                (PermissionManagerService) ctx.getOSGiService(PermissionManagerService.class, null);
+        if (PermissionManagerService == null) {
+            throw new IllegalStateException("Permission manager service is not initialized.");
+        }
+        return PermissionManagerService;
     }
 
     public static GeoLocationProviderService getGeoService() {
@@ -783,5 +820,86 @@ public class DeviceMgtAPIUtils {
         typeVersion.setVersionName(deviceTypeVersion.getVersionName());
         typeVersion.setVersionStatus(deviceTypeVersion.getVersionStatus());
         return typeVersion;
+    }
+
+    /**
+     * Extract permissions from a UiPermissionNode using recursions
+     * @param uiPermissionNode an UiPermissionNode Object to extract permissions
+     * @param list provided list to add permissions
+     */
+    public static void iteratePermissions(UIPermissionNode uiPermissionNode, List<String> list) {
+        // To prevent NullPointer exceptions
+        if (uiPermissionNode == null) {
+            return;
+        }
+        for (UIPermissionNode permissionNode : uiPermissionNode.getNodeList()) {
+            if (permissionNode != null) {
+                if(permissionNode.isSelected()){
+                    list.add(permissionNode.getResourcePath());
+                }
+                if (permissionNode.getNodeList() != null
+                        && permissionNode.getNodeList().length > 0) {
+                    iteratePermissions(permissionNode, list);
+                }
+            }
+        }
+    }
+
+    /**
+     * This method validates the status of the operation
+     *
+     * @param operationStatusBean {@link OperationStatusBean} object
+     * @return {@link Operation} Returns Operation object with status set.
+     * @throws {@link BadRequestException} If invalid status received
+     */
+    public static Operation validateOperationStatusBean(OperationStatusBean operationStatusBean)
+            throws BadRequestException {
+        Operation operation = new Operation();
+        if (operationStatusBean.getStatus() != null) {
+            switch (operationStatusBean.getStatus().toLowerCase()) {
+                case Constants.OperationStatus.COMPLETED:
+                    operation.setStatus(Operation.Status.COMPLETED);
+                    break;
+                case Constants.OperationStatus.ERROR:
+                    operation.setStatus(Operation.Status.ERROR);
+                    break;
+                case Constants.OperationStatus.IN_PROGRESS:
+                    operation.setStatus(Operation.Status.IN_PROGRESS);
+                    break;
+                case Constants.OperationStatus.PENDING:
+                    operation.setStatus(Operation.Status.PENDING);
+                    break;
+                case Constants.OperationStatus.NOTNOW:
+                    operation.setStatus(Operation.Status.NOTNOW);
+                    break;
+                case Constants.OperationStatus.REPEATED:
+                    operation.setStatus(Operation.Status.REPEATED);
+                    break;
+                default:
+                    String msg = "Invalid operation status. Valid operations: " +
+                            "[IN_PROGRESS, PENDING, COMPLETED, ERROR, REPEATED, NOTNOW]";
+                    log.error(msg);
+                    throw new BadRequestException(msg);
+            }
+        } else {
+            String msg = "Payload does not contain status value";
+            log.error(msg);
+            throw new BadRequestException(msg);
+        }
+        return operation;
+    }
+
+    /**
+     * This method is used to set property name and value to ClaimPropertyDTO
+     *
+     * @param propertyName Name of the property
+     * @param propertyValue Value of the property
+     * @return {@link ClaimPropertyDTO}
+     */
+    public static ClaimPropertyDTO buildClaimPropertyDTO(String propertyName, String propertyValue) {
+        ClaimPropertyDTO claimPropertyDTO = new ClaimPropertyDTO();
+        claimPropertyDTO.setPropertyName(propertyName);
+        claimPropertyDTO.setPropertyValue(propertyValue);
+        return claimPropertyDTO;
     }
 }

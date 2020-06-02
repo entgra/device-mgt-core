@@ -22,16 +22,22 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.CarbonContext;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.device.mgt.analytics.data.publisher.exception.DataPublisherConfigurationException;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
+import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfigurationManagementService;
+import org.wso2.carbon.device.mgt.common.device.details.DeviceData;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceDetailsWrapper;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.EventPublishingException;
 import org.wso2.carbon.device.mgt.common.exceptions.TransactionManagementException;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceInfo;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceLocation;
+import org.wso2.carbon.device.mgt.common.group.mgt.DeviceGroup;
+import org.wso2.carbon.device.mgt.common.group.mgt.GroupManagementException;
 import org.wso2.carbon.device.mgt.core.DeviceManagementConstants;
+import org.wso2.carbon.device.mgt.core.config.tenant.PlatformConfigurationManagementServiceImpl;
 import org.wso2.carbon.device.mgt.core.dao.DeviceDAO;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOException;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOFactory;
@@ -40,12 +46,18 @@ import org.wso2.carbon.device.mgt.core.device.details.mgt.DeviceInformationManag
 import org.wso2.carbon.device.mgt.core.device.details.mgt.dao.DeviceDetailsDAO;
 import org.wso2.carbon.device.mgt.core.device.details.mgt.dao.DeviceDetailsMgtDAOException;
 import org.wso2.carbon.device.mgt.core.internal.DeviceManagementDataHolder;
+
+import org.wso2.carbon.device.mgt.core.service.GroupManagementProviderService;
 import org.wso2.carbon.device.mgt.core.report.mgt.Constants;
+import org.wso2.carbon.device.mgt.core.service.GroupManagementProviderService;
 import org.wso2.carbon.device.mgt.core.util.DeviceManagerUtil;
 import org.wso2.carbon.device.mgt.core.util.HttpReportingUtil;
+import org.wso2.carbon.user.api.UserRealm;
+import org.wso2.carbon.user.api.UserStoreException;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -53,7 +65,7 @@ import java.util.Map;
 
 public class DeviceInformationManagerImpl implements DeviceInformationManager {
 
-    private DeviceDetailsDAO deviceDetailsDAO;
+    private final DeviceDetailsDAO deviceDetailsDAO;
     private DeviceDAO deviceDAO;
     private static final Log log = LogFactory.getLog(DeviceInformationManagerImpl.class);
     private static final String LOCATION_EVENT_STREAM_DEFINITION = "org.wso2.iot.LocationStream";
@@ -79,6 +91,11 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
     @Override
     public void addDeviceInfo(Device device, DeviceInfo deviceInfo) throws DeviceDetailsMgtException {
         try {
+
+            DeviceDetailsWrapper deviceDetailsWrapper = new DeviceDetailsWrapper();
+            deviceDetailsWrapper.setDeviceInfo(deviceInfo);
+            publishEvents(device, deviceDetailsWrapper, DeviceManagementConstants.Report.DEVICE_INFO_PARAM);
+
             DeviceManagementDAOFactory.beginTransaction();
             DeviceInfo newDeviceInfo;
             DeviceInfo previousDeviceInfo = deviceDetailsDAO.getDeviceInformation(device.getId(),
@@ -104,7 +121,10 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
                 addOSVersionValue(device, newDeviceInfo);
                 for (String key : newDeviceInfo.getDeviceDetailsMap().keySet()) {
                     if (previousDeviceProperties.containsKey(key)) {
-                        updatableProps.put(key, newDeviceInfo.getDeviceDetailsMap().get(key));
+                        String val = previousDeviceProperties.get(key);
+                        if (val != null &&!val.equals(newDeviceInfo.getDeviceDetailsMap().get(key))) {
+                            updatableProps.put(key, newDeviceInfo.getDeviceDetailsMap().get(key));
+                        }
                     } else {
                         injectableProps.put(key, newDeviceInfo.getDeviceDetailsMap().get(key));
                     }
@@ -116,18 +136,6 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
             }
             deviceDAO.updateDevice(device, CarbonContext.getThreadLocalCarbonContext().getTenantId());
             DeviceManagementDAOFactory.commitTransaction();
-
-            String reportingHost = System.getProperty(DeviceManagementConstants.Report
-                    .REPORTING_EVENT_HOST);
-            if (reportingHost != null && !reportingHost.isEmpty()) {
-                DeviceDetailsWrapper deviceDetailsWrapper = new DeviceDetailsWrapper();
-                deviceDetailsWrapper.setDevice(device);
-                deviceDetailsWrapper.setDeviceInfo(deviceInfo);
-                deviceDetailsWrapper.getJSONString();
-
-                HttpReportingUtil.invokeApi(deviceDetailsWrapper.getJSONString(),
-                        reportingHost + DeviceManagementConstants.Report.DEVICE_INFO_ENDPOINT);
-            }
 
             //TODO :: This has to be fixed by adding the enrollment ID.
             if (DeviceManagerUtil.isPublishDeviceInfoResponseEnabled()) {
@@ -159,27 +167,87 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
                 );
             }
         } catch (TransactionManagementException e) {
-            DeviceManagementDAOFactory.rollbackTransaction();
             throw new DeviceDetailsMgtException("Transactional error occurred while adding the device information.", e);
         } catch (DeviceDetailsMgtDAOException e) {
             DeviceManagementDAOFactory.rollbackTransaction();
             throw new DeviceDetailsMgtException("Error occurred while adding the device information.", e);
         } catch (DeviceManagementException e) {
-            DeviceManagementDAOFactory.rollbackTransaction();
             throw new DeviceDetailsMgtException("Error occurred while retrieving the device information.", e);
         } catch (DeviceManagementDAOException e) {
             DeviceManagementDAOFactory.rollbackTransaction();
             throw new DeviceDetailsMgtException("Error occurred while updating the last update timestamp of the " +
-                                                "device", e);
+                    "device", e);
         } catch (DataPublisherConfigurationException e) {
-            DeviceManagementDAOFactory.rollbackTransaction();
             throw new DeviceDetailsMgtException("Error occurred while publishing the device location information.", e);
-        } catch (EventPublishingException e) {
-            DeviceManagementDAOFactory.rollbackTransaction();
-            throw new DeviceDetailsMgtException("Error occurred while sending events", e);
         } finally {
             DeviceManagementDAOFactory.closeConnection();
         }
+    }
+
+    public int publishEvents(String deviceId, String deviceType, String payload, String eventType)
+            throws DeviceDetailsMgtException {
+
+        DeviceIdentifier deviceIdentifier = new DeviceIdentifier(deviceId, deviceType);
+
+        try {
+            Device device = DeviceManagementDataHolder.getInstance().
+                    getDeviceManagementProvider().getDevice(deviceIdentifier, false);
+            DeviceDetailsWrapper deviceDetailsWrapper = new DeviceDetailsWrapper();
+            deviceDetailsWrapper.setEvents(payload);
+            return publishEvents(device, deviceDetailsWrapper, eventType);
+        } catch (DeviceManagementException e) {
+            DeviceManagementDAOFactory.rollbackTransaction();
+            String msg = "Event publishing error. Could not get device " + deviceId;
+            log.error(msg, e);
+            throw new DeviceDetailsMgtException(msg, e);
+        }
+    }
+
+    /**
+     * Send device details from core to reporting backend
+     * @param device Device that is sending event
+     * @param deviceDetailsWrapper Payload to send(example, deviceinfo, applist, raw events)
+     */
+    private int publishEvents(Device device, DeviceDetailsWrapper deviceDetailsWrapper, String
+            eventType)  {
+        String reportingHost = HttpReportingUtil.getReportingHost();
+        if (!StringUtils.isBlank(reportingHost)
+                && HttpReportingUtil.isPublishingEnabledForTenant()) {
+            try {
+                deviceDetailsWrapper.setDevice(device);
+                deviceDetailsWrapper.setTenantId(DeviceManagerUtil.getTenantId());
+                GroupManagementProviderService groupManagementService = DeviceManagementDataHolder
+                        .getInstance().getGroupManagementProviderService();
+
+                List<DeviceGroup> groups = groupManagementService.getGroups(device, false);
+                if (groups != null && groups.size() > 0) {
+                    deviceDetailsWrapper.setGroups(groups);
+                }
+
+                String[] rolesOfUser = DeviceManagerUtil.getRolesOfUser(CarbonContext
+                        .getThreadLocalCarbonContext()
+                        .getUsername());
+                if (rolesOfUser != null && rolesOfUser.length > 0) {
+                    deviceDetailsWrapper.setRole(rolesOfUser);
+                }
+
+                String eventUrl = reportingHost + DeviceManagementConstants.Report
+                        .REPORTING_CONTEXT + DeviceManagementConstants.URL_SEPERATOR + eventType;
+                return HttpReportingUtil.invokeApi(deviceDetailsWrapper.getJSONString(), eventUrl);
+            } catch (EventPublishingException e) {
+                log.error("Error occurred while sending events", e);
+            } catch (GroupManagementException e) {
+                log.error("Error occurred while getting group list", e);
+            } catch (UserStoreException e) {
+                log.error("Error occurred while getting role list", e);
+            }
+        } else {
+            if(log.isTraceEnabled()) {
+                log.trace("Event publishing is not enabled for tenant "
+                        + DeviceManagerUtil.getTenantId());
+            }
+        }
+        return 0;
     }
 
     @Override
@@ -188,17 +256,30 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
         if (device == null) {
             return null;
         }
+        return getDeviceInfo(device);
+    }
+
+    @Override
+    public DeviceInfo getDeviceInfo(Device device) throws DeviceDetailsMgtException {
         try {
             DeviceManagementDAOFactory.openConnection();
             DeviceInfo deviceInfo = deviceDetailsDAO.getDeviceInformation(device.getId(),
                     device.getEnrolmentInfo().getId());
+            if (deviceInfo == null) {
+                deviceInfo = new DeviceInfo();
+            }
             deviceInfo.setDeviceDetailsMap(deviceDetailsDAO.getDeviceProperties(device.getId(),
                     device.getEnrolmentInfo().getId()));
+            DeviceLocation location = deviceDetailsDAO.getDeviceLocation(device.getId(),
+                    device.getEnrolmentInfo().getId());
+            if (location != null) {
+                //There are some cases where the device-info is not updated properly. Hence returning a null value.
+                deviceInfo.setLocation(location);
+            }
             return deviceInfo;
-
         } catch (SQLException e) {
-            throw new DeviceDetailsMgtException("SQL error occurred while retrieving device " + deviceId.toString()
-                                                + "'s info from database.", e);
+            throw new DeviceDetailsMgtException("SQL error occurred while retrieving device " +
+                    device.getDeviceIdentifier() + "'s info from database.", e);
         } catch (DeviceDetailsMgtDAOException e) {
             throw new DeviceDetailsMgtException("Exception occurred while retrieving device details.", e);
         } finally {
@@ -225,11 +306,21 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
                 }
             }
             DeviceManagementDAOFactory.openConnection();
+            DeviceInfo deviceInfo;
             for (Device device : deviceIds) {
-                DeviceInfo deviceInfo = deviceDetailsDAO.getDeviceInformation(device.getId(),
+                deviceInfo = deviceDetailsDAO.getDeviceInformation(device.getId(),
                         device.getEnrolmentInfo().getId());
+                if (deviceInfo == null) {
+                    deviceInfo = new DeviceInfo();
+                }
                 deviceInfo.setDeviceDetailsMap(deviceDetailsDAO.getDeviceProperties(device.getId(),
                         device.getEnrolmentInfo().getId()));
+                DeviceLocation location = deviceDetailsDAO.getDeviceLocation(device.getId(),
+                        device.getEnrolmentInfo().getId());
+                if (location != null) {
+                    //There are some cases where the device-info is not updated properly. Hence returning a null value.
+                    deviceInfo.setLocation(location);
+                }
                 deviceInfos.add(deviceInfo);
             }
         } catch (SQLException e) {
@@ -245,6 +336,7 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
     }
 
     @Override
+    @Deprecated
     public void addDeviceLocation(DeviceLocation deviceLocation) throws DeviceDetailsMgtException {
         try {
             Device device = DeviceManagementDataHolder.getInstance().
@@ -268,6 +360,8 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
             } else {
                 deviceDetailsDAO.updateDeviceLocation(deviceLocation, device.getEnrolmentInfo().getId());
             }
+            deviceDetailsDAO.addDeviceLocationInfo(device, deviceLocation,
+                    CarbonContext.getThreadLocalCarbonContext().getTenantId());
             if (DeviceManagerUtil.isPublishLocationResponseEnabled()) {
                 Object[] metaData = {device.getDeviceIdentifier(), device.getEnrolmentInfo().getOwner(), device.getType()};
                 Object[] payload = new Object[]{
@@ -326,7 +420,7 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
             if (device == null) {
                 if (log.isDebugEnabled()) {
                     log.debug("No device is found upon the device identifier '" + deviceId.getId() +
-                              "' and type '" + deviceId.getType() + "'. Therefore returning null");
+                            "' and type '" + deviceId.getType() + "'. Therefore returning null");
                 }
                 return null;
             }
@@ -360,7 +454,7 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
             throw new DeviceDetailsMgtException("SQL error occurred while retrieving device from database.", e);
         } catch (DeviceDetailsMgtDAOException e) {
             throw new DeviceDetailsMgtException("Exception occurred while retrieving device locations.", e);
-        } finally{
+        } finally {
             DeviceManagementDAOFactory.closeConnection();
         }
     }
@@ -424,6 +518,7 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
         return newDeviceInfo;
     }
 
+
     /**
      * Generate and add a value depending on the device's OS version included in device info
      *
@@ -458,5 +553,6 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
             }
         }
     }
+
 }
 

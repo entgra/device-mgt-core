@@ -45,6 +45,8 @@ public interface OperationManager {
     Activity addOperation(Operation operation, List<DeviceIdentifier> devices) throws OperationManagementException,
             InvalidDeviceException;
 
+    void addTaskOperation(String deviceType, Operation operation) throws OperationManagementException;
+
     /**
      * Method to retrieve the list of all operations to a device.
      *
@@ -66,6 +68,17 @@ public interface OperationManager {
      */
     PaginationResult getOperations(DeviceIdentifier deviceId, PaginationRequest request)
             throws OperationManagementException;
+    /**
+     * Method to retrieve the list of operations placed for device with specified status.
+     *
+     * @param deviceId  - Device Identifier of the device
+     * @param status    - Status of the operation
+     * @return A List of operations applied to the given device-id.
+     * @throws OperationManagementException If some unusual behaviour is observed while fetching the
+     *                                      operation list.
+     */
+    List<? extends Operation> getOperations(DeviceIdentifier deviceId, Operation.Status status)
+            throws OperationManagementException;
 
     /**
      * Method to retrieve the list of available operations to a device.
@@ -75,7 +88,6 @@ public interface OperationManager {
      * @throws OperationManagementException If some unusual behaviour is observed while fetching the
      *                                      operation list.
      */
-    @Deprecated
     List<? extends Operation> getPendingOperations(DeviceIdentifier deviceId) throws OperationManagementException;
 
     List<? extends Operation> getPendingOperations(Device device) throws OperationManagementException;
@@ -87,7 +99,7 @@ public interface OperationManager {
 
     void updateOperation(DeviceIdentifier deviceId, Operation operation) throws OperationManagementException;
 
-    void updateOperation(int enrolmentId, Operation operation) throws OperationManagementException;
+    void updateOperation(int enrolmentId, Operation operation, DeviceIdentifier deviceId) throws OperationManagementException;
 
     Operation getOperationByDeviceAndOperationId(DeviceIdentifier deviceId, int operationId)
             throws OperationManagementException;
@@ -122,5 +134,15 @@ public interface OperationManager {
      * @return NotificationStrategy
      */
     NotificationStrategy getNotificationStrategy();
+
+    /**
+     * Check if an operation exists for a given device identifier and operation id
+     *
+     * @param deviceId Device identifier of the device
+     * @param operationId Id of the operation
+     * @return true if operation already exists, else false
+     * @throws {@link OperationManagementException}
+     */
+    boolean isOperationExist(DeviceIdentifier deviceId, int operationId) throws OperationManagementException;
 
 }

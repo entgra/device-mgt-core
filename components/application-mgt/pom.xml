@@ -22,13 +22,13 @@
     <parent>
         <groupId>org.wso2.carbon.devicemgt</groupId>
         <artifactId>carbon-devicemgt</artifactId>
-        <version>4.1.7-SNAPSHOT</version>
+        <version>4.1.9-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>application-mgt</artifactId>
-    <version>4.1.7-SNAPSHOT</version>
+    <version>4.1.9-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>WSO2 Carbon - Application Management Component</name>
     <description>WSO2 Carbon - Application Management Component</description>
@@ -50,6 +50,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${maven.checkstyle.vesion}</version>
             </plugin>
         </plugins>
         <pluginManagement>

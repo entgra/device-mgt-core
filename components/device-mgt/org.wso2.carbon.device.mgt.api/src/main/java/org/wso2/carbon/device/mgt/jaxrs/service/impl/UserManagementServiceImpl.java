@@ -33,12 +33,14 @@
  */
 package org.wso2.carbon.device.mgt.jaxrs.service.impl;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpStatus;
 import org.eclipse.wst.common.uriresolver.internal.util.URIEncoder;
+import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
@@ -56,6 +58,7 @@ import org.wso2.carbon.device.mgt.jaxrs.beans.Credential;
 import org.wso2.carbon.device.mgt.jaxrs.beans.EnrollmentInvitation;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
 import org.wso2.carbon.device.mgt.jaxrs.beans.OldPasswordResetWrapper;
+import org.wso2.carbon.device.mgt.jaxrs.beans.PermissionList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.RoleList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.UserInfo;
 import org.wso2.carbon.device.mgt.jaxrs.exception.BadRequestException;
@@ -64,6 +67,11 @@ import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.RequestValidationUtil;
 import org.wso2.carbon.device.mgt.jaxrs.util.Constants;
 import org.wso2.carbon.device.mgt.jaxrs.util.CredentialManagementResponseBuilder;
 import org.wso2.carbon.device.mgt.jaxrs.util.DeviceMgtAPIUtils;
+import org.wso2.carbon.identity.claim.metadata.mgt.ClaimMetadataManagementAdminService;
+import org.wso2.carbon.identity.claim.metadata.mgt.dto.AttributeMappingDTO;
+import org.wso2.carbon.identity.claim.metadata.mgt.dto.ClaimPropertyDTO;
+import org.wso2.carbon.identity.claim.metadata.mgt.dto.LocalClaimDTO;
+import org.wso2.carbon.identity.claim.metadata.mgt.exception.ClaimMetadataException;
 import org.wso2.carbon.identity.user.store.count.UserStoreCountRetriever;
 import org.wso2.carbon.identity.user.store.count.exception.UserStoreCounterException;
 import org.wso2.carbon.user.api.Permission;
@@ -71,7 +79,11 @@ import org.wso2.carbon.user.api.RealmConfiguration;
 import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.api.UserStoreManager;
+import org.wso2.carbon.user.core.UserCoreConstants;
 import org.wso2.carbon.user.core.service.RealmService;
+import org.wso2.carbon.user.mgt.UserRealmProxy;
+import org.wso2.carbon.user.mgt.common.UIPermissionNode;
+import org.wso2.carbon.user.mgt.common.UserAdminException;
 import org.wso2.carbon.utils.CarbonUtils;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 
@@ -920,6 +932,189 @@ public class UserManagementServiceImpl implements UserManagementService {
         }
     }
 
+    @PUT
+    @Override
+    @Path("/claims/{username}")
+    public Response updateUserClaimsForDevices(
+            @PathParam("username") String username,
+            JsonArray deviceList) {
+        try {
+            UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
+            if (!userStoreManager.isExistingUser(username)) {
+                String msg = "User by username: " + username + " does not exist.";
+                log.error(msg);
+                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+            }
+            RealmConfiguration realmConfiguration = PrivilegedCarbonContext.getThreadLocalCarbonContext()
+                    .getUserRealm()
+                    .getRealmConfiguration();
+            String domain = realmConfiguration
+                    .getUserStoreProperty(UserCoreConstants.RealmConfig.PROPERTY_DOMAIN_NAME);
+            if (!StringUtils.isBlank(domain)) {
+                username = domain + Constants.FORWARD_SLASH + username;
+            }
+            ClaimMetadataManagementAdminService
+                    claimMetadataManagementAdminService = new ClaimMetadataManagementAdminService();
+            //Get all available claim URIs
+            String[] allUserClaims = userStoreManager.getClaimManager().getAllClaimUris();
+            //Check they contains a claim attribute for external devices
+            if (!Arrays.asList(allUserClaims).contains(Constants.USER_CLAIM_DEVICES)) {
+                List<ClaimPropertyDTO> claimPropertyDTOList = new ArrayList<>();
+                claimPropertyDTOList
+                        .add(DeviceMgtAPIUtils.buildClaimPropertyDTO
+                                (Constants.ATTRIBUTE_DISPLAY_NAME, Constants.EXTERNAL_DEVICE_CLAIM_DISPLAY_NAME));
+                claimPropertyDTOList
+                        .add(DeviceMgtAPIUtils.buildClaimPropertyDTO
+                                (Constants.ATTRIBUTE_DESCRIPTION, Constants.EXTERNAL_DEVICE_CLAIM_DESCRIPTION));
+
+                LocalClaimDTO localClaimDTO = new LocalClaimDTO();
+                localClaimDTO.setLocalClaimURI(Constants.USER_CLAIM_DEVICES);
+                localClaimDTO.setClaimProperties(claimPropertyDTOList.toArray(
+                        new ClaimPropertyDTO[claimPropertyDTOList.size()]));
+
+                AttributeMappingDTO attributeMappingDTO = new AttributeMappingDTO();
+                attributeMappingDTO.setAttributeName(Constants.DEVICES);
+                attributeMappingDTO.setUserStoreDomain(domain);
+                localClaimDTO.setAttributeMappings(new AttributeMappingDTO[]{attributeMappingDTO});
+
+                claimMetadataManagementAdminService.addLocalClaim(localClaimDTO);
+            }
+            Map<String, String> userClaims =
+                    this.buildExternalDevicesUserClaims(username, domain, deviceList, userStoreManager);
+            userStoreManager.setUserClaimValues(username, userClaims, domain);
+            return Response.status(Response.Status.OK).entity(userClaims).build();
+        } catch (UserStoreException e) {
+            String msg = "Error occurred while updating external device claims of the user '" + username + "'";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (ClaimMetadataException e) {
+            String msg = "Error occurred while adding claim attribute";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
+    @GET
+    @Override
+    @Path("/claims/{username}")
+    public Response getUserClaimsForDevices(
+            @PathParam("username") String username) {
+        try {
+            UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
+            Map<String, String> claims = new HashMap<>();
+            if (!userStoreManager.isExistingUser(username)) {
+                String msg = "User by username: " + username + " does not exist.";
+                log.error(msg);
+                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+            }
+            RealmConfiguration realmConfiguration = PrivilegedCarbonContext.getThreadLocalCarbonContext()
+                    .getUserRealm()
+                    .getRealmConfiguration();
+            String domain = realmConfiguration
+                    .getUserStoreProperty(UserCoreConstants.RealmConfig.PROPERTY_DOMAIN_NAME);
+            if (!StringUtils.isBlank(domain)) {
+                username = domain + Constants.FORWARD_SLASH + username;
+            }
+            String[] allUserClaims = userStoreManager.getClaimManager().getAllClaimUris();
+            if (!Arrays.asList(allUserClaims).contains(Constants.USER_CLAIM_DEVICES)) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Claim attribute for external device doesn't exist.");
+                }
+                return Response.status(Response.Status.OK).entity(claims).build();
+            }
+            String[] claimArray = {Constants.USER_CLAIM_DEVICES};
+            claims = userStoreManager.getUserClaimValues(username, claimArray, domain);
+            return Response.status(Response.Status.OK).entity(claims).build();
+        } catch (UserStoreException e) {
+            String msg = "Error  occurred while retrieving external device claims of the user '" + username + "'";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
+    @DELETE
+    @Override
+    @Path("/claims/{username}")
+    public Response deleteUserClaimsForDevices(
+            @PathParam("username") String username) {
+        try {
+            String[] claimArray = new String[1];
+            UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
+            if (!userStoreManager.isExistingUser(username)) {
+                String msg = "User by username: " + username + " does not exist.";
+                log.error(msg);
+                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+            }
+            RealmConfiguration realmConfiguration = PrivilegedCarbonContext.getThreadLocalCarbonContext()
+                    .getUserRealm()
+                    .getRealmConfiguration();
+            String domain = realmConfiguration
+                    .getUserStoreProperty(UserCoreConstants.RealmConfig.PROPERTY_DOMAIN_NAME);
+            if (!StringUtils.isBlank(domain)) {
+                username = domain + Constants.FORWARD_SLASH + username;
+            }
+            String[] allUserClaims = userStoreManager.getClaimManager().getAllClaimUris();
+            if (!Arrays.asList(allUserClaims).contains(Constants.USER_CLAIM_DEVICES)) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Claim attribute for external device doesn't exist.");
+                }
+                return Response.status(Response.Status.OK).entity(claimArray).build();
+            }
+            claimArray[0] = Constants.USER_CLAIM_DEVICES;
+            userStoreManager.deleteUserClaimValues(
+                    username,
+                    claimArray,
+                    domain);
+            return Response.status(Response.Status.OK).entity(claimArray).build();
+        } catch (UserStoreException e) {
+            String msg = "Error occurred while deleting external device claims of the user '" + username + "'";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
+    @GET
+    @Override
+    @Path("/current-user/permissions")
+    public Response getPermissionsOfUser() {
+        String username = CarbonContext.getThreadLocalCarbonContext().getUsername();
+        try {
+            UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
+            if (!userStoreManager.isExistingUser(username)) {
+                String message = "User by username: " + username + " does not exist for permission retrieval.";
+                log.error(message);
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity(new ErrorResponse.ErrorResponseBuilder().setMessage(message).build()).build();
+            }
+            // Get a list of roles which the user assigned to
+            List<String> roles = getFilteredRoles(userStoreManager, username);
+            List<String> permissions = new ArrayList<>();
+            UserRealm userRealm = DeviceMgtAPIUtils.getUserRealm();
+            int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+            // Get permissions for each role
+            for (String roleName : roles) {
+                try {
+                    permissions.addAll(getPermissionsListFromRole(roleName, userRealm, tenantId));
+                } catch (UserAdminException e) {
+                    String message = "Error occurred while retrieving the permissions of role '" + roleName + "'";
+                    log.error(message, e);
+                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                            .entity(new ErrorResponse.ErrorResponseBuilder().setMessage(message).build())
+                            .build();
+                }
+            }
+            PermissionList permissionList = new PermissionList();
+            permissionList.setList(permissions);
+            return Response.status(Response.Status.OK).entity(permissionList).build();
+        } catch (UserStoreException e) {
+            String message = "Error occurred while trying to retrieve roles of the user '" + username + "'";
+            log.error(message, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse.ErrorResponseBuilder().setMessage(message).build())
+                    .build();
+        }
+    }
+
     private Map<String, String> buildDefaultUserClaims(String firstName, String lastName, String emailAddress,
                                                        boolean isFresh) {
         Map<String, String> defaultUserClaims = new HashMap<>();
@@ -935,6 +1130,40 @@ public class UserManagementServiceImpl implements UserManagementService {
             log.debug("Default claim map is created for new user: " + defaultUserClaims.toString());
         }
         return defaultUserClaims;
+    }
+
+    /**
+     * This method is used to build String map for user claims with updated external device details
+     *
+     * @param username username of the particular user
+     * @param domain domain of the particular user
+     * @param deviceList Array of external device details
+     * @param userStoreManager {@link UserStoreManager} instance
+     * @return String map
+     * @throws UserStoreException If any error occurs while calling into UserStoreManager service
+     */
+    private Map<String, String> buildExternalDevicesUserClaims(
+            String username,
+            String domain,
+            JsonArray deviceList,
+            UserStoreManager userStoreManager) throws UserStoreException {
+        Map<String, String> userClaims;
+        String[] claimArray = {
+                Constants.USER_CLAIM_FIRST_NAME,
+                Constants.USER_CLAIM_LAST_NAME,
+                Constants.USER_CLAIM_EMAIL_ADDRESS,
+                Constants.USER_CLAIM_MODIFIED
+        };
+        userClaims = userStoreManager.getUserClaimValues(username, claimArray, domain);
+        if (userClaims.containsKey(Constants.USER_CLAIM_DEVICES)) {
+            userClaims.replace(Constants.USER_CLAIM_DEVICES, deviceList.toString());
+        } else {
+            userClaims.put(Constants.USER_CLAIM_DEVICES, deviceList.toString());
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("Claim map is created for user: " + username + ", claims:" + userClaims.toString());
+        }
+        return userClaims;
     }
 
     private String generateInitialUserPassword() {
@@ -1031,4 +1260,30 @@ public class UserManagementServiceImpl implements UserManagementService {
     private boolean skipSearch(List<String> commonUsers) {
         return commonUsers != null && commonUsers.size() == 0;
     }
+
+    /**
+     * Returns a list of permissions of a given role
+     * @param roleName name of the role
+     * @param tenantId the user's tenetId
+     * @param userRealm user realm of the tenant
+     * @return list of permissions
+     * @throws UserAdminException If unable to get the permissions
+     */
+    private static List<String> getPermissionsListFromRole(String roleName, UserRealm userRealm, int tenantId)
+            throws UserAdminException {
+        org.wso2.carbon.user.core.UserRealm userRealmCore;
+        try {
+            userRealmCore = (org.wso2.carbon.user.core.UserRealm) userRealm;
+        } catch (ClassCastException e) {
+            String message = "Provided UserRealm object is not an instance of org.wso2.carbon.user.core.UserRealm";
+            log.error(message, e);
+            throw new UserAdminException(message, e);
+        }
+        UserRealmProxy userRealmProxy = new UserRealmProxy(userRealmCore);
+        List<String> permissionsList = new ArrayList<>();
+        final UIPermissionNode rolePermissions = userRealmProxy.getRolePermissions(roleName, tenantId);
+        DeviceMgtAPIUtils.iteratePermissions(rolePermissions, permissionsList);
+        return permissionsList;
+    }
+
 }

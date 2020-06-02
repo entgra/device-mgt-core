@@ -25,10 +25,17 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.protocol.HTTP;
 import org.wso2.carbon.device.mgt.common.exceptions.EventPublishingException;
+import org.wso2.carbon.device.mgt.core.DeviceManagementConstants;
 
 import java.io.IOException;
 
 public class HttpReportingUtil {
+
+    private static final String IS_EVENT_PUBLISHING_ENABLED = "isEventPublishingEnabled";
+
+    public static String getReportingHost() {
+        return System.getProperty(DeviceManagementConstants.Report.REPORTING_EVENT_HOST);
+    }
 
     public static int invokeApi(String payload, String endpoint) throws EventPublishingException {
         try (CloseableHttpClient client = HttpClients.createDefault()) {
@@ -43,5 +50,13 @@ public class HttpReportingUtil {
             throw new EventPublishingException("Error occurred when " +
                     "invoking API. API endpoint: " + endpoint, e);
         }
+    }
+
+    public static boolean isPublishingEnabledForTenant() {
+        Object configuration = DeviceManagerUtil.getConfiguration(IS_EVENT_PUBLISHING_ENABLED);
+        if (configuration != null) {
+            return Boolean.valueOf(configuration.toString());
+        }
+        return false;
     }
 }

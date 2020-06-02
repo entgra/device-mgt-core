@@ -40,30 +40,28 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.device.mgt.common.Device;
-import org.wso2.carbon.device.mgt.common.DeviceManager;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
+import org.wso2.carbon.device.mgt.common.DeviceManager;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
 import org.wso2.carbon.device.mgt.common.FeatureManager;
-import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.license.mgt.License;
 import org.wso2.carbon.device.mgt.common.license.mgt.LicenseManagementException;
 import org.wso2.carbon.device.mgt.common.license.mgt.LicenseManager;
-import org.wso2.carbon.device.mgt.common.ui.policy.mgt.PolicyConfigurationManager;
-import org.wso2.carbon.device.mgt.extensions.device.type.template.config.DeviceTypeConfiguration;
-import org.wso2.carbon.device.mgt.extensions.device.type.template.config.DeviceDetails;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.config.DataSource;
-import org.wso2.carbon.device.mgt.extensions.device.type.template.config.TableConfig;
-import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Table;
+import org.wso2.carbon.device.mgt.extensions.device.type.template.config.DeviceDetails;
+import org.wso2.carbon.device.mgt.extensions.device.type.template.config.DeviceTypeConfiguration;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Feature;
-import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Policy;
+import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Properties;
+import org.wso2.carbon.device.mgt.extensions.device.type.template.config.Table;
+import org.wso2.carbon.device.mgt.extensions.device.type.template.config.TableConfig;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.dao.DeviceDAODefinition;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.dao.DeviceTypePluginDAOManager;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.exception.DeviceTypeDeployerPayloadException;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.exception.DeviceTypeMgtPluginException;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.exception.DeviceTypePluginExtensionException;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.feature.ConfigurationBasedFeatureManager;
-import org.wso2.carbon.device.mgt.extensions.device.type.template.policy.mgt.ConfigurationBasedPolicyManager;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.util.DeviceTypePluginConstants;
 import org.wso2.carbon.device.mgt.extensions.device.type.template.util.DeviceTypeUtils;
 import org.wso2.carbon.device.mgt.extensions.license.mgt.registry.RegistryBasedLicenseManager;
@@ -83,7 +81,8 @@ import javax.xml.stream.XMLStreamReader;
 import java.io.File;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -93,20 +92,19 @@ import java.util.List;
 public class DeviceTypeManager implements DeviceManager {
 
     private static final Log log = LogFactory.getLog(DeviceTypeManager.class);
-    private String deviceType;
-    private DeviceTypePluginDAOManager deviceTypePluginDAOManager;
-    private LicenseManager licenseManager;
-    private PlatformConfiguration defaultPlatformConfiguration;
-    private boolean propertiesExist;
-    private boolean requiredDeviceTypeAuthorization;
-    private boolean claimable;
+    private final String deviceType;
+    private final LicenseManager licenseManager;
+    private final PlatformConfiguration defaultPlatformConfiguration;
+    private final boolean requiredDeviceTypeAuthorization;
 
     private static final String PATH_MOBILE_PLUGIN_CONF_DIR =
             CarbonUtils.getEtcCarbonConfigDirPath() + File.separator + "device-mgt-plugin-configs" + File.separator
                     + "mobile";
 
     private FeatureManager featureManager;
-    private PolicyConfigurationManager policyManager;
+    private boolean propertiesExist;
+    private DeviceTypePluginDAOManager deviceTypePluginDAOManager;
+    private DeviceTypePluginDAOManager propertyBasedDeviceTypePluginDAOManager = null;
 
     public DeviceTypeManager(DeviceTypeConfigIdentifier deviceTypeConfigIdentifier,
                              DeviceTypeConfiguration deviceTypeConfiguration) {
@@ -116,12 +114,6 @@ public class DeviceTypeManager implements DeviceManager {
             List<Feature> features = deviceTypeConfiguration.getFeatures().getFeature();
             featureManager = new ConfigurationBasedFeatureManager(features);
         }
-        if (deviceTypeConfiguration.getPolicyUIConfigurations() != null && deviceTypeConfiguration.getPolicyUIConfigurations().
-                getPolicies() != null) {
-            List<Policy> policies = deviceTypeConfiguration.getPolicyUIConfigurations().getPolicies();
-            policyManager = new ConfigurationBasedPolicyManager(policies);
-        }
-
         if (deviceTypeConfiguration.getDeviceAuthorizationConfig() != null) {
             requiredDeviceTypeAuthorization = deviceTypeConfiguration.getDeviceAuthorizationConfig().
                     isAuthorizationRequired();
@@ -145,10 +137,6 @@ public class DeviceTypeManager implements DeviceManager {
             String msg = "Error occurred while adding default license for " + deviceType + " devices.";
             throw new DeviceTypeDeployerPayloadException(msg, e);
         }
-        claimable = false;
-        if (deviceTypeConfiguration.getClaimable() != null ) {
-            claimable = deviceTypeConfiguration.getClaimable().isEnabled();
-        }
 
         // Loading default platform configuration
         try {
@@ -169,13 +157,13 @@ public class DeviceTypeManager implements DeviceManager {
                 DataSource dataSource = deviceTypeConfiguration.getDataSource();
                 if (dataSource == null) {
                     throw new DeviceTypeDeployerPayloadException("Could not find the datasource related with the "
-                            + "table id " +  tableName + " for the device type " + deviceType);
+                            + "table id " + tableName + " for the device type " + deviceType);
                 }
                 TableConfig tableConfig = dataSource.getTableConfig();
 
                 if (tableConfig == null) {
                     throw new DeviceTypeDeployerPayloadException("Could not find the table config with the "
-                            + "table id " +  tableName + " for the device type " + deviceType);
+                            + "table id " + tableName + " for the device type " + deviceType);
                 }
                 List<Table> tables = deviceTypeConfiguration.getDataSource().getTableConfig().getTable();
                 Table deviceDefinitionTable = null;
@@ -212,6 +200,15 @@ public class DeviceTypeManager implements DeviceManager {
                             }
                         }
                         deviceTypePluginDAOManager = new DeviceTypePluginDAOManager(datasourceName, deviceDAODefinition);
+                        if (deviceDetails.getProperties() == null || deviceDetails.getProperties().getProperty() == null
+                                || deviceDetails.getProperties().getProperty().size() == 0) {
+                            Properties properties = new Properties();
+                            List<String> propKeys = new ArrayList<>(deviceDAODefinition.getColumnNames());
+                            propKeys.add("token");
+                            properties.addProperties(propKeys);
+                            deviceDetails.setProperties(properties);
+                        }
+                        propertyBasedDeviceTypePluginDAOManager = new DeviceTypePluginDAOManager(deviceType, deviceDetails);
                     } else {
                         throw new DeviceTypeDeployerPayloadException("Invalid datasource name.");
                     }
@@ -220,7 +217,7 @@ public class DeviceTypeManager implements DeviceManager {
                 }
             } else {
                 if (deviceDetails.getProperties() != null && deviceDetails.getProperties().getProperty() != null
-                        && deviceDetails.getProperties().getProperty().size() > 0 ) {
+                        && deviceDetails.getProperties().getProperty().size() > 0) {
                     deviceTypePluginDAOManager = new DeviceTypePluginDAOManager(deviceType, deviceDetails);
                     propertiesExist = true;
                 }
@@ -242,13 +239,13 @@ public class DeviceTypeManager implements DeviceManager {
                     deviceTypeManagerExtensionService.addPluginDAOManager(deviceType, deviceTypePluginDAOManager);
                 } catch (DeviceTypePluginExtensionException e) {
                     String msg = "Error occurred while saving DeviceTypePluginDAOManager for device type: "
-                                 +  deviceType;
+                            + deviceType;
                     log.error(msg);
                     throw new DeviceTypeDeployerPayloadException(msg);
                 }
             } else {
                 log.warn("Could not save DeviceTypePluginDAOManager for device type: " + deviceType +
-                         " since DeviceTypePluginDAOManager is null.");
+                        " since DeviceTypePluginDAOManager is null.");
             }
         } else {
             String msg = "Could not save DeviceTypePluginDAOManager since device type is null or empty.";
@@ -260,11 +257,6 @@ public class DeviceTypeManager implements DeviceManager {
     @Override
     public FeatureManager getFeatureManager() {
         return featureManager;
-    }
-
-    @Override
-    public PolicyConfigurationManager getPolicyUIConfigurationManager(){
-        return policyManager;
     }
 
     @Override
@@ -310,8 +302,7 @@ public class DeviceTypeManager implements DeviceManager {
                 factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
                 factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
                 XMLStreamReader reader = factory.createXMLStreamReader(
-                        new StringReader(new String((byte[]) resource.getContent(), Charset
-                                .forName(DeviceTypePluginConstants.CHARSET_UTF8))));
+                        new StringReader(new String((byte[]) resource.getContent(), StandardCharsets.UTF_8)));
 
                 JAXBContext context = JAXBContext.newInstance(PlatformConfiguration.class);
                 Unmarshaller unmarshaller = context.createUnmarshaller();
@@ -344,7 +335,7 @@ public class DeviceTypeManager implements DeviceManager {
                     new DeviceIdentifier(device.getDeviceIdentifier(), device.getType()));
             try {
                 if (log.isDebugEnabled()) {
-                    log.debug("Enrolling a new Android device : " + device.getDeviceIdentifier());
+                    log.debug("Enrolling a new device : " + device.getDeviceIdentifier());
                 }
                 if (isEnrolled) {
                     this.modifyEnrollment(device);
@@ -360,6 +351,23 @@ public class DeviceTypeManager implements DeviceManager {
             } finally {
                 deviceTypePluginDAOManager.getDeviceTypeDAOHandler().closeConnection();
             }
+            if (propertyBasedDeviceTypePluginDAOManager != null && !isEnrolled && status) {
+                try {
+                    if (log.isDebugEnabled()) {
+                        log.debug("Adding properties for new device : " + device.getDeviceIdentifier());
+                    }
+                    propertyBasedDeviceTypePluginDAOManager.getDeviceTypeDAOHandler().beginTransaction();
+                    status = propertyBasedDeviceTypePluginDAOManager.getDeviceDAO().addDevice(device);
+                    propertyBasedDeviceTypePluginDAOManager.getDeviceTypeDAOHandler().commitTransaction();
+                } catch (DeviceTypeMgtPluginException e) {
+                    propertyBasedDeviceTypePluginDAOManager.getDeviceTypeDAOHandler().rollbackTransaction();
+                    String msg = "Error while adding properties for " + deviceType + " device : " +
+                            device.getDeviceIdentifier();
+                    throw new DeviceManagementException(msg, e);
+                } finally {
+                    propertyBasedDeviceTypePluginDAOManager.getDeviceTypeDAOHandler().closeConnection();
+                }
+            }
             return status;
         }
         return true;
@@ -371,7 +379,7 @@ public class DeviceTypeManager implements DeviceManager {
             boolean status;
             try {
                 if (log.isDebugEnabled()) {
-                    log.debug("Modifying the Android device enrollment data");
+                    log.debug("Adding properties for new device : " + device.getDeviceIdentifier());
                 }
                 deviceTypePluginDAOManager.getDeviceTypeDAOHandler().beginTransaction();
                 status = deviceTypePluginDAOManager.getDeviceDAO().updateDevice(device);
@@ -383,6 +391,23 @@ public class DeviceTypeManager implements DeviceManager {
                 throw new DeviceManagementException(msg, e);
             } finally {
                 deviceTypePluginDAOManager.getDeviceTypeDAOHandler().closeConnection();
+            }
+            if (propertyBasedDeviceTypePluginDAOManager != null && status) {
+                try {
+                    if (log.isDebugEnabled()) {
+                        log.debug("Updating properties for new device : " + device.getDeviceIdentifier());
+                    }
+                    propertyBasedDeviceTypePluginDAOManager.getDeviceTypeDAOHandler().beginTransaction();
+                    status = propertyBasedDeviceTypePluginDAOManager.getDeviceDAO().updateDevice(device);
+                    propertyBasedDeviceTypePluginDAOManager.getDeviceTypeDAOHandler().commitTransaction();
+                } catch (DeviceTypeMgtPluginException e) {
+                    propertyBasedDeviceTypePluginDAOManager.getDeviceTypeDAOHandler().rollbackTransaction();
+                    String msg = "Error while updating properties for " + deviceType + " device : " +
+                            device.getDeviceIdentifier();
+                    throw new DeviceManagementException(msg, e);
+                } finally {
+                    propertyBasedDeviceTypePluginDAOManager.getDeviceTypeDAOHandler().closeConnection();
+                }
             }
             return status;
         }
@@ -414,7 +439,7 @@ public class DeviceTypeManager implements DeviceManager {
                 }
             } catch (DeviceTypeMgtPluginException e) {
                 String msg = "Error while checking the enrollment status of " + deviceType + " device : " +
-                             deviceId.getId();
+                        deviceId.getId();
                 throw new DeviceManagementException(msg, e);
             } finally {
                 deviceTypePluginDAOManager.getDeviceTypeDAOHandler().closeConnection();
@@ -489,11 +514,6 @@ public class DeviceTypeManager implements DeviceManager {
     public boolean setOwnership(DeviceIdentifier deviceId, String ownershipType)
             throws DeviceManagementException {
         return true;
-    }
-
-    @Override
-    public boolean isClaimable(DeviceIdentifier deviceIdentifier) throws DeviceManagementException {
-        return claimable;
     }
 
     @Override
@@ -624,12 +644,41 @@ public class DeviceTypeManager implements DeviceManager {
                     log.debug("Error occurred while deleting the " + deviceType + " devices: '" +
                             deviceIdentifierList + "'. Transaction rolled back");
                 }
-                String msg= "Error occurred while deleting the " + deviceType + " devices: '" +
+                String msg = "Error occurred while deleting the " + deviceType + " devices: '" +
                         deviceIdentifierList;
-                log.error(msg,e);
+                log.error(msg, e);
                 throw new DeviceManagementException(msg, e);
             } finally {
                 deviceTypePluginDAOManager.getDeviceTypeDAOHandler().closeConnection();
+            }
+            if (propertyBasedDeviceTypePluginDAOManager != null) {
+                try {
+                    if (log.isDebugEnabled()) {
+                        log.debug("Deleting the properties of " + deviceType + " devices : " + deviceIdentifierList);
+                    }
+                    propertyBasedDeviceTypePluginDAOManager.getDeviceTypeDAOHandler().beginTransaction();
+                    if (propertyBasedDeviceTypePluginDAOManager.getDeviceDAO().deleteDevices(deviceIdentifierList)) {
+                        propertyBasedDeviceTypePluginDAOManager.getDeviceTypeDAOHandler().commitTransaction();
+                    } else {
+                        propertyBasedDeviceTypePluginDAOManager.getDeviceTypeDAOHandler().rollbackTransaction();
+                        String msg = "Error occurred while deleting the properties of " + deviceType + " devices: '" +
+                                deviceIdentifierList;
+                        log.error(msg);
+                        throw new DeviceManagementException(msg);
+                    }
+                } catch (DeviceTypeMgtPluginException e) {
+                    propertyBasedDeviceTypePluginDAOManager.getDeviceTypeDAOHandler().rollbackTransaction();
+                    if (log.isDebugEnabled()) {
+                        log.debug("Error occurred while deleting the properties of " + deviceType + " devices: '" +
+                                deviceIdentifierList + "'. Transaction rolled back");
+                    }
+                    String msg = "Error occurred while deleting the properties of " + deviceType + " devices: '" +
+                            deviceIdentifierList;
+                    log.error(msg, e);
+                    throw new DeviceManagementException(msg, e);
+                } finally {
+                    propertyBasedDeviceTypePluginDAOManager.getDeviceTypeDAOHandler().closeConnection();
+                }
             }
         }
     }

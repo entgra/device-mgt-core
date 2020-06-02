@@ -21,6 +21,9 @@ package org.wso2.carbon.device.application.mgt.core.util;
 import org.wso2.carbon.utils.CarbonUtils;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Application Management related constants.
@@ -45,6 +48,7 @@ public class Constants {
     public static final String FORWARD_SLASH = "/";
     public static final String ANY = "ANY";
     public static final String DEFAULT_PCK_NAME = "default.app.com";
+    public static final String ALL = "ALL";
 
     public static final String GOOGLE_PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=";
     public static final String APPLE_STORE_URL = "https://itunes.apple.com/country/app/app-name/id";
@@ -61,7 +65,12 @@ public class Constants {
     public  static final String SUBSCRIBED = "SUBSCRIBED";
     public  static final String UNSUBSCRIBED = "UNSUBSCRIBED";
 
-    public static final String ANDROID_AGENT = "android-agent.apk";
+    private static final Map<String, String> AGENT_DATA = new HashMap<>();
+    static {
+        AGENT_DATA.put("android", "android-agent.apk");
+        AGENT_DATA.put("ios", "ios.ipa");
+    }
+    public static final Map<String, String> AGENT_FILE_NAMES = Collections.unmodifiableMap(AGENT_DATA);
 
 
     /**
