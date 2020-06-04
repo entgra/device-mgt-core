@@ -27,6 +27,7 @@ import {
   Steps,
   Icon,
   Alert,
+  Tabs,
 } from 'antd';
 import axios from 'axios';
 import ReactQuill from 'react-quill';
@@ -34,8 +35,10 @@ import 'react-quill/dist/quill.snow.css';
 import './styles.css';
 import { withConfigContext } from '../../../../../../../../components/ConfigContext';
 import { handleApiError } from '../../../../../../../../services/utils/errorHandler';
+import LifeCycleHistory from './components/LifeCycleHistory';
 
 const { Text, Title, Paragraph } = Typography;
+const { TabPane } = Tabs;
 
 const modules = {
   toolbar: [
@@ -175,7 +178,7 @@ class LifeCycle extends React.Component {
       current,
       lifecycleSteps,
     } = this.state;
-    const { lifecycle } = this.props;
+    const { lifecycle, uuid } = this.props;
     let proceedingStates = [];
     if (
       lifecycle !== null &&
@@ -195,44 +198,52 @@ class LifeCycle extends React.Component {
           directly publishing it to your app store. You can easily transition
           from one state to another. <br />
         </Paragraph>
-        <Divider />
-        <div>
-          <Steps
-            direction={'vertical'}
-            current={current}
-            onChange={this.onChange}
-            size="small"
-          >
-            {lifecycleSteps.map((step, index) => (
-              <Step
-                key={index}
-                icon={<Icon type={step.icon} />}
-                title={step.title}
-                disabled={current !== step.step}
-                description={
-                  current === step.step && (
-                    <div style={{ width: 400 }}>
-                      <p>{step.text}</p>
-                      {proceedingStates.map(lifecycleState => {
-                        return (
-                          <Button
-                            size={'small'}
-                            style={{ marginRight: 3 }}
-                            onClick={() => this.showReasonModal(lifecycleState)}
-                            key={lifecycleState}
-                            type={'primary'}
-                          >
-                            {lifecycleState}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  )
-                }
-              />
-            ))}
-          </Steps>
-        </div>
+        <Tabs defaultActiveKey="1" type="card">
+          <TabPane tab="Change Lifecycle" key="1">
+            <div>
+              <Steps
+                direction={'vertical'}
+                current={current}
+                onChange={this.onChange}
+                size="small"
+              >
+                {lifecycleSteps.map((step, index) => (
+                  <Step
+                    key={index}
+                    icon={<Icon type={step.icon} />}
+                    title={step.title}
+                    disabled={current !== step.step}
+                    description={
+                      current === step.step && (
+                        <div style={{ width: 400 }}>
+                          <p>{step.text}</p>
+                          {proceedingStates.map(lifecycleState => {
+                            return (
+                              <Button
+                                size={'small'}
+                                style={{ marginRight: 3 }}
+                                onClick={() =>
+                                  this.showReasonModal(lifecycleState)
+                                }
+                                key={lifecycleState}
+                                type={'primary'}
+                              >
+                                {lifecycleState}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      )
+                    }
+                  />
+                ))}
+              </Steps>
+            </div>
+          </TabPane>
+          <TabPane tab="Lifecycle History" key="2">
+            <LifeCycleHistory uuid={uuid} />
+          </TabPane>
+        </Tabs>
         <Divider />
         <Modal
           title="Confirm changing lifecycle state"
