@@ -76,6 +76,7 @@ class LifeCycle extends React.Component {
       isConfirmButtonLoading: false,
       current: 0,
       lifecycleSteps: [],
+      lifeCycleStates: [],
     };
   }
 
@@ -89,6 +90,7 @@ class LifeCycle extends React.Component {
       current: lifeCycleConfig[this.props.currentStatus].step,
       lifecycleSteps,
     });
+    this.getLifeCycleHistory();
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -157,6 +159,7 @@ class LifeCycle extends React.Component {
             message: 'Done!',
             description: 'Lifecycle state updated successfully!',
           });
+          this.getLifeCycleHistory();
         }
       })
       .catch(error => {
@@ -164,6 +167,31 @@ class LifeCycle extends React.Component {
         this.setState({
           isConfirmButtonLoading: false,
         });
+      });
+  };
+
+  getLifeCycleHistory = () => {
+    const config = this.props.context;
+    const { uuid } = this.props;
+
+    axios
+      .get(
+        window.location.origin +
+          config.serverConfig.invoker.uri +
+          config.serverConfig.invoker.publisher +
+          '/applications/life-cycle/state-changes/' +
+          uuid,
+      )
+      .then(res => {
+        if (res.status === 200) {
+          this.setState({ lifeCycleStates: JSON.parse(res.data.data) });
+        }
+      })
+      .catch(error => {
+        handleApiError(
+          error,
+          'Error occurred while trying to get lifecycle history',
+        );
       });
   };
 
@@ -177,6 +205,7 @@ class LifeCycle extends React.Component {
       selectedStatus,
       current,
       lifecycleSteps,
+      lifeCycleStates,
     } = this.state;
     const { lifecycle, uuid } = this.props;
     let proceedingStates = [];
@@ -241,7 +270,7 @@ class LifeCycle extends React.Component {
             </div>
           </TabPane>
           <TabPane tab="Lifecycle History" key="2">
-            <LifeCycleHistory uuid={uuid} />
+            <LifeCycleHistory lifeCycleStates={lifeCycleStates} />
           </TabPane>
         </Tabs>
         <Divider />

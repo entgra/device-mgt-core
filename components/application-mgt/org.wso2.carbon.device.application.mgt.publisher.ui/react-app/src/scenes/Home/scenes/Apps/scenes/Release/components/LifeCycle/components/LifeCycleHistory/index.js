@@ -19,57 +19,32 @@
 import React from 'react';
 import { Tag, Timeline, Card } from 'antd';
 import { withConfigContext } from '../../../../../../../../../../components/ConfigContext';
-import axios from 'axios';
+import moment from 'moment';
 import { handleApiError } from '../../../../../../../../../../services/utils/errorHandler';
 
 class LifeCycleHistory extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { lifeCycleStates: [] };
   }
-
-  componentDidMount() {
-    this.getLifeCycleHistory();
-  }
-
-  getLifeCycleHistory = () => {
-    const config = this.props.context;
-    const { uuid } = this.props;
-
-    axios
-      .get(
-        window.location.origin +
-          config.serverConfig.invoker.uri +
-          config.serverConfig.invoker.publisher +
-          '/applications/life-cycle/state-changes/' +
-          uuid,
-      )
-      .then(res => {
-        if (res.status === 200) {
-          this.setState({ lifeCycleStates: JSON.parse(res.data.data) });
-        }
-      })
-      .catch(error => {
-        handleApiError(
-          error,
-          'Error occurred while trying to get lifecycle history',
-        );
-      });
-  };
 
   render() {
-    const { lifeCycleStates } = this.state;
+    const { lifeCycleStates } = this.props;
     return (
-      <div>
-        <Timeline mode={'alternate'}>
+      <div className="scroll" style={{ height: 500, overflowY: 'auto' }}>
+        <Timeline mode={'alternate'} style={{ marginTop: 10 }}>
           {lifeCycleStates.map(
             (state, index) =>
               state && (
                 <Timeline.Item key={index} label={state.updatedAt}>
                   <Card>
-                    State changed from <br />
-                    <Tag color="blue">{state.previousState}</Tag> to{' '}
-                    <Tag color="blue">{state.currentState}</Tag>
+                    <div style={{ textAlign: 'center' }}>
+                      State changed from <br />
+                      <div style={{ marginTop: 5 }}>
+                        <Tag color="blue">{state.previousState}</Tag> to{'  '}
+                        <Tag color="blue">{state.currentState}</Tag>
+                      </div>
+                      <Tag style={{ marginTop: 5 }}>{state.updatedAt}</Tag>
+                    </div>
                   </Card>
                 </Timeline.Item>
               ),
