@@ -207,7 +207,7 @@ class LifeCycle extends React.Component {
       lifecycleSteps,
       lifeCycleStates,
     } = this.state;
-    const { lifecycle, uuid } = this.props;
+    const { lifecycle } = this.props;
     let proceedingStates = [];
     if (
       lifecycle !== null &&
