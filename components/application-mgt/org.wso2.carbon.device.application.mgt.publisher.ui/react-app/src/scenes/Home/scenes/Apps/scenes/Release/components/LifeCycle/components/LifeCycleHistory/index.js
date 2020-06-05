@@ -19,8 +19,6 @@
 import React from 'react';
 import { Tag, Timeline, Card } from 'antd';
 import { withConfigContext } from '../../../../../../../../../../components/ConfigContext';
-import moment from 'moment';
-import { handleApiError } from '../../../../../../../../../../services/utils/errorHandler';
 
 class LifeCycleHistory extends React.Component {
   constructor(props) {
@@ -38,11 +36,17 @@ class LifeCycleHistory extends React.Component {
                 <Timeline.Item key={index} label={state.updatedAt}>
                   <Card>
                     <div style={{ textAlign: 'center' }}>
-                      State changed from <br />
-                      <div style={{ marginTop: 5 }}>
-                        <Tag color="blue">{state.previousState}</Tag> to{'  '}
-                        <Tag color="blue">{state.currentState}</Tag>
-                      </div>
+                      {state.previousState === state.currentState ? (
+                        'Application Created'
+                      ) : (
+                        <div>
+                          State changed from <br />
+                          <div style={{ marginTop: 5 }}>
+                            <Tag color="blue">{state.previousState}</Tag> to{' '}
+                            <Tag color="blue">{state.currentState}</Tag>
+                          </div>
+                        </div>
+                      )}
                       <Tag style={{ marginTop: 5 }}>{state.updatedAt}</Tag>
                     </div>
                   </Card>
