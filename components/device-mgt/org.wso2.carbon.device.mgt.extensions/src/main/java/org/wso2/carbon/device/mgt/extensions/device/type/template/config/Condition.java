@@ -29,7 +29,7 @@ public class Condition {
     private String id;
     private List<String> values;
 
-    @XmlElement(name = "Id")
+    @XmlElement(name = "id")
     public String getId() {
         return id;
     }
