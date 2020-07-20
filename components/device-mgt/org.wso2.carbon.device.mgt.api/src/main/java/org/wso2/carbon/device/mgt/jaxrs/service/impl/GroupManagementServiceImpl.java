@@ -42,6 +42,8 @@ import org.wso2.carbon.device.mgt.jaxrs.beans.RoleList;
 import org.wso2.carbon.device.mgt.jaxrs.service.api.GroupManagementService;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.RequestValidationUtil;
 import org.wso2.carbon.device.mgt.jaxrs.util.DeviceMgtAPIUtils;
+import org.wso2.carbon.policy.mgt.common.PolicyManagementException;
+import org.wso2.carbon.policy.mgt.core.PolicyManagerService;
 
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
@@ -259,6 +261,13 @@ public class GroupManagementServiceImpl implements GroupManagementService {
     public Response addDevicesToGroup(int groupId, List<DeviceIdentifier> deviceIdentifiers) {
         try {
             DeviceMgtAPIUtils.getGroupManagementProviderService().addDevices(groupId, deviceIdentifiers);
+            PolicyManagerService policyManagementService = DeviceMgtAPIUtils.getPolicyManagementService();
+            if (deviceIdentifiers != null && deviceIdentifiers.size() > 0) {
+                policyManagementService.reloadPolicy(deviceIdentifiers, groupId);
+//                for (DeviceIdentifier deviceIdentifier : deviceIdentifiers) {
+//                    policyManagementService.getEffectivePolicy(deviceIdentifier);
+//                }
+            }
             return Response.status(Response.Status.OK).build();
         } catch (GroupManagementException e) {
             String msg = "Error occurred while adding devices to group.";
@@ -266,6 +275,10 @@ public class GroupManagementServiceImpl implements GroupManagementService {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         } catch (DeviceNotFoundException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (PolicyManagementException e) {
+            String msg = "Error occurred while adding devices to group.";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
 

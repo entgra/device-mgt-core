@@ -43,14 +43,25 @@ import org.wso2.carbon.device.mgt.common.Feature;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
 import org.wso2.carbon.device.mgt.common.exceptions.InvalidDeviceException;
+import org.wso2.carbon.device.mgt.common.operation.mgt.Operation;
 import org.wso2.carbon.device.mgt.common.operation.mgt.OperationManagementException;
+import org.wso2.carbon.device.mgt.common.policy.mgt.DeviceGroupWrapper;
 import org.wso2.carbon.device.mgt.common.policy.mgt.Policy;
 import org.wso2.carbon.device.mgt.common.policy.mgt.Profile;
 import org.wso2.carbon.device.mgt.common.policy.mgt.ProfileFeature;
-import org.wso2.carbon.policy.mgt.common.*;
-import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.NonComplianceData;
 import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.ComplianceFeature;
+import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.NonComplianceData;
 import org.wso2.carbon.device.mgt.common.policy.mgt.monitor.PolicyComplianceException;
+import org.wso2.carbon.device.mgt.core.operation.mgt.CommandOperation;
+import org.wso2.carbon.device.mgt.core.operation.mgt.OperationMgtConstants;
+import org.wso2.carbon.policy.mgt.common.FeatureManagementException;
+import org.wso2.carbon.policy.mgt.common.PolicyAdministratorPoint;
+import org.wso2.carbon.policy.mgt.common.PolicyEvaluationException;
+import org.wso2.carbon.policy.mgt.common.PolicyEvaluationPoint;
+import org.wso2.carbon.policy.mgt.common.PolicyInformationPoint;
+import org.wso2.carbon.policy.mgt.common.PolicyManagementException;
+import org.wso2.carbon.policy.mgt.common.PolicyMonitoringTaskException;
+import org.wso2.carbon.policy.mgt.common.PolicyTransformException;
 import org.wso2.carbon.policy.mgt.core.impl.PolicyAdministratorPointImpl;
 import org.wso2.carbon.policy.mgt.core.impl.PolicyInformationPointImpl;
 import org.wso2.carbon.policy.mgt.core.internal.PolicyManagementDataHolder;
@@ -63,6 +74,7 @@ import org.wso2.carbon.policy.mgt.core.task.TaskScheduleServiceImpl;
 import org.wso2.carbon.policy.mgt.core.util.PolicyManagerUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class PolicyManagerServiceImpl implements PolicyManagerService {
@@ -109,6 +121,88 @@ public class PolicyManagerServiceImpl implements PolicyManagerService {
     @Override
     public boolean deletePolicy(int policyId) throws PolicyManagementException {
         return policyAdministratorPoint.deletePolicy(policyId);
+    }
+
+    public void reloadPolicy(List<DeviceIdentifier> deviceIdentifiers, int groupId) throws
+            PolicyManagementException {
+        try {
+            String type = deviceIdentifiers.get(0).getType();
+            PolicyEvaluationPoint policyEvaluationPoint = PolicyManagementDataHolder.getInstance().getPolicyEvaluationPoint();
+            Policy policy;
+
+
+            if (policyEvaluationPoint != null) {
+                for (DeviceIdentifier deviceIdentifier : deviceIdentifiers) {
+                    policy = policyEvaluationPoint.getEffectivePolicy(deviceIdentifier);
+                    if (policy != null && policy.getDeviceGroups() != null) {
+                        for (DeviceGroupWrapper deviceGroupWrapper : policy.getDeviceGroups()) {
+                            if (deviceGroupWrapper.getId() == groupId) {
+                                PolicyManagementDataHolder.getInstance().getDeviceManagementService().addOperation(type,
+                                        this.getPolicyRevokeOperation(), Arrays.asList(deviceIdentifier));
+                                applyEffectivePolicy(policy, deviceIdentifier);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (InvalidDeviceException e) {
+            String msg = "Invalid DeviceIdentifiers found.";
+            log.error(msg, e);
+            throw new PolicyManagementException(msg, e);
+        } catch (OperationManagementException e) {
+            String msg = "Error occurred while adding the operation to device.";
+            log.error(msg, e);
+            throw new PolicyManagementException(msg, e);
+        } catch (PolicyEvaluationException e) {
+            String msg = "Error occurred while calculating current effective policy.";
+            log.error(msg, e);
+            throw new PolicyManagementException(msg, e);
+        }
+    }
+
+    private Operation getPolicyRevokeOperation() {
+        CommandOperation policyRevokeOperation = new CommandOperation();
+        policyRevokeOperation.setEnabled(true);
+        policyRevokeOperation.setCode(OperationMgtConstants.OperationCodes.POLICY_REVOKE);
+        policyRevokeOperation.setType(Operation.Type.COMMAND);
+        return policyRevokeOperation;
+    }
+
+    public void applyEffectivePolicy(Policy policy, DeviceIdentifier deviceIdentifier) throws
+            PolicyManagementException {
+        try {
+            if (policy == null) {
+                policyAdministratorPoint.removePolicyUsed(deviceIdentifier);
+                return;
+            }
+            this.getPAP().setPolicyUsed(deviceIdentifier, policy);
+
+            List<DeviceIdentifier> deviceIdentifiers = new ArrayList<DeviceIdentifier>();
+            deviceIdentifiers.add(deviceIdentifier);
+
+            //TODO: Fix this properly later adding device type to be passed in when the task manage executes "addOperations()"
+            String type = null;
+            if (deviceIdentifiers.size() > 0) {
+                type = deviceIdentifiers.get(0).getType();
+            }
+            PolicyManagementDataHolder.getInstance().getDeviceManagementService().addOperation(type,
+                    PolicyManagerUtil.transformPolicy(policy), deviceIdentifiers);
+        } catch (InvalidDeviceException e) {
+            String msg = "Error occurred while getting the effective policies for invalid DeviceIdentifiers";
+            log.error(msg, e);
+            throw new PolicyManagementException(msg, e);
+        } catch (OperationManagementException e) {
+            String msg = "Error occurred while adding the effective feature to database." +
+                    deviceIdentifier.getId() + " - " + deviceIdentifier.getType();
+            log.error(msg, e);
+            throw new PolicyManagementException(msg, e);
+        } catch (PolicyTransformException e) {
+            String msg = "Error occurred while transforming policy object to operation object type for device " +
+                    deviceIdentifier.getId() + " - " + deviceIdentifier.getType();
+            log.error(msg, e);
+            throw new PolicyManagementException(msg, e);
+        }
     }
 
     @Override

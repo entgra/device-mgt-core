@@ -55,6 +55,9 @@ public interface PolicyManagerService {
 
     boolean deletePolicy(int policyId) throws PolicyManagementException;
 
+    void reloadPolicy(List<DeviceIdentifier> deviceIdentifiers, int groupId) throws
+            PolicyManagementException;
+
     Policy getEffectivePolicy(DeviceIdentifier deviceIdentifier) throws PolicyManagementException;
 
     List<ProfileFeature> getEffectiveFeatures(DeviceIdentifier deviceIdentifier) throws FeatureManagementException;
