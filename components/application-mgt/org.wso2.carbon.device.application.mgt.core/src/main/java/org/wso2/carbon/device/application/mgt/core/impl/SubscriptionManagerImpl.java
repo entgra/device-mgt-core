@@ -170,6 +170,28 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
     }
 
     @Override
+    public String checkAppSubscription(int id, String packageName) throws SubscriptionManagementException {
+        try {
+            ConnectionManagerUtil.openDBConnection();
+            String UUID = subscriptionDAO.getUUID(id, packageName);
+            return UUID;
+        } catch (ApplicationManagementDAOException e) {
+            ConnectionManagerUtil.rollbackDBTransaction();
+            String msg = "Error occurred while checking the application is " +
+                    "subscribed one or not";
+            log.error(msg, e);
+            throw new SubscriptionManagementException(msg, e);
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while observing the database connection while checking the application is " +
+                    "subscribed one or not";
+            log.error(msg, e);
+            throw new SubscriptionManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+    }
+
+    @Override
     public List<ScheduledSubscriptionDTO> cleanScheduledSubscriptions() throws SubscriptionManagementException {
         try {
             // Cleaning up already executed, missed and failed tasks

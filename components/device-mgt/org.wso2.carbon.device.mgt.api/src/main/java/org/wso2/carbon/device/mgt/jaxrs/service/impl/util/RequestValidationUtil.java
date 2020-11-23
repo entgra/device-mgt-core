@@ -26,6 +26,7 @@ import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.Feature;
 import org.wso2.carbon.device.mgt.common.FeatureManager;
 import org.wso2.carbon.device.mgt.common.OperationLogFilters;
+import org.wso2.carbon.device.mgt.common.app.mgt.Application;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
@@ -122,6 +123,23 @@ public class RequestValidationUtil {
         if (isErroneous) {
             throw new InputValidationException(error.setCode(400l).setMessage("Invalid device identifier").build());
 
+        }
+    }
+
+    //validating the package names requested by user
+    public static void validateApplicationIdentifier(String packageName, List<Application> applications) {
+        int count = 0;
+        for (int i = 0; i < applications.size(); i++) {
+                if (applications.get(i).getApplicationIdentifier().equals(packageName)) {
+                    count++;
+            }
+        }
+        if (count != 1) {
+            String msg = "Invalid package name";
+            log.error(msg);
+            throw new InputValidationException(new ErrorResponse.ErrorResponseBuilder()
+                    .setCode(HttpStatus.SC_BAD_REQUEST)
+                    .setMessage(msg).build());
         }
     }
 

@@ -42,6 +42,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.carbon.device.application.mgt.common.ApplicationInstallResponse;
+import org.wso2.carbon.device.application.mgt.common.SubscriptionType;
+import org.wso2.carbon.device.application.mgt.common.exception.SubscriptionManagementException;
+import org.wso2.carbon.device.application.mgt.common.services.SubscriptionManager;
+import org.wso2.carbon.device.application.mgt.core.exception.ApplicationManagementDAOException;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
 import org.wso2.carbon.device.mgt.common.Feature;
@@ -876,6 +881,63 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
         }
     }
+
+    @POST
+    @Path("/{type}/{id}/uninstallation")
+    @Override
+    public Response uninstallation(
+            @PathParam("type") @Size(max = 45) String type,
+            @PathParam("id") @Size(max = 45) String id,
+            @QueryParam("packageName") String packageName) {
+        String UUID;
+        List<DeviceIdentifier> deviceIdentifiers = new ArrayList<>();
+        List<Application> applications;
+        ApplicationManagementProviderService amc;
+        try {
+            RequestValidationUtil.validateDeviceIdentifier(type, id);
+            Device device = DeviceMgtAPIUtils.getDeviceManagementService().getDevice(id, false);
+            amc = DeviceMgtAPIUtils.getAppManagementService();
+            applications = amc.getApplicationListForDevice(device);
+            //checking requested package names are valid or not
+            RequestValidationUtil.validateApplicationIdentifier(packageName, applications);
+            DeviceIdentifier deviceIdentifier = new DeviceIdentifier(device.getDeviceIdentifier(), device.getType());
+            deviceIdentifiers.add(deviceIdentifier);
+            SubscriptionManager subscriptionManager = DeviceMgtAPIUtils.getSubscriptionManager();
+            UUID = subscriptionManager.checkAppSubscription(device.getId(), packageName);
+            // UUID is available means app is subscribed using the entgra store
+            if (UUID != null) {
+                ApplicationInstallResponse response = subscriptionManager
+                        .performBulkAppOperation(UUID, deviceIdentifiers, SubscriptionType.DEVICE.toString(),
+                                "uninstall");
+                return Response.status(Response.Status.OK).entity(response).build();
+                //if the applications not installed via entgra store
+            } else {
+                String msg = "Application is already unsubscribed or not installed via entgra store";
+                return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+            }
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while getting '" + type + "' device, which carries " +
+                    "the id '" + id + "'";
+            log.error(msg, e);
+            return Response.serverError().entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        } catch (SubscriptionManagementException |
+                org.wso2.carbon.device.application.mgt.common.exception.ApplicationManagementException |
+                ApplicationManagementDAOException e) {
+            String msg = "Error occurred while getting the " + type + "application is of device " + id + "subscribed " +
+                    "at entgra store";
+            log.error(msg, e);
+            return Response.serverError().entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        } catch (ApplicationManagementException e) {
+            String msg = "Error occurred while fetching the apps of the '" + type + "' device, which carries " +
+                    "the id '" + id + "'";
+            log.error(msg, e);
+            return Response.serverError().entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        }
+    }
+
 
     @GET
     @Path("/{type}/{id}/operations")
