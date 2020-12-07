@@ -36,6 +36,7 @@
 
 package org.wso2.carbon.device.mgt.jaxrs.service.impl;
 
+import com.google.gson.Gson;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -47,17 +48,11 @@ import org.wso2.carbon.device.application.mgt.common.SubscriptionType;
 import org.wso2.carbon.device.application.mgt.common.exception.SubscriptionManagementException;
 import org.wso2.carbon.device.application.mgt.common.services.SubscriptionManager;
 import org.wso2.carbon.device.application.mgt.core.exception.ApplicationManagementDAOException;
-import org.wso2.carbon.device.mgt.common.PaginationRequest;
-import org.wso2.carbon.device.mgt.common.PaginationResult;
-import org.wso2.carbon.device.mgt.common.Feature;
-import org.wso2.carbon.device.mgt.common.FeatureManager;
-import org.wso2.carbon.device.mgt.common.Device;
-import org.wso2.carbon.device.mgt.common.OperationLogFilters;
-import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
-import org.wso2.carbon.device.mgt.common.DeviceFilters;
-import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
+import org.wso2.carbon.device.application.mgt.core.util.HelperUtil;
+import org.wso2.carbon.device.mgt.common.*;
 import org.wso2.carbon.device.mgt.common.app.mgt.Application;
 import org.wso2.carbon.device.mgt.common.app.mgt.ApplicationManagementException;
+import org.wso2.carbon.device.mgt.common.app.mgt.android.CustomApplication;
 import org.wso2.carbon.device.mgt.common.authorization.DeviceAccessAuthorizationException;
 import org.wso2.carbon.device.mgt.common.authorization.DeviceAccessAuthorizationService;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceData;
@@ -93,14 +88,7 @@ import org.wso2.carbon.device.mgt.core.search.mgt.SearchMgtException;
 import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
 import org.wso2.carbon.device.mgt.core.service.GroupManagementProviderService;
 import org.wso2.carbon.device.mgt.core.util.DeviceManagerUtil;
-import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceCompliance;
-import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
-import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
-import org.wso2.carbon.device.mgt.jaxrs.beans.OperationList;
-import org.wso2.carbon.device.mgt.jaxrs.beans.OperationRequest;
-import org.wso2.carbon.device.mgt.jaxrs.beans.ComplianceDeviceList;
-import org.wso2.carbon.device.mgt.jaxrs.beans.ApplicationList;
-import org.wso2.carbon.device.mgt.jaxrs.beans.OperationStatusBean;
+import org.wso2.carbon.device.mgt.jaxrs.beans.*;
 import org.wso2.carbon.device.mgt.jaxrs.service.api.DeviceManagementService;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.InputValidationException;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.RequestValidationUtil;
@@ -893,6 +881,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
         List<DeviceIdentifier> deviceIdentifiers = new ArrayList<>();
         List<Application> applications;
         ApplicationManagementProviderService amc;
+        Operation operation = new Operation();
         try {
             RequestValidationUtil.validateDeviceIdentifier(type, id);
             Device device = DeviceMgtAPIUtils.getDeviceManagementService().getDevice(id, false);
@@ -912,8 +901,21 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                 return Response.status(Response.Status.OK).entity(response).build();
                 //if the applications not installed via entgra store
             } else {
-                String msg = "Application is already unsubscribed or not installed via entgra store";
-                return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+                if (type.equals("android")) {
+                    ApplicationUninstallation applicationUninstallation = new ApplicationUninstallation(packageName, "PUBLIC");
+                    Gson gson = new Gson();
+                    operation.setCode(MDMAppConstants.AndroidConstants.DEVICE_APP_UNINSTALL);
+                    operation.setType(Operation.Type.PROFILE);
+                    operation.setPayLoad(gson.toJson(applicationUninstallation));
+                    DeviceManagementProviderService deviceManagementProviderService = HelperUtil
+                            .getDeviceManagementProviderService();
+                    Activity activity = deviceManagementProviderService.addOperation(
+                            DeviceManagementConstants.MobileDeviceTypes.MOBILE_DEVICE_TYPE_ANDROID, operation, deviceIdentifiers);
+                    return Response.status(Response.Status.CREATED).entity(activity).build();
+                } else {
+                    String msg = "Not implemented for other device types";
+                    return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+                }
             }
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while getting '" + type + "' device, which carries " +
@@ -935,6 +937,14 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             log.error(msg, e);
             return Response.serverError().entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        } catch (OperationManagementException e) {
+            String msg = "Issue in retrieving operation management service instance";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (InvalidDeviceException e) {
+            String msg = "The list of device identifiers are invalid";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
 

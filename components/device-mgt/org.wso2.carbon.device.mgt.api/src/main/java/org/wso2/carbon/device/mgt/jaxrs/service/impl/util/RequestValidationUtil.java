@@ -130,8 +130,8 @@ public class RequestValidationUtil {
     public static void validateApplicationIdentifier(String packageName, List<Application> applications) {
         int count = 0;
         for (int i = 0; i < applications.size(); i++) {
-                if (applications.get(i).getApplicationIdentifier().equals(packageName)) {
-                    count++;
+            if (applications.get(i).getApplicationIdentifier().equals(packageName)) {
+                count++;
             }
         }
         if (count != 1) {
