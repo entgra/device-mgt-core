@@ -904,7 +904,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                 if (type.equals("android")) {
                     ApplicationUninstallation applicationUninstallation = new ApplicationUninstallation(packageName, "PUBLIC");
                     Gson gson = new Gson();
-                    operation.setCode(MDMAppConstants.AndroidConstants.DEVICE_APP_UNINSTALL);
+                    operation.setCode(MDMAppConstants.AndroidConstants.UNMANAGED_APP_UNINSTALL);
                     operation.setType(Operation.Type.PROFILE);
                     operation.setPayLoad(gson.toJson(applicationUninstallation));
                     DeviceManagementProviderService deviceManagementProviderService = HelperUtil
