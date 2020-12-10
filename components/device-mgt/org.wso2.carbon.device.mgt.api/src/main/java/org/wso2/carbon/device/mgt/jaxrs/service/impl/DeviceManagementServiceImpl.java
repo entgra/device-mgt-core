@@ -924,8 +924,9 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             return Response.serverError().entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
         } catch (SubscriptionManagementException |
-                org.wso2.carbon.device.application.mgt.common.exception.ApplicationManagementException |
-                ApplicationManagementDAOException e) {
+                org.wso2.carbon.device.application.mgt.common.exception.ApplicationManagementException
+                 e) {
+            //ApplicationManagementDAOException
             String msg = "Error occurred while getting the " + type + "application is of device " + id + "subscribed " +
                     "at entgra store";
             log.error(msg, e);

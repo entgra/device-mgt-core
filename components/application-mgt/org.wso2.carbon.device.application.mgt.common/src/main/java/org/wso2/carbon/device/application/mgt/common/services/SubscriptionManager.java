@@ -73,7 +73,8 @@ public interface SubscriptionManager {
      * @throws SubscriptionManagementException if error occurred while cleaning up subscriptions.
      */
     String checkAppSubscription(int id, String packageName) throws
-            org.wso2.carbon.device.application.mgt.core.exception.ApplicationManagementDAOException, SubscriptionManagementException;
+            //org.wso2.carbon.device.application.mgt.core.exception.ApplicationManagementDAOException,
+            SubscriptionManagementException;
 
     /**
      * Retrieves the subscription entry which is pending by task name. At a given time, there should be only a single
