@@ -1485,6 +1485,7 @@ public interface DeviceManagementService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{type}/{id}/uninstallation")
     @ApiOperation(
+            consumes = MediaType.APPLICATION_JSON,
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "POST",
             value = "Uninstall apps in device",
@@ -1494,56 +1495,10 @@ public interface DeviceManagementService {
                     @Extension(properties = {
                             @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:applications")
                     })
-
-            }
-    )
+            })
     @ApiResponses(
             value = {
-                    @ApiResponse(
-                            code = 200,
-                            message = "OK. \n Successfully uninstallation is done.",
-                            response = Application.class,
-                            responseContainer = "List",
-                            responseHeaders = {
-                                    @ResponseHeader(
-                                            name = "Content-Type",
-                                            description = "The content type of the body"),
-                                    @ResponseHeader(
-                                            name = "ETag",
-                                            description = "Entity Tag of the response resource.\n" +
-                                                    "Used by caches, or in conditional requests."),
-                                    @ResponseHeader(
-                                            name = "Last-Modified",
-                                            description = "Date and time the resource was last modified\n" +
-                                                    "Used by caches, or in conditional requests.")}),
-                    @ApiResponse(
-                            code = 303,
-                            message = "See Other. \n " +
-                                    "The source can be retrieved from the URL specified in the location header.\n",
-                            responseHeaders = {
-                                    @ResponseHeader(
-                                            name = "Content-Location",
-                                            description = "The Source URL of the document.")}),
-                    @ApiResponse(
-                            code = 304,
-                            message = "Not Modified. \n " +
-                                    "Empty body because the client already has the latest version of the requested resource."),
-                    @ApiResponse(
-                            code = 400,
-                            message = "Bad Request. \n Invalid request or validation error.",
-                            response = ErrorResponse.class),
-                    @ApiResponse(
-                            code = 404,
-                            message = "Not Found. \n The specified device does not exist.",
-                            response = ErrorResponse.class),
-                    @ApiResponse(
-                            code = 406,
-                            message = "Not Acceptable. \n The requested media type is not supported."),
-                    @ApiResponse(
-                            code = 500,
-                            message = "Internal Server Error. \n " +
-                                    "Server error occurred while retrieving the list of installed application on the device.",
-                            response = ErrorResponse.class)
+
             })
     Response uninstallation(
             @ApiParam(

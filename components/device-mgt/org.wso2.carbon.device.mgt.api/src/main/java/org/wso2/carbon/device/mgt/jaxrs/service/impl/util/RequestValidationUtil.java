@@ -126,7 +126,12 @@ public class RequestValidationUtil {
         }
     }
 
-    //validating the package names requested by user
+    /**
+     * validating the package names requested by user
+     *
+     * @param applications All the applications in the device
+     * @param packageName  Package name sen by the user
+     */
     public static void validateApplicationIdentifier(String packageName, List<Application> applications) {
         int count = 0;
         for (int i = 0; i < applications.size(); i++) {

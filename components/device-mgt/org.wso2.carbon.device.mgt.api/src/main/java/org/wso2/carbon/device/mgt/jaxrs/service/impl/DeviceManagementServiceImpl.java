@@ -877,22 +877,19 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             @PathParam("type") @Size(max = 45) String type,
             @PathParam("id") @Size(max = 45) String id,
             @QueryParam("packageName") String packageName) {
-        String UUID;
         List<DeviceIdentifier> deviceIdentifiers = new ArrayList<>();
-        List<Application> applications;
-        ApplicationManagementProviderService amc;
         Operation operation = new Operation();
         try {
             RequestValidationUtil.validateDeviceIdentifier(type, id);
             Device device = DeviceMgtAPIUtils.getDeviceManagementService().getDevice(id, false);
-            amc = DeviceMgtAPIUtils.getAppManagementService();
-            applications = amc.getApplicationListForDevice(device);
+            ApplicationManagementProviderService amc = DeviceMgtAPIUtils.getAppManagementService();
+            List<Application> applications = amc.getApplicationListForDevice(device);
             //checking requested package names are valid or not
             RequestValidationUtil.validateApplicationIdentifier(packageName, applications);
             DeviceIdentifier deviceIdentifier = new DeviceIdentifier(device.getDeviceIdentifier(), device.getType());
             deviceIdentifiers.add(deviceIdentifier);
             SubscriptionManager subscriptionManager = DeviceMgtAPIUtils.getSubscriptionManager();
-            UUID = subscriptionManager.checkAppSubscription(device.getId(), packageName);
+            String UUID = subscriptionManager.checkAppSubscription(device.getId(), packageName);
             // UUID is available means app is subscribed using the entgra store
             if (UUID != null) {
                 ApplicationInstallResponse response = subscriptionManager
