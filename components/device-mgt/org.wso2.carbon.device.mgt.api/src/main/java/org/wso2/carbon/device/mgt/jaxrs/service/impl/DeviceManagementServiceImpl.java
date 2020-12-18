@@ -47,12 +47,20 @@ import org.wso2.carbon.device.application.mgt.common.ApplicationInstallResponse;
 import org.wso2.carbon.device.application.mgt.common.SubscriptionType;
 import org.wso2.carbon.device.application.mgt.common.exception.SubscriptionManagementException;
 import org.wso2.carbon.device.application.mgt.common.services.SubscriptionManager;
-import org.wso2.carbon.device.application.mgt.core.exception.ApplicationManagementDAOException;
 import org.wso2.carbon.device.application.mgt.core.util.HelperUtil;
-import org.wso2.carbon.device.mgt.common.*;
+import org.wso2.carbon.device.mgt.common.DeviceFilters;
+import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
+import org.wso2.carbon.device.mgt.common.OperationLogFilters;
+import org.wso2.carbon.device.mgt.common.MDMAppConstants;
+import org.wso2.carbon.device.mgt.common.DeviceManagementConstants;
+import org.wso2.carbon.device.mgt.common.Feature;
+import org.wso2.carbon.device.mgt.common.FeatureManager;
+import org.wso2.carbon.device.mgt.common.Device;
+import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
+import org.wso2.carbon.device.mgt.common.PaginationRequest;
+import org.wso2.carbon.device.mgt.common.PaginationResult;
 import org.wso2.carbon.device.mgt.common.app.mgt.Application;
 import org.wso2.carbon.device.mgt.common.app.mgt.ApplicationManagementException;
-import org.wso2.carbon.device.mgt.common.app.mgt.android.CustomApplication;
 import org.wso2.carbon.device.mgt.common.authorization.DeviceAccessAuthorizationException;
 import org.wso2.carbon.device.mgt.common.authorization.DeviceAccessAuthorizationService;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceData;
@@ -88,10 +96,19 @@ import org.wso2.carbon.device.mgt.core.search.mgt.SearchMgtException;
 import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
 import org.wso2.carbon.device.mgt.core.service.GroupManagementProviderService;
 import org.wso2.carbon.device.mgt.core.util.DeviceManagerUtil;
-import org.wso2.carbon.device.mgt.jaxrs.beans.*;
+import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
+import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
+import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceCompliance;
+import org.wso2.carbon.device.mgt.jaxrs.beans.ApplicationList;
+import org.wso2.carbon.device.mgt.jaxrs.beans.OperationStatusBean;
+import org.wso2.carbon.device.mgt.jaxrs.beans.ComplianceDeviceList;
+import org.wso2.carbon.device.mgt.jaxrs.beans.OperationRequest;
+import org.wso2.carbon.device.mgt.jaxrs.beans.OperationList;
+import org.wso2.carbon.device.mgt.jaxrs.beans.ApplicationUninstallation;
 import org.wso2.carbon.device.mgt.jaxrs.service.api.DeviceManagementService;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.InputValidationException;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.RequestValidationUtil;
+import org.wso2.carbon.device.mgt.jaxrs.util.Constants;
 import org.wso2.carbon.device.mgt.jaxrs.util.DeviceMgtAPIUtils;
 import org.wso2.carbon.identity.jwt.client.extension.JWTClient;
 import org.wso2.carbon.identity.jwt.client.extension.dto.AccessTokenInfo;
@@ -898,7 +915,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                 return Response.status(Response.Status.OK).entity(response).build();
                 //if the applications not installed via entgra store
             } else {
-                if (type.equals("android")) {
+                if (type.equals(Constants.ANDROID)) {
                     ApplicationUninstallation applicationUninstallation = new ApplicationUninstallation(packageName, "PUBLIC");
                     Gson gson = new Gson();
                     operation.setCode(MDMAppConstants.AndroidConstants.UNMANAGED_APP_UNINSTALL);
@@ -911,6 +928,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                     return Response.status(Response.Status.CREATED).entity(activity).build();
                 } else {
                     String msg = "Not implemented for other device types";
+                    log.error(msg);
                     return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
                 }
             }
@@ -944,7 +962,6 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
-
 
     @GET
     @Path("/{type}/{id}/operations")

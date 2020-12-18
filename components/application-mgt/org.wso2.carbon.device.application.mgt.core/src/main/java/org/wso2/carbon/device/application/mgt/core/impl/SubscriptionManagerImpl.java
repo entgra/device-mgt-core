@@ -173,10 +173,8 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
     public String checkAppSubscription(int id, String packageName) throws SubscriptionManagementException {
         try {
             ConnectionManagerUtil.openDBConnection();
-            String UUID = subscriptionDAO.getUUID(id, packageName);
-            return UUID;
+            return subscriptionDAO.getUUID(id, packageName);
         } catch (ApplicationManagementDAOException e) {
-            ConnectionManagerUtil.rollbackDBTransaction();
             String msg = "Error occurred while checking the application is " +
                     "subscribed one or not";
             log.error(msg, e);
