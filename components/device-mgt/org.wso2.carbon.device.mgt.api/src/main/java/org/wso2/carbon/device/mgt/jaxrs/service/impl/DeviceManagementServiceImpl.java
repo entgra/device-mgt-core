@@ -915,7 +915,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                 return Response.status(Response.Status.OK).entity(response).build();
                 //if the applications not installed via entgra store
             } else {
-                if (type.equals(Constants.ANDROID)) {
+                if (Constants.ANDROID.equals(type)) {
                     ApplicationUninstallation applicationUninstallation = new ApplicationUninstallation(packageName, "PUBLIC");
                     Gson gson = new Gson();
                     operation.setCode(MDMAppConstants.AndroidConstants.UNMANAGED_APP_UNINSTALL);
