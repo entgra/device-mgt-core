@@ -1488,7 +1488,7 @@ public interface DeviceManagementService {
             consumes = MediaType.APPLICATION_JSON,
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "POST",
-            value = "Uninstall apps in device",
+            value = "Uninstall apps in device using apps tab",
             notes = "Check app is subscribed in store or not and then do uninstallation accordingly",
             tags = "Device Management",
             extensions = {
@@ -1503,7 +1503,7 @@ public interface DeviceManagementService {
     Response uninstallation(
             @ApiParam(
                     name = "type",
-                    value = "The device type name, such as ios, android, windows, or fire-alarm.",
+                    value = "The device type name, such as ios, android, windows",
                     required = true)
             @PathParam("type")
             @Size(max = 45)
@@ -1517,7 +1517,7 @@ public interface DeviceManagementService {
                     String id,
             @ApiParam(
                     name = "packageName",
-                    value = "The package name of the app you want to uninstall",
+                    value = "The package name of the app user want to uninstall",
                     required = true)
             @QueryParam("packageName")
                     String packageName);

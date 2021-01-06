@@ -907,7 +907,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             deviceIdentifiers.add(deviceIdentifier);
             SubscriptionManager subscriptionManager = DeviceMgtAPIUtils.getSubscriptionManager();
             String UUID = subscriptionManager.checkAppSubscription(device.getId(), packageName);
-            // UUID is available means app is subscribed using the entgra store
+            // UUID is available means app is subscribed in the entgra store
             if (UUID != null) {
                 ApplicationInstallResponse response = subscriptionManager
                         .performBulkAppOperation(UUID, deviceIdentifiers, SubscriptionType.DEVICE.toString(),

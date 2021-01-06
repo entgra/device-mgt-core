@@ -122,15 +122,15 @@ public class RequestValidationUtil {
     }
 
     /**
-     * validating the package names requested by user
+     * validating the package name requested by user
      *
      * @param applications All the applications in the device
      * @param packageName  Package name sen by the user
      */
     public static void validateApplicationIdentifier(String packageName, List<Application> applications) {
         List<String> packageNames = new ArrayList<>();
-        for (int i = 0; i < applications.size(); i++) {
-            packageNames.add(applications.get(i).getApplicationIdentifier());
+        for (Application application : applications) {
+            packageNames.add(application.getApplicationIdentifier());
         }
         if (!packageNames.contains(packageName)) {
             String msg = "Invalid package name";

@@ -932,14 +932,10 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
 
     @Override
     public String getUUID(int id, String packageName) throws ApplicationManagementDAOException {
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        Connection conn = null;
         try {
-            conn = this.getDBConnection();
+            Connection conn = this.getDBConnection();
             String sql = "SELECT " +
-                    "AP_DEVICE_SUBSCRIPTION.*, " +
-                    "AP_APP_RELEASE.* " +
+                    "AP_APP_RELEASE.UUID " +
                     "FROM  AP_DEVICE_SUBSCRIPTION " +
                     "JOIN AP_APP_RELEASE " +
                     "ON " +
@@ -948,14 +944,16 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                     "AND DM_DEVICE_ID = ?" +
                     "AND UNSUBSCRIBED = 'FALSE' " +
                     "AND STATUS = 'COMPLETED';";
-            stmt = conn.prepareStatement(sql);
-            stmt.setString(1, packageName);
-            stmt.setInt(2, id);
-            rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getString("UUID");
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, packageName);
+                stmt.setInt(2, id);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getString("UUID");
+                    }
+                    return null;
+                }
             }
-            return null;
         } catch (DBConnectionException e) {
             String msg =
                     "Error occurred while obtaining the DB connection to check an application is subscribed ";
