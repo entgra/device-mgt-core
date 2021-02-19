@@ -69,13 +69,12 @@ public class Card {
         this.item = item;
     }
 
-    @XmlElement(name = "Item")
+    @XmlElementWrapper(name = "SubContents")
+    @XmlElement(name = "SubContent")
     public List<SubContent> getSubContents() {
         return subContents;
     }
 
-    @XmlElementWrapper(name = "SubContents")
-    @XmlElement(name = "SubContent")
     public void setSubContents(List<SubContent> subContents) {
         this.subContents = subContents;
     }
