@@ -29,8 +29,10 @@ public class Card {
 
     private String title;
     private String key;
+    private List<APIContent> apiContents;
     private APIContent apiContent;
     private Item item;
+    private List<Item> items;
     private List<SubContent> subContents;
 
     @XmlAttribute(name = "title", required = true)
@@ -51,6 +53,16 @@ public class Card {
         this.key = key;
     }
 
+    @XmlElementWrapper(name = "APIContents")
+    @XmlElement(name = "APIContent")
+    public List<APIContent> getApiContents() {
+        return apiContents;
+    }
+
+    public void setApiContents(List<APIContent> apiContents) {
+        this.apiContents = apiContents;
+    }
+
     @XmlElement(name = "APIContent")
     public APIContent getApiContent() {
         return apiContent;
@@ -67,6 +79,16 @@ public class Card {
 
     public void setItem(Item item) {
         this.item = item;
+    }
+
+    @XmlElementWrapper(name = "Items")
+    @XmlElement(name = "Item")
+    public List<Item> getItems() {
+        return items;
+    }
+
+    public void setItems(List<Item> items) {
+        this.items = items;
     }
 
     @XmlElementWrapper(name = "SubContents")
