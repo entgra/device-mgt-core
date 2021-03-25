@@ -68,7 +68,7 @@ public abstract class AbstractEventConfigDAO implements EventConfigDAO {
     public List<EventConfig> getEventsOfGroups(List<Integer> groupIds, int tenantId) throws EventManagementDAOException {
         try {
             List<EventConfig> eventList = new ArrayList<>();
-            if (groupIds.size() == 0) {
+            if (groupIds.isEmpty()) {
                 return eventList;
             }
             Connection conn = this.getConnection();
@@ -148,7 +148,7 @@ public abstract class AbstractEventConfigDAO implements EventConfigDAO {
     @Override
     public void deleteEventGroupMappingRecordsByEventIds(List<Integer> eventsIdsToDelete) throws EventManagementDAOException {
         try {
-            if (eventsIdsToDelete.size() == 0) {
+            if (eventsIdsToDelete.isEmpty()) {
                 return;
             }
             Connection conn = this.getConnection();
@@ -172,7 +172,7 @@ public abstract class AbstractEventConfigDAO implements EventConfigDAO {
     @Override
     public void deleteEventGroupMappingRecordsByGroupIds(List<Integer> groupIdsToDelete) throws EventManagementDAOException {
         try {
-            if (groupIdsToDelete.size() == 0) {
+            if (groupIdsToDelete.isEmpty()) {
                 return;
             }
             Connection conn = this.getConnection();
@@ -239,7 +239,7 @@ public abstract class AbstractEventConfigDAO implements EventConfigDAO {
     public List<EventConfig> getEventsById(List<Integer> eventIdList) throws EventManagementDAOException {
         try {
             List<EventConfig> eventList = new ArrayList<>();
-            if (eventIdList.size() == 0) {
+            if (eventIdList.isEmpty()) {
                 return eventList;
             }
             Connection conn = this.getConnection();
@@ -281,7 +281,7 @@ public abstract class AbstractEventConfigDAO implements EventConfigDAO {
     public List<Integer> getGroupsOfEvents(List<Integer> eventIdList) throws EventManagementDAOException {
         try {
             List<Integer> groupIdList = new ArrayList<>();
-            if (eventIdList.size() == 0) {
+            if (eventIdList.isEmpty()) {
                 return groupIdList;
             }
             Connection conn = this.getConnection();

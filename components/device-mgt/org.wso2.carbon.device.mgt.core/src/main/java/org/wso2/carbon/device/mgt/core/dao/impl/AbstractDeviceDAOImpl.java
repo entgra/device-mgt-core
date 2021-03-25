@@ -938,7 +938,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             throws DeviceManagementDAOException {
         List<Device> devices = new ArrayList<>();
         try {
-            if (deviceStatuses.size() == 0) {
+            if (deviceStatuses.isEmpty()) {
                 return devices;
             }
             Connection conn = this.getConnection();
@@ -1228,7 +1228,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         Connection conn;
         PreparedStatement stmt = null;
         try {
-            if (devices.size() == 0) {
+            if (devices.isEmpty()) {
                 return false;
             }
             conn = this.getConnection();
@@ -1922,7 +1922,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             int counter = 0;
             List<Device> devices = new ArrayList<>();
 
-            if (deviceIdentifiers.size() == 0) {
+            if (deviceIdentifiers.isEmpty()) {
                 return devices;
             }
 
@@ -1974,7 +1974,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             int counter = 0;
             List<Device> devices = new ArrayList<>();
 
-            if (deviceIdentifiers.size() == 0 || statuses.size() == 0) {
+            if (deviceIdentifiers.isEmpty() || statuses.isEmpty()) {
                 return devices;
             }
 

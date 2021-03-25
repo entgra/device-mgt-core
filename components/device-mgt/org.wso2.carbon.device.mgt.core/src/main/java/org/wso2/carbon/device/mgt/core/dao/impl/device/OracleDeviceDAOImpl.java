@@ -854,7 +854,7 @@ public class OracleDeviceDAOImpl extends AbstractDeviceDAOImpl {
 
         try {
             List<Device> devices = new ArrayList<>();
-            if (deviceIds.size() == 0) {
+            if (deviceIds.isEmpty()) {
                 return devices;
             }
             conn = this.getConnection();
@@ -929,7 +929,7 @@ public class OracleDeviceDAOImpl extends AbstractDeviceDAOImpl {
     public int getSubscribedDeviceCount(List<Integer> deviceIds, int tenantId, List<String> status)
             throws DeviceManagementDAOException {
         try {
-            if (deviceIds.size() == 0) {
+            if (deviceIds.isEmpty()) {
                 return 0;
             }
             Connection conn = this.getConnection();

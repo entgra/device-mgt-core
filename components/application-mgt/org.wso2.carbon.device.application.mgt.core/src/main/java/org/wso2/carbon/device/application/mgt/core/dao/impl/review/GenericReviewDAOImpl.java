@@ -110,7 +110,7 @@ public class GenericReviewDAOImpl extends AbstractDAOImpl implements ReviewDAO {
                     + "application. Commenting user: " + username + " and tenant-id: " + tenantId);
         }
         try {
-            if (appReleaseIds.size() == 0) {
+            if (appReleaseIds.isEmpty()) {
                 return false;
             }
             Connection conn = this.getDBConnection();
@@ -286,9 +286,8 @@ public class GenericReviewDAOImpl extends AbstractDAOImpl implements ReviewDAO {
             log.debug("DAO request is received to Get all active application reviews.");
         }
         try {
-            if (releaseIds.size() == 0) {
-                List<ReviewDTO> reviewDTOs = new ArrayList<>();
-                return reviewDTOs;
+            if (releaseIds.isEmpty()) {
+                return new ArrayList<>();
             }
             Connection conn = this.getDBConnection();
             StringJoiner joiner = new StringJoiner(",",
@@ -343,9 +342,8 @@ public class GenericReviewDAOImpl extends AbstractDAOImpl implements ReviewDAO {
             log.debug("DAO request is received to Get all active application reviews of user " + username);
         }
         try {
-            if (releaseIds.size() == 0) {
-                List<ReviewDTO> reviewDTOs = new ArrayList<>();
-                return reviewDTOs;
+            if (releaseIds.isEmpty()) {
+                return new ArrayList<>();
             }
             Connection conn = this.getDBConnection();
             StringJoiner joiner = new StringJoiner(",",
@@ -485,7 +483,7 @@ public class GenericReviewDAOImpl extends AbstractDAOImpl implements ReviewDAO {
         }
         try {
             List<Integer> reviews = new ArrayList<>();
-            if (uuids.size() == 0) {
+            if (uuids.isEmpty()) {
                 return reviews;
             }
             int index = 1;

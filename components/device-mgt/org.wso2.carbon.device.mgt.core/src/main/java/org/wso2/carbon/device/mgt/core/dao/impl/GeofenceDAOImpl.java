@@ -421,7 +421,7 @@ public class GeofenceDAOImpl implements GeofenceDAO {
     public Map<Integer, List<EventConfig>> getEventsOfGeoFences(List<Integer> geofenceIds) throws DeviceManagementDAOException {
         try {
             Map<Integer, List<EventConfig>> geoFenceEventMap = new HashMap<>();
-            if (geofenceIds.size() == 0) {
+            if (geofenceIds.isEmpty()) {
                 return geoFenceEventMap;
             }
             Connection conn = this.getConnection();
@@ -493,7 +493,7 @@ public class GeofenceDAOImpl implements GeofenceDAO {
     public Set<GeoFenceGroupMap> getGroupIdsOfGeoFences(List<Integer> fenceIds) throws DeviceManagementDAOException {
         try {
             Set<GeoFenceGroupMap> geoFenceGroupSet = new HashSet<>();
-            if (fenceIds.size() == 0) {
+            if (fenceIds.isEmpty()) {
                 return geoFenceGroupSet;
             }
             Connection conn = this.getConnection();

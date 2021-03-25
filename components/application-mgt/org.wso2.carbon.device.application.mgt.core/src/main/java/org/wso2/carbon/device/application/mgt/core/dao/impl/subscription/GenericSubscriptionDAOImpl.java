@@ -384,7 +384,7 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
         }
         try {
             Map<Integer, DeviceSubscriptionDTO> deviceSubscriptionDTOHashMap = new HashMap<>();
-            if (deviceIds.size() == 0) {
+            if (deviceIds.isEmpty()) {
                 return deviceSubscriptionDTOHashMap;
             }
             Connection conn = this.getDBConnection();
@@ -443,7 +443,7 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
         }
         try {
             List<String> subscribedUsers = new ArrayList<>();
-            if (users.size() == 0) {
+            if (users.isEmpty()) {
                 return subscribedUsers;
             }
             Connection conn = this.getDBConnection();
@@ -486,7 +486,7 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
         }
         try {
             List<String> subscribedRoles = new ArrayList<>();
-            if (roles.size() == 0) {
+            if (roles.isEmpty()) {
                 return subscribedRoles;
             }
             Connection conn = this.getDBConnection();
@@ -530,7 +530,7 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
         }
         try {
             List<String> subscribedGroups = new ArrayList<>();
-            if (groups.size() == 0) {
+            if (groups.isEmpty()) {
                 return subscribedGroups;
             }
             Connection conn = this.getDBConnection();
@@ -575,7 +575,7 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
         }
         try {
             List<Integer> subscribedDevices = new ArrayList<>();
-            if (deviceIds.size() == 0) {
+            if (deviceIds.isEmpty()) {
                 return subscribedDevices;
             }
             Connection conn = this.getDBConnection();
@@ -710,7 +710,7 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
     public boolean updateDeviceSubStatus(int deviceId, List<Integer> deviceSubIds, String status, int tenantId)
             throws ApplicationManagementDAOException {
         try {
-            if (deviceSubIds.size() == 0) {
+            if (deviceSubIds.isEmpty()) {
                 return false;
             }
             Connection conn = this.getDBConnection();

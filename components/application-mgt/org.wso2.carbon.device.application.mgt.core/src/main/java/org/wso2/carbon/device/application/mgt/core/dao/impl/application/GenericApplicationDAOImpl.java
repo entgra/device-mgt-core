@@ -492,9 +492,8 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                     + " from the database");
         }
         try {
-            if (packageNames.size() == 0) {
-                List<ApplicationDTO> applications = new ArrayList<>();
-                return applications;
+            if (packageNames.isEmpty()) {
+                return new ArrayList<>();
             }
             Connection conn = this.getDBConnection();
             int index = 1;
@@ -832,7 +831,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
         }
         try {
             List<Integer> tagIds = new ArrayList<>();
-            if (categoryNames.size() == 0) {
+            if (categoryNames.isEmpty()) {
                 return tagIds;
             }
             Connection conn = this.getDBConnection();
@@ -1126,7 +1125,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
         }
         try {
             List<Integer> tagIds = new ArrayList<>();
-            if (tagNames.size() == 0) {
+            if (tagNames.isEmpty()) {
                 return tagIds;
             }
             Connection conn = this.getDBConnection();

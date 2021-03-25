@@ -565,7 +565,7 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
             ApplicationManagementDAOException {
 
         List<ApplicationReleaseDTO> releaseDTOs = new ArrayList<>();
-        if (packages.size() == 0) {
+        if (packages.isEmpty()) {
             return releaseDTOs;
         }
 
