@@ -421,6 +421,9 @@ public class GeofenceDAOImpl implements GeofenceDAO {
     public Map<Integer, List<EventConfig>> getEventsOfGeoFences(List<Integer> geofenceIds) throws DeviceManagementDAOException {
         try {
             Map<Integer, List<EventConfig>> geoFenceEventMap = new HashMap<>();
+            if (geofenceIds.size() == 0) {
+                return geoFenceEventMap;
+            }
             Connection conn = this.getConnection();
             String sql = "SELECT " +
                     "E.ID AS EVENT_ID, " +
@@ -490,6 +493,9 @@ public class GeofenceDAOImpl implements GeofenceDAO {
     public Set<GeoFenceGroupMap> getGroupIdsOfGeoFences(List<Integer> fenceIds) throws DeviceManagementDAOException {
         try {
             Set<GeoFenceGroupMap> geoFenceGroupSet = new HashSet<>();
+            if (fenceIds.size() == 0) {
+                return geoFenceGroupSet;
+            }
             Connection conn = this.getConnection();
             String sql = "SELECT " +
                     "FENCE_ID, " +

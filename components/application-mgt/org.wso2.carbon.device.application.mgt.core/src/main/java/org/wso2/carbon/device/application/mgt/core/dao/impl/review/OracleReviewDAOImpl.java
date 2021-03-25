@@ -97,6 +97,10 @@ public class OracleReviewDAOImpl extends GenericReviewDAOImpl {
             log.debug("DAO request is received to Get all active application reviews.");
         }
         try {
+            if (releaseIds.size() == 0) {
+                List<ReviewDTO> reviewDTOs = new ArrayList<>();
+                return reviewDTOs;
+            }
             Connection conn = this.getDBConnection();
             StringJoiner joiner = new StringJoiner(",",
                     "SELECT " + "AP_APP_REVIEW.ID AS ID, "
@@ -150,6 +154,10 @@ public class OracleReviewDAOImpl extends GenericReviewDAOImpl {
             log.debug("DAO request is received to Get all active application reviews of user " + username);
         }
         try {
+            if (releaseIds.size() == 0) {
+                List<ReviewDTO> reviewDTOs = new ArrayList<>();
+                return reviewDTOs;
+            }
             Connection conn = this.getDBConnection();
             StringJoiner joiner = new StringJoiner(",",
                     "SELECT "
@@ -203,6 +211,10 @@ public class OracleReviewDAOImpl extends GenericReviewDAOImpl {
             log.debug("DAO request is received to Get all application rating values of an application.");
         }
         try {
+            List<Integer> reviews = new ArrayList<>();
+            if (uuids.size() == 0) {
+                return reviews;
+            }
             int index = 1;
             Connection conn = this.getDBConnection();
             StringJoiner joiner = new StringJoiner(",",
@@ -217,7 +229,6 @@ public class OracleReviewDAOImpl extends GenericReviewDAOImpl {
                 }
                 ps.setInt(index, tenantId);
                 try (ResultSet rs = ps.executeQuery()) {
-                    List<Integer> reviews = new ArrayList<>();
                     while (rs.next()) {
                         reviews.add(rs.getInt("RATING"));
                     }
