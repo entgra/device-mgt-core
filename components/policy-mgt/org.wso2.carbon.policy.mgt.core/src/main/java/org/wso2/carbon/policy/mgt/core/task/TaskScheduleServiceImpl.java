@@ -129,7 +129,7 @@ public class TaskScheduleServiceImpl implements TaskScheduleService {
                 triggerInfo.setRepeatCount(-1);
 
                 Map<String, String> properties = new HashMap<>();
-                properties.put("tenantId", String.valueOf(tenantId));
+                properties.put(PolicyManagementConstants.TENANT_ID, String.valueOf(tenantId));
 
                 TaskInfo taskInfo = new TaskInfo(taskName, PolicyManagementConstants.MONITORING_TASK_CLAZZ, properties,
                         triggerInfo);
