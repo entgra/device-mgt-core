@@ -39,13 +39,7 @@ public class MonitoringTask extends DynamicPartitionedScheduleTask {
 
     private static final Log log = LogFactory.getLog(MonitoringTask.class);
 
-    @Override
-    public void executeDynamicTask() {
-        if (log.isDebugEnabled()) {
-            log.debug("Monitoring task started to run.");
-        }
-        this.executeForAllTenants();
-    }
+    private String tenant;
 
     /**
      * Check whether Device platform (ex: android) is exist in the cdm-config.xml file before adding a
@@ -61,17 +55,17 @@ public class MonitoringTask extends DynamicPartitionedScheduleTask {
         return policyMonitoringManager != null;
     }
 
-    private void executeForAllTenants() {
-
-        if (log.isDebugEnabled()) {
-            log.debug("Monitoring task started to run for all tenants.");
-        }
-        String tenant = getProperty(PolicyManagementConstants.TENANT_ID);
+    @Override
+    public void executeDynamicTask() {
+        tenant = getProperty(PolicyManagementConstants.TENANT_ID);
         if (tenant == null) {
             log.warn("Tenant id of the Monitoring Task got null");
             return;
         }
         int tenantId = Integer.parseInt(tenant);
+        if (log.isDebugEnabled()) {
+            log.debug("Monitoring task started to run for tenant: " + tenant);
+        }
         if (MultitenantConstants.SUPER_TENANT_ID == tenantId) {
             this.executeTask();
             return;
@@ -97,7 +91,7 @@ public class MonitoringTask extends DynamicPartitionedScheduleTask {
                 }
             }
         } catch (PolicyComplianceException e) {
-            log.error("Error occurred while getting the device types.");
+            log.error("TID:[" + tenant + "] Error occurred while getting the device types.");
         }
         if (!deviceTypes.isEmpty()) {
             try {
@@ -105,7 +99,7 @@ public class MonitoringTask extends DynamicPartitionedScheduleTask {
                         PolicyManagementDataHolder.getInstance().getDeviceManagementService();
                 for (String deviceType : configDeviceTypes) {
                     if (log.isDebugEnabled()) {
-                        log.debug("Running task for device type : " + deviceType);
+                        log.debug("TID:[" + tenant + "] Running task for device type : " + deviceType);
                     }
                     PolicyMonitoringManager monitoringService =
                             PolicyManagementDataHolder.getInstance().getDeviceManagementService()
@@ -121,8 +115,8 @@ public class MonitoringTask extends DynamicPartitionedScheduleTask {
                     if (monitoringService != null && !devices.isEmpty()) {
                         List<Device> notifiableDevices = new ArrayList<>();
                         if (log.isDebugEnabled()) {
-                            log.debug("Removing inactive and blocked devices from the list for the device type : " +
-                                    deviceType);
+                            log.debug("TID:[" + tenant + "] Removing inactive and blocked devices from " +
+                                    "the list for the device type : " + deviceType);
                         }
                         for (Device device : devices) {
                             EnrolmentInfo.Status status = device.getEnrolmentInfo().getStatus();
@@ -132,12 +126,13 @@ public class MonitoringTask extends DynamicPartitionedScheduleTask {
                                 notifiableDevices.add(device);
                             }
                             if (log.isDebugEnabled()) {
-                                log.debug("Adding monitoring operation to device : " + device.getDeviceIdentifier());
+                                log.debug("TID:[" + tenant + "] Adding monitoring operation to device : " +
+                                        device.getDeviceIdentifier());
                             }
                         }
                         if (log.isDebugEnabled()) {
-                            log.debug("Following '" + deviceType + "' devices selected to send the notification " +
-                                    "for policy monitoring");
+                            log.debug("TID:[" + tenant + "] Following '" + deviceType +
+                                    "' devices selected to send the notification for policy monitoring");
                             for (Device device : notifiableDevices) {
                                 log.debug(device.getDeviceIdentifier());
                             }
@@ -148,13 +143,14 @@ public class MonitoringTask extends DynamicPartitionedScheduleTask {
                     }
                 }
                 if (log.isDebugEnabled()) {
-                    log.debug("Monitoring task running completed.");
+                    log.debug("TID:[" + tenant + "] Monitoring task running completed.");
                 }
             } catch (Exception e) {
-                log.error("Error occurred while trying to run a task.", e);
+                log.error("TID:[" + tenant + "] Error occurred while trying to run a task.", e);
             }
         } else {
-            log.info("No device types registered currently. So did not run the monitoring task.");
+            log.info("TID:[" + tenant + "] No device types registered currently. " +
+                    "So did not run the monitoring task.");
         }
     }
 
