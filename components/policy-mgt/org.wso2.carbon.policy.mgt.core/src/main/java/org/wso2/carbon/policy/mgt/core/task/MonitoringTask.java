@@ -118,24 +118,23 @@ public class MonitoringTask extends DynamicPartitionedScheduleTask {
                             log.debug("TID:[" + tenant + "] Removing inactive and blocked devices from " +
                                     "the list for the device type : " + deviceType);
                         }
+                        StringBuilder sb = new StringBuilder();
                         for (Device device : devices) {
                             EnrolmentInfo.Status status = device.getEnrolmentInfo().getStatus();
                             if (status.equals(EnrolmentInfo.Status.ACTIVE) ||
-                                    status.equals(EnrolmentInfo.Status.INACTIVE) ||
                                     status.equals(EnrolmentInfo.Status.UNREACHABLE)) {
                                 notifiableDevices.add(device);
-                            }
-                            if (log.isDebugEnabled()) {
-                                log.debug("TID:[" + tenant + "] Adding monitoring operation to device : " +
-                                        device.getDeviceIdentifier());
+                                if (log.isDebugEnabled()) {
+                                    if (sb.length() > 0) {
+                                        sb.append(", ");
+                                    }
+                                    sb.append(device.getDeviceIdentifier());
+                                }
                             }
                         }
                         if (log.isDebugEnabled()) {
-                            log.debug("TID:[" + tenant + "] Following '" + deviceType +
-                                    "' devices selected to send the notification for policy monitoring");
-                            for (Device device : notifiableDevices) {
-                                log.debug(device.getDeviceIdentifier());
-                            }
+                            log.debug("TID:[" + tenant + "] Sending monitoring to '" + deviceType +
+                                    "' devices with ids [" + sb + "]");
                         }
                         if (!notifiableDevices.isEmpty()) {
                             monitoringManager.addMonitoringOperation(deviceType, notifiableDevices);
