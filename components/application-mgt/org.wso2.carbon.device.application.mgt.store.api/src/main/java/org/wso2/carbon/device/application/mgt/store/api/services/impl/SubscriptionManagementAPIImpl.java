@@ -54,6 +54,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.core.Response;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -255,9 +258,13 @@ public class SubscriptionManagementAPIImpl implements SubscriptionManagementAPI{
     private Response scheduleApplicationOperationTask(String applicationUUID, List<?> subscribers,
             SubscriptionType subType, SubAction subAction, String timestamp) {
         try {
+            log.info("Scheduled Timestamp: " + timestamp);
             ScheduledAppSubscriptionTaskManager subscriptionTaskManager = new ScheduledAppSubscriptionTaskManager();
-            subscriptionTaskManager.scheduleAppSubscriptionTask(applicationUUID, subscribers, subType, subAction,
-                    LocalDateTime.parse(timestamp, DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+            OffsetDateTime offsetDateTime = OffsetDateTime.parse( timestamp ) ;
+            ZoneId zone = ZoneId.of(String.valueOf(ZoneId.systemDefault())) ;
+            ZonedDateTime zonedDateTime = offsetDateTime.atZoneSameInstant( zone ) ;
+            LocalDateTime localDateTime =  zonedDateTime.toLocalDateTime();
+            subscriptionTaskManager.scheduleAppSubscriptionTask(applicationUUID, subscribers, subType, subAction, localDateTime);
         } catch (ApplicationOperationTaskException e) {
             String msg = "Error occurred while scheduling the application install operation";
             log.error(msg, e);

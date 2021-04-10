@@ -37,6 +37,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -65,8 +66,7 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
         try {
             Connection conn = this.getDBConnection();
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                Calendar calendar = Calendar.getInstance();
-                Timestamp timestamp = new Timestamp(calendar.getTime().getTime());
+                Timestamp timestamp = Timestamp.valueOf(ZonedDateTime.now().toLocalDateTime());
                 for (Integer deviceId : deviceIds) {
                     stmt.setString(1, subscribedBy);
                     stmt.setTimestamp(2, timestamp);
