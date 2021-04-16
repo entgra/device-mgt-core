@@ -247,6 +247,12 @@ public interface DeviceManagementService {
             @QueryParam("user")
                     String user,
             @ApiParam(
+                    name = "serialNumber",
+                    value = "The serialNumber of the device.",
+                    required = false)
+            @QueryParam("serialNumber")
+                    String serialNumber,
+            @ApiParam(
                     name = "userPattern",
                     value = "Define a few letters of the username in the order they appear. For example, you want to get the devices that belong to the admin, you can give \\\"ad\\\" or \\\"min\\\" here and you will get the devices that are enrolled under a user who has the given combination as part of the username .",
                     required = false)

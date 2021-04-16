@@ -770,7 +770,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             DeviceManagementDAOFactory.closeConnection();
         }
         if (requireDeviceInfo) {
-            return this.populateAllDeviceInfo(allDevices);
+            return this.populateAllDeviceInfo(allDevices, null);
         }
         return allDevices;
     }
@@ -846,7 +846,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         }
 
         if (!allDevices.isEmpty() && requireDeviceInfo) {
-            return this.populateAllDeviceInfo(allDevices);
+            return this.populateAllDeviceInfo(allDevices,null);
         }
         return allDevices;
     }
@@ -888,7 +888,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         }
 
         if (requireDeviceInfo) {
-            return this.populateAllDeviceInfo(allDevices);
+            return this.populateAllDeviceInfo(allDevices,null);
         }
         return allDevices;
     }
@@ -937,7 +937,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         }
 
         if (requireDeviceInfo) {
-            paginationResult.setData(this.populateAllDeviceInfo(allDevices));
+            paginationResult.setData(this.populateAllDeviceInfo(allDevices, null));
         } else {
             paginationResult.setData(allDevices);
         }
@@ -973,7 +973,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             if (devicesForRoles != null) {
                 count = devicesForRoles.size();
                 if (requireDeviceInfo) {
-                    paginationResult.setData(populateAllDeviceInfo(devicesForRoles));
+                    paginationResult.setData(populateAllDeviceInfo(devicesForRoles,null));
                 }
             }
         } else {
@@ -1002,7 +1002,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                 DeviceManagementDAOFactory.closeConnection();
             }
             if (requireDeviceInfo && !allDevices.isEmpty()) {
-                paginationResult.setData(populateAllDeviceInfo(allDevices));
+                paginationResult.setData(populateAllDeviceInfo(allDevices, request.getSerialNumber()));
             } else {
                 paginationResult.setData(allDevices);
             }
@@ -2221,7 +2221,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         }
 
         if (requireDeviceInfo) {
-            return this.populateAllDeviceInfo(userDevices);
+            return this.populateAllDeviceInfo(userDevices,null);
         }
         return userDevices;
     }
@@ -2260,7 +2260,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         }
 
         if (requireDeviceInfo) {
-            return this.populateAllDeviceInfo(userDevices);
+            return this.populateAllDeviceInfo(userDevices,null);
         }
         return userDevices;
     }
@@ -2304,7 +2304,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         }
 
         if (requireDeviceInfo) {
-            return this.populateAllDeviceInfo(userDevices);
+            return this.populateAllDeviceInfo(userDevices,null);
         }
         return userDevices;
     }
@@ -2353,7 +2353,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         }
 
         if (requireDeviceInfo) {
-            result.setData(this.populateAllDeviceInfo(userDevices));
+            result.setData(this.populateAllDeviceInfo(userDevices,null));
         } else {
             result.setData(userDevices);
         }
@@ -2406,7 +2406,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             DeviceManagementDAOFactory.closeConnection();
         }
         if (requireDeviceInfo) {
-            result.setData(this.populateAllDeviceInfo(allDevices));
+            result.setData(this.populateAllDeviceInfo(allDevices,null));
         } else {
             result.setData(allDevices);
         }
@@ -2452,7 +2452,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                 DeviceManagementDAOFactory.closeConnection();
             }
             if (requireDeviceInfo) {
-                this.populateAllDeviceInfo(userDevices);
+                this.populateAllDeviceInfo(userDevices,null);
             }
             devices.addAll(userDevices);
         }
@@ -2639,7 +2639,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         }
 
         if (requireDeviceInfo) {
-            return this.populateAllDeviceInfo(allDevices);
+            return this.populateAllDeviceInfo(allDevices,null);
         }
         return allDevices;
     }
@@ -2687,7 +2687,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             DeviceManagementDAOFactory.closeConnection();
         }
         if (requireDeviceInfo) {
-            result.setData(this.populateAllDeviceInfo(allDevices));
+            result.setData(this.populateAllDeviceInfo(allDevices,null));
         } else {
             result.setData(allDevices);
         }
@@ -2758,7 +2758,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             DeviceManagementDAOFactory.closeConnection();
         }
         if (requireDeviceInfo) {
-            return this.populateAllDeviceInfo(allDevices);
+            return this.populateAllDeviceInfo(allDevices,null);
         }
         return allDevices;
     }
@@ -2828,7 +2828,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             DeviceManagementDAOFactory.closeConnection();
         }
         if (requireDeviceInfo) {
-            result.setData(this.populateAllDeviceInfo(allDevices));
+            result.setData(this.populateAllDeviceInfo(allDevices,null));
         } else {
             result.setData(allDevices);
         }
@@ -3290,7 +3290,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
      * Returns all the available information (device-info, location, applications and plugin-db data)
      * of the given device list.
      */
-    private List<Device> populateAllDeviceInfo(List<Device> allDevices) throws DeviceManagementException {
+    private List<Device> populateAllDeviceInfo(List<Device> allDevices, String serialNumber) throws DeviceManagementException {
         if (log.isDebugEnabled()) {
             log.debug("Get all device info of devices, num of devices: " + allDevices.size());
         }
@@ -3299,10 +3299,17 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             device.setDeviceInfo(this.getDeviceInfo(device));
             device.setApplications(this.getInstalledApplications(device));
             DeviceManager deviceManager = this.getDeviceManager(device.getType());
+            String serial = device.getDeviceInfo().getDeviceDetailsMap().get("serial");
             if (deviceManager == null) {
                 if (log.isDebugEnabled()) {
                     log.debug("Device Manager associated with the device type '" + device.getType() + "' is null. " +
                             "Therefore, not attempting method 'isEnrolled'");
+                }
+                if (serialNumber != null && !serialNumber.isEmpty()) {
+                    if (serial.equals(serialNumber)) {
+                        devices.add(device);
+                    }
+                    continue;
                 }
                 devices.add(device);
                 continue;
@@ -3312,6 +3319,12 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             if (dmsDevice != null) {
                 device.setFeatures(dmsDevice.getFeatures());
                 device.setProperties(dmsDevice.getProperties());
+            }
+            if (serialNumber != null && !serialNumber.isEmpty()) {
+                if (serial.equals(serialNumber)) {
+                    devices.add(device);
+                }
+                continue;
             }
             devices.add(device);
         }
@@ -4189,7 +4202,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         } finally {
             DeviceManagementDAOFactory.closeConnection();
         }
-        paginationResult.setData(populateAllDeviceInfo(subscribedDeviceDetails));
+        paginationResult.setData(populateAllDeviceInfo(subscribedDeviceDetails,null));
         return paginationResult;
     }
 

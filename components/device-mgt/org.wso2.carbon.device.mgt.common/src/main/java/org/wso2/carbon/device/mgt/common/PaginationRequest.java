@@ -42,6 +42,7 @@ public class PaginationRequest {
     private String filter;
     private Map<String, Object> property = new HashMap<>();
     private List<String> statusList = new ArrayList<>();
+    private String serialNumber;
     private OperationLogFilters operationLogFilters = new OperationLogFilters();
     public OperationLogFilters getOperationLogFilters() {
         return operationLogFilters;
@@ -53,6 +54,11 @@ public class PaginationRequest {
         this.startIndex = start;
         this.rowCount = rowCount;
     }
+
+    public String getSerialNumber() { return serialNumber; }
+
+    public void setSerialNumber(String serialNumber) { this.serialNumber = serialNumber; }
+
     public int getStartIndex() {
         return startIndex;
     }
