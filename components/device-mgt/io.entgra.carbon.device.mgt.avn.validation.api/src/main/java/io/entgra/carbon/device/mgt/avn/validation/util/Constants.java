@@ -24,5 +24,6 @@ public class Constants {
             "2Ny04YWQ0LTQwYzMtYmY5MS0wM2M3YmM2NzEzMTYiLCJuYW1lIjoiQ2xvdWQgRXF1YXRpb24gUHR5IEx0ZCIsImlhdCI6MTUxNjIzO" +
             "TAyMn0.RBDI0EluVYme_U89nDcJw0PZvdPBxWTx7NdNlgwEyAI";
     public static final String SCOPE = "scope";
+    public static final String AUTHORIZATION = "Authorization";
 
 }

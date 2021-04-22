@@ -122,29 +122,28 @@ public class DeviceValidationServiceImpl implements DeviceValidationService {
                     Constants.VALIDATION_API_URL);
             apiEndpoint.setEntity(new StringEntity(String.valueOf(jsonObj), ContentType.APPLICATION_JSON));
             apiEndpoint.setHeader(HTTP.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
-            apiEndpoint.setHeader("Authorization", Constants.VALIDATION_API_TOKEN);
+            apiEndpoint.setHeader(Constants.AUTHORIZATION, Constants.VALIDATION_API_TOKEN);
             HttpResponse response = client.execute(apiEndpoint);
             if (response != null) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
                 String line = null;
                 StringBuilder builder = new StringBuilder();
                 while ((line = reader.readLine()) != null) {
-
                     builder.append(line);
-
                 }
                 JSONObject jsonObject = new JSONObject(builder.toString());
                 JSONObject dataObject = jsonObject.getJSONObject("data");
                 JSONArray jsonArray = dataObject.getJSONArray("nevdisPlateSearch_v2");
                 JSONObject vObject = (JSONObject) jsonArray.get(0);
                 return vObject.getString("vin");
-
             } else {
                 log.error("Response is 'NUll' for the device validation API call.");
                 return null;
             }
         } catch (IOException e) {
-            throw new DeviceValidationException("Error occured when invoking API. API endpoint: ", e);
+            String msg = "Error occured when invoking API. API endpoint: ";
+            log.error(msg, e);
+            throw new DeviceValidationException(msg, e);
         }
     }
 
