@@ -42,7 +42,7 @@
         <property name="host" value="localhost:9443"/>
         <property name="schemes" value="https" />
         <property name="basePath" value="/api/device-mgt-avn/v1.0"/>
-        <property name="title" value="Device Management Dynamic COnfiguration Service API Definitions"/>
+        <property name="title" value="AVN Device Validation Service API Definitions"/>
         <property name="contact" value="dev@entgra.io"/>
         <property name="license" value="Apache 2.0"/>
         <property name="licenseUrl" value="http://www.apache.org/licenses/LICENSE-2.0.html"/>
