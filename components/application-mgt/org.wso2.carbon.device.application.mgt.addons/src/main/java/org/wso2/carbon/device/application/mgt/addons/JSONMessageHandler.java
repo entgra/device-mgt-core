@@ -56,7 +56,7 @@ public class JSONMessageHandler implements MessageBodyWriter<Object>, MessageBod
     private Gson getGson() {
         if (gson == null) {
             final GsonBuilder gsonBuilder = new GsonBuilder()
-                    .setDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz")
+                    .setDateFormat("EEE, dd MMM yyyy HH:mm:ss Z")
                     .setExclusionStrategies(new AnnotationExclusionStrategy());
             gson = gsonBuilder.create();
         }

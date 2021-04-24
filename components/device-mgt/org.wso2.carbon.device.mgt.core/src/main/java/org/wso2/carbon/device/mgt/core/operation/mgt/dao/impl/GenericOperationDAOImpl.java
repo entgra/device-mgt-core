@@ -1462,12 +1462,13 @@ public class GenericOperationDAOImpl implements OperationDAO {
                         operation = new Operation();
                         operation.setId(rs.getInt("ID"));
                         operation.setType(Operation.Type.valueOf(rs.getString("TYPE")));
-                        operation.setCreatedTimeStamp(rs.getTimestamp("CREATED_TIMESTAMP").toString());
+                        operation.setCreatedTimeStamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ").format(
+                                rs.getTimestamp("CREATED_TIMESTAMP")));
                         if (rs.getLong("UPDATED_TIMESTAMP") == 0) {
                             operation.setReceivedTimeStamp("");
                         } else {
-                            operation.setReceivedTimeStamp(
-                                    new java.sql.Timestamp((rs.getLong("UPDATED_TIMESTAMP") * 1000)).toString());
+                            operation.setReceivedTimeStamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ").format(
+                                    new java.sql.Timestamp((rs.getLong("UPDATED_TIMESTAMP") * 1000))));
                         }
                         operation.setCode(rs.getString("OPERATION_CODE"));
                         operation.setStatus(Operation.Status.valueOf(rs.getString("STATUS")));
