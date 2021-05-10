@@ -20,7 +20,6 @@ package org.wso2.carbon.apimgt.application.extension;
 
 import org.wso2.carbon.apimgt.application.extension.dto.ApiApplicationKey;
 import org.wso2.carbon.apimgt.application.extension.exception.APIManagerException;
-import org.wso2.carbon.apimgt.integration.client.store.StoreClient;
 import org.wso2.carbon.identity.jwt.client.extension.dto.AccessTokenInfo;
 
 /**
@@ -61,7 +60,7 @@ public interface APIManagementProviderService {
      * @param username           to whom the application is created
      * @param isAllowedAllDomains application is allowed to all the tenants
      * @param validityTime       validity period of the application
-     * @param storeClient        Specified store client
+     * @param scopes            scopes
      * @return consumerkey and secrete of the created application.
      * @throws APIManagerException
      */
@@ -70,8 +69,7 @@ public interface APIManagementProviderService {
                                                          String keyType,
                                                          String username,
                                                          boolean isAllowedAllDomains,
-                                                         String validityTime,
-                                                         StoreClient storeClient) throws APIManagerException;
+                                                         String validityTime, String scopes) throws APIManagerException;
 
     /**
      * Remove APIM Application.
