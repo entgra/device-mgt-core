@@ -121,7 +121,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
 
     @Override
     public <T> ApplicationInstallResponse performBulkAppOperation(String applicationUUID, List<T> params,
-            String subType, String action) throws ApplicationManagementException {
+                                                                  String subType, String action, Properties properties) throws ApplicationManagementException {
         if (log.isDebugEnabled()) {
             log.debug("Install application release which has UUID " + applicationUUID + " to " + params.size()
                     + " users.");
@@ -409,7 +409,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
 
             if (!appInstallingDevices.isEmpty()) {
                 performBulkAppOperation(releaseUUID, appInstallingDevices, SubscriptionType.DEVICE.toString(),
-                        SubAction.INSTALL.toString());
+                        SubAction.INSTALL.toString(), );
             }
         }
     }

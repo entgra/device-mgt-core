@@ -915,7 +915,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             if (UUID != null) {
                 ApplicationInstallResponse response = subscriptionManager
                         .performBulkAppOperation(UUID, deviceIdentifiers, SubscriptionType.DEVICE.toString(),
-                                "uninstall");
+                                "uninstall", );
                 return Response.status(Response.Status.OK).entity(response).build();
                 //if the applications not installed via entgra store
             } else {

@@ -55,9 +55,8 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.core.Response;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Implementation of Subscription Management related APIs.
@@ -75,12 +74,16 @@ public class SubscriptionManagementAPIImpl implements SubscriptionManagementAPI{
             @PathParam("uuid") String uuid,
             @PathParam("action") String action,
             @Valid List<DeviceIdentifier> deviceIdentifiers,
-            @QueryParam("timestamp") long timestamp) {
+            @QueryParam("timestamp") long timestamp,
+            @QueryParam("block-uninstall") boolean isUninstallBlocked
+    ) {
+        Properties properties = new Properties();
+        properties.put("isUninstallBlocked", isUninstallBlocked);
         try {
             if (0 == timestamp) {
                 SubscriptionManager subscriptionManager = APIUtil.getSubscriptionManager();
                 ApplicationInstallResponse response = subscriptionManager
-                        .performBulkAppOperation(uuid, deviceIdentifiers, SubscriptionType.DEVICE.toString(), action);
+                        .performBulkAppOperation(uuid, deviceIdentifiers, SubscriptionType.DEVICE.toString(), action, properties);
                 return Response.status(Response.Status.OK).entity(response).build();
             } else {
                 return scheduleApplicationOperationTask(uuid, deviceIdentifiers, SubscriptionType.DEVICE,
@@ -116,12 +119,16 @@ public class SubscriptionManagementAPIImpl implements SubscriptionManagementAPI{
             @PathParam("subType") String subType,
             @PathParam("action") String action,
             @Valid List<String> subscribers,
-            @QueryParam("timestamp") long timestamp) {
+            @QueryParam("timestamp") long timestamp,
+        @QueryParam("block-uninstall") boolean isUninstallBlocked
+    ) {
+        Properties properties = new Properties();
+        properties.put("isUninstallBlocked", isUninstallBlocked);
         try {
             if (0 == timestamp) {
                 SubscriptionManager subscriptionManager = APIUtil.getSubscriptionManager();
                 ApplicationInstallResponse response = subscriptionManager
-                        .performBulkAppOperation(uuid, subscribers, subType, action);
+                        .performBulkAppOperation(uuid, subscribers, subType, action, properties);
                 return Response.status(Response.Status.OK).entity(response).build();
             } else {
                 return scheduleApplicationOperationTask(uuid, subscribers,

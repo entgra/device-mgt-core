@@ -90,7 +90,7 @@ public class ScheduledAppSubscriptionTask extends RandomlyAssignedScheduleTask {
                                                                                        }.getType());
                         try {
                             subscriptionManager.performBulkAppOperation(this.application, deviceIdentifiers,
-                                                                        this.subscriptionType, this.action);
+                                                                        this.subscriptionType, this.action, );
                             subscriptionDTO.setStatus(ExecutionStatus.EXECUTED);
                         } catch (ApplicationManagementException e) {
                             log.error(
@@ -103,7 +103,7 @@ public class ScheduledAppSubscriptionTask extends RandomlyAssignedScheduleTask {
                                 Collectors.toList());
                         try {
                             subscriptionManager.performBulkAppOperation(this.application, subscriberList,
-                                                                        this.subscriptionType, this.action);
+                                                                        this.subscriptionType, this.action, );
                             subscriptionDTO.setStatus(ExecutionStatus.EXECUTED);
                         } catch (ApplicationManagementException e) {
                             log.error(
