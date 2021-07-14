@@ -24,6 +24,7 @@ import org.wso2.carbon.device.application.mgt.common.exception.SubscriptionManag
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
+import org.wso2.carbon.device.mgt.common.app.mgt.App;
 
 import java.util.List;
 import java.util.Properties;
@@ -122,7 +123,7 @@ public interface SubscriptionManager {
      * @throws ApplicationManagementException if error occurred while installing given applications into the given
      * device
      */
-    void installAppsForDevice(DeviceIdentifier deviceIdentifier, List<String> releaseUUID)
+    void installAppsForDevice(DeviceIdentifier deviceIdentifier, List<App> apps)
             throws ApplicationManagementException;
 
     /***
