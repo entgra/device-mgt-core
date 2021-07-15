@@ -95,6 +95,7 @@ public class MDMAndroidOperationUtil {
 						new EnterpriseApplication();
 				enterpriseApplication.setType(application.getType().toString());
 				enterpriseApplication.setAppIdentifier(application.getIdentifier());
+				enterpriseApplication.setProperties(application.getProperties());
 				operation.setPayLoad(enterpriseApplication.toJSON());
 				break;
 			case PUBLIC:
