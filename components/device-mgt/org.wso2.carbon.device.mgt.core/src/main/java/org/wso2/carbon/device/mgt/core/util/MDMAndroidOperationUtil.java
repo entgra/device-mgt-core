@@ -69,6 +69,7 @@ public class MDMAndroidOperationUtil {
 				webApplication.setUrl(application.getLocation());
 				webApplication.setName(application.getName());
 				webApplication.setType(application.getType().toString());
+				webApplication.setProperties(application.getProperties());
 				operation.setPayLoad(webApplication.toJSON());
 				break;
 			default:
