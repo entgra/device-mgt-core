@@ -135,7 +135,7 @@ public interface SubscriptionManagementAPI {
                     name = "block-uninstall",
                     value = "App removal status of the install operation"
             )
-            @QueryParam("block-uninstall") boolean isUninstallBlocked
+            @QueryParam("block-uninstall") Boolean isUninstallBlocked
     );
 
     @POST
@@ -193,7 +193,7 @@ public interface SubscriptionManagementAPI {
                     name = "block-uninstall",
                     value = "App removal status of the install operation"
             )
-            @QueryParam("block-uninstall") boolean isUninstallBlocked
+            @QueryParam("block-uninstall") Boolean isUninstallBlocked
     );
 
     @POST

@@ -74,10 +74,10 @@ public class SubscriptionManagementAPIImpl implements SubscriptionManagementAPI{
             @PathParam("action") String action,
             @Valid List<DeviceIdentifier> deviceIdentifiers,
             @QueryParam("timestamp") long timestamp,
-            @QueryParam("block-uninstall") boolean isUninstallBlocked
+            @QueryParam("block-uninstall") Boolean isUninstallBlocked
     ) {
         Properties properties = new Properties();
-        if(action.equalsIgnoreCase(SubAction.INSTALL.toString())) {
+        if(isUninstallBlocked != null) {
             properties.put(MDMAppConstants.AndroidConstants.IS_BLOCK_UNINSTALL, isUninstallBlocked);
         }
         try {
@@ -121,10 +121,10 @@ public class SubscriptionManagementAPIImpl implements SubscriptionManagementAPI{
             @PathParam("action") String action,
             @Valid List<String> subscribers,
             @QueryParam("timestamp") long timestamp,
-            @QueryParam("block-uninstall") boolean isUninstallBlocked
+            @QueryParam("block-uninstall") Boolean isUninstallBlocked
     ) {
         Properties properties = new Properties();
-        if(action.equalsIgnoreCase(SubAction.INSTALL.toString())) {
+        if(isUninstallBlocked != null) {
             properties.put(MDMAppConstants.AndroidConstants.IS_BLOCK_UNINSTALL, isUninstallBlocked);
         }
         try {
