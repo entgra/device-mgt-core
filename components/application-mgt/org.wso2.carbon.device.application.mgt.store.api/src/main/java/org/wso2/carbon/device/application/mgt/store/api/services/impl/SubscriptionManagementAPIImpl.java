@@ -182,7 +182,7 @@ public class SubscriptionManagementAPIImpl implements SubscriptionManagementAPI{
                 return Response.status(Response.Status.OK).entity(msg).build();
             } else {
                 return scheduleApplicationOperationTask(uuid, deviceIdentifiers, SubscriptionType.DEVICE,
-                        SubAction.valueOf(SubAction.INSTALL.toString().toUpperCase()), timestamp);
+                        SubAction.valueOf(SubAction.INSTALL.toString().toUpperCase()), timestamp, null);
             }
         } catch (NotFoundException e) {
             String msg = "Couldn't found an application release for UUI: " + uuid + " to perform ent app installation "
@@ -228,7 +228,7 @@ public class SubscriptionManagementAPIImpl implements SubscriptionManagementAPI{
             } else {
                 return scheduleApplicationOperationTask(uuid, subscribers,
                         SubscriptionType.valueOf(subType.toUpperCase()),
-                        SubAction.valueOf(SubAction.INSTALL.toString().toUpperCase()), timestamp);
+                        SubAction.valueOf(SubAction.INSTALL.toString().toUpperCase()), timestamp, null);
             }
         } catch (NotFoundException e) {
             String msg = "Couldn't found an application release for UUID: " + uuid + ". Hence, verify the payload";
@@ -280,10 +280,6 @@ public class SubscriptionManagementAPIImpl implements SubscriptionManagementAPI{
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(errorResponse).build();
         }
         return Response.status(Response.Status.CREATED).build();
-    }
-    private Response scheduleApplicationOperationTask(String applicationUUID, List<?> subscribers,
-              SubscriptionType subType, SubAction subAction, long timestamp) {
-        return scheduleApplicationOperationTask(applicationUUID, subscribers, subType, subAction, timestamp, null);
     }
 
     @GET
