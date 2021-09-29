@@ -19,6 +19,7 @@
 package org.wso2.carbon.apimgt.application.extension;
 
 import feign.FeignException;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.apimgt.application.extension.bean.APIRegistrationProfile;
@@ -239,11 +240,11 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
 
     @Override
     public AccessTokenInfo getAccessToken(String scopes, String[] tags, String applicationName, String tokenType,
-            String validityPeriod) throws APIManagerException {
+            String validityPeriod, String username) throws APIManagerException {
         try {
             String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain(true);
             ApiApplicationKey clientCredentials = getClientCredentials(tenantDomain, tags, applicationName, tokenType,
-                    validityPeriod);
+                    validityPeriod, username);
 
             if (clientCredentials == null) {
                 String msg = "Oauth Application creation is failed.";
@@ -251,9 +252,22 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
                 throw new APIManagerException(msg);
             }
 
-            String user =
-                    PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername() + "@" + PrivilegedCarbonContext
-                            .getThreadLocalCarbonContext().getTenantDomain(true);
+            String user;
+            if(StringUtils.isBlank(username)){
+                user = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername() + "@" + PrivilegedCarbonContext
+                        .getThreadLocalCarbonContext().getTenantDomain(true);
+            } else {
+                boolean isUserExist = APIApplicationManagerExtensionDataHolder.getInstance().getRealmService().
+                        getTenantUserRealm(PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId()).
+                        getUserStoreManager().isExistingUser(username);
+                if (!isUserExist) {
+                    String msg = "User does not exist in the user storage. User: " + username;
+                    log.error(msg);
+                    throw new UserStoreException(msg);
+                }
+                user = username + "@" + PrivilegedCarbonContext
+                        .getThreadLocalCarbonContext().getTenantDomain(true);
+            }
 
             JWTClientManagerService jwtClientManagerService = APIApplicationManagerExtensionDataHolder.getInstance()
                     .getJwtClientManagerService();
@@ -290,13 +304,14 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
      * @throws UserStoreException if error ocurred while getting admin username.
      */
     private ApiApplicationKey getClientCredentials(String tenantDomain, String[] tags, String applicationName,
-            String tokenType, String validityPeriod) throws APIManagerException, UserStoreException {
+            String tokenType, String validityPeriod, String username) throws APIManagerException, UserStoreException {
 
         APIRegistrationProfile registrationProfile = new APIRegistrationProfile();
         registrationProfile.setAllowedToAllDomains(false);
         registrationProfile.setMappingAnExistingOAuthApp(false);
         registrationProfile.setTags(tags);
         registrationProfile.setApplicationName(applicationName);
+        registrationProfile.setUsername(username);
 
         ApiApplicationKey info = null;
         if (tenantDomain == null || tenantDomain.isEmpty()) {
@@ -312,6 +327,10 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
             if (registrationProfile.getUsername() == null || registrationProfile.getUsername().isEmpty()) {
                 info = generateAndRetrieveApplicationKeys(registrationProfile.getApplicationName(),
                         registrationProfile.getTags(), tokenType, registrationProfile.getApplicationName(),
+                        registrationProfile.isAllowedToAllDomains(), validityPeriod);
+            } else {
+                info = generateAndRetrieveApplicationKeys(registrationProfile.getApplicationName(),
+                        registrationProfile.getTags(), tokenType, registrationProfile.getUsername(),
                         registrationProfile.isAllowedToAllDomains(), validityPeriod);
             }
         } finally {
