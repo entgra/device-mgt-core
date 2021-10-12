@@ -22,9 +22,15 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import io.entgra.application.mgt.common.dto.ApiRegistrationProfile;
+import io.entgra.application.mgt.core.util.OAuthUtils;
 import org.apache.axis2.AxisFault;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.json.simple.JSONObject;
+import org.wso2.carbon.apimgt.application.extension.APIManagementProviderService;
+import org.wso2.carbon.apimgt.application.extension.dto.ApiApplicationKey;
+import org.wso2.carbon.apimgt.application.extension.exception.APIManagerException;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
@@ -48,10 +54,14 @@ import org.wso2.carbon.device.mgt.jaxrs.util.DeviceMgtAPIUtils;
 import org.wso2.carbon.event.stream.stub.EventStreamAdminServiceStub;
 import org.wso2.carbon.event.stream.stub.types.EventStreamAttributeDto;
 import org.wso2.carbon.event.stream.stub.types.EventStreamDefinitionDto;
+import org.wso2.carbon.identity.jwt.client.extension.JWTClient;
+import org.wso2.carbon.identity.jwt.client.extension.dto.AccessTokenInfo;
 import org.wso2.carbon.identity.jwt.client.extension.exception.JWTClientException;
+import org.wso2.carbon.identity.jwt.client.extension.service.JWTClientManagerService;
 import org.wso2.carbon.policy.mgt.common.PolicyAdministratorPoint;
 import org.wso2.carbon.policy.mgt.common.PolicyManagementException;
 import org.wso2.carbon.user.api.UserStoreException;
+import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 
 import javax.validation.Valid;
 import javax.ws.rs.DELETE;
@@ -62,6 +72,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,6 +89,7 @@ import java.util.Map;
 public class DeviceAgentServiceImpl implements DeviceAgentService {
     private static final Log log = LogFactory.getLog(DeviceAgentServiceImpl.class);
     private static final String POLICY_MONITOR = "POLICY_MONITOR";
+
     @POST
     @Path("/enroll")
     @Override
@@ -127,7 +146,7 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
                 return Response.status(Response.Status.OK).build();
             } else {
                 return Response.status(Response.Status.NO_CONTENT).entity(type + " device that carries id '" + id +
-                                                                          "' has not been dis-enrolled").build();
+                        "' has not been dis-enrolled").build();
             }
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while enrolling the device, which carries the id '" + id + "'";
@@ -163,7 +182,7 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
             log.error(errorMessage);
             return Response.status(Response.Status.NOT_FOUND).entity(errorMessage).build();
         }
-        if (device.getEnrolmentInfo().getStatus() == EnrolmentInfo.Status.ACTIVE ) {
+        if (device.getEnrolmentInfo().getStatus() == EnrolmentInfo.Status.ACTIVE) {
             DeviceAccessAuthorizationService deviceAccessAuthorizationService =
                     DeviceMgtAPIUtils.getDeviceAccessAuthorizationService();
             boolean status;
@@ -179,25 +198,25 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
                 return Response.status(Response.Status.UNAUTHORIZED).build();
             }
         }
-        if(updateDevice.getEnrolmentInfo() != null) {
+        if (updateDevice.getEnrolmentInfo() != null) {
             device.getEnrolmentInfo().setDateOfLastUpdate(System.currentTimeMillis());
             device.setEnrolmentInfo(device.getEnrolmentInfo());
         }
         device.getEnrolmentInfo().setOwner(DeviceMgtAPIUtils.getAuthenticatedUser());
-        if(updateDevice.getDeviceInfo() != null) {
+        if (updateDevice.getDeviceInfo() != null) {
             device.setDeviceInfo(updateDevice.getDeviceInfo());
         }
         device.setDeviceIdentifier(id);
-        if(updateDevice.getDescription() != null) {
+        if (updateDevice.getDescription() != null) {
             device.setDescription(updateDevice.getDescription());
         }
-        if(updateDevice.getName() != null) {
+        if (updateDevice.getName() != null) {
             device.setName(updateDevice.getName());
         }
-        if(updateDevice.getFeatures() != null) {
+        if (updateDevice.getFeatures() != null) {
             device.setFeatures(updateDevice.getFeatures());
         }
-        if(updateDevice.getProperties() != null) {
+        if (updateDevice.getProperties() != null) {
             device.setProperties(updateDevice.getProperties());
         }
         boolean result;
@@ -282,7 +301,7 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
 //                    , PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain())
 //                    , Constants.DEFAULT_STREAM_VERSION, metaData
 //                    , null, payloadData)) {
-                return Response.status(Response.Status.OK).build();
+            return Response.status(Response.Status.OK).build();
 //            } else {
 //                String msg = "Error occurred while publishing the event.";
 //                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
@@ -383,7 +402,7 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
 //                    , PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain())
 //                    , Constants.DEFAULT_STREAM_VERSION, metaData
 //                    , null, payloadData)) {
-                return Response.status(Response.Status.OK).build();
+            return Response.status(Response.Status.OK).build();
 //            } else {
 //                String msg = "Error occurred while publishing the event.";
 //                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
@@ -418,6 +437,191 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
             }
         }
     }
+
+//    @GET
+//    @Path("/enroll/{type}/{id}/config")
+//    public Object getDeviceConfigProperties(@PathParam("type") String type, @PathParam("id") String deviceId) throws IOException {
+//        DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
+//        String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+//        String user = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
+////        String user = DeviceMgtAPIUtils.getDeviceManagementService().getDevice().get
+//        System.out.println("---------dms-------------");
+//        System.out.println(DeviceMgtAPIUtils.getDeviceManagementService());
+//        try {
+//            if (!DeviceMgtAPIUtils.getDeviceManagementService().getAvailableDeviceTypes().contains(type)) {
+//                String errorMessage = "Device identifier list is empty";
+//                log.error(errorMessage);
+//                return Response.status(Response.Status.BAD_REQUEST).build();
+//            }
+//            DeviceIdentifier deviceIdentifier = new DeviceIdentifier(deviceId, type);
+//            if (!DeviceMgtAPIUtils.isValidDeviceIdentifier(deviceIdentifier)) {
+//                String msg = "Device not found for identifier '" + deviceId + "'";
+//                log.error(msg);
+//                return Response.status(Response.Status.NO_CONTENT).entity(msg).build();
+//            }
+//
+//            String userName = user + "@" + tenantDomain;
+//            JSONObject config = new JSONObject();
+//            config.put("type", type);
+//            config.put("deviceId", deviceId);
+//
+//            String applicationName = type.replace(" ", "") + "_" + tenantDomain;
+//            String requestURL = ("https://%iot.gateway.host%:%iot.gateway.https.port%/api-application-registration/register/tenants").replace("/tenants", "");
+//            JSONObject payload = new JSONObject();
+//            payload.put("applicationName", applicationName);
+//            payload.put("tags", "device_agent");
+//            payload.put("isAllowedToAllDomains", false);
+//            payload.put("validityPeriod", 3600);
+//
+//            HttpURLConnection conn = null;
+//            OutputStream outputStream = null;
+//            try {
+//                conn = (HttpURLConnection) new URL(requestURL).openConnection();
+//                conn.setRequestProperty("Content-Type", "application/json");
+////                conn.setRequestProperty("Authorization", "key=" + config.getProperty(FCM_API_KEY));
+//                conn.setRequestMethod("POST");
+//                conn.setDoOutput(true);
+////                os = conn.getOutputStream();
+////                os.write(bytes);
+//                try (OutputStream os = conn.getOutputStream()) {
+//                    byte[] input = payload.toString().getBytes("utf-8");
+//                    os.write(input, 0, input.length);
+//                }
+//
+//                StringBuilder response;
+//                try (BufferedReader br = new BufferedReader(
+//                        new InputStreamReader(conn.getInputStream(), "utf-8"))) {
+//                    response = new StringBuilder();
+//                    String responseLine = null;
+//                    while ((responseLine = br.readLine()) != null) {
+//                        response.append(responseLine.trim());
+//                    }
+//                    JSONObject obj = new JSONObject(response.toString());
+//                    config.put("clientId", obj.get("client_id"));
+//                    config.put("clientSecret", obj.get("client_secret"));
+//
+//                    if (config.has("clientId") && config.has("clientSecret")) {
+//                        return config;
+//                    } else {
+//                        return null;
+//                    }
+//                }
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            } finally {
+//                if (outputStream != null) {
+//                    outputStream.close();
+//                }
+//                if (conn != null) {
+//                    conn.disconnect();
+//                }
+//            }
+//
+//            return config;
+//        }
+//        catch (DeviceManagementException | ProtocolException | MalformedURLException e) {
+//            String errorMessage = "Issue in retrieving deivce management service instance";
+//            log.error(errorMessage, e);
+//            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(errorMessage).build();
+//        }
+//    }
+
+    //=================================
+
+    @GET
+    @Path("/enroll/{type}/{id}/config")
+    public Response getDeviceConfigProperties(@PathParam("type") String type, @PathParam("id") String deviceId) {
+        DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
+        String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+        String user = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
+        try {
+            if (!DeviceMgtAPIUtils.getDeviceManagementService().getAvailableDeviceTypes().contains(type)) {
+                String errorMessage = "Device identifier list is empty";
+                log.error(errorMessage);
+                return Response.status(Response.Status.BAD_REQUEST).build();
+            }
+            DeviceIdentifier deviceIdentifier = new DeviceIdentifier(deviceId, type);
+            if (!DeviceMgtAPIUtils.isValidDeviceIdentifier(deviceIdentifier)) {
+                String msg = "Device not found for identifier '" + deviceId + "'";
+                log.error(msg);
+                return Response.status(Response.Status.NO_CONTENT).entity(msg).build();
+            }
+
+            String userName = user + "@" + tenantDomain;
+            JSONObject config = new JSONObject();
+            config.put("type", type);
+            config.put("deviceId", deviceId);
+
+            String applicationName = type.replace(" ", "") + "_" + tenantDomain;
+            ApiApplicationKey apiApplicationKey = getClientCredentials(tenantDomain);
+
+            config.put("clientId", apiApplicationKey.getConsumerKey());
+            config.put("clientSecret", apiApplicationKey.getConsumerSecret());
+
+            AccessTokenInfo tokenInfo = OAuthUtils.getOAuthCredentials(apiApplicationKey, userName);
+
+            config.put("accessToken", tokenInfo.getAccessToken());
+            config.put("refreshToken", tokenInfo.getRefreshToken());
+
+
+            String httpsGateway = "https://" + System.getProperty("iot.gateway.host") + ":" + System.getProperty("iot.gateway.https.port");
+            String httpGateway = "http://" + System.getProperty("iot.gateway.host") + ":" + System.getProperty("iot.gateway.http.port");
+            String mqttGateway = "tcp://" + System.getProperty("mqtt.broker.host") + ":" + System.getProperty("mqtt.broker.port");
+
+            config.put("mqttGateway", mqttGateway);
+            config.put("httpsGateway", httpsGateway);
+            config.put("httpGateway", httpGateway);
+
+            return Response.status(Response.Status.OK).entity(config).build();
+        }
+        catch (DeviceManagementException e) {
+            String errorMessage = "Issue in retrieving deivce management service instance";
+            log.error(errorMessage, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(errorMessage).build();
+        } catch (APIManagerException e) {
+            e.printStackTrace();
+        } catch (UserStoreException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    //====================================
+
+    @GET
+    @Path("/oshani/{type}/{id}")
+    public Response getPendingOperationsTestingConf(@PathParam("type") String type, @PathParam("id") String deviceId) {
+        try {
+            if (!DeviceMgtAPIUtils.getDeviceManagementService().getAvailableDeviceTypes().contains(type)) {
+                String errorMessage = "Device identifier list is empty";
+                log.error(errorMessage);
+                return Response.status(Response.Status.BAD_REQUEST).build();
+            }
+            DeviceIdentifier deviceIdentifier = new DeviceIdentifier(deviceId, type);
+            if (!DeviceMgtAPIUtils.isValidDeviceIdentifier(deviceIdentifier)) {
+                String msg = "Device not found for identifier '" + deviceId + "'";
+                log.error(msg);
+                return Response.status(Response.Status.NO_CONTENT).entity(msg).build();
+            }
+            List<? extends Operation> operations = DeviceMgtAPIUtils.getDeviceManagementService().getPendingOperations(
+                    deviceIdentifier);
+            OperationList operationsList = new OperationList();
+            operationsList.setList(operations);
+            operationsList.setCount(operations.size());
+            return Response.status(Response.Status.OK).entity(operationsList).build();
+        } catch (OperationManagementException e) {
+            String errorMessage = "Issue in retrieving operation management service instance";
+            log.error(errorMessage, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(errorMessage).build();
+        } catch (DeviceManagementException e) {
+            String errorMessage = "Issue in retrieving deivce management service instance";
+            log.error(errorMessage, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(errorMessage).build();
+        }
+    }
+
+
+    //============================================
 
     @GET
     @Path("/pending/operations/{type}/{id}")
@@ -531,14 +735,14 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
     @PUT
     @Path("/properties/{type}/{id}")
     public Response updateDeviceProperties(@PathParam("type") String type, @PathParam("id") String deviceId,
-            @Valid List<Device.Property> properties) {
+                                           @Valid List<Device.Property> properties) {
         try {
             if (!DeviceMgtAPIUtils.getDeviceManagementService().getAvailableDeviceTypes().contains(type)) {
                 String errorMessage = "Device type is invalid";
                 log.error(errorMessage);
                 return Response.status(Response.Status.BAD_REQUEST).build();
             }
-            if(properties == null) {
+            if (properties == null) {
                 String errorMessage = "Properties cannot be empty";
                 log.error(errorMessage);
                 return Response.status(Response.Status.BAD_REQUEST).build();
@@ -550,7 +754,7 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
                 return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
             }
 
-            if (DeviceMgtAPIUtils.getDeviceManagementService().updateProperties(deviceIdentifier, properties)){
+            if (DeviceMgtAPIUtils.getDeviceManagementService().updateProperties(deviceIdentifier, properties)) {
                 return Response.status(Response.Status.ACCEPTED).entity("Device properties updated.").build();
             } else {
                 return Response.status(Response.Status.NOT_ACCEPTABLE).entity("Device properties not updated.").build();
@@ -596,7 +800,7 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
     }
 
     private static List<ComplianceFeature> getComplianceFeatures(Object compliancePayload) throws
-                                                                                           PolicyComplianceException {
+            PolicyComplianceException {
         String compliancePayloadString = new Gson().toJson(compliancePayload);
         if (compliancePayload == null) {
             return null;
@@ -615,4 +819,56 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
         }
         return complianceFeatures;
     }
+
+    public static ApiApplicationKey getClientCredentials(String tenantDomain)
+            throws UserStoreException, APIManagerException {
+        ApiRegistrationProfile registrationProfile = new ApiRegistrationProfile();
+        registrationProfile.setApplicationName(Constants.APPLICATION_NAME);
+        registrationProfile.setTags(new String[]{Constants.DEVICE_TYPE_TAG_ONE});
+        registrationProfile.setAllowedToAllDomains(false);
+        registrationProfile.setMappingAnExistingOAuthApp(false);
+        return getCredentials(registrationProfile, tenantDomain);
+    }
+
+    public static ApiApplicationKey getCredentials(ApiRegistrationProfile registrationProfile, String tenantDomain)
+            throws UserStoreException, APIManagerException {
+        ApiApplicationKey apiApplicationKeyInfo;
+        if (tenantDomain == null || tenantDomain.isEmpty()) {
+            tenantDomain = MultitenantConstants.SUPER_TENANT_DOMAIN_NAME;
+        }
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(tenantDomain, true);
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setUsername(PrivilegedCarbonContext.
+                    getThreadLocalCarbonContext().getUserRealm().getRealmConfiguration().getAdminUserName());
+            PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+            APIManagementProviderService apiManagementProviderService = (APIManagementProviderService) ctx.
+                    getOSGiService(APIManagementProviderService.class, null);
+            apiApplicationKeyInfo = apiManagementProviderService.
+                    generateAndRetrieveApplicationKeys(registrationProfile.getApplicationName(),
+                            registrationProfile.getTags(), io.entgra.application.mgt.core.util.Constants.ApplicationInstall.DEFAULT_TOKEN_TYPE,
+                            null, registrationProfile.isAllowedToAllDomains(),
+                            io.entgra.application.mgt.core.util.Constants.ApplicationInstall.DEFAULT_VALIDITY_PERIOD);
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+        return apiApplicationKeyInfo;
+    }
+
+    public static AccessTokenInfo getOAuthCredentials(ApiApplicationKey apiApplicationKey, String username)
+            throws APIManagerException {
+        try {
+            PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+            JWTClientManagerService jwtClientManagerService = (JWTClientManagerService) ctx.
+                    getOSGiService(JWTClientManagerService.class, null);
+            JWTClient jwtClient = jwtClientManagerService.getJWTClient();
+            return jwtClient.getAccessToken(apiApplicationKey.getConsumerKey(), apiApplicationKey.getConsumerSecret(),
+                    username, Constants.SUBSCRIPTION_SCOPE);
+        } catch (JWTClientException e) {
+            String errorMsg = "Error while generating an OAuth token for user " + username;
+            log.error(errorMsg, e);
+            throw new APIManagerException(errorMsg, e);
+        }
+    }
+
 }

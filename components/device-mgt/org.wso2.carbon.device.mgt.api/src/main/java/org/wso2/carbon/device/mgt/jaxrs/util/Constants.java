@@ -69,6 +69,10 @@ public class Constants {
 		public static final String NOTNOW = "notnow";
 		public static final String REPEATED = "repeated";
 	}
+	public static final String APPLICATION_NAME = "DeviceAgent Service";
+	public static final String DEVICE_TYPE_TAG_ONE = "device_agent";
+	public static final String DEVICE_TYPE_TAG_TWO = "device_management";
+	public static final String SUBSCRIPTION_SCOPE = "appm:subscribe";
 	public static final String DEVICES = "devices";
 	public static final String ATTRIBUTE_DISPLAY_NAME = "DisplayName";
 	public static final String ATTRIBUTE_DESCRIPTION = "Description";
