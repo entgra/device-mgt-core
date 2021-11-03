@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.wso2.carbon.device.mgt.core.status.task.io.entgra.ticketing.common.TicketingHandlerConstants.*;
 
 
 public class UVDeskClient implements TicketingClient {
@@ -29,15 +30,11 @@ public class UVDeskClient implements TicketingClient {
 
     public String createIssue(TicketingClientDeviceInfo deviceInfo){
         String responseBody="Something went wrong";
-        //Retrieve the default (isDefault=true) Ticketing Gateway in the Ticketing configuration in ticketing-config.xml
-        TicketingGateway ticketingGateway = TicketingConfigurationManager.getInstance().getTicketingConfig().getDefaultTicketingGateway();
-
-        //Retrieve the Ticketing Gateway by passing the Gateway name
-        ticketingGateway = TicketingConfigurationManager.getInstance().getTicketingConfig().getTicketingGateway("sample");
+        TicketingGateway ticketingGateway = getTicketingGateway(GATEWAY_NAME);
 
         //Retrieve the properties in the Ticketing Gateway by passing the property name
-        String fromName = ticketingGateway.getPropertyByName("from-name").getValue();
-        String fromEmail = ticketingGateway.getPropertyByName("from-email").getValue();
+        String fromName = ticketingGateway.getPropertyByName(FROM_NAME).getValue();
+        String fromEmail = ticketingGateway.getPropertyByName(FROM_EMAIL).getValue();
 
         try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
             List<NameValuePair> form = new ArrayList<>();
@@ -64,15 +61,13 @@ public class UVDeskClient implements TicketingClient {
 
     private String sendToUvDesk (List<NameValuePair> form) throws IOException{
 
-        //Retrieve the default (isDefault=true) Ticketing Gateway in the Ticketing configuration in ticketing-config.xml
-        TicketingGateway ticketingGateway = TicketingConfigurationManager.getInstance().getTicketingConfig().getDefaultTicketingGateway();
         //Retrieve the Ticketing Gateway by passing the Gateway name
-        ticketingGateway = TicketingConfigurationManager.getInstance().getTicketingConfig().getTicketingGateway("sample");
+        TicketingGateway ticketingGateway = getTicketingGateway(GATEWAY_NAME);
 
         //Retrieve the properties in the Ticketing Gateway by passing the property name
-        String endpoint = ticketingGateway.getPropertyByName("create-issue-api-endpoint").getValue();
-        String authorization = ticketingGateway.getPropertyByName("authorization").getValue();
-        String authorizationKey = ticketingGateway.getPropertyByName("authorization-key").getValue();
+        String endpoint = ticketingGateway.getPropertyByName(ENDPOINT).getValue();
+        String authorization = ticketingGateway.getPropertyByName(AUTHORIZATION).getValue();
+        String authorizationKey = ticketingGateway.getPropertyByName(AUTHORIZATION_KEY).getValue();
 
         try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
 
@@ -93,5 +88,9 @@ public class UVDeskClient implements TicketingClient {
             };
             return (String) httpclient.execute(httpPost, responseHandler);
         }
+    }
+    
+    private TicketingGateway getTicketingGateway(String gatewayName){
+        return TicketingConfigurationManager.getInstance().getTicketingConfig().getTicketingGateway(gatewayName);
     }
 }
