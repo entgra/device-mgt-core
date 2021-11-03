@@ -86,6 +86,7 @@
                             javax.servlet.*,
                             org.xml.sax,
                             javax.sql.*,
+                            javax.xml.*,
                             org.wso2.carbon.context,
                             org.wso2.carbon.core,
                             org.wso2.carbon.utils.*,
@@ -338,6 +339,13 @@
             <groupId>org.wso2.carbon.devicemgt</groupId>
             <artifactId>io.entgra.server.bootup.heartbeat.beacon</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.13</version>
+        </dependency>
+
     </dependencies>
 
 </project>

@@ -21,10 +21,7 @@ package org.wso2.carbon.device.mgt.core.status.task.impl;
 import com.google.gson.Gson;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
-import org.wso2.carbon.device.mgt.common.DeviceStatusTaskPluginConfig;
-import org.wso2.carbon.device.mgt.common.DynamicTaskContext;
-import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
+import org.wso2.carbon.device.mgt.common.*;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceMonitoringData;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.TransactionManagementException;
@@ -33,6 +30,8 @@ import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOException;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOFactory;
 import org.wso2.carbon.device.mgt.core.status.task.DeviceStatusTaskException;
 import org.wso2.carbon.device.mgt.core.task.impl.DynamicPartitionedScheduleTask;
+import org.wso2.carbon.device.mgt.core.status.task.io.entgra.ticketing.api.service.impl.DeviceAPIClientServiceImpl;
+import org.wso2.carbon.device.mgt.core.status.task.io.entgra.ticketing.common.beans.TicketingClientDeviceInfo;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -102,13 +101,35 @@ public class DeviceStatusMonitoringTask extends DynamicPartitionedScheduleTask {
 
                 EnrolmentInfo enrolmentInfo = monitoringData.getDevice().getEnrolmentInfo();
                 EnrolmentInfo.Status status = null;
-                if (lastUpdatedTime >= this.deviceStatusTaskPluginConfig
-                        .getIdleTimeToMarkInactive()) {
+
+                String subject = "";// To raise a ticket
+                if (lastUpdatedTime >= this.deviceStatusTaskPluginConfig.getIdleTimeToMarkInactive()) {
                     status = EnrolmentInfo.Status.INACTIVE;
-                } else if (lastUpdatedTime >= this.deviceStatusTaskPluginConfig
-                        .getIdleTimeToMarkUnreachable()) {
+                    subject = "INACTIVE";//added newly
+                } else if (lastUpdatedTime >= this.deviceStatusTaskPluginConfig.getIdleTimeToMarkUnreachable()) {
                     status = EnrolmentInfo.Status.UNREACHABLE;
+                    subject = "UNREACHABLE";
                 }
+
+                //added newly
+                //To raise a ticket
+                if(subject != ""){
+                    TicketingClientDeviceInfo uvdi = new TicketingClientDeviceInfo(subject, deviceType,
+                            monitoringData.getDevice().getDeviceIdentifier(), monitoringData.getDevice().getId(),
+                            monitoringData.getDevice().getName());
+
+                    DeviceAPIClientServiceImpl dac= new DeviceAPIClientServiceImpl();
+                    String deviceAPIClientResponse=dac.sendToClient(uvdi);
+
+                    log.debug(subject+" DEBUG status");
+                    log.debug("Response - "+ deviceAPIClientResponse);
+                    log.debug("DeviceType - " + deviceType);
+                    log.debug("DeviceTypeId - " + deviceTypeId);
+                    log.debug("GetDeviceIdentifier - " + monitoringData.getDevice().getDeviceIdentifier());
+                    log.debug("GetId - " + monitoringData.getDevice().getId());
+                    log.debug("GetName - " + monitoringData.getDevice().getName());
+                }
+                //added newly
 
                 if (status != null) {
                     enrolmentInfo.setStatus(status);
