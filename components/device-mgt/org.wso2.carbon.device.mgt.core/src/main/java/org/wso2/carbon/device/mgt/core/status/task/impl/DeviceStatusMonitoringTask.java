@@ -33,6 +33,7 @@ import org.wso2.carbon.device.mgt.core.task.impl.DynamicPartitionedScheduleTask;
 import org.wso2.carbon.device.mgt.core.status.task.io.entgra.ticketing.api.service.impl.DeviceAPIClientServiceImpl;
 import org.wso2.carbon.device.mgt.core.status.task.io.entgra.ticketing.common.beans.TicketingClientDeviceInfo;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -153,7 +154,7 @@ public class DeviceStatusMonitoringTask extends DynamicPartitionedScheduleTask {
             }
 
 
-        } catch (DeviceManagementException e) {
+        } catch (DeviceManagementException | IOException e) {
             String msg = "Error occurred while retrieving devices list for monitoring.";
             log.error(msg, e);
         }
