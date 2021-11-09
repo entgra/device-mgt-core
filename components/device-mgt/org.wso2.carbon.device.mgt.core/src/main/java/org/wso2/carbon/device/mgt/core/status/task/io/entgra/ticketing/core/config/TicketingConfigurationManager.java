@@ -71,9 +71,7 @@ public class TicketingConfigurationManager {
             Unmarshaller unmarshaller = ticketingContext.createUnmarshaller();
             this.ticketingConfiguration = (TicketingConfiguration) unmarshaller.unmarshal(doc);
         } catch (JAXBException e) {
-            String msg = "Error occurred while initializing Ticketing config '" + configLocation + "'";
-            log.error(msg, e);
-            throw new DeviceManagementException(msg, e);
+            log.error("Error occurred while initializing Ticketing config "+configLocation+"", e);
         }
     }
 

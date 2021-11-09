@@ -122,13 +122,11 @@ public class DeviceStatusMonitoringTask extends DynamicPartitionedScheduleTask {
                     message+="Device Identifier - "+monitoringData.getDevice().getDeviceIdentifier()+", \r\n";
                     message+="Device Id - "+monitoringData.getDevice().getId()+", \r\n";
                     message+="Device Name - "+monitoringData.getDevice().getName()+". \r\n";
-                    TicketingClientDeviceInfo uvdi = new TicketingClientDeviceInfo(subject, message, deviceType,
-                            monitoringData.getDevice().getDeviceIdentifier(), monitoringData.getDevice().getId(),
-                            monitoringData.getDevice().getName());
+                    TicketingClientDeviceInfo uvdi = new TicketingClientDeviceInfo(subject, message);
 
                     DeviceAPIClientServiceImpl dac= new DeviceAPIClientServiceImpl();
                     String deviceAPIClientResponse=dac.sendToClient(uvdi);
-                    log.error("Response - "+ deviceAPIClientResponse);
+
                     if (log.isDebugEnabled()) {
                         log.debug("Response - "+ deviceAPIClientResponse);
                         /*log.debug(subject+" DEBUG status");
