@@ -104,6 +104,7 @@ public class DeviceStatusMonitoringTask extends DynamicPartitionedScheduleTask {
                 EnrolmentInfo.Status status = null;
 
                 String subject = "";// To raise a ticket
+                String message = "";// To raise a ticket
                 if (lastUpdatedTime >= this.deviceStatusTaskPluginConfig.getIdleTimeToMarkInactive()) {
                     status = EnrolmentInfo.Status.INACTIVE;
                     subject = "INACTIVE";//added newly
@@ -115,20 +116,28 @@ public class DeviceStatusMonitoringTask extends DynamicPartitionedScheduleTask {
                 //added newly
                 //To raise a ticket
                 if(subject != ""){
-                    TicketingClientDeviceInfo uvdi = new TicketingClientDeviceInfo(subject, deviceType,
+                    message="Hi, \r\n The IoT device bearing "+monitoringData.getDevice().getDeviceIdentifier();
+                    message+=" device identifier is in "+subject+" state. \r\n\n";
+                    message+="Device Type - "+deviceType+", \r\n";
+                    message+="Device Identifier - "+monitoringData.getDevice().getDeviceIdentifier()+", \r\n";
+                    message+="Device Id - "+monitoringData.getDevice().getId()+", \r\n";
+                    message+="Device Name - "+monitoringData.getDevice().getName()+". \r\n";
+                    TicketingClientDeviceInfo uvdi = new TicketingClientDeviceInfo(subject, message, deviceType,
                             monitoringData.getDevice().getDeviceIdentifier(), monitoringData.getDevice().getId(),
                             monitoringData.getDevice().getName());
 
                     DeviceAPIClientServiceImpl dac= new DeviceAPIClientServiceImpl();
                     String deviceAPIClientResponse=dac.sendToClient(uvdi);
-
-                    log.debug(subject+" DEBUG status");
-                    log.debug("Response - "+ deviceAPIClientResponse);
-                    log.debug("DeviceType - " + deviceType);
-                    log.debug("DeviceTypeId - " + deviceTypeId);
-                    log.debug("GetDeviceIdentifier - " + monitoringData.getDevice().getDeviceIdentifier());
-                    log.debug("GetId - " + monitoringData.getDevice().getId());
-                    log.debug("GetName - " + monitoringData.getDevice().getName());
+                    log.error("Response - "+ deviceAPIClientResponse);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Response - "+ deviceAPIClientResponse);
+                        /*log.debug(subject+" DEBUG status");
+                        log.debug("DeviceType - " + deviceType);
+                        log.debug("DeviceTypeId - " + deviceTypeId);
+                        log.debug("GetDeviceIdentifier - " + monitoringData.getDevice().getDeviceIdentifier());
+                        log.debug("GetId - " + monitoringData.getDevice().getId());
+                        log.debug("GetName - " + monitoringData.getDevice().getName());*/
+                    }
                 }
                 //added newly
 

@@ -1,93 +1,82 @@
+/*
+ * Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * WSO2 Inc. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.wso2.carbon.device.mgt.core.status.task.io.entgra.ticketing.api.service.addons;
 
+import com.google.common.net.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.Consts;
-import org.apache.http.HttpEntity;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
 import org.wso2.carbon.device.mgt.core.status.task.io.entgra.ticketing.common.TicketingClient;
 import org.wso2.carbon.device.mgt.core.status.task.io.entgra.ticketing.common.beans.TicketingClientDeviceInfo;
 import org.wso2.carbon.device.mgt.core.status.task.io.entgra.ticketing.common.config.TicketingGateway;
 import org.wso2.carbon.device.mgt.core.status.task.io.entgra.ticketing.core.config.TicketingConfigurationManager;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
-import static org.wso2.carbon.device.mgt.core.status.task.io.entgra.ticketing.common.TicketingHandlerConstants.*;
+import org.wso2.carbon.device.mgt.core.status.task.io.entgra.ticketing.common.TicketingHandlerConstants;
 
 
 public class UVDeskClient implements TicketingClient {
     private static final Log log = LogFactory.getLog(UVDeskClient.class);
 
-    public String createIssue(TicketingClientDeviceInfo deviceInfo){
+    public String createIssue(TicketingClientDeviceInfo deviceInfo) throws IOException {
         String responseBody="Something went wrong";
-        TicketingGateway ticketingGateway = getTicketingGateway(GATEWAY_NAME);
+        TicketingGateway ticketingGateway = getTicketingGateway(TicketingHandlerConstants.GATEWAY_NAME);
 
         //Retrieve the properties in the Ticketing Gateway by passing the property name
-        String fromName = ticketingGateway.getPropertyByName(FROM_NAME).getValue();
-        String fromEmail = ticketingGateway.getPropertyByName(FROM_EMAIL).getValue();
+        String fromName = ticketingGateway.getPropertyByName(TicketingHandlerConstants.FROM_NAME).getValue();
+        String fromEmail = ticketingGateway.getPropertyByName(TicketingHandlerConstants.FROM_EMAIL).getValue();
 
-        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
-            List<NameValuePair> form = new ArrayList<>();
-            String message="Hi, \r\nThe IoT device bearing "+deviceInfo.getDeviceIdentifier()+ " device dentifier ";
-            message+="is in "+deviceInfo.getSubject()+" state. \r\n\n";
+        MediaType mediaType = MediaType.parse("text/plain");
+        RequestBody body = new MultipartBody.Builder().setType(MultipartBody.FORM)
+                .addFormDataPart("message",deviceInfo.getMessage())
+                .addFormDataPart("actAsType","customer")
+                .addFormDataPart("name",fromName)
+                .addFormDataPart("subject","IoT Device is in "+deviceInfo.getSubject()+" state")
+                .addFormDataPart("from",fromEmail)
+                .build();
 
-            message+="Device Type - "+deviceInfo.getDeviceType()+", \r\n";
-            message+="Device Identifier - "+deviceInfo.getDeviceIdentifier()+", \r\n";
-            message+="Device Id - "+deviceInfo.getDeviceId()+", \r\n";
-            message+="Device Name - "+deviceInfo.getDeviceName()+", \r\n";
-
-            form.add(new BasicNameValuePair("message", message));
-            form.add(new BasicNameValuePair("actAsType", "customer"));
-            form.add(new BasicNameValuePair("name", fromName));
-            form.add(new BasicNameValuePair("subject", "IoT Device is in "+deviceInfo.getSubject()+" state"));
-            form.add(new BasicNameValuePair("from", fromEmail));
-
-            responseBody = sendToUvDesk(form);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        responseBody = sendToUvDesk(body);
         return responseBody;
     }
 
-    private String sendToUvDesk (List<NameValuePair> form) throws IOException{
+    private String sendToUvDesk (RequestBody body) throws IOException{
 
         //Retrieve the Ticketing Gateway by passing the Gateway name
-        TicketingGateway ticketingGateway = getTicketingGateway(GATEWAY_NAME);
+        TicketingGateway ticketingGateway = getTicketingGateway(TicketingHandlerConstants.GATEWAY_NAME);
 
         //Retrieve the properties in the Ticketing Gateway by passing the property name
-        String endpoint = ticketingGateway.getPropertyByName(ENDPOINT).getValue();
-        String authorization = ticketingGateway.getPropertyByName(AUTHORIZATION).getValue();
-        String authorizationKey = ticketingGateway.getPropertyByName(AUTHORIZATION_KEY).getValue();
+        String endpoint = ticketingGateway.getPropertyByName(TicketingHandlerConstants.ENDPOINT).getValue();
+        String authorization = ticketingGateway.getPropertyByName(TicketingHandlerConstants.AUTHORIZATION).getValue();
+        String authorizationKey = ticketingGateway.getPropertyByName(TicketingHandlerConstants.AUTHORIZATION_KEY).getValue();
 
-        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
+        OkHttpClient client = new OkHttpClient().newBuilder().build();
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url(endpoint)
+                .method("POST", body)
+                .addHeader(authorization, authorizationKey)
+                .build();
+        okhttp3.Response response = client.newCall(request).execute();
 
-            UrlEncodedFormEntity entity = new UrlEncodedFormEntity(form, Consts.UTF_8);
-            HttpPost httpPost = new HttpPost(endpoint);
-            httpPost.setHeader(authorization, authorizationKey);
-            httpPost.setEntity(entity);
-
-            // Create a custom response handler
-            ResponseHandler responseHandler = response -> {
-                int status = response.getStatusLine().getStatusCode();
-                if (status >= 200 && status < 300) {
-                    HttpEntity responseEntity = response.getEntity();
-                    return responseEntity != null ? EntityUtils.toString(responseEntity) : null;
-                } else {
-                    throw new ClientProtocolException("Unexpected response status: " + status);
-                }
-            };
-            return (String) httpclient.execute(httpPost, responseHandler);
-        }
+        return String.valueOf(response);
     }
     
     private TicketingGateway getTicketingGateway(String gatewayName){
