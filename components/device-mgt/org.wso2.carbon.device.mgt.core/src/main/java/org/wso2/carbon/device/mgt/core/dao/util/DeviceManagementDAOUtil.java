@@ -17,6 +17,9 @@
  */
 package org.wso2.carbon.device.mgt.core.dao.util;
 
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,10 +39,6 @@ import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 
 import javax.naming.InitialContext;
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
@@ -262,7 +261,7 @@ public final class DeviceManagementDAOUtil {
         deviceInfo.setTotalRAMMemory(rs.getDouble("TOTAL_RAM_MEMORY"));
         deviceInfo.setAvailableRAMMemory(rs.getDouble("AVAILABLE_RAM_MEMORY"));
         deviceInfo.setPluggedIn(rs.getBoolean("PLUGGED_IN"));
-        deviceInfo.setUpdatedTime(new java.util.Date(rs.getLong("UPDATE_TIMESTAMP")));
+        deviceInfo.setUpdatedTime(new Date(rs.getLong("UPDATE_TIMESTAMP")));
         return deviceInfo;
     }
 
@@ -285,4 +284,14 @@ public final class DeviceManagementDAOUtil {
         return deviceLocationHistory;
     }
 
+    public static long getCurrentUTCTime() {
+        return new Date().getTime() / 1000;
+    }
+
+    public static long convertLocalTimeIntoUTC(Date localDate) {
+        LocalDateTime l = localDate.toInstant()
+                .atZone(ZoneId.of("GMT"))
+                .toLocalDateTime();
+        return Timestamp.valueOf(l).getTime() / 1000;
+    }
 }
