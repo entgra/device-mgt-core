@@ -50,7 +50,6 @@ public class CommandOperationDAOImpl extends GenericOperationDAOImpl {
             stmt = connection.prepareStatement(sql, new String[]{"id"});
             stmt.setString(1, operation.getType().toString());
             stmt.setLong(2, DeviceManagementDAOUtil.getCurrentUTCTime());
-            log.info("------Time----- " + DeviceManagementDAOUtil.getCurrentUTCTime());
             stmt.setLong(3, 0);
             stmt.setString(4, operation.getCode());
             stmt.setString(5, operation.getInitiatedBy());
