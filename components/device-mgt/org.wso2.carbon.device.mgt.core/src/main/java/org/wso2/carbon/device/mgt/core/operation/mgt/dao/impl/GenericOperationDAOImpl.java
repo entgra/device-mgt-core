@@ -1769,7 +1769,7 @@ public class GenericOperationDAOImpl implements OperationDAO {
             }
             if (activityPaginationRequest.getStartTimestamp() > 0 && activityPaginationRequest.getEndTimestamp() > 0) {
                 isTimeDurationFilteringProvided = true;
-                sql += "AND UPDATED_TIMESTAMP BETWEEN  ? AND ? ";
+                sql += "AND CREATED_TIMESTAMP BETWEEN  ? AND ? ";
             }
             if (activityPaginationRequest.getType() != null) {
                 sql += "AND TYPE = ? ";
@@ -1797,7 +1797,7 @@ public class GenericOperationDAOImpl implements OperationDAO {
                 sql += "AND eom.UPDATED_TIMESTAMP > ? ";
             }
             if (isTimeDurationFilteringProvided) {
-                sql += "AND eom.UPDATED_TIMESTAMP BETWEEN  ? AND ? ";
+                sql += "AND eom.CREATED_TIMESTAMP BETWEEN  ? AND ? ";
             }
             if (activityPaginationRequest.getType() != null) {
                 sql += "AND eom.TYPE = ? ";
@@ -1917,8 +1917,9 @@ public class GenericOperationDAOImpl implements OperationDAO {
             }
             if (activityPaginationRequest.getStartTimestamp() > 0 && activityPaginationRequest.getEndTimestamp() > 0) {
                 isTimeDurationFilteringProvided = true;
-                sql += "AND UPDATED_TIMESTAMP BETWEEN ? AND ? ";
+                sql += "AND CREATED_TIMESTAMP BETWEEN ? AND ? ";
             }
+
             int index = 1;
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(index++, tenantId);
