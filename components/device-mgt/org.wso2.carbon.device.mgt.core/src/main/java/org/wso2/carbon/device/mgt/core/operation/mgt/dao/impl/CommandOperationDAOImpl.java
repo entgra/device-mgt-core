@@ -18,9 +18,6 @@
 
 package org.wso2.carbon.device.mgt.core.operation.mgt.dao.impl;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import org.wso2.carbon.device.mgt.core.dto.operation.mgt.CommandOperation;
 import org.wso2.carbon.device.mgt.core.dto.operation.mgt.Operation;
 import org.wso2.carbon.device.mgt.core.operation.mgt.dao.OperationManagementDAOException;
@@ -37,7 +34,6 @@ import java.util.Date;
 import java.util.List;
 
 public class CommandOperationDAOImpl extends GenericOperationDAOImpl {
-    private static final Log log = LogFactory.getLog(CommandOperationDAOImpl.class);
 
     @Override
     public int addOperation(Operation operation) throws OperationManagementDAOException {
@@ -49,8 +45,8 @@ public class CommandOperationDAOImpl extends GenericOperationDAOImpl {
                          "INITIATED_BY, ENABLED) VALUES (?, ?, ?, ?, ?, ?)";
             stmt = connection.prepareStatement(sql, new String[]{"id"});
             stmt.setString(1, operation.getType().toString());
-            stmt.setLong(2, DeviceManagementDAOUtil.getCurrentUTCTime());
-            stmt.setLong(3, 0);
+            stmt.setTimestamp(2, new Timestamp(new Date().getTime()));
+            stmt.setTimestamp(3, null);
             stmt.setString(4, operation.getCode());
             stmt.setString(5, operation.getInitiatedBy());
             stmt.setBoolean(6, operation.isEnabled());

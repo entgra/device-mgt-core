@@ -68,7 +68,8 @@ public class GenericReviewDAOImpl extends AbstractDAOImpl implements ReviewDAO {
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ? )";
         try {
             int reviewId = -1;
-            long timestamp = DAOUtil.getCurrentUTCTime();
+            Calendar calendar = Calendar.getInstance();
+            Timestamp timestamp = new Timestamp(calendar.getTime().getTime());
             Connection conn = this.getDBConnection();
             try (PreparedStatement statement = conn.prepareStatement(sql, new String[] { "id" })) {
                 statement.setInt(1, tenantId);
@@ -77,8 +78,8 @@ public class GenericReviewDAOImpl extends AbstractDAOImpl implements ReviewDAO {
                 statement.setInt(4, reviewDTO.getImmediateParentId());
                 statement.setInt(5, reviewDTO.getRating());
                 statement.setString(6, reviewDTO.getUsername());
-                statement.setLong(7, timestamp);
-                statement.setLong(8, timestamp);
+                statement.setTimestamp(7, timestamp);
+                statement.setTimestamp(8, timestamp);
                 statement.setInt(9, appReleaseId);
                 statement.executeUpdate();
                 try (ResultSet rs = statement.getGeneratedKeys()) {
@@ -157,17 +158,19 @@ public class GenericReviewDAOImpl extends AbstractDAOImpl implements ReviewDAO {
                 + "ACTIVE_REVIEW = ? "
                 + "WHERE ID = ? AND TENANT_ID = ?";
         try {
-            long timestamp = DAOUtil.getCurrentUTCTime();
+            Calendar calendar = Calendar.getInstance();
+            Timestamp timestamp = new Timestamp(calendar.getTime().getTime());
+
             Connection connection = this.getDBConnection();
             try (PreparedStatement statement = connection.prepareStatement(sql)){
                 statement.setString(1, reviewDTO.getContent());
                 statement.setInt(2, reviewDTO.getRating());
-                statement.setLong(3, timestamp);
+                statement.setTimestamp(3, timestamp);
                 statement.setBoolean(4, isActiveReview);
                 statement.setInt(5, reviewId);
                 statement.setInt(6, tenantId);
                 if (statement.executeUpdate() == 1) {
-                    reviewDTO.setModifiedAt(new Timestamp(timestamp * 1000));
+                    reviewDTO.setModifiedAt(timestamp);
                     return reviewDTO;
                 }
                 return null;
