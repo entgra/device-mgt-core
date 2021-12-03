@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.carbon.device.mgt.core.grafana.mgt.service.cache.impl;
+package org.wso2.carbon.device.mgt.core.grafana.mgt.service.cache;
 
 import java.util.Objects;
 

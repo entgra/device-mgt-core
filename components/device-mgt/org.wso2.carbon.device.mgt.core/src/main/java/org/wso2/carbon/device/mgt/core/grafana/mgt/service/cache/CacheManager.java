@@ -18,6 +18,8 @@
 
 package org.wso2.carbon.device.mgt.core.grafana.mgt.service.cache;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.wso2.carbon.device.mgt.common.exceptions.GrafanaManagementException;
@@ -25,28 +27,17 @@ import org.wso2.carbon.device.mgt.core.grafana.mgt.config.GrafanaConfiguration;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.config.GrafanaConfigurationManager;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.config.xml.bean.CacheConfiguration;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.service.bean.Datasource;
-import org.wso2.carbon.device.mgt.core.grafana.mgt.service.cache.impl.LRUCache;
-import org.wso2.carbon.device.mgt.core.grafana.mgt.service.cache.impl.GenericMapCache;
-import org.wso2.carbon.device.mgt.core.grafana.mgt.service.cache.impl.QueryTemplateCacheKey;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.util.GrafanaConstants;
-import org.wso2.carbon.device.mgt.core.grafana.mgt.util.GrafanaUtil;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class CacheManager {
-
     private static final Log log = LogFactory.getLog(CacheManager.class);
-    private static final Map<String, Integer> cacheCapacityMap = new ConcurrentHashMap<>();
 
-    private final Map<Integer, Cache<QueryTemplateCacheKey, String>> queryTemplateAPICache;
-    private final Map<Integer, Cache<String, String>> encodedQueryCache;
-    private final GenericMapCache<Integer, Datasource> datasourceAPICache;
+    private Cache<Integer, Datasource> datasourceAPICache;
+    private Cache<QueryTemplateCacheKey, String> queryTemplateAPICache;
+    private Cache<String, String> encodedQueryCache;
 
     private CacheManager() {
-        this.queryTemplateAPICache = new ConcurrentHashMap<>();
-        this.encodedQueryCache = new ConcurrentHashMap<>();
-        this.datasourceAPICache = new GenericMapCache<>();
+        initCache();
     }
 
     private static final class CacheManagerHolder {
@@ -57,41 +48,50 @@ public class CacheManager {
         return CacheManagerHolder.cacheManager;
     }
 
-    public Cache<String, String> getEncodedQueryCache() throws GrafanaManagementException {
-        String cacheName = GrafanaConstants.ENCODED_QUERY_CACHE_NAME;
-        initCacheCapacityIfNotExist(cacheName);
-        int tenantId = GrafanaUtil.getTenantId();
-        return encodedQueryCache.computeIfAbsent(tenantId, k ->
-                new LRUCache<>(cacheCapacityMap.get(cacheName)));
+    public Cache<String, String> getEncodedQueryCache() {
+        return encodedQueryCache;
     }
 
-    public Cache<QueryTemplateCacheKey, String> getQueryTemplateAPICache() throws GrafanaManagementException {
-        String cacheName = GrafanaConstants.QUERY_API_CACHE_NAME;
-        initCacheCapacityIfNotExist(cacheName);
-        int tenantId = GrafanaUtil.getTenantId();
-        return queryTemplateAPICache.computeIfAbsent(tenantId, k ->
-                new LRUCache<>(cacheCapacityMap.get(cacheName)));
+    public Cache<QueryTemplateCacheKey, String> getQueryTemplateAPICache() {
+        return queryTemplateAPICache;
     }
+
 
     public Cache<Integer, Datasource> getDatasourceAPICache() {
         return datasourceAPICache;
     }
 
-    private static void initCacheCapacityIfNotExist(String cacheName) throws GrafanaManagementException {
-        if (cacheCapacityMap.get(cacheName) == null) {
-            initCacheCapacity(cacheName);
-        }
+
+    private void initCache() {
+        this.datasourceAPICache = buildDatasourceCache();
+        this.queryTemplateAPICache = buildQueryCacheByName(GrafanaConstants.QUERY_API_CACHE_NAME);
+        this.encodedQueryCache = buildQueryCacheByName(GrafanaConstants.ENCODED_QUERY_CACHE_NAME);
     }
 
-    private synchronized static void initCacheCapacity(String cacheName) throws GrafanaManagementException {
-        if (cacheCapacityMap.get(cacheName) == null) {
+    private <K, V> Cache<K, V> buildDatasourceCache() {
+        return CacheBuilder.newBuilder().build();
+    }
+
+    private <K , V> Cache<K, V> buildQueryCacheByName(String cacheName) {
+        int capacity = getCacheCapacity(cacheName);
+        return CacheBuilder.newBuilder().maximumSize(capacity).build();
+    }
+
+
+
+    private static int getCacheCapacity(String cacheName) {
+        try {
             GrafanaConfiguration configuration = GrafanaConfigurationManager.getInstance().getGrafanaConfiguration();
             CacheConfiguration cacheConfig = configuration.getCacheByName(cacheName);
             if (cacheConfig == null) {
                 log.error("CacheConfiguration config not defined for " + cacheName);
                 throw new GrafanaManagementException("Query API CacheConfiguration configuration not properly defined");
             }
-            cacheCapacityMap.put(cacheName, cacheConfig.getCapacity());
+            return cacheConfig.getCapacity();
+        } catch (GrafanaManagementException e) {
+            String errMsg = "Error occurred while initializing cache capacity for " + cacheName;
+            log.error(errMsg);
+            throw new RuntimeException(errMsg, e);
         }
     }
 

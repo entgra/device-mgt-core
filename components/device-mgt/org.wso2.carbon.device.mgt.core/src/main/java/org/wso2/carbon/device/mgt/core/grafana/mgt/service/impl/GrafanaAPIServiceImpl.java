@@ -39,7 +39,7 @@ import org.wso2.carbon.device.mgt.core.grafana.mgt.exception.TemplateNotFound;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.service.GrafanaAPIService;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.service.bean.Datasource;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.service.cache.CacheManager;
-import org.wso2.carbon.device.mgt.core.grafana.mgt.service.cache.impl.QueryTemplateCacheKey;
+import org.wso2.carbon.device.mgt.core.grafana.mgt.service.cache.QueryTemplateCacheKey;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.util.GrafanaConstants;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.util.GrafanaUtil;
 import org.wso2.carbon.device.mgt.core.report.mgt.Constants;
@@ -70,7 +70,7 @@ public class GrafanaAPIServiceImpl implements GrafanaAPIService {
         }
         String queryTemplate =  query.get(GrafanaConstants.RAW_SQL_KEY).getAsString();
         CacheManager.getInstance().getQueryTemplateAPICache().
-                add(new QueryTemplateCacheKey(dashboardUID, panelId, refId), queryTemplate);
+                put(new QueryTemplateCacheKey(dashboardUID, panelId, refId), queryTemplate);
         return queryTemplate;
     }
 
@@ -85,7 +85,7 @@ public class GrafanaAPIServiceImpl implements GrafanaAPIService {
         }
         String query =  queryElement.getAsString();
         CacheManager.getInstance().getQueryTemplateAPICache().
-                add(new QueryTemplateCacheKey(dashboardUID, null, refId), query);
+                put(new QueryTemplateCacheKey(dashboardUID, null, refId), query);
         return query;
     }
 
@@ -137,7 +137,7 @@ public class GrafanaAPIServiceImpl implements GrafanaAPIService {
         String type = datasourceDetails.get(GrafanaConstants.DATASOURCE_TYPE_KEY).getAsString();
         String database = datasourceDetails.get(GrafanaConstants.DATASOURCE_DB_KEY).getAsString();
         Datasource ds = new Datasource(datasourceId, url, name, type, database);
-        CacheManager.getInstance().getDatasourceAPICache().add(datasourceId, ds);
+        CacheManager.getInstance().getDatasourceAPICache().put(datasourceId, ds);
         return ds;
     }
 

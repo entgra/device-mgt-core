@@ -31,7 +31,7 @@ import org.wso2.carbon.device.mgt.core.grafana.mgt.service.GrafanaAPIService;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.service.GrafanaQueryService;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.service.bean.Datasource;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.service.cache.CacheManager;
-import org.wso2.carbon.device.mgt.core.grafana.mgt.service.cache.impl.QueryTemplateCacheKey;
+import org.wso2.carbon.device.mgt.core.grafana.mgt.service.cache.QueryTemplateCacheKey;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.sql.query.GrafanaPreparedQueryBuilder;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.sql.query.PreparedQuery;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.sql.query.encoder.QueryEncoderFactory;
@@ -66,17 +66,17 @@ public class GrafanaQueryServiceImpl implements GrafanaQueryService {
             String rawSql = rawSqlJson.getAsString();
             int datasourceId = datasourceIdJson.getAsInt();
             CacheManager cacheManager = CacheManager.getInstance();
-            String encodedQuery = cacheManager.getEncodedQueryCache().get(rawSql);
-            if (cacheManager.getEncodedQueryCache().get(rawSql) != null) {
+            String encodedQuery = cacheManager.getEncodedQueryCache().getIfPresent(rawSql);
+            if (cacheManager.getEncodedQueryCache().getIfPresent(rawSql) != null) {
                 queryObj.addProperty(GrafanaConstants.RAW_SQL_KEY, encodedQuery);
                 return;
             }
-            Datasource datasource = cacheManager.getDatasourceAPICache().get(datasourceId);
+            Datasource datasource = cacheManager.getDatasourceAPICache().getIfPresent(datasourceId);
             if (datasource == null) {
                 datasource = grafanaAPIService.getDatasource(datasourceId, requestUri.getScheme());
             }
             String queryTemplate = cacheManager.getQueryTemplateAPICache().
-                    get(new QueryTemplateCacheKey(dashboardUID, panelId, refId));
+                    getIfPresent(new QueryTemplateCacheKey(dashboardUID, panelId, refId));
             try {
                 if (queryTemplate != null) {
                     try {
@@ -104,7 +104,7 @@ public class GrafanaQueryServiceImpl implements GrafanaQueryService {
             throws SQLException, GrafanaManagementException, DBConnectionException {
         PreparedQuery pq = GrafanaPreparedQueryBuilder.build(queryTemplate, rawSql);
         String encodedQuery = QueryEncoderFactory.createEncoder(datasource.getType(), datasource.getName()).encode(pq);
-        CacheManager.getInstance().getEncodedQueryCache().add(rawSql, encodedQuery);
+        CacheManager.getInstance().getEncodedQueryCache().put(rawSql, encodedQuery);
         if(log.isDebugEnabled()) {
             log.debug("Encoded query: " + encodedQuery);
         }
