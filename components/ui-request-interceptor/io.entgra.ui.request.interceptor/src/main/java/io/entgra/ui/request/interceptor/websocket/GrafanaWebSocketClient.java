@@ -24,13 +24,15 @@ import javax.ws.rs.core.HttpHeaders;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 
 @ClientEndpoint
 public class GrafanaWebSocketClient extends Endpoint {
 
     private static final Log log = LogFactory.getLog(GrafanaWebSocketClient.class);
     private Session grafanaServerSession;
-    private MessageHandler messageHandler;
+    private Consumer<String> messageConsumer;
 
     public GrafanaWebSocketClient(URI endpointURI) {
         try {
@@ -48,7 +50,7 @@ public class GrafanaWebSocketClient extends Endpoint {
             public void beforeRequest(Map<String, List<String>> headers) {
                 try {
                     headers.put(HttpHeaders.AUTHORIZATION,
-                            Collections.singletonList(HandlerConstants.BASIC + GrafanaUtil.getBasicAuthBase64Header()));
+                            Collections.singletonList(GrafanaUtil.getBasicAuthBase64Header()));
                 } catch (GrafanaManagementException e) {
                     log.error(e);
                 }
@@ -63,8 +65,9 @@ public class GrafanaWebSocketClient extends Endpoint {
     @OnOpen
     @Override
     public void onOpen(Session grafanaServerSession, EndpointConfig endpointConfig) {
-        // Commented due tomcat version conflict at runtime (addMessageHandler source code doesn't match)
-//        grafanaServerSession.addMessageHandler(messageHandler);
+        // Due to a bug (https://bz.apache.org/bugzilla/show_bug.cgi?format=multiple&id=57788)
+        // in the tomcat version used, this has to coded like this
+        grafanaServerSession.addMessageHandler(String.class, message -> messageConsumer.accept(message));
         this.grafanaServerSession = grafanaServerSession;
     }
 
@@ -92,7 +95,7 @@ public class GrafanaWebSocketClient extends Endpoint {
         return grafanaServerSession;
     }
 
-    public void addMessageHandler(MessageHandler.Whole<String> msgHandler) {
-        messageHandler = msgHandler;
+    public void addMessageHandler(Consumer<String> messageConsumer) {
+        this.messageConsumer = messageConsumer;
     }
 }
