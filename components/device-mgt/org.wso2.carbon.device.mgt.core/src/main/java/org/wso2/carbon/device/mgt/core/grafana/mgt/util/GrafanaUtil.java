@@ -20,7 +20,6 @@ package org.wso2.carbon.device.mgt.core.grafana.mgt.util;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
@@ -32,7 +31,6 @@ import org.wso2.carbon.device.mgt.core.grafana.mgt.config.GrafanaConfigurationMa
 import org.wso2.carbon.device.mgt.core.grafana.mgt.exception.GrafanaEnvVariablesNotDefined;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.service.GrafanaAPIService;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.service.GrafanaQueryService;
-import org.wso2.carbon.device.mgt.core.grafana.mgt.service.impl.GrafanaAPIServiceImpl;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.service.impl.GrafanaQueryServiceImpl;
 import org.wso2.carbon.device.mgt.core.report.mgt.Constants;
 
@@ -116,11 +114,29 @@ public class GrafanaUtil {
     }
 
     public static GrafanaAPIService getGrafanaAPIService() {
-        return new GrafanaAPIServiceImpl();
+        GrafanaAPIService grafanaAPIService;
+        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        grafanaAPIService = (GrafanaAPIService) ctx.getOSGiService(
+                GrafanaAPIService.class, null);
+        if (grafanaAPIService == null) {
+            String msg = "Report Management service not initialized.";
+            log.error(msg);
+            throw new IllegalStateException(msg);
+        }
+        return grafanaAPIService;
     }
 
     public static GrafanaQueryService getGrafanaQueryService() {
-        return new GrafanaQueryServiceImpl(getGrafanaAPIService());
+        GrafanaQueryService grafanaQueryService;
+        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        grafanaQueryService = (GrafanaQueryService) ctx.getOSGiService(
+                GrafanaQueryService.class, null);
+        if (grafanaQueryService == null) {
+            String msg = "Report Management service not initialized.";
+            log.error(msg);
+            throw new IllegalStateException(msg);
+        }
+        return grafanaQueryService;
     }
 
 }

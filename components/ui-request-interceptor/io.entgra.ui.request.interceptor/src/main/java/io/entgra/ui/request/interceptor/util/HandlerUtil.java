@@ -588,16 +588,12 @@ public class HandlerUtil {
             if (session == null) {
                 log.error("Unauthorized, You are not logged in. Please log in to the portal");
                 return constructProxyResponseByErrorCode(HttpStatus.SC_UNAUTHORIZED);
-//                handleError(resp, HttpStatus.SC_UNAUTHORIZED);
-//                return null;
             }
             httpRequest.setHeader(HttpHeaders.AUTHORIZATION, HandlerConstants.BEARER + authData.getAccessToken());
             ProxyResponse proxyResponse = HandlerUtil.execute(httpRequest);
             if (proxyResponse.getExecutorResponse().contains(HandlerConstants.EXECUTOR_EXCEPTION_PREFIX)) {
                 log.error("Error occurred while invoking the API after refreshing the token.");
                 return proxyResponse;
-//                HandlerUtil.handleError(resp, proxyResponse);
-//                return null;
             }
             return proxyResponse;
 
