@@ -298,9 +298,9 @@ public class DeviceManagementDAOFactory {
                 for (JNDILookupDefinition.JNDIProperty prop : jndiPropertyList) {
                     jndiProperties.put(prop.getName(), prop.getValue());
                 }
-                dataSource = DeviceManagementDAOUtil.lookupDataSource(config.getJndiLookupDefinition().getJndiName(), jndiProperties);
+                dataSource = DeviceManagementDAOUtil.lookupDataSource(jndiConfig.getJndiName(), jndiProperties);
             } else {
-                dataSource = DeviceManagementDAOUtil.lookupDataSource(config.getJndiLookupDefinition().getJndiName(), null);
+                dataSource = DeviceManagementDAOUtil.lookupDataSource(jndiConfig.getJndiName(), null);
             }
         }
         return dataSource;

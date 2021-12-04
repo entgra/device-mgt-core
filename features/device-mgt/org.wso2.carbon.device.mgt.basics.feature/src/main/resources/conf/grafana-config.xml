@@ -19,11 +19,14 @@
 -->
 
 <GrafanaConfiguration>
-	<CacheConfiguration>
-		<Cache name="queryAPICache">
+	<Cache >
+		<CacheConfiguration name="queryAPICache">
 			<Capacity>100</Capacity>
-		</Cache>
-	</CacheConfiguration>
+		</CacheConfiguration>
+		<CacheConfiguration name="encodedQueryCache">
+			<Capacity>100</Capacity>
+		</CacheConfiguration>
+	</Cache>
 	<AdminUser>
 		<!-- properties can be listed and can be picked up in the relevant implementation class as required-->
 		<Username>admin</Username>
