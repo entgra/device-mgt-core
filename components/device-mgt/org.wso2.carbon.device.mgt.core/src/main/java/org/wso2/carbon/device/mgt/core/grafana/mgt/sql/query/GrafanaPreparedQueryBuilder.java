@@ -17,6 +17,7 @@
  */
 package org.wso2.carbon.device.mgt.core.grafana.mgt.sql.query;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.exception.QueryMisMatch;
@@ -159,15 +160,18 @@ public class GrafanaPreparedQueryBuilder {
     }
 
     private static String unQuoteString(String str) {
-        int firstCharIndex = 0;
-        int lastCharIndex = str.length() - 1;
         if (isQuoted(str)) {
+            int firstCharIndex = 0;
+            int lastCharIndex = str.length() - 1;
             return str.substring(firstCharIndex + 1, lastCharIndex);
         }
         return str;
     }
 
     private static boolean isQuoted(String str) {
+        if (StringUtils.isEmpty(str)) {
+            return false;
+        }
         int firstCharIndex = 0;
         int lastCharIndex = str.length() - 1;
         return (str.charAt(firstCharIndex) == '\'' && str.charAt(lastCharIndex) == '\'') ||
