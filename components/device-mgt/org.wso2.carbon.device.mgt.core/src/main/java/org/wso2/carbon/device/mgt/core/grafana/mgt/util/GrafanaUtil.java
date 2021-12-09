@@ -31,7 +31,6 @@ import org.wso2.carbon.device.mgt.core.grafana.mgt.config.GrafanaConfigurationMa
 import org.wso2.carbon.device.mgt.core.grafana.mgt.exception.GrafanaEnvVariablesNotDefined;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.service.GrafanaAPIService;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.service.GrafanaQueryService;
-import org.wso2.carbon.device.mgt.core.grafana.mgt.service.impl.GrafanaQueryServiceImpl;
 import org.wso2.carbon.device.mgt.core.report.mgt.Constants;
 
 import java.net.URI;
@@ -102,7 +101,7 @@ public class GrafanaUtil {
     }
 
     public static GrafanaPanelIdentifier getPanelIdentifierFromReferer(String referer) {
-        URI refererUri = URI.create(referer);
+        URI refererUri = HttpUtil.createURI(referer);
         String orgId = GrafanaUtil.getOrgId(refererUri);
         String dashboardUID = GrafanaUtil.getDashboardUID(refererUri);
         String panelId = GrafanaUtil.getPanelId(refererUri);

@@ -95,7 +95,7 @@ public class GrafanaWebSocketClient extends Endpoint {
         return grafanaServerSession;
     }
 
-    public void addMessageHandler(Consumer<String> messageConsumer) {
+    public void addMessageConsumer(Consumer<String> messageConsumer) {
         this.messageConsumer = messageConsumer;
     }
 }

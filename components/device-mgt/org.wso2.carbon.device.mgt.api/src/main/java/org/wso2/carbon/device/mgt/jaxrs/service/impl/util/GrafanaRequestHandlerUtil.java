@@ -108,7 +108,7 @@ public class GrafanaRequestHandlerUtil {
     public static  URI generateGrafanaUri(UriInfo requestUriInfo) throws GrafanaEnvVariablesNotDefined {
         String base = GrafanaUtil.getGrafanaHTTPBase(requestUriInfo.getRequestUri().getScheme());
         String grafanaRequestPath = getGrafanaRequestPathWQuery(requestUriInfo);
-        return URI.create(GrafanaUtil.generateGrafanaUrl(grafanaRequestPath, base));
+        return HttpUtil.createURI(GrafanaUtil.generateGrafanaUrl(grafanaRequestPath, base));
     }
 
     public static  String getGrafanaRequestPathWQuery(UriInfo requestUriInfo) {

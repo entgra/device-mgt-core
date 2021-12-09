@@ -34,6 +34,11 @@ import java.util.Map;
 
 public class HttpUtil {
 
+    public static URI createURI(String uriString) {
+        uriString = uriString.replace(" ", "%20");
+        return URI.create(uriString);
+    }
+
     public static String getRequestSubPathFromEnd(URI requestUri, int position) {
         if (requestUri.getPath() != null) {
             String[] pathList = requestUri.getPath().split("/");

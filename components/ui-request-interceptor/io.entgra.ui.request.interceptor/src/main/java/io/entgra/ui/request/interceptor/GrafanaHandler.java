@@ -33,6 +33,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.*;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.wso2.carbon.device.mgt.common.exceptions.GrafanaManagementException;
+import org.wso2.carbon.device.mgt.core.common.util.HttpUtil;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.exception.GrafanaEnvVariablesNotDefined;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.util.GrafanaUtil;
 import javax.servlet.annotation.MultipartConfig;
@@ -204,7 +205,7 @@ public class GrafanaHandler extends HttpServlet {
 
     private ProxyResponse executeGrafanaAPIRequest(HttpRequestBase requestBase, HttpServletRequest request)
             throws IOException {
-        URI grafanaUri = URI.create(generateGrafanaAPIUrl(request));
+        URI grafanaUri = HttpUtil.createURI(generateGrafanaAPIUrl(request));
         requestBase.setURI(grafanaUri);
         return HandlerUtil.execute(requestBase);
     }
@@ -220,7 +221,7 @@ public class GrafanaHandler extends HttpServlet {
     }
 
     private String getURIWithQuery(HttpServletRequest request) {
-        String uri = request.getPathInfo().replace(" ", "%20");
+        String uri = request.getPathInfo();
         if (request.getQueryString() != null) {
             uri +=  HandlerConstants.URI_QUERY_SEPARATOR + request.getQueryString();
         }
@@ -229,9 +230,9 @@ public class GrafanaHandler extends HttpServlet {
     private void proxyPassGrafanaRequest(HttpRequestBase requestBase, HttpServletResponse response,
                                          HttpServletRequest request) throws IOException {
         try (CloseableHttpClient client = HandlerUtil.getHttpClient()) {
-            String grafanaUriStr = GrafanaHandlerUtil.generateGrafanaUrl(URI.create(getURIWithQuery(request)),
+            String grafanaUriStr = GrafanaHandlerUtil.generateGrafanaUrl(HttpUtil.createURI(getURIWithQuery(request)),
                     GrafanaUtil.getGrafanaHTTPBase(request.getScheme()));
-            URI grafanaURI = URI.create(grafanaUriStr);
+            URI grafanaURI = HttpUtil.createURI(grafanaUriStr);
             requestBase.setURI(grafanaURI);
             HttpResponse grafanaResponse = invokeGrafanaAPI(client, requestBase);
             forwardGrafanaResponse(grafanaResponse, response);

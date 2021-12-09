@@ -2,7 +2,6 @@ package io.entgra.ui.request.interceptor.websocket;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.device.mgt.common.exceptions.GrafanaManagementException;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.exception.GrafanaEnvVariablesNotDefined;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.util.GrafanaConstants;
 import org.wso2.carbon.device.mgt.core.grafana.mgt.util.GrafanaUtil;
@@ -29,7 +28,7 @@ public class GrafanaWebSocketHandler {
         String grafanaWebSocketUrl = getGrafanaWebSocketUrl(grafanaUri);
         try {
             grafanaClient = new GrafanaWebSocketClient(new URI(grafanaWebSocketUrl));
-            grafanaClient.addMessageHandler(message -> sendMessageToBrowser(browserSession, message));
+            grafanaClient.addMessageConsumer(message -> sendMessageToBrowser(browserSession, message));
         } catch (URISyntaxException e) {
             log.error("Invalid web socket uri provided", e);
         }
