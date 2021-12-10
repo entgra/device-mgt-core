@@ -97,16 +97,18 @@ public class GrafanaPreparedQueryBuilder {
             }
             if (isTenantIdVar(currentVar)) {
                 preparedQueryBuilder.append(GrafanaUtil.getTenantId());
-            } else if (isSafeVariableInput(currentVarInput)) {
-                preparedQueryBuilder.append(currentVarInput);
             } else {
                 // Grafana variable input can be multi-valued, which are separated by comma by default
                 String[] varValues = splitByComma(currentVarInput);
                 List<String> preparedStatementPlaceHolders = new ArrayList<>();
                 for (String v : varValues) {
                     String param = unQuoteString(v);
-                    parameters.add(param);
-                    preparedStatementPlaceHolders.add(PreparedQuery.PREPARED_SQL_PARAM_PLACEHOLDER);
+                    if (isSafeVariableInput(param)) {
+                        preparedStatementPlaceHolders.add(v);
+                    } else {
+                        parameters.add(param);
+                        preparedStatementPlaceHolders.add(PreparedQuery.PREPARED_SQL_PARAM_PLACEHOLDER);
+                    }
                 }
                 preparedQueryBuilder.append(String.join(COMMA_SEPARATOR, preparedStatementPlaceHolders));
             }
