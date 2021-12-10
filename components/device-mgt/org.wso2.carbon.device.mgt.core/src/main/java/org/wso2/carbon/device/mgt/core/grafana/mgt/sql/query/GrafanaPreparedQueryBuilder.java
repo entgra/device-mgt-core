@@ -155,8 +155,10 @@ public class GrafanaPreparedQueryBuilder {
     }
 
     private static boolean isSafeVariableInput(String currentVarInput) {
+        if (StringUtils.isEmpty(currentVarInput)) {
+            return true;
+        }
         return currentVarInput.matches("\\$?[a-zA-Z0-9-_\\.]+|^\"[a-zA-Z0-9-_\\.\\s]+\"$|^'[a-zA-Z0-9-_\\.\\s]+'$");
-
     }
 
     private static String unQuoteString(String str) {
