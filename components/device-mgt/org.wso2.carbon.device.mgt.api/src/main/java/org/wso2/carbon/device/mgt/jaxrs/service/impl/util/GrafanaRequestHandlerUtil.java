@@ -115,7 +115,10 @@ public class GrafanaRequestHandlerUtil {
         String contextPath = "/reports/grafana";
         String path = requestUriInfo.getPath().substring(contextPath.length());
         String queryParam = requestUriInfo.getRequestUri().getRawQuery();
-        return path + Constants.URI_QUERY_SEPARATOR + queryParam;
+        if (queryParam != null) {
+            path += Constants.URI_QUERY_SEPARATOR + queryParam;
+        }
+        return path;
     }
 
     public static GrafanaPanelIdentifier getPanelIdentifier(HttpHeaders headers) throws RefererNotValid {
