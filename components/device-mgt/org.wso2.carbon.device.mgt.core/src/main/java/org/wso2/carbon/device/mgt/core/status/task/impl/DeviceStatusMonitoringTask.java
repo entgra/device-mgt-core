@@ -115,13 +115,13 @@ public class DeviceStatusMonitoringTask extends DynamicPartitionedScheduleTask {
 
                 //added newly
                 //To raise a ticket
-                if(subject != ""){
+                /*if(!subject.equals("")){
                     message="Hi, \r\n The IoT device bearing "+monitoringData.getDevice().getDeviceIdentifier();
                     message+=" device identifier is in "+subject+" state. \r\n\n";
                     message+="Device Type - "+deviceType+", \r\n";
                     message+="Device Identifier - "+monitoringData.getDevice().getDeviceIdentifier()+", \r\n";
                     message+="Device Id - "+monitoringData.getDevice().getId()+", \r\n";
-                    message+="Device Name - "+monitoringData.getDevice().getName()+". \r\n";
+                    message+="Device Name - "+monitoringData.getDevice().getName()+". \r\n";//use stringbuilder
                     TicketingClientDeviceInfo uvdi = new TicketingClientDeviceInfo(subject, message);
 
                     DeviceAPIClientServiceImpl dac= new DeviceAPIClientServiceImpl();
@@ -129,15 +129,15 @@ public class DeviceStatusMonitoringTask extends DynamicPartitionedScheduleTask {
 
                     if (log.isDebugEnabled()) {
                         log.debug("Response - "+ deviceAPIClientResponse);
-                        /*log.debug(subject+" DEBUG status");
+                        *//*log.debug(subject+" DEBUG status");
                         log.debug("DeviceType - " + deviceType);
                         log.debug("DeviceTypeId - " + deviceTypeId);
                         log.debug("GetDeviceIdentifier - " + monitoringData.getDevice().getDeviceIdentifier());
                         log.debug("GetId - " + monitoringData.getDevice().getId());
-                        log.debug("GetName - " + monitoringData.getDevice().getName());*/
+                        log.debug("GetName - " + monitoringData.getDevice().getName());*//*
                     }
                 }
-                //added newly
+                //added newly*/
 
                 if (status != null) {
                     enrolmentInfo.setStatus(status);
@@ -161,7 +161,7 @@ public class DeviceStatusMonitoringTask extends DynamicPartitionedScheduleTask {
             }
 
 
-        } catch (DeviceManagementException | IOException e) {
+        } catch (DeviceManagementException e) {
             String msg = "Error occurred while retrieving devices list for monitoring.";
             log.error(msg, e);
         }
