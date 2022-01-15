@@ -88,7 +88,7 @@ public class DeviceStatusPersistenceTests extends BaseDeviceManagementTest {
             EnrolmentInfo.Status[] statuses = {ACTIVE};
             int enrolmentId = createNewEnrolmentAddStatuses(device, "admin", statuses);
 
-            DeviceManagementDAOFactory.openConnection();
+//            DeviceManagementDAOFactory.openConnection();
             validateDeviceStatus(device, deviceStatusDAO.getStatus(enrolmentId), statuses);
             validateDeviceStatus(device, deviceStatusDAO.getStatus(device.getId(), TestDataHolder.SUPER_TENANT_ID),
                     new EnrolmentInfo.Status[][]{statuses});
@@ -96,8 +96,8 @@ public class DeviceStatusPersistenceTests extends BaseDeviceManagementTest {
             log.error("Error occurred while getting enrolment status", e);
         } catch (Exception e) {
             log.error("Error occurred while initializing datasource", e);
-        } finally{
-            DeviceManagementDAOFactory.closeConnection();
+//        } finally{
+//            DeviceManagementDAOFactory.closeConnection();
         }
     }
 
@@ -109,7 +109,7 @@ public class DeviceStatusPersistenceTests extends BaseDeviceManagementTest {
             addDevice(device);
             EnrolmentInfo.Status[] statuses = {ACTIVE, ASSIGNED, CONFIGURED, READY_TO_CONNECT};
             int enrolmentId = createNewEnrolmentAddStatuses(device, "admin", statuses);
-            DeviceManagementDAOFactory.openConnection();
+//            DeviceManagementDAOFactory.openConnection();
             validateDeviceStatus(device, deviceStatusDAO.getStatus(enrolmentId),statuses);
             validateDeviceStatus(device, deviceStatusDAO.getStatus(device.getId(), TestDataHolder.SUPER_TENANT_ID),
                     new EnrolmentInfo.Status[][]{statuses});
@@ -117,8 +117,8 @@ public class DeviceStatusPersistenceTests extends BaseDeviceManagementTest {
             log.error("Error occurred while getting enrolment status", e);
         } catch (Exception e) {
             log.error("Error occurred while initializing datasource", e);
-        } finally{
-            DeviceManagementDAOFactory.closeConnection();
+//        } finally{
+//            DeviceManagementDAOFactory.closeConnection();
         }
     }
 
@@ -141,9 +141,9 @@ public class DeviceStatusPersistenceTests extends BaseDeviceManagementTest {
             EnrolmentInfo.Status[] statuses1_3 = Stream.concat(Arrays.stream(statuses1), Arrays.stream(statuses3)).toArray(EnrolmentInfo.Status[]::new);
 
             // introducing a delay so that data is committed to the database before we try to retrieve for validation
-            Thread.sleep(5000);
+//            Thread.sleep(5000);
 
-            DeviceManagementDAOFactory.openConnection();
+//            DeviceManagementDAOFactory.openConnection();
             validateDeviceStatus(device, deviceStatusDAO.getStatus(enrolmentId1), statuses1_3);
             validateDeviceStatus(device, deviceStatusDAO.getStatus(enrolmentId2), statuses2);
 
@@ -153,8 +153,8 @@ public class DeviceStatusPersistenceTests extends BaseDeviceManagementTest {
             log.error("Error occurred while getting enrolment status", e);
         } catch (Exception e) {
             log.error("Error occurred while initializing data source", e);
-        } finally{
-            DeviceManagementDAOFactory.closeConnection();
+//        } finally{
+//            DeviceManagementDAOFactory.closeConnection();
         }
     }
     private int addDevice(Device device) throws DeviceManagementDAOException {
