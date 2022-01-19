@@ -52,10 +52,10 @@ public class GrafanaManagementServiceComponent {
             GrafanaMgtDataHolder.getInstance().setGrafanaQueryService(grafanaQueryService);
 
             if (log.isDebugEnabled()) {
-                log.debug("Certificate management core bundle has been successfully initialized");
+                log.debug("Grafana management core bundle has been successfully initialized");
             }
         } catch (Throwable e) {
-            log.error("Error occurred while initializing certificate management core bundle", e);
+            log.error("Error occurred while initializing grafana management core bundle", e);
         }
     }
 
