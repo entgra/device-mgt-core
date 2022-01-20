@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2022, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -23,27 +23,24 @@ import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.status.task.DeviceStatusTaskException;
 
 /**
- * This interface defines the methods that should be implemented by the management service of
- * DeviceStatusMonitoringTask.
+ * This interface defines the methods that should be implemented by the management service of OperationTimeoutTask
  */
 public interface OperationTimeoutTaskManagerService {
 
     /**
-     * This method will start the task.
-     *
-     * @param deviceType - DeviceType
-     * @param deviceStatusTaskConfig - DeviceStatusTaskConfig
-     * @throws DeviceStatusTaskException
+     * This method will start the task
+     * @param deviceType
+     * @param config
+     * @throws OperationTimeoutTaskException
      */
     void startTask(DeviceType deviceType, OperationTimeout config)
             throws OperationTimeoutTaskException;
 
     /**
      * This method will stop the task.
-     *
-     * @param deviceType - DeviceType
-     * @param deviceStatusTaskConfig - DeviceStatusTaskConfig
-     * @throws DeviceStatusTaskException
+     * @param deviceType
+     * @param config
+     * @throws OperationTimeoutTaskException
      */
     void stopTask(DeviceType deviceType, OperationTimeout config)
             throws OperationTimeoutTaskException;
@@ -52,16 +49,18 @@ public interface OperationTimeoutTaskManagerService {
      * This will update the task frequency which it runs.
      *
      * @param deviceType
-     * @param deviceStatusTaskConfig - DeviceStatusTaskConfig
-     * @throws DeviceStatusTaskException
+     * @param config
+     * @throws OperationTimeoutTaskException
      */
     void updateTask(DeviceType deviceType, OperationTimeout config)
             throws OperationTimeoutTaskException;
 
     /**
      * This will check weather the task is scheduled.
-     * @param deviceType - Device Type
-     * @throws DeviceStatusTaskException
+     *
+     * @param deviceType
+     * @return
+     * @throws OperationTimeoutTaskException
      */
     boolean isTaskScheduled(DeviceType deviceType) throws OperationTimeoutTaskException;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2022, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -20,7 +20,7 @@
 package org.wso2.carbon.device.mgt.core.operation.timeout.task;
 
 /**
- * This exception class defines the custom exceptions thrown by the DeviceStatusMonitoringTask related components.
+ * This exception class defines the custom exceptions thrown by the OperationTimeoutTask related components.
  */
 public class OperationTimeoutTaskException extends Exception {
 

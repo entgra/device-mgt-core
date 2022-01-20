@@ -1,3 +1,21 @@
+/*
+ *   Copyright (c) 2022, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *   WSO2 Inc. licenses this file to you under the Apache License,
+ *   Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing,
+ *   software distributed under the License is distributed on an
+ *   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *   KIND, either express or implied.  See the License for the
+ *   specific language governing permissions and limitations
+ *   under the License.
+ *
+ */
 package org.wso2.carbon.device.mgt.core.operation.timeout.task.impl;
 
 import com.google.gson.Gson;
@@ -17,9 +35,6 @@ import org.wso2.carbon.ntask.core.service.TaskService;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by amalka on 1/19/22.
- */
 public class OperationTimeoutTaskManagerServiceImpl implements OperationTimeoutTaskManagerService {
 
     private static final Log log = LogFactory.getLog(OperationTimeoutTaskManagerServiceImpl.class);
@@ -139,8 +154,8 @@ public class OperationTimeoutTaskManagerServiceImpl implements OperationTimeoutT
             taskManager = taskService.getTaskManager(OPERATION_TIMEOUT_TASK);
             return taskManager.isTaskScheduled(taskName);
         } catch (TaskException e) {
-            throw new OperationTimeoutTaskException("Error occurred while checking task schedule status of Operation timeout task for device-type : " +
-                    deviceType.getName(), e);
+            throw new OperationTimeoutTaskException("Error occurred while checking task schedule status of " +
+                    "Operation timeout task for device-type : " + deviceType.getName(), e);
         }
     }
 }

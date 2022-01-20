@@ -114,9 +114,12 @@ public class DeviceTaskManagerServiceComponent {
     }
 
     private void startOperationTimeoutTask(BundleContext bundleContext) {
-        OperationTimeoutTaskManagerService operationTimeoutTaskManagerService = new OperationTimeoutTaskManagerServiceImpl();
-        DeviceManagementDataHolder.getInstance().setOperationTimeoutTaskManagerService(operationTimeoutTaskManagerService);
-        bundleContext.registerService(OperationTimeoutTaskManagerService.class, operationTimeoutTaskManagerService, null);
+        OperationTimeoutTaskManagerService operationTimeoutTaskManagerService =
+                new OperationTimeoutTaskManagerServiceImpl();
+        DeviceManagementDataHolder.getInstance().setOperationTimeoutTaskManagerService(
+                operationTimeoutTaskManagerService);
+        bundleContext.registerService(OperationTimeoutTaskManagerService.class,
+                operationTimeoutTaskManagerService, null);
 
         OperationTimeoutConfiguration configuration = deviceManagementConfig.getOperationTimeoutConfiguration();
 
@@ -126,20 +129,22 @@ public class DeviceTaskManagerServiceComponent {
                     // get all device types and start task
                     List<DeviceType> deviceTypeList = null;
                     try {
-                        deviceTypeList = DeviceManagementDataHolder.getInstance().getDeviceManagementProvider().getDeviceTypes();
-                        for(DeviceType deviceType1 : deviceTypeList) {
+                        deviceTypeList = DeviceManagementDataHolder.getInstance()
+                                .getDeviceManagementProvider().getDeviceTypes();
+                        for (DeviceType deviceType1 : deviceTypeList) {
                             operationTimeoutTaskManagerService.startTask(deviceType1, operationTimeout);
                         }
                     } catch (DeviceManagementException | OperationTimeoutTaskException e) {
-                        e.printStackTrace();
+                        log.error("Error while starting the operation timeout task for device type : " + deviceType);
                     }
 
                 } else {
                     try {
-                        DeviceType deviceType1 = DeviceManagementDataHolder.getInstance().getDeviceManagementProvider().getDeviceType(deviceType);
+                        DeviceType deviceType1 = DeviceManagementDataHolder.getInstance()
+                                .getDeviceManagementProvider().getDeviceType(deviceType);
                         operationTimeoutTaskManagerService.startTask(deviceType1, operationTimeout);
                     } catch (DeviceManagementException | OperationTimeoutTaskException e) {
-                        e.printStackTrace();
+                        log.error("Error while starting the operation timeout task for device type : " + deviceType);
                     }
                 }
             }
@@ -153,7 +158,7 @@ public class DeviceTaskManagerServiceComponent {
             if (deviceManagementConfig != null && deviceManagementConfig.getDeviceStatusTaskConfig().isEnabled()) {
                 stopDeviceStatusMonitoringTask();
             }
-            if (deviceManagementConfig != null && !deviceManagementConfig.getOperationTimeoutConfiguration().getOperationTimeoutList().isEmpty()) {
+            if (deviceManagementConfig != null && deviceManagementConfig.getOperationTimeoutConfiguration() != null) {
                 stopOperationTimeoutTask();
             }
         } catch (Throwable e) {
@@ -191,7 +196,8 @@ public class DeviceTaskManagerServiceComponent {
     }
 
     private void stopOperationTimeoutTask() {
-        OperationTimeoutTaskManagerService operationTimeoutTaskManagerService = DeviceManagementDataHolder.getInstance().getOperationTimeoutTaskManagerService();
+        OperationTimeoutTaskManagerService operationTimeoutTaskManagerService =
+                DeviceManagementDataHolder.getInstance().getOperationTimeoutTaskManagerService();
         OperationTimeoutConfiguration configuration = deviceManagementConfig.getOperationTimeoutConfiguration();
 
         for (OperationTimeout operationTimeout : configuration.getOperationTimeoutList()) {
@@ -200,20 +206,22 @@ public class DeviceTaskManagerServiceComponent {
                     // get all device types and start task
                     List<DeviceType> deviceTypeList = null;
                     try {
-                        deviceTypeList = DeviceManagementDataHolder.getInstance().getDeviceManagementProvider().getDeviceTypes();
+                        deviceTypeList = DeviceManagementDataHolder.getInstance()
+                                .getDeviceManagementProvider().getDeviceTypes();
                         for(DeviceType deviceType1 : deviceTypeList) {
                             operationTimeoutTaskManagerService.stopTask(deviceType1, operationTimeout);
                         }
                     } catch (DeviceManagementException | OperationTimeoutTaskException e) {
-                        e.printStackTrace();
+                        log.error("Error while stopping the operation timeout task for device type : " + deviceType);
                     }
 
                 } else {
                     try {
-                        DeviceType deviceType1 = DeviceManagementDataHolder.getInstance().getDeviceManagementProvider().getDeviceType(deviceType);
+                        DeviceType deviceType1 = DeviceManagementDataHolder.getInstance()
+                                .getDeviceManagementProvider().getDeviceType(deviceType);
                         operationTimeoutTaskManagerService.stopTask(deviceType1, operationTimeout);
                     } catch (DeviceManagementException | OperationTimeoutTaskException e) {
-                        e.printStackTrace();
+                        log.error("Error while stopping the operation timeout task for device type : " + deviceType);
                     }
                 }
             }
