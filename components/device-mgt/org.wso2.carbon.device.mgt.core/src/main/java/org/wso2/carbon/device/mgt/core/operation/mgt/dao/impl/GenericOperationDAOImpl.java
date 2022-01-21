@@ -1724,7 +1724,7 @@ public class GenericOperationDAOImpl implements OperationDAO {
     }
 
 
-    public List<Activity> getActivities(String deviceType, String operationCode, long updatedSince, String operationStatus)
+    public List<Activity> getActivities(List<String> deviceTypes, String operationCode, long updatedSince, String operationStatus)
             throws OperationManagementDAOException {
         try {
 
@@ -1753,8 +1753,13 @@ public class GenericOperationDAOImpl implements OperationDAO {
                     "INNER JOIN " +
                     "    (SELECT DISTINCT OPERATION_ID FROM DM_ENROLMENT_OP_MAPPING WHERE TENANT_ID = ? ");
 
-            if (deviceType != null) {
-                sql.append("AND DEVICE_TYPE = ? ");
+
+            if (deviceTypes != null && !deviceTypes.isEmpty()) {
+                sql.append("AND DEVICE_TYPE IN (");
+                for (int i = 0; i < deviceTypes.size() - 1; i++) {
+                    sql.append("?, ");
+                }
+                sql.append("?) ");
             }
 
             if (operationCode != null) {
@@ -1772,8 +1777,12 @@ public class GenericOperationDAOImpl implements OperationDAO {
             sql.append("ORDER BY OPERATION_ID ASC ) eom_ordered " +
                     "ON eom_ordered.OPERATION_ID = eom.OPERATION_ID WHERE eom.TENANT_ID = ? ");
 
-            if (deviceType != null) {
-                sql.append("AND eom.DEVICE_TYPE = ? ");
+            if (deviceTypes != null && !deviceTypes.isEmpty()) {
+                sql.append("AND DEVICE_TYPE IN (");
+                for (int i = 0; i < deviceTypes.size() - 1; i++) {
+                    sql.append("?, ");
+                }
+                sql.append("?) ");
             }
 
             if (operationCode != null) {
@@ -1793,8 +1802,11 @@ public class GenericOperationDAOImpl implements OperationDAO {
             int index = 1;
             try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
                 stmt.setInt(index++, tenantId);
-                if (deviceType != null) {
-                    stmt.setString(index++, deviceType);
+
+                if (deviceTypes != null && !deviceTypes.isEmpty()) {
+                    for (String deviceId : deviceTypes) {
+                        stmt.setString(index++, deviceId);
+                    }
                 }
 
                 if (operationCode != null) {
@@ -1811,8 +1823,10 @@ public class GenericOperationDAOImpl implements OperationDAO {
 
                 stmt.setInt(index++, tenantId);
 
-                if (deviceType != null) {
-                    stmt.setString(index++, deviceType);
+                if (deviceTypes != null && !deviceTypes.isEmpty()) {
+                    for (String deviceId : deviceTypes) {
+                        stmt.setString(index++, deviceId);
+                    }
                 }
 
                 if (operationCode != null) {

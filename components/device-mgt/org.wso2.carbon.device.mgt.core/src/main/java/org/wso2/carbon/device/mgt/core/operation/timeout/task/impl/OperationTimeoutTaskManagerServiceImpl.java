@@ -19,14 +19,13 @@
 package org.wso2.carbon.device.mgt.core.operation.timeout.task.impl;
 
 import com.google.gson.Gson;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.device.mgt.core.config.operation.timeout.OperationTimeout;
-import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.internal.DeviceManagementDataHolder;
 import org.wso2.carbon.device.mgt.core.operation.timeout.task.OperationTimeoutTaskException;
 import org.wso2.carbon.device.mgt.core.operation.timeout.task.OperationTimeoutTaskManagerService;
-import org.wso2.carbon.device.mgt.core.operation.timeout.task.impl.OperationTimeoutTask;
 import org.wso2.carbon.ntask.common.TaskException;
 import org.wso2.carbon.ntask.core.TaskInfo;
 import org.wso2.carbon.ntask.core.TaskManager;
@@ -40,22 +39,24 @@ public class OperationTimeoutTaskManagerServiceImpl implements OperationTimeoutT
     private static final Log log = LogFactory.getLog(OperationTimeoutTaskManagerServiceImpl.class);
 
     public static final String OPERATION_TIMEOUT_TASK = "OPERATION_TIMEOUT_TASK";
-    static final String DEVICE_TYPE = "DEVICE_TYPE";
-    static final String DEVICE_TYPE_ID = "DEVICE_TYPE_ID";
+    static final String DEVICE_TYPES = "DEVICE_TYPES";
     static final String OPERATION_TIMEOUT_TASK_CONFIG = "OPERATION_TIMEOUT_TASK_CONFIG";
+    static final String INITIAL_STATUS = "INITIAL_STATUS";
     private static final String TASK_CLASS = OperationTimeoutTask.class.getName();
 
     @Override
-    public void startTask(DeviceType deviceType, OperationTimeout config)
+    public void startTask(OperationTimeout config)
             throws OperationTimeoutTaskException {
-        log.info("Operation timeout task adding for " + deviceType.getName());
+        log.info("Operation timeout task adding for device type(s) : " + config.getDeviceTypes()
+                + ", operation code : " + config.getInitialStatus());
 
         try {
             TaskService taskService = DeviceManagementDataHolder.getInstance().getTaskService();
             taskService.registerTaskType(OPERATION_TIMEOUT_TASK);
 
             if (log.isDebugEnabled()) {
-                log.debug("Operation timeout task is started for the device type " + deviceType.getName());
+                log.debug("Operation timeout task is started for the device type(s) : " + config.getDeviceTypes()
+                        + ", operation code : " + config.getInitialStatus());
                 log.debug(
                         "Operation timeout task is at frequency of : " + config.getTimeout() + " minutes");
             }
@@ -64,7 +65,7 @@ public class OperationTimeoutTaskManagerServiceImpl implements OperationTimeoutT
 
             TaskInfo.TriggerInfo triggerInfo = new TaskInfo.TriggerInfo();
             //Convert to milli seconds
-            triggerInfo.setIntervalMillis(config.getTimeout()*60*1000);
+            triggerInfo.setIntervalMillis(config.getTimeout() * 60 * 1000);
             triggerInfo.setRepeatCount(-1);
 
             Gson gson = new Gson();
@@ -72,11 +73,12 @@ public class OperationTimeoutTaskManagerServiceImpl implements OperationTimeoutT
 
             Map<String, String> properties = new HashMap<>();
 
-            properties.put(DEVICE_TYPE, deviceType.getName());
-            properties.put(DEVICE_TYPE_ID, deviceType.getId() + "");
+            String deviceTypes = StringUtils.join(config.getDeviceTypes(), "_");
+            properties.put(DEVICE_TYPES, deviceTypes);
+            properties.put(INITIAL_STATUS, config.getInitialStatus());
             properties.put(OPERATION_TIMEOUT_TASK_CONFIG, operationTimeoutConfig);
 
-            String taskName = OPERATION_TIMEOUT_TASK + "_" + deviceType.getName() + "_" + deviceType.getId();
+            String taskName = OPERATION_TIMEOUT_TASK + "_" + config.getInitialStatus() + "_" + deviceTypes;
 
             if (!taskManager.isTaskScheduled(taskName)) {
                 TaskInfo taskInfo = new TaskInfo(taskName, TASK_CLASS, properties, triggerInfo);
@@ -84,37 +86,43 @@ public class OperationTimeoutTaskManagerServiceImpl implements OperationTimeoutT
                 taskManager.rescheduleTask(taskInfo.getName());
             } else {
                 throw new OperationTimeoutTaskException(
-                        "Operation Timeout task is already started for this device-type : " + deviceType.getName());
+                        "Operation Timeout task is already started for the device type(s) : " + config.getDeviceTypes()
+                                + ", operation code : " + config.getInitialStatus());
             }
         } catch (TaskException e) {
             throw new OperationTimeoutTaskException("Error occurred while creating the Operation timeout task " +
-                    "for device-type : " + deviceType.getName(), e);
+                    "for the device type(s) : " + config.getDeviceTypes() + ", operation code : " + config
+                    .getInitialStatus(), e);
         }
     }
 
     @Override
-    public void stopTask(DeviceType deviceType, OperationTimeout config)
+    public void stopTask(OperationTimeout config)
             throws OperationTimeoutTaskException {
         try {
             TaskService taskService = DeviceManagementDataHolder.getInstance().getTaskService();
-            String taskName = OPERATION_TIMEOUT_TASK + "_" + deviceType.getName() + "_" + deviceType.getId();
+            String deviceTypes = StringUtils.join(config.getDeviceTypes(), "_");
+            String taskName = OPERATION_TIMEOUT_TASK + "_" + config.getInitialStatus() + "_" + deviceTypes;
             if (taskService != null && taskService.isServerInit()) {
                 TaskManager taskManager = taskService.getTaskManager(OPERATION_TIMEOUT_TASK);
                 taskManager.deleteTask(taskName);
             }
         } catch (TaskException e) {
             throw new OperationTimeoutTaskException("Error occurred while deleting the Operation timeout task " +
-                    "for device-type : " + deviceType.getName(), e);
+                    "for the device type(s) : " + config.getDeviceTypes() + ", operation code : " + config
+                    .getInitialStatus(), e);
         }
     }
 
     @Override
-    public void updateTask(DeviceType deviceType, OperationTimeout config)
+    public void updateTask(OperationTimeout config)
             throws OperationTimeoutTaskException {
         try {
             TaskService taskService = DeviceManagementDataHolder.getInstance().getTaskService();
             TaskManager taskManager = taskService.getTaskManager(OPERATION_TIMEOUT_TASK);
-            String taskName = OPERATION_TIMEOUT_TASK + "_" + deviceType + "_" + deviceType.getId();
+            String deviceTypes = StringUtils.join(config.getDeviceTypes(), "_");
+            String taskName = OPERATION_TIMEOUT_TASK + "_" + config.getInitialStatus() + "_" + deviceTypes;
+
             if (taskManager.isTaskScheduled(taskName)) {
                 taskManager.deleteTask(taskName);
                 TaskInfo.TriggerInfo triggerInfo = new TaskInfo.TriggerInfo();
@@ -122,8 +130,8 @@ public class OperationTimeoutTaskManagerServiceImpl implements OperationTimeoutT
                 triggerInfo.setRepeatCount(-1);
 
                 Map<String, String> properties = new HashMap<>();
-                properties.put(DEVICE_TYPE, deviceType.getName());
-                properties.put(DEVICE_TYPE_ID, deviceType.getId() + "");
+                properties.put(DEVICE_TYPES, deviceTypes);
+                properties.put(INITIAL_STATUS, config.getInitialStatus());
 
                 Gson gson = new Gson();
                 String deviceStatusTaskConfigs = gson.toJson(config);
@@ -135,27 +143,31 @@ public class OperationTimeoutTaskManagerServiceImpl implements OperationTimeoutT
                 taskManager.rescheduleTask(taskInfo.getName());
             } else {
                 throw new OperationTimeoutTaskException(
-                        "Operation timeout task has not been started for this device-type " +
-                                deviceType.getName() + ". Please start the task first.");
+                        "Operation timeout task has not been started for this device-type the device type(s) : "
+                                + config.getDeviceTypes() + ", operation code : " + config.getInitialStatus() +
+                                ". Please start the task first.");
             }
 
         } catch (TaskException e) {
-            throw new OperationTimeoutTaskException("Error occurred while updating the Operation timeout  " +
-                    "task for device-type : " + deviceType.getName(), e);
+            throw new OperationTimeoutTaskException("Error occurred while updating the Operation timeout task " +
+                    "for the device type(s) : " + config.getDeviceTypes() + ", operation code : " +
+                    config.getInitialStatus(), e);
         }
     }
 
     @Override
-    public boolean isTaskScheduled(DeviceType deviceType) throws OperationTimeoutTaskException {
-        String taskName = OPERATION_TIMEOUT_TASK + "_" + deviceType.getName() + "_" + deviceType.getId();
+    public boolean isTaskScheduled(OperationTimeout config) throws OperationTimeoutTaskException {
+        String deviceTypes = StringUtils.join(config.getDeviceTypes(), "|");
+        String taskName = OPERATION_TIMEOUT_TASK + "_" + config.getInitialStatus() + "_" + deviceTypes;
         TaskService taskService = DeviceManagementDataHolder.getInstance().getTaskService();
         TaskManager taskManager;
         try {
             taskManager = taskService.getTaskManager(OPERATION_TIMEOUT_TASK);
             return taskManager.isTaskScheduled(taskName);
         } catch (TaskException e) {
-            throw new OperationTimeoutTaskException("Error occurred while checking task schedule status of " +
-                    "Operation timeout task for device-type : " + deviceType.getName(), e);
+            throw new OperationTimeoutTaskException("Error occurred while checking the task schedule status " +
+                    "of the Operation timeout task for the device type(s) : " + config.getDeviceTypes() +
+                    ", operation code : " + config.getInitialStatus(), e);
         }
     }
 }

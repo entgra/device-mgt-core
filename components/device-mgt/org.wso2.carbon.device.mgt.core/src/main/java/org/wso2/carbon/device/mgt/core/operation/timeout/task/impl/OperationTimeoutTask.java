@@ -21,28 +21,30 @@ package org.wso2.carbon.device.mgt.core.operation.timeout.task.impl;
 import com.google.gson.Gson;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.operation.mgt.Activity;
 import org.wso2.carbon.device.mgt.common.operation.mgt.ActivityStatus;
 import org.wso2.carbon.device.mgt.common.operation.mgt.Operation;
 import org.wso2.carbon.device.mgt.common.operation.mgt.OperationManagementException;
 import org.wso2.carbon.device.mgt.core.config.operation.timeout.OperationTimeout;
+import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.internal.DeviceManagementDataHolder;
 import org.wso2.carbon.device.mgt.core.task.impl.DynamicPartitionedScheduleTask;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class OperationTimeoutTask extends DynamicPartitionedScheduleTask {
 
     private static final Log log = LogFactory.getLog(OperationTimeoutTask.class);
-    private String deviceType;
     private OperationTimeout operationTimeoutConfig;
 
     @Override
     public void setProperties(Map<String, String> properties) {
         super.setProperties(properties);
-        deviceType = properties.get(OperationTimeoutTaskManagerServiceImpl.DEVICE_TYPE);
-        String operationTimeoutTaskConfigStr = properties.get(OperationTimeoutTaskManagerServiceImpl.OPERATION_TIMEOUT_TASK_CONFIG);
+        String operationTimeoutTaskConfigStr = properties
+                .get(OperationTimeoutTaskManagerServiceImpl.OPERATION_TIMEOUT_TASK_CONFIG);
         Gson gson = new Gson();
         operationTimeoutConfig = gson.fromJson(operationTimeoutTaskConfigStr, OperationTimeout.class);
     }
@@ -66,14 +68,30 @@ public class OperationTimeoutTask extends DynamicPartitionedScheduleTask {
     protected void executeDynamicTask() {
         try {
 
-             long timeMillis = System.currentTimeMillis() - operationTimeoutConfig.getTimeout() * 60 * 1000;
+            long timeMillis = System.currentTimeMillis() - operationTimeoutConfig.getTimeout() * 60 * 1000;
+            List<String> deviceTypes = new ArrayList<>();
+            if (operationTimeoutConfig.getDeviceTypes().size() == 1 &&
+                    "ALL".equals(operationTimeoutConfig.getDeviceTypes().get( 0))) {
+                try {
+                    List<DeviceType> deviceTypeList = DeviceManagementDataHolder.getInstance()
+                            .getDeviceManagementProvider().getDeviceTypes();
+                    for (DeviceType deviceType : deviceTypeList) {
+                        deviceTypes.add(deviceType.getName());
+                    }
+                } catch (DeviceManagementException e) {
+                    log.error("Error occurred while reading device types", e);
+                }
+            } else {
+                deviceTypes = operationTimeoutConfig.getDeviceTypes();
+            }
             List<Activity> activities = DeviceManagementDataHolder.getInstance().getOperationManager()
-                    .getActivities(deviceType, operationTimeoutConfig.getCode(), timeMillis,
+                    .getActivities(deviceTypes, operationTimeoutConfig.getCode(), timeMillis,
                             operationTimeoutConfig.getInitialStatus());
             for (Activity activity : activities) {
-                for(ActivityStatus activityStatus : activity.getActivityStatus()) {
+                for (ActivityStatus activityStatus : activity.getActivityStatus()) {
                     String operationId = activity.getActivityId().replace("ACTIVITY_", "");
-                    Operation operation = DeviceManagementDataHolder.getInstance().getOperationManager().getOperation(Integer.parseInt(operationId));
+                    Operation operation = DeviceManagementDataHolder.getInstance().getOperationManager()
+                            .getOperation(Integer.parseInt(operationId));
                     operation.setStatus(Operation.Status.valueOf(operationTimeoutConfig.getNextStatus()));
                     DeviceManagementDataHolder.getInstance().getOperationManager()
                             .updateOperation(activityStatus.getDeviceIdentifier(), operation);

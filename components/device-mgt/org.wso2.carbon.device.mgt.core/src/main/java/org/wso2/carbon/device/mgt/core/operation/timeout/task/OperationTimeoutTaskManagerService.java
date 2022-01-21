@@ -19,8 +19,6 @@
 package org.wso2.carbon.device.mgt.core.operation.timeout.task;
 
 import org.wso2.carbon.device.mgt.core.config.operation.timeout.OperationTimeout;
-import org.wso2.carbon.device.mgt.core.dto.DeviceType;
-import org.wso2.carbon.device.mgt.core.status.task.DeviceStatusTaskException;
 
 /**
  * This interface defines the methods that should be implemented by the management service of OperationTimeoutTask
@@ -29,38 +27,33 @@ public interface OperationTimeoutTaskManagerService {
 
     /**
      * This method will start the task
-     * @param deviceType
      * @param config
      * @throws OperationTimeoutTaskException
      */
-    void startTask(DeviceType deviceType, OperationTimeout config)
+    void startTask(OperationTimeout config)
             throws OperationTimeoutTaskException;
 
     /**
      * This method will stop the task.
-     * @param deviceType
      * @param config
      * @throws OperationTimeoutTaskException
      */
-    void stopTask(DeviceType deviceType, OperationTimeout config)
+    void stopTask(OperationTimeout config)
             throws OperationTimeoutTaskException;
 
     /**
      * This will update the task frequency which it runs.
      *
-     * @param deviceType
      * @param config
      * @throws OperationTimeoutTaskException
      */
-    void updateTask(DeviceType deviceType, OperationTimeout config)
+    void updateTask(OperationTimeout config)
             throws OperationTimeoutTaskException;
 
     /**
      * This will check weather the task is scheduled.
-     *
-     * @param deviceType
      * @return
      * @throws OperationTimeoutTaskException
      */
-    boolean isTaskScheduled(DeviceType deviceType) throws OperationTimeoutTaskException;
+    boolean isTaskScheduled(OperationTimeout config) throws OperationTimeoutTaskException;
 }
