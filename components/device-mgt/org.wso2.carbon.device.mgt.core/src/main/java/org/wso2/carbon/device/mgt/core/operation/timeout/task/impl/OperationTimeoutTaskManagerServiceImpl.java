@@ -157,7 +157,7 @@ public class OperationTimeoutTaskManagerServiceImpl implements OperationTimeoutT
 
     @Override
     public boolean isTaskScheduled(OperationTimeout config) throws OperationTimeoutTaskException {
-        String deviceTypes = StringUtils.join(config.getDeviceTypes(), "|");
+        String deviceTypes = StringUtils.join(config.getDeviceTypes(), "_");
         String taskName = OPERATION_TIMEOUT_TASK + "_" + config.getInitialStatus() + "_" + deviceTypes;
         TaskService taskService = DeviceManagementDataHolder.getInstance().getTaskService();
         TaskManager taskManager;
