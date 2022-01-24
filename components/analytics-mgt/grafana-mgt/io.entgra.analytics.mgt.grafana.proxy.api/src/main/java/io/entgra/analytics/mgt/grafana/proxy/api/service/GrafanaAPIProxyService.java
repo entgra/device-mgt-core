@@ -50,7 +50,7 @@ import javax.ws.rs.core.UriInfo;
                 }
         ),
         tags = {
-                @Tag(name = "device_management", description = "")
+                @Tag(name = "analytics_management", description = "")
         }
 )
 @Scopes(
