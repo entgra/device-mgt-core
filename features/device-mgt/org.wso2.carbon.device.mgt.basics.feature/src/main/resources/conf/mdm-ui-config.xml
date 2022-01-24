@@ -34,6 +34,7 @@
         <AllowToAllDomains>true</AllowToAllDomains>
     </AppRegistration>
     <Scopes>
+        <Scope>perm:grafana:api:view</Scope>
         <Scope>perm:app:review:view</Scope>
         <Scope>perm:app:review:update</Scope>
         <Scope>perm:app:publisher:view</Scope>

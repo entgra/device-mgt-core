@@ -61,6 +61,8 @@ public class GrafanaManagementServiceComponent {
 
     @SuppressWarnings("unused")
     protected void deactivate(ComponentContext componentContext) {
-        //do nothing
+        if (log.isDebugEnabled()) {
+            log.debug("De-activating Grafana Management Service Component");
+        }
     }
 }

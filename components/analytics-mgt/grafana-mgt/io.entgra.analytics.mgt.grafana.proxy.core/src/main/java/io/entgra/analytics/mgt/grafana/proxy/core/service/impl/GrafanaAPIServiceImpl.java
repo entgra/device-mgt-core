@@ -51,16 +51,6 @@ public class GrafanaAPIServiceImpl implements GrafanaAPIService {
 
     private static final Log log = LogFactory.getLog(GrafanaAPIServiceImpl.class);
 
-    /**
-     * Get predefined query template from grafana for given panel/variable
-     * @param dashboardUID
-     * @param panelId
-     * @param refId
-     * @param requestScheme
-     * @return query of the given panel/variable
-     * @throws IOException
-     * @throws GrafanaManagementException
-     */
     public String getQueryTemplate(String dashboardUID, String panelId, String refId,
                                    String requestScheme) throws IOException, GrafanaManagementException {
         try {
@@ -97,6 +87,7 @@ public class GrafanaAPIServiceImpl implements GrafanaAPIService {
 
     /**
      * Get predefined query template from grafana for given variable (template variable)
+     * Note: Here template query means the grafana template variable queries
      * @param dashboardUID
      * @param refId
      * @param requestScheme
@@ -140,15 +131,6 @@ public class GrafanaAPIServiceImpl implements GrafanaAPIService {
         return template;
     }
 
-    /**
-     * Get panel details by dashboard uid and panel Id
-     * @param dashboardUID
-     * @param panelId
-     * @param requestScheme
-     * @return Panel details
-     * @throws IOException
-     * @throws GrafanaManagementException
-     */
     public JsonObject getPanelDetails(String dashboardUID, String panelId, String requestScheme) throws
             IOException, GrafanaManagementException {
         JsonObject dashboard = getDashboardDetails(dashboardUID, requestScheme);
@@ -161,14 +143,6 @@ public class GrafanaAPIServiceImpl implements GrafanaAPIService {
         return panel;
     }
 
-    /**
-     * Get dashboard details by uid
-     * @param dashboardUID
-     * @param requestScheme
-     * @return Dashboard details
-     * @throws IOException
-     * @throws GrafanaManagementException
-     */
     public JsonObject getDashboardDetails(String dashboardUID, String requestScheme) throws IOException,
             GrafanaManagementException {
         String dashboardAPI = generateGrafanaAPIBaseUri(GrafanaConstants.DASHBOARD_API, requestScheme) + dashboardUID;
@@ -181,14 +155,6 @@ public class GrafanaAPIServiceImpl implements GrafanaAPIService {
         return dashboardResponseJsonBody.getAsJsonObject(GrafanaConstants.DASHBOARD_KEY);
     }
 
-    /**
-     * Get datasource details by id
-     * @param datasourceId
-     * @param requestScheme
-     * @return Datasource details
-     * @throws IOException
-     * @throws GrafanaManagementException
-     */
     public Datasource getDatasource(int datasourceId, String requestScheme) throws IOException, GrafanaManagementException {
         String datasourceAPI = generateGrafanaAPIBaseUri(GrafanaConstants.DATASOURCE_API, requestScheme) + datasourceId;
         HttpGet request = new HttpGet(datasourceAPI);

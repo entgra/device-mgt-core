@@ -97,42 +97,6 @@ public class ErrorResponse {
 
     @Override
     public String toString() {
-//        StringBuilder sb = new StringBuilder();
-//        sb.append("{");
-//        boolean cont = false;
-//        if (code != null) {
-//            cont = true;
-//            sb.append("  \"code\": ").append(code);
-//        }
-//        if (message != null) {
-//            if (cont) {
-//                sb.append(",");
-//            }
-//            cont = true;
-//            sb.append("  \"message\": \"").append(message).append("\"");
-//        }
-//        if (description != null) {
-//            if (cont) {
-//                sb.append(",");
-//            }
-//            cont = true;
-//            sb.append("  \"description\": ").append(description).append("\"");
-//        }
-//        if (moreInfo != null) {
-//            if (cont) {
-//                sb.append(",");
-//            }
-//            cont = true;
-//            sb.append("  \"moreInfo\": \"").append(moreInfo).append("\"");
-//        }
-//        if (error != null && error.size() > 0) {
-//            if (cont) {
-//                sb.append(",");
-//            }
-//            sb.append("  \"errorItems\": ").append(error);
-//        }
-//        sb.append("}");
-//        return sb.toString();
         return null;
     }
 

@@ -25,15 +25,50 @@ import java.io.IOException;
 
 public interface GrafanaAPIService {
 
+    /**
+     * Get predefined query template from grafana for given panel/variable
+     * @param dashboardUID
+     * @param panelId
+     * @param refId
+     * @param requestScheme
+     * @return query of the given panel/variable
+     * @throws IOException
+     * @throws GrafanaManagementException
+     */
     String getQueryTemplate(String dashboardUID, String panelId, String refId,
                             String requestScheme) throws IOException, GrafanaManagementException;
 
+    /**
+     * Get panel details by dashboard uid and panel Id
+     * @param dashboardUID
+     * @param panelId
+     * @param requestScheme
+     * @return Panel details
+     * @throws IOException
+     * @throws GrafanaManagementException
+     */
     JsonObject getPanelDetails(String dashboardUID, String panelId, String requestScheme) throws
             IOException, GrafanaManagementException;
 
+    /**
+     * Get dashboard details by uid
+     * @param dashboardUID
+     * @param requestScheme
+     * @return Dashboard details
+     * @throws IOException
+     * @throws GrafanaManagementException
+     */
     JsonObject getDashboardDetails(String dashboardUID, String requestScheme) throws IOException,
             GrafanaManagementException;
 
+    /**
+     * Get datasource details by id
+     * @param datasourceId
+     * @param requestScheme
+     * @return Datasource details
+     * @throws IOException
+     * @throws GrafanaManagementException
+     */
     Datasource getDatasource(int datasourceId, String requestScheme) throws IOException,
             GrafanaManagementException;
 }
