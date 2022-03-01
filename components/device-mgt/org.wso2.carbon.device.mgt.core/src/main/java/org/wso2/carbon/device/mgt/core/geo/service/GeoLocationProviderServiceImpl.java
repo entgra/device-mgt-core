@@ -53,6 +53,7 @@ import org.wso2.carbon.device.mgt.common.geo.service.GeofenceData;
 import org.wso2.carbon.device.mgt.core.cache.impl.GeoCacheManagerImpl;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOException;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOFactory;
+import org.wso2.carbon.device.mgt.core.dao.EventManagementDAOFactory;
 import org.wso2.carbon.device.mgt.core.dao.GeofenceDAO;
 import org.wso2.carbon.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import org.wso2.carbon.device.mgt.core.dto.event.config.GeoFenceGroupMap;
@@ -133,7 +134,7 @@ public class GeoLocationProviderServiceImpl implements GeoLocationProviderServic
     private final GeofenceDAO geofenceDAO;
 
     public GeoLocationProviderServiceImpl() {
-        this.geofenceDAO = DeviceManagementDAOFactory.getGeofenceDAO();
+        this.geofenceDAO = EventManagementDAOFactory.getGeofenceDAO();
     }
 
     public static JWTClientManagerService getJWTClientManagerService() {
