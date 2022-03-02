@@ -704,6 +704,7 @@ ApplicationManagerImpl implements ApplicationManager {
     @Override
     public ApplicationList getApplications(Filter filter) throws ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        String userName = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
         ApplicationList applicationList = new ApplicationList();
         List<Application> applications = new ArrayList<>();
         DeviceType deviceType;
@@ -729,6 +730,7 @@ ApplicationManagerImpl implements ApplicationManager {
                         .setUnrestrictedRoles(visibilityDAO.getUnrestrictedRoles(applicationDTO.getId(), tenantId));
                 applicationDTO.setAppCategories(applicationDAO.getAppCategories(applicationDTO.getId(), tenantId));
                 applicationDTO.setTags(applicationDAO.getAppTags(applicationDTO.getId(), tenantId));
+                applicationDTO.setFavourite(applicationDAO.isFavouriteApp(applicationDTO.getId(), userName, tenantId));
 
                 if (isFilteringApp(applicationDTO, filter)) {
                     boolean isHideableApp = isHideableApp(applicationDTO.getApplicationReleaseDTOs());
