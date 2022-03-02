@@ -43,8 +43,6 @@ public interface ApplicationDAO {
 
     void removeAppFromFavourite(int appId, String userName, int tenantId) throws ApplicationManagementDAOException;
 
-    List<ApplicationDTO> getFavouriteApps(Filter filter, String userName, int deviceTypeId, int tenantId) throws ApplicationManagementDAOException;
-
     boolean isFavouriteApp(int appId, String userName, int tenantId) throws ApplicationManagementDAOException;
 
     /**
