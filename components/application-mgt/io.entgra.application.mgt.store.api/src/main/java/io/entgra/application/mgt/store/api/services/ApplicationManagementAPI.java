@@ -72,6 +72,13 @@ import javax.ws.rs.core.Response;
                         key = "perm:app:store:view",
                         roles = {"Internal/devicemgt-user"},
                         permissions = {"/app-mgt/store/application/view"}
+                ),
+                @Scope(
+                        name = "Modify Application",
+                        description = "Modify application state",
+                        key = "perm:app:store:modify",
+                        roles = {"Internal/devicemgt-user"},
+                        permissions = {"/app-mgt/store/application/modify"}
                 )
         }
 )
@@ -83,15 +90,104 @@ public interface ApplicationManagementAPI {
 
     String SCOPE = "scope";
 
-    @PUT
+    @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/favourite/{appId}")
+    @ApiOperation(
+            consumes = MediaType.APPLICATION_JSON,
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "get all applications",
+            notes = "This will get all applications",
+            tags = "Application Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = SCOPE, value = "perm:app:store:modify")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully removed application from favourites.",
+                            response = ApplicationList.class),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. \n " +
+                                    "Application retrieving request payload contains unacceptable or vulnerable data"),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n Error occurred while getting the application list.",
+                            response = ErrorResponse.class)
+            })
     Response addAppToFavourite(@PathParam("appId") int appId);
 
     @DELETE
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/favourite/{appId}")
+    @ApiOperation(
+            consumes = MediaType.APPLICATION_JSON,
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "get all applications",
+            notes = "This will get all applications",
+            tags = "Application Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = SCOPE, value = "perm:app:store:modify")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully removed application from favourites.",
+                            response = ApplicationList.class),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. \n " +
+                                    "Application retrieving request payload contains unacceptable or vulnerable data"),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n Error occurred while getting the application list.",
+                            response = ErrorResponse.class)
+            })
     Response removeAppFromFavourite(@PathParam("appId") int appId);
+
+    @POST
+    @Path("/favourite/{appId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            consumes = MediaType.APPLICATION_JSON,
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "get all applications",
+            notes = "This will get all applications",
+            tags = "Application Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = SCOPE, value = "perm:app:store:view")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully got application list.",
+                            response = ApplicationList.class),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. \n " +
+                                    "Application retrieving request payload contains unacceptable or vulnerable data"),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n Error occurred while getting the application list.",
+                            response = ErrorResponse.class)
+            })
+    Response getFavouriteApplications(@Valid Filter filter);
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)

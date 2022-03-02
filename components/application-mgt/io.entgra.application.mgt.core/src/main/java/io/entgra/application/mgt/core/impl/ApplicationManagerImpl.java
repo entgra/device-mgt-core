@@ -25,7 +25,6 @@ import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.checkerframework.checker.units.qual.A;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import io.entgra.application.mgt.common.ApplicationArtifact;
@@ -699,6 +698,13 @@ ApplicationManagerImpl implements ApplicationManager {
                 .uploadImageArtifacts(applicationReleaseDTO, applicationArtifact.getIconStream(),
                         applicationArtifact.getBannerStream(), screenshotStreams, tenantId);
         return applicationReleaseDTO;
+    }
+
+    @Override
+    public ApplicationList getFavouriteApplications(Filter filter) throws ApplicationManagementException {
+        String userName = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
+        filter.setFavouredBy(userName);
+        return getApplications(filter);
     }
 
     @Override

@@ -70,7 +70,7 @@ public class ApplicationManagementAPIImpl implements ApplicationManagementAPI {
         }
     }
 
-    @POST
+    @DELETE
     @Override
     @Consumes(MediaType.APPLICATION_JSON)
     public Response removeAppFromFavourite(@PathParam("appId") int appId) {
@@ -91,15 +91,35 @@ public class ApplicationManagementAPIImpl implements ApplicationManagementAPI {
 
     @POST
     @Override
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response getFavouriteApplications(@Valid Filter filter) {
+        ApplicationManager applicationManager = APIUtil.getApplicationManager();
+        try {
+            validateFilter(filter);
+            ApplicationList applications = applicationManager.getFavouriteApplications(filter);
+            return Response.status(Response.Status.OK).entity(applications).build();
+        } catch (BadRequestException e) {
+            String msg = e.getMessage();
+            log.error(msg, e);
+            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+        } catch (UnexpectedServerErrorException e) {
+            String msg = e.getMessage();
+            log.error(msg);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (ApplicationManagementException e) {
+            String msg = e.getMessage();
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
+    @POST
+    @Override
     @Consumes("application/json")
     public Response getApplications(@Valid Filter filter) {
         ApplicationManager applicationManager = APIUtil.getApplicationManager();
         try {
-            if (filter == null) {
-                String msg = "Request Payload is null";
-                log.error(msg);
-                return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
-            }
+            validateFilter(filter);
             filter.setAppReleaseState(applicationManager.getInstallableLifecycleState());
             ApplicationList applications = applicationManager.getApplications(filter);
             return Response.status(Response.Status.OK).entity(applications).build();
@@ -141,6 +161,14 @@ public class ApplicationManagementAPIImpl implements ApplicationManagementAPI {
             String msg = "Error occurred while getting application with the application release uuid: " + uuid;
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
+    private void validateFilter(Filter filter) throws BadRequestException {
+        if (filter == null) {
+            String msg = "Request Payload is null";
+            log.error(msg);
+            throw new BadRequestException(msg);
         }
     }
 }

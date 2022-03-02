@@ -118,6 +118,8 @@ public interface ApplicationManager {
      */
     void deleteApplicationRelease(String releaseUuid) throws ApplicationManagementException;
 
+    ApplicationList getFavouriteApplications(Filter filter) throws ApplicationManagementException;
+
     /**
      * To get the applications based on the search filter.
      *
