@@ -35,8 +35,10 @@ import io.entgra.application.mgt.common.ApplicationList;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -80,6 +82,16 @@ import javax.ws.rs.core.Response;
 public interface ApplicationManagementAPI {
 
     String SCOPE = "scope";
+
+    @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/favourite/{appId}")
+    Response addAppToFavourite(@PathParam("appId") int appId);
+
+    @DELETE
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/favourite/{appId}")
+    Response removeAppFromFavourite(@PathParam("appId") int appId);
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)

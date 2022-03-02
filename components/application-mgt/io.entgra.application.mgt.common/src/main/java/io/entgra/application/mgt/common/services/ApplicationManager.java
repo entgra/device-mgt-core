@@ -60,6 +60,12 @@ public interface ApplicationManager {
     Application createWebClip(WebAppWrapper webAppWrapper, ApplicationArtifact applicationArtifact)
             throws ApplicationManagementException;
 
+    void addAppToFavourites(int appId) throws ApplicationManagementException;
+
+    void removeAppFromFavourites(int appId) throws ApplicationManagementException;
+
+    boolean isFavouriteApp(int appId) throws ApplicationManagementException;
+
     Application createPublicApp(PublicAppWrapper publicAppWrapper, ApplicationArtifact applicationArtifact)
             throws ApplicationManagementException;
 

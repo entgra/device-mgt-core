@@ -28,14 +28,18 @@ import io.entgra.application.mgt.core.exception.NotFoundException;
 import io.entgra.application.mgt.core.exception.UnexpectedServerErrorException;
 import io.entgra.application.mgt.core.util.APIUtil;
 import io.entgra.application.mgt.store.api.services.ApplicationManagementAPI;
+import org.checkerframework.checker.units.qual.C;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 /**
@@ -46,6 +50,44 @@ import javax.ws.rs.core.Response;
 public class ApplicationManagementAPIImpl implements ApplicationManagementAPI {
 
     private static final Log log = LogFactory.getLog(ApplicationManagementAPIImpl.class);
+
+    @POST
+    @Override
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response addAppToFavourite(@PathParam("appId") int appId) {
+        ApplicationManager applicationManager = APIUtil.getApplicationManager();
+        try {
+            applicationManager.addAppToFavourites(appId);
+            return Response.status(Response.Status.OK).build();
+        } catch (BadRequestException e) {
+            String msg = e.getMessage();
+            log.error(msg, e);
+            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+        } catch (ApplicationManagementException e) {
+            String msg = e.getMessage();
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
+    @POST
+    @Override
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response removeAppFromFavourite(@PathParam("appId") int appId) {
+        ApplicationManager applicationManager = APIUtil.getApplicationManager();
+        try {
+            applicationManager.removeAppFromFavourites(appId);
+            return Response.status(Response.Status.OK).build();
+        } catch (BadRequestException e) {
+            String msg = e.getMessage();
+            log.error(msg, e);
+            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+        } catch (ApplicationManagementException e) {
+            String msg = e.getMessage();
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
 
     @POST
     @Override

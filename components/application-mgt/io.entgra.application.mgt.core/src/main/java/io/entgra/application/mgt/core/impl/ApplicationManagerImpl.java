@@ -25,6 +25,7 @@ import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.checkerframework.checker.units.qual.A;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import io.entgra.application.mgt.common.ApplicationArtifact;
@@ -176,6 +177,98 @@ ApplicationManagerImpl implements ApplicationManager {
         }
         //insert application data into database
         return addAppDataIntoDB(applicationDTO, tenantId);
+    }
+
+    @Override
+    public void addAppToFavourites(int appId) throws ApplicationManagementException {
+        validateAddAppToFavouritesRequest(appId);
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        String userName = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
+        try {
+            ConnectionManagerUtil.beginDBTransaction();
+            applicationDAO.addAppToFavourite(appId, userName, tenantId);
+            ConnectionManagerUtil.commitDBTransaction();
+        } catch (TransactionManagementException e) {
+            String msg = "Error occurred while staring transaction to add applicationId: "
+                    + appId + " to favourites";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while adding application id " + appId + " to favourites ";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } catch (ApplicationManagementDAOException e) {
+            ConnectionManagerUtil.rollbackDBTransaction();
+            String msg = "Error occurred while adding new application release for application " + appId;
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+    }
+
+    @Override
+    public void removeAppFromFavourites(int appId) throws ApplicationManagementException {
+        validateRemoveAppFromFavouritesRequest(appId);
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        String userName = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
+        try {
+            ConnectionManagerUtil.beginDBTransaction();
+            applicationDAO.removeAppFromFavourite(appId, userName, tenantId);
+            ConnectionManagerUtil.commitDBTransaction();
+        } catch (TransactionManagementException e) {
+            String msg = "Error occurred while staring transaction to add applicationId: "
+                    + appId + " to favourites";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while adding application id " + appId + " to favourites ";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } catch (ApplicationManagementDAOException e) {
+            ConnectionManagerUtil.rollbackDBTransaction();
+            String msg = "Error occurred while adding new application release for application " + appId;
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+    }
+
+    @Override
+    public boolean isFavouriteApp(int appId) throws ApplicationManagementException{
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        String userName = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
+        try {
+            ConnectionManagerUtil.openDBConnection();
+            return applicationDAO.isFavouriteApp(appId, userName, tenantId);
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while getting DB connection to check is app with the id " + appId
+                    + " is a favourite app";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } catch (ApplicationManagementDAOException e) {
+            String msg = "Error occurred while checking app with the id " + appId + " is a favourite app.";
+            log.error(msg);
+            throw new ApplicationManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+
+    }
+
+    private void validateRemoveAppFromFavouritesRequest(int appId) throws ApplicationManagementException {
+            if (!isFavouriteApp(appId)) {
+                String msg = "Provided appId " + appId + " is not a favourite app in order remove from favourites";
+                throw new BadRequestException(msg);
+            }
+    }
+
+    private void validateAddAppToFavouritesRequest(int appId) throws ApplicationManagementException {
+            if (isFavouriteApp(appId)) {
+                String msg = "Provided appId " + appId + " is already a favourite app";
+                throw new BadRequestException(msg);
+            }
     }
 
     @Override
