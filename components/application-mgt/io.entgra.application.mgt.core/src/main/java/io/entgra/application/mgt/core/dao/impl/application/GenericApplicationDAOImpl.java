@@ -749,7 +749,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
         String sql = "INSERT INTO AP_APP_FAVOURITES "
                 + "(AP_APP_ID, USER_NAME "
                 + " TENANT_ID) "
-                + "VALUES (?, ?)";
+                + "VALUES (?, ?, ?)";
         try {
             Connection conn = this.getDBConnection();
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
