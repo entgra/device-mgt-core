@@ -132,6 +132,7 @@ import org.wso2.carbon.device.mgt.core.operation.mgt.CommandOperation;
 import org.wso2.carbon.device.mgt.core.traccar.api.service.impl.DeviceAPIClientServiceImpl;
 import org.wso2.carbon.device.mgt.core.traccar.common.beans.TraccarDevice;
 import org.wso2.carbon.device.mgt.core.traccar.common.beans.TraccarPosition;
+import org.wso2.carbon.device.mgt.core.traccar.common.config.TraccarConfigurationException;
 import org.wso2.carbon.device.mgt.core.util.DeviceManagerUtil;
 import org.wso2.carbon.email.sender.core.ContentProviderInfo;
 import org.wso2.carbon.email.sender.core.EmailContext;
@@ -224,7 +225,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public boolean enrollDevice(Device device) throws DeviceManagementException, IOException {
+    public boolean enrollDevice(Device device) throws DeviceManagementException {
         if (device == null) {
             String msg = "Received empty device for device enrollment";
             log.error(msg);
@@ -405,17 +406,19 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             status = true;
         }
 
-        //Traccar update Latitude Longitude
+        //enroll Traccar device
         String lastUpdatedTime = String.valueOf((new Date().getTime()));
         TraccarDevice traccarDeviceInfo = new TraccarDevice(device.getName(), device.getDeviceIdentifier(),
                 "online", "false", lastUpdatedTime, "", "", "", "",
                 "", "");
         DeviceAPIClientServiceImpl dac= new DeviceAPIClientServiceImpl();
-        String deviceAPIClientResponse=dac.addDevice(traccarDeviceInfo);
-        if (log.isDebugEnabled()) {
-            log.debug("Location Update "+ new Gson().toJson(deviceAPIClientResponse));
+        try {
+            dac.addDevice(traccarDeviceInfo);
+        } catch (TraccarConfigurationException e) {
+            log.error("Error on Traccar add device" + e);
+            //e.printStackTrace();
         }
-        //Traccar update Latitude Longitude
+        //enroll Traccar device
 
         if (status) {
             addDeviceToGroups(deviceIdentifier, device.getEnrolmentInfo().getOwnership());
@@ -578,14 +581,17 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             DeviceManagementDAOFactory.commitTransaction();
             this.removeDeviceFromCache(deviceId);
 
-            //Traccar update Latitude Longitude
+            //disenroll Traccar device
             TraccarDevice traccarDeviceInfo = new TraccarDevice(device.getDeviceIdentifier());
             DeviceAPIClientServiceImpl dac= new DeviceAPIClientServiceImpl();
-            String deviceAPIClientResponse=dac.disDevice(traccarDeviceInfo);
-            if (log.isDebugEnabled()) {
-                log.debug("Disenroll Device "+ new Gson().toJson(deviceAPIClientResponse));
+            try {
+                dac.disDevice(traccarDeviceInfo);
+            } catch (TraccarConfigurationException e) {
+                log.error("Error on Traccar disenroll a device" + e);
+                //e.printStackTrace();
             }
-            //Traccar update Latitude Longitude
+            //disenroll Traccar device
+
         } catch (DeviceManagementDAOException e) {
             DeviceManagementDAOFactory.rollbackTransaction();
             String msg = "Error occurred while dis-enrolling '" + deviceId.getType() +
