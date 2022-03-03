@@ -157,7 +157,7 @@ public interface ApplicationManagementAPI {
     Response removeAppFromFavourite(@PathParam("appId") int appId);
 
     @POST
-    @Path("/favourite/{appId}")
+    @Path("/favourite")
     @Consumes(MediaType.APPLICATION_JSON)
     @ApiOperation(
             consumes = MediaType.APPLICATION_JSON,

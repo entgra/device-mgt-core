@@ -52,6 +52,7 @@ public class ApplicationManagementAPIImpl implements ApplicationManagementAPI {
     private static final Log log = LogFactory.getLog(ApplicationManagementAPIImpl.class);
 
     @POST
+    @Path("/favourite/{appId}")
     @Override
     @Consumes(MediaType.APPLICATION_JSON)
     public Response addAppToFavourite(@PathParam("appId") int appId) {
@@ -71,6 +72,7 @@ public class ApplicationManagementAPIImpl implements ApplicationManagementAPI {
     }
 
     @DELETE
+    @Path("/favourite/{appId}")
     @Override
     @Consumes(MediaType.APPLICATION_JSON)
     public Response removeAppFromFavourite(@PathParam("appId") int appId) {
@@ -90,6 +92,7 @@ public class ApplicationManagementAPIImpl implements ApplicationManagementAPI {
     }
 
     @POST
+    @Path("/favourite")
     @Override
     @Consumes(MediaType.APPLICATION_JSON)
     public Response getFavouriteApplications(@Valid Filter filter) {
