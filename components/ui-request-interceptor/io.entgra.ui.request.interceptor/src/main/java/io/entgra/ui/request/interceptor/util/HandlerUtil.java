@@ -39,6 +39,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.cookie.SM;
+import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
@@ -49,6 +50,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Document;
@@ -263,10 +265,18 @@ public class HandlerUtil {
 
         if (!StringUtils.isEmpty(responseData)) {
             try {
-                JSONObject responseDataJsonObj = new JSONObject(responseData);
-                response.put("data", responseDataJsonObj);
+                if (responseData.startsWith("{")) {
+                    JSONObject responseDataJsonObj = new JSONObject(responseData);
+                    response.put("data", responseDataJsonObj);
+                } else if (responseData.startsWith("[")) {
+                    JSONArray responseDataJsonArr = new JSONArray(responseData);
+                    response.put("data", responseDataJsonArr);
+                } else {
+                    log.warn("Response data is not valid json string >> " + responseData);
+                    response.put("data", responseData);
+                }
             } catch (JSONException e) {
-                log.debug("Response data is not valid json string");
+                log.error("Response data is not passable");
                 response.put("data", responseData);
             }
         }
@@ -413,14 +423,14 @@ public class HandlerUtil {
                     entityBuilder.addTextBody(item.getFieldName(), item.getString());
                 }
             }
-            proxyRequest.setEntity(entityBuilder.build());
+            proxyRequest.setEntity(new BufferedHttpEntity(entityBuilder.build()));
             HandlerUtil.copyRequestHeaders(req, proxyRequest, false);
         } else {
             if (StringUtils.isNotEmpty(req.getHeader(HttpHeaders.CONTENT_LENGTH)) ||
                     StringUtils.isNotEmpty(req.getHeader(HttpHeaders.TRANSFER_ENCODING))) {
                 InputStreamEntity entity = new InputStreamEntity(req.getInputStream(),
                         Long.parseLong(req.getHeader(HttpHeaders.CONTENT_LENGTH)));
-                proxyRequest.setEntity(entity);
+                proxyRequest.setEntity(new BufferedHttpEntity(entity));
             }
             HandlerUtil.copyRequestHeaders(req, proxyRequest, true);
         }
@@ -646,7 +656,7 @@ public class HandlerUtil {
     public static ProxyResponse getTokenResult(AuthData authData, String keymanagerUrl) throws IOException {
         HttpPost tokenEndpoint = new HttpPost(keymanagerUrl + HandlerConstants.TOKEN_ENDPOINT);
         StringEntity tokenEndpointPayload = new StringEntity(
-                "grant_type=refresh_token&refresh_token=" + authData.getRefreshToken() + "&scope=PRODUCTION",
+                "grant_type=refresh_token&refresh_token=" + authData.getRefreshToken(),
                 ContentType.APPLICATION_FORM_URLENCODED);
 
         tokenEndpoint.setEntity(tokenEndpointPayload);
