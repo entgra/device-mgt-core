@@ -257,17 +257,23 @@ ApplicationManagerImpl implements ApplicationManager {
     }
 
     private void validateRemoveAppFromFavouritesRequest(int appId) throws ApplicationManagementException {
-            if (!isFavouriteApp(appId)) {
-                String msg = "Provided appId " + appId + " is not a favourite app in order remove from favourites";
-                throw new BadRequestException(msg);
-            }
+        if (!isFavouriteApp(appId)) {
+            String msg = "Provided appId " + appId + " is not a favourite app in order remove from favourites";
+            throw new BadRequestException(msg);
+        }
     }
 
     private void validateAddAppToFavouritesRequest(int appId) throws ApplicationManagementException {
-            if (isFavouriteApp(appId)) {
-                String msg = "Provided appId " + appId + " is already a favourite app";
-                throw new BadRequestException(msg);
-            }
+        try {
+            getApplication(appId);
+        } catch (NotFoundException e) {
+            String msg = " No application exists for the provided appId " + appId;
+            throw new BadRequestException(msg);
+        }
+        if (isFavouriteApp(appId)) {
+            String msg = "Provided appId " + appId + " is already a favourite app";
+            throw new BadRequestException(msg);
+        }
     }
 
     @Override

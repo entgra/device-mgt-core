@@ -747,7 +747,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
             log.debug("Request received in DAO Layer to add app with the id " + appId + " favourites");
         }
         String sql = "INSERT INTO AP_APP_FAVOURITES "
-                + "(AP_APP_ID, USER_NAME "
+                + "(AP_APP_ID, USER_NAME, "
                 + " TENANT_ID) "
                 + "VALUES (?, ?, ?)";
         try {
