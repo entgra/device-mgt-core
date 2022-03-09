@@ -96,9 +96,9 @@ public interface ApplicationManagementAPI {
     @ApiOperation(
             consumes = MediaType.APPLICATION_JSON,
             produces = MediaType.APPLICATION_JSON,
-            httpMethod = "GET",
-            value = "get all applications",
-            notes = "This will get all applications",
+            httpMethod = "POST",
+            value = "add application to favourites",
+            notes = "This will add application to favourites",
             tags = "Application Management",
             extensions = {
                     @Extension(properties = {
@@ -110,18 +110,23 @@ public interface ApplicationManagementAPI {
             value = {
                     @ApiResponse(
                             code = 200,
-                            message = "OK. \n Successfully removed application from favourites.",
+                            message = "OK. \n Successfully added application to favourites.",
                             response = ApplicationList.class),
                     @ApiResponse(
                             code = 400,
                             message = "Bad Request. \n " +
-                                    "Application retrieving request payload contains unacceptable or vulnerable data"),
+                                    "Payload contains unacceptable or vulnerable data"),
                     @ApiResponse(
                             code = 500,
-                            message = "Internal Server Error. \n Error occurred while getting the application list.",
+                            message = "Internal Server Error. \n Error occurred while adding the application to favourites.",
                             response = ErrorResponse.class)
             })
-    Response addAppToFavourite(@PathParam("appId") int appId);
+    Response addAppToFavourite(
+            @ApiParam(
+                    name = "appId",
+                    value = "id of the application",
+                    required = true)
+            @PathParam("appId") int appId);
 
     @DELETE
     @Consumes(MediaType.APPLICATION_JSON)
@@ -129,9 +134,9 @@ public interface ApplicationManagementAPI {
     @ApiOperation(
             consumes = MediaType.APPLICATION_JSON,
             produces = MediaType.APPLICATION_JSON,
-            httpMethod = "GET",
-            value = "get all applications",
-            notes = "This will get all applications",
+            httpMethod = "DELETE",
+            value = "remove application from favourites",
+            notes = "This will removing an application from favourites",
             tags = "Application Management",
             extensions = {
                     @Extension(properties = {
@@ -148,13 +153,18 @@ public interface ApplicationManagementAPI {
                     @ApiResponse(
                             code = 400,
                             message = "Bad Request. \n " +
-                                    "Application retrieving request payload contains unacceptable or vulnerable data"),
+                                    "Payload contains unacceptable or vulnerable data"),
                     @ApiResponse(
                             code = 500,
-                            message = "Internal Server Error. \n Error occurred while getting the application list.",
+                            message = "Internal Server Error. \n Error occurred while removing the application from favourites.",
                             response = ErrorResponse.class)
             })
-    Response removeAppFromFavourite(@PathParam("appId") int appId);
+    Response removeAppFromFavourite(
+            @ApiParam(
+                    name = "appId",
+                    value = "id of the application",
+                    required = true)
+            @PathParam("appId") int appId);
 
     @POST
     @Path("/favourite")
@@ -163,8 +173,8 @@ public interface ApplicationManagementAPI {
             consumes = MediaType.APPLICATION_JSON,
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
-            value = "get all applications",
-            notes = "This will get all applications",
+            value = "get all favourite applications",
+            notes = "This will get all favourite applications",
             tags = "Application Management",
             extensions = {
                     @Extension(properties = {
@@ -187,7 +197,12 @@ public interface ApplicationManagementAPI {
                             message = "Internal Server Error. \n Error occurred while getting the application list.",
                             response = ErrorResponse.class)
             })
-    Response getFavouriteApplications(@Valid Filter filter);
+    Response getFavouriteApplications(
+            @ApiParam(
+                    name = "filter",
+                    value = "Application filtering data",
+                    required = true)
+            @Valid Filter filter);
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)

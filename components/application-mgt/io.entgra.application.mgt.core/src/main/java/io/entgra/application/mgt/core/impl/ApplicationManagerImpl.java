@@ -198,7 +198,7 @@ ApplicationManagerImpl implements ApplicationManager {
             throw new ApplicationManagementException(msg, e);
         } catch (ApplicationManagementDAOException e) {
             ConnectionManagerUtil.rollbackDBTransaction();
-            String msg = "Error occurred while adding new application release for application " + appId;
+            String msg = "Error occurred while adding application with the id: " + appId + " to favourites ";
             log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
         } finally {
@@ -216,17 +216,17 @@ ApplicationManagerImpl implements ApplicationManager {
             applicationDAO.removeAppFromFavourite(appId, userName, tenantId);
             ConnectionManagerUtil.commitDBTransaction();
         } catch (TransactionManagementException e) {
-            String msg = "Error occurred while staring transaction to add applicationId: "
-                    + appId + " to favourites";
+            String msg = "Error occurred while staring transaction to remove applicationId: "
+                    + appId + " from favourites";
             log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
         } catch (DBConnectionException e) {
-            String msg = "Error occurred while adding application id " + appId + " to favourites ";
+            String msg = "Error occurred while removing application id " + appId + " from favourites ";
             log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
         } catch (ApplicationManagementDAOException e) {
             ConnectionManagerUtil.rollbackDBTransaction();
-            String msg = "Error occurred while adding new application release for application " + appId;
+            String msg = "Error occurred while removing application with the id: " + appId + " from favourites ";
             log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
         } finally {

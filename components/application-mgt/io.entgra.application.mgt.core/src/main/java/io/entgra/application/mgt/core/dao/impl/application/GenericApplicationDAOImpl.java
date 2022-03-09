@@ -140,9 +140,9 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
             sql += "INNER JOIN AP_APP_FAVOURITES ON "
                     + "AP_APP.ID = AP_APP_FAVOURITES.AP_APP_ID ";
         }
-                sql += "INNER JOIN AP_APP_RELEASE ON "
-                + "AP_APP.ID = AP_APP_RELEASE.AP_APP_ID "
-                + "INNER JOIN (SELECT AP_APP.ID FROM AP_APP ";
+        sql += "INNER JOIN AP_APP_RELEASE ON "
+        + "AP_APP.ID = AP_APP_RELEASE.AP_APP_ID "
+        + "INNER JOIN (SELECT AP_APP.ID FROM AP_APP ";
         if (StringUtils.isNotEmpty(filter.getVersion()) || StringUtils.isNotEmpty(filter.getAppReleaseState())
                 || StringUtils.isNotEmpty(filter.getAppReleaseType())) {
             sql += "INNER JOIN AP_APP_RELEASE ON AP_APP.ID = AP_APP_RELEASE.AP_APP_ID ";
