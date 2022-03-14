@@ -28,14 +28,11 @@ import io.entgra.application.mgt.core.exception.NotFoundException;
 import io.entgra.application.mgt.core.exception.UnexpectedServerErrorException;
 import io.entgra.application.mgt.core.util.APIUtil;
 import io.entgra.application.mgt.store.api.services.ApplicationManagementAPI;
-import org.checkerframework.checker.units.qual.C;
-
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -61,11 +58,11 @@ public class ApplicationManagementAPIImpl implements ApplicationManagementAPI {
             applicationManager.addAppToFavourites(appId);
             return Response.status(Response.Status.OK).build();
         } catch (BadRequestException e) {
-            String msg = e.getMessage();
+            String msg = "Invalid payload found in the request. Hence verify the request payload.";
             log.error(msg, e);
             return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
         } catch (ApplicationManagementException e) {
-            String msg = e.getMessage();
+            String msg = "Error occurred while adding application to favourites";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
@@ -81,11 +78,11 @@ public class ApplicationManagementAPIImpl implements ApplicationManagementAPI {
             applicationManager.removeAppFromFavourites(appId);
             return Response.status(Response.Status.OK).build();
         } catch (BadRequestException e) {
-            String msg = e.getMessage();
+            String msg = "Invalid payload found in the request. Hence verify the request payload.";
             log.error(msg, e);
             return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
         } catch (ApplicationManagementException e) {
-            String msg = e.getMessage();
+            String msg = "Error occurred while removing application from favourites";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
@@ -102,15 +99,11 @@ public class ApplicationManagementAPIImpl implements ApplicationManagementAPI {
             ApplicationList applications = applicationManager.getFavouriteApplications(filter);
             return Response.status(Response.Status.OK).entity(applications).build();
         } catch (BadRequestException e) {
-            String msg = e.getMessage();
+            String msg = "Invalid filter payload found in the request. Hence verify the filter payload.";
             log.error(msg, e);
             return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
-        } catch (UnexpectedServerErrorException e) {
-            String msg = e.getMessage();
-            log.error(msg);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         } catch (ApplicationManagementException e) {
-            String msg = e.getMessage();
+            String msg = "Error occurred while retrieving favourite applications";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
@@ -127,15 +120,16 @@ public class ApplicationManagementAPIImpl implements ApplicationManagementAPI {
             ApplicationList applications = applicationManager.getApplications(filter);
             return Response.status(Response.Status.OK).entity(applications).build();
         } catch (BadRequestException e) {
-            String msg = e.getMessage();
+            String msg = "Invalid request payload found in the request. Hence verify the payload.";
             log.error(msg, e);
             return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
         } catch (UnexpectedServerErrorException e) {
-            String msg = e.getMessage();
+            String msg = "Unexpected Error occurred while retrieving applications";
             log.error(msg);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         } catch (ApplicationManagementException e) {
-            String msg = e.getMessage();
+            String msg = "Error occurred while retrieving applications";
+            log.error(msg);
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
@@ -167,6 +161,12 @@ public class ApplicationManagementAPIImpl implements ApplicationManagementAPI {
         }
     }
 
+    /**
+     * Check if filter is valid. If not throw {@link BadRequestException}
+     *
+     * @param filter filter request payload
+     * @throws BadRequestException if filter is not valid
+     */
     private void validateFilter(Filter filter) throws BadRequestException {
         if (filter == null) {
             String msg = "Request Payload is null";

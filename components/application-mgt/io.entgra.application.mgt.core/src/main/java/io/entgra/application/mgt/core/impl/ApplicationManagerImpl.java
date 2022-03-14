@@ -256,6 +256,12 @@ ApplicationManagerImpl implements ApplicationManager {
 
     }
 
+    /**
+     * Use to check if the requested application id is valid before removing from favourites
+     *
+     * @param appId ID of the application
+     * @throws ApplicationManagementException if ID is not valid or errors while validating
+     */
     private void validateRemoveAppFromFavouritesRequest(int appId) throws ApplicationManagementException {
         if (!isFavouriteApp(appId)) {
             String msg = "Provided appId " + appId + " is not a favourite app in order remove from favourites";
@@ -263,6 +269,12 @@ ApplicationManagerImpl implements ApplicationManager {
         }
     }
 
+    /**
+     * Use to check if the requested application id is valid before adding to favourites
+     *
+     * @param appId ID of the application
+     * @throws ApplicationManagementException if ID is not valid or errors while validating
+     */
     private void validateAddAppToFavouritesRequest(int appId) throws ApplicationManagementException {
         try {
             getApplication(appId);
