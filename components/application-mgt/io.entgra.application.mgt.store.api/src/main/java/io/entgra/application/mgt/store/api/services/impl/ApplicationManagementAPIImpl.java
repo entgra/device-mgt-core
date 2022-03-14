@@ -162,10 +162,10 @@ public class ApplicationManagementAPIImpl implements ApplicationManagementAPI {
     }
 
     /**
-     * Check if filter is valid. If not throw {@link BadRequestException}
+     * This method can be used to check & validate if {@link Filter} object exist.
      *
-     * @param filter filter request payload
-     * @throws BadRequestException if filter is not valid
+     * @param filter {@link Filter}
+     * @throws BadRequestException if filter object doesn't exist
      */
     private void validateFilter(Filter filter) throws BadRequestException {
         if (filter == null) {
