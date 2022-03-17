@@ -35,6 +35,7 @@
 package org.wso2.carbon.device.mgt.core.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -72,6 +73,9 @@ import org.wso2.carbon.device.mgt.common.geo.service.GeofenceData;
 import org.wso2.carbon.device.mgt.common.group.mgt.DeviceGroup;
 import org.wso2.carbon.device.mgt.common.group.mgt.DeviceGroupConstants;
 import org.wso2.carbon.device.mgt.common.group.mgt.GroupManagementException;
+import org.wso2.carbon.device.mgt.common.license.mgt.License;
+import org.wso2.carbon.device.mgt.common.metadata.mgt.Metadata;
+import org.wso2.carbon.device.mgt.common.metadata.mgt.MetadataManagementService;
 import org.wso2.carbon.device.mgt.common.notification.mgt.NotificationManagementException;
 import org.wso2.carbon.device.mgt.common.operation.mgt.OperationManagementException;
 import org.wso2.carbon.device.mgt.common.type.mgt.DeviceTypeMetaDefinition;
@@ -89,6 +93,7 @@ import org.wso2.carbon.device.mgt.core.dao.DeviceTypeDAO;
 import org.wso2.carbon.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.internal.DeviceManagementDataHolder;
+import org.wso2.carbon.device.mgt.core.metadata.mgt.MetadataManagementServiceImpl;
 import org.wso2.carbon.device.mgt.core.operation.mgt.util.DeviceIDHolder;
 import org.wso2.carbon.device.mgt.core.report.mgt.Constants;
 import org.wso2.carbon.device.mgt.core.service.GroupManagementProviderService;
@@ -118,14 +123,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -960,6 +960,37 @@ public final class DeviceManagerUtil {
         return null;
     }
 
+//    public static Object getConfiguration(String key) {
+//        MetadataManagementService metadataManagementService = new MetadataManagementServiceImpl();
+//        try {
+//            Metadata metadata= metadataManagementService.retrieveMetadata(DeviceManagementConstants.Common.METADATA_CONFIGURATION);
+//            Gson g = new Gson();
+////            return g.fromJson(metadata.getMetaValue(),  PlatformConfiguration.class);
+//            PlatformConfiguration enrollmentConfigEntry = g.fromJson(metadata.getMetaValue(),  PlatformConfiguration.class);
+//            List<ConfigurationEntry> configuration =   enrollmentConfigEntry.getConfiguration();
+//
+//            if (configuration != null && !configuration.isEmpty()) {
+//                for (ConfigurationEntry cEntry : configuration) {
+//                    if (key.equalsIgnoreCase(cEntry.getName())) {
+//                        return cEntry.getValue();
+//                    }
+//                }
+//            }
+////            Gson g = new Gson();
+////            Collection<PlatformConfiguration> platformConfigurations = null;
+////
+////            Type collectionType = new TypeToken<Collection<PlatformConfiguration>>(){}.getType();
+////            if (metadata != null) {
+////                platformConfigurations = g.fromJson(metadata.getMetaValue(), (Type) PlatformConfiguration.class);
+////                return  platformConfigurations;
+////            }
+//        } catch (MetadataManagementException e) {
+//            log.error("Error while getting the configurations from registry.", e);
+//            return null;
+//        }
+//        return null;
+//    }
+
     /**
      * Retrieve the value stored in a property list by passing the Key
      * @param properties list of property
@@ -990,6 +1021,20 @@ public final class DeviceManagerUtil {
             }
         return null;
     }
+
+    /**
+     * Retrieve the Enrollment Configuration entry added to the Platform Configuration
+     * @return enrollment configuration
+     */
+//    public static EnrollmentConfiguration getEnrollmentConfigurationEntry() {
+//        Object enrollmentConfigEntry = DeviceManagerUtil.getConfiguration(
+//                DeviceManagementConstants.Common.ENROLLMENT_CONFIGURATION);
+//        if (enrollmentConfigEntry != null) {
+//            Gson gson = new Gson();
+//            return gson.fromJson(enrollmentConfigEntry.toString(), EnrollmentConfiguration.class);
+//        }
+//        return null;
+//    }
 
     /**
      * Validates if the device is allowed to be enrolled based on the device serial number.
