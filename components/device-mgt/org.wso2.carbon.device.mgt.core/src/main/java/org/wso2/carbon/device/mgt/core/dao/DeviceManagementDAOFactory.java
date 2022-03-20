@@ -124,6 +124,23 @@ public class DeviceManagementDAOFactory {
     public static EnrollmentDAO getEnrollmentDAO() {
         return new EnrollmentDAOImpl();
     }
+
+    public static TrackerDAO getTrackerDAO() {
+        if (databaseEngine != null) {
+            switch (databaseEngine) {
+                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_POSTGRESQL:
+                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_ORACLE:
+                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_MSSQL:
+                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_H2:
+                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_MYSQL:
+                    return new TrackerDAOImpl();
+                default:
+                    throw new UnsupportedDatabaseEngineException("Unsupported database engine : " + databaseEngine);
+            }
+        }
+        throw new IllegalStateException("Database engine has not initialized properly.");
+    }
+
     public static DeviceStatusDAO getDeviceStatusDAO() {
         return new DeviceStatusDAOImpl();
     }
