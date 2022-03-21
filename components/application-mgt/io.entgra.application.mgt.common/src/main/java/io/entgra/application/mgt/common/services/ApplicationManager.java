@@ -51,19 +51,41 @@ public interface ApplicationManager {
      *
      * @param applicationWrapper Application that need to be created.
      * @param applicationArtifact contains artifact data. i.e image name and stream,  icon name and stream etc.
+     * @param isPublished checks if application should be published
      * @return {@link Application}
      * @throws ApplicationManagementException Catch all other throwing exceptions and throw {@link ApplicationManagementException}
      */
-    Application createEntApp(ApplicationWrapper applicationWrapper, ApplicationArtifact applicationArtifact)
+    Application createEntApp(ApplicationWrapper applicationWrapper, ApplicationArtifact applicationArtifact, boolean isPublished)
             throws ApplicationManagementException;
 
-    Application createWebClip(WebAppWrapper webAppWrapper, ApplicationArtifact applicationArtifact)
+    Application createWebClip(WebAppWrapper webAppWrapper, ApplicationArtifact applicationArtifact, boolean isPublished)
             throws ApplicationManagementException;
 
-    Application createPublicApp(PublicAppWrapper publicAppWrapper, ApplicationArtifact applicationArtifact)
+    /**
+     * Add an application to favourites
+     * @param appId id of the application
+     * @throws ApplicationManagementException Catch all other throwing exceptions and throw {@link ApplicationManagementException}
+     */
+    void addAppToFavourites(int appId) throws ApplicationManagementException;
+
+    /**
+     * Remove an application from favourites
+     * @param appId id of the application
+     * @throws ApplicationManagementException Catch all other throwing exceptions and throw {@link ApplicationManagementException}
+     */
+    void removeAppFromFavourites(int appId) throws ApplicationManagementException;
+
+    /**
+     * Check if an application is a favourite app
+     * @param appId id of the application
+     * @throws ApplicationManagementException Catch all other throwing exceptions and throw {@link ApplicationManagementException}
+     */
+    boolean isFavouriteApp(int appId) throws ApplicationManagementException;
+
+    Application createPublicApp(PublicAppWrapper publicAppWrapper, ApplicationArtifact applicationArtifact, boolean isPublished)
             throws ApplicationManagementException;
 
-    Application createCustomApp(CustomAppWrapper customAppWrapper, ApplicationArtifact applicationArtifact)
+    Application createCustomApp(CustomAppWrapper customAppWrapper, ApplicationArtifact applicationArtifact, boolean isPublished)
             throws ApplicationManagementException;
 
     /**
@@ -111,6 +133,8 @@ public interface ApplicationManager {
      * @throws ApplicationManagementException ApplicationDTO Management Exception
      */
     void deleteApplicationRelease(String releaseUuid) throws ApplicationManagementException;
+
+    ApplicationList getFavouriteApplications(Filter filter) throws ApplicationManagementException;
 
     /**
      * To get the applications based on the search filter.
@@ -179,7 +203,18 @@ public interface ApplicationManager {
      */
     ApplicationRelease changeLifecycleState(String releaseUuid, LifecycleChanger lifecycleChanger)
             throws ApplicationManagementException;
-
+    
+    /**
+     * To get all the releases of a particular ApplicationDTO.
+     *
+     * @param applicationReleaseDTO  of the ApplicationDTO Release.
+     * @param lifecycleChanger Lifecycle changer that contains the action and the reason for the change.
+     * @throws ApplicationManagementException ApplicationDTO Management Exception.
+     * @return
+     */
+    ApplicationRelease changeLifecycleState(ApplicationReleaseDTO applicationReleaseDTO, LifecycleChanger lifecycleChanger)
+            throws ApplicationManagementException;
+    
     /**
      * To update release images such as icons, banner and screenshots.
      *
@@ -207,10 +242,11 @@ public interface ApplicationManager {
      *
      * @param applicationId     ID of the ApplicationDTO
      * @param entAppReleaseWrapper ApplicatonRelease that need to be be created.
+     * @param isPublished checks if application should be published
      * @return the unique id of the application release, if the application release succeeded else -1
      */
     ApplicationRelease createEntAppRelease(int applicationId, EntAppReleaseWrapper entAppReleaseWrapper,
-            ApplicationArtifact applicationArtifact) throws ApplicationManagementException;
+            ApplicationArtifact applicationArtifact, boolean isPublished) throws ApplicationManagementException;
 
     /***
      *
@@ -291,7 +327,9 @@ public interface ApplicationManager {
      */
     boolean checkSubDeviceIdsForOperations(int operationId, int deviceId) throws ApplicationManagementException;
 
-    void updateSubsStatus (int deviceId, int operationId, String status) throws ApplicationManagementException;
+    void updateSubStatus(int deviceId, List<Integer> operationId, String status) throws ApplicationManagementException;
+
+    void updateSubsStatus(int deviceId, int operationId, String status) throws ApplicationManagementException;
 
 
         /**
@@ -304,5 +342,4 @@ public interface ApplicationManager {
     String getPlistArtifact(String uuid) throws ApplicationManagementException;
 
     List<ApplicationReleaseDTO> getReleaseByPackageNames(List<String> packageIds) throws ApplicationManagementException;
-
 }
