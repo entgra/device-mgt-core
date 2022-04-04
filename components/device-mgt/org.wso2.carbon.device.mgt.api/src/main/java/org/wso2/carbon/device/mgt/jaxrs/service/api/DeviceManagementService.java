@@ -1546,6 +1546,54 @@ public interface DeviceManagementService {
             @QueryParam("packageName")
                     String packageName);
 
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/{type}/{id}/removeAccount")
+    @ApiOperation(
+            consumes = MediaType.APPLICATION_JSON,
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "POST",
+            value = "Remove account in device using accounts tab",
+            notes = "Check app is subscribed in store or not and then do uninstallation accordingly",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:applications")
+                    })
+            })
+    @ApiResponses(
+            value = {
+
+            })
+    Response removeAccount(
+            @ApiParam(
+                    name = "type",
+                    value = "The device type name, such as ios, android, windows",
+                    required = true)
+            @PathParam("type")
+            @Size(max = 45)
+                    String type,
+            @ApiParam(
+                    name = "id",
+                    value = "The device identifier of the device.",
+                    required = true)
+            @PathParam("id")
+            @Size(max = 45)
+                    String id,
+            @ApiParam(
+                    name = "accountName",
+                    value = "The account name of the app user want to remove",
+                    required = true)
+            @QueryParam("accountName")
+                    String accountName,
+            @ApiParam(
+                    name = "accountType",
+                    value = "The account type of the app user want to remove",
+                    required = true)
+            @QueryParam("accountType")
+                    String accountType);
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{type}/{id}/operations")

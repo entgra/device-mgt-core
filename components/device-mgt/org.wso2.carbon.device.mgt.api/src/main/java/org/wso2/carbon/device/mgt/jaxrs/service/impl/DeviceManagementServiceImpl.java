@@ -60,6 +60,7 @@ import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.PaginationResult;
+import org.wso2.carbon.device.mgt.common.app.mgt.Account;
 import org.wso2.carbon.device.mgt.common.app.mgt.Application;
 import org.wso2.carbon.device.mgt.common.app.mgt.ApplicationManagementException;
 import org.wso2.carbon.device.mgt.common.authorization.DeviceAccessAuthorizationException;
@@ -967,6 +968,51 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             String msg = "The list of device identifiers are invalid";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
+    @POST
+    @Path("/{type}/{id}/removeAccount")
+    @Override
+    public Response removeAccount(
+            @PathParam("type") @Size(max = 45) String type,
+            @PathParam("id") @Size(max = 45) String id,
+            @QueryParam("accountName") String accountName,
+            @QueryParam("accountType") String accountType) {
+        List<DeviceIdentifier> deviceIdentifiers = new ArrayList<>();
+        Operation operation = new Operation();
+        try {
+            Device device = DeviceMgtAPIUtils.getDeviceManagementService().getDevice(id, false);
+            DeviceIdentifier deviceIdentifier = new DeviceIdentifier(device.getDeviceIdentifier(), device.getType());
+            deviceIdentifiers.add(deviceIdentifier);
+            deviceIdentifier.setId(id);
+            deviceIdentifier.setType(type);
+            Account accountData = new Account();
+            accountData.setName(accountName);
+            accountData.setType(accountType);
+            Gson gson = new Gson();
+            operation.setCode(MDMAppConstants.AndroidConstants.AUTHENTICATE_ACCOUNTS);
+            operation.setType(Operation.Type.PROFILE);
+            operation.setPayLoad(gson.toJson(accountData));
+            DeviceManagementProviderService deviceManagementProviderService = HelperUtil
+                    .getDeviceManagementProviderService();
+            Activity activity = deviceManagementProviderService.addOperation(
+                    DeviceManagementConstants.MobileDeviceTypes.MOBILE_DEVICE_TYPE_ANDROID, operation, deviceIdentifiers);
+            return Response.status(Response.Status.CREATED).entity(activity).build();
+        } catch (OperationManagementException e) {
+            String msg = "Issue in retrieving operation management service instance";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (InvalidDeviceException e) {
+            String msg = "The list of device identifiers are invalid";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while getting '" + type + "' device, which carries " +
+                    "the id '" + id + "'";
+            log.error(msg, e);
+            return Response.serverError().entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
         }
     }
 
