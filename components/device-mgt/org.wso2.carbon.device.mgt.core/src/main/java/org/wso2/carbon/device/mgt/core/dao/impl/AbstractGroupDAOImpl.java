@@ -977,7 +977,7 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
             for (int i = 0; i < rolesCount; i++) {
                 sql += (rolesCount - 1 != i) ? "?," : "?";
             }
-            sql += ")) gr WHERE g.ID = gr.GROUP_ID AND TENANT_ID = ? ";
+            sql += ")) gr WHERE TENANT_ID = ? ";
             if (StringUtils.isNotBlank(parentPath)) {
                 sql += " AND g.PARENT_PATH = ? ";
             }
