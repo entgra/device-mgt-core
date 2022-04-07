@@ -585,6 +585,20 @@ public class DeviceManagementServiceImplTest {
         Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
     }
 
+    @Test(description = "Testing getting device Account information when unable to retrieve information")
+    public void testGetDeviceAccountInformationException() throws DeviceDetailsMgtException {
+        DeviceInformationManager deviceInformationManager = Mockito
+                .mock(DeviceInformationManagerImpl.class, Mockito.RETURNS_MOCKS);
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getDeviceInformationManagerService")).
+                toReturn(deviceInformationManager);
+        Mockito.when(deviceInformationManager.getDeviceInfo(Mockito.any(DeviceIdentifier.class)))
+                .thenThrow(new DeviceDetailsMgtException());
+        Response response = this.deviceManagementService
+                .getDeviceInformation(TEST_DEVICE_TYPE, UUID.randomUUID().toString(), null);
+        Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+    }
+
+
     @Test(description = "Testing getting device features")
     public void testGetFeaturesOfDevice() {
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getDeviceManagementService"))
