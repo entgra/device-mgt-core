@@ -385,6 +385,14 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
 //                        LOCATION_EVENT_STREAM_DEFINITION, "1.0.0", metaData, new Object[0], payload
 //                );
             }
+
+            //Tracker update GPS Location
+            if (HttpReportingUtil.isLocationPublishing() && HttpReportingUtil.isTrackerEnabled()) {
+                DeviceManagementDataHolder.getInstance().getDeviceAPIClientService()
+                        .updateLocation(device, deviceLocation, CarbonContext.getThreadLocalCarbonContext().getTenantId());
+            }
+            //Tracker update GPS Location
+
             DeviceManagementDAOFactory.commitTransaction();
         } catch (TransactionManagementException e) {
             throw new DeviceDetailsMgtException("Transactional error occurred while adding the device location " +

@@ -26,16 +26,8 @@ import org.wso2.carbon.device.mgt.common.exceptions.TransactionManagementExcepti
 import org.wso2.carbon.device.mgt.common.exceptions.UnsupportedDatabaseEngineException;
 import org.wso2.carbon.device.mgt.core.config.datasource.DataSourceConfig;
 import org.wso2.carbon.device.mgt.core.config.datasource.JNDILookupDefinition;
-import org.wso2.carbon.device.mgt.core.dao.impl.*;
-import org.wso2.carbon.device.mgt.core.dao.impl.device.GenericDeviceDAOImpl;
-import org.wso2.carbon.device.mgt.core.dao.impl.device.OracleDeviceDAOImpl;
-import org.wso2.carbon.device.mgt.core.dao.impl.device.PostgreSQLDeviceDAOImpl;
-import org.wso2.carbon.device.mgt.core.dao.impl.device.SQLServerDeviceDAOImpl;
+import org.wso2.carbon.device.mgt.core.dao.impl.tracker.TrackerDAOImpl;
 import org.wso2.carbon.device.mgt.core.dao.util.DeviceManagementDAOUtil;
-import org.wso2.carbon.device.mgt.core.device.details.mgt.dao.DeviceDetailsDAO;
-import org.wso2.carbon.device.mgt.core.device.details.mgt.dao.impl.DeviceDetailsDAOImpl;
-import org.wso2.carbon.device.mgt.core.privacy.dao.PrivacyComplianceDAO;
-import org.wso2.carbon.device.mgt.core.privacy.dao.impl.PrivacyComplianceDAOImpl;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -51,7 +43,7 @@ import java.util.List;
  * <p/>
  * In addition, this also provides means to handle transactions across multiple device management related DAO objects.
  * Any high-level business logic that requires transaction handling to be done via utility methods provided in
- * DeviceManagementDAOFactory should adhere the following guidelines to avoid any unexpected behaviour that can cause
+ * TrackerManagementDAOFactory should adhere the following guidelines to avoid any unexpected behaviour that can cause
  * as a result of improper use of the aforementioned utility method.
  * <p/>
  * Any transaction that commits data into the underlying data persistence mechanism MUST follow the sequence of
@@ -60,15 +52,15 @@ import java.util.List;
  * <pre>
  * {@code
  * try {
- *      DeviceManagementDAOFactory.beginTransaction();
+ *      TrackerManagementDAOFactory.beginTransaction();
  *      .....
- *      DeviceManagementDAOFactory.commitTransaction();
+ *      TrackerManagementDAOFactory.commitTransaction();
  *      return success;
  * } catch (Exception e) {
- *      DeviceManagementDAOFactory.rollbackTransaction();
+ *      TrackerManagementDAOFactory.rollbackTransaction();
  *      throw new DeviceManagementException("Error occurred while ...", e);
  * } finally {
- *      DeviceManagementDAOFactory.closeConnection();
+ *      TrackerManagementDAOFactory.closeConnection();
  * }
  * }
  * </pre>
@@ -79,35 +71,33 @@ import java.util.List;
  * <pre>
  * {@code
  * try {
- *      DeviceManagementDAOFactory.openConnection();
+ *      TrackerManagementDAOFactory.openConnection();
  *      .....
  * } catch (Exception e) {
  *      throw new DeviceManagementException("Error occurred while ..., e);
  * } finally {
- *      DeviceManagementDAOFactory.closeConnection();
+ *      TrackerManagementDAOFactory.closeConnection();
  * }
  * }
  * </pre>
  */
-public class DeviceManagementDAOFactory {
+public class TrackerManagementDAOFactory {
 
     private static DataSource dataSource;
     private static String databaseEngine;
-    private static final Log log = LogFactory.getLog(DeviceManagementDAOFactory.class);
+    private static final Log log = LogFactory.getLog(TrackerManagementDAOFactory.class);
     private static ThreadLocal<Connection> currentConnection = new ThreadLocal<>();
 
-    public static DeviceDAO getDeviceDAO() {
+
+    public static TrackerDAO getTrackerDAO() {
         if (databaseEngine != null) {
             switch (databaseEngine) {
                 case DeviceManagementConstants.DataBaseTypes.DB_TYPE_ORACLE:
-                    return new OracleDeviceDAOImpl();
                 case DeviceManagementConstants.DataBaseTypes.DB_TYPE_MSSQL:
-                    return new SQLServerDeviceDAOImpl();
                 case DeviceManagementConstants.DataBaseTypes.DB_TYPE_POSTGRESQL:
-                    return new PostgreSQLDeviceDAOImpl();
                 case DeviceManagementConstants.DataBaseTypes.DB_TYPE_H2:
                 case DeviceManagementConstants.DataBaseTypes.DB_TYPE_MYSQL:
-                    return new GenericDeviceDAOImpl();
+                    return new TrackerDAOImpl();
                 default:
                     throw new UnsupportedDatabaseEngineException("Unsupported database engine : " + databaseEngine);
             }
@@ -115,40 +105,6 @@ public class DeviceManagementDAOFactory {
         throw new IllegalStateException("Database engine has not initialized properly.");
     }
 
-    public static DeviceTypeDAO getDeviceTypeDAO() {
-        return new DeviceTypeDAOImpl();
-    }
-
-    public static EnrollmentDAO getEnrollmentDAO() {
-        return new EnrollmentDAOImpl();
-    }
-
-    public static DeviceStatusDAO getDeviceStatusDAO() {
-        return new DeviceStatusDAOImpl();
-    }
-    public static ApplicationDAO getApplicationDAO() {
-        if (databaseEngine != null) {
-            switch (databaseEngine) {
-                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_POSTGRESQL:
-                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_ORACLE:
-                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_MSSQL:
-                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_H2:
-                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_MYSQL:
-                    return new ApplicationDAOImpl();
-                default:
-                    throw new UnsupportedDatabaseEngineException("Unsupported database engine : " + databaseEngine);
-            }
-        }
-        throw new IllegalStateException("Database engine has not initialized properly.");
-    }
-
-    public static DeviceDetailsDAO getDeviceDetailsDAO() {
-        return new DeviceDetailsDAOImpl();
-    }
-
-    public static PrivacyComplianceDAO getPrivacyComplianceDAO() {
-        return new PrivacyComplianceDAOImpl();
-    }
 
     public static void init(DataSourceConfig config) {
         dataSource = resolveDataSource(config);
