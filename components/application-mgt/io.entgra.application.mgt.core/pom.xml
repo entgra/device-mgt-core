@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.wso2.carbon.devicemgt</groupId>
         <artifactId>application-mgt</artifactId>
-        <version>5.0.6-SNAPSHOT</version>
+        <version>5.0.7-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -90,6 +90,7 @@
                             !io.entgra.application.mgt.core.internal.*,
                             io.entgra.application.mgt.core.*
                         </Export-Package>
+                        <DynamicImport-Package>*</DynamicImport-Package>
                     </instructions>
                 </configuration>
             </plugin>

@@ -38,6 +38,10 @@
         <Scope>perm:grafana:api:view</Scope>
         <Scope>perm:app:review:view</Scope>
         <Scope>perm:app:review:update</Scope>
+        <Scope>perm:app:publisher:service-provider:view</Scope>
+        <Scope>perm:app:publisher:service-provider:create</Scope>
+        <Scope>perm:app:publisher:service-provider:attach</Scope>
+        <Scope>perm:app:publisher:service-provider:detach</Scope>
         <Scope>perm:app:publisher:view</Scope>
         <Scope>perm:app:publisher:update</Scope>
         <Scope>perm:app:store:view</Scope>
@@ -189,6 +193,13 @@
         <Scope>perm:android:update-default-sim</Scope>
         <Scope>perm:android:google-account</Scope>
         <Scope>perm:android:info</Scope>
+        <Scope>perm:windows:lock-devices</Scope>
+        <Scope>perm:windows:disenroll</Scope>
+        <Scope>perm:windows:wipe</Scope>
+        <Scope>perm:windows:ring</Scope>
+        <Scope>perm:windows:lock-reset</Scope>
+        <Scope>perm:windows:reboot</Scope>
+        <Scope>perm:windows:location</Scope>
     </Scopes>
     <SSOConfiguration>
         <Issuer>device-mgt</Issuer>
