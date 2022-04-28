@@ -960,36 +960,27 @@ public final class DeviceManagerUtil {
         return null;
     }
 
-//    public static Object getConfiguration(String key) {
-//        MetadataManagementService metadataManagementService = new MetadataManagementServiceImpl();
-//        try {
-//            Metadata metadata= metadataManagementService.retrieveMetadata(DeviceManagementConstants.Common.METADATA_CONFIGURATION);
-//            Gson g = new Gson();
-////            return g.fromJson(metadata.getMetaValue(),  PlatformConfiguration.class);
-//            PlatformConfiguration enrollmentConfigEntry = g.fromJson(metadata.getMetaValue(),  PlatformConfiguration.class);
-//            List<ConfigurationEntry> configuration =   enrollmentConfigEntry.getConfiguration();
-//
-//            if (configuration != null && !configuration.isEmpty()) {
-//                for (ConfigurationEntry cEntry : configuration) {
-//                    if (key.equalsIgnoreCase(cEntry.getName())) {
-//                        return cEntry.getValue();
-//                    }
-//                }
-//            }
-////            Gson g = new Gson();
-////            Collection<PlatformConfiguration> platformConfigurations = null;
-////
-////            Type collectionType = new TypeToken<Collection<PlatformConfiguration>>(){}.getType();
-////            if (metadata != null) {
-////                platformConfigurations = g.fromJson(metadata.getMetaValue(), (Type) PlatformConfiguration.class);
-////                return  platformConfigurations;
-////            }
-//        } catch (MetadataManagementException e) {
-//            log.error("Error while getting the configurations from registry.", e);
-//            return null;
-//        }
-//        return null;
-//    }
+    public static Object getConfigurationFromMetadata(String key) {
+        MetadataManagementService metadataManagementService = new MetadataManagementServiceImpl();
+        try {
+            Metadata metadata= metadataManagementService.retrieveMetadata(DeviceManagementConstants.Common.METADATA_CONFIGURATION);
+            Gson g = new Gson();
+            PlatformConfiguration enrollmentConfigEntry = g.fromJson(metadata.getMetaValue(),  PlatformConfiguration.class);
+            List<ConfigurationEntry> configuration =   enrollmentConfigEntry.getConfiguration();
+
+            if (configuration != null && !configuration.isEmpty()) {
+                for (ConfigurationEntry cEntry : configuration) {
+                    if (key.equalsIgnoreCase(cEntry.getName())) {
+                        return cEntry.getValue();
+                    }
+                }
+            }
+        } catch (MetadataManagementException e) {
+            log.error("Error while getting the configurations from metadata.", e);
+            return null;
+        }
+        return null;
+    }
 
     /**
      * Retrieve the value stored in a property list by passing the Key
@@ -1013,28 +1004,14 @@ public final class DeviceManagerUtil {
      * @return enrollment configuration
      */
     public static EnrollmentConfiguration getEnrollmentConfigurationEntry() {
-            Object enrollmentConfigEntry = DeviceManagerUtil.getConfiguration(
-                    DeviceManagementConstants.Common.ENROLLMENT_CONFIGURATION);
+        Object enrollmentConfigEntry = DeviceManagerUtil.getConfigurationFromMetadata(
+                DeviceManagementConstants.Common.ENROLLMENT_CONFIGURATION);
             if (enrollmentConfigEntry != null) {
                 Gson gson = new Gson();
                 return gson.fromJson(enrollmentConfigEntry.toString(), EnrollmentConfiguration.class);
             }
         return null;
     }
-
-    /**
-     * Retrieve the Enrollment Configuration entry added to the Platform Configuration
-     * @return enrollment configuration
-     */
-//    public static EnrollmentConfiguration getEnrollmentConfigurationEntry() {
-//        Object enrollmentConfigEntry = DeviceManagerUtil.getConfiguration(
-//                DeviceManagementConstants.Common.ENROLLMENT_CONFIGURATION);
-//        if (enrollmentConfigEntry != null) {
-//            Gson gson = new Gson();
-//            return gson.fromJson(enrollmentConfigEntry.toString(), EnrollmentConfiguration.class);
-//        }
-//        return null;
-//    }
 
     /**
      * Validates if the device is allowed to be enrolled based on the device serial number.
