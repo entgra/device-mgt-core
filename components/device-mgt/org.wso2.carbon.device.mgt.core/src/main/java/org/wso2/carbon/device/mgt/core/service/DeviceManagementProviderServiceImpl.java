@@ -125,12 +125,12 @@ import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.dto.DeviceTypeServiceIdentifier;
 import org.wso2.carbon.device.mgt.core.dto.DeviceTypeVersion;
 import org.wso2.carbon.device.mgt.common.geo.service.GeoCluster;
-import org.wso2.carbon.device.mgt.common.geo.service.GeoCoordinate;
 import org.wso2.carbon.device.mgt.core.internal.DeviceManagementDataHolder;
 import org.wso2.carbon.device.mgt.core.internal.DeviceManagementServiceComponent;
 import org.wso2.carbon.device.mgt.core.internal.PluginInitializationListener;
 import org.wso2.carbon.device.mgt.core.operation.mgt.CommandOperation;
 import org.wso2.carbon.device.mgt.core.util.DeviceManagerUtil;
+import org.wso2.carbon.device.mgt.core.util.HttpReportingUtil;
 import org.wso2.carbon.email.sender.core.ContentProviderInfo;
 import org.wso2.carbon.email.sender.core.EmailContext;
 import org.wso2.carbon.email.sender.core.EmailSendingFailedException;
@@ -159,7 +159,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
-//import org.wso2.carbon.device.mgt.analytics.data.publisher.exception.DataPublisherConfigurationException;
 
 public class DeviceManagementProviderServiceImpl implements DeviceManagementProviderService,
         PluginInitializationListener {
@@ -404,6 +403,12 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             status = true;
         }
 
+        //enroll Traccar device
+        if (HttpReportingUtil.isTrackerEnabled()) {
+            DeviceManagementDataHolder.getInstance().getDeviceAPIClientService().addDevice(device, tenantId);
+        }
+        //enroll Traccar device
+
         if (status) {
             addDeviceToGroups(deviceIdentifier, device.getEnrolmentInfo().getOwnership());
             if (enrollmentConfiguration != null) {
@@ -465,6 +470,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             }
             deviceDAO.updateDevice(device, tenantId);
             enrollmentDAO.updateEnrollment(device.getEnrolmentInfo(), tenantId);
+
             DeviceManagementDAOFactory.commitTransaction();
             this.removeDeviceFromCache(deviceIdentifier);
         } catch (DeviceManagementDAOException e) {
@@ -564,6 +570,14 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             deviceDAO.updateDevice(device, tenantId);
             DeviceManagementDAOFactory.commitTransaction();
             this.removeDeviceFromCache(deviceId);
+
+            //procees to dis-enroll a device from traccar starts
+            if (HttpReportingUtil.isTrackerEnabled()) {
+                DeviceManagementDataHolder.getInstance().getDeviceAPIClientService()
+                        .disEndrollDevice(device.getId(), tenantId);
+            }
+            //procees to dis-enroll a device from traccar ends
+
         } catch (DeviceManagementDAOException e) {
             DeviceManagementDAOFactory.rollbackTransaction();
             String msg = "Error occurred while dis-enrolling '" + deviceId.getType() +
