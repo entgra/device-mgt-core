@@ -78,6 +78,7 @@ public class Constants {
         AGENT_DATA.put("ios", "ios.ipa");
     }
     public static final Map<String, String> AGENT_FILE_NAMES = Collections.unmodifiableMap(AGENT_DATA);
+    public static final String googlePlayCategoryName = "GooglePlaySyncedApp";
 
 
     /**
