@@ -157,6 +157,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 
@@ -405,7 +406,15 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
 
         //enroll Traccar device
         if (HttpReportingUtil.isTrackerEnabled()) {
-            DeviceManagementDataHolder.getInstance().getDeviceAPIClientService().addDevice(device, tenantId);
+            try {
+                DeviceManagementDataHolder.getInstance().getDeviceAPIClientService().addDevice(device, tenantId);
+            } catch (ExecutionException e) {
+                log.error("ExecutionException : " + e);
+                //throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                log.error("InterruptedException : " + e);
+                //throw new RuntimeException(e);
+            }
         }
         //enroll Traccar device
 
@@ -574,7 +583,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             //procees to dis-enroll a device from traccar starts
             if (HttpReportingUtil.isTrackerEnabled()) {
                 DeviceManagementDataHolder.getInstance().getDeviceAPIClientService()
-                        .disEndrollDevice(device.getId(), tenantId);
+                        .disEnrollDevice(device.getId(), tenantId);
             }
             //procees to dis-enroll a device from traccar ends
 
