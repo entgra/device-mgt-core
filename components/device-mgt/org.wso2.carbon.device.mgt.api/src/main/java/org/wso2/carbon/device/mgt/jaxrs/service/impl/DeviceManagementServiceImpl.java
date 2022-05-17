@@ -379,10 +379,11 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
     @GET
     @Override
     @Path("/traccar-user-token")
-    public Response getTraccarUserToken(@QueryParam("name") String name) {
+    public Response getTraccarUserToken() {
 
         if (HttpReportingUtil.isTrackerEnabled()) {
-            JSONObject obj = new JSONObject(DeviceAPIClientServiceImpl.returnUser(name));
+            String currentUser = CarbonContext.getThreadLocalCarbonContext().getUsername();
+            JSONObject obj = new JSONObject(DeviceAPIClientServiceImpl.returnUser(currentUser));
 
             log.info("=================");
             log.info(obj.toString());
