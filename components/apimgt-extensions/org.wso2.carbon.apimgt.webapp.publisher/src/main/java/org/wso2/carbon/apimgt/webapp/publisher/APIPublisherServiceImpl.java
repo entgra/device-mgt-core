@@ -92,9 +92,6 @@ public class APIPublisherServiceImpl implements APIPublisherService {
                 }
 
                 if (tenantFound) {
-                    // String tenantDomain = MultitenantUtils.getTenantDomain(apiConfig.getOwner());
-//                    PrivilegedCarbonContext.startTenantFlow();
-//                    PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(tenantDomain, true);
                     PrivilegedCarbonContext.getThreadLocalCarbonContext().setUsername(apiConfig.getOwner());
                     int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
 
