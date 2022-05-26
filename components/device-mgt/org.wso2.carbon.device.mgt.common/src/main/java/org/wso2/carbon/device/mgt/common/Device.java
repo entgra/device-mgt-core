@@ -92,6 +92,10 @@ public class Device implements Serializable {
         this.properties = properties;
     }
 
+    public Device(String deviceId) {
+        this.deviceIdentifier = deviceId;
+    }
+
     public int getId() {
         return id;
     }

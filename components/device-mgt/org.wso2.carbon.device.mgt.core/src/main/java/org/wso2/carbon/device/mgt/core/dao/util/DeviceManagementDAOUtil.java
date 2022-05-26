@@ -17,7 +17,12 @@
  */
 package org.wso2.carbon.device.mgt.core.dao.util;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -152,6 +157,14 @@ public final class DeviceManagementDAOUtil {
         return enrolmentInfo;
     }
 
+    public static EnrolmentInfo loadEnrolmentStatus(ResultSet rs) throws SQLException {
+        EnrolmentInfo enrolmentInfo = new EnrolmentInfo();
+        enrolmentInfo.setId(rs.getInt("ENROLMENT_ID"));
+        enrolmentInfo.setTransferred(rs.getBoolean("IS_TRANSFERRED"));
+        enrolmentInfo.setStatus(EnrolmentInfo.Status.valueOf(rs.getString("STATUS")));
+        return enrolmentInfo;
+    }
+
     public static EnrolmentInfo loadMatchingEnrolment(ResultSet rs) throws SQLException {
         Map<EnrolmentInfo.Status, EnrolmentInfo> enrolmentInfos = new HashMap<>();
         EnrolmentInfo enrolmentInfo = loadEnrolment(rs);
@@ -194,6 +207,14 @@ public final class DeviceManagementDAOUtil {
         device.setType(rs.getString("DEVICE_TYPE"));
         device.setDeviceIdentifier(rs.getString("DEVICE_IDENTIFICATION"));
         device.setEnrolmentInfo(loadEnrolment(rs));
+        return device;
+    }
+
+    public static Device loadDeviceIds(ResultSet rs) throws SQLException {
+        Device device = new Device();
+        device.setId(rs.getInt("DEVICE_ID"));
+        device.setDeviceIdentifier(rs.getString("DEVICE_IDENTIFICATION"));
+        device.setEnrolmentInfo(loadEnrolmentStatus(rs));
         return device;
     }
 
