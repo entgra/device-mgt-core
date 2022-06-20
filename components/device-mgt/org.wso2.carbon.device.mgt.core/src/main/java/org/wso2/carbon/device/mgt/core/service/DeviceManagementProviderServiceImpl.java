@@ -74,6 +74,7 @@ import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceNotFoundException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceTypeNotFoundException;
 import org.wso2.carbon.device.mgt.common.exceptions.InvalidDeviceException;
+import org.wso2.carbon.device.mgt.common.exceptions.MetadataManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.TransactionManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.UnauthorizedDeviceAccessException;
 import org.wso2.carbon.device.mgt.common.exceptions.UserNotFoundException;
@@ -112,13 +113,13 @@ import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.dto.DeviceTypeServiceIdentifier;
 import org.wso2.carbon.device.mgt.core.dto.DeviceTypeVersion;
 import org.wso2.carbon.device.mgt.common.geo.service.GeoCluster;
-import org.wso2.carbon.device.mgt.common.geo.service.GeoCoordinate;
 import org.wso2.carbon.device.mgt.core.internal.DeviceManagementDataHolder;
 import org.wso2.carbon.device.mgt.core.internal.DeviceManagementServiceComponent;
 import org.wso2.carbon.device.mgt.core.internal.PluginInitializationListener;
 import org.wso2.carbon.device.mgt.core.metadata.mgt.dao.MetadataDAO;
 import org.wso2.carbon.device.mgt.core.metadata.mgt.dao.MetadataManagementDAOFactory;
 import org.wso2.carbon.device.mgt.core.operation.mgt.CommandOperation;
+import org.wso2.carbon.device.mgt.core.task.DeviceMgtTaskException;
 import org.wso2.carbon.device.mgt.core.util.DeviceManagerUtil;
 import org.wso2.carbon.email.sender.core.ContentProviderInfo;
 import org.wso2.carbon.email.sender.core.EmailContext;
@@ -187,8 +188,9 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
 
     @Override
     public PlatformConfiguration getConfiguration(String deviceType) throws DeviceManagementException {
+        int tenantId = this.getTenantId();
         DeviceManager dms =
-                pluginRepository.getDeviceManagementService(deviceType, this.getTenantId()).getDeviceManager();
+                pluginRepository.getDeviceManagementService(deviceType, tenantId).getDeviceManager();
         if (dms == null) {
             if (log.isDebugEnabled()) {
                 log.debug("Device type '" + deviceType + "' does not have an associated device management " +
@@ -2097,6 +2099,71 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
+    public void handleOperationMonitoringTaskConfigUpdate(String deviceType, OperationMonitoringTaskConfig operationMonitoringTaskConfig) {
+        try {
+            DeviceManagementDataHolder.getInstance().getDeviceTaskManagerService().
+                    updateTask(deviceType, operationMonitoringTaskConfig);
+        } catch (DeviceMgtTaskException e) {
+            String msg = "Error occurred while updating operation monitoring tasks";
+            log.error(msg, e);
+        }
+    }
+
+    @Override
+    public void registerDeviceMonitoringTasks() throws DeviceManagementException {
+        List<DeviceType> deviceTypes = getDeviceTypes();
+        for (DeviceType type : deviceTypes) {
+            try {
+                OperationMonitoringTaskConfig operationMonitoringTaskConfig = getOperationMonitoringTaskConfig(type.getName());
+                DeviceManagementDataHolder.getInstance().getDeviceTaskManagerService().registerTask(type.getName(), operationMonitoringTaskConfig);
+            } catch (DeviceMgtTaskException e) {
+                String msg = "Error occurred while starting task for device type " + type.getName();
+                log.error(msg, e);
+                throw new DeviceManagementException(msg, e);
+            }
+        }
+    }
+
+
+    @Override
+    public OperationMonitoringTaskConfig getOperationMonitoringTaskConfig(String deviceType)
+            throws DeviceManagementException {
+        try {
+            return DeviceManagementDataHolder.getInstance().getMonitoringOperationTaskConfigManagementService().
+                    getMonitoringOperationTaskConfig(deviceType);
+        } catch (MetadataManagementException e) {
+            String msg = "Error occurred while retrieving operation monitoring config metadata for device type " + deviceType;
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        }
+    }
+    @Override
+    public OperationMonitoringTaskConfig getDefaultOperationMonitoringTaskConfig(String deviceType) {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        DeviceManagementService dms = pluginRepository.getDeviceManagementService(deviceType, tenantId);
+        return dms.getOperationMonitoringConfig();
+    }
+
+
+    @Override
+    public ConfigurationEntry getConfigurationEntryByName(String name, String deviceType) throws DeviceManagementException {
+        PlatformConfiguration platformConfiguration = getConfiguration(deviceType);
+        return getConfigurationEntryByName(platformConfiguration, name);
+    }
+
+    @Override
+    public ConfigurationEntry getConfigurationEntryByName(PlatformConfiguration platformConfiguration, String name) {
+        if (platformConfiguration != null && platformConfiguration.getConfiguration() != null) {
+            for(ConfigurationEntry entry : platformConfiguration.getConfiguration()) {
+                if (entry.getName().equals(name)) {
+                    return entry;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
     public License getLicense(String deviceType, String languageCode) throws DeviceManagementException {
         if (deviceType == null || languageCode == null) {
             String msg = "Received incomplete data for getLicence";
@@ -2410,13 +2477,8 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public List<MonitoringOperation> getMonitoringOperationList(String deviceType) {
-        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
-
-        DeviceManagementService dms = pluginRepository.getDeviceManagementService(deviceType, tenantId);
-
-        OperationMonitoringTaskConfig operationMonitoringTaskConfig = dms.getOperationMonitoringConfig();
-        return operationMonitoringTaskConfig.getMonitoringOperation();
+    public List<MonitoringOperation> getMonitoringOperationList(String deviceType) throws DeviceManagementException {
+        return getOperationMonitoringTaskConfig(deviceType).getEnabledMonitoringOperations();
     }
 
     @Override
@@ -2433,18 +2495,9 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public int getDeviceMonitoringFrequency(String deviceType) {
-        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
-        DeviceManagementService dms = pluginRepository.getDeviceManagementService(deviceType, tenantId);
-        OperationMonitoringTaskConfig operationMonitoringTaskConfig = dms.getOperationMonitoringConfig();
+    public int getDeviceMonitoringFrequency(String deviceType) throws DeviceManagementException {
+        OperationMonitoringTaskConfig operationMonitoringTaskConfig = getOperationMonitoringTaskConfig(deviceType);
         return operationMonitoringTaskConfig.getFrequency();
-    }
-
-    @Override
-    public OperationMonitoringTaskConfig getDeviceMonitoringConfig(String deviceType) {
-        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
-        DeviceManagementService dms = pluginRepository.getDeviceManagementService(deviceType, tenantId);
-        return dms.getOperationMonitoringConfig();
     }
 
     @Override
@@ -2455,10 +2508,8 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public boolean isDeviceMonitoringEnabled(String deviceType) {
-        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
-        DeviceManagementService dms = pluginRepository.getDeviceManagementService(deviceType, tenantId);
-        OperationMonitoringTaskConfig operationMonitoringTaskConfig = dms.getOperationMonitoringConfig();
+    public boolean isDeviceMonitoringEnabled(String deviceType) throws DeviceManagementException {
+        OperationMonitoringTaskConfig operationMonitoringTaskConfig = getOperationMonitoringTaskConfig(deviceType);
         return operationMonitoringTaskConfig.isEnabled();
     }
 
@@ -3201,6 +3252,32 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         }
     }
 
+    @Override
+    public boolean isDeviceEnrolled() throws DeviceManagementException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        if (log.isDebugEnabled()) {
+            log.debug("checking if any device are enrolled for tenant " + tenantId);
+        }
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            return deviceDAO.isDeviceEnrolled(tenantId);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred while checking if any device are enrolled for the tenant " + tenantId;
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (Exception e) {
+            String msg = "Error occurred in isDeviceEnrolled";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
+
     private boolean updateEnrollment(int deviceId, EnrolmentInfo enrolmentInfo, int tenantId)
             throws DeviceManagementException {
         if (log.isDebugEnabled()) {
@@ -3419,10 +3496,10 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
 
     @Override
     public List<DeviceType> getDeviceTypes() throws DeviceManagementException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         if (log.isDebugEnabled()) {
             log.debug("Get device types");
         }
-        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         try {
             DeviceManagementDAOFactory.openConnection();
             return deviceTypeDAO.getDeviceTypes(tenantId);

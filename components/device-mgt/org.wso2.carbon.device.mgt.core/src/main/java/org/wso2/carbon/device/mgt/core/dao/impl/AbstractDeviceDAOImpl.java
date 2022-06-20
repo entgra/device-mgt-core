@@ -1852,6 +1852,26 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         return tenants;
     }
 
+    @Override
+    public boolean isDeviceEnrolled(int tenantId) throws DeviceManagementDAOException {
+        Connection conn;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            conn = this.getConnection();
+            String sql = "SELECT TENANT_ID FROM DM_DEVICE WHERE TENANT_ID = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, tenantId);
+            rs = stmt.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            throw new DeviceManagementDAOException("Error occurred while retrieving tenants which have " +
+                    "device registered.", e);
+        } finally {
+            DeviceManagementDAOUtil.cleanupResources(stmt, rs);
+        }
+    }
+
     public List<GeoCluster> findGeoClusters(GeoQuery geoQuery, int tenantId) throws DeviceManagementDAOException {
         Connection conn;
         PreparedStatement stmt = null;

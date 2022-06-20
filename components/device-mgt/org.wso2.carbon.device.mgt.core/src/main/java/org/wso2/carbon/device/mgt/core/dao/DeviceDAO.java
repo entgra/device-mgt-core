@@ -557,6 +557,14 @@ public interface DeviceDAO {
     List<Integer> getDeviceEnrolledTenants() throws DeviceManagementDAOException;
 
     /**
+     * Check if any device is enrolled for the given tenantId
+     * @param tenantId tenant id.
+     * @return
+     * @throws DeviceManagementDAOException
+     */
+    boolean isDeviceEnrolled(int tenantId) throws DeviceManagementDAOException;
+
+    /**
      * This method is used to retrieve the details of geoclusters formed relatively to the zoom level and map
      * boundaries.
      *

@@ -81,6 +81,7 @@ public class TaskConfiguration {
         private int recurrency;
         private List<String> platforms;
 
+        private boolean isEnabled;
 
         @XmlElement(name = "Name", required = true)
         public String getOperationName() {
@@ -110,5 +111,13 @@ public class TaskConfiguration {
             this.platforms = platforms;
         }
 
+        @XmlElement(name = "Enable")
+        public boolean isEnabled() {
+            return isEnabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            isEnabled = enabled;
+        }
     }
 }

@@ -80,7 +80,9 @@ public class TestDeviceManagementService implements DeviceManagementService {
         MonitoringOperation monitoringOperation = new MonitoringOperation();
         monitoringOperation.setTaskName(operationCode);
         monitoringOperation.setRecurrentTimes(2);
+        monitoringOperation.setEnabled(true);
         monitoringOperations.add(monitoringOperation);
+
         taskConfig.setMonitoringOperation(monitoringOperations);
         return taskConfig;
     }

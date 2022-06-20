@@ -69,6 +69,8 @@ public class TaskConfiguration {
         private int recurrency;
         private boolean responsePersistence = true;
 
+        private boolean isEnabled;
+
         @XmlElement(name = "Name", required = true)
         public String getOperationName() {
             return operationName;
@@ -94,6 +96,15 @@ public class TaskConfiguration {
 
         public void setResponsePersistence(boolean responsePersistence) {
             this.responsePersistence = responsePersistence;
+        }
+
+        @XmlElement(name = "Enable")
+        public boolean isEnabled() {
+            return isEnabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            isEnabled = enabled;
         }
     }
 }

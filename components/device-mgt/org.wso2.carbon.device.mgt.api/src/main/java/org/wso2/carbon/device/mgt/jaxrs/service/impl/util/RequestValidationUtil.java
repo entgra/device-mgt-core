@@ -26,6 +26,7 @@ import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.Feature;
 import org.wso2.carbon.device.mgt.common.FeatureManager;
 import org.wso2.carbon.device.mgt.common.OperationLogFilters;
+import org.wso2.carbon.device.mgt.common.OperationMonitoringTaskConfig;
 import org.wso2.carbon.device.mgt.common.app.mgt.Application;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
@@ -651,6 +652,21 @@ public class RequestValidationUtil {
             throw new InputValidationException(new ErrorResponse.ErrorResponseBuilder()
                     .setCode(HttpStatus.SC_BAD_REQUEST)
                     .setMessage(msg).build());
+        }
+    }
+
+    /**
+     * Validate if the operation config is non empty & in proper format.
+     *
+     * @param operationMonitoringTaskConfig user submitted OperationMonitoringTaskConfig instance
+     */
+    public static void validateMonitoringOperationConfig(OperationMonitoringTaskConfig operationMonitoringTaskConfig) {
+        if (operationMonitoringTaskConfig == null) {
+            String msg = "Operation monitoring task config cannot hav empty value";
+            log.error(msg);
+            throw new InputValidationException(
+                    new ErrorResponse.ErrorResponseBuilder()
+                            .setCode(HttpStatus.SC_BAD_REQUEST).setMessage(msg).build());
         }
     }
 

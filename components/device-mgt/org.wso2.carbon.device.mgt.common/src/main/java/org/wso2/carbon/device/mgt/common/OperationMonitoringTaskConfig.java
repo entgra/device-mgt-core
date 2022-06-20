@@ -18,8 +18,11 @@
 
 package org.wso2.carbon.device.mgt.common;
 
+import org.wso2.carbon.device.mgt.common.operation.mgt.Operation;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * This class holds configurations for Operation Monitoring Task.
@@ -32,6 +35,11 @@ public class OperationMonitoringTaskConfig {
 
     public boolean isEnabled() {
         return isEnabled;
+    }
+
+    public boolean hasEnabledOperations() {
+        boolean hasEnabledOperations = !getEnabledMonitoringOperations().isEmpty();
+        return hasEnabledOperations && isEnabled;
     }
 
     public void setEnabled(boolean enabled) {
@@ -52,6 +60,10 @@ public class OperationMonitoringTaskConfig {
 
     public void setMonitoringOperation(List<MonitoringOperation> monitoringOperation) {
         this.monitoringOperation = monitoringOperation;
-
     }
+
+    public List<MonitoringOperation> getEnabledMonitoringOperations() {
+        return monitoringOperation.stream().filter(MonitoringOperation::isEnabled).collect(Collectors.toList());
+    }
+
 }

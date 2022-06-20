@@ -41,6 +41,7 @@ import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.MonitoringOperation;
 import org.wso2.carbon.device.mgt.common.OperationMonitoringTaskConfig;
 import org.wso2.carbon.device.mgt.common.StartupOperationConfig;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.InvalidDeviceException;
 import org.wso2.carbon.device.mgt.common.operation.mgt.Operation;
 import org.wso2.carbon.device.mgt.common.operation.mgt.OperationManagementException;
@@ -87,8 +88,8 @@ public class DeviceTaskManagerImpl implements DeviceTaskManager {
     }
 
     //get device type specific operations
-    private List<MonitoringOperation> getOperationList() throws DeviceMgtTaskException {
-        return operationMonitoringTaskConfig.getMonitoringOperation();
+    private List<MonitoringOperation> getOperationList() {
+        return operationMonitoringTaskConfig.getEnabledMonitoringOperations();
     }
 
     private List<String> getStartupOperations() {
@@ -195,7 +196,7 @@ public class DeviceTaskManagerImpl implements DeviceTaskManager {
         }
     }
 
-    private List<MonitoringOperation> getOperationListforTask() throws DeviceMgtTaskException {
+    private List<MonitoringOperation> getOperationListforTask() throws DeviceMgtTaskException, DeviceManagementException {
 
         DeviceManagementProviderService deviceManagementProviderService = DeviceManagementDataHolder
                 .getInstance().getDeviceManagementProvider();
@@ -228,7 +229,7 @@ public class DeviceTaskManagerImpl implements DeviceTaskManager {
                     }
                 }
             }
-        } catch (DeviceMgtTaskException e) {
+        } catch (DeviceMgtTaskException | DeviceManagementException e) {
             // ignoring the error, no need to throw, If error occurs, return value will be false.
         }
         return false;

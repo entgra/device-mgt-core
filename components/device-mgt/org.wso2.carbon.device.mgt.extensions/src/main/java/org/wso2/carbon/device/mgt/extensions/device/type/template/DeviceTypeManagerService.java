@@ -151,13 +151,13 @@ public class DeviceTypeManagerService implements DeviceManagementService {
                     monitoringOperation.setTaskName(op.getOperationName());
                     monitoringOperation.setRecurrentTimes(op.getRecurrency());
                     monitoringOperation.setResponsePersistence(op.getResponsePersistence());
+                    monitoringOperation.setEnabled(op.isEnabled());
                     monitoringOperations.add(monitoringOperation);
                 }
             }
             operationMonitoringConfigs.setMonitoringOperation(monitoringOperations);
         }
     }
-
     @Override
     public void init() throws DeviceManagementException {
     }

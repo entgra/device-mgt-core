@@ -221,7 +221,7 @@ public class DeviceTypeManagerServiceTest {
         TaskConfiguration taskConfiguration = androidDeviceConfiguration.getTaskConfiguration();
         Assert.assertEquals(operationMonitoringTaskConfig.getFrequency(), taskConfiguration.getFrequency(),
                 "Policy " + "Monitoring frequency does not match with the frequency in the configuration");
-        Assert.assertEquals(operationMonitoringTaskConfig.getMonitoringOperation().size(),
+        Assert.assertEquals(operationMonitoringTaskConfig.getEnabledMonitoringOperations().size(),
                 taskConfiguration.getOperations().size(),
                 "Number of task configuration operations does not match with the task "
                         + "configuration operations provided in the configuration file");

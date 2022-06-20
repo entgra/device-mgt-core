@@ -20,27 +20,44 @@
 package org.wso2.carbon.device.mgt.core.task;
 
 import org.wso2.carbon.device.mgt.common.OperationMonitoringTaskConfig;
+import org.wso2.carbon.ntask.common.TaskException;
 
 public interface DeviceTaskManagerService {
 
     /**
-     * This method will start the task.
+     * This method will start the task for all the tenants.
      * @param operationMonitoringTaskConfig - OperationMonitoringTaskConfig
      * @throws DeviceMgtTaskException
      */
-    void startTask(String deviceType, OperationMonitoringTaskConfig operationMonitoringTaskConfig)
+    void startTasks(String deviceType, OperationMonitoringTaskConfig operationMonitoringTaskConfig)
             throws DeviceMgtTaskException;
 
     /**
-     * This method will stop the task.
+     * This method will start the task for the provided tenant id.
+     *
      * @param operationMonitoringTaskConfig - OperationMonitoringTaskConfig
      * @throws DeviceMgtTaskException
      */
-    void stopTask(String deviceType, OperationMonitoringTaskConfig operationMonitoringTaskConfig)
+    void startTask(String deviceType, OperationMonitoringTaskConfig operationMonitoringTaskConfig) throws DeviceMgtTaskException;
+
+    void registerTask(String deviceType, OperationMonitoringTaskConfig operationMonitoringTaskConfig) throws DeviceMgtTaskException;
+
+    /**
+     * This method will stop the task if scheduled.
+     * @throws DeviceMgtTaskException
+     */
+    void stopTaskIfScheduled(String deviceType)
+            throws TaskException;
+
+    /**
+     * This method will stop the task scheduled for all the tenants
+     * @throws DeviceMgtTaskException
+     */
+    void stopTasksOfAllTenants(String deviceType)
             throws DeviceMgtTaskException;
 
     /**
-     * This will update the task frequency which it runs.
+     * This will update the task according to the provided operation monitoring task configuration
      * @param operationMonitoringTaskConfig - OperationMonitoringTaskConfig
      * @throws DeviceMgtTaskException
      */

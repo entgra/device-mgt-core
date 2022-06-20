@@ -66,11 +66,9 @@ import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOException;
 import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.dto.DeviceTypeVersion;
 import org.wso2.carbon.device.mgt.common.geo.service.GeoCluster;
-import org.wso2.carbon.device.mgt.common.geo.service.GeoCoordinate;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -652,6 +650,7 @@ public interface DeviceManagementProviderService {
      */
     PlatformConfiguration getConfiguration(String deviceType) throws DeviceManagementException;
 
+
     /**
      * This method is used to check whether the device is enrolled with the give user.
      *
@@ -670,6 +669,50 @@ public interface DeviceManagementProviderService {
      * @throws DeviceManagementException
      */
     NotificationStrategy getNotificationStrategyByDeviceType(String deviceType) throws DeviceManagementException;
+
+    /**
+     * Handle updated operation monitoring task configuration update
+     * @param deviceType device type
+     * @param operationMonitoringTaskConfig updated operation monitoring task configuration
+     */
+    void handleOperationMonitoringTaskConfigUpdate(String deviceType, OperationMonitoringTaskConfig operationMonitoringTaskConfig);
+
+    /**
+     * Useful to start monitoring tasks for all device types
+     */
+    void registerDeviceMonitoringTasks() throws DeviceManagementException;
+
+    /**
+     * Get operation monitoring task configuration for provided device type. This returns the configuration from
+     * Platform configuration if exists. Otherwise, returns the default configuration
+     *
+     * @param deviceType device type
+     */
+    OperationMonitoringTaskConfig getOperationMonitoringTaskConfig(String deviceType)
+            throws DeviceManagementException;
+
+    /**
+     *
+     * Helps to get the {@link ConfigurationEntry} by name from PlatformConfiguration
+     *
+     * @param name of the entry
+     * @param deviceType device type
+     *
+     * @throws DeviceManagementException
+     */
+    ConfigurationEntry getConfigurationEntryByName(String name, String deviceType) throws DeviceManagementException;
+
+    /**
+     *
+     * Helps to get the {@link ConfigurationEntry} by name from the provided PlatformConfiguration
+     *
+     * @param name of the entry
+     * @parm platformConfiguration in which the entry must be searched
+     *
+     * @throws DeviceManagementException
+     */
+    ConfigurationEntry getConfigurationEntryByName(PlatformConfiguration platformConfiguration, String name)
+            throws DeviceManagementException;
 
     License getLicense(String deviceType, String languageCode) throws DeviceManagementException;
 
@@ -775,17 +818,17 @@ public interface DeviceManagementProviderService {
 
     int getActivityCountUpdatedAfterByUser(long timestamp, String user) throws OperationManagementException;
 
-    List<MonitoringOperation> getMonitoringOperationList(String deviceType);
+    List<MonitoringOperation> getMonitoringOperationList(String deviceType) throws DeviceManagementException;
 
     List<String> getStartupOperations(String deviceType);
 
-    int getDeviceMonitoringFrequency(String deviceType);
+    int getDeviceMonitoringFrequency(String deviceType) throws DeviceManagementException;
 
-    OperationMonitoringTaskConfig getDeviceMonitoringConfig(String deviceType);
+    OperationMonitoringTaskConfig getDefaultOperationMonitoringTaskConfig(String deviceType);
 
     StartupOperationConfig getStartupOperationConfig(String deviceType);
 
-    boolean isDeviceMonitoringEnabled(String deviceType);
+    boolean isDeviceMonitoringEnabled(String deviceType) throws DeviceManagementException;
 
     PolicyMonitoringManager getPolicyMonitoringManager(String deviceType);
 
@@ -799,6 +842,11 @@ public interface DeviceManagementProviderService {
      */
     boolean changeDeviceStatus(DeviceIdentifier deviceIdentifier, EnrolmentInfo.Status newStatus)
             throws DeviceManagementException;
+
+    /**
+     * Check if any device is enrolled for the provided tenant
+     */
+    boolean isDeviceEnrolled() throws DeviceManagementException;
 
     /**
      * This will handle add and update of device type services.

@@ -39,6 +39,8 @@ public class TestDataHolder {
     public final static String initialDeviceIdentifier = "12345";
     public final static String OWNER = "admin";
     public static final String OPERATION_CONFIG = "TEST-OPERATION-";
+
+    public static final String OPERATION_CONFIG_KEY = "OPPCONFIG";
     public static Device initialTestDevice;
     public static DeviceType initialTestDeviceType;
 
@@ -189,6 +191,7 @@ public class TestDataHolder {
         MonitoringOperation operation = new MonitoringOperation();
         operation.setTaskName(name);
         operation.setRecurrentTimes(recurrentTimes);
+        operation.setEnabled(true);
 
         return operation;
     }

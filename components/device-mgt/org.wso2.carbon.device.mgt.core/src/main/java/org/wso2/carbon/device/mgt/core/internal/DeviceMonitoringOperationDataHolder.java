@@ -39,7 +39,9 @@ public class DeviceMonitoringOperationDataHolder {
     }
 
     public void addOperationMonitoringConfigToMap(String deviceType, OperationMonitoringTaskConfig OperationConfig) {
-        this.OperationConfigMap.put(deviceType, OperationConfig);
+        if (OperationConfig != null) {
+            this.OperationConfigMap.put(deviceType, OperationConfig);
+        }
     }
 
     public Map<String, OperationMonitoringTaskConfig> getOperationMonitoringConfigFromMap(){
