@@ -63,8 +63,6 @@ public class DeviceDetailsRetrieverTask extends DynamicPartitionedScheduleTask {
     public void setProperties(Map<String, String> map) {
         super.setProperties(map);
         deviceType = map.get(TaskConstants.DEVICE_TYPE_KEY);
-//        operationMonitoringTaskConfig = deviceManagementProviderService
-//                .getDeviceMonitoringConfig(deviceType, tenantId);
         operationMonitoringTaskConfig = new Gson().
                 fromJson(map.get(TaskConstants.OPERATION_MONITORING.OPERATION_CONF_KEY), OperationMonitoringTaskConfig.class);
         tenantId = Integer.parseInt(map.get(TaskConstants.TENANT_ID_KEY));
@@ -72,12 +70,8 @@ public class DeviceDetailsRetrieverTask extends DynamicPartitionedScheduleTask {
 
     @Override
     public void executeDynamicTask() {
-        System.out.println("[" + LocalDateTime.now() + "]" + " Executing Operation Monitoring Task: { tenantId: " + tenantId + " }");
         DeviceManagementProviderService deviceManagementProviderService = DeviceManagementDataHolder.getInstance()
                 .getDeviceManagementProvider();
-        // See line 67
-//        OperationMonitoringTaskConfig operationMonitoringTaskConfig = deviceManagementProviderService
-//                .getDeviceMonitoringConfig(deviceType);
         if (log.isDebugEnabled()) {
             log.debug("Device details retrieving task started to run for tenant " + tenantId);
         }
