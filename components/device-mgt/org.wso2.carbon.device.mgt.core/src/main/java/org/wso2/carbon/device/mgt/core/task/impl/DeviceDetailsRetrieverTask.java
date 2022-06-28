@@ -40,6 +40,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.carbon.device.mgt.common.MonitoringOperation;
 import org.wso2.carbon.device.mgt.common.OperationMonitoringTaskConfig;
 import org.wso2.carbon.device.mgt.common.StartupOperationConfig;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
@@ -56,15 +57,16 @@ public class DeviceDetailsRetrieverTask extends DynamicPartitionedScheduleTask {
 
     private static final Log log = LogFactory.getLog(DeviceDetailsRetrieverTask.class);
     private int tenantId;
-    private OperationMonitoringTaskConfig operationMonitoringTaskConfig;
+
+    private MonitoringOperation monitoringOperation;
     private String deviceType;
 
     @Override
     public void setProperties(Map<String, String> map) {
         super.setProperties(map);
         deviceType = map.get(TaskConstants.DEVICE_TYPE_KEY);
-        operationMonitoringTaskConfig = new Gson().
-                fromJson(map.get(TaskConstants.OPERATION_MONITORING.OPERATION_CONF_KEY), OperationMonitoringTaskConfig.class);
+        monitoringOperation = new Gson().
+                fromJson(map.get(TaskConstants.OPERATION_MONITORING.OPERATION_CONF_KEY), MonitoringOperation.class);
         tenantId = Integer.parseInt(map.get(TaskConstants.TENANT_ID_KEY));
     }
 
@@ -81,13 +83,13 @@ public class DeviceDetailsRetrieverTask extends DynamicPartitionedScheduleTask {
         StartupOperationConfig startupOperationConfig = deviceManagementProviderService
                 .getStartupOperationConfig(deviceType);
         if (MultitenantConstants.SUPER_TENANT_ID == tenantId) {
-            this.executeTask(operationMonitoringTaskConfig, startupOperationConfig);
+            this.executeTask(monitoringOperation, startupOperationConfig);
             return;
         }
         try {
             PrivilegedCarbonContext.startTenantFlow();
             PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(tenantId, true);
-            this.executeTask(operationMonitoringTaskConfig, startupOperationConfig);
+            this.executeTask(monitoringOperation, startupOperationConfig);
         } finally {
             PrivilegedCarbonContext.endTenantFlow();
         }
@@ -96,10 +98,9 @@ public class DeviceDetailsRetrieverTask extends DynamicPartitionedScheduleTask {
 
     /**
      * Execute device detail retriever task
-     * @param operationMonitoringTaskConfig which contains monitoring operations and related details
      * @param startupOperationConfig which contains startup operations and realted details
      */
-    private void executeTask(OperationMonitoringTaskConfig operationMonitoringTaskConfig,
+    private void executeTask(MonitoringOperation monitoringOperation,
                              StartupOperationConfig startupOperationConfig) {
         DeviceManagementProviderService deviceManagementProviderService = DeviceManagementDataHolder.getInstance()
                 .getDeviceManagementProvider();
@@ -115,7 +116,7 @@ public class DeviceDetailsRetrieverTask extends DynamicPartitionedScheduleTask {
             log.error(msg, e);
         }
         DeviceTaskManager deviceTaskManager = new DeviceTaskManagerImpl(deviceType,
-                operationMonitoringTaskConfig,
+                monitoringOperation,
                 startupOperationConfig);
         if (log.isDebugEnabled()) {
             log.debug("Device details retrieving task started to run.");

@@ -822,8 +822,6 @@ public interface DeviceManagementProviderService {
 
     List<String> getStartupOperations(String deviceType);
 
-    int getDeviceMonitoringFrequency(String deviceType) throws DeviceManagementException;
-
     OperationMonitoringTaskConfig getDefaultOperationMonitoringTaskConfig(String deviceType);
 
     StartupOperationConfig getStartupOperationConfig(String deviceType);

@@ -40,7 +40,7 @@ public interface DeviceTaskManagerService {
      */
     void startTask(String deviceType, OperationMonitoringTaskConfig operationMonitoringTaskConfig) throws DeviceMgtTaskException;
 
-    void registerTask(String deviceType, OperationMonitoringTaskConfig operationMonitoringTaskConfig) throws DeviceMgtTaskException;
+    void registerTasks(String deviceType, OperationMonitoringTaskConfig operationMonitoringTaskConfig) throws DeviceMgtTaskException;
 
     /**
      * This method will stop the task if scheduled.

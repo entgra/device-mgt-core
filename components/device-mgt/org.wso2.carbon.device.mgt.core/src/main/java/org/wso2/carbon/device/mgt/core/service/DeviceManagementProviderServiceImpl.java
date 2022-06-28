@@ -2115,7 +2115,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         for (DeviceType type : deviceTypes) {
             try {
                 OperationMonitoringTaskConfig operationMonitoringTaskConfig = getOperationMonitoringTaskConfig(type.getName());
-                DeviceManagementDataHolder.getInstance().getDeviceTaskManagerService().registerTask(type.getName(), operationMonitoringTaskConfig);
+                DeviceManagementDataHolder.getInstance().getDeviceTaskManagerService().registerTasks(type.getName(), operationMonitoringTaskConfig);
             } catch (DeviceMgtTaskException e) {
                 String msg = "Error occurred while starting task for device type " + type.getName();
                 log.error(msg, e);
@@ -2492,12 +2492,6 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             return startupOperationConfig.getStartupOperations();
         }
         return null;
-    }
-
-    @Override
-    public int getDeviceMonitoringFrequency(String deviceType) throws DeviceManagementException {
-        OperationMonitoringTaskConfig operationMonitoringTaskConfig = getOperationMonitoringTaskConfig(deviceType);
-        return operationMonitoringTaskConfig.getFrequency();
     }
 
     @Override

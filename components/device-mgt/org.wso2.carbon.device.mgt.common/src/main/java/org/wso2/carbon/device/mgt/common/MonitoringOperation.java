@@ -25,8 +25,11 @@ public class MonitoringOperation {
 
     private String taskName;
     private int recurrentTimes;
+
+    private int frequency;
     private boolean responsePersistence = true;
     private boolean isEnabled;
+
 
     public String getTaskName() {
         return taskName;
@@ -67,6 +70,14 @@ public class MonitoringOperation {
 
     public void setEnabled(boolean enabled) {
         isEnabled = enabled;
+    }
+
+    public int getFrequency() {
+        return frequency;
+    }
+
+    public void setFrequency(int frequency) {
+        this.frequency = frequency;
     }
 }
 

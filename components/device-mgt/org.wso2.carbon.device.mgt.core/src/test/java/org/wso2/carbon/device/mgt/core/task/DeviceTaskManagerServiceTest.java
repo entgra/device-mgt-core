@@ -23,6 +23,7 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.wso2.carbon.device.mgt.common.OperationMonitoringTaskConfig;
 import org.wso2.carbon.device.mgt.core.TestTaskServiceImpl;
 import org.wso2.carbon.device.mgt.core.common.TestDataHolder;
 import org.wso2.carbon.device.mgt.core.config.DeviceConfigurationManager;
@@ -60,13 +61,13 @@ public class DeviceTaskManagerServiceTest {
     public void testStartTask() {
         try {
             log.debug("Attempting to start task from testStartTask");
-            this.deviceTaskManagerService.registerTask(TestDataHolder.TEST_DEVICE_TYPE,
-                    TestDataHolder.generateMonitoringTaskConfig(true, 60000, 1));
+            OperationMonitoringTaskConfig config = TestDataHolder.generateMonitoringTaskConfig(true, 60000, 1);
+            this.deviceTaskManagerService.registerTasks(TestDataHolder.TEST_DEVICE_TYPE, config);
             TaskManager taskManager = this.taskService.getTaskManager(TASK_TYPE);
             Assert.assertEquals(this.taskService.getRegisteredTaskTypes().size(), 1);
             Assert.assertNotNull(taskManager
-                    .getTask(TestDataHolder.TEST_DEVICE_TYPE +
-                            String.valueOf(TestDataHolder.SUPER_TENANT_ID)));
+                    .getTask(config.getEnabledMonitoringOperations().get(0).getTaskName() + "_" + TestDataHolder.TEST_DEVICE_TYPE + "_" +
+                            TestDataHolder.SUPER_TENANT_ID));
             log.debug("Task Successfully started");
         } catch (DeviceMgtTaskException | TaskException e) {
             Assert.fail("Exception occurred when starting the task", e);
@@ -92,8 +93,10 @@ public class DeviceTaskManagerServiceTest {
     public void testStopTask() {
         log.debug("Attempting to stop task from testStopTask");
         try {
-            this.deviceTaskManagerService.stopTaskIfScheduled(TestDataHolder.TEST_DEVICE_TYPE + TestDataHolder.SUPER_TENANT_ID);
+            OperationMonitoringTaskConfig config = TestDataHolder.generateMonitoringTaskConfig(true, 60000, 1);
             TaskManager taskManager = this.taskService.getTaskManager(TASK_TYPE);
+            this.deviceTaskManagerService.stopTaskIfScheduled(config.getEnabledMonitoringOperations().get(0).getTaskName() +
+                    "_" + TestDataHolder.TEST_DEVICE_TYPE + "_"  + TestDataHolder.SUPER_TENANT_ID);
             Assert.assertEquals(taskManager.getAllTasks().size(), 0);
         } catch (TaskException e) {
             Assert.fail("Exception occurred when stopping the task", e);

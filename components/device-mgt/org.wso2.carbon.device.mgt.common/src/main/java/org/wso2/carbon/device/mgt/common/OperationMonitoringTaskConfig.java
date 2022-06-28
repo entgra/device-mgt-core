@@ -18,8 +18,6 @@
 
 package org.wso2.carbon.device.mgt.common;
 
-import org.wso2.carbon.device.mgt.common.operation.mgt.Operation;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,7 +28,6 @@ import java.util.stream.Collectors;
 public class OperationMonitoringTaskConfig {
 
     private boolean isEnabled;
-    private int frequency;
     private List<MonitoringOperation> monitoringOperation = new ArrayList<>();
 
     public boolean isEnabled() {
@@ -44,14 +41,6 @@ public class OperationMonitoringTaskConfig {
 
     public void setEnabled(boolean enabled) {
         isEnabled = enabled;
-    }
-
-    public int getFrequency() {
-        return frequency;
-    }
-
-    public void setFrequency(int frequency) {
-        this.frequency = frequency;
     }
 
     public List<MonitoringOperation> getMonitoringOperation() {

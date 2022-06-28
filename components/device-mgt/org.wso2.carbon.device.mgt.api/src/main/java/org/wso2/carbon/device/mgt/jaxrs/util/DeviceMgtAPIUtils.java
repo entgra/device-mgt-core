@@ -1051,13 +1051,14 @@ public class DeviceMgtAPIUtils {
             List<DeviceLocationHistorySnapshot> deviceLocationHistorySnapshots = dms.getDeviceLocationInfo(deviceIdentifier, from, to);
 
             OperationMonitoringTaskConfig operationMonitoringTaskConfig = dms.getOperationMonitoringTaskConfig(deviceType);
-            int taskFrequency = operationMonitoringTaskConfig.getFrequency();
+            int taskFrequency = 0;
             int operationRecurrentTimes = 0;
 
             List<MonitoringOperation> monitoringOperations = operationMonitoringTaskConfig.getEnabledMonitoringOperations();
             for (MonitoringOperation monitoringOperation : monitoringOperations) {
                 if (monitoringOperation.getTaskName().equals("DEVICE_LOCATION")) {
                     operationRecurrentTimes = monitoringOperation.getRecurrentTimes();
+                    taskFrequency = monitoringOperation.getFrequency();
                     break;
                 }
             }

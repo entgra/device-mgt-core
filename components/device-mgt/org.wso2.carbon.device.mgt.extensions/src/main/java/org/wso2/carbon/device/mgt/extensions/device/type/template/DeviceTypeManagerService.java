@@ -142,7 +142,6 @@ public class DeviceTypeManagerService implements DeviceManagementService {
         TaskConfiguration taskConfiguration = deviceTypeConfiguration.getTaskConfiguration();
         if (taskConfiguration != null) {
             operationMonitoringConfigs.setEnabled(taskConfiguration.isEnabled());
-            operationMonitoringConfigs.setFrequency(taskConfiguration.getFrequency());
             List<TaskConfiguration.Operation> ops = taskConfiguration.getOperations();
             if (ops != null && !ops.isEmpty()) {
                 monitoringOperations = new ArrayList<>();

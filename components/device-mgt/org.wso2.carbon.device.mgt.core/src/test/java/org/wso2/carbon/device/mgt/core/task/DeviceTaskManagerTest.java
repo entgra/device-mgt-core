@@ -109,14 +109,7 @@ public class DeviceTaskManagerTest extends BaseDeviceManagementTest {
         this.deviceMgtProviderService.registerDeviceType(
                 new TestDeviceManagementService(TestDataHolder.TEST_DEVICE_TYPE, TestDataHolder.SUPER_TENANT_DOMAIN));
         this.deviceTaskManager = new DeviceTaskManagerImpl(TestDataHolder.TEST_DEVICE_TYPE,
-                TestDataHolder.generateMonitoringTaskConfig(true, 60000, 3));
-    }
-
-    @Test(groups = "Device Task Manager Test Group", description = "Getting the task frequency from the scheduler")
-    public void testGetTaskFrequency() throws DeviceMgtTaskException {
-        log.info("Attempting to retrieve task frequency.");
-        Assert.assertEquals(this.deviceTaskManager.getTaskFrequency(), 60000);
-        log.info("Successfully retrieved task frequency.");
+                TestDataHolder.generateMonitoringOperation("TEST_OP01", 3));
     }
 
     @Test(groups = "Device Task Manager Test Group", description = "Testing if the task is enabled")
@@ -129,18 +122,18 @@ public class DeviceTaskManagerTest extends BaseDeviceManagementTest {
     @Test(groups = "Device Task Manager Test Group", description = "Testing device detail retriever task execution")
     public void testDeviceDetailRetrieverTaskExecute() throws OperationManagementException {
         DeviceDetailsRetrieverTask deviceDetailsRetrieverTask = new DeviceDetailsRetrieverTask();
-        OperationMonitoringTaskConfig operationMonitoringTaskConfig = TestDataHolder.generateMonitoringTaskConfig(true, 60000, 3);
+        OperationMonitoringTaskConfig operationMonitoringTaskConfig = TestDataHolder.generateMonitoringTaskConfig(true, 60000, 2);
         List<MonitoringOperation> monitoringOperations = operationMonitoringTaskConfig.getEnabledMonitoringOperations();
         Map<String, String> map = new HashMap<>();
         map.put("DEVICE_TYPE", TestDataHolder.TEST_DEVICE_TYPE);
         map.put("TENANT_ID", String.valueOf(TestDataHolder.SUPER_TENANT_ID));
-        map.put(TestDataHolder.OPERATION_CONFIG_KEY, new Gson().toJson(operationMonitoringTaskConfig));
+        map.put(TestDataHolder.OPERATION_CONFIG_KEY, new Gson().toJson(operationMonitoringTaskConfig.getMonitoringOperation().get(0)));
         deviceDetailsRetrieverTask.setProperties(map);
         deviceDetailsRetrieverTask.execute();
         for (DeviceIdentifier deviceId : deviceIds) {
             List<? extends Operation> operationList = this.operationManager.getOperations(deviceId);
             Assert.assertNotNull(operationList);
-            Assert.assertEquals(operationList.size(), 3,
+            Assert.assertEquals(operationList.size(), 2,
                     "Expected number of operations is 4 after adding the device detail retriever operation");
             if (monitoringOperations.size() > 0) {
                 Assert.assertTrue(operationList.stream().anyMatch(op -> op.getCode().equals(monitoringOperations.get(0).getTaskName())) ,
@@ -152,13 +145,11 @@ public class DeviceTaskManagerTest extends BaseDeviceManagementTest {
     @Test(groups = "Device Task Manager Test Group", description = "Testing adding operations to devices.")
     public void testAddOperation() throws DeviceMgtTaskException, OperationManagementException, DeviceManagementException {
         log.info("Attempting to add operations for devices.");
-        OperationMonitoringTaskConfig operationMonitoringTaskConfig = TestDataHolder.generateMonitoringTaskConfig(true, 60000, 3);
         this.deviceTaskManager.addOperations(null);
-        int enabledOperationsCount = operationMonitoringTaskConfig.getEnabledMonitoringOperations().size();
         for (DeviceIdentifier deviceId : deviceIds) {
             List<? extends Operation> operationList = this.operationManager.getOperations(deviceId);
             Assert.assertNotNull(operationList);
-            Assert.assertEquals(operationList.size(), enabledOperationsCount);
+            Assert.assertEquals(operationList.size(), 1);
         }
         log.info("Successfully added operations for devices.");
     }
@@ -169,7 +160,7 @@ public class DeviceTaskManagerTest extends BaseDeviceManagementTest {
         this.deviceMgtProviderService.registerDeviceType(
                 new TestDeviceManagementService(NEW_DEVICE_TYPE, TestDataHolder.SUPER_TENANT_DOMAIN));
         DeviceTaskManager taskManager = new DeviceTaskManagerImpl(NEW_DEVICE_TYPE,
-                TestDataHolder.generateMonitoringTaskConfig(true, 50000, 3));
+                TestDataHolder.generateMonitoringOperation("TEST_OP02", 50000, 3));
         taskManager.addOperations(null);
     }
 
@@ -177,7 +168,7 @@ public class DeviceTaskManagerTest extends BaseDeviceManagementTest {
             description = "Testing adding operations when no operations are scheduled")
     public void testAddOperationsWithoutOperations() throws DeviceMgtTaskException {
         DeviceTaskManager taskManager = new DeviceTaskManagerImpl(NEW_DEVICE_TYPE,
-                TestDataHolder.generateMonitoringTaskConfig(true, 50000, 3));
+                TestDataHolder.generateMonitoringOperation("TEST_OP03", 50000, 3));
         taskManager.addOperations(null);
     }
 

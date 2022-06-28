@@ -32,7 +32,6 @@ public class TaskConfiguration {
 
 
     private boolean enabled;
-    private int frequency;
     private String taskClazz;
     private List<Operation> operations;
 
@@ -43,15 +42,6 @@ public class TaskConfiguration {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
-    }
-
-    @XmlElement(name = "Frequency", required = true)
-    public int getFrequency() {
-        return frequency;
-    }
-
-    public void setFrequency(int frequency) {
-        this.frequency = frequency;
     }
 
     @XmlElement(name = "TaskClass", required = true)
@@ -80,6 +70,8 @@ public class TaskConfiguration {
         private String operationName;
         private int recurrency;
         private List<String> platforms;
+
+        private int frequency;
 
         private boolean isEnabled;
 
@@ -118,6 +110,15 @@ public class TaskConfiguration {
 
         public void setEnabled(boolean enabled) {
             isEnabled = enabled;
+        }
+
+        @XmlElement(name = "Frequency", required = true)
+        public int getFrequency() {
+            return frequency;
+        }
+
+        public void setFrequency(int frequency) {
+            this.frequency = frequency;
         }
     }
 }

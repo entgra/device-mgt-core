@@ -39,7 +39,6 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.base.ServerConfiguration;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.MonitoringOperation;
-import org.wso2.carbon.device.mgt.common.OperationMonitoringTaskConfig;
 import org.wso2.carbon.device.mgt.common.StartupOperationConfig;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.InvalidDeviceException;
@@ -66,20 +65,20 @@ public class DeviceTaskManagerImpl implements DeviceTaskManager {
     private final String deviceType;
     static volatile Map<Integer, Map<String, Map<String, Long>>> map = new HashMap<>();
     private static final Map<Integer, List<String>> startupConfigMap = new HashMap<>();
-    private OperationMonitoringTaskConfig operationMonitoringTaskConfig;
+    private MonitoringOperation monitoringOperation;
     private StartupOperationConfig startupOperationConfig;
 
     public DeviceTaskManagerImpl(String deviceType,
-                                 OperationMonitoringTaskConfig operationMonitoringTaskConfig,
+                                 MonitoringOperation operationMonitoringTaskConfig,
                                  StartupOperationConfig startupOperationConfig) {
         this.deviceType = deviceType;
-        this.operationMonitoringTaskConfig = operationMonitoringTaskConfig;
+        this.monitoringOperation = operationMonitoringTaskConfig;
         this.startupOperationConfig = startupOperationConfig;
     }
 
     public DeviceTaskManagerImpl(String deviceType,
-                                 OperationMonitoringTaskConfig operationMonitoringTaskConfig) {
-        this.operationMonitoringTaskConfig = operationMonitoringTaskConfig;
+                                 MonitoringOperation monitoringOperation) {
+        this.monitoringOperation = monitoringOperation;
         this.deviceType = deviceType;
     }
 
@@ -87,21 +86,11 @@ public class DeviceTaskManagerImpl implements DeviceTaskManager {
         this.deviceType = deviceType;
     }
 
-    //get device type specific operations
-    private List<MonitoringOperation> getOperationList() {
-        return operationMonitoringTaskConfig.getEnabledMonitoringOperations();
-    }
-
     private List<String> getStartupOperations() {
         if (startupOperationConfig != null) {
             return startupOperationConfig.getStartupOperations();
         }
         return null;
-    }
-
-    @Override
-    public int getTaskFrequency() throws DeviceMgtTaskException {
-        return operationMonitoringTaskConfig.getFrequency();
     }
 
 //    @Override
@@ -112,7 +101,7 @@ public class DeviceTaskManagerImpl implements DeviceTaskManager {
 
     @Override
     public boolean isTaskEnabled() throws DeviceMgtTaskException {
-        return operationMonitoringTaskConfig.isEnabled();
+        return monitoringOperation.isEnabled();
     }
 
 
@@ -121,53 +110,47 @@ public class DeviceTaskManagerImpl implements DeviceTaskManager {
         DeviceManagementProviderService deviceManagementProviderService = DeviceManagementDataHolder.getInstance().
                 getDeviceManagementProvider();
         //list operations for device type
-        List<String> operations = this.getValidOperationNames();
-        if (operations.isEmpty()) {
+        boolean isValidOperation = this.isValidOperation();
+        if (!isValidOperation) {
             if (log.isDebugEnabled()) {
                 log.debug("No operations are available.");
             }
             return;
         }
-
-        for (String str : operations) {
-            CommandOperation operation = new CommandOperation();
-            operation.setEnabled(true);
-            operation.setType(Operation.Type.COMMAND);
-            operation.setCode(str);
-            try {
-                deviceManagementProviderService.addTaskOperation(deviceType, operation, dynamicTaskContext);
-            } catch (OperationManagementException e) {
-                throw new DeviceMgtTaskException("Error occurred while adding task operations to devices", e);
-            }
+        CommandOperation operation = new CommandOperation();
+        operation.setEnabled(true);
+        operation.setType(Operation.Type.COMMAND);
+        operation.setCode(monitoringOperation.getTaskName());
+        try {
+            deviceManagementProviderService.addTaskOperation(deviceType, operation, dynamicTaskContext);
+        } catch (OperationManagementException e) {
+            throw new DeviceMgtTaskException("Error occurred while adding task operations to devices", e);
         }
     }
 
-    private List<String> getValidOperationNames() throws DeviceMgtTaskException {
-
-        List<MonitoringOperation> monitoringOperations = this.getOperationList();
+    private boolean isValidOperation() throws DeviceMgtTaskException {
         List<String> opNames = new ArrayList<>();
         Long milliseconds = System.currentTimeMillis();
-        int frequency = this.getTaskFrequency();
         Map<String, Long> mp = Utils.getTenantedTaskOperationMap(map, deviceType);
 
-        for (MonitoringOperation top : monitoringOperations) {
-            if (!mp.containsKey(top.getTaskName())) {
-                opNames.add(top.getTaskName());
-                mp.put(top.getTaskName(), milliseconds);
-            } else {
-                Long lastExecutedTime = mp.get(top.getTaskName());
-                long evalTime = lastExecutedTime + (frequency * top.getRecurrentTimes());
-                if (evalTime <= milliseconds) {
-                    opNames.add(top.getTaskName());
-                    mp.put(top.getTaskName(), milliseconds);
-                }
+        if (!mp.containsKey(monitoringOperation.getTaskName())) {
+            opNames.add(monitoringOperation.getTaskName());
+            mp.put(monitoringOperation.getTaskName(), milliseconds);
+            return true;
+        } else {
+            Long lastExecutedTime = mp.get(monitoringOperation.getTaskName());
+            long evalTime = lastExecutedTime + (monitoringOperation.getFrequency() * monitoringOperation.getRecurrentTimes());
+            if (evalTime <= milliseconds) {
+                opNames.add(monitoringOperation.getTaskName());
+                mp.put(monitoringOperation.getTaskName(), milliseconds);
+                return true;
             }
         }
 
         if (log.isDebugEnabled()) {
             log.debug("Valid operation names are : " + Arrays.toString(opNames.toArray()));
         }
-        return opNames;
+        return false;
     }
 
     private void addStartupOperations(List<String> startupOperations, List<DeviceIdentifier> validDeviceIdentifiers

@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.carbon.device.mgt.common.MonitoringOperation;
 import org.wso2.carbon.device.mgt.common.OperationMonitoringTaskConfig;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.MetadataManagementException;
@@ -68,12 +69,10 @@ public class DeviceTaskManagerServiceImpl implements DeviceTaskManagerService {
                 log.debug("Task is running for " + tenants.size() + " tenants and the device type is " + deviceType);
             }
             for (Tenant tenant : tenants) {
-                // Start task for super tenant
                 if (tenant.getId() == MultitenantConstants.SUPER_TENANT_ID) {
                     startTask(deviceType, defaultOperationMonitoringTaskConfig);
                     continue;
                 }
-                // Start task for rest of the tenants
                 try {
                     PrivilegedCarbonContext.startTenantFlow();
                     PrivilegedCarbonContext.getThreadLocalCarbonContext()
@@ -113,7 +112,7 @@ public class DeviceTaskManagerServiceImpl implements DeviceTaskManagerService {
                     getInstance().getMonitoringOperationTaskConfigManagementService().getMonitoringOperationTaskConfigFromMetaDataDB(deviceType);
             OperationMonitoringTaskConfig operationMonitoringTaskConfig =
                     operationMonitoringTaskPlatformConfig != null ? operationMonitoringTaskPlatformConfig : defaultOperationMonitoringTaskConfig;
-            registerTask(deviceType, operationMonitoringTaskConfig);
+            registerTasks(deviceType, operationMonitoringTaskConfig);
         } catch (MetadataManagementException e) {
             log.error("Error occurred while retrieving the operation task configuration from metadata db", e);
         }
@@ -121,36 +120,29 @@ public class DeviceTaskManagerServiceImpl implements DeviceTaskManagerService {
     }
 
     @Override
-    public void registerTask(String deviceType, OperationMonitoringTaskConfig operationMonitoringTaskConfig) throws DeviceMgtTaskException {
+    public void registerTasks(String deviceType, OperationMonitoringTaskConfig operationMonitoringTaskConfig) throws DeviceMgtTaskException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         try {
             if (operationMonitoringTaskConfig == null || !operationMonitoringTaskConfig.hasEnabledOperations()) {
                 return;
             }
             TaskService taskService = DeviceManagementDataHolder.getInstance().getTaskService();
-            taskService.registerTaskType(TASK_TYPE);
-
-            if (log.isDebugEnabled()) {
-                log.debug("Device details retrieving task is started for the tenant id " + tenantId);
-                //                log.debug("Device details retrieving task is at frequency of : " + deviceTaskManager
-                //                        .getTaskFrequency());
-                log.debug(
-                        "Device details retrieving task is at frequency of : " + operationMonitoringTaskConfig
-                                .getFrequency());
-            }
-
-            TaskManager taskManager = taskService.getTaskManager(TASK_TYPE);
-
-            //            triggerInfo.setIntervalMillis(deviceTaskManager.getTaskFrequency());
-
-            String taskName = getTaskName(deviceType, tenantId);
-            if (!taskManager.isTaskScheduled(taskName)) {
-                TaskInfo taskInfo = constructTaskInfo(operationMonitoringTaskConfig, deviceType, taskName, tenantId);
-                taskManager.registerTask(taskInfo);
-                taskManager.rescheduleTask(taskInfo.getName());
-            } else {
-                throw new DeviceMgtTaskException(
-                        "Device details retrieving task is already started for this tenant " + tenantId);
+            for (MonitoringOperation operation : operationMonitoringTaskConfig.getEnabledMonitoringOperations()) {
+                taskService.registerTaskType(TASK_TYPE);
+                if (log.isDebugEnabled()) {
+                    log.debug(operation.getTaskName() + " device details retrieving task is started for the tenant id " + tenantId);
+                    log.debug(operation.getTaskName() + " device details retrieving task is at frequency of : " +
+                            operation.getFrequency());
+                }
+                TaskManager taskManager = taskService.getTaskManager(TASK_TYPE);
+                String taskName = getTaskName(operation.getTaskName(), deviceType, tenantId);
+                if (!taskManager.isTaskScheduled(taskName)) {
+                    TaskInfo taskInfo = constructTaskInfo(operation, deviceType, taskName, tenantId);
+                    taskManager.registerTask(taskInfo);
+                    taskManager.rescheduleTask(taskInfo.getName());
+                } else {
+                    throw new DeviceMgtTaskException("Device details retrieving task is already started for this tenant " + tenantId);
+                }
             }
         } catch (TaskException | DeviceMgtTaskException e) {
             throw new DeviceMgtTaskException("Error occurred while creating the task for tenant " + tenantId,
@@ -162,15 +154,17 @@ public class DeviceTaskManagerServiceImpl implements DeviceTaskManagerService {
         OperationMonitoringTaskConfig config = DeviceManagementDataHolder.getInstance().
                 getDeviceManagementProvider().getOperationMonitoringTaskConfig(deviceType);
         if (config.hasEnabledOperations()) {
-            String taskName = getTaskName(deviceType, tenantId);
-            try {
-                TaskService taskService = DeviceManagementDataHolder.getInstance().getTaskService();
-                if (taskService != null && taskService.isServerInit()) {
-                    TaskManager taskManager = taskService.getTaskManager(TASK_TYPE);
-                    taskManager.deleteTask(taskName);
+            for (MonitoringOperation operation : config.getEnabledMonitoringOperations()) {
+                String taskName = getTaskName(operation.getTaskName(), deviceType, tenantId);
+                try {
+                    TaskService taskService = DeviceManagementDataHolder.getInstance().getTaskService();
+                    if (taskService != null && taskService.isServerInit()) {
+                        TaskManager taskManager = taskService.getTaskManager(TASK_TYPE);
+                        taskManager.deleteTask(taskName);
+                    }
+                } catch (TaskException e) {
+                    log.error("Error occurred while deleting the task: " + taskName);
                 }
-            } catch (TaskException e) {
-                log.error("Error occurred while deleting the task: " + taskName);
             }
         }
     }
@@ -207,11 +201,6 @@ public class DeviceTaskManagerServiceImpl implements DeviceTaskManagerService {
                 }
 
             }
-//            List<TaskInfo> allMonitoringTaskInfo = DeviceManagementDataHolder.getInstance().
-//                    getTaskService().getTaskManager(TASK_TYPE).getAllTasks();
-//            for (TaskInfo info : allMonitoringTaskInfo) {
-//                stopTask(info.getName());
-//            }
         } catch (Exception e) {
             log.error("Error occurred while trying to stop device management retrieval tasks");
         }
@@ -222,49 +211,48 @@ public class DeviceTaskManagerServiceImpl implements DeviceTaskManagerService {
             throws DeviceMgtTaskException {
 
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
-        //        deviceTaskManager = new DeviceTaskManagerImpl();
         try {
             TaskService taskService = DeviceManagementDataHolder.getInstance().getTaskService();
             TaskManager taskManager = taskService.getTaskManager(TASK_TYPE);
-            String taskName = getTaskName(deviceType, tenantId);
-            if (!operationMonitoringTaskConfig.hasEnabledOperations()) {
-                stopTaskIfScheduled(taskName);
-            } else if (taskManager.isTaskScheduled(taskName)){
-                taskManager.deleteTask(taskName);
-                TaskInfo taskInfo = constructTaskInfo(operationMonitoringTaskConfig, deviceType, taskName, tenantId);
-                taskManager.registerTask(taskInfo);
-                taskManager.rescheduleTask(taskInfo.getName());
-            } else {
-                registerTask(deviceType, operationMonitoringTaskConfig);
+            for (MonitoringOperation operation : operationMonitoringTaskConfig.getMonitoringOperation()) {
+                String taskName = getTaskName(operation.getTaskName(), deviceType, tenantId);
+                if (!operationMonitoringTaskConfig.hasEnabledOperations() || !operation.isEnabled()) {
+                    stopTaskIfScheduled(taskName);
+                } else if (operation.isEnabled() && taskManager.isTaskScheduled(taskName)){
+                    taskManager.deleteTask(taskName);
+                    TaskInfo taskInfo = constructTaskInfo(operation, deviceType, taskName, tenantId);
+                    taskManager.registerTask(taskInfo);
+                    taskManager.rescheduleTask(taskInfo.getName());
+                } else {
+                    registerTasks(deviceType, operationMonitoringTaskConfig);
+                }
             }
-
-
         } catch (TaskException e) {
             throw new DeviceMgtTaskException("Error occurred while updating the task for tenant " + tenantId,
                     e);
         }
     }
 
-    private String getTaskName(String deviceType, int tenantId) {
-        return deviceType + tenantId;
+    private String getTaskName(String operationName, String deviceType, int tenantId) {
+        return operationName + "_" + deviceType + "_" + tenantId;
     }
 
-    private TaskInfo constructTaskInfo(OperationMonitoringTaskConfig operationMonitoringTaskConfig, String deviceType,
+    private TaskInfo constructTaskInfo(MonitoringOperation monitoringOperation, String deviceType,
                                        String taskName, int tenantId) {
         TaskInfo.TriggerInfo triggerInfo = new TaskInfo.TriggerInfo();
-        triggerInfo.setIntervalMillis(operationMonitoringTaskConfig.getFrequency());
+        triggerInfo.setIntervalMillis(monitoringOperation.getFrequency());
         triggerInfo.setRepeatCount(-1);
 
-        Map<String, String> properties = constructTaskProperties(tenantId, deviceType, operationMonitoringTaskConfig);
+        Map<String, String> properties = constructTaskProperties(tenantId, deviceType, monitoringOperation);
         return new TaskInfo(taskName, TASK_CLASS, properties, triggerInfo);
     }
 
-    private Map<String, String> constructTaskProperties(int tenantId, String deviceType, OperationMonitoringTaskConfig operationMonitoringTaskConfig) {
-        String operationConfJson = new Gson().toJson(operationMonitoringTaskConfig);
+    private Map<String, String> constructTaskProperties(int tenantId, String deviceType, MonitoringOperation monitoringOperation) {
+        String monitoringOperationJson = new Gson().toJson(monitoringOperation);
         Map<String, String> properties = new HashMap<>();
         properties.put(TaskConstants.TENANT_ID_KEY, String.valueOf(tenantId));
         properties.put(TaskConstants.DEVICE_TYPE_KEY, deviceType);
-        properties.put(TaskConstants.OPERATION_MONITORING.OPERATION_CONF_KEY, operationConfJson);
+        properties.put(TaskConstants.OPERATION_MONITORING.OPERATION_CONF_KEY, monitoringOperationJson);
         return properties;
     }
 }
