@@ -46,14 +46,7 @@ import org.wso2.carbon.device.mgt.core.dao.DeviceTypeDAO;
 import org.wso2.carbon.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.dto.DeviceTypeVersion;
-import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderServiceImpl;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -370,6 +363,30 @@ public class DeviceTypeDAOImpl implements DeviceTypeDAO {
 			String msg = "Error occurred while fetching device types";
 			log.error(msg, e);
 			throw new DeviceManagementDAOException(msg, e);
+		}
+	}
+
+	@Override
+	public boolean hasDeviceType(String deviceType, int tenantId) throws
+			DeviceManagementDAOException {
+		Connection conn;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		try {
+			conn = this.getConnection();
+			String sql =
+					"SELECT ID AS DEVICE_TYPE_ID, NAME AS DEVICE_TYPE, DEVICE_TYPE_META,LAST_UPDATED_TIMESTAMP " +
+							"FROM DM_DEVICE_TYPE where NAME = ? AND (PROVIDER_TENANT_ID =? OR SHARED_WITH_ALL_TENANTS = ?)";
+			stmt = conn.prepareStatement(sql);
+			stmt.setString(1, deviceType);
+			stmt.setInt(2, tenantId);
+			stmt.setBoolean(3, true);
+			rs = stmt.executeQuery();
+			return rs.next();
+		} catch (SQLException e) {
+			throw new DeviceManagementDAOException("Error occurred while fetching the registered device types", e);
+		} finally {
+			DeviceManagementDAOUtil.cleanupResources(stmt, rs);
 		}
 	}
 

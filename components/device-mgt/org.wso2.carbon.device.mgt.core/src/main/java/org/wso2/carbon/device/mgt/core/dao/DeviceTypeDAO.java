@@ -110,6 +110,15 @@ public interface DeviceTypeDAO {
 	DeviceType getDeviceType(String name, int tenantId) throws DeviceManagementDAOException;
 
 	/**
+	 * Check if given tenantId has deviceType
+	 *
+	 * @return
+	 * @throws DeviceManagementDAOException
+	 */
+	boolean hasDeviceType(String deviceType, int tenantId) throws
+			DeviceManagementDAOException;
+
+	/**
 	 * remove the device type from tenant.
 	 *
 	 * @param name     remove the device type with it name.

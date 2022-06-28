@@ -656,17 +656,39 @@ public class RequestValidationUtil {
     }
 
     /**
-     * Validate if the operation config is non empty & in proper format.
+     * Validate device type and if the operation config is non empty & in proper format.
      *
      * @param operationMonitoringTaskConfig user submitted OperationMonitoringTaskConfig instance
      */
-    public static void validateMonitoringOperationConfig(OperationMonitoringTaskConfig operationMonitoringTaskConfig) {
+    public static void validateMonitoringOperationConfig(OperationMonitoringTaskConfig operationMonitoringTaskConfig, String deviceType)
+            throws DeviceManagementException{
         if (operationMonitoringTaskConfig == null) {
             String msg = "Operation monitoring task config cannot hav empty value";
             log.error(msg);
             throw new InputValidationException(
                     new ErrorResponse.ErrorResponseBuilder()
                             .setCode(HttpStatus.SC_BAD_REQUEST).setMessage(msg).build());
+        }
+        validateDeviceType(deviceType);
+    }
+
+    /**
+     * Validate device type (i.e check if it exists)
+     */
+    public static void validateDeviceType(String deviceType) throws DeviceManagementException {
+        DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
+        try {
+            if (!dms.hasDeviceType(deviceType)) {
+                String msg = "Invalid device type. No such device type: " + deviceType;
+                log.error(msg);
+                throw new InputValidationException(
+                        new ErrorResponse.ErrorResponseBuilder()
+                                .setCode(HttpStatus.SC_BAD_REQUEST).setMessage(msg).build());
+            }
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while checking if device type exists";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
         }
     }
 

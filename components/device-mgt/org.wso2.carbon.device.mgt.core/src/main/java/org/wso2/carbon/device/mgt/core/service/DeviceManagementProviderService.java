@@ -849,6 +849,15 @@ public interface DeviceManagementProviderService {
     boolean isDeviceEnrolled() throws DeviceManagementException;
 
     /**
+     * Check if tenant has the provided device type
+     *
+     * @param deviceType that needs to be checked
+     * @return if device type exists for tenant
+     * @throws DeviceManagementException on errors while trying check if device type exists
+     */
+    boolean hasDeviceType(String deviceType) throws DeviceManagementException;
+
+    /**
      * This will handle add and update of device type services.
      * @param deviceManagementService
      */

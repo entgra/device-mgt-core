@@ -3278,6 +3278,33 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         }
     }
 
+    @Override
+    public boolean hasDeviceType(String deviceType) throws DeviceManagementException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        if (log.isDebugEnabled()) {
+            log.debug("checking if tenant has device type " + deviceType);
+        }
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            return deviceTypeDAO.hasDeviceType(deviceType, tenantId);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred while checking if device type: " + deviceType +
+                    " exists for tenant " +  tenantId;
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (Exception e) {
+            String msg = "Error occurred in hasDeviceType";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
+
     private boolean updateEnrollment(int deviceId, EnrolmentInfo enrolmentInfo, int tenantId)
             throws DeviceManagementException {
         if (log.isDebugEnabled()) {

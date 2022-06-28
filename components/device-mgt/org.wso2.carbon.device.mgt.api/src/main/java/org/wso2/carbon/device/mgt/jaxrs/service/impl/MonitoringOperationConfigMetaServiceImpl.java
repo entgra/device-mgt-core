@@ -21,6 +21,7 @@ package org.wso2.carbon.device.mgt.jaxrs.service.impl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.device.mgt.common.OperationMonitoringTaskConfig;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.MetadataManagementException;
 import org.wso2.carbon.device.mgt.jaxrs.service.api.MonitoringOperationConfigMetaService;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.RequestValidationUtil;
@@ -48,13 +49,17 @@ public class MonitoringOperationConfigMetaServiceImpl implements MonitoringOpera
     @Override
     @Path("/{deviceType}")
     public Response updateMonitoringOperationConfig(@PathParam("deviceType") String deviceType, OperationMonitoringTaskConfig operationMonitoringTaskConfig) {
-        RequestValidationUtil.validateMonitoringOperationConfig(operationMonitoringTaskConfig);
         try {
+            RequestValidationUtil.validateMonitoringOperationConfig(operationMonitoringTaskConfig, deviceType);
             OperationMonitoringTaskConfig newOperationMonitoringTaskConfig = DeviceMgtAPIUtils.getMonitoringOperationTaskConfigManagementService().
                     updateMonitoringOperationTaskConfig(deviceType, operationMonitoringTaskConfig);
             return Response.status(Response.Status.CREATED).entity(newOperationMonitoringTaskConfig).build();
         } catch (MetadataManagementException e) {
             String msg = "Error occurred while creating monitoring operation task config";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while validating device type " + deviceType;
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
@@ -65,11 +70,16 @@ public class MonitoringOperationConfigMetaServiceImpl implements MonitoringOpera
     @Path("/{deviceType}")
     public Response getMonitoringOperationConfig(@PathParam("deviceType") String deviceType) {
         try {
+            RequestValidationUtil.validateDeviceType(deviceType);
             OperationMonitoringTaskConfig whiteLabelTheme = DeviceMgtAPIUtils.getMonitoringOperationTaskConfigManagementService().
                     getMonitoringOperationTaskConfig(deviceType);
             return Response.status(Response.Status.OK).entity(whiteLabelTheme).build();
         } catch (MetadataManagementException e) {
             String msg = "Error occurred while getting monitoring operation task config";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while validating device type " + deviceType;
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
