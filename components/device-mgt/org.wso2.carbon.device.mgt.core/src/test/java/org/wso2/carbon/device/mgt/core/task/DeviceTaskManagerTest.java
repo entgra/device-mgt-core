@@ -23,7 +23,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.powermock.api.mockito.PowerMockito;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -145,7 +144,7 @@ public class DeviceTaskManagerTest extends BaseDeviceManagementTest {
     @Test(groups = "Device Task Manager Test Group", description = "Testing adding operations to devices.")
     public void testAddOperation() throws DeviceMgtTaskException, OperationManagementException, DeviceManagementException {
         log.info("Attempting to add operations for devices.");
-        this.deviceTaskManager.addOperations(null);
+        this.deviceTaskManager.addMonitoringOperation(null);
         for (DeviceIdentifier deviceId : deviceIds) {
             List<? extends Operation> operationList = this.operationManager.getOperations(deviceId);
             Assert.assertNotNull(operationList);
@@ -161,7 +160,7 @@ public class DeviceTaskManagerTest extends BaseDeviceManagementTest {
                 new TestDeviceManagementService(NEW_DEVICE_TYPE, TestDataHolder.SUPER_TENANT_DOMAIN));
         DeviceTaskManager taskManager = new DeviceTaskManagerImpl(NEW_DEVICE_TYPE,
                 TestDataHolder.generateMonitoringOperation("TEST_OP02", 50000, 3));
-        taskManager.addOperations(null);
+        taskManager.addMonitoringOperation(null);
     }
 
     @Test(groups = "Device Task Manager Test Group", dependsOnMethods = "testAddOperationsWithoutDevices",
@@ -169,7 +168,7 @@ public class DeviceTaskManagerTest extends BaseDeviceManagementTest {
     public void testAddOperationsWithoutOperations() throws DeviceMgtTaskException {
         DeviceTaskManager taskManager = new DeviceTaskManagerImpl(NEW_DEVICE_TYPE,
                 TestDataHolder.generateMonitoringOperation("TEST_OP03", 50000, 3));
-        taskManager.addOperations(null);
+        taskManager.addMonitoringOperation(null);
     }
 
 

@@ -25,6 +25,7 @@ import org.apache.http.HttpStatus;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.Feature;
 import org.wso2.carbon.device.mgt.common.FeatureManager;
+import org.wso2.carbon.device.mgt.common.MonitoringOperation;
 import org.wso2.carbon.device.mgt.common.OperationLogFilters;
 import org.wso2.carbon.device.mgt.common.OperationMonitoringTaskConfig;
 import org.wso2.carbon.device.mgt.common.app.mgt.Application;
@@ -668,6 +669,15 @@ public class RequestValidationUtil {
             throw new InputValidationException(
                     new ErrorResponse.ErrorResponseBuilder()
                             .setCode(HttpStatus.SC_BAD_REQUEST).setMessage(msg).build());
+        }
+        for (MonitoringOperation mop : operationMonitoringTaskConfig.getMonitoringOperation()) {
+            if (mop.getFrequency() <= 0) {
+                String msg = mop.getTaskName() + " monitoring operation task frequency is below 1 second. Frequency must be above 0" ;
+                log.error(msg);
+                throw new InputValidationException(
+                        new ErrorResponse.ErrorResponseBuilder()
+                                .setCode(HttpStatus.SC_BAD_REQUEST).setMessage(msg).build());
+            }
         }
         validateDeviceType(deviceType);
     }

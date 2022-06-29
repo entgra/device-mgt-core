@@ -51,7 +51,7 @@ public interface DeviceTaskManager {
      * This method will add the operations to devices
      * @throws DeviceMgtTaskException
      */
-    void addOperations(DynamicTaskContext dynamicTaskContext) throws DeviceMgtTaskException;
+    void addMonitoringOperation(DynamicTaskContext dynamicTaskContext) throws DeviceMgtTaskException;
 
 
 //    /**

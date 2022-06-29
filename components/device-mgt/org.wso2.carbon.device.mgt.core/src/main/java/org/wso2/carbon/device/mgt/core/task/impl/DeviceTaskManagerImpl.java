@@ -106,7 +106,7 @@ public class DeviceTaskManagerImpl implements DeviceTaskManager {
 
 
     @Override
-    public void addOperations(DynamicTaskContext dynamicTaskContext) throws DeviceMgtTaskException {
+    public void addMonitoringOperation(DynamicTaskContext dynamicTaskContext) throws DeviceMgtTaskException {
         DeviceManagementProviderService deviceManagementProviderService = DeviceManagementDataHolder.getInstance().
                 getDeviceManagementProvider();
         //list operations for device type
