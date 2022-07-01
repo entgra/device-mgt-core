@@ -18,7 +18,6 @@
 
 package org.wso2.carbon.device.mgt.core.dao.impl.device;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.device.mgt.common.Count;
@@ -85,6 +84,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                     "e.IS_TRANSFERRED, " +
                     "e.DATE_OF_LAST_UPDATE, " +
                     "e.DATE_OF_ENROLMENT, " +
+                    "e.LAST_BILLED_DATE, " +
                     "e.ID AS ENROLMENT_ID " +
                     "FROM DM_ENROLMENT e, " +
                     "(SELECT d.ID, " +
@@ -186,6 +186,34 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
             log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
+    }
+
+    @Override
+    public List<Device> getDeviceListWithoutPagination(int tenantId)
+            throws DeviceManagementDAOException {
+        Connection conn;
+        PreparedStatement stmt = null;
+        List<Device> devices = new ArrayList<>();
+        try {
+            conn = this.getConnection();
+            String sql = "SELECT DM_DEVICE.ID AS DEVICE_ID, DEVICE_IDENTIFICATION, DESCRIPTION, DM_DEVICE.NAME AS DEVICE_NAME, DM_DEVICE_TYPE.NAME AS DEVICE_TYPE,\n" +
+                    "DM_ENROLMENT.ID AS ENROLMENT_ID, DATE_OF_ENROLMENT,OWNER, OWNERSHIP,IS_TRANSFERRED, STATUS, DATE_OF_LAST_UPDATE, LAST_BILLED_DATE,\n" +
+                    "TIMESTAMPDIFF('DAY', DATE_OF_ENROLMENT, CURDATE()) as DAYS_SINCE_ENROLLED FROM DM_DEVICE JOIN DM_ENROLMENT\n" +
+                    "ON (DM_DEVICE.ID = DM_ENROLMENT.DEVICE_ID) JOIN DM_DEVICE_TYPE ON (DM_DEVICE.DEVICE_TYPE_ID = DM_DEVICE_TYPE.ID) WHERE DM_ENROLMENT.TENANT_ID=?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, tenantId);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Device device = DeviceManagementDAOUtil.loadDevice(rs);
+                devices.add(device);
+            }
+        } catch (SQLException e) {
+            throw new DeviceManagementDAOException("Error occurred while fetching the list of device billing ", e);
+        } finally {
+            DeviceManagementDAOUtil.cleanupResources(stmt, null);
+        }
+        return devices;
     }
 
     @Override
@@ -902,6 +930,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
         String name = request.getDeviceName();
         String user = request.getOwner();
         String ownership = request.getOwnership();
+        String query = null;
         try {
             List<Device> devices = new ArrayList<>();
             if (deviceIds.isEmpty()) {
@@ -937,10 +966,10 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                             + "INNER JOIN (SELECT ID, NAME FROM DM_DEVICE_TYPE) AS device_types ON "
                             + "device_types.ID = DM_DEVICE.DEVICE_TYPE_ID "
                             + "WHERE DM_DEVICE.ID IN (",
-                    ") AND DM_DEVICE.TENANT_ID = ? AND e.STATUS != " + EnrolmentInfo.Status.REMOVED);
+                    ") AND DM_DEVICE.TENANT_ID = ? AND e.STATUS != ?");
 
             deviceIds.stream().map(ignored -> "?").forEach(joiner::add);
-            String query = joiner.toString();
+            query = joiner.toString();
 
             if (name != null && !name.isEmpty()) {
                 query += " AND DM_DEVICE.NAME LIKE ?";
@@ -967,6 +996,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                     ps.setObject(index++, deviceId);
                 }
                 ps.setInt(index++, tenantId);
+                ps.setString(index++, EnrolmentInfo.Status.REMOVED.toString());
                 if (isDeviceNameProvided) {
                     ps.setString(index++, name + "%");
                 }
@@ -993,7 +1023,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
             }
         } catch (SQLException e) {
             String msg = "Error occurred while retrieving information of all registered devices " +
-                    "according to device ids and the limit area.";
+                    "according to device ids and the limit area. Executed query " + query;
             log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }

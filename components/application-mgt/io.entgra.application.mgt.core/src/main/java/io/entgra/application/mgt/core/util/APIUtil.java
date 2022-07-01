@@ -18,6 +18,12 @@
 
 package io.entgra.application.mgt.core.util;
 
+import io.entgra.application.mgt.common.IdentityServerResponse;
+import io.entgra.application.mgt.common.dto.IdentityServerDTO;
+import io.entgra.application.mgt.common.dto.IdentityServiceProviderDTO;
+import io.entgra.application.mgt.common.exception.InvalidConfigurationException;
+import io.entgra.application.mgt.core.config.IdentityServiceProvider;
+import io.entgra.application.mgt.core.identityserver.serviceprovider.ISServiceProviderApplicationService;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -59,26 +65,49 @@ public class APIUtil {
 
     private static Log log = LogFactory.getLog(APIUtil.class);
 
+    private static volatile SPApplicationManager SPApplicationManager;
     private static volatile ApplicationManager applicationManager;
     private static volatile ApplicationStorageManager applicationStorageManager;
     private static volatile SubscriptionManager subscriptionManager;
     private static volatile ReviewManager reviewManager;
     private static volatile AppmDataHandler appmDataHandler;
 
-    public static ApplicationManager getApplicationManager() {
-        if (applicationManager == null) {
+    public static SPApplicationManager getSPApplicationManager() {
+        if (SPApplicationManager == null) {
             synchronized (APIUtil.class) {
-                if (applicationManager == null) {
+                if (SPApplicationManager == null) {
                     PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
-                    applicationManager =
-                            (ApplicationManager) ctx.getOSGiService(ApplicationManager.class, null);
-                    if (applicationManager == null) {
+                    SPApplicationManager =
+                            (SPApplicationManager) ctx.getOSGiService(SPApplicationManager.class, null);
+                    if (SPApplicationManager == null) {
                         String msg = "ApplicationDTO Manager service has not initialized.";
                         log.error(msg);
                         throw new IllegalStateException(msg);
                     }
                 }
             }
+        }
+        return SPApplicationManager;
+    }
+
+    public static ApplicationManager getApplicationManager() {
+        try {
+            if (applicationManager == null) {
+                synchronized (APIUtil.class) {
+                    if (applicationManager == null) {
+                        applicationManager = ApplicationManagementUtil.getApplicationManagerInstance();
+                        if (applicationManager == null) {
+                            String msg = "ApplicationDTO Manager service has not initialized.";
+                            log.error(msg);
+                            throw new IllegalStateException(msg);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            String msg = "Error occurred while getting the application manager";
+            log.error(msg);
+            throw new IllegalStateException(msg);
         }
         return applicationManager;
     }
@@ -231,6 +260,7 @@ public class APIUtil {
     public static <T> ApplicationDTO convertToAppDTO(T param)
             throws BadRequestException, UnexpectedServerErrorException {
         ApplicationDTO applicationDTO = new ApplicationDTO();
+        List<ApplicationReleaseDTO> applicationReleaseEntities;
 
         if (param instanceof ApplicationWrapper){
             ApplicationWrapper applicationWrapper = (ApplicationWrapper) param;
@@ -244,7 +274,7 @@ public class APIUtil {
             applicationDTO.setTags(applicationWrapper.getTags());
             applicationDTO.setUnrestrictedRoles(applicationWrapper.getUnrestrictedRoles());
             applicationDTO.setDeviceTypeId(deviceType.getId());
-            List<ApplicationReleaseDTO> applicationReleaseEntities = applicationWrapper.getEntAppReleaseWrappers()
+            applicationReleaseEntities = applicationWrapper.getEntAppReleaseWrappers()
                     .stream().map(APIUtil::releaseWrapperToReleaseDTO).collect(Collectors.toList());
             applicationDTO.setApplicationReleaseDTOs(applicationReleaseEntities);
         } else if (param instanceof WebAppWrapper){
@@ -257,7 +287,7 @@ public class APIUtil {
             applicationDTO.setType(webAppWrapper.getType());
             applicationDTO.setTags(webAppWrapper.getTags());
             applicationDTO.setUnrestrictedRoles(webAppWrapper.getUnrestrictedRoles());
-            List<ApplicationReleaseDTO> applicationReleaseEntities = webAppWrapper.getWebAppReleaseWrappers()
+           applicationReleaseEntities = webAppWrapper.getWebAppReleaseWrappers()
                     .stream().map(APIUtil::releaseWrapperToReleaseDTO).collect(Collectors.toList());
             applicationDTO.setApplicationReleaseDTOs(applicationReleaseEntities);
         } else if (param instanceof PublicAppWrapper) {
@@ -272,7 +302,7 @@ public class APIUtil {
             applicationDTO.setTags(publicAppWrapper.getTags());
             applicationDTO.setUnrestrictedRoles(publicAppWrapper.getUnrestrictedRoles());
             applicationDTO.setDeviceTypeId(deviceType.getId());
-            List<ApplicationReleaseDTO> applicationReleaseEntities = publicAppWrapper.getPublicAppReleaseWrappers()
+            applicationReleaseEntities = publicAppWrapper.getPublicAppReleaseWrappers()
                     .stream().map(APIUtil::releaseWrapperToReleaseDTO).collect(Collectors.toList());
             applicationDTO.setApplicationReleaseDTOs(applicationReleaseEntities);
         } else if (param instanceof CustomAppWrapper){
@@ -287,7 +317,7 @@ public class APIUtil {
             applicationDTO.setTags(customAppWrapper.getTags());
             applicationDTO.setUnrestrictedRoles(customAppWrapper.getUnrestrictedRoles());
             applicationDTO.setDeviceTypeId(deviceType.getId());
-            List<ApplicationReleaseDTO> applicationReleaseEntities = customAppWrapper.getCustomAppReleaseWrappers()
+            applicationReleaseEntities = customAppWrapper.getCustomAppReleaseWrappers()
                     .stream().map(APIUtil::releaseWrapperToReleaseDTO).collect(Collectors.toList());
             applicationDTO.setApplicationReleaseDTOs(applicationReleaseEntities);
         }
@@ -343,6 +373,32 @@ public class APIUtil {
         return applicationReleaseDTO;
     }
 
+    public static IdentityServiceProviderDTO identityServiceProviderToDTO(IdentityServiceProvider identityServiceProvider)
+            throws InvalidConfigurationException {
+        ISServiceProviderApplicationService serviceProviderApplicationService =
+                ISServiceProviderApplicationService.of(identityServiceProvider.getProviderName());
+        IdentityServiceProviderDTO identityServiceProviderDTO = new IdentityServiceProviderDTO();
+        identityServiceProviderDTO.setName(identityServiceProvider.getProviderName());
+        identityServiceProviderDTO.setRequiredApiParams(serviceProviderApplicationService.getRequiredApiParams());
+        return identityServiceProviderDTO;
+    }
+
+    public static IdentityServerResponse identityServerDtoToIdentityServerResponse(IdentityServerDTO identityServerDTO) {
+        IdentityServerResponse identityServer = new IdentityServerResponse();
+        identityServer.setId(identityServerDTO.getId());
+        identityServer.setProviderName(identityServerDTO.getProviderName());
+        identityServer.setName(identityServerDTO.getName());
+        identityServer.setDescription(identityServerDTO.getDescription());
+        identityServer.setUrl(identityServerDTO.getUrl());
+        identityServer.setApiParamList(identityServerDTO.getApiParams());
+        identityServer.setUsername(identityServerDTO.getUsername());
+        IdentityServiceProvider identityServiceProvider = ConfigurationManager.getInstance().getIdentityServerConfiguration()
+                .getIdentityServerDetailByProviderName(identityServerDTO.getProviderName());
+        String serviceProviderAppsUrl = identityServerDTO.getUrl() + identityServiceProvider.getServiceProvidersPageUri();
+        identityServer.setServiceProviderAppsUrl(serviceProviderAppsUrl);
+        return identityServer;
+    }
+
     public static Application appDtoToAppResponse(ApplicationDTO applicationDTO) throws ApplicationManagementException {
 
         Application application = new Application();
@@ -363,7 +419,9 @@ public class APIUtil {
         application.setUnrestrictedRoles(applicationDTO.getUnrestrictedRoles());
         application.setRating(applicationDTO.getAppRating());
         application.setFavourite(applicationDTO.isFavourite());
-        application.setInstallerName(applicationDTO.getApplicationReleaseDTOs().get(0).getInstallerName());
+        if (applicationDTO.getApplicationReleaseDTOs() != null && !applicationDTO.getApplicationReleaseDTOs().isEmpty()) {
+            application.setInstallerName(applicationDTO.getApplicationReleaseDTOs().get(0).getInstallerName());
+        }
         List<ApplicationRelease> applicationReleases = new ArrayList<>();
         if (ApplicationType.PUBLIC.toString().equals(applicationDTO.getType()) && application.getCategories()
                 .contains("GooglePlaySyncedApp")) {
