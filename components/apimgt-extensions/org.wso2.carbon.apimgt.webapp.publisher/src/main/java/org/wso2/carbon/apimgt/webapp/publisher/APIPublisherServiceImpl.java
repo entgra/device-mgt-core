@@ -18,6 +18,7 @@
  */
 package org.wso2.carbon.apimgt.webapp.publisher;
 
+import org.wso2.carbon.apimgt.api.model.Mediation;
 import org.wso2.carbon.apimgt.webapp.publisher.dto.ApiScope;
 import org.wso2.carbon.apimgt.webapp.publisher.dto.ApiUriTemplate;
 import org.wso2.carbon.apimgt.api.APIManagementException;
@@ -84,6 +85,15 @@ public class APIPublisherServiceImpl implements APIPublisherService {
                 API api = getAPI(apiConfig, true);
                 API createdAPI = apiProvider.addAPI(api);
                 if (CREATED_STATUS.equals(createdAPI.getStatus())) {
+                    // if endpoint type "dynamic" and then add in sequence
+                    if ("dynamic".equals(apiConfig.getEndpointType())) {
+                        Mediation mediation = new Mediation();
+                        mediation.setName(apiConfig.getInSequenceName());
+                        mediation.setConfig(apiConfig.getInSequenceConfig());
+                        mediation.setType("in");
+                        mediation.setGlobal(false);
+                        apiProvider.addApiSpecificMediationPolicy(createdAPI.getUuid(), mediation, tenantDomain);
+                    }
                     apiProvider.changeLifeCycleStatus(tenantDomain, createdAPI.getUuid(), PUBLISH_ACTION, null);
                     APIRevision apiRevision = new APIRevision();
                     apiRevision.setApiUUID(createdAPI.getUuid());
@@ -161,6 +171,30 @@ public class APIPublisherServiceImpl implements APIPublisherService {
                     API api = getAPI(apiConfig, true);
                     api.setStatus(existingAPI.getStatus());
                     apiProvider.updateAPI(api);
+
+                    // if endpoint type "dynamic" and then add /update in sequence
+                    if ("dynamic".equals(apiConfig.getEndpointType())) {
+                        Mediation mediation = new Mediation();
+                        mediation.setName(apiConfig.getInSequenceName());
+                        mediation.setConfig(apiConfig.getInSequenceConfig());
+                        mediation.setType("in");
+                        mediation.setGlobal(false);
+
+                        List<Mediation> mediationList = apiProvider.getAllApiSpecificMediationPolicies(apiIdentifier);
+                        boolean isMediationPolicyFound = false;
+                        for (Mediation m : mediationList) {
+                            if (apiConfig.getInSequenceName().equals(m.getName())) {
+                                m.setConfig(apiConfig.getInSequenceConfig());
+                                apiProvider.updateApiSpecificMediationPolicyContent(existingAPI.getUuid(), m,
+                                        tenantDomain);
+                                isMediationPolicyFound = true;
+                                break;
+                            }
+                        }
+                        if (!isMediationPolicyFound) {
+                            apiProvider.addApiSpecificMediationPolicy(existingAPI.getUuid(), mediation, tenantDomain);
+                        }
+                    }
 
                     // Assumption: Assume the latest revision is the published one
                     String latestRevisionUUID = apiProvider.getLatestRevisionUUID(existingAPI.getUuid());
@@ -264,7 +298,14 @@ public class APIPublisherServiceImpl implements APIPublisherService {
         String endpointConfig = "{ \"endpoint_type\": \"http\", \"sandbox_endpoints\": { \"url\": \" " +
                 config.getEndpoint() + "\" }, \"production_endpoints\": { \"url\": \" "+ config.getEndpoint()+"\" } }";
 
+        if (config.getEndpointType() !=  null && "dynamic".equals(config.getEndpointType())) {
+            endpointConfig = "{ \"endpoint_type\":\"default\", \"sandbox_endpoints\":{ \"url\":\"default\" }, \"production_endpoints\":{ \"url\":\"default\" } }";
+            api.setInSequence(config.getInSequenceName());
+        }
+
         api.setEndpointConfig(endpointConfig);
+
+
         List<String> accessControlAllowOrigins = new ArrayList<>();
         accessControlAllowOrigins.add("*");
 

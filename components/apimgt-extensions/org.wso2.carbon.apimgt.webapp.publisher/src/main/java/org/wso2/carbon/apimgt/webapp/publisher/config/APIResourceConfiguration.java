@@ -30,6 +30,9 @@ public class APIResourceConfiguration {
 	private String version;
 	private List<APIResource> resources;
 	private String[] tags;
+    private String endpointType;
+    private String inSequenceName;
+    private String inSequenceConfig;
 
 	public List<APIResource> getResources() {
 		return resources;
@@ -76,4 +79,30 @@ public class APIResourceConfiguration {
 		this.tags = tags;
 	}
 
+    public String getEndpointType() {
+        return endpointType;
+    }
+
+    @XmlElement(name = "EndpointType")
+    public void setEndpointType(String endpointType) {
+        this.endpointType = endpointType;
+    }
+
+    public String getInSequenceName() {
+        return inSequenceName;
+    }
+
+    @XmlElement(name = "inSequenceName")
+    public void setInSequenceName(String inSequenceName) {
+        this.inSequenceName = inSequenceName;
+    }
+
+    public String getInSequenceConfig() {
+        return inSequenceConfig;
+    }
+
+    @XmlElement(name = "inSequenceConfig")
+    public void setInSequenceConfig(String inSequenceConfig) {
+        this.inSequenceConfig = inSequenceConfig;
+    }
 }

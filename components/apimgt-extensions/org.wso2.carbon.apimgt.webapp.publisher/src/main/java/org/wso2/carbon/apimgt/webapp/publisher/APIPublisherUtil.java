@@ -105,6 +105,12 @@ public class APIPublisherUtil {
         }
         apiConfig.setContext(context);
 
+        apiConfig.setEndpointType(apiDef.getEndpointType());
+
+        apiConfig.setInSequenceName(apiDef.getInSequenceName());
+
+        apiConfig.setInSequenceConfig(apiDef.getInSequenceConfig());
+
         String[] tags = apiDef.getTags();
         if (tags == null || tags.length == 0) {
             if (log.isDebugEnabled()) {
