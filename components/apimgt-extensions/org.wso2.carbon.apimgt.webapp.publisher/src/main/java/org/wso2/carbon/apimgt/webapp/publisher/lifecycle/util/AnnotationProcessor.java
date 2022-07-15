@@ -73,6 +73,9 @@ public class AnnotationProcessor {
     private static final String SWAGGER_ANNOTATIONS_PROPERTIES_ROLES = "roles";
     private static final String SWAGGER_ANNOTATIONS_PROPERTIES_VERSION = "version";
     private static final String SWAGGER_ANNOTATIONS_PROPERTIES_CONTEXT = "context";
+    private static final String SWAGGER_ANNOTATIONS_PROPERTIES_ENDPOINT_TYPE = "endpointType";
+    private static final String SWAGGER_ANNOTATIONS_PROPERTIES_IN_SEQUENCE_NAME = "inSequenceName";
+    private static final String SWAGGER_ANNOTATIONS_PROPERTIES_IN_SEQUENCE_CONFIG = "inSequenceConfig";
     private static final String SWAGGER_ANNOTATIONS_PROPERTIES_VALUE = "value";
     private static final String ANNOTATIONS_SCOPES = "scopes";
     private static final String ANNOTATIONS_SCOPE = "scope";
@@ -403,6 +406,18 @@ public class AnnotationProcessor {
                 case SWAGGER_ANNOTATIONS_PROPERTIES_CONTEXT:
                     if ("".equals(value)) return null;
                     apiResourceConfig.setContext(value);
+                    break;
+                case SWAGGER_ANNOTATIONS_PROPERTIES_ENDPOINT_TYPE:
+                    if ("".equals(value)) return null;
+                    apiResourceConfig.setEndpointType(value);
+                    break;
+                case SWAGGER_ANNOTATIONS_PROPERTIES_IN_SEQUENCE_NAME:
+                    if ("".equals(value)) return null;
+                    apiResourceConfig.setInSequenceName(value);
+                    break;
+                case SWAGGER_ANNOTATIONS_PROPERTIES_IN_SEQUENCE_CONFIG:
+                    if ("".equals(value)) return null;
+                    apiResourceConfig.setInSequenceConfig(value);
                     break;
                 default:
                     break;
