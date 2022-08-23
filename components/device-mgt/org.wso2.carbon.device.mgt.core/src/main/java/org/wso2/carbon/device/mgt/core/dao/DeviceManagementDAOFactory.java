@@ -126,6 +126,10 @@ public class DeviceManagementDAOFactory {
         return new EnrollmentDAOImpl();
     }
 
+    public static DeviceLifecycleDAO getDeviceLifecycleDAO() {
+        return new DeviceLifecycleDAOImpl();
+    }
+
     public static BillingDAO getBillingDAO() {
         return new BillingDAOImpl();
     }

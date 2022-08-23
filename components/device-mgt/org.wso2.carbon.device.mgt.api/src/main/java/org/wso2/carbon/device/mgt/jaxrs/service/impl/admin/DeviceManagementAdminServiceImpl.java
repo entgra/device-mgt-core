@@ -40,7 +40,9 @@ import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.device.mgt.common.Device;
+import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
+import org.wso2.carbon.device.mgt.common.LifecycleStateDevice;
 import org.wso2.carbon.device.mgt.common.MDMAppConstants;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.ConfigurationEntry;
@@ -50,13 +52,16 @@ import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration
 import org.wso2.carbon.device.mgt.common.exceptions.BadRequestException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceNotFoundException;
+import org.wso2.carbon.device.mgt.common.exceptions.DeviceStatusException;
 import org.wso2.carbon.device.mgt.common.exceptions.InvalidDeviceException;
+import org.wso2.carbon.device.mgt.common.exceptions.InvalidStatusException;
 import org.wso2.carbon.device.mgt.common.exceptions.UserNotFoundException;
 import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
 import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
 import org.wso2.carbon.device.mgt.jaxrs.service.api.admin.DeviceManagementAdminService;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.RequestValidationUtil;
+import org.wso2.carbon.device.mgt.jaxrs.util.Constants;
 import org.wso2.carbon.device.mgt.jaxrs.util.DeviceMgtAPIUtils;
 
 import javax.validation.constraints.Size;
@@ -232,5 +237,93 @@ public class DeviceManagementAdminServiceImpl implements DeviceManagementAdminSe
             return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
         }
         return Response.status(Response.Status.OK).entity("Triggered action successfully").build();
+    }
+
+    /**
+     * This change the device status
+     *
+     * @param deviceId   Id of the device
+     * @param nextStatus next status of the device
+     * @return
+     */
+    @POST
+    @Path("/device-status")
+    public Response changeDeviceStatus(
+            @QueryParam("deviceId") String deviceId,
+            @QueryParam("nextStatus") EnrolmentInfo.Status nextStatus) {
+
+        try {
+            if (nextStatus == null) {
+                return Response.status(Response.Status.BAD_REQUEST).entity(
+                        new ErrorResponse.ErrorResponseBuilder().setMessage("Next status is required")
+                                .build()).build();
+            }
+
+            RequestValidationUtil.validateDeviceIdentifier(Constants.ANY, deviceId);
+            DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
+            Device device = dms.getDevice(deviceId, false);
+            if (device == null) {
+                String message = "Device does not exist with id '" + deviceId + "'";
+                log.error(message);
+                return Response.status(Response.Status.NOT_FOUND).entity(
+                        new ErrorResponse.ErrorResponseBuilder().setMessage(message).build()).build();
+            }
+            LifecycleStateDevice updatedInfo = DeviceMgtAPIUtils.getDeviceStateManagementService()
+                    .changeDeviceStatus(device.getEnrolmentInfo(), nextStatus);
+            return Response.status(Response.Status.OK).entity(updatedInfo).build();
+        } catch (InvalidStatusException e) {
+            String msg = "Error occured while changing status: Invalid status or invalid status change";
+            log.error(msg, e);
+            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while getting the device '" + deviceId + "'";
+            log.error(msg, e);
+            return Response.serverError().entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        } catch (DeviceStatusException e) {
+            String msg = "Error occurred while getting device Status";
+            log.error(msg, e);
+            return Response.serverError().entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        }
+    }
+
+    /**
+     * Get the devicelifecycle history
+     *
+     * @param type     Device type
+     * @param deviceId Device id
+     * @return lifecycle history
+     */
+    @Override
+    @GET
+    @Path("/{type}/{deviceId}/device-lifecycle")
+    public Response getDeviceLifecycle(
+            @PathParam("type") String type,
+            @PathParam("deviceId") String deviceId) {
+
+        try {
+            RequestValidationUtil.validateDeviceIdentifier(type, deviceId);
+            DeviceManagementProviderService deviceManagementProviderService =
+                    DeviceMgtAPIUtils.getDeviceManagementService();
+            DeviceIdentifier deviceIdentifier = new DeviceIdentifier(deviceId, type);
+            Device device = deviceManagementProviderService.getDevice(deviceIdentifier, false);
+            if (device == null) {
+                return Response.status(Response.Status.NOT_FOUND).build();
+            }
+            List<LifecycleStateDevice> deviceLifecycle = DeviceMgtAPIUtils.getDeviceStateManagementService()
+                    .getDeviceLifecycleHistory(device);
+            return Response.status(Response.Status.OK).entity(deviceLifecycle).build();
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while getting the device '" + deviceId + "'";
+            log.error(msg);
+            return Response.serverError().entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        } catch (DeviceStatusException e) {
+            String msg = "Error occurred while getting device Status";
+            log.error(msg, e);
+            return Response.serverError().entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        }
     }
 }
