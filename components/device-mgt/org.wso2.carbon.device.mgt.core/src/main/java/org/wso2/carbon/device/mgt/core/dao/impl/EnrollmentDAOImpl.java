@@ -370,7 +370,7 @@ public class EnrollmentDAOImpl implements EnrollmentDAO {
             DeviceManagementDAOUtil.cleanupResources(stmt, null);
             // if there was no record for the enrolment or the previous status is not the same as the current status
             // we'll add a record
-            if (previousStatus == null){
+            if (previousStatus == null || previousStatus != status) {
                 if (deviceId == -1) {
                     // we need the device id in order to add a new record, therefore we get it from the enrolment table
                     sql = "SELECT DEVICE_ID FROM DM_ENROLMENT WHERE ID = ?";
@@ -386,7 +386,16 @@ public class EnrollmentDAOImpl implements EnrollmentDAO {
                     }
                     DeviceManagementDAOUtil.cleanupResources(stmt, null);
                 }
-                sql = "INSERT INTO DM_DEVICE_STATUS (ENROLMENT_ID, DEVICE_ID, STATUS, UPDATE_TIME, CHANGED_BY) VALUES(?, ?, ?, ?, ?)";
+                sql = "INSERT INTO DM_DEVICE_STATUS (ENROLMENT_ID, DEVICE_ID, STATUS, UPDATE_TIME, CHANGED_BY";
+                if (previousStatus != null) {
+                    sql += ", PREVIOUS_STATUS";
+                }
+                sql += ") VALUES(?, ?, ?, ?, ?";
+                if (previousStatus != null) {
+                    sql += ", ?";
+                }
+                sql += ")";
+
                 stmt = conn.prepareStatement(sql);
                 Timestamp updateTime = new Timestamp(new Date().getTime());
                 stmt.setInt(1, enrolmentId);
@@ -394,19 +403,9 @@ public class EnrollmentDAOImpl implements EnrollmentDAO {
                 stmt.setString(3, status.toString());
                 stmt.setTimestamp(4, updateTime);
                 stmt.setString(5, changedBy);
-                stmt.execute();
-                DeviceManagementDAOUtil.cleanupResources(stmt, null);
-            } else if (previousStatus != status) {
-                String mssql = "INSERT INTO DM_DEVICE_STATUS (ENROLMENT_ID, DEVICE_ID, STATUS, UPDATE_TIME, CHANGED_BY, " +
-                        "PREVIOUS_STATUS) VALUES(?, ?, ?, ?, ?, ?)";
-                stmt = conn.prepareStatement(mssql);
-                Timestamp updateTime = new Timestamp(new Date().getTime());
-                stmt.setInt(1, enrolmentId);
-                stmt.setInt(2, deviceId);
-                stmt.setString(3, status.toString());
-                stmt.setTimestamp(4, updateTime);
-                stmt.setString(5, changedBy);
-                stmt.setString(6, previousStatus.toString());
+                if (previousStatus != null) {
+                    stmt.setString(6, previousStatus.toString());
+                }
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {

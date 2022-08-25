@@ -30,30 +30,6 @@ import java.util.List;
 public interface DeviceLifecycleDAO {
 
     /**
-     * can change the relevent device's status
-     *
-     * @param enrolmentId Enrolment Id
-     * @param status      changing status
-     * @param tenantId    tenantId
-     * @return true or false
-     * @throws DeviceManagementDAOException when device no found
-     */
-    boolean changeStatus(int enrolmentId, EnrolmentInfo.Status status, int tenantId) throws DeviceManagementDAOException;
-
-    /**
-     * Add the changed status
-     *
-     * @param enrolmentId    Enrolment Id
-     * @param currentStatus  Current Status
-     * @param previousStatus Previous Status
-     * @param deviceId       Id of the device
-     * @return Added or not, true or false
-     * @throws DeviceManagementDAOException When device not found
-     */
-    boolean addStatus(int enrolmentId, EnrolmentInfo.Status currentStatus, EnrolmentInfo.Status previousStatus,
-                      int deviceId) throws DeviceManagementDAOException;
-
-    /**
      * Get Device ID
      *
      * @param enrolmentId Enrolment ID

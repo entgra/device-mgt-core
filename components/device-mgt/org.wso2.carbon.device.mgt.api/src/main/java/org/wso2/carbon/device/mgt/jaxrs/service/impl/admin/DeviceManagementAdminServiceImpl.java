@@ -244,10 +244,10 @@ public class DeviceManagementAdminServiceImpl implements DeviceManagementAdminSe
      *
      * @param deviceId   Id of the device
      * @param nextStatus next status of the device
-     * @return
+     * @return response
      */
     @POST
-    @Path("/device-status")
+    @Path("/status")
     public Response changeDeviceStatus(
             @QueryParam("deviceId") String deviceId,
             @QueryParam("nextStatus") EnrolmentInfo.Status nextStatus) {
@@ -269,7 +269,7 @@ public class DeviceManagementAdminServiceImpl implements DeviceManagementAdminSe
                         new ErrorResponse.ErrorResponseBuilder().setMessage(message).build()).build();
             }
             LifecycleStateDevice updatedInfo = DeviceMgtAPIUtils.getDeviceStateManagementService()
-                    .changeDeviceStatus(device.getEnrolmentInfo(), nextStatus);
+                    .changeDeviceStatus(device, nextStatus);
             return Response.status(Response.Status.OK).entity(updatedInfo).build();
         } catch (InvalidStatusException e) {
             String msg = "Error occured while changing status: Invalid status or invalid status change";

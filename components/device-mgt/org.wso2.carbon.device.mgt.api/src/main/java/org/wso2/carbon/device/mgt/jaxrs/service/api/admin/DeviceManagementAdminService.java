@@ -117,7 +117,7 @@ import java.util.List;
                 @Scope(
                         name = "Change device status.",
                         description = "Change device status.",
-                        key = "perm:devices:change-status",
+                        key = "perm:admin:devices:change-status",
                         roles = {"Internal/devicemgt-admin"},
                         permissions = {"/device-mgt/admin/devices/change-status"}
                 )
@@ -436,7 +436,7 @@ public interface DeviceManagementAdminService {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/device-status")
+    @Path("/status")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             consumes = MediaType.APPLICATION_JSON,
@@ -446,7 +446,7 @@ public interface DeviceManagementAdminService {
             tags = "Device Management Administrative Service",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:change-status")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:admin:devices:change-status")
                     })
             }
     )
