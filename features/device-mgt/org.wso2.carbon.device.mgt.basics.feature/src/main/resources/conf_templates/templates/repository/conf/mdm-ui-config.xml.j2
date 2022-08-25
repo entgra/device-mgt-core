@@ -266,6 +266,7 @@
         <Scope>perm:windows:location</Scope>
         <Scope>perm:admin:tenant:view</Scope>
         <Scope>perm:admin:metadata:view</Scope>
+        <Scope>perm:android:authenticate-account</Scope>
     {% if mdm_ui_conf.scopes is defined %}
         {%- for scope in mdm_ui_conf.scopes -%}
         <Scope>{{scope}}</Scope>
