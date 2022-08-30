@@ -2817,6 +2817,7 @@ public interface DeviceManagementService {
                     value = "Client Secret",
                     required = true)
             @PathParam("clientSecret")
-                    String clientSecret
+                    String clientSecret,
+            @QueryParam("scopes") String scopes
     );
 }
