@@ -18,6 +18,10 @@
  */
 package org.wso2.carbon.apimgt.webapp.publisher;
 
+import com.ctc.wstx.util.StringUtil;
+        import graphql.execution.Async;
+        import org.wso2.carbon.apimgt.api.model.Mediation;
+        import org.wso2.carbon.apimgt.impl.definitions.AsyncApiParser;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.apimgt.impl.utils.APIUtil;
@@ -47,10 +51,12 @@ import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -59,6 +65,7 @@ import java.util.Set;
  */
 public class APIPublisherServiceImpl implements APIPublisherService {
     private static final String UNLIMITED_TIER = "Unlimited";
+    private static final String WS_UNLIMITED_TIER = "AsyncUnlimited";
     private static final String API_PUBLISH_ENVIRONMENT = "Default";
     private static final String CREATED_STATUS = "CREATED";
     private static final String PUBLISH_ACTION = "Publish";
@@ -129,7 +136,20 @@ public class APIPublisherServiceImpl implements APIPublisherService {
                             API api = getAPI(apiConfig, true);
                             api.setId(apiIdentifier);
                             API createdAPI = apiProvider.addAPI(api);
+                            if (apiConfig.getEndpointType() != null && "WS".equals(apiConfig.getEndpointType())) {
+                                apiProvider.saveAsyncApiDefinition(api, apiConfig.getAsyncApiDefinition());
+                            }
                             if (CREATED_STATUS.equals(createdAPI.getStatus())) {
+                                // if endpoint type "dynamic" and then add in sequence
+                                if ("dynamic".equals(apiConfig.getEndpointType())) {
+                                    Mediation mediation = new Mediation();
+                                    mediation.setName(apiConfig.getInSequenceName());
+                                    mediation.setConfig(apiConfig.getInSequenceConfig());
+                                    mediation.setType("in");
+                                    mediation.setGlobal(false);
+                                    apiProvider.addApiSpecificMediationPolicy(createdAPI.getUuid(), mediation,
+                                            tenantDomain);
+                                }
                                 apiProvider.changeLifeCycleStatus(tenantDomain, createdAPI.getUuid(), PUBLISH_ACTION, null);
                                 APIRevision apiRevision = new APIRevision();
                                 apiRevision.setApiUUID(createdAPI.getUuid());
@@ -207,6 +227,37 @@ public class APIPublisherServiceImpl implements APIPublisherService {
                                 api.setStatus(existingAPI.getStatus());
                                 apiProvider.updateAPI(api);
 
+                                if (apiConfig.getEndpointType() != null && "WS".equals(apiConfig.getEndpointType())) {
+                                    apiProvider.saveAsyncApiDefinition(api, apiConfig.getAsyncApiDefinition());
+                                }
+
+                                // if endpoint type "dynamic" and then add /update in sequence
+                                if ("dynamic".equals(apiConfig.getEndpointType())) {
+                                    Mediation mediation = new Mediation();
+                                    mediation.setName(apiConfig.getInSequenceName());
+                                    mediation.setConfig(apiConfig.getInSequenceConfig());
+                                    mediation.setType("in");
+                                    mediation.setGlobal(false);
+
+                                    List<Mediation> mediationList = apiProvider
+                                            .getAllApiSpecificMediationPolicies(apiIdentifier);
+                                    boolean isMediationPolicyFound = false;
+                                    for (Mediation m : mediationList) {
+                                        if (apiConfig.getInSequenceName().equals(m.getName())) {
+                                            m.setConfig(apiConfig.getInSequenceConfig());
+                                            apiProvider
+                                                    .updateApiSpecificMediationPolicyContent(existingAPI.getUuid(), m,
+                                                            tenantDomain);
+                                            isMediationPolicyFound = true;
+                                            break;
+                                        }
+                                    }
+                                    if (!isMediationPolicyFound) {
+                                        apiProvider.addApiSpecificMediationPolicy(existingAPI.getUuid(), mediation,
+                                                tenantDomain);
+                                    }
+                                }
+
                                 // Assumption: Assume the latest revision is the published one
                                 String latestRevisionUUID = apiProvider.getLatestRevisionUUID(existingAPI.getUuid());
                                 List<APIRevisionDeployment> latestRevisionDeploymentList =
@@ -262,44 +313,58 @@ public class APIPublisherServiceImpl implements APIPublisherService {
         api.setWsdlUrl(null);
         api.setResponseCache("Disabled");
         api.setContextTemplate(context + "/{version}");
-        api.setSwaggerDefinition(APIPublisherUtil.getSwaggerDefinition(config));
-        api.setType("HTTP");
+        if (config.getEndpointType() != null && "WS".equals(config.getEndpointType())) {
+            api.setAsyncApiDefinition(config.getAsyncApiDefinition());
+            AsyncApiParser asyncApiParser = new AsyncApiParser();
+            try {
+                api.setUriTemplates(asyncApiParser.getURITemplates(config.getAsyncApiDefinition(), true));
+            } catch (APIManagementException e) {
 
-        Set<URITemplate> uriTemplates = new HashSet<>();
-        Iterator<ApiUriTemplate> iterator;
-        for (iterator = config.getUriTemplates().iterator(); iterator.hasNext(); ) {
-            ApiUriTemplate apiUriTemplate = iterator.next();
-            URITemplate uriTemplate = new URITemplate();
-            uriTemplate.setAuthType(apiUriTemplate.getAuthType());
-            uriTemplate.setHTTPVerb(apiUriTemplate.getHttpVerb());
-            uriTemplate.setResourceURI(apiUriTemplate.getResourceURI());
-            uriTemplate.setUriTemplate(apiUriTemplate.getUriTemplate());
-            if (includeScopes) {
-                Scope scope = new Scope();
-                if (apiUriTemplate.getScope() != null) {
-                    scope.setName(apiUriTemplate.getScope().getName());
-                    scope.setDescription(apiUriTemplate.getScope().getDescription());
-                    scope.setKey(apiUriTemplate.getScope().getKey());
-                    scope.setRoles(apiUriTemplate.getScope().getRoles());
-                    uriTemplate.setScopes(scope);
-                }
             }
-            uriTemplates.add(uriTemplate);
+            api.setWsUriMapping(asyncApiParser.buildWSUriMapping(config.getAsyncApiDefinition()));
+        } else {
+            api.setSwaggerDefinition(APIPublisherUtil.getSwaggerDefinition(config));
+
+            Set<URITemplate> uriTemplates = new HashSet<>();
+            Iterator<ApiUriTemplate> iterator;
+            for (iterator = config.getUriTemplates().iterator(); iterator.hasNext(); ) {
+                ApiUriTemplate apiUriTemplate = iterator.next();
+                URITemplate uriTemplate = new URITemplate();
+                uriTemplate.setAuthType(apiUriTemplate.getAuthType());
+                uriTemplate.setHTTPVerb(apiUriTemplate.getHttpVerb());
+                uriTemplate.setResourceURI(apiUriTemplate.getResourceURI());
+                uriTemplate.setUriTemplate(apiUriTemplate.getUriTemplate());
+                if (includeScopes) {
+                    Scope scope = new Scope();
+                    if (apiUriTemplate.getScope() != null) {
+                        scope.setName(apiUriTemplate.getScope().getName());
+                        scope.setDescription(apiUriTemplate.getScope().getDescription());
+                        scope.setKey(apiUriTemplate.getScope().getKey());
+                        scope.setRoles(apiUriTemplate.getScope().getRoles());
+                        uriTemplate.setScopes(scope);
+                    }
+
+                }
+                uriTemplates.add(uriTemplate);
+            }
+            api.setUriTemplates(uriTemplates);
         }
-        api.setUriTemplates(uriTemplates);
 
         api.setApiOwner(config.getOwner());
 
 
         api.setDefaultVersion(config.isDefault());
-        api.setTransports("https,http");
 
         Set<String> tags = new HashSet<>();
         tags.addAll(Arrays.asList(config.getTags()));
         api.setTags(tags);
 
         Set<Tier> availableTiers = new HashSet<>();
-        availableTiers.add(new Tier(UNLIMITED_TIER));
+        if (config.getEndpointType() != null && "WS".equals(config.getEndpointType())) {
+            availableTiers.add(new Tier(WS_UNLIMITED_TIER));
+        } else {
+            availableTiers.add(new Tier(UNLIMITED_TIER));
+        }
         api.setAvailableTiers(availableTiers);
 
         Set<String> environments = new HashSet<>();
@@ -315,7 +380,23 @@ public class APIPublisherServiceImpl implements APIPublisherService {
         }
         String endpointConfig = "{ \"endpoint_type\": \"http\", \"sandbox_endpoints\": { \"url\": \" " +
                 config.getEndpoint() + "\" }, \"production_endpoints\": { \"url\": \" " + config.getEndpoint() + "\" } }";
+        api.setTransports(config.getTransports());
+        api.setType("HTTP");
 
+        // if dynamic endpoint
+        if (config.getEndpointType() != null && "dynamic".equals(config.getEndpointType())) {
+            endpointConfig = "{ \"endpoint_type\":\"default\", \"sandbox_endpoints\":{ \"url\":\"default\" }, \"production_endpoints\":{ \"url\":\"default\" } }";
+            api.setInSequence(config.getInSequenceName());
+        }
+
+        // if ws endpoint
+        if (config.getEndpointType() != null && "WS".equals(config.getEndpointType())) {
+            endpointConfig = "{ \"endpoint_type\": \"ws\", \"sandbox_endpoints\": { \"url\": \" " +
+                    config.getEndpoint() + "\" }, \"production_endpoints\": { \"url\": \" " + config.getEndpoint()
+                    + "\" } }";
+            api.setTransports("wss,ws");
+            api.setType("WS");
+        }
         api.setEndpointConfig(endpointConfig);
         List<String> accessControlAllowOrigins = new ArrayList<>();
         accessControlAllowOrigins.add("*");
@@ -343,7 +424,8 @@ public class APIPublisherServiceImpl implements APIPublisherService {
         keyManagers.add("all");
         api.setKeyManagers(keyManagers);
         api.setEnableStore(true);
-
+        api.setEnableSchemaValidation(false);
+        api.setMonetizationEnabled(false);
         return api;
     }
 }
