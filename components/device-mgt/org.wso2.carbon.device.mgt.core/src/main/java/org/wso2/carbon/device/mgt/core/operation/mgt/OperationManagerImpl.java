@@ -894,8 +894,8 @@ public class OperationManagerImpl implements OperationManager {
             }
             if (isOperationUpdated && operation.getOperationResponse() != null) {
                 OperationMonitoringTaskConfig operationMonitoringTaskConfig = DeviceManagementDataHolder
-                        .getInstance().getDeviceManagementProvider().getDeviceMonitoringConfig(deviceId.getType());
-                List<MonitoringOperation> monitoringOperations = operationMonitoringTaskConfig.getMonitoringOperation();
+                        .getInstance().getDeviceManagementProvider().getOperationMonitoringTaskConfig(deviceId.getType());
+                List<MonitoringOperation> monitoringOperations = operationMonitoringTaskConfig.getEnabledMonitoringOperations();
                 MonitoringOperation currentMonitoringOperation = null;
                 for (MonitoringOperation monitoringOperation : monitoringOperations) {
                     if (monitoringOperation.getTaskName().equals(operation.getCode())) {
@@ -986,6 +986,11 @@ public class OperationManagerImpl implements OperationManager {
             }
         } catch (TransactionManagementException e) {
             throw new OperationManagementException("Error occurred while initiating a transaction", e);
+        } catch (DeviceManagementException e) {
+           String msg = "Error occurred while retrieving operation monitoring task configuration";
+           log.error(msg, e);
+           throw new OperationManagementException(msg, e);
+
         } finally {
             OperationManagementDAOFactory.closeConnection();
         }
@@ -1492,14 +1497,20 @@ public class OperationManagerImpl implements OperationManager {
         }
     }
 
-    private boolean isTaskScheduledOperation(Operation operation) {
-        DeviceManagementProviderService deviceManagementProviderService = DeviceManagementDataHolder.getInstance().
-                getDeviceManagementProvider();
-        List<MonitoringOperation> monitoringOperations = deviceManagementProviderService.getMonitoringOperationList(deviceType);//Get task list from each device type
-        for (MonitoringOperation op : monitoringOperations) {
-            if (operation.getCode().equals(op.getTaskName())) {
-                return true;
+    private boolean isTaskScheduledOperation(Operation operation) throws OperationManagementException {
+        try {
+            DeviceManagementProviderService deviceManagementProviderService = DeviceManagementDataHolder.getInstance().
+                    getDeviceManagementProvider();
+            List<MonitoringOperation>   monitoringOperations = deviceManagementProviderService.getMonitoringOperationList(deviceType);
+            for (MonitoringOperation op : monitoringOperations) {
+                if (operation.getCode().equals(op.getTaskName())) {
+                    return true;
+                }
             }
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while retrieving monitoring operation list for " + deviceType;
+            log.error(msg, e);
+            throw new OperationManagementException(msg);
         }
         return false;
     }

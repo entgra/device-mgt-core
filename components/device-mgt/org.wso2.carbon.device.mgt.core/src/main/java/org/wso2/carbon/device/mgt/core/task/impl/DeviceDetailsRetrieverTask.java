@@ -35,96 +35,96 @@
 
 package org.wso2.carbon.device.mgt.core.task.impl;
 
+import com.google.gson.Gson;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.carbon.device.mgt.common.OperationMonitoringTaskConfig;
+import org.wso2.carbon.device.mgt.common.MonitoringOperation;
 import org.wso2.carbon.device.mgt.common.StartupOperationConfig;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.core.internal.DeviceManagementDataHolder;
 import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
 import org.wso2.carbon.device.mgt.core.task.DeviceMgtTaskException;
 import org.wso2.carbon.device.mgt.core.task.DeviceTaskManager;
+import org.wso2.carbon.device.mgt.core.task.TaskConstants;
 
-import java.util.List;
 import java.util.Map;
 
 public class DeviceDetailsRetrieverTask extends DynamicPartitionedScheduleTask {
 
     private static final Log log = LogFactory.getLog(DeviceDetailsRetrieverTask.class);
+    private int tenantId;
+
+    private MonitoringOperation monitoringOperation;
     private String deviceType;
-    private DeviceManagementProviderService deviceManagementProviderService;
 
     @Override
     public void setProperties(Map<String, String> map) {
         super.setProperties(map);
-        deviceType = map.get("DEVICE_TYPE");
+        deviceType = map.get(TaskConstants.DEVICE_TYPE_KEY);
+        monitoringOperation = new Gson().
+                fromJson(map.get(TaskConstants.OPERATION_MONITORING.OPERATION_CONF_KEY), MonitoringOperation.class);
+        tenantId = Integer.parseInt(map.get(TaskConstants.TENANT_ID_KEY));
     }
 
     @Override
     public void executeDynamicTask() {
-        deviceManagementProviderService = DeviceManagementDataHolder.getInstance()
+        DeviceManagementProviderService deviceManagementProviderService = DeviceManagementDataHolder.getInstance()
                 .getDeviceManagementProvider();
-        OperationMonitoringTaskConfig operationMonitoringTaskConfig = deviceManagementProviderService
-                .getDeviceMonitoringConfig(deviceType);
+        if (log.isDebugEnabled()) {
+            log.debug("Device details retrieving task started to run for tenant " + tenantId);
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("Task is running for " + tenantId + " tenants and the device type is " + deviceType);
+        }
         StartupOperationConfig startupOperationConfig = deviceManagementProviderService
                 .getStartupOperationConfig(deviceType);
-        this.executeForAllTenants(operationMonitoringTaskConfig, startupOperationConfig);
-    }
-
-    private void executeForAllTenants(OperationMonitoringTaskConfig operationMonitoringTaskConfig,
-                                      StartupOperationConfig startupOperationConfig) {
-
-        if (log.isDebugEnabled()) {
-            log.debug("Device details retrieving task started to run for all tenants.");
+        if (MultitenantConstants.SUPER_TENANT_ID == tenantId) {
+            this.executeTask(monitoringOperation, startupOperationConfig);
+            return;
         }
         try {
-            List<Integer> tenants = DeviceManagementDataHolder.getInstance().
-                    getDeviceManagementProvider().getDeviceEnrolledTenants();
-            if (log.isDebugEnabled()) {
-                log.debug("Task is running for " + tenants.size() + " tenants and the device type is " + deviceType);
-            }
-            for (Integer tenant : tenants) {
-                if (MultitenantConstants.SUPER_TENANT_ID == tenant) {
-                    this.executeTask(operationMonitoringTaskConfig, startupOperationConfig);
-                    continue;
-                }
-                try {
-                    PrivilegedCarbonContext.startTenantFlow();
-                    PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(tenant, true);
-                    this.executeTask(operationMonitoringTaskConfig, startupOperationConfig);
-                } finally {
-                    PrivilegedCarbonContext.endTenantFlow();
-                }
-            }
-        } catch (DeviceManagementException e) {
-            log.error("Error occurred while trying to get the available tenants " +
-                    "from device manager provider service.", e);
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(tenantId, true);
+            this.executeTask(monitoringOperation, startupOperationConfig);
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
         }
     }
+
 
     /**
      * Execute device detail retriever task
-     * @param operationMonitoringTaskConfig which contains monitoring operations and related details
      * @param startupOperationConfig which contains startup operations and realted details
      */
-    private void executeTask(OperationMonitoringTaskConfig operationMonitoringTaskConfig,
+    private void executeTask(MonitoringOperation monitoringOperation,
                              StartupOperationConfig startupOperationConfig) {
+        DeviceManagementProviderService deviceManagementProviderService = DeviceManagementDataHolder.getInstance()
+                .getDeviceManagementProvider();
+        try {
+            if (!deviceManagementProviderService.isDeviceEnrolled()) {
+                if (log.isDebugEnabled()) {
+                    log.debug("No devices are enrolled for tenant " + tenantId + ". Hence the task won't be running.");
+                }
+                return;
+            }
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while checking if any device is enrolled for tenant " + tenantId;
+            log.error(msg, e);
+        }
         DeviceTaskManager deviceTaskManager = new DeviceTaskManagerImpl(deviceType,
-                                                                        operationMonitoringTaskConfig,
-                                                                        startupOperationConfig);
+                monitoringOperation,
+                startupOperationConfig);
         if (log.isDebugEnabled()) {
             log.debug("Device details retrieving task started to run.");
         }
         //pass the configurations also from here, monitoring tasks
         try {
-            if (deviceManagementProviderService.isDeviceMonitoringEnabled(deviceType)) {
-                deviceTaskManager.addOperations(getTaskContext());
-            }
+            deviceTaskManager.addMonitoringOperation(getTaskContext());
         } catch (DeviceMgtTaskException e) {
             log.error("Error occurred while trying to add the operations to " +
-                      "device to retrieve device details.", e);
+                    "device to retrieve device details.", e);
         }
     }
 

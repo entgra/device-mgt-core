@@ -297,15 +297,12 @@ public class DeviceManagementPluginRepository implements DeviceManagerStartupLis
                     getDeviceTaskManagerService();
             OperationMonitoringTaskConfig operationMonitoringTaskConfig = deviceManagementService.
                     getOperationMonitoringConfig();
-            if (operationMonitoringTaskConfig != null && operationMonitoringTaskConfig.isEnabled()) {
-
-                if (deviceTaskManagerService == null) {
-                    DeviceMonitoringOperationDataHolder.getInstance().addOperationMonitoringConfigToMap(
-                            deviceManagementService.getType(), operationMonitoringTaskConfig);
-                } else {
-                    deviceTaskManagerService.startTask(deviceManagementService.getType(),
-                            operationMonitoringTaskConfig);
-                }
+            if (deviceTaskManagerService == null) {
+                DeviceMonitoringOperationDataHolder.getInstance().addOperationMonitoringConfigToMap(
+                        deviceManagementService.getType(), operationMonitoringTaskConfig);
+            } else {
+                deviceTaskManagerService.startTasks(deviceManagementService.getType(),
+                        operationMonitoringTaskConfig);
             }
         } catch (DeviceMgtTaskException e) {
             throw new DeviceManagementException("Error occurred while adding task service for '" +
@@ -318,12 +315,7 @@ public class DeviceManagementPluginRepository implements DeviceManagerStartupLis
         try {
             DeviceTaskManagerService deviceTaskManagerService = DeviceManagementDataHolder.getInstance().
                     getDeviceTaskManagerService();
-            OperationMonitoringTaskConfig operationMonitoringTaskConfig = deviceManagementService.
-                    getOperationMonitoringConfig();
-            if (operationMonitoringTaskConfig != null && operationMonitoringTaskConfig.isEnabled()) {
-                deviceTaskManagerService.stopTask(deviceManagementService.getType(),
-                        deviceManagementService.getOperationMonitoringConfig());
-            }
+            deviceTaskManagerService.stopTasksOfAllTenants(deviceManagementService.getType());
         } catch (DeviceMgtTaskException e) {
             throw new DeviceManagementException("Error occurred while removing task service for '" +
                     deviceManagementService.getType() + "'", e);

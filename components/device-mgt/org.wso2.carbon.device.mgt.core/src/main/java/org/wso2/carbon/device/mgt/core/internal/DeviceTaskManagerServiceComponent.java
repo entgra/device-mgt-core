@@ -89,9 +89,7 @@ public class DeviceTaskManagerServiceComponent {
                 .getInstance().getOperationMonitoringConfigFromMap();
         for (String platformType : deviceConfigMap.keySet()) {
             OperationMonitoringTaskConfig taskConfig = deviceConfigMap.get(platformType);
-            if (taskConfig.isEnabled()) {
-                deviceTaskManagerService.startTask(platformType, taskConfig);
-            }
+            deviceTaskManagerService.startTasks(platformType, taskConfig);
         }
     }
 
@@ -155,9 +153,7 @@ public class DeviceTaskManagerServiceComponent {
                 .getInstance().getOperationMonitoringConfigFromMap();
         for (String platformType : deviceConfigMap.keySet()) {
             OperationMonitoringTaskConfig taskConfig = deviceConfigMap.get(platformType);
-            if (taskConfig.isEnabled()) {
-                deviceTaskManagerService.stopTask(platformType, taskConfig);
-            }
+            deviceTaskManagerService.stopTasksOfAllTenants(platformType);
         }
     }
 

@@ -43,6 +43,8 @@
         <AllowToAllDomains>true</AllowToAllDomains>
     </AppRegistration>
     <Scopes>
+        <Scope>perm:monitoring:operation:view</Scope>
+        <Scope>perm:monitoring:operation:update</Scope>
         <Scope>perm:grafana:api:view</Scope>
         <Scope>perm:app:review:view</Scope>
         <Scope>perm:app:review:update</Scope>

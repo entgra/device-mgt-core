@@ -39,6 +39,8 @@ public class TestDataHolder {
     public final static String initialDeviceIdentifier = "12345";
     public final static String OWNER = "admin";
     public static final String OPERATION_CONFIG = "TEST-OPERATION-";
+
+    public static final String OPERATION_CONFIG_KEY = "OPPCONFIG";
     public static Device initialTestDevice;
     public static DeviceType initialTestDeviceType;
 
@@ -179,16 +181,27 @@ public class TestDataHolder {
         }
 
         taskConfig.setEnabled(enabled);
-        taskConfig.setFrequency(frequency);
         taskConfig.setMonitoringOperation(operationList);
 
         return taskConfig;
     }
 
-    private static MonitoringOperation generateMonitoringOperation(String name, int recurrentTimes) {
+    public static MonitoringOperation generateMonitoringOperation(String name, int recurrentTimes) {
         MonitoringOperation operation = new MonitoringOperation();
         operation.setTaskName(name);
         operation.setRecurrentTimes(recurrentTimes);
+        operation.setEnabled(true);
+        operation.setFrequency(600000);
+
+        return operation;
+    }
+
+    public static MonitoringOperation generateMonitoringOperation(String name, int recurrentTimes, int frequency) {
+        MonitoringOperation operation = new MonitoringOperation();
+        operation.setTaskName(name);
+        operation.setRecurrentTimes(recurrentTimes);
+        operation.setEnabled(true);
+        operation.setFrequency(frequency);
 
         return operation;
     }

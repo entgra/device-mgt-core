@@ -25,7 +25,9 @@ import org.apache.http.HttpStatus;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.Feature;
 import org.wso2.carbon.device.mgt.common.FeatureManager;
+import org.wso2.carbon.device.mgt.common.MonitoringOperation;
 import org.wso2.carbon.device.mgt.common.OperationLogFilters;
+import org.wso2.carbon.device.mgt.common.OperationMonitoringTaskConfig;
 import org.wso2.carbon.device.mgt.common.app.mgt.Application;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
@@ -651,6 +653,52 @@ public class RequestValidationUtil {
             throw new InputValidationException(new ErrorResponse.ErrorResponseBuilder()
                     .setCode(HttpStatus.SC_BAD_REQUEST)
                     .setMessage(msg).build());
+        }
+    }
+
+    /**
+     * Validate device type and if the operation config is non empty & in proper format.
+     *
+     * @param operationMonitoringTaskConfig user submitted OperationMonitoringTaskConfig instance
+     */
+    public static void validateMonitoringOperationConfig(OperationMonitoringTaskConfig operationMonitoringTaskConfig, String deviceType)
+            throws DeviceManagementException{
+        if (operationMonitoringTaskConfig == null) {
+            String msg = "Operation monitoring task config cannot hav empty value";
+            log.error(msg);
+            throw new InputValidationException(
+                    new ErrorResponse.ErrorResponseBuilder()
+                            .setCode(HttpStatus.SC_BAD_REQUEST).setMessage(msg).build());
+        }
+        for (MonitoringOperation mop : operationMonitoringTaskConfig.getMonitoringOperation()) {
+            if (mop.getFrequency() <= 0) {
+                String msg = mop.getTaskName() + " monitoring operation task frequency is below 1 second. Frequency must be above 0" ;
+                log.error(msg);
+                throw new InputValidationException(
+                        new ErrorResponse.ErrorResponseBuilder()
+                                .setCode(HttpStatus.SC_BAD_REQUEST).setMessage(msg).build());
+            }
+        }
+        validateDeviceType(deviceType);
+    }
+
+    /**
+     * Validate device type (i.e check if it exists)
+     */
+    public static void validateDeviceType(String deviceType) throws DeviceManagementException {
+        DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
+        try {
+            if (!dms.hasDeviceType(deviceType)) {
+                String msg = "Invalid device type. No such device type: " + deviceType;
+                log.error(msg);
+                throw new InputValidationException(
+                        new ErrorResponse.ErrorResponseBuilder()
+                                .setCode(HttpStatus.SC_BAD_REQUEST).setMessage(msg).build());
+            }
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while checking if device type exists";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
         }
     }
 

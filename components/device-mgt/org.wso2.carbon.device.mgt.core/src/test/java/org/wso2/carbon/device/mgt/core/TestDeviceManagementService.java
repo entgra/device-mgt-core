@@ -75,12 +75,13 @@ public class TestDeviceManagementService implements DeviceManagementService {
     public OperationMonitoringTaskConfig getOperationMonitoringConfig() {
         OperationMonitoringTaskConfig taskConfig = new OperationMonitoringTaskConfig();
         taskConfig.setEnabled(true);
-        taskConfig.setFrequency(3000);
         List<MonitoringOperation> monitoringOperations = new ArrayList<>();
         MonitoringOperation monitoringOperation = new MonitoringOperation();
         monitoringOperation.setTaskName(operationCode);
         monitoringOperation.setRecurrentTimes(2);
+        monitoringOperation.setEnabled(true);
         monitoringOperations.add(monitoringOperation);
+
         taskConfig.setMonitoringOperation(monitoringOperations);
         return taskConfig;
     }

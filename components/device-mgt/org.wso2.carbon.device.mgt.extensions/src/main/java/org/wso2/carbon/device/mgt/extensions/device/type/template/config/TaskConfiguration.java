@@ -43,15 +43,6 @@ public class TaskConfiguration {
         this.enabled = enabled;
     }
 
-    @XmlElement(name = "Frequency", required = true)
-    public int getFrequency() {
-        return frequency;
-    }
-
-    public void setFrequency(int frequency) {
-        this.frequency = frequency;
-    }
-
     @XmlElementWrapper(name="Operations")
     @XmlElement(name = "Operation", required = true)
     public List<Operation> getOperations() {
@@ -67,7 +58,11 @@ public class TaskConfiguration {
 
         private String operationName;
         private int recurrency;
+
+        private int frequency;
         private boolean responsePersistence = true;
+
+        private boolean isEnabled;
 
         @XmlElement(name = "Name", required = true)
         public String getOperationName() {
@@ -94,6 +89,24 @@ public class TaskConfiguration {
 
         public void setResponsePersistence(boolean responsePersistence) {
             this.responsePersistence = responsePersistence;
+        }
+
+        @XmlElement(name = "Enable")
+        public boolean isEnabled() {
+            return isEnabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            isEnabled = enabled;
+        }
+
+        @XmlElement(name = "Frequency", required = true)
+        public int getFrequency() {
+            return frequency;
+        }
+
+        public void setFrequency(int frequency) {
+            this.frequency = frequency;
         }
     }
 }

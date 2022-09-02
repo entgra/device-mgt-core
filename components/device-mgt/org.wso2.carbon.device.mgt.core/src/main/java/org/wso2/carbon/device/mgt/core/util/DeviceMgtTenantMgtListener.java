@@ -46,27 +46,31 @@ public class DeviceMgtTenantMgtListener implements TenantMgtListener {
     @Override
     public void onTenantCreate(TenantInfoBean tenantInfoBean) {
         DeviceManagementConfig config = DeviceConfigurationManager.getInstance().getDeviceManagementConfig();
-        if (config.getDefaultRoles().isEnabled()) {
-            Map<String, List<Permission>> roleMap = getValidRoleMap(config);
-            try {
-                PrivilegedCarbonContext.startTenantFlow();
-                PrivilegedCarbonContext.getThreadLocalCarbonContext()
-                        .setTenantDomain(tenantInfoBean.getTenantDomain(), true);
-                UserStoreManager userStoreManager = DeviceManagementDataHolder.getInstance().getRealmService()
-                        .getTenantUserRealm(tenantInfoBean.getTenantId()).getUserStoreManager();
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext.getThreadLocalCarbonContext()
+                    .setTenantDomain(tenantInfoBean.getTenantDomain(), true);
+            if (config.getDefaultRoles().isEnabled()) {
+                Map<String, List<Permission>> roleMap = getValidRoleMap(config);
+                try {
+                    UserStoreManager userStoreManager = DeviceManagementDataHolder.getInstance().getRealmService()
+                            .getTenantUserRealm(tenantInfoBean.getTenantId()).getUserStoreManager();
 
-                roleMap.forEach((key, value) -> {
-                    try {
-                        userStoreManager.addRole(key, null, value.toArray(new Permission[0]));
-                    } catch (UserStoreException e) {
-                        log.error("Error occurred while adding default roles into user store.", e);
-                    }
-                });
-            } catch (UserStoreException e) {
-                log.error("Error occurred while getting user store manager.", e);
-            } finally {
-                PrivilegedCarbonContext.endTenantFlow();
+                    roleMap.forEach((key, value) -> {
+                        try {
+                            userStoreManager.addRole(key, null, value.toArray(new Permission[0]));
+                        } catch (UserStoreException e) {
+                            log.error("Error occurred while adding default roles into user store.", e);
+                        }
+                    });
+                } catch (UserStoreException e) {
+                    log.error("Error occurred while getting user store manager.", e);
+                }
             }
+            startScheduledTasks(tenantInfoBean.getTenantId());
+        }
+        finally {
+            PrivilegedCarbonContext.endTenantFlow();
         }
     }
 
@@ -144,5 +148,13 @@ public class DeviceMgtTenantMgtListener implements TenantMgtListener {
             log.error("Error occurred while checking permission existence.", e);
         }
         return roleMap;
+    }
+
+    private void startScheduledTasks(int tenantId) {
+        try {
+            DeviceManagementDataHolder.getInstance().getDeviceManagementProvider().registerDeviceMonitoringTasks();
+        } catch (Exception e) {
+            log.error("Error occurred while starting device monitoring tasks for tenant " + tenantId, e);
+        }
     }
 }

@@ -23,6 +23,7 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.wso2.carbon.device.mgt.common.OperationMonitoringTaskConfig;
 import org.wso2.carbon.device.mgt.core.TestTaskServiceImpl;
 import org.wso2.carbon.device.mgt.core.common.TestDataHolder;
 import org.wso2.carbon.device.mgt.core.config.DeviceConfigurationManager;
@@ -60,13 +61,13 @@ public class DeviceTaskManagerServiceTest {
     public void testStartTask() {
         try {
             log.debug("Attempting to start task from testStartTask");
-            this.deviceTaskManagerService.startTask(TestDataHolder.TEST_DEVICE_TYPE,
-                    TestDataHolder.generateMonitoringTaskConfig(true, 60000, 1));
+            OperationMonitoringTaskConfig config = TestDataHolder.generateMonitoringTaskConfig(true, 60000, 1);
+            this.deviceTaskManagerService.registerTasks(TestDataHolder.TEST_DEVICE_TYPE, config);
             TaskManager taskManager = this.taskService.getTaskManager(TASK_TYPE);
             Assert.assertEquals(this.taskService.getRegisteredTaskTypes().size(), 1);
             Assert.assertNotNull(taskManager
-                    .getTask(TestDataHolder.TEST_DEVICE_TYPE +
-                            String.valueOf(TestDataHolder.SUPER_TENANT_ID)));
+                    .getTask(config.getEnabledMonitoringOperations().get(0).getTaskName() + "_" + TestDataHolder.TEST_DEVICE_TYPE + "_" +
+                            TestDataHolder.SUPER_TENANT_ID));
             log.debug("Task Successfully started");
         } catch (DeviceMgtTaskException | TaskException e) {
             Assert.fail("Exception occurred when starting the task", e);
@@ -92,17 +93,17 @@ public class DeviceTaskManagerServiceTest {
     public void testStopTask() {
         log.debug("Attempting to stop task from testStopTask");
         try {
-            this.deviceTaskManagerService.stopTask(TestDataHolder.TEST_DEVICE_TYPE,
-                    TestDataHolder.generateMonitoringTaskConfig(true, 30000, 1));
+            OperationMonitoringTaskConfig config = TestDataHolder.generateMonitoringTaskConfig(true, 60000, 1);
             TaskManager taskManager = this.taskService.getTaskManager(TASK_TYPE);
+            this.deviceTaskManagerService.stopTaskIfScheduled(config.getEnabledMonitoringOperations().get(0).getTaskName() +
+                    "_" + TestDataHolder.TEST_DEVICE_TYPE + "_"  + TestDataHolder.SUPER_TENANT_ID);
             Assert.assertEquals(taskManager.getAllTasks().size(), 0);
-        } catch (DeviceMgtTaskException | TaskException e) {
+        } catch (TaskException e) {
             Assert.fail("Exception occurred when stopping the task", e);
         }
     }
 
-    @Test(groups = "Device Task Manager Service Test Group", dependsOnMethods = "testStopTask", expectedExceptions = {
-            DeviceMgtTaskException.class })
+    @Test(groups = "Device Task Manager Service Test Group", dependsOnMethods = "testStopTask")
     public void testUpdateUnscheduledTask() throws DeviceMgtTaskException {
         log.debug("Attempting to update unscheduled task");
         this.deviceTaskManagerService.updateTask(TestDataHolder.TEST_DEVICE_TYPE,
@@ -117,7 +118,7 @@ public class DeviceTaskManagerServiceTest {
         Mockito.doThrow(new TaskException("Unable to get TaskManager", TaskException.Code.UNKNOWN)).when(taskService)
                 .getTaskManager(TASK_TYPE);
         DeviceManagementDataHolder.getInstance().setTaskService(taskService);
-        this.deviceTaskManagerService.startTask(TestDataHolder.TEST_DEVICE_TYPE,
+        this.deviceTaskManagerService.startTasks(TestDataHolder.TEST_DEVICE_TYPE,
                 TestDataHolder.generateMonitoringTaskConfig(true, 60000, 2));
     }
 
@@ -141,7 +142,7 @@ public class DeviceTaskManagerServiceTest {
         Mockito.doThrow(new TaskException("Unable to register task type", TaskException.Code.UNKNOWN)).when(taskService)
                 .registerTaskType(TASK_TYPE);
         DeviceManagementDataHolder.getInstance().setTaskService(taskService);
-        this.deviceTaskManagerService.startTask(TestDataHolder.TEST_DEVICE_TYPE,
+        this.deviceTaskManagerService.startTasks(TestDataHolder.TEST_DEVICE_TYPE,
                 TestDataHolder.generateMonitoringTaskConfig(true, 60000, 2));
     }
 
@@ -155,63 +156,8 @@ public class DeviceTaskManagerServiceTest {
         Mockito.doThrow(new TaskException("Unable to register task", TaskException.Code.UNKNOWN)).when(taskManager)
                 .registerTask(Mockito.any(TaskInfo.class));
         DeviceManagementDataHolder.getInstance().setTaskService(taskService);
-        this.deviceTaskManagerService.startTask(TestDataHolder.TEST_DEVICE_TYPE,
+        this.deviceTaskManagerService.startTasks(TestDataHolder.TEST_DEVICE_TYPE,
                 TestDataHolder.generateMonitoringTaskConfig(true, 60000, 2));
     }
 
-    @Test(groups = "Device Task Manager Service Test Group", dependsOnMethods = "testUpdateUnscheduledTask",
-            expectedExceptions = {DeviceMgtTaskException.class })
-    public void testUpdateTaskWhenFailedToRegisterTask()
-            throws DeviceMgtTaskException, TaskException {
-        TestTaskServiceImpl taskService = new TestTaskServiceImpl();
-        TaskManager taskManager = Mockito.mock(TestTaskManagerImpl.class);
-        taskService.setTaskManager(taskManager);
-        Mockito.doThrow(new TaskException("Unable to register task", TaskException.Code.UNKNOWN)).when(taskManager)
-                .registerTask(Mockito.any(TaskInfo.class));
-        DeviceManagementDataHolder.getInstance().setTaskService(taskService);
-        this.deviceTaskManagerService.updateTask(TestDataHolder.TEST_DEVICE_TYPE,
-                TestDataHolder.generateMonitoringTaskConfig(true, 60000, 2));
-    }
-
-    @Test(groups = "Device Task Manager Service Test Group", dependsOnMethods = "testUpdateUnscheduledTask",
-            expectedExceptions = {DeviceMgtTaskException.class })
-    public void testUpdateTaskWhenFailedToRescheduleTask()
-            throws DeviceMgtTaskException, TaskException {
-        TestTaskServiceImpl taskService = new TestTaskServiceImpl();
-        TaskManager taskManager = Mockito.mock(TestTaskManagerImpl.class);
-        taskService.setTaskManager(taskManager);
-        Mockito.doThrow(new TaskException("Unable to reschedule task", TaskException.Code.UNKNOWN)).when(taskManager)
-                .rescheduleTask(Mockito.any(String.class));
-        DeviceManagementDataHolder.getInstance().setTaskService(taskService);
-        this.deviceTaskManagerService.updateTask(TestDataHolder.TEST_DEVICE_TYPE,
-                TestDataHolder.generateMonitoringTaskConfig(true, 60000, 2));
-    }
-
-    @Test(groups = "Device Task Manager Service Test Group", dependsOnMethods = "testUpdateUnscheduledTask",
-            expectedExceptions = {DeviceMgtTaskException.class })
-    public void testUpdateTaskWhenFailedToDeleteTask()
-            throws DeviceMgtTaskException, TaskException {
-        TestTaskServiceImpl taskService = new TestTaskServiceImpl();
-        TaskManager taskManager = Mockito.mock(TestTaskManagerImpl.class);
-        taskService.setTaskManager(taskManager);
-        Mockito.doThrow(new TaskException("Unable to delete task", TaskException.Code.UNKNOWN)).when(taskManager)
-                .deleteTask(Mockito.any(String.class));
-        DeviceManagementDataHolder.getInstance().setTaskService(taskService);
-        this.deviceTaskManagerService.updateTask(TestDataHolder.TEST_DEVICE_TYPE,
-                TestDataHolder.generateMonitoringTaskConfig(true, 60000, 2));
-    }
-
-    @Test(groups = "Device Task Manager Service Test Group", dependsOnMethods = "testUpdateUnscheduledTask",
-            expectedExceptions = {DeviceMgtTaskException.class })
-    public void testStopTaskWhenFailedToDeleteTask()
-            throws DeviceMgtTaskException, TaskException {
-        TestTaskServiceImpl taskService = new TestTaskServiceImpl();
-        TaskManager taskManager = Mockito.mock(TestTaskManagerImpl.class);
-        taskService.setTaskManager(taskManager);
-        Mockito.doThrow(new TaskException("Unable to delete task", TaskException.Code.UNKNOWN)).when(taskManager)
-                .deleteTask(Mockito.any(String.class));
-        DeviceManagementDataHolder.getInstance().setTaskService(taskService);
-        this.deviceTaskManagerService.stopTask(TestDataHolder.TEST_DEVICE_TYPE,
-                TestDataHolder.generateMonitoringTaskConfig(true, 60000, 2));
-    }
 }

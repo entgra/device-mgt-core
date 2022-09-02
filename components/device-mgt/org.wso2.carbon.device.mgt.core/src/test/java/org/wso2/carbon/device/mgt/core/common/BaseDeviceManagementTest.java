@@ -37,6 +37,7 @@ import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOFactory;
 import org.wso2.carbon.device.mgt.core.dao.GroupManagementDAOFactory;
 import org.wso2.carbon.device.mgt.core.internal.DeviceManagementDataHolder;
 import org.wso2.carbon.device.mgt.core.internal.DeviceManagementServiceComponent;
+import org.wso2.carbon.device.mgt.core.metadata.mgt.MonitoringOperationTaskConfigManagementServiceImpl;
 import org.wso2.carbon.device.mgt.core.metadata.mgt.dao.MetadataManagementDAOFactory;
 import org.wso2.carbon.device.mgt.core.mock.MockDataSource;
 import org.wso2.carbon.device.mgt.core.notification.mgt.dao.NotificationManagementDAOFactory;
@@ -102,6 +103,7 @@ public abstract class BaseDeviceManagementTest {
         DeviceManagementDataHolder.getInstance().setDeviceTaskManagerService(null);
         DeviceManagementDataHolder.getInstance().setEmailSenderService(new TestEmailSenderService());
         DeviceManagementDataHolder.getInstance().setConfigurationContextService(getConfigContextService());
+        DeviceManagementDataHolder.getInstance().setMonitoringOperationTaskConfigManagementService(new MonitoringOperationTaskConfigManagementServiceImpl());
     }
 
     private RegistryService getRegistryService() throws RegistryException {

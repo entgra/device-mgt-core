@@ -74,6 +74,7 @@ import org.wso2.carbon.device.mgt.common.geo.service.GeoLocationProviderService;
 import org.wso2.carbon.device.mgt.common.group.mgt.DeviceGroup;
 import org.wso2.carbon.device.mgt.common.group.mgt.GroupManagementException;
 import org.wso2.carbon.device.mgt.common.metadata.mgt.MetadataManagementService;
+import org.wso2.carbon.device.mgt.common.metadata.mgt.MonitoringOperationTaskConfigManagementService;
 import org.wso2.carbon.device.mgt.common.notification.mgt.NotificationManagementService;
 import org.wso2.carbon.device.mgt.common.operation.mgt.Operation;
 import org.wso2.carbon.device.mgt.common.report.mgt.ReportManagementService;
@@ -178,6 +179,8 @@ public class DeviceMgtAPIUtils {
     private static volatile SubscriptionManager subscriptionManager;
     private static volatile ApplicationManager applicationManager;
 
+    private static volatile MonitoringOperationTaskConfigManagementService monitoringOperationTaskConfigManagementService;
+
     static {
         String keyStorePassword = ServerConfiguration.getInstance().getFirstProperty("Security.KeyStore.Password");
         String trustStorePassword = ServerConfiguration.getInstance().getFirstProperty(
@@ -254,6 +257,24 @@ public class DeviceMgtAPIUtils {
             }
         }
         return applicationManager;
+    }
+
+    public static MonitoringOperationTaskConfigManagementService getMonitoringOperationTaskConfigManagementService() {
+        if (monitoringOperationTaskConfigManagementService == null) {
+            synchronized (DeviceMgtAPIUtils.class) {
+                if (monitoringOperationTaskConfigManagementService == null) {
+                    PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+                    monitoringOperationTaskConfigManagementService = (MonitoringOperationTaskConfigManagementService) ctx.
+                                    getOSGiService(MonitoringOperationTaskConfigManagementService.class, null);
+                    if (monitoringOperationTaskConfigManagementService == null) {
+                        String msg = "Subscription Manager service has not initialized.";
+                        log.error(msg);
+                        throw new IllegalStateException(msg);
+                    }
+                }
+            }
+        }
+        return monitoringOperationTaskConfigManagementService;
     }
 
     public static void scheduleTaskService(int notifierFrequency) {
@@ -1029,14 +1050,15 @@ public class DeviceMgtAPIUtils {
             // Get the location history snapshots for the given period
             List<DeviceLocationHistorySnapshot> deviceLocationHistorySnapshots = dms.getDeviceLocationInfo(deviceIdentifier, from, to);
 
-            OperationMonitoringTaskConfig operationMonitoringTaskConfig = dms.getDeviceMonitoringConfig(deviceType);
-            int taskFrequency = operationMonitoringTaskConfig.getFrequency();
+            OperationMonitoringTaskConfig operationMonitoringTaskConfig = dms.getOperationMonitoringTaskConfig(deviceType);
+            int taskFrequency = 0;
             int operationRecurrentTimes = 0;
 
-            List<MonitoringOperation> monitoringOperations = operationMonitoringTaskConfig.getMonitoringOperation();
+            List<MonitoringOperation> monitoringOperations = operationMonitoringTaskConfig.getEnabledMonitoringOperations();
             for (MonitoringOperation monitoringOperation : monitoringOperations) {
                 if (monitoringOperation.getTaskName().equals("DEVICE_LOCATION")) {
                     operationRecurrentTimes = monitoringOperation.getRecurrentTimes();
+                    taskFrequency = monitoringOperation.getFrequency();
                     break;
                 }
             }

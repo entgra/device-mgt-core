@@ -142,7 +142,6 @@ public class DeviceTypeManagerService implements DeviceManagementService {
         TaskConfiguration taskConfiguration = deviceTypeConfiguration.getTaskConfiguration();
         if (taskConfiguration != null) {
             operationMonitoringConfigs.setEnabled(taskConfiguration.isEnabled());
-            operationMonitoringConfigs.setFrequency(taskConfiguration.getFrequency());
             List<TaskConfiguration.Operation> ops = taskConfiguration.getOperations();
             if (ops != null && !ops.isEmpty()) {
                 monitoringOperations = new ArrayList<>();
@@ -151,13 +150,13 @@ public class DeviceTypeManagerService implements DeviceManagementService {
                     monitoringOperation.setTaskName(op.getOperationName());
                     monitoringOperation.setRecurrentTimes(op.getRecurrency());
                     monitoringOperation.setResponsePersistence(op.getResponsePersistence());
+                    monitoringOperation.setEnabled(op.isEnabled());
                     monitoringOperations.add(monitoringOperation);
                 }
             }
             operationMonitoringConfigs.setMonitoringOperation(monitoringOperations);
         }
     }
-
     @Override
     public void init() throws DeviceManagementException {
     }

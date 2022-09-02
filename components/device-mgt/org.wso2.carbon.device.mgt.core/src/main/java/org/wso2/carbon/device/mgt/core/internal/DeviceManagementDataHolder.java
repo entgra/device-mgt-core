@@ -26,6 +26,7 @@ import org.wso2.carbon.device.mgt.common.authorization.DeviceAccessAuthorization
 import org.wso2.carbon.device.mgt.common.event.config.EventConfigurationProviderService;
 import org.wso2.carbon.device.mgt.common.geo.service.GeoLocationProviderService;
 import org.wso2.carbon.device.mgt.common.license.mgt.LicenseManager;
+import org.wso2.carbon.device.mgt.common.metadata.mgt.MonitoringOperationTaskConfigManagementService;
 import org.wso2.carbon.device.mgt.common.operation.mgt.OperationManager;
 import org.wso2.carbon.device.mgt.common.spi.DeviceTypeGeneratorService;
 import org.wso2.carbon.device.mgt.core.app.mgt.config.AppManagementConfig;
@@ -83,6 +84,8 @@ public class DeviceManagementDataHolder {
     private GeoFenceEventOperationManager geoFenceEventOperationManager;
     private ExecutorService eventConfigExecutors;
     private OperationTimeoutTaskManagerService operationTimeoutTaskManagerService;
+
+    private MonitoringOperationTaskConfigManagementService monitoringOperationTaskConfigManagementService;
 
     private final Map<DeviceType, DeviceStatusTaskPluginConfig> deviceStatusTaskPluginConfigs = Collections.synchronizedMap(
             new HashMap<>());
@@ -348,5 +351,13 @@ public class DeviceManagementDataHolder {
     public void setOperationTimeoutTaskManagerService(
             OperationTimeoutTaskManagerService operationTimeoutTaskManagerService) {
         this.operationTimeoutTaskManagerService = operationTimeoutTaskManagerService;
+    }
+
+    public MonitoringOperationTaskConfigManagementService getMonitoringOperationTaskConfigManagementService() {
+        return monitoringOperationTaskConfigManagementService;
+    }
+
+    public void setMonitoringOperationTaskConfigManagementService(MonitoringOperationTaskConfigManagementService monitoringOperationTaskConfigManagementService) {
+        this.monitoringOperationTaskConfigManagementService = monitoringOperationTaskConfigManagementService;
     }
 }

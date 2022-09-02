@@ -32,13 +32,6 @@ public interface DeviceTaskManager {
 //    List<MonitoringOperation> getOperationList(String deviceType)
 //            throws DeviceMgtTaskException;
 
-    /**
-     * This method will take the monitoring frequency.
-     * @return - integer
-     * @throws DeviceMgtTaskException
-     */
-    int getTaskFrequency() throws DeviceMgtTaskException;
-
 //    /**
 //     * This method will return the task clazz from configurations.
 //     * @return - Fully qualified class name.
@@ -58,7 +51,7 @@ public interface DeviceTaskManager {
      * This method will add the operations to devices
      * @throws DeviceMgtTaskException
      */
-    void addOperations(DynamicTaskContext dynamicTaskContext) throws DeviceMgtTaskException;
+    void addMonitoringOperation(DynamicTaskContext dynamicTaskContext) throws DeviceMgtTaskException;
 
 
 //    /**

@@ -31,6 +31,7 @@ import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.geo.service.GeoLocationProviderService;
 import org.wso2.carbon.device.mgt.common.group.mgt.GroupManagementException;
 import org.wso2.carbon.device.mgt.common.metadata.mgt.MetadataManagementService;
+import org.wso2.carbon.device.mgt.common.metadata.mgt.MonitoringOperationTaskConfigManagementService;
 import org.wso2.carbon.device.mgt.common.notification.mgt.NotificationManagementService;
 import org.wso2.carbon.device.mgt.common.operation.mgt.OperationManagementException;
 import org.wso2.carbon.device.mgt.common.operation.mgt.OperationManager;
@@ -58,6 +59,7 @@ import org.wso2.carbon.device.mgt.core.device.details.mgt.impl.DeviceInformation
 import org.wso2.carbon.device.mgt.core.event.config.EventConfigurationProviderServiceImpl;
 import org.wso2.carbon.device.mgt.core.geo.service.GeoLocationProviderServiceImpl;
 import org.wso2.carbon.device.mgt.core.metadata.mgt.MetadataManagementServiceImpl;
+import org.wso2.carbon.device.mgt.core.metadata.mgt.MonitoringOperationTaskConfigManagementServiceImpl;
 import org.wso2.carbon.device.mgt.core.metadata.mgt.dao.MetadataManagementDAOFactory;
 import org.wso2.carbon.device.mgt.core.notification.mgt.NotificationManagementServiceImpl;
 import org.wso2.carbon.device.mgt.core.notification.mgt.dao.NotificationManagementDAOFactory;
@@ -350,6 +352,13 @@ public class DeviceManagementServiceComponent {
         /* Registering Metadata Service */
         MetadataManagementService metadataManagementService = new MetadataManagementServiceImpl();
         bundleContext.registerService(MetadataManagementService.class.getName(), metadataManagementService, null);
+
+        /* Registering Monitoring Operation Management Service */
+        MonitoringOperationTaskConfigManagementService monitoringOperationTaskConfigManagementService =
+                new MonitoringOperationTaskConfigManagementServiceImpl();
+        DeviceManagementDataHolder.getInstance().setMonitoringOperationTaskConfigManagementService(monitoringOperationTaskConfigManagementService);
+        bundleContext.registerService(MonitoringOperationTaskConfigManagementService.class.getName(),
+                monitoringOperationTaskConfigManagementService, null);
 
         /* Registering Event Configuration Service */
         EventConfigurationProviderService eventConfigurationService = new EventConfigurationProviderServiceImpl();
