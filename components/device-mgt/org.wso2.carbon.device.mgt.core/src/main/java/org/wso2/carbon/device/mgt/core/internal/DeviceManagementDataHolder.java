@@ -42,6 +42,7 @@ import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
 import org.wso2.carbon.device.mgt.core.service.GroupManagementProviderService;
 import org.wso2.carbon.device.mgt.core.status.task.DeviceStatusTaskManagerService;
 import org.wso2.carbon.device.mgt.core.task.DeviceTaskManagerService;
+import org.wso2.carbon.device.mgt.core.traccar.api.service.DeviceAPIClientService;
 import org.wso2.carbon.email.sender.core.service.EmailSenderService;
 import org.wso2.carbon.ntask.core.service.TaskService;
 import org.wso2.carbon.registry.core.service.RegistryService;
@@ -84,6 +85,7 @@ public class DeviceManagementDataHolder {
     private GeoFenceEventOperationManager geoFenceEventOperationManager;
     private ExecutorService eventConfigExecutors;
     private OperationTimeoutTaskManagerService operationTimeoutTaskManagerService;
+    private DeviceAPIClientService deviceAPIClientService;
 
     private DeviceLifecycleStateManager deviceLifecycleStateManager;
     private final Map<DeviceType, DeviceStatusTaskPluginConfig> deviceStatusTaskPluginConfigs = Collections.synchronizedMap(
@@ -151,6 +153,7 @@ public class DeviceManagementDataHolder {
     public void setRegistryService(RegistryService registryService) {
         this.registryService = registryService;
     }
+
 
     public LicenseManager getLicenseManager() {
         return licenseManager;
@@ -311,6 +314,7 @@ public class DeviceManagementDataHolder {
         this.heartBeatService = heartBeatService;
     }
 
+
     public void setEventConfigurationProviderService(EventConfigurationProviderService eventConfigurationService) {
         this.eventConfigurationService = eventConfigurationService;
     }
@@ -358,5 +362,13 @@ public class DeviceManagementDataHolder {
 
     public void setDeviceLifecycleStateManager(DeviceLifecycleStateManager deviceLifecycleStateManager) {
         this.deviceLifecycleStateManager = deviceLifecycleStateManager;
+    }
+
+    public DeviceAPIClientService getDeviceAPIClientService() {
+        return deviceAPIClientService;
+    }
+
+    public void setDeviceAPIClientService(DeviceAPIClientService deviceAPIClientService) {
+        this.deviceAPIClientService = deviceAPIClientService;
     }
 }
