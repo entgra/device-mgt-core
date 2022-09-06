@@ -45,6 +45,7 @@ import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
 import org.wso2.carbon.device.mgt.common.LifecycleStateDevice;
 import org.wso2.carbon.device.mgt.common.MDMAppConstants;
 import org.wso2.carbon.device.mgt.common.PaginationRequest;
+import org.wso2.carbon.device.mgt.common.PaginationResult;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.ConfigurationEntry;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.ConfigurationManagementException;
 import org.wso2.carbon.device.mgt.common.configuration.mgt.PlatformConfiguration;
@@ -59,6 +60,7 @@ import org.wso2.carbon.device.mgt.common.exceptions.UserNotFoundException;
 import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
 import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceList;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
+import org.wso2.carbon.device.mgt.jaxrs.beans.LifecycleStateDeviceList;
 import org.wso2.carbon.device.mgt.jaxrs.service.api.admin.DeviceManagementAdminService;
 import org.wso2.carbon.device.mgt.jaxrs.service.impl.util.RequestValidationUtil;
 import org.wso2.carbon.device.mgt.jaxrs.util.Constants;
@@ -293,16 +295,25 @@ public class DeviceManagementAdminServiceImpl implements DeviceManagementAdminSe
      *
      * @param type     Device type
      * @param deviceId Device id
+     * @param offset is starting number of the record which we want tot get
+     * @param limit is the number of records we want starting from offset
      * @return lifecycle history
      */
+
     @Override
     @GET
-    @Path("/{type}/{deviceId}/device-lifecycle")
+    @Path("/{type}/{deviceId}/lifecycle")
     public Response getDeviceLifecycle(
             @PathParam("type") String type,
-            @PathParam("deviceId") String deviceId) {
+            @PathParam("deviceId") String deviceId,
+            @QueryParam("offset") int offset,
+            @QueryParam("limit") int limit) {
 
         try {
+            RequestValidationUtil.validatePaginationParameters(offset, limit);
+            PaginationRequest request = new PaginationRequest(offset, limit);
+            PaginationResult result;
+
             RequestValidationUtil.validateDeviceIdentifier(type, deviceId);
             DeviceManagementProviderService deviceManagementProviderService =
                     DeviceMgtAPIUtils.getDeviceManagementService();
@@ -311,9 +322,12 @@ public class DeviceManagementAdminServiceImpl implements DeviceManagementAdminSe
             if (device == null) {
                 return Response.status(Response.Status.NOT_FOUND).build();
             }
-            List<LifecycleStateDevice> deviceLifecycle = DeviceMgtAPIUtils.getDeviceStateManagementService()
-                    .getDeviceLifecycleHistory(device);
-            return Response.status(Response.Status.OK).entity(deviceLifecycle).build();
+            LifecycleStateDeviceList states = new LifecycleStateDeviceList();
+            result = DeviceMgtAPIUtils.getDeviceStateManagementService()
+                    .getDeviceLifecycleHistory(request, device);
+            states.setLifecycleStates((List<LifecycleStateDevice>) result.getData());
+            states.setCount(result.getRecordsTotal());
+            return Response.status(Response.Status.OK).entity(states).build();
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while getting the device '" + deviceId + "'";
             log.error(msg);

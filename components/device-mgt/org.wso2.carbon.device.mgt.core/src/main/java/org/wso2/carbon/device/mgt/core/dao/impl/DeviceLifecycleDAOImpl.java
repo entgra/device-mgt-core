@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.device.mgt.common.LifecycleStateDevice;
+import org.wso2.carbon.device.mgt.common.PaginationRequest;
 import org.wso2.carbon.device.mgt.core.dao.DeviceLifecycleDAO;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOException;
 import org.wso2.carbon.device.mgt.core.dao.DeviceManagementDAOFactory;
@@ -76,7 +77,7 @@ public class DeviceLifecycleDAOImpl implements DeviceLifecycleDAO {
     }
 
     @Override
-    public List<LifecycleStateDevice> getDeviceLifecycle(int id) throws DeviceManagementDAOException {
+    public List<LifecycleStateDevice> getDeviceLifecycle(PaginationRequest request, int id) throws DeviceManagementDAOException {
         List<LifecycleStateDevice> result = new ArrayList<>();
         Connection conn;
         PreparedStatement stmt = null;
@@ -84,10 +85,12 @@ public class DeviceLifecycleDAOImpl implements DeviceLifecycleDAO {
         try {
             conn = this.getConnection();
             String sql = "SELECT DEVICE_ID, STATUS, UPDATE_TIME, CHANGED_BY, PREVIOUS_STATUS FROM DM_DEVICE_STATUS " +
-                    "WHERE DEVICE_ID = ?";
+                    "WHERE DEVICE_ID = ? LIMIT ?,?";
 
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, id);
+            stmt.setInt(2, request.getStartIndex());
+            stmt.setInt(3, request.getRowCount());
             rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -108,5 +111,33 @@ public class DeviceLifecycleDAOImpl implements DeviceLifecycleDAO {
             DeviceManagementDAOUtil.cleanupResources(stmt, rs);
         }
         return result;
+    }
+
+    @Override
+    public int getLifecycleCountByDevice(int id) throws DeviceManagementDAOException {
+
+        Connection conn;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        int lifecycleCount = 0;
+        try {
+            conn = this.getConnection();
+            String sql = "SELECT COUNT(ID) AS STATES_COUNT FROM DM_DEVICE_STATUS WHERE DEVICE_ID = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, id);
+            rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                lifecycleCount = rs.getInt("STATES_COUNT");
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while getiing the device lifecycle which has " + id + " deviceId";
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        } finally {
+            DeviceManagementDAOUtil.cleanupResources(stmt, rs);
+        }
+
+        return lifecycleCount;
     }
 }

@@ -22,6 +22,8 @@ package org.wso2.carbon.device.mgt.core.service;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
 import org.wso2.carbon.device.mgt.common.LifecycleStateDevice;
+import org.wso2.carbon.device.mgt.common.PaginationRequest;
+import org.wso2.carbon.device.mgt.common.PaginationResult;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceStatusException;
 import org.wso2.carbon.device.mgt.common.exceptions.InvalidStatusException;
 
@@ -46,8 +48,9 @@ public interface DeviceStateManagementService {
    /**
     * Get the lifecycle history of the relevent device
     *
-    * @param device Device
+    * @param request is stored offset and limit
+    * @param device device
     * @return List of LifecycleStateDevice
     */
-   List<LifecycleStateDevice> getDeviceLifecycleHistory(Device device) throws DeviceStatusException;
+   PaginationResult getDeviceLifecycleHistory(PaginationRequest request, Device device) throws DeviceStatusException;
 }

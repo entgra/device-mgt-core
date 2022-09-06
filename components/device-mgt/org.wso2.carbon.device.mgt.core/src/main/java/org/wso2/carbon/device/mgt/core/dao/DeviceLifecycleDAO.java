@@ -21,6 +21,7 @@ package org.wso2.carbon.device.mgt.core.dao;
 
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
 import org.wso2.carbon.device.mgt.common.LifecycleStateDevice;
+import org.wso2.carbon.device.mgt.common.PaginationRequest;
 
 import java.util.List;
 
@@ -41,8 +42,11 @@ public interface DeviceLifecycleDAO {
     /**
      * Get the lifecycle history of the device
      *
+     * @param request  PaginationRequest object holding the data for pagination and search data.
      * @param id id of the device
      * @return List of LifecycleStateDevice
      */
-    List<LifecycleStateDevice> getDeviceLifecycle(int id) throws DeviceManagementDAOException;
+    List<LifecycleStateDevice> getDeviceLifecycle(PaginationRequest request, int id) throws DeviceManagementDAOException;
+
+    int getLifecycleCountByDevice(int id) throws DeviceManagementDAOException;
 }

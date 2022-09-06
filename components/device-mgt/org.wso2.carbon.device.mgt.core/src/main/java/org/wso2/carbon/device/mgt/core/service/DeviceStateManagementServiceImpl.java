@@ -41,6 +41,8 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
 import org.wso2.carbon.device.mgt.common.LifecycleStateDevice;
+import org.wso2.carbon.device.mgt.common.PaginationRequest;
+import org.wso2.carbon.device.mgt.common.PaginationResult;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.exceptions.DeviceStatusException;
 import org.wso2.carbon.device.mgt.common.exceptions.IllegalTransactionStateException;
@@ -105,12 +107,16 @@ public class DeviceStateManagementServiceImpl implements DeviceStateManagementSe
     }
 
     @Override
-    public List<LifecycleStateDevice> getDeviceLifecycleHistory(Device device) throws DeviceStatusException {
+    public PaginationResult getDeviceLifecycleHistory(PaginationRequest request, Device device)
+            throws DeviceStatusException {
         int id = device.getId();
+        PaginationResult result = new PaginationResult();
+        List<LifecycleStateDevice> listLifecycle;
+        int lifecycleStateCount;
         try {
             DeviceManagementDAOFactory.openConnection();
-            List<LifecycleStateDevice> listLifecycle = deviceLifecycleDAO.getDeviceLifecycle(id);
-            return listLifecycle;
+            listLifecycle = deviceLifecycleDAO.getDeviceLifecycle(request, id);
+            lifecycleStateCount = deviceLifecycleDAO.getLifecycleCountByDevice(id);
         } catch (DeviceManagementDAOException e) {
             String msg = "Error occurred while getting lifecycle history";
             log.error(msg, e);
@@ -122,5 +128,8 @@ public class DeviceStateManagementServiceImpl implements DeviceStateManagementSe
         } finally {
             DeviceManagementDAOFactory.closeConnection();
         }
+        result.setData(listLifecycle);
+        result.setRecordsTotal(lifecycleStateCount);
+        return result;
     }
 }

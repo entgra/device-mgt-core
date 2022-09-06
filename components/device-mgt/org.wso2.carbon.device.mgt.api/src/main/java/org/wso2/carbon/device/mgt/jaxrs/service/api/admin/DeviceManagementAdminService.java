@@ -489,7 +489,7 @@ public interface DeviceManagementAdminService {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{type}/{deviceId}/device-lifecycle")
+    @Path("/{type}/{deviceId}/lifecycle")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
@@ -553,6 +553,20 @@ public interface DeviceManagementAdminService {
                     required = true)
             @PathParam("type")
             @Size(max = 45)
-            String type) throws DeviceManagementException;
+            String type,
+            @ApiParam(
+                    name = "offset",
+                    value = "The starting pagination index for the complete list of qualified items.",
+                    required = false,
+                    defaultValue = "0")
+            @QueryParam("offset")
+            int offset,
+            @ApiParam(
+                    name = "limit",
+                    value = "Provide how many device details you require from the starting pagination index/offset.",
+                    required = false,
+                    defaultValue = "5")
+            @QueryParam("limit")
+            int limit) throws DeviceManagementException;
 
 }
