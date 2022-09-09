@@ -18,15 +18,9 @@
  */
 package org.wso2.carbon.apimgt.webapp.publisher;
 
-import com.ctc.wstx.util.StringUtil;
-        import graphql.execution.Async;
-        import org.wso2.carbon.apimgt.api.model.Mediation;
-        import org.wso2.carbon.apimgt.impl.definitions.AsyncApiParser;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.apimgt.impl.utils.APIUtil;
-import org.wso2.carbon.apimgt.webapp.publisher.dto.ApiScope;
-import org.wso2.carbon.apimgt.webapp.publisher.dto.ApiUriTemplate;
 import org.wso2.carbon.apimgt.api.APIManagementException;
 import org.wso2.carbon.apimgt.api.APIProvider;
 import org.wso2.carbon.apimgt.api.FaultGatewaysException;
@@ -35,24 +29,38 @@ import org.wso2.carbon.apimgt.api.model.APIIdentifier;
 import org.wso2.carbon.apimgt.api.model.APIRevision;
 import org.wso2.carbon.apimgt.api.model.APIRevisionDeployment;
 import org.wso2.carbon.apimgt.api.model.CORSConfiguration;
+import org.wso2.carbon.apimgt.api.model.Mediation;
 import org.wso2.carbon.apimgt.api.model.Scope;
 import org.wso2.carbon.apimgt.api.model.Tier;
 import org.wso2.carbon.apimgt.api.model.URITemplate;
 import org.wso2.carbon.apimgt.impl.APIConstants;
 import org.wso2.carbon.apimgt.impl.APIManagerFactory;
+import org.wso2.carbon.apimgt.impl.definitions.AsyncApiParser;
+import org.wso2.carbon.apimgt.impl.utils.APIUtil;
 import org.wso2.carbon.apimgt.webapp.publisher.config.WebappPublisherConfig;
+import org.wso2.carbon.apimgt.webapp.publisher.dto.ApiScope;
+import org.wso2.carbon.apimgt.webapp.publisher.dto.ApiUriTemplate;
 import org.wso2.carbon.apimgt.webapp.publisher.exception.APIManagerPublisherException;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.user.core.tenant.Tenant;
 import org.wso2.carbon.user.core.tenant.TenantSearchResult;
+import org.wso2.carbon.utils.CarbonUtils;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
+import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.DirectoryIteratorException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -298,6 +306,93 @@ public class APIPublisherServiceImpl implements APIPublisherService {
             String msg = "Error occurred while retrieving admin user from tenant user realm";
             log.error(msg, e);
             throw new APIManagerPublisherException(e);
+        }
+    }
+
+    @Override
+    public void updateScopeRoleMapping()
+            throws APIManagerPublisherException {
+        // todo: This logic has written assuming all the scopes are now work as shared scopes
+        WebappPublisherConfig config = WebappPublisherConfig.getInstance();
+        List<String> tenants = new ArrayList<>(Collections.singletonList(APIConstants.SUPER_TENANT_DOMAIN));
+        tenants.addAll(config.getTenants().getTenant());
+        try {
+            for (String tenantDomain : tenants) {
+                PrivilegedCarbonContext.startTenantFlow();
+                PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(tenantDomain, true);
+                APIProvider apiProvider = API_MANAGER_FACTORY.getAPIProvider(MultitenantUtils.getTenantAwareUsername(
+                        PrivilegedCarbonContext.getThreadLocalCarbonContext().getUserRealm().getRealmConfiguration()
+                                .getAdminUserName()));
+
+                try {
+                    String fileName =
+                            CarbonUtils.getCarbonConfigDirPath() + File.separator + "etc"
+                            + File.separator + tenantDomain + ".csv";
+                    if (Files.exists(Paths.get(fileName))) {
+                        BufferedReader br = new BufferedReader(new FileReader(fileName));
+                        int lineNumber = 0;
+                        Map<Integer, String> roles = new HashMap<>();
+                        String line = "";
+                        String splitBy = ",";
+                        while ((line = br.readLine()) != null)   //returns a Boolean value
+                        {
+                            lineNumber++;
+                            String[] scopeMapping = line.split(splitBy);    // use comma as separator
+                            if (lineNumber == 1) { // skip titles
+                                for (int i = 0; i < scopeMapping.length; i++) {
+                                    if (i > 3) {
+                                        roles.put(i, scopeMapping[i]); // add roles to the map
+                                    }
+                                }
+                                continue;
+                            }
+
+                            Scope scope = new Scope();
+                            scope.setName(
+                                    scopeMapping[0] != null ? StringUtils.trim(scopeMapping[0]) : StringUtils.EMPTY);
+                            scope.setDescription(
+                                    scopeMapping[1] != null ? StringUtils.trim(scopeMapping[1]) : StringUtils.EMPTY);
+                            scope.setKey(
+                                    scopeMapping[2] != null ? StringUtils.trim(scopeMapping[2]) : StringUtils.EMPTY);
+                            //                        scope.setPermissions(
+                            //                                scopeMapping[3] != null ? StringUtils.trim(scopeMapping[3]) : StringUtils.EMPTY);
+
+                            String roleString = "";
+                            for (int i = 4; i < scopeMapping.length; i++) {
+                                if (scopeMapping[i] != null && StringUtils.trim(scopeMapping[i]).equals("Yes")) {
+                                    roleString = roleString + "," + roles.get(i);
+                                }
+                            }
+                            if (roleString.length() > 1) {
+                                roleString = roleString.substring(1); // remove first , (comma)
+                            }
+                            scope.setRoles(roleString);
+
+                            if (apiProvider.isSharedScopeNameExists(scope.getKey(), tenantDomain)) {
+                                apiProvider.updateSharedScope(scope, tenantDomain);
+                            } else {
+                                // todo: come to this level means, that scope is removed from API, but haven't removed from the scope-role-permission-mappings list
+                                if (log.isDebugEnabled()) {
+                                    log.debug(scope.getKey() + " not available as shared scope");
+                                }
+                            }
+                        }
+                    }
+                } catch (IOException | DirectoryIteratorException ex) {
+                    log.error("failed to read scopes from file.", ex);
+                }
+
+            }
+        } catch (UserStoreException e) {
+            String msg = "Error occurred while reading tenant admin username";
+            log.error(msg, e);
+            throw new APIManagerPublisherException(e);
+        } catch (APIManagementException e) {
+            String msg = "Error occurred while loading api provider";
+            log.error(msg, e);
+            throw new APIManagerPublisherException(e);
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
         }
     }
 
