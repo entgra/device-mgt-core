@@ -403,6 +403,9 @@ public class TraccarClientImpl implements TraccarClient {
                     authorizedKey(HttpReportingUtil.trackerUser(), HttpReportingUtil.trackerPassword()),
                     serverUrl(HttpReportingUtil.trackerServer())));
             String result = res.get();
+            log.info("---------result--------");
+            log.info("---------result--------" + res.isDone());
+            log.info("---------result--------  " + result);
             if (result.charAt(0) == '{') {
                 JSONObject obj = new JSONObject(result);
                 if (obj.has("id")) {
@@ -581,8 +584,9 @@ public class TraccarClientImpl implements TraccarClient {
                 authorizedKey(HttpReportingUtil.trackerUser(), HttpReportingUtil.trackerPassword()),
                 serverUrl(HttpReportingUtil.trackerServer())));
         String result = res.get();
-        log.info("---------result--------");
-        if (result.charAt(0) == '{') {
+//        log.info(result);
+//        log.info("---------result--------");
+        if (res.isDone() && result.charAt(0) == '{') {
             JSONObject obj = new JSONObject(result);
             if (obj.has("id")) {
                 int traccarGroupId = obj.getInt("id");
