@@ -179,7 +179,7 @@ public class APIPublisherUtil {
                         "which is 'https'");
             }
             transports = "https,http";
-            if ("ws".equals(apiDef.getEndpointType())) {
+            if ("WS".equals(apiDef.getEndpointType())) {
                 transports = "wss,ws";
             }
         }
