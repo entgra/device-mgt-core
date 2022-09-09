@@ -532,12 +532,15 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                     for (Device device : devices.getList()) {
                         TrackerDeviceInfo trackerDevice = DeviceAPIClientServiceImpl
                                 .getTrackerDevice(device.getId(), tenantId);
-                        int traccarDeviceId = trackerDevice.getTraccarDeviceId();
-                        boolean getPermission = DeviceAPIClientServiceImpl.getUserIdofPermissionByDeviceIdNUserId(traccarDeviceId, userId);
-                        traccarValidIdList.add(traccarDeviceId);
-                        if (!getPermission) {
-                            DeviceAPIClientServiceImpl.addTrackerUserDevicePermission(userId, traccarDeviceId);
+                        if (trackerDevice != null) {
+                            int traccarDeviceId = trackerDevice.getTraccarDeviceId();
+                            boolean getPermission = DeviceAPIClientServiceImpl.getUserIdofPermissionByDeviceIdNUserId(traccarDeviceId, userId);
+                            traccarValidIdList.add(traccarDeviceId);
+                            if (!getPermission) {
+                                DeviceAPIClientServiceImpl.addTrackerUserDevicePermission(userId, traccarDeviceId);
+                            }
                         }
+
                     }
                     //Remove necessary
                     List<TrackerPermissionInfo> getAllUserDevices =
@@ -569,6 +572,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                     log.error(msg, e);
                     return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
                 }
+
                 /*Get Device Id List*/
                 return Response.status(Response.Status.OK).entity(obj.getString("token")).build();
             }
