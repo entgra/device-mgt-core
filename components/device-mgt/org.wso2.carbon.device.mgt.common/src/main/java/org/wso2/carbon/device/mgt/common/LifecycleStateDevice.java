@@ -30,19 +30,17 @@ public class LifecycleStateDevice {
     private String previousStatus;
     private String updatedBy;
     private Date updatedAt;
-    private int StatusId;
 
     public LifecycleStateDevice() {
     }
 
     public LifecycleStateDevice(int deviceId, String currentStatus, String previousStatus, String updatedBy,
-                                Date updatedAt, int StatusId) {
+                                Date updatedAt) {
         this.deviceId = deviceId;
         this.currentStatus = currentStatus;
         this.previousStatus = previousStatus;
         this.updatedBy = updatedBy;
         this.updatedAt = updatedAt;
-        this.StatusId = StatusId;
     }
 
     public String getCurrentStatus() {
@@ -83,14 +81,6 @@ public class LifecycleStateDevice {
 
     public void setDeviceId(int deviceId) {
         this.deviceId = deviceId;
-    }
-
-    public int getStatusId() {
-        return StatusId;
-    }
-
-    public void setStatusId(int statusId) {
-        StatusId = statusId;
     }
 
     @Override

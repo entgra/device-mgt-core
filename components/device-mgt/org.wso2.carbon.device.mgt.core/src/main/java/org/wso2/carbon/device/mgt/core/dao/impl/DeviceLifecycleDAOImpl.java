@@ -84,7 +84,7 @@ public class DeviceLifecycleDAOImpl implements DeviceLifecycleDAO {
         ResultSet rs = null;
         try {
             conn = this.getConnection();
-            String sql = "SELECT DEVICE_ID, STATUS, UPDATE_TIME, CHANGED_BY, PREVIOUS_STATUS, ID AS STATUSID FROM " +
+            String sql = "SELECT DEVICE_ID, STATUS, UPDATE_TIME, CHANGED_BY, PREVIOUS_STATUS FROM " +
                     "DM_DEVICE_STATUS WHERE DEVICE_ID = ? ORDER BY ID DESC LIMIT ?,?";
 
             stmt = conn.prepareStatement(sql);
@@ -99,8 +99,7 @@ public class DeviceLifecycleDAOImpl implements DeviceLifecycleDAO {
                         rs.getString("STATUS"),
                         rs.getString("PREVIOUS_STATUS"),
                         rs.getString("CHANGED_BY"),
-                        new Date(rs.getTimestamp("UPDATE_TIME").getTime()),
-                        rs.getInt("STATUSID")
+                        new Date(rs.getTimestamp("UPDATE_TIME").getTime())
                 );
                 result.add(lifecycleStateDevice);
             }
