@@ -1,4 +1,4 @@
-/* Copyright (c) 2020, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
+/* Copyright (c) 2022, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
  *
  * Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -28,21 +28,11 @@ public class SearchInput {
     private String valueType;
     private List<Option> options;
     private String placeholderValue;
-
-    private String mode;
+    private String inputValue;
     private String apiUrl;
     private String defineValueKey;
     private String displayValueKey;
     private String arrayPath;
-
-    @XmlElement(name = "Mode")
-    public String getMode() {
-        return mode;
-    }
-
-    public void setMode(String mode) {
-        this.mode = mode;
-    }
 
     @XmlElement(name = "Url")
     public String getApiUrl() {
@@ -106,5 +96,14 @@ public class SearchInput {
 
     public void setPlaceholderValue(String placeholderValue) {
         this.placeholderValue = placeholderValue;
+    }
+
+    @XmlElement(name = "InputValue")
+    public String getInputValue() {
+        return inputValue;
+    }
+
+    public void setInputValue(String inputValue) {
+        this.inputValue = inputValue;
     }
 }

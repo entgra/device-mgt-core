@@ -1491,6 +1491,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
 
     @GET
     @Override
+    @Consumes("application/json")
     @Path("/{deviceType}/applications")
     public Response getApplications(
             @PathParam("deviceType") String deviceType,

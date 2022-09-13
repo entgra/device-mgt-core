@@ -2570,7 +2570,9 @@ public interface DeviceManagementService {
 
     @GET
     @Path("/{deviceType}/applications")
+    @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
+            consumes = MediaType.APPLICATION_JSON,
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
             value = "Getting Details of Applications",
