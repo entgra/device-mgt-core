@@ -48,6 +48,8 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.protocol.HTTP;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.wso2.carbon.CarbonConstants;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
@@ -133,6 +135,8 @@ import org.wso2.carbon.device.mgt.core.dao.EnrollmentDAO;
 import org.wso2.carbon.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import org.wso2.carbon.device.mgt.core.device.details.mgt.DeviceDetailsMgtException;
 import org.wso2.carbon.device.mgt.core.device.details.mgt.DeviceInformationManager;
+import org.wso2.carbon.device.mgt.core.device.details.mgt.dao.DeviceDetailsDAO;
+import org.wso2.carbon.device.mgt.core.device.details.mgt.dao.DeviceDetailsMgtDAOException;
 import org.wso2.carbon.device.mgt.core.dto.DeviceType;
 import org.wso2.carbon.device.mgt.core.dto.DeviceTypeServiceIdentifier;
 import org.wso2.carbon.device.mgt.core.dto.DeviceTypeVersion;
@@ -196,6 +200,8 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     private final BillingDAO billingDAO;
     private final DeviceStatusDAO deviceStatusDAO;
 
+    private final DeviceDetailsDAO deviceDetailsDAO;
+
     public DeviceManagementProviderServiceImpl() {
         this.pluginRepository = new DeviceManagementPluginRepository();
         this.deviceDAO = DeviceManagementDAOFactory.getDeviceDAO();
@@ -205,6 +211,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         this.metadataDAO = MetadataManagementDAOFactory.getMetadataDAO();
         this.billingDAO = DeviceManagementDAOFactory.getBillingDAO();
         this.deviceStatusDAO = DeviceManagementDAOFactory.getDeviceStatusDAO();
+        this.deviceDetailsDAO = DeviceManagementDAOFactory.getDeviceDetailsDAO();
 
         /* Registering a listener to retrieve events when some device management service plugin is installed after
          * the component is done getting initialized */
@@ -462,7 +469,29 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                         .getInstance().getDeviceInformationManager();
                 deviceInformationManager.addDeviceInfo(device, device.getDeviceInfo());
             }
-        } catch (DeviceDetailsMgtException e) {
+            if (device.getProperties() != null) {
+                try {
+                    DeviceManagementDAOFactory.beginTransaction();
+                    JSONArray serialData = new JSONArray(device.getProperties());
+                    Map<String, String> map = new HashMap<>();
+                    for (int i = 0; i < serialData.length(); ++i) {
+                        JSONObject result = new JSONObject();
+                        result = serialData.getJSONObject(i);
+                        if (result.has("value") && result.get("name").equals("SERIAL")) {
+                            map.put("serial", result.getString("value"));
+                        }
+                    }
+                    deviceDetailsDAO.addDeviceProperties(map, device.getId(),
+                            device.getEnrolmentInfo().getId());
+                    DeviceManagementDAOFactory.commitTransaction();
+                } catch (TransactionManagementException e) {
+                    String msg = "Error occurred while initiating transaction";
+                    log.error(msg, e);
+                } finally {
+                    DeviceManagementDAOFactory.closeConnection();
+                }
+            }
+        } catch (DeviceDetailsMgtException | DeviceDetailsMgtDAOException e) {
             //This is not logging as error, neither throwing an exception as this is not an exception in main
             // business logic.
             String msg = "Error occurred while adding device info";
