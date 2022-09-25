@@ -26,13 +26,13 @@ import java.util.List;
 public class SearchInput {
 
     private String valueType;
-    private List<Option> options;
     private String placeholderValue;
-    private String inputValue;
     private String apiUrl;
     private String defineValueKey;
     private String displayValueKey;
     private String arrayPath;
+    private String paramValue;
+    private String iteratorKeyValue;
 
     @XmlElement(name = "Url")
     public String getApiUrl() {
@@ -79,16 +79,6 @@ public class SearchInput {
         this.valueType = valueType;
     }
 
-    @XmlElementWrapper(name = "Options")
-    @XmlElement(name = "Option")
-    public List<Option> getOptions() {
-        return options;
-    }
-
-    public void setOptions(List<Option> options) {
-        this.options = options;
-    }
-
     @XmlElement(name = "Placeholder")
     public String getPlaceholderValue() {
         return placeholderValue;
@@ -98,12 +88,21 @@ public class SearchInput {
         this.placeholderValue = placeholderValue;
     }
 
-    @XmlElement(name = "InputValue")
-    public String getInputValue() {
-        return inputValue;
+    @XmlElement(name = "ParamValue")
+    public String getParamValue() {
+        return paramValue;
     }
 
-    public void setInputValue(String inputValue) {
-        this.inputValue = inputValue;
+    public void setParamValue(String paramValue) {
+        this.paramValue = paramValue;
+    }
+
+    @XmlElement(name = "IteratorKeyValue")
+    public String getIteratorKeyValue() {
+        return iteratorKeyValue;
+    }
+
+    public void setIteratorKeyValue(String iteratorKeyValue) {
+        this.iteratorKeyValue = iteratorKeyValue;
     }
 }
