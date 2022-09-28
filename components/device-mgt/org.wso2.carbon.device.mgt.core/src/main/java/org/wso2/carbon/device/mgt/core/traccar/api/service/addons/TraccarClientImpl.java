@@ -130,7 +130,6 @@ public class TraccarClientImpl implements TraccarClient {
 
             request = builder.url(serverUri + publisherUrlWithContext).addHeader(authorization, authorizeKey).build();
             response = client.newCall(request).execute();
-            log.info("Live Location: " + response.body().string());
             return response.body().string();
         }
     }
@@ -481,8 +480,6 @@ public class TraccarClientImpl implements TraccarClient {
                     "&timestamp=" + deviceInfo.getTimestamp() + "&lat=" + deviceInfo.getLat() +
                     "&lon=" + deviceInfo.getLon() + "&bearing=" + deviceInfo.getBearing() +
                     "&speed=" + deviceInfo.getSpeed() + "&ignition=true";
-
-            log.info("Live Location: " + url);
 
             executor.submit(new OkHttpClientThreadPool(url, null, TraccarHandlerConstants.Methods.GET,
                     authorizedKey(HttpReportingUtil.trackerUser(), HttpReportingUtil.trackerPassword()),

@@ -367,6 +367,7 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
             if (previousLocation == null) {
                 deviceDetailsDAO.addDeviceLocation(deviceLocation, device.getEnrolmentInfo().getId());
             } else {
+                log.info("Update location on IOTS");
                 deviceDetailsDAO.updateDeviceLocation(deviceLocation, device.getEnrolmentInfo().getId());
             }
             deviceDetailsDAO.addDeviceLocationInfo(device, deviceLocation,
@@ -390,8 +391,10 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
             //Tracker update GPS Location
             if (HttpReportingUtil.isLocationPublishing() && HttpReportingUtil.isTrackerEnabled()) {
                 try {
+                    log.info("--- Location Pushing to Traccar starts ---");
                     DeviceManagementDataHolder.getInstance().getDeviceAPIClientService()
                             .updateLocation(device, deviceLocation, CarbonContext.getThreadLocalCarbonContext().getTenantId());
+                    log.info("--- Location Pushing to Traccar end ---");
                 } catch (ExecutionException e) {
                     log.error("ExecutionException : " + e);
                     //throw new RuntimeException(e);
@@ -435,16 +438,43 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
             DeviceLocation mostRecentDeviceLocation = deviceLocations.get(deviceLocations.size()  - 1);
             mostRecentDeviceLocation.setDeviceId(device.getId());
             DeviceManagementDAOFactory.beginTransaction();
-            DeviceLocation previousLocation = deviceDetailsDAO.getDeviceLocation(device.getId(),
+            boolean previousLocation = deviceDetailsDAO.hasLocations(device.getId(),
                     device.getEnrolmentInfo().getId());
-            if (previousLocation == null) {
-                deviceDetailsDAO.addDeviceLocation(mostRecentDeviceLocation, device.getEnrolmentInfo().getId());
-            } else {
+            if (previousLocation) {
                 deviceDetailsDAO.updateDeviceLocation(mostRecentDeviceLocation, device.getEnrolmentInfo().getId());
+            } else {
+                deviceDetailsDAO.addDeviceLocation(mostRecentDeviceLocation, device.getEnrolmentInfo().getId());
             }
 
             deviceDetailsDAO.addDeviceLocationsInfo(device, deviceLocations,
                     CarbonContext.getThreadLocalCarbonContext().getTenantId());
+
+            for (DeviceLocation deviceLocation: deviceLocations) {
+                //Tracker update GPS Location
+                if (HttpReportingUtil.isLocationPublishing() && HttpReportingUtil.isTrackerEnabled()) {
+                    try {
+                        log.info("--- Location Pushing to Traccar starts ---");
+                        DeviceManagementDataHolder.getInstance().getDeviceAPIClientService()
+                                .updateLocation(device, deviceLocation, CarbonContext.getThreadLocalCarbonContext().getTenantId());
+                        log.info("--- Location Pushing to Traccar end ---");
+                    } catch (ExecutionException e) {
+                        log.error("ExecutionException : " + e);
+                        //throw new RuntimeException(e);
+                        //Exception was not thrown due to being conflicted with non-traccar features
+                    } catch (InterruptedException e) {
+                        log.error("InterruptedException : " + e);
+                        //throw new RuntimeException(e);
+                        //Exception was not thrown due to being conflicted with non-traccar features
+                    }
+                } else {
+                    if(!HttpReportingUtil.isLocationPublishing()) {
+                        log.info("Location publishing is disabled");
+                    }
+                    if (!HttpReportingUtil.isTrackerEnabled()) {
+                        log.info("Traccar is disabled");
+                    }
+                }
+            }
 
             DeviceManagementDAOFactory.commitTransaction();
         } catch (TransactionManagementException e) {
