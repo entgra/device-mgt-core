@@ -131,6 +131,7 @@ import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
 import javax.validation.Valid;
+import javax.ws.rs.Consumes;
 import javax.validation.constraints.Size;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
