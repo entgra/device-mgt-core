@@ -304,8 +304,8 @@ public class ApplicationDAOImpl implements ApplicationDAO {
                 int paramIdx = 1;
                 stmt.setString(paramIdx++, request.getDeviceType());
                 stmt.setInt(paramIdx++, tenantId);
-                if (request.getFilter() != null){
-                    stmt.setString(paramIdx++, request.getFilter());
+                if (filter != null){
+                    stmt.setString(paramIdx++, filter);
                 }
                 stmt.setInt(paramIdx++, request.getRowCount());
                 stmt.setInt(paramIdx, request.getStartIndex());
