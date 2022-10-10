@@ -32,7 +32,10 @@ public class Column {
     private Input input;
     private Upload upload;
     private Checkbox checkbox;
+    private SearchInput searchInput;
     private boolean isRequired;
+    private String tooltip;
+    private String docLink;
 
     @XmlAttribute(name = "name", required = true)
     public String getName() { return name; }
@@ -98,6 +101,15 @@ public class Column {
         this.checkbox = checkbox;
     }
 
+    @XmlElement(name = "SearchInput")
+    public SearchInput getSearchInput() {
+        return searchInput;
+    }
+
+    public void setSearchInput(SearchInput searchInput) {
+        this.searchInput = searchInput;
+    }
+
     @XmlElement(name = "RequiredItem")
     public boolean isRequired() {
         return isRequired;
@@ -105,5 +117,23 @@ public class Column {
 
     public void setRequired(boolean required) {
         isRequired = required;
+    }
+
+    @XmlElement(name = "Tooltip")
+    public String getTooltip() {
+        return tooltip;
+    }
+
+    public void setTooltip(String tooltip) {
+        this.tooltip = tooltip;
+    }
+
+    @XmlElement(name = "DocLink")
+    public String getDocLink() {
+        return docLink;
+    }
+
+    public void setDocLink(String docLink) {
+        this.docLink = docLink;
     }
 }
