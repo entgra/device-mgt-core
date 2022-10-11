@@ -86,6 +86,7 @@ import org.wso2.carbon.device.mgt.core.permission.mgt.PermissionUtils;
 import org.wso2.carbon.device.mgt.core.privacy.PrivacyComplianceProvider;
 import org.wso2.carbon.device.mgt.core.search.mgt.SearchManagerService;
 import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
+import org.wso2.carbon.device.mgt.core.service.DeviceStateManagementService;
 import org.wso2.carbon.device.mgt.core.service.GroupManagementProviderService;
 import org.wso2.carbon.device.mgt.jaxrs.beans.DeviceTypeVersionWrapper;
 import org.wso2.carbon.device.mgt.jaxrs.beans.ErrorResponse;
@@ -268,6 +269,18 @@ public class DeviceMgtAPIUtils {
         } catch (PolicyMonitoringTaskException e) {
             log.error("Exception occurred while starting the Task service.", e);
         }
+    }
+
+    public static DeviceStateManagementService getDeviceStateManagementService() {
+        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        DeviceStateManagementService deviceStateManagementService =
+                (DeviceStateManagementService) ctx.getOSGiService(DeviceStateManagementService.class, null);
+        if (deviceStateManagementService == null) {
+            String msg = "DeviceStateManagementService service has not initialized.";
+            log.error(msg);
+            throw new IllegalStateException(msg);
+        }
+        return deviceStateManagementService;
     }
 
     public static DeviceManagementProviderService getDeviceManagementService() {
