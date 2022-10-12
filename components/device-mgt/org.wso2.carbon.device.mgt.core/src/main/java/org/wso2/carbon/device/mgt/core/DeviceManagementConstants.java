@@ -72,7 +72,8 @@ public final class DeviceManagementConstants {
         public static final String SETUP_PROPERTY = "setup";
         public static final String DEFAULT_LICENSE_CONFIG_XML_NAME = "license-config.xml";
         public static final String SERIAL = "SERIAL";
-        public static final String ENROLLMENT_CONFIGURATION = "enrollmentConfiguration";
+        public static final String ENROLLMENT_CONFIGURATION = "enrollmentConfigOriginalFile";
+        public static final String METADATA_CONFIGURATION = "CONFIG";
     }
 
 	public static final class AppManagement {
