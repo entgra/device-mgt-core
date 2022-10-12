@@ -403,6 +403,7 @@ public class TraccarClientImpl implements TraccarClient {
                     authorizedKey(HttpReportingUtil.trackerUser(), HttpReportingUtil.trackerPassword()),
                     serverUrl(HttpReportingUtil.trackerServer())));
             String result = res.get();
+            log.info("---------result--------");
             if (result.charAt(0) == '{') {
                 JSONObject obj = new JSONObject(result);
                 if (obj.has("id")) {
@@ -465,6 +466,7 @@ public class TraccarClientImpl implements TraccarClient {
             TrackerManagementDAOFactory.closeConnection();
         }
 
+
         //check if the device is already exist before updating the location
         if (trackerDeviceInfo == null) {
             //add device if not exist
@@ -481,7 +483,8 @@ public class TraccarClientImpl implements TraccarClient {
 
             executor.submit(new OkHttpClientThreadPool(url, null, TraccarHandlerConstants.Methods.GET,
                     authorizedKey(HttpReportingUtil.trackerUser(), HttpReportingUtil.trackerPassword()),
-                    "http://localhost:"));
+                    Objects.requireNonNull(HttpReportingUtil.trackerServer()).split(":")[0] + ":" +
+                            Objects.requireNonNull(HttpReportingUtil.trackerServer()).split(":")[1] + ":"));
         }
     }
 
@@ -579,8 +582,8 @@ public class TraccarClientImpl implements TraccarClient {
                 authorizedKey(HttpReportingUtil.trackerUser(), HttpReportingUtil.trackerPassword()),
                 serverUrl(HttpReportingUtil.trackerServer())));
         String result = res.get();
-
-        if (result.charAt(0) == '{') {
+        log.info("---------result--------");
+        if (res.isDone() && result.charAt(0) == '{') {
             JSONObject obj = new JSONObject(result);
             if (obj.has("id")) {
                 int traccarGroupId = obj.getInt("id");
