@@ -857,6 +857,19 @@ public class ApplicationManagementPublisherAPIImpl implements ApplicationManagem
         ApplicationManager applicationManager = APIUtil.getApplicationManager();
         try {
             List<Category> categories = applicationManager.getRegisteredCategories();
+            boolean isCategoryAvailable = false;
+            for (Category category : categories) {
+                if (category.getCategoryName().equals(Constants.googlePlayCategoryName)) {
+                    isCategoryAvailable = true;
+                    break;
+                }
+            }
+            if(!isCategoryAvailable){
+                Category category = new Category();
+                category.setCategoryName(Constants.googlePlayCategoryName);
+                category.setCategoryDeletable(true);
+                categories.add(category);
+            }
             return Response.status(Response.Status.OK).entity(categories).build();
         } catch (ApplicationManagementException e) {
             String msg = "Error Occurred while getting registered categories.";
