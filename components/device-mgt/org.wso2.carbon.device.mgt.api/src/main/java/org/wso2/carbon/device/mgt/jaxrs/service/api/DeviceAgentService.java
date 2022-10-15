@@ -49,6 +49,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -306,7 +307,7 @@ public interface DeviceAgentService {
                     name = "payloadData",
                     value = "Information of the agent event to be published on DAS.")
             @Valid
-            Map<String, Object> payloadData,
+                    Map<String, Object> payloadData,
             @ApiParam(
                     name = "type",
                     value = "The name of the device type, such as android, ios, or windows.")
@@ -336,19 +337,19 @@ public interface DeviceAgentService {
     @ApiResponses(
             value = {
                     @ApiResponse(code = 200, message = "OK. \n Successfully published the event",
-                                 responseHeaders = {
-                                         @ResponseHeader(
-                                                 name = "Content-Type",
-                                                 description = "The content type of the body"),
-                                         @ResponseHeader(
-                                                 name = "ETag",
-                                                 description = "Entity Tag of the response resource.\n" +
-                                                         "Used by caches, or in conditional requests."),
-                                         @ResponseHeader(
-                                                 name = "Last-Modified",
-                                                 description = "Date and time the resource was last modified.\n" +
-                                                         "Used by caches, or in conditional requests.")
-                                 }),
+                            responseHeaders = {
+                                    @ResponseHeader(
+                                            name = "Content-Type",
+                                            description = "The content type of the body"),
+                                    @ResponseHeader(
+                                            name = "ETag",
+                                            description = "Entity Tag of the response resource.\n" +
+                                                    "Used by caches, or in conditional requests."),
+                                    @ResponseHeader(
+                                            name = "Last-Modified",
+                                            description = "Date and time the resource was last modified.\n" +
+                                                    "Used by caches, or in conditional requests.")
+                            }),
                     @ApiResponse(
                             code = 303,
                             message = "See Other. \n The source can be retrieved from the URL specified in the " +
@@ -374,7 +375,7 @@ public interface DeviceAgentService {
                     name = "payloadData",
                     value = "Information of the agent event to be published on DAS.")
             @Valid
-            List<Object> payloadData,
+                    List<Object> payloadData,
             @ApiParam(
                     name = "type",
                     value = "name of the device type")
@@ -383,6 +384,189 @@ public interface DeviceAgentService {
                     name = "deviceId",
                     value = "deviceId of the device")
             @PathParam("deviceId") String deviceId);
+
+//    @GET
+//    @Path("/enroll/{type}/{id}/config")
+//    @ApiOperation(
+//            produces = MediaType.APPLICATION_JSON,
+//            consumes = MediaType.APPLICATION_JSON,
+//            httpMethod = "GET",
+//            value = "Getting config properties of a Device",
+//            notes = "You can get the device properties needed to connect to the IoT server",
+//            tags = "Device Agent Management",
+//            extensions = {
+//                    @Extension(properties = {
+//                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:device:enroll")
+//                    })
+//            }
+//    )
+//    @ApiResponses(
+//            value = {
+//                    @ApiResponse(
+//                            code = 200,
+//                            message = "OK. \n Successfully retrieved the config properties.",
+//                            response = OperationList.class,
+//                            responseHeaders = {
+//                                    @ResponseHeader(
+//                                            name = "Content-Type",
+//                                            description = "The content type of the body"),
+//                                    @ResponseHeader(
+//                                            name = "ETag",
+//                                            description = "Entity Tag of the response resource.\n" +
+//                                                    "Used by caches, or in conditional requests."),
+//                                    @ResponseHeader(
+//                                            name = "Last-Modified",
+//                                            description = "Date and time the resource has been modified the last " +
+//                                                    "time.\n" +
+//                                                    "Used by caches, or in conditional requests."),
+//                            }),
+//                    @ApiResponse(
+//                            code = 304,
+//                            message = "Not Modified. Empty body because the client already has the latest " +
+//                                    "version of the requested resource."),
+//                    @ApiResponse(
+//                            code = 400,
+//                            message = "Bad Request. \n Invalid request or validation error.",
+//                            response = ErrorResponse.class),
+//                    @ApiResponse(
+//                            code = 404,
+//                            message = "Not Found. \n No device is found under the provided type and id.",
+//                            response = ErrorResponse.class),
+//                    @ApiResponse(
+//                            code = 500,
+//                            message = "Internal Server Error. \n " +
+//                                    "Server error occurred while retrieving information requested device.",
+//                            response = ErrorResponse.class)
+//            })
+//    Object getDeviceConfigProperties(@ApiParam(name = "type", value = "The device type, such as ios, android, or windows.", required = true)
+//                                     @PathParam("type") String type,
+//                                     @ApiParam(name = "id", value = "The device ID.", required = true)
+//                                     @PathParam("id") String deviceId) throws IOException;
+
+    //-------------------
+
+    //===============================
+
+    @GET
+    @Path("/enroll/{type}/{id}/config")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            consumes = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Getting All the Pending Operations of a Device",
+            notes = "You can get all the list of pending operations of a device.",
+            tags = "Device Agent Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:device:enroll")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully retrieved the operations.",
+                            response = OperationList.class,
+                            responseHeaders = {
+                                    @ResponseHeader(
+                                            name = "Content-Type",
+                                            description = "The content type of the body"),
+                                    @ResponseHeader(
+                                            name = "ETag",
+                                            description = "Entity Tag of the response resource.\n" +
+                                                    "Used by caches, or in conditional requests."),
+                                    @ResponseHeader(
+                                            name = "Last-Modified",
+                                            description = "Date and time the resource has been modified the last " +
+                                                    "time.\n" +
+                                                    "Used by caches, or in conditional requests."),
+                            }),
+                    @ApiResponse(
+                            code = 304,
+                            message = "Not Modified. Empty body because the client already has the latest " +
+                                    "version of the requested resource."),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. \n Invalid request or validation error.",
+                            response = ErrorResponse.class),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. \n No device is found under the provided type and id.",
+                            response = ErrorResponse.class),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n " +
+                                    "Server error occurred while retrieving information requested device.",
+                            response = ErrorResponse.class)
+            })
+    Response getDeviceConfigProperties(@ApiParam(name = "type", value = "The device type, such as ios, android, or windows.", required = true)
+                                  @PathParam("type") String type,
+                                  @ApiParam(name = "id", value = "The device ID.", required = true)
+                                  @PathParam("id") String deviceId);
+
+    //======================11============
+
+    @GET
+    @Path("/oshani/{type}/{id}")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            consumes = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Getting All the Pending Operations of a Device",
+            notes = "You can get all the list of pending operations of a device.",
+            tags = "Device Agent Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:device:operations")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully retrieved the operations.",
+                            response = OperationList.class,
+                            responseHeaders = {
+                                    @ResponseHeader(
+                                            name = "Content-Type",
+                                            description = "The content type of the body"),
+                                    @ResponseHeader(
+                                            name = "ETag",
+                                            description = "Entity Tag of the response resource.\n" +
+                                                    "Used by caches, or in conditional requests."),
+                                    @ResponseHeader(
+                                            name = "Last-Modified",
+                                            description = "Date and time the resource has been modified the last " +
+                                                    "time.\n" +
+                                                    "Used by caches, or in conditional requests."),
+                            }),
+                    @ApiResponse(
+                            code = 304,
+                            message = "Not Modified. Empty body because the client already has the latest " +
+                                    "version of the requested resource."),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. \n Invalid request or validation error.",
+                            response = ErrorResponse.class),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. \n No device is found under the provided type and id.",
+                            response = ErrorResponse.class),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n " +
+                                    "Server error occurred while retrieving information requested device.",
+                            response = ErrorResponse.class)
+            })
+    Response getPendingOperationsTestingConf(@ApiParam(name = "type", value = "The device type, such as ios, android, or windows.", required = true)
+                                  @PathParam("type") String type,
+                                  @ApiParam(name = "id", value = "The device ID.", required = true)
+                                  @PathParam("id") String deviceId);
+
+
+    //========================================
 
     @GET
     @Path("/pending/operations/{type}/{id}")
@@ -678,6 +862,6 @@ public interface DeviceAgentService {
                                             @ApiParam(name = "id", value = "The device ID.", required = true)
                                             @PathParam("id") String deviceId,
                                             @ApiParam(name = "status", value = "status of the operation.", required = true)
-                                            @QueryParam("status")Operation.Status status);
+                                            @QueryParam("status") Operation.Status status);
 
 }
