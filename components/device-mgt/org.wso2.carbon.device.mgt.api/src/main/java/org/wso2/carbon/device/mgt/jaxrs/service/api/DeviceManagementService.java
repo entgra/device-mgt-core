@@ -1382,7 +1382,7 @@ public interface DeviceManagementService {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{type}/{id}/features")
+    @Path("/device-type/{type}/features")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
@@ -1453,14 +1453,6 @@ public interface DeviceManagementService {
             @PathParam("type")
             @Size(max = 45)
                     String type,
-            @ApiParam(
-                    name = "id",
-                    value = "The device identifier of the device.\n" +
-                            "INFO: Make sure to add the ID of a device that is already registered with WSO2 IoTS.",
-                    required = true)
-            @PathParam("id")
-            @Size(max = 45)
-                    String id,
             @ApiParam(
                     name = "If-Modified-Since",
                     value = "Checks if the requested variant was modified, since the specified date-time. \n" +
