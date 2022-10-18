@@ -391,10 +391,8 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
             //Tracker update GPS Location
             if (HttpReportingUtil.isLocationPublishing() && HttpReportingUtil.isTrackerEnabled()) {
                 try {
-                    log.info("--- Location Pushing to Traccar starts ---");
                     DeviceManagementDataHolder.getInstance().getDeviceAPIClientService()
                             .updateLocation(device, deviceLocation, CarbonContext.getThreadLocalCarbonContext().getTenantId());
-                    log.info("--- Location Pushing to Traccar end ---");
                 } catch (ExecutionException e) {
                     log.error("ExecutionException : " + e);
                     //throw new RuntimeException(e);
@@ -453,10 +451,8 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
                 //Tracker update GPS Location
                 if (HttpReportingUtil.isLocationPublishing() && HttpReportingUtil.isTrackerEnabled()) {
                     try {
-                        log.info("--- Location Pushing to Traccar starts ---");
                         DeviceManagementDataHolder.getInstance().getDeviceAPIClientService()
                                 .updateLocation(device, deviceLocation, CarbonContext.getThreadLocalCarbonContext().getTenantId());
-                        log.info("--- Location Pushing to Traccar end ---");
                     } catch (ExecutionException e) {
                         log.error("ExecutionException : " + e);
                         //throw new RuntimeException(e);
