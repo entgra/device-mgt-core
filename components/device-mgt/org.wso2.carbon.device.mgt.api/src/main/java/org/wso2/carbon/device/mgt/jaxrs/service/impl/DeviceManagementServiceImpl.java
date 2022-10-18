@@ -530,9 +530,9 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                     }
 
                     int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
+                    TrackerDeviceInfo trackerDevice;
                     for (Device device : devices.getList()) {
-                        TrackerDeviceInfo trackerDevice = DeviceAPIClientServiceImpl
-                                .getTrackerDevice(device.getId(), tenantId);
+                        trackerDevice = DeviceAPIClientServiceImpl.getTrackerDevice(device.getId(), tenantId);
                         if (trackerDevice != null) {
                             int traccarDeviceId = trackerDevice.getTraccarDeviceId();
                             boolean getPermission = DeviceAPIClientServiceImpl.getUserIdofPermissionByDeviceIdNUserId(traccarDeviceId, userId);
@@ -541,7 +541,6 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                                 DeviceAPIClientServiceImpl.addTrackerUserDevicePermission(userId, traccarDeviceId);
                             }
                         }
-
                     }
                     //Remove necessary
                     List<TrackerPermissionInfo> getAllUserDevices =
