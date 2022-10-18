@@ -30,7 +30,7 @@ import org.wso2.carbon.device.mgt.common.group.mgt.DeviceGroup;
 import org.wso2.carbon.device.mgt.common.exceptions.TrackerAlreadyExistException;
 import org.wso2.carbon.device.mgt.core.dao.TrackerManagementDAOException;
 import org.wso2.carbon.device.mgt.core.traccar.api.service.DeviceAPIClientService;
-import org.wso2.carbon.device.mgt.core.traccar.api.service.addons.TraccarClientImpl;
+import org.wso2.carbon.device.mgt.core.traccar.api.service.TraccarClientFactory;
 import org.wso2.carbon.device.mgt.core.traccar.common.beans.TraccarDevice;
 import org.wso2.carbon.device.mgt.core.traccar.common.beans.TraccarGroups;
 import org.wso2.carbon.device.mgt.core.traccar.common.beans.TraccarPosition;
@@ -43,9 +43,9 @@ import java.util.concurrent.ExecutionException;
 public class DeviceAPIClientServiceImpl implements DeviceAPIClientService {
 
     private static final Log log = LogFactory.getLog(DeviceAPIClientServiceImpl.class);
+    TraccarClientFactory client = TraccarClientFactory.getInstance();
 
     public void addDevice(Device device, int tenantId) throws ExecutionException, InterruptedException {
-        TraccarClientImpl client = new TraccarClientImpl();
         String lastUpdatedTime = String.valueOf((new Date().getTime()));
         TraccarDevice traccarDevice = new TraccarDevice(device.getId(), device.getName(), device.getDeviceIdentifier(),
                 "online", "false", lastUpdatedTime, "", "", "", "",
@@ -62,7 +62,6 @@ public class DeviceAPIClientServiceImpl implements DeviceAPIClientService {
     }
 
     public void updateLocation(Device device, DeviceLocation deviceLocation, int tenantId) throws ExecutionException, InterruptedException {
-        TraccarClientImpl client = new TraccarClientImpl();
         TraccarPosition traccarPosition = new TraccarPosition(device.getDeviceIdentifier(),
                 deviceLocation.getUpdatedTime().getTime(),
                 deviceLocation.getLatitude(), deviceLocation.getLongitude(),
@@ -84,7 +83,6 @@ public class DeviceAPIClientServiceImpl implements DeviceAPIClientService {
     }
 
     public void disEnrollDevice(int deviceId, int tenantId) throws ExecutionException, InterruptedException{
-        TraccarClientImpl client = new TraccarClientImpl();
         try {
             client.disEnrollDevice(deviceId, tenantId);
         } catch (TrackerManagementDAOException e) {
@@ -95,54 +93,51 @@ public class DeviceAPIClientServiceImpl implements DeviceAPIClientService {
 
     public void addGroup(DeviceGroup group, int groupId, int tenantId) throws
             TrackerManagementDAOException, TrackerAlreadyExistException, ExecutionException, InterruptedException {
-        TraccarClientImpl client = new TraccarClientImpl();
         TraccarGroups traccarGroups = new TraccarGroups(group.getName());
         client.addGroup(traccarGroups, groupId, tenantId);
     }
 
     public void updateGroup(DeviceGroup group, int groupId, int tenantId) throws
             TrackerManagementDAOException, TrackerAlreadyExistException, ExecutionException, InterruptedException {
-        TraccarClientImpl client = new TraccarClientImpl();
         TraccarGroups traccarGroups = new TraccarGroups(group.getName());
         client.updateGroup(traccarGroups, groupId, tenantId);
     }
 
     public void deleteGroup(int groupId, int tenantId) throws
             TrackerManagementDAOException, ExecutionException, InterruptedException {
-        TraccarClientImpl client = new TraccarClientImpl();
         client.deleteGroup(groupId, tenantId);
     }
 
     public static String fetchUserInfo(String userName) throws ExecutionException, InterruptedException {
-        TraccarClientImpl client = new TraccarClientImpl();
+        TraccarClientFactory client = TraccarClientFactory.getInstance();
         return client.fetchUserInfo(userName);
     }
 
     public static TrackerDeviceInfo getTrackerDevice(int deviceId, int tenantId) throws
             TrackerManagementDAOException {
-        TraccarClientImpl client = new TraccarClientImpl();
+        TraccarClientFactory client = TraccarClientFactory.getInstance();
         return client.getTrackerDevice(deviceId, tenantId);
     }
 
     public static boolean getUserIdofPermissionByDeviceIdNUserId(int deviceId, int userId) throws
             TrackerManagementDAOException {
-        TraccarClientImpl client = new TraccarClientImpl();
+        TraccarClientFactory client = TraccarClientFactory.getInstance();
         return client.getUserIdofPermissionByDeviceIdNUserId(deviceId, userId);
     }
 
     public static String createUser(TraccarUser traccarUser) throws ExecutionException, InterruptedException {
-        TraccarClientImpl client = new TraccarClientImpl();
+        TraccarClientFactory client = TraccarClientFactory.getInstance();
         return client.createUser(traccarUser);
     }
 
     public static String updateUser(TraccarUser traccarUser, int userId) throws
             ExecutionException, InterruptedException {
-        TraccarClientImpl client = new TraccarClientImpl();
+        TraccarClientFactory client = TraccarClientFactory.getInstance();
         return client.updateUser(traccarUser, userId);
     }
 
     public static String returnUser(String userName) {
-        TraccarClientImpl client = new TraccarClientImpl();
+        TraccarClientFactory client = TraccarClientFactory.getInstance();
         try {
             return client.returnUser(userName);
         } catch (TrackerManagementDAOException e) {
@@ -155,24 +150,24 @@ public class DeviceAPIClientServiceImpl implements DeviceAPIClientService {
 
     public static void addTrackerUserDevicePermission(int userId, int deviceId) throws
             TrackerManagementDAOException, ExecutionException, InterruptedException {
-        TraccarClientImpl client = new TraccarClientImpl();
+        TraccarClientFactory client = TraccarClientFactory.getInstance();
         client.setPermission(userId, deviceId);
     }
 
     public static void removeTrackerUserDevicePermission(int userId, int deviceId, int removeType) throws
             TrackerManagementDAOException, ExecutionException, InterruptedException {
-        TraccarClientImpl client = new TraccarClientImpl();
+        TraccarClientFactory client = TraccarClientFactory.getInstance();
         client.removePermission(userId, deviceId, removeType);
     }
 
     public static List<TrackerPermissionInfo> getUserIdofPermissionByUserIdNIdList(int userId, List<Integer> NotInDeviceIdList) throws
             TrackerManagementDAOException {
-        TraccarClientImpl client = new TraccarClientImpl();
+        TraccarClientFactory client = TraccarClientFactory.getInstance();
         return client.getUserIdofPermissionByUserIdNIdList(userId, NotInDeviceIdList);
     }
 
     public static String generateRandomString(int len) {
-        TraccarClientImpl client = new TraccarClientImpl();
+        TraccarClientFactory client = TraccarClientFactory.getInstance();
         return client.generateRandomString(len);
     }
 

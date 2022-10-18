@@ -379,6 +379,35 @@ public class DeviceDetailsDAOImpl implements DeviceDetailsDAO {
     }
 
     @Override
+    public boolean hasLocations(int deviceId, int enrollmentId) throws
+            DeviceDetailsMgtDAOException {
+
+    Connection conn;
+    PreparedStatement stmt = null;
+    ResultSet rs = null;
+    boolean hasLocation = false;
+        try {
+        conn = this.getConnection();
+        String sql = "SELECT DEVICE_ID FROM DM_DEVICE_LOCATION WHERE DEVICE_ID = ? AND ENROLMENT_ID = ? " +
+                "LIMIT 1";
+        stmt = conn.prepareStatement(sql);
+        stmt.setInt(1, deviceId);
+        stmt.setInt(2, enrollmentId);
+        rs = stmt.executeQuery();
+
+        if (rs.next()) {
+            hasLocation = true;
+        }
+
+        return hasLocation;
+    } catch (SQLException e) {
+        throw new DeviceDetailsMgtDAOException("Error occurred while fetching the location of the registered devices.", e);
+    } finally {
+        DeviceManagementDAOUtil.cleanupResources(stmt, rs);
+    }
+}
+
+    @Override
     public void deleteDeviceLocation(int deviceId, int enrollmentId) throws DeviceDetailsMgtDAOException {
 
         Connection conn;

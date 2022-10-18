@@ -1,23 +1,22 @@
 /*
- * Copyright (C) 2022 Entgra (Pvt) Ltd, Inc - All Rights Reserved.
+ *   Copyright (c) 2022, Entgra (pvt) Ltd. (http://entgra.io) All Rights Reserved.
  *
- * Unauthorised copying/redistribution of this file, via any medium is strictly prohibited.
+ *   Entgra (pvt) Ltd. licenses this file to you under the Apache License,
+ *   Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License.
+ *   You may obtain a copy of the License at
  *
- * Licensed under the Entgra Commercial License, Version 1.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      https://entgra.io/licenses/entgra-commercial/1.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *   Unless required by applicable law or agreed to in writing,
+ *   software distributed under the License is distributed on an
+ *   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *   KIND, either express or implied. See the License for the
+ *   specific language governing permissions and limitations
+ *   under the License.
  */
 
-package org.wso2.carbon.device.mgt.core.traccar.api.service.addons;
+package org.wso2.carbon.device.mgt.core.traccar.api.service;
 
 import okhttp3.ConnectionPool;
 import okhttp3.MediaType;
@@ -51,6 +50,7 @@ import org.wso2.carbon.device.mgt.core.traccar.common.util.TraccarUtil;
 import org.wso2.carbon.device.mgt.core.traccar.core.config.TraccarConfigurationManager;
 import org.wso2.carbon.device.mgt.core.util.HttpReportingUtil;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -65,8 +65,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-public class TraccarClientImpl implements TraccarClient {
-    private static final Log log = LogFactory.getLog(TraccarClientImpl.class);
+public class TraccarClientFactory {
+
+    private static TraccarClientFactory INSTANCE;
+    private static final Log log = LogFactory.getLog(TraccarClientFactory.class);
     private static final int THREAD_POOL_SIZE = 50;
     private final OkHttpClient client;
     private final ExecutorService executor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
@@ -80,7 +82,7 @@ public class TraccarClientImpl implements TraccarClient {
     final String username = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
     private final TrackerDAO trackerDAO;
 
-    public TraccarClientImpl() {
+    private TraccarClientFactory() {
         client = new OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .writeTimeout(30, TimeUnit.SECONDS)
@@ -90,7 +92,14 @@ public class TraccarClientImpl implements TraccarClient {
         this.trackerDAO = TrackerManagementDAOFactory.getTrackerDAO();
     }
 
-    private class OkHttpClientThreadPool implements Callable {
+    public static TraccarClientFactory getInstance() {
+        if(INSTANCE == null) {
+            INSTANCE = new TraccarClientFactory();
+        }
+        return INSTANCE;
+    }
+
+    private class OkHttpClientThreadPool implements Callable<String> {
         final String publisherUrlWithContext;
         final JSONObject payload;
         private final String method;
@@ -107,7 +116,7 @@ public class TraccarClientImpl implements TraccarClient {
         }
 
         @Override
-        public String call() throws Exception {
+        public String call() throws IOException {
             RequestBody requestBody;
             Request.Builder builder = new Request.Builder();
             Request request;
@@ -404,7 +413,7 @@ public class TraccarClientImpl implements TraccarClient {
                     serverUrl(HttpReportingUtil.trackerServer())));
             String result = res.get();
             log.info("---------result--------");
-            if (result.charAt(0) == '{') {
+            if (res.isDone() && result.charAt(0) == '{') {
                 JSONObject obj = new JSONObject(result);
                 if (obj.has("id")) {
                     int traccarDeviceId = obj.getInt("id");

@@ -3979,7 +3979,10 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                     deviceLocation.setDistance(Double.parseDouble(distance));
                     deviceLocation.setSpeed(Float.parseFloat(speed));
                     deviceLocation.setBearing(Float.parseFloat(bearing));
+//                    deviceInformationManager.addDeviceLocation(device, deviceLocation);
+                    log.info("--- Location Pushing to Traccar starts ---");
                     deviceInformationManager.addDeviceLocation(device, deviceLocation);
+                    log.info("--- Location Pushing to Traccar end ---");
                 } catch (DeviceDetailsMgtException e) {
                     //We are not failing the execution since this is not critical for the functionality. But logging as
                     // a warning for reference.
