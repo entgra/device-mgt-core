@@ -38,7 +38,7 @@
                 <p style="font-size: 1em; font-family: Arial, Helvetica; line-height: 170%; color: #666666; margin: 5px 0px;">
                     Congratulations!!! Thank you for registering with Entgra. Please click on the
                     following link to complete your registration with us. Click <a
-                        href="$base-url-https/self-register/sign-up?token=$otp-token&type=$type&email=$email>here</a>.
+                        href="https://entgra.io/user-evaluation?token=$otp-token&amp;type=$type&amp;email=$email">here</a>.
                 </p>
 
                 <p style="font-length: 1em; font-family: Arial, Helvetica; line-height: 170%; color: #666666; margin: 5px 0px;">
