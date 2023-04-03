@@ -89,6 +89,39 @@ public class OTPManagementServiceImpl implements OTPManagementService {
         return false;
     }
 
+    public OneTimePinDTO getRenewedOtpByEmailAndMailType(String email, String emailType) throws OTPManagementException{
+        OneTimePinDTO oneTimePinDTO;
+        try {
+            ConnectionManagerUtil.beginDBTransaction();
+            oneTimePinDTO = otpManagementDAO.getOtpDataByEmailAndMailType(email, emailType);
+            if (oneTimePinDTO == null) {
+                ConnectionManagerUtil.rollbackDBTransaction();
+                String msg = "Can't find OTP data for email: " + email + " and email type: " + emailType;
+                log.error(msg);
+                throw new OTPManagementException(msg);
+            }
+            otpManagementDAO.restoreOneTimeToken(oneTimePinDTO.getId(), UUID.randomUUID().toString());
+            ConnectionManagerUtil.commitDBTransaction();
+            return oneTimePinDTO;
+        } catch (DBConnectionException e) {
+            ConnectionManagerUtil.rollbackDBTransaction();
+            String msg = "Error occurred while getting database connection to validate the given email and email type.";
+            log.error(msg, e);
+            throw new OTPManagementException(msg, e);
+        } catch (OTPManagementDAOException e) {
+            ConnectionManagerUtil.rollbackDBTransaction();
+            String msg = "Error occurred while executing SQL query to validate the given email and email type.";
+            log.error(msg, e);
+            throw new OTPManagementException(msg);
+        } catch (TransactionManagementException e) {
+            String msg = "Error occurred while starting the DB transaction";
+            log.error(msg, e);
+            throw new OTPManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+    }
+
     @Override
     public OneTimePinDTO isValidOTP(String oneTimeToken) throws OTPManagementException, BadRequestException {
         if (StringUtils.isBlank(oneTimeToken)){
@@ -297,7 +330,7 @@ public class OTPManagementServiceImpl implements OTPManagementService {
      * @return {@link OneTimePinDTO}
      * @throws OTPManagementException if error occurred while getting OTP data for given OTP in DB
      */
-    private OneTimePinDTO getOTPDataByToken ( String oneTimeToken) throws OTPManagementException {
+    private OneTimePinDTO getOTPDataByToken (String oneTimeToken) throws OTPManagementException {
         try {
             ConnectionManagerUtil.openDBConnection();
             return otpManagementDAO.getOTPDataByToken(oneTimeToken);

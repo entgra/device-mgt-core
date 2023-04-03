@@ -61,4 +61,6 @@ public interface OTPManagementService {
     OneTimePinDTO generateOneTimePin(String email, String emailType, String userName, Object metaDataObj,
                                      int tenantId, boolean persistPin) throws OTPManagementException;
 
+    OneTimePinDTO getRenewedOtpByEmailAndMailType(String email, String emailType) throws OTPManagementException;
+
 }
