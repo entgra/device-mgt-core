@@ -91,6 +91,7 @@ public class OTPManagementServiceImpl implements OTPManagementService {
 
     public OneTimePinDTO getRenewedOtpByEmailAndMailType(String email, String emailType) throws OTPManagementException{
         OneTimePinDTO oneTimePinDTO;
+        String newToken = UUID.randomUUID().toString();
         try {
             ConnectionManagerUtil.beginDBTransaction();
             oneTimePinDTO = otpManagementDAO.getOtpDataByEmailAndMailType(email, emailType);
@@ -100,9 +101,9 @@ public class OTPManagementServiceImpl implements OTPManagementService {
                 log.error(msg);
                 throw new OTPManagementException(msg);
             }
-            otpManagementDAO.restoreOneTimeToken(oneTimePinDTO.getId(), UUID.randomUUID().toString());
+            otpManagementDAO.restoreOneTimeToken(oneTimePinDTO.getId(), newToken);
             ConnectionManagerUtil.commitDBTransaction();
-            return oneTimePinDTO;
+
         } catch (DBConnectionException e) {
             ConnectionManagerUtil.rollbackDBTransaction();
             String msg = "Error occurred while getting database connection to validate the given email and email type.";
@@ -120,6 +121,8 @@ public class OTPManagementServiceImpl implements OTPManagementService {
         } finally {
             ConnectionManagerUtil.closeDBConnection();
         }
+        oneTimePinDTO.setOtpToken(newToken);
+        return oneTimePinDTO;
     }
 
     @Override
