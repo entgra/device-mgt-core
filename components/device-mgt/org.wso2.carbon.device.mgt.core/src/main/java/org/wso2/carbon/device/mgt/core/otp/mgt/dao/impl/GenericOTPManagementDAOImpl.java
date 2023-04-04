@@ -214,7 +214,7 @@ public class GenericOTPManagementDAOImpl extends AbstractDAOImpl implements OTPM
                 + "SET "
                 + "OTP_TOKEN = ?, "
                 + "CREATED_AT = ?, "
-                + "IS_EXPIRED = false"
+                + "IS_EXPIRED = false "
                 + "WHERE ID = ?";
 
         try {
