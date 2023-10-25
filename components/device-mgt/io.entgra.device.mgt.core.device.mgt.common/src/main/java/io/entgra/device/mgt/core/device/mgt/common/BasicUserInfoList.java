@@ -15,9 +15,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans;
+package io.entgra.device.mgt.core.device.mgt.common;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.entgra.device.mgt.core.device.mgt.common.BasePaginatedResult;
+import io.entgra.device.mgt.core.device.mgt.common.BasicUserInfo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - 2023, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
+ * Copyright (c) 2023, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
  *
  * Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -15,7 +15,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.analytics;
+
+package io.entgra.device.mgt.core.device.mgt.common;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
@@ -23,22 +24,26 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * This holds event attributes
- */
-public class EventAttributeList {
+public class BasicUserInfoMetadata {
 
-    private List<Attribute> attributes = new ArrayList<>();
+    private List<BasicUserInfo> users = new ArrayList<>();
 
-    @ApiModelProperty(value = "List of Event Attributes")
-    @JsonProperty("attributes")
-    public List<Attribute> getList() {
-        return attributes;
+    private int totalUserCount;
+
+    public int getTotalUserCount() {
+        return totalUserCount;
     }
 
-    public void setList(List<Attribute> attributes) {
-        this.attributes = attributes;
+    public void setTotalUserCount(int totalUserCount) {
+        this.totalUserCount = totalUserCount;
+    }
+
+    public List<BasicUserInfo> getList() {
+        return users;
+    }
+
+    public void setList(List<BasicUserInfo> users) {
+        this.users = users;
     }
 
 }
-

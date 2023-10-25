@@ -16,8 +16,9 @@
  * under the License.
  */
 
-package io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans;
+package io.entgra.device.mgt.core.device.mgt.common;
 
+import io.entgra.device.mgt.core.device.mgt.common.BasicUserInfo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 

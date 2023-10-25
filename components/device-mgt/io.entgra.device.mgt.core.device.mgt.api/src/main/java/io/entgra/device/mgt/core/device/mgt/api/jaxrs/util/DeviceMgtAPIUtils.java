@@ -21,6 +21,7 @@ package io.entgra.device.mgt.core.device.mgt.api.jaxrs.util;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.APIPublisherService;
 import io.entgra.device.mgt.core.application.mgt.common.services.ApplicationManager;
 import io.entgra.device.mgt.core.application.mgt.common.services.SubscriptionManager;
+import io.entgra.device.mgt.core.device.mgt.core.service.UserManagementProviderService;
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.client.Options;
 import org.apache.axis2.java.security.SSLProtocolSocketFactory;
@@ -280,6 +281,18 @@ public class DeviceMgtAPIUtils {
             throw new IllegalStateException(msg);
         }
         return deviceManagementProviderService;
+    }
+
+    public static UserManagementProviderService getUserManagementService() {
+        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        UserManagementProviderService userManagementProviderService =
+                (UserManagementProviderService) ctx.getOSGiService(UserManagementProviderService.class, null);
+        if (userManagementProviderService == null) {
+            String msg = "UserImpl Management provider service has not initialized.";
+            log.error(msg);
+            throw new IllegalStateException(msg);
+        }
+        return userManagementProviderService;
     }
 
     public static DeviceTypeGeneratorService getDeviceTypeGeneratorService() {

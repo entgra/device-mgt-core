@@ -19,7 +19,9 @@ package io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import io.entgra.device.mgt.core.device.mgt.common.Device;
+import io.entgra.device.mgt.core.device.mgt.common.BasicUserInfoMetadata;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.UserManagementException;
+import io.entgra.device.mgt.core.device.mgt.core.service.UserManagementProviderService;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,7 +30,6 @@ import org.eclipse.wst.common.uriresolver.internal.util.URIEncoder;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
-import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo;
 import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.ConfigurationManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.OTPManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.invitation.mgt.DeviceEnrollmentInvitation;
@@ -39,16 +40,16 @@ import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.service.EmailMetaInfo;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ActivityList;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.BasicUserInfo;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.BasicUserInfoList;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.BasicUserInfoWrapper;
+import io.entgra.device.mgt.core.device.mgt.common.BasicUserInfo;
+import io.entgra.device.mgt.core.device.mgt.common.BasicUserInfoList;
+import io.entgra.device.mgt.core.device.mgt.common.BasicUserInfoWrapper;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.Credential;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.EnrollmentInvitation;
+import io.entgra.device.mgt.core.device.mgt.common.EnrollmentInvitation;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.OldPasswordResetWrapper;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.PermissionList;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.RoleList;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.UserInfo;
+import io.entgra.device.mgt.core.device.mgt.common.UserInfo;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.UserStoreList;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.exception.BadRequestException;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.UserManagementService;
@@ -70,8 +71,6 @@ import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.api.UserStoreManager;
 import org.wso2.carbon.user.core.UserCoreConstants;
 import org.wso2.carbon.user.core.service.RealmService;
-import org.wso2.carbon.user.mgt.UserRealmProxy;
-import org.wso2.carbon.user.mgt.common.UIPermissionNode;
 import org.wso2.carbon.user.mgt.common.UserAdminException;
 import org.wso2.carbon.utils.CarbonUtils;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
@@ -83,7 +82,6 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -92,10 +90,8 @@ import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.SecureRandom;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -129,6 +125,7 @@ public class UserManagementServiceImpl implements UserManagementService {
     @Override
     public Response addUser(UserInfo userInfo) {
         try {
+            UserManagementProviderService ums = DeviceMgtAPIUtils.getUserManagementService();
             UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
             if (userStoreManager.isExistingUser(userInfo.getUsername())) {
                 // if user already exists
@@ -140,51 +137,8 @@ public class UserManagementServiceImpl implements UserManagementService {
                 String msg = "User by username: " + userInfo.getUsername() + " already exists. Try with another username." ;
                 return Response.status(Response.Status.CONFLICT).entity(msg).build();
             }
-
-            String initialUserPassword;
-            if (userInfo.getPassword() != null) {
-                initialUserPassword = userInfo.getPassword();
-            } else {
-                initialUserPassword = this.generateInitialUserPassword();
-            }
-
-            Map<String, String> defaultUserClaims =
-                    this.buildDefaultUserClaims(userInfo.getFirstname(), userInfo.getLastname(),
-                            userInfo.getEmailAddress(), true);
-
-            userStoreManager.addUser(userInfo.getUsername(), initialUserPassword,
-                    userInfo.getRoles(), defaultUserClaims, null);
-            // Outputting debug message upon successful addition of user
-            if (log.isDebugEnabled()) {
-                log.debug("User '" + userInfo.getUsername() + "' has successfully been added.");
-            }
-
-            BasicUserInfo createdUserInfo = this.getBasicUserInfo(userInfo.getUsername());
-            // Outputting debug message upon successful retrieval of user
-            if (log.isDebugEnabled()) {
-                log.debug("User by username: " + userInfo.getUsername() + " was found.");
-            }
-            DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
-            String[] bits = userInfo.getUsername().split("/");
-            String username = bits[bits.length - 1];
-            String recipient = userInfo.getEmailAddress();
-            Properties props = new Properties();
-            props.setProperty("first-name", userInfo.getFirstname());
-            props.setProperty("last-name", userInfo.getLastname());
-            props.setProperty("username", username);
-            props.setProperty("password", initialUserPassword);
-
-            EmailMetaInfo metaInfo = new EmailMetaInfo(recipient, props);
             BasicUserInfoWrapper userInfoWrapper = new BasicUserInfoWrapper();
-            String message;
-            try {
-                dms.sendRegistrationEmail(metaInfo);
-                message = "An invitation mail will be sent to this user to initiate device enrollment.";
-            } catch (ConfigurationManagementException e) {
-                message = "Mail Server is not configured. Email invitation will not be sent.";
-            }
-            userInfoWrapper.setBasicUserInfo(createdUserInfo);
-            userInfoWrapper.setMessage(message);
+            userInfoWrapper =  ums.addUser(userInfo);
             return Response.created(new URI(API_BASE_PATH + "/" + URIEncoder.encode(userInfo.getUsername(),
                     "UTF-8"))).entity(userInfoWrapper).build();
         } catch (UserStoreException e) {
@@ -205,8 +159,8 @@ public class UserManagementServiceImpl implements UserManagementService {
             log.error(msg, e);
             return Response.serverError().entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
-        } catch (DeviceManagementException e) {
-            String msg = "Error occurred while sending registration email to the user " + userInfo.getUsername();
+        } catch (UserManagementException e) {
+            String msg = "Error occurred while trying to add the user '" +  userInfo.getUsername() + "'";
             log.error(msg, e);
             return Response.serverError().entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
@@ -221,6 +175,7 @@ public class UserManagementServiceImpl implements UserManagementService {
             username = domain + '/' + username;
         }
         try {
+            UserManagementProviderService ums = DeviceMgtAPIUtils.getUserManagementService();
             UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
             if (!userStoreManager.isExistingUser(username)) {
                 if (log.isDebugEnabled()) {
@@ -229,14 +184,19 @@ public class UserManagementServiceImpl implements UserManagementService {
                 String msg = "User by username: " + username + " does not exist.";
                 return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
             }
-
-            BasicUserInfo user = this.getBasicUserInfo(username);
+            BasicUserInfo user = ums.getUser(username);
             return Response.status(Response.Status.OK).entity(user).build();
         } catch (UserStoreException e) {
             String msg = "Error occurred while retrieving information of the user '" + username + "'";
             log.error(msg, e);
             return Response.serverError().entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        } catch (UserManagementException e) {
+            String message = "Error occurred while trying to get the user '" + username + "'";
+            log.error(message, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse.ErrorResponseBuilder().setMessage(message).build())
+                    .build();
         }
     }
 
@@ -247,6 +207,7 @@ public class UserManagementServiceImpl implements UserManagementService {
             username = domain + '/' + username;
         }
         try {
+            UserManagementProviderService ums = DeviceMgtAPIUtils.getUserManagementService();
             UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
             if (!userStoreManager.isExistingUser(username)) {
                 if (log.isDebugEnabled()) {
@@ -256,65 +217,19 @@ public class UserManagementServiceImpl implements UserManagementService {
                 String msg = "User by username: " + username + " does not exist.";
                 return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
             }
-
-            Map<String, String> defaultUserClaims =
-                    this.buildDefaultUserClaims(userInfo.getFirstname(), userInfo.getLastname(),
-                            userInfo.getEmailAddress(), false);
-            if (StringUtils.isNotEmpty(userInfo.getPassword())) {
-                // Decoding Base64 encoded password
-                userStoreManager.updateCredentialByAdmin(username,
-                        userInfo.getPassword());
-                log.debug("User credential of username: " + username + " has been changed");
-            }
-            List<String> currentRoles = this.getFilteredRoles(userStoreManager, username);
-
-            List<String> newRoles = new ArrayList<>();
-            if (userInfo.getRoles() != null) {
-                newRoles = Arrays.asList(userInfo.getRoles());
-            }
-
-            List<String> rolesToAdd = new ArrayList<>(newRoles);
-            List<String> rolesToDelete = new ArrayList<>();
-
-            for (String role : currentRoles) {
-                if (newRoles.contains(role)) {
-                    rolesToAdd.remove(role);
-                } else {
-                    rolesToDelete.add(role);
-                }
-            }
-            rolesToDelete.remove(ROLE_EVERYONE);
-            rolesToAdd.remove(ROLE_EVERYONE);
-            userStoreManager.updateRoleListOfUser(username,
-                    rolesToDelete.toArray(new String[rolesToDelete.size()]),
-                    rolesToAdd.toArray(new String[rolesToAdd.size()]));
-            userStoreManager.setUserClaimValues(username, defaultUserClaims, null);
-            // Outputting debug message upon successful addition of user
-            if (log.isDebugEnabled()) {
-                log.debug("User by username: " + username + " was successfully updated.");
-            }
-
-            BasicUserInfo updatedUserInfo = this.getBasicUserInfo(username);
-            return Response.ok().entity(updatedUserInfo).build();
+            return Response.ok().entity(ums.updateUser(username, userInfo)).build();
         } catch (UserStoreException e) {
             String msg = "Error occurred while trying to update user '" + username + "'";
             log.error(msg, e);
             return Response.serverError().entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        } catch (UserManagementException e) {
+            String message = "Error occurred while trying to update the user '" + username + "'";
+            log.error(message, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse.ErrorResponseBuilder().setMessage(message).build())
+                    .build();
         }
-    }
-
-    private List<String> getFilteredRoles(UserStoreManager userStoreManager, String username)
-            throws UserStoreException {
-        String[] roleListOfUser;
-        roleListOfUser = userStoreManager.getRoleListOfUser(username);
-        List<String> filteredRoles = new ArrayList<>();
-        for (String role : roleListOfUser) {
-            if (!(role.startsWith("Internal/") || role.startsWith("Authentication/"))) {
-                filteredRoles.add(role);
-            }
-        }
-        return filteredRoles;
     }
 
     @DELETE
@@ -368,6 +283,7 @@ public class UserManagementServiceImpl implements UserManagementService {
             username = domain + '/' + username;
         }
         try {
+            UserManagementProviderService ums = DeviceMgtAPIUtils.getUserManagementService();
             UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
             if (!userStoreManager.isExistingUser(username)) {
                 if (log.isDebugEnabled()) {
@@ -378,13 +294,19 @@ public class UserManagementServiceImpl implements UserManagementService {
             }
 
             RoleList result = new RoleList();
-            result.setList(getFilteredRoles(userStoreManager, username));
+            result.setList(ums.getRoles(username));
             return Response.status(Response.Status.OK).entity(result).build();
         } catch (UserStoreException e) {
             String msg = "Error occurred while trying to retrieve roles of the user '" + username + "'";
             log.error(msg, e);
             return Response.serverError().entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        } catch (UserManagementException e) {
+            String message = "Error occurred while trying to retrieve roles of the user '" + username + "'";
+            log.error(message, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse.ErrorResponseBuilder().setMessage(message).build())
+                    .build();
         }
     }
 
@@ -409,46 +331,15 @@ public class UserManagementServiceImpl implements UserManagementService {
         int appliedLimit = -1;
 
         try {
-            UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
-
-            //As the listUsers function accepts limit only to accommodate offset we are passing offset + limit
-            List<String> users = Arrays.asList(userStoreManager.listUsers(appliedFilter, appliedLimit));
-            if (domain != null && !domain.isEmpty()) {
-                users = getUsersFromDomain(domain, users);
-            }
-            userList = new ArrayList<>(users.size());
-            BasicUserInfo user;
-            for (String username : users) {
-                if (Constants.APIM_RESERVED_USER.equals(username) || Constants.RESERVED_USER.equals(username)) {
-                    continue;
-                }
-                user = getBasicUserInfo(username);
-                userList.add(user);
-            }
-
-            int toIndex = offset + limit;
-            int listSize = userList.size();
-            int lastIndex = listSize - 1;
-
-            if (offset <= lastIndex) {
-                if (toIndex <= listSize) {
-                    offsetList = userList.subList(offset, toIndex);
-                } else {
-                    offsetList = userList.subList(offset, listSize);
-                }
-            } else {
-                offsetList = new ArrayList<>();
-            }
-            BasicUserInfoList result = new BasicUserInfoList();
-            result.setList(offsetList);
-            result.setCount(userList.size());
-
-            return Response.status(Response.Status.OK).entity(result).build();
-        } catch (UserStoreException e) {
-            String msg = "Error occurred while retrieving the list of users.";
-            log.error(msg, e);
-            return Response.serverError().entity(
-                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+            UserManagementProviderService ums = DeviceMgtAPIUtils.getUserManagementService();
+            BasicUserInfoList basicUserInfoList = ums.getUsers(appliedFilter,appliedLimit, domain, limit, offset);
+            return Response.status(Response.Status.OK).entity(basicUserInfoList).build();
+        }  catch (UserManagementException e) {
+            String message = "Error occurred while trying to retrieve all users of domain '" + domain + "'";
+            log.error(message, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse.ErrorResponseBuilder().setMessage(message).build())
+                    .build();
         }
     }
 
@@ -475,78 +366,17 @@ public class UserManagementServiceImpl implements UserManagementService {
             limit = Constants.DEFAULT_PAGE_LIMIT;
         }
 
-        List<BasicUserInfo> filteredUserList = new ArrayList<>();
-        List<String> commonUsers = null, tempList;
+        BasicUserInfo basicUserInfo = new BasicUserInfo();
+        basicUserInfo.setUsername(username);
+        basicUserInfo.setFirstname(firstName);
+        basicUserInfo.setLastname(lastName);
+        basicUserInfo.setEmailAddress(emailAddress);
 
         try {
-            if (StringUtils.isNotEmpty(username)) {
-                commonUsers = getUserList(null, username);
-            }
-            if (commonUsers != null) {
-                commonUsers.remove(Constants.APIM_RESERVED_USER);
-                commonUsers.remove(Constants.RESERVED_USER);
-            }
-
-            if (!skipSearch(commonUsers) && StringUtils.isNotEmpty(firstName)) {
-                tempList = getUserList(Constants.USER_CLAIM_FIRST_NAME, firstName);
-                if (commonUsers == null) {
-                    commonUsers = tempList;
-                } else {
-                    commonUsers.retainAll(tempList);
-                }
-            }
-
-            if (!skipSearch(commonUsers) && StringUtils.isNotEmpty(lastName)) {
-                tempList = getUserList(Constants.USER_CLAIM_LAST_NAME, lastName);
-                if (commonUsers == null || commonUsers.size() == 0) {
-                    commonUsers = tempList;
-                } else {
-                    commonUsers.retainAll(tempList);
-                }
-            }
-
-            if (!skipSearch(commonUsers) && StringUtils.isNotEmpty(emailAddress)) {
-                tempList = getUserList(Constants.USER_CLAIM_EMAIL_ADDRESS, emailAddress);
-                if (commonUsers == null || commonUsers.size() == 0) {
-                    commonUsers = tempList;
-                } else {
-                    commonUsers.retainAll(tempList);
-                }
-            }
-
-            BasicUserInfo basicUserInfo;
-            if (commonUsers != null) {
-                for (String user : commonUsers) {
-                    basicUserInfo = new BasicUserInfo();
-                    basicUserInfo.setUsername(user);
-                    basicUserInfo.setEmailAddress(getClaimValue(user, Constants.USER_CLAIM_EMAIL_ADDRESS));
-                    basicUserInfo.setFirstname(getClaimValue(user, Constants.USER_CLAIM_FIRST_NAME));
-                    basicUserInfo.setLastname(getClaimValue(user, Constants.USER_CLAIM_LAST_NAME));
-                    filteredUserList.add(basicUserInfo);
-                }
-            }
-
-            int toIndex = offset + limit;
-            int listSize = filteredUserList.size();
-            int lastIndex = listSize - 1;
-
-            List<BasicUserInfo> offsetList;
-            if (offset <= lastIndex) {
-                if (toIndex <= listSize) {
-                    offsetList = filteredUserList.subList(offset, toIndex);
-                } else {
-                    offsetList = filteredUserList.subList(offset, listSize);
-                }
-            } else {
-                offsetList = new ArrayList<>();
-            }
-
-            BasicUserInfoList result = new BasicUserInfoList();
-            result.setList(offsetList);
-            result.setCount(commonUsers != null ? commonUsers.size() : 0);
-
+            UserManagementProviderService ums = DeviceMgtAPIUtils.getUserManagementService();
+            BasicUserInfoList result = ums.getUsersSearch(basicUserInfo, offset, limit);
             return Response.status(Response.Status.OK).entity(result).build();
-        } catch (UserStoreException e) {
+        } catch (UserManagementException e) {
             String msg = "Error occurred while retrieving the list of users.";
             log.error(msg, e);
             return Response.serverError().entity(
@@ -650,28 +480,10 @@ public class UserManagementServiceImpl implements UserManagementService {
         }
         List<UserInfo> userList;
         try {
-            UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
-            String[] users;
-            if (userStoreDomain.equals("all")) {
-                users = userStoreManager.listUsers(filter + "*", limit);
-            } else {
-                users = userStoreManager.listUsers(userStoreDomain + "/" + filter + "*", limit);
-            }
-            userList = new ArrayList<>();
-            UserInfo user;
-            for (String username : users) {
-                if (Constants.APIM_RESERVED_USER.equals(username) || Constants.RESERVED_USER.equals(username)) {
-                    continue;
-                }
-                user = new UserInfo();
-                user.setUsername(username);
-                user.setEmailAddress(getClaimValue(username, Constants.USER_CLAIM_EMAIL_ADDRESS));
-                user.setFirstname(getClaimValue(username, Constants.USER_CLAIM_FIRST_NAME));
-                user.setLastname(getClaimValue(username, Constants.USER_CLAIM_LAST_NAME));
-                userList.add(user);
-            }
+            UserManagementProviderService ums = DeviceMgtAPIUtils.getUserManagementService();
+            userList = ums.getUserNames(filter, userStoreDomain, offset, limit);
             return Response.status(Response.Status.OK).entity(userList).build();
-        } catch (UserStoreException e) {
+        } catch (UserManagementException e) {
             String msg = "Error occurred while retrieving the list of users using the filter : " + filter;
             log.error(msg, e);
             return Response.serverError().entity(
@@ -1043,28 +855,13 @@ public class UserManagementServiceImpl implements UserManagementService {
         String username = CarbonContext.getThreadLocalCarbonContext().getUsername();
         try {
             UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
+            UserManagementProviderService ums = DeviceMgtAPIUtils.getUserManagementService();
             if (!userStoreManager.isExistingUser(username)) {
                 String message = "User by username: " + username + " does not exist for permission retrieval.";
                 log.error(message);
                 return Response.status(Response.Status.NOT_FOUND).entity(message).build();
             }
-            // Get a list of roles which the user assigned to
-            List<String> roles = getFilteredRoles(userStoreManager, username);
-            List<String> permissions = new ArrayList<>();
-            UserRealm userRealm = DeviceMgtAPIUtils.getUserRealm();
-            int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
-            // Get permissions for each role
-            for (String roleName : roles) {
-                try {
-                    permissions.addAll(getPermissionsListFromRole(roleName, userRealm, tenantId));
-                } catch (UserAdminException e) {
-                    String message = "Error occurred while retrieving the permissions of role '" + roleName + "'";
-                    log.error(message, e);
-                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                            .entity(new ErrorResponse.ErrorResponseBuilder().setMessage(message).build())
-                            .build();
-                }
-            }
+            List<String> permissions = ums.getPermissions(username);
             PermissionList permissionList = new PermissionList();
             permissionList.setList(permissions);
             return Response.status(Response.Status.OK).entity(permissionList).build();
@@ -1074,24 +871,13 @@ public class UserManagementServiceImpl implements UserManagementService {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(new ErrorResponse.ErrorResponseBuilder().setMessage(message).build())
                     .build();
+        } catch (UserManagementException e) {
+            String message = "Error occurred while trying to retrieve permissions of the user '" + username + "'";
+            log.error(message, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse.ErrorResponseBuilder().setMessage(message).build())
+                    .build();
         }
-    }
-
-    private Map<String, String> buildDefaultUserClaims(String firstName, String lastName, String emailAddress,
-                                                       boolean isFresh) {
-        Map<String, String> defaultUserClaims = new HashMap<>();
-        defaultUserClaims.put(Constants.USER_CLAIM_FIRST_NAME, firstName);
-        defaultUserClaims.put(Constants.USER_CLAIM_LAST_NAME, lastName);
-        defaultUserClaims.put(Constants.USER_CLAIM_EMAIL_ADDRESS, emailAddress);
-        if (isFresh) {
-            defaultUserClaims.put(Constants.USER_CLAIM_CREATED, String.valueOf(Instant.now().getEpochSecond()));
-        } else {
-            defaultUserClaims.put(Constants.USER_CLAIM_MODIFIED, String.valueOf(Instant.now().getEpochSecond()));
-        }
-        if (log.isDebugEnabled()) {
-            log.debug("Default claim map is created for new user: " + defaultUserClaims.toString());
-        }
-        return defaultUserClaims;
     }
 
     /**
@@ -1128,37 +914,6 @@ public class UserManagementServiceImpl implements UserManagementService {
         return userClaims;
     }
 
-    private String generateInitialUserPassword() {
-        int passwordLength = 6;
-        //defining the pool of characters to be used for initial password generation
-        String lowerCaseCharset = "abcdefghijklmnopqrstuvwxyz";
-        String upperCaseCharset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        String numericCharset = "0123456789";
-        SecureRandom randomGenerator = new SecureRandom();
-        String totalCharset = lowerCaseCharset + upperCaseCharset + numericCharset;
-        int totalCharsetLength = totalCharset.length();
-        StringBuilder initialUserPassword = new StringBuilder();
-        for (int i = 0; i < passwordLength; i++) {
-            initialUserPassword.append(
-                    totalCharset.charAt(randomGenerator.nextInt(totalCharsetLength)));
-        }
-        if (log.isDebugEnabled()) {
-            log.debug("Initial user password is created for new user: " + initialUserPassword);
-        }
-        return initialUserPassword.toString();
-    }
-
-    private BasicUserInfo getBasicUserInfo(String username) throws UserStoreException {
-        BasicUserInfo userInfo = new BasicUserInfo();
-        userInfo.setUsername(username);
-        userInfo.setEmailAddress(getClaimValue(username, Constants.USER_CLAIM_EMAIL_ADDRESS));
-        userInfo.setFirstname(getClaimValue(username, Constants.USER_CLAIM_FIRST_NAME));
-        userInfo.setLastname(getClaimValue(username, Constants.USER_CLAIM_LAST_NAME));
-        userInfo.setCreatedDate(getClaimValue(username, Constants.USER_CLAIM_CREATED));
-        userInfo.setModifiedDate(getClaimValue(username, Constants.USER_CLAIM_MODIFIED));
-        return userInfo;
-    }
-
     private String getClaimValue(String username, String claimUri) throws UserStoreException {
         UserStoreManager userStoreManager = DeviceMgtAPIUtils.getUserStoreManager();
         return userStoreManager.getUserClaimValue(username, claimUri, null);
@@ -1179,74 +934,6 @@ public class UserManagementServiceImpl implements UserManagementService {
         return DeviceManagementConstants.EmailAttributes.DEFAULT_ENROLLMENT_TEMPLATE;
     }
 
-    /**
-     * Searches users which matches a given filter based on a claim
-     *
-     * @param claim the claim value to apply the filter. If <code>null</code> users will be filtered by username.
-     * @param filter the search query.
-     * @return <code>List<String></code> of users which matches.
-     * @throws UserStoreException If unable to search users.
-     */
-    private ArrayList<String> getUserList(String claim, String filter) throws UserStoreException {
-        String defaultFilter = "*";
-
-        org.wso2.carbon.user.core.UserStoreManager userStoreManager =
-                (org.wso2.carbon.user.core.UserStoreManager) DeviceMgtAPIUtils.getUserStoreManager();
-
-        String appliedFilter = filter + defaultFilter;
-
-        String[] users;
-        if (log.isDebugEnabled()) {
-            log.debug("Searching Users - claim: " + claim + " filter: " + appliedFilter);
-        }
-        if (StringUtils.isEmpty(claim)) {
-            users = userStoreManager.listUsers(appliedFilter, -1);
-        } else {
-            users = userStoreManager.getUserList(claim, appliedFilter, null);
-        }
-
-        if (log.isDebugEnabled()) {
-            log.debug("Returned user count: " + users.length);
-        }
-
-        return new ArrayList<>(Arrays.asList(users));
-    }
-
-    /**
-     * User search provides an AND search result and if either of the filter returns an empty set of users, there is no
-     * need to carry on the search further. This method decides whether to carry on the search or not.
-     *
-     * @param commonUsers current filtered user list.
-     * @return <code>true</code> if further search is needed.
-     */
-    private boolean skipSearch(List<String> commonUsers) {
-        return commonUsers != null && commonUsers.size() == 0;
-    }
-
-    /**
-     * Returns a list of permissions of a given role
-     * @param roleName name of the role
-     * @param tenantId the user's tenetId
-     * @param userRealm user realm of the tenant
-     * @return list of permissions
-     * @throws UserAdminException If unable to get the permissions
-     */
-    private static List<String> getPermissionsListFromRole(String roleName, UserRealm userRealm, int tenantId)
-            throws UserAdminException {
-        org.wso2.carbon.user.core.UserRealm userRealmCore;
-        try {
-            userRealmCore = (org.wso2.carbon.user.core.UserRealm) userRealm;
-        } catch (ClassCastException e) {
-            String message = "Provided UserRealm object is not an instance of org.wso2.carbon.user.core.UserRealm";
-            log.error(message, e);
-            throw new UserAdminException(message, e);
-        }
-        UserRealmProxy userRealmProxy = new UserRealmProxy(userRealmCore);
-        List<String> permissionsList = new ArrayList<>();
-        final UIPermissionNode rolePermissions = userRealmProxy.getRolePermissions(roleName, tenantId);
-        DeviceMgtAPIUtils.iteratePermissions(rolePermissions, permissionsList);
-        return permissionsList;
-    }
 
     /**
      * Returns a Response with the list of user stores available for a tenant
@@ -1282,24 +969,5 @@ public class UserManagementServiceImpl implements UserManagementService {
         userStoreList.setList(userStores);
         userStoreList.setCount(userStores.size());
         return Response.status(Response.Status.OK).entity(userStoreList).build();
-    }
-
-    /**
-     * Iterates through the list of all users and returns a list of users from the specified user store domain
-     * @param domain user store domain name
-     * @param users list of all users from UserStoreManager
-     * @return list of users from specified user store domain
-     */
-    public List<String> getUsersFromDomain(String domain, List<String> users) {
-        List<String> userList = new ArrayList<>();
-        for(String username : users) {
-            String[] domainName = username.split("/");
-            if(domain.equals(Constants.PRIMARY_USER_STORE) && domainName.length == 1) {
-                userList.add(username);
-            } else if (domainName[0].equals(domain) && domainName.length > 1) {
-                userList.add(username);
-            }
-        }
-        return userList;
     }
 }

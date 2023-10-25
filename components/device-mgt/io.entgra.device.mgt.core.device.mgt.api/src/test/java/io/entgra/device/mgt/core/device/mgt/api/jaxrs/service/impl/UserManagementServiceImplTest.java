@@ -18,7 +18,7 @@
 
 package io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl;
 
-import io.entgra.device.mgt.core.device.mgt.common.Device;
+import io.entgra.device.mgt.core.device.mgt.core.service.UserManagementProviderService;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -40,9 +40,9 @@ import io.entgra.device.mgt.core.device.mgt.common.spi.OTPManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.otp.mgt.service.OTPManagementServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderServiceImpl;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.BasicUserInfo;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.EnrollmentInvitation;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.UserInfo;
+import io.entgra.device.mgt.core.device.mgt.common.BasicUserInfo;
+import io.entgra.device.mgt.core.device.mgt.common.EnrollmentInvitation;
+import io.entgra.device.mgt.core.device.mgt.common.UserInfo;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.UserManagementService;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.Constants;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.DeviceMgtAPIUtils;
@@ -70,6 +70,8 @@ public class UserManagementServiceImplTest {
     private UserStoreManager userStoreManager;
     private UserManagementService userManagementService;
     private DeviceManagementProviderService deviceManagementProviderService;
+
+    private UserManagementProviderService userManagementProviderService;
     private OTPManagementService otpManagementService;
     private static final String DEFAULT_DEVICE_USER = "Internal/devicemgt-user";
     private UserRealm userRealm;
@@ -168,6 +170,8 @@ public class UserManagementServiceImplTest {
     @Test(description = "This method tests the updateUser method of UserManagementService", dependsOnMethods =
             {"testGetUser"})
     public void testUpdateUser() throws UserStoreException {
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getUserManagementService"))
+                .toReturn(this.userManagementProviderService);
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getUserStoreManager"))
                 .toReturn(this.userStoreManager);
         Response response = userManagementService.updateUser(TEST2_USERNAME, null, null);

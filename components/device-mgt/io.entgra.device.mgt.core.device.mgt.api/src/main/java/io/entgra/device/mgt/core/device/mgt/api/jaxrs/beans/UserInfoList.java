@@ -18,6 +18,8 @@
 package io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.entgra.device.mgt.core.device.mgt.common.BasePaginatedResult;
+import io.entgra.device.mgt.core.device.mgt.common.UserInfo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 

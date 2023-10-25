@@ -17,6 +17,7 @@
  */
 package io.entgra.device.mgt.core.device.mgt.core.internal;
 
+import io.entgra.device.mgt.core.device.mgt.core.service.*;
 import io.entgra.device.mgt.core.server.bootup.heartbeat.beacon.service.HeartBeatManagementService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -77,10 +78,6 @@ import io.entgra.device.mgt.core.device.mgt.core.push.notification.mgt.task.Push
 import io.entgra.device.mgt.core.device.mgt.core.report.mgt.ReportManagementServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.search.mgt.SearchManagerService;
 import io.entgra.device.mgt.core.device.mgt.core.search.mgt.impl.SearchManagerServiceImpl;
-import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
-import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderServiceImpl;
-import io.entgra.device.mgt.core.device.mgt.core.service.GroupManagementProviderService;
-import io.entgra.device.mgt.core.device.mgt.core.service.GroupManagementProviderServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.task.DeviceTaskManagerService;
 import io.entgra.device.mgt.core.device.mgt.core.traccar.api.service.DeviceAPIClientService;
 import io.entgra.device.mgt.core.device.mgt.core.traccar.api.service.impl.DeviceAPIClientServiceImpl;
@@ -305,6 +302,11 @@ public class DeviceManagementServiceComponent {
         DeviceManagementProviderService deviceManagementProvider = new DeviceManagementProviderServiceImpl();
         DeviceManagementDataHolder.getInstance().setDeviceManagementProvider(deviceManagementProvider);
         bundleContext.registerService(DeviceManagementProviderService.class.getName(), deviceManagementProvider, null);
+
+        /* Registering User Management Service */
+        UserManagementProviderService  userManagementProviderService = new UserManagementProviderServiceImpl();
+        DeviceManagementDataHolder.getInstance().setUserManagementProviderService(userManagementProviderService);
+        bundleContext.registerService(UserManagementProviderService.class.getName(), userManagementProviderService, null);
 
         /* Registering Device API Client Service */
         DeviceAPIClientService deviceAPIClientService = new DeviceAPIClientServiceImpl();

@@ -148,6 +148,15 @@ public final class DeviceManagementConstants {
 
         public static final String CLAIM_EMAIL_ADDRESS = "http://wso2.org/claims/emailaddress";
         public static final String CLAIM_FIRST_NAME = "http://wso2.org/claims/givenname";
+        public static final String CLAIM_LAST_NAME = "http://wso2.org/claims/lastname";
+        public static final String CLAIM_CREATED = "http://wso2.org/claims/created";
+        public static final String CLAIM_MODIFIED = "http://wso2.org/claims/modified";
+        public static final String CLAIM_DEVICES = "http://wso2.org/claims/devices";
+        public static final String RESERVED_USER = "reserved_user";
+
+        public static final String APIM_RESERVED_USER = "apim_reserved_user";
+
+        public static final String PRIMARY_USER_STORE = "PRIMARY";
 
         // Permissions that are given for a normal device user.
         public static final Permission[] PERMISSIONS_FOR_DEVICE_USER = {
