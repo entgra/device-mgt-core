@@ -272,7 +272,7 @@ public class UserManagementProviderServiceImpl implements UserManagementProvider
         List<String> commonUsers = null, tempList;
         try {
             if (basicUserInfo.getUsername() != null && StringUtils.isNotEmpty(basicUserInfo.getUsername())) {
-                commonUsers = getUserList(null, basicUserInfo.getUsername());
+                commonUsers = getUserList(null, "*" + basicUserInfo.getUsername() + "*");
             }
             if (commonUsers != null) {
                 commonUsers.remove(DeviceManagementConstants.User.APIM_RESERVED_USER);
@@ -280,7 +280,7 @@ public class UserManagementProviderServiceImpl implements UserManagementProvider
             }
 
             if (!skipSearch(commonUsers) && basicUserInfo.getFirstname() != null && StringUtils.isNotEmpty(basicUserInfo.getFirstname())) {
-                tempList = getUserList(DeviceManagementConstants.User.CLAIM_FIRST_NAME, basicUserInfo.getFirstname());
+                tempList = getUserList(DeviceManagementConstants.User.CLAIM_FIRST_NAME, "*" + basicUserInfo.getFirstname() + "*");
                 if (commonUsers == null) {
                     commonUsers = tempList;
                 } else {
@@ -289,7 +289,7 @@ public class UserManagementProviderServiceImpl implements UserManagementProvider
             }
 
             if (!skipSearch(commonUsers) && basicUserInfo.getLastname() != null && StringUtils.isNotEmpty(basicUserInfo.getLastname())) {
-                tempList = getUserList(DeviceManagementConstants.User.CLAIM_LAST_NAME, basicUserInfo.getLastname());
+                tempList = getUserList(DeviceManagementConstants.User.CLAIM_LAST_NAME, "*" + basicUserInfo.getLastname() + "*");
                 if (commonUsers == null || commonUsers.size() == 0) {
                     commonUsers = tempList;
                 } else {
@@ -298,7 +298,7 @@ public class UserManagementProviderServiceImpl implements UserManagementProvider
             }
 
             if (!skipSearch(commonUsers)  && basicUserInfo.getEmailAddress() != null && StringUtils.isNotEmpty(basicUserInfo.getEmailAddress())) {
-                tempList = getUserList(DeviceManagementConstants.User.CLAIM_EMAIL_ADDRESS, basicUserInfo.getEmailAddress());
+                tempList = getUserList(DeviceManagementConstants.User.CLAIM_EMAIL_ADDRESS, "*" + basicUserInfo.getEmailAddress() + "*");
                 if (commonUsers == null || commonUsers.size() == 0) {
                     commonUsers = tempList;
                 } else {
