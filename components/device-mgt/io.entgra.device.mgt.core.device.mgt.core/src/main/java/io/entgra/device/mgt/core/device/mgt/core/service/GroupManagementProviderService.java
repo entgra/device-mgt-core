@@ -30,6 +30,7 @@ import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupAlreadyExistEx
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupNotExistException;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.RoleDoesNotExistException;
+import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupFilter;
 import org.wso2.carbon.user.api.AuthorizationManager;
 import org.wso2.carbon.user.api.UserStoreManager;
 
@@ -188,6 +189,17 @@ public interface GroupManagementProviderService {
      */
     PaginationResult getGroupsWithHierarchy(String username, GroupPaginationRequest request,
             boolean requireGroupProps) throws GroupManagementException;
+
+
+    /**
+     * Get device groups of the provided filter.
+     *
+     * @param username of the user.
+     * @param request to filter results
+     * @return {@link PaginationResult} paginated groups.
+     * @throws GroupManagementException on error during retrieval of groups for provided filter
+     */
+    List<GroupFilter> getGroupFilterValues(String username, GroupPaginationRequest request) throws GroupManagementException;
 
     /**
      * Get all hierarchical device groups count in tenant

@@ -18,6 +18,8 @@
 
 package io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl;
 
+import io.entgra.device.mgt.core.device.mgt.common.*;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.UserManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.service.UserManagementProviderService;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -40,12 +42,10 @@ import io.entgra.device.mgt.core.device.mgt.common.spi.OTPManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.otp.mgt.service.OTPManagementServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderServiceImpl;
-import io.entgra.device.mgt.core.device.mgt.common.BasicUserInfo;
-import io.entgra.device.mgt.core.device.mgt.common.EnrollmentInvitation;
-import io.entgra.device.mgt.core.device.mgt.common.UserInfo;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.UserManagementService;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.Constants;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.DeviceMgtAPIUtils;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.user.api.RealmConfiguration;
 import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.api.UserStoreException;
@@ -88,9 +88,10 @@ public class UserManagementServiceImplTest {
     }
 
     @BeforeClass
-    public void setup() throws UserStoreException {
+    public void init() throws UserStoreException {
         initMocks(this);
         userManagementService = new UserManagementServiceImpl();
+        userManagementProviderService = Mockito.mock(UserManagementProviderService.class);
         userStoreManager = Mockito.mock(UserStoreManager.class, Mockito.RETURNS_MOCKS);
         deviceManagementProviderService = Mockito
                 .mock(DeviceManagementProviderServiceImpl.class, Mockito.CALLS_REAL_METHODS);
@@ -114,6 +115,8 @@ public class UserManagementServiceImplTest {
     public void testAddUser() throws UserStoreException, ConfigurationManagementException, DeviceManagementException {
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getUserStoreManager"))
                 .toReturn(this.userStoreManager);
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getUserManagementService"))
+                .toReturn(userManagementProviderService);
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getDeviceManagementService"))
                 .toReturn(this.deviceManagementProviderService);
         Mockito.doReturn(true).when(userStoreManager).isExistingUser("admin");
@@ -152,11 +155,27 @@ public class UserManagementServiceImplTest {
 
     @Test(description = "This method tests the getUser method of UserManagementService", dependsOnMethods =
             "testAddUser")
-    public void testGetUser() throws UserStoreException {
+    public void testGetUser() throws UserStoreException, UserManagementException {
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getUserStoreManager"))
                 .toReturn(this.userStoreManager);
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getUserManagementService"))
+                .toReturn(userManagementProviderService);
+        BasicUserInfo basicUserInfo = new BasicUserInfo();
+        Mockito.doReturn(basicUserInfo).when(userManagementProviderService)
+                .getUser(Mockito.anyString());
         Response response = userManagementService.getUser(TEST_USERNAME, null, null);
         Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode(), "User retrieval failed");
+        Mockito.reset(userManagementProviderService);
+        basicUserInfo.setUsername(TEST_USERNAME);
+        basicUserInfo.setFirstname(TEST_USERNAME);
+        basicUserInfo.setLastname(TEST_USERNAME);
+        basicUserInfo.setEmailAddress("test@gmail.com");
+        Mockito.doReturn(basicUserInfo).when(userManagementProviderService)
+                .getUser(Mockito.anyString());
+        response = userManagementService.getUser("test", null, null);
+        Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode(),
+                "GetUser request failed with valid parameters");
+        Mockito.reset(this.userManagementProviderService);
         BasicUserInfo userInfo = (BasicUserInfo) response.getEntity();
         Assert.assertEquals(userInfo.getFirstname(), TEST_USERNAME,
                 "Retrieved user object is different from the original one " + "saved");
@@ -188,15 +207,24 @@ public class UserManagementServiceImplTest {
 
     @Test(description = "This method tests the getRolesOfUser method of UserManagementService", dependsOnMethods =
             {"testUpdateUser"})
-    public void testGetRolesOfUser() {
+    public void testGetRolesOfUser() throws UserManagementException {
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getUserStoreManager"))
                 .toReturn(this.userStoreManager);
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getUserManagementService"))
+                .toReturn(userManagementProviderService);
+        List<String> roles= new ArrayList<>();
+        Mockito.doReturn(roles).when(userManagementProviderService)
+                .getRoles(Mockito.anyString());
         Response response = userManagementService.getRolesOfUser(TEST2_USERNAME, null);
         Assert.assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode(),
                 "Roles of a non-existing user was successfully retrieved");
+        Mockito.reset(userManagementProviderService);
+        Mockito.doReturn(roles).when(userManagementProviderService)
+                .getRoles(Mockito.anyString());
         response = userManagementService.getRolesOfUser(TEST_USERNAME, null);
         Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode(),
                 "Retrieval of roles of a existing user failed.");
+        Mockito.reset(this.userManagementProviderService);
     }
 
     @Test(description = "This method tests the IsUserExists method of UserManagementService", dependsOnMethods =
@@ -232,12 +260,13 @@ public class UserManagementServiceImplTest {
     public void testGetUserNames() throws UserStoreException {
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getUserStoreManager"))
                 .toReturn(this.userStoreManager);
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getUserManagementService"))
+                .toReturn(userManagementProviderService);
         Mockito.doReturn(new String[] { TEST_USERNAME }).when(userStoreManager)
                 .listUsers(Mockito.anyString(), Mockito.anyInt());
         Response response = userManagementService.getUserNames(TEST_USERNAME, null, "00", 0, 0);
         Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode(),
                 "Getting user names is failed for a valid request");
-
     }
 
     @Test(description = "This method tests the getUsers method of UserManagementService",
@@ -245,6 +274,8 @@ public class UserManagementServiceImplTest {
     public void testGetUsers() {
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getUserStoreManager"))
                 .toReturn(userStoreManager);
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getUserManagementService"))
+                .toReturn(userManagementProviderService);
         Response response = userManagementService.getUsers(null, "00", 0, 10, null);
         Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode(), "GetUsers request failed");
     }
@@ -303,6 +334,8 @@ public class UserManagementServiceImplTest {
             + "DeviceManagementProviderService", dependsOnMethods = {"testGetUserCount"})
     public void testNegativeScenarios1()
             throws ConfigurationManagementException, DeviceManagementException, OTPManagementException {
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getUserManagementService"))
+                .toReturn(userManagementProviderService);
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getUserStoreManager"))
                 .toReturn(this.userStoreManager);
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getDeviceManagementService"))
@@ -322,41 +355,61 @@ public class UserManagementServiceImplTest {
         response = userManagementService.inviteToEnrollDevice(enrollmentInvitation);
         Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                 "Invite existing users to enroll device succeeded under erroneous conditions");
+        Mockito.reset(this.userManagementProviderService);
     }
 
     @Test(description = "This method tests the behaviour of the different methods when there is an issue is "
             + "userStoreManager", dependsOnMethods = {"testNegativeScenarios1"})
-    public void testNegativeScenarios2() throws UserStoreException {
+    public void testNegativeScenarios2() throws UserStoreException, UserManagementException {
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getUserStoreManager"))
                 .toReturn(this.userStoreManager);
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getUserManagementService"))
+                .toReturn(userManagementProviderService);
         Mockito.doThrow(new UserStoreException()).when(userStoreManager).isExistingUser(TEST3_USERNAME);
         Response response = userManagementService.getUser(TEST3_USERNAME, null, null);
         Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                 "Response returned successful for a user retrieval with problematic inputs");
+        Mockito.when(this.userManagementProviderService.getUser(Mockito.anyString()))
+                .thenThrow(new UserManagementException());
+        response = userManagementService.getUser(TEST3_USERNAME, null, null);
+        Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                "Response returned successful for a user retrieval with problematic inputs");
         UserInfo userInfo = new UserInfo();
         userInfo.setUsername(TEST3_USERNAME);
+        Mockito.reset(this.userManagementProviderService);
+        Mockito.when(this.userManagementProviderService.getUser(Mockito.anyString()))
+                .thenThrow(new UserManagementException());
         response = userManagementService.addUser(userInfo);
         Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                 "Response returned successful for a user addition with problematic inputs");
+        Mockito.reset(this.userManagementProviderService);
+        Mockito.when(this.userManagementProviderService.getUser(Mockito.anyString()))
+                .thenThrow(new UserManagementException());
         response = userManagementService.updateUser(TEST3_USERNAME, null, userInfo);
         Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                 "Response returned successful for a user updating request with problematic inputs");
         response = userManagementService.removeUser(TEST3_USERNAME, null);
         Assert.assertEquals(response.getStatus(), Response.Status.BAD_REQUEST.getStatusCode(),
                 "Response returned successful for a user removal request with problematic inputs");
+        Mockito.reset(this.userManagementProviderService);
+        Mockito.when(this.userManagementProviderService.getUser(Mockito.anyString()))
+                .thenThrow(new UserManagementException());
         response = userManagementService.getRolesOfUser(TEST3_USERNAME, null);
         Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                 "Response returned successful for a user role retrieval request with problematic inputs");
         response = userManagementService.isUserExists(TEST3_USERNAME);
         Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                 "Response returned successful for checking existence of user under problematic conditions");
+        Mockito.reset(this.userManagementProviderService);
     }
 
     @Test(description = "This method tests the behaviour of various methods when there is an issue with UserStore "
             + "Manager", dependsOnMethods = {"testNegativeScenarios2"})
-    public void testNegativeScenarios3() throws UserStoreException {
+    public void testNegativeScenarios3() throws UserStoreException, UserManagementException {
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getUserStoreManager"))
                 .toReturn(this.userStoreManager);
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getUserManagementService"))
+                .toReturn(userManagementProviderService);
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getUserRealm")).toReturn(userRealm);
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getUserStoreCountRetrieverService"))
                 .toReturn(null);
@@ -370,12 +423,17 @@ public class UserManagementServiceImplTest {
                 .getUserClaimValue(Mockito.any(), Mockito.any(), Mockito.any());
         Mockito.doThrow(new UserStoreException()).when(userStoreManager)
                 .listUsers(Mockito.anyString(), Mockito.anyInt());
+        Mockito.when(this.userManagementProviderService.getUsers(Mockito.anyString(), Mockito.anyInt(), Mockito.anyString(), Mockito.anyInt(), Mockito.anyInt()))
+                .thenThrow(new UserManagementException());
         Response response = userManagementService.getUsers(TEST_USERNAME, "00", 0, 10, null);
         Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                 "Response returned successful for a users retrieval request.");
         response = userManagementService.getUserCount();
         Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                 "Response returned successful for a user count retrieval request.");
+        Mockito.reset(this.userManagementProviderService);
+        Mockito.when(this.userManagementProviderService.getUserNames(Mockito.anyString(), Mockito.anyString(), Mockito.anyInt(), Mockito.anyInt()))
+                .thenThrow(new UserManagementException());
         response = userManagementService.getUserNames(TEST_USERNAME, null, "00", 0, 10);
         Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                 "Response returned successful for a user count retrieval request.");
@@ -385,6 +443,7 @@ public class UserManagementServiceImplTest {
         response = userManagementService.inviteExistingUsersToEnrollDevice(deviceEnrollmentInvitation);
         Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                 "Invite existing users to enroll device succeeded under erroneous conditions");
+        Mockito.reset(this.userManagementProviderService);
     }
 
     /**

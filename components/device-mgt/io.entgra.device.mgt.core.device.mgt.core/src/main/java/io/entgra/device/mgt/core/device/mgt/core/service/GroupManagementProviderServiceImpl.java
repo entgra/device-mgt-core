@@ -26,6 +26,7 @@ import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupAlreadyExistEx
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupNotExistException;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.RoleDoesNotExistException;
+import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupFilter;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOException;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
@@ -613,6 +614,44 @@ public class GroupManagementProviderServiceImpl implements GroupManagementProvid
             groupResult.setRecordsTotal(getGroupCount(username, request.getParentPath()));
         }
         return groupResult;
+    }
+
+
+    @Override
+    public List<GroupFilter> getGroupFilterValues(String username, GroupPaginationRequest request) throws GroupManagementException {
+
+        if (request != null) {
+            DeviceManagerUtil.validateGroupListPageSize(request);
+        }
+
+        if (log.isDebugEnabled()) {
+            log.debug("Get groups filters " + username);
+        }
+
+        List<GroupFilter> groupFilters;
+        try {
+            int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
+
+            if (StringUtils.isBlank(username)) {
+                GroupManagementDAOFactory.openConnection();
+                groupFilters = groupDAO.getGroupFilterDetails(request, tenantId);
+            } else {
+                List<Integer> allDeviceGroupIdsOfUser = getGroupIds(username);
+                GroupManagementDAOFactory.openConnection();
+                groupFilters = groupDAO.getGroupFilterDetails(allDeviceGroupIdsOfUser, tenantId);
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source to retrieve all groups of filter.";
+            log.error(msg, e);
+            throw new GroupManagementException(msg, e);
+        } catch (GroupManagementDAOException e) {
+            String msg = "Error occurred while retrieving all groups of filter";
+            log.error(msg, e);
+            throw new GroupManagementException(msg, e);
+        } finally {
+            GroupManagementDAOFactory.closeConnection();
+        }
+        return groupFilters;
     }
 
     private List<DeviceGroup> getGroups(List<Integer> groupIds, int tenantId) throws GroupManagementException {

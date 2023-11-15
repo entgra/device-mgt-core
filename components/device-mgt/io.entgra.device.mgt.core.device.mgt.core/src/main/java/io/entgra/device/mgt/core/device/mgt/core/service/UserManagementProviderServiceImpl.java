@@ -378,52 +378,6 @@ public class UserManagementProviderServiceImpl implements UserManagementProvider
         }
     }
 
-    @Override
-    public List<UserInfo> updateUserClaimsForDevices(String username, JsonArray deviceList, String domain) throws UserManagementException {
-        return null;
-    }
-
-//    @Override
-//    public EmailMetaInfo inviteToEnrollDevice(EnrollmentInvitation enrollmentInvitation) throws UserManagementException {
-//        try {
-//            Set<String> recipients = new HashSet<>();
-//            recipients.addAll(enrollmentInvitation.getRecipients());
-//            Properties props = new Properties();
-//            String username = DeviceMgtAPIUtils.getAuthenticatedUser();
-//            String firstName = getClaimValue(username, DeviceManagementConstants.User.CLAIM_FIRST_NAME);
-//            String lastName = getClaimValue(username, DeviceManagementConstants.User.CLAIM_LAST_NAME);
-//            if (firstName == null) {
-//                firstName = username;
-//            }
-//            if (lastName == null) {
-//                lastName = "";
-//            }
-//            props.setProperty("first-name", firstName);
-//            props.setProperty("last-name", lastName);
-//            props.setProperty("device-type", enrollmentInvitation.getDeviceType());
-//            EmailMetaInfo metaInfo = new EmailMetaInfo(recipients, props);
-//            return metaInfo;
-//        } catch (DeviceManagementException e) {
-//            String msg = "Error occurred while inviting user to enrol their device";
-//            log.error(msg, e);
-//            throw new UserManagementException(msg, e);
-//        } catch (UserStoreException e) {
-//            String msg = "Error occurred while getting claim values to invite user";
-//            log.error(msg, e);
-//            throw new UserManagementException(msg, e);
-//        } catch (ConfigurationManagementException e) {
-//            String msg = "Error occurred while sending the email invitations. Mail server not configured.";
-//            throw new UserManagementException(msg, e);
-//        }
-//    }
-
-
-    @Override
-    public int getCount() throws UserManagementException {
-        return 0;
-    }
-
-
     /**
      * User search provides an AND search result and if either of the filter returns an empty set of users, there is no
      * need to carry on the search further. This method decides whether to carry on the search or not.

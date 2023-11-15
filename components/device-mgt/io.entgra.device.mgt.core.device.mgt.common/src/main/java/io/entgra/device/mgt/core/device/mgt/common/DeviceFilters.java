@@ -17,6 +17,10 @@
  */
 package io.entgra.device.mgt.core.device.mgt.common;
 
+import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.ConfigurationEntry;
+import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.PlatformConfiguration;
+import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupFilter;
+
 import java.io.Serializable;
 import java.util.List;
 
@@ -30,6 +34,10 @@ public class DeviceFilters implements Serializable {
     private List<String> deviceTypes;
     private List<String> ownerships;
     private List<String> statuses;
+
+    private List<ConfigurationEntry> configs;
+
+    private List<GroupFilter> groups;
 
     public List<String> getDeviceTypes() {
         return deviceTypes;
@@ -53,5 +61,21 @@ public class DeviceFilters implements Serializable {
 
     public void setStatuses(List<String> statuses) {
         this.statuses = statuses;
+    }
+
+    public List<GroupFilter> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(List<GroupFilter> groups) {
+        this.groups = groups;
+    }
+
+    public List<ConfigurationEntry> getConfigs() {
+        return configs;
+    }
+
+    public void setConfigs(List<ConfigurationEntry> configs) {
+        this.configs = configs;
     }
 }

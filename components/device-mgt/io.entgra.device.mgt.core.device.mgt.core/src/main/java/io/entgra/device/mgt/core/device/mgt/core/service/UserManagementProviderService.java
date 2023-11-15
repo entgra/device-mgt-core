@@ -18,7 +18,6 @@
 
 package io.entgra.device.mgt.core.device.mgt.core.service;
 
-import com.google.gson.JsonArray;
 import io.entgra.device.mgt.core.device.mgt.common.*;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.UserManagementException;
 
@@ -109,28 +108,4 @@ public interface UserManagementProviderService {
      */
     List<UserInfo> getUserNames(String filter, String userStoreDomain, int offset, int limit) throws UserManagementException;
 
-    /**
-     * Method to retrieve the list of users based on filter.
-     *
-     * @param username data needed for the user search
-     * @param deviceList domain of the user
-     * @param domain the maximum number of the users to be retrieved
-     * @throws UserManagementException If some unusual behaviour is observed while fetching the users.
-     */
-    List<UserInfo> updateUserClaimsForDevices(String username, JsonArray deviceList, String domain) throws UserManagementException;
-
-    /**
-     * Method to send enrollment invitation mail to existing user.
-     *
-     * @param enrollmentInvitation data related to the mail
-     * @throws UserManagementException If some unusual behaviour is observed while fetching the users.
-     */
-//    EmailMetaInfo inviteToEnrollDevice(EnrollmentInvitation enrollmentInvitation) throws UserManagementException;
-
-    /**
-     * Method to retrieve the count of users.
-     *
-     * @throws UserManagementException If some unusual behaviour is observed while fetching the count of users.
-     */
-    int getCount() throws UserManagementException;
 }

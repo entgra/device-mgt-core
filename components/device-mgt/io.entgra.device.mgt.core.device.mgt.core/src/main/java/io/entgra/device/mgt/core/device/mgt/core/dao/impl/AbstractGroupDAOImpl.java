@@ -19,6 +19,7 @@
 package io.entgra.device.mgt.core.device.mgt.core.dao.impl;
 
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.DeviceGroupRoleWrapper;
+import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupFilter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -98,6 +99,48 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
                     }
                 }
                 return deviceGroupList;
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while retrieving groups in tenant: " + tenantId;
+            log.error(msg);
+            throw new GroupManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public List<GroupFilter> getGroupFilterDetails(GroupPaginationRequest request, int tenantId)
+            throws GroupManagementDAOException {
+        try {
+            Connection conn = GroupManagementDAOFactory.getConnection();
+            String sql = "SELECT ID, GROUP_NAME FROM DM_GROUP "
+                    + "WHERE TENANT_ID = ?";
+            if (request != null && StringUtils.isNotBlank(request.getOwner())) {
+                sql += " AND OWNER LIKE ?";
+            }
+            if (request != null && request.getRowCount() != 0) {
+                sql += " LIMIT ? OFFSET ?";
+            }
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                int paramIndex = 1;
+                stmt.setInt(paramIndex++, tenantId);
+                if (request != null && StringUtils.isNotBlank(request.getOwner())) {
+                    stmt.setString(paramIndex++, request.getOwner() + "%");
+                }
+                if (request != null && request.getRowCount() != 0) {
+                    stmt.setInt(paramIndex++, request.getRowCount());
+                    stmt.setInt(paramIndex, request.getStartIndex());
+                }
+                List<GroupFilter> groupFilterDetails = new ArrayList<>();
+                try (ResultSet resultSet = stmt.executeQuery()) {
+                    while (resultSet.next()) {
+                        GroupFilter group = new GroupFilter();
+                        group.setId(resultSet.getInt("ID"));
+                        group.setName(resultSet.getString("GROUP_NAME"));
+                        groupFilterDetails.add(group);
+                    }
+                }
+                return groupFilterDetails;
             }
         } catch (SQLException e) {
             String msg = "Error occurred while retrieving groups in tenant: " + tenantId;
@@ -199,6 +242,47 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
                     }
                 }
                 return deviceGroupList;
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while retrieving groups of groups IDs " + deviceGroupIds
+                    +  " in tenant: " + tenantId;
+            log.error(msg);
+            throw new GroupManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public List<GroupFilter> getGroupFilterDetails(List<Integer> deviceGroupIds, int tenantId) throws GroupManagementDAOException {
+        int deviceGroupIdsCount = deviceGroupIds.size();
+        if (deviceGroupIdsCount == 0) {
+            return new ArrayList<>();
+        }
+        try {
+            Connection conn = GroupManagementDAOFactory.getConnection();
+            String sql = "SELECT ID, GROUP_NAME FROM DM_GROUP WHERE TENANT_ID = ?";
+
+            sql += " AND ID IN (";
+            for (int i = 0; i < deviceGroupIdsCount; i++) {
+                sql += (deviceGroupIdsCount - 1 != i) ? "?," : "?";
+            }
+            sql += ")";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                int paramIndex = 1;
+                stmt.setInt(paramIndex++, tenantId);
+
+                for (Integer deviceGroupId : deviceGroupIds) {
+                    stmt.setInt(paramIndex++, deviceGroupId);
+                }
+                List<GroupFilter> groupFilters = new ArrayList<>();
+                try (ResultSet resultSet = stmt.executeQuery()) {
+                    while (resultSet.next()) {
+                        GroupFilter groupFilter = new GroupFilter();
+                        groupFilter.setId(resultSet.getInt("ID"));
+                        groupFilter.setName(resultSet.getString("GROUP_NAME"));
+                        groupFilters.add(groupFilter);
+                    }
+                }
+                return groupFilters;
             }
         } catch (SQLException e) {
             String msg = "Error occurred while retrieving groups of groups IDs " + deviceGroupIds

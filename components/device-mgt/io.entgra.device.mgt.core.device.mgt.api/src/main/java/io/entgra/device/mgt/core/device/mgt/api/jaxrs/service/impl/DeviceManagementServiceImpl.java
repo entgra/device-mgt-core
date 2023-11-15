@@ -26,6 +26,10 @@ import io.entgra.device.mgt.core.application.mgt.common.exception.SubscriptionMa
 import io.entgra.device.mgt.core.application.mgt.common.services.ApplicationManager;
 import io.entgra.device.mgt.core.application.mgt.common.services.SubscriptionManager;
 import io.entgra.device.mgt.core.application.mgt.core.util.HelperUtil;
+import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.ConfigurationEntry;
+import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.ConfigurationManagementException;
+import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.PlatformConfiguration;
+import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupFilter;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -101,13 +105,14 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
 import java.util.Map;
+import java.util.Arrays;
 
 @Path("/devices")
 public class DeviceManagementServiceImpl implements DeviceManagementService {
 
     public static final String DATE_FORMAT_NOW = "yyyy-MM-dd HH:mm:ss";
+    private static final String DEFAULT_ADMIN_ROLE = "admin";
     private static final Log log = LogFactory.getLog(DeviceManagementServiceImpl.class);
 
     @GET
@@ -1612,8 +1617,39 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
     @GET
     @Path("/filters")
     @Override
-    public Response getDeviceFilters() {
+    public Response getDeviceFilters( @QueryParam("isGroups") boolean isGroups,  @QueryParam("isConfig") boolean isConfig) {
         try {
+            String currentUser = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
+            List<String> permissions = DeviceMgtAPIUtils
+                    .getUserManagementService().getPermissions(currentUser);
+            List<GroupFilter> groupFilters = new ArrayList<>();
+            List<ConfigurationEntry> configList = new ArrayList<>();
+            if (isGroups) {
+                List<String> roles = DeviceMgtAPIUtils
+                        .getUserManagementService().getRoles(currentUser);
+                boolean isAdmin = DEFAULT_ADMIN_ROLE.equals(currentUser);
+                boolean hasAdminRole = Arrays.asList(roles).contains(DEFAULT_ADMIN_ROLE);
+                if (permissions.contains("/permission/admin/device-mgt/admin/groups/view")) {
+                    if (StringUtils.isBlank(currentUser) || isAdmin || hasAdminRole) {
+                        groupFilters =  DeviceMgtAPIUtils.getGroupManagementProviderService().getGroupFilterValues(null, null);
+                    } else {
+                        groupFilters =  DeviceMgtAPIUtils.getGroupManagementProviderService().getGroupFilterValues(currentUser, null);
+                    }
+                }  else {
+                    if (hasAdminRole) {
+                        groupFilters =  DeviceMgtAPIUtils.getGroupManagementProviderService().getGroupFilterValues(null, null);
+                    } else {
+                        groupFilters =  DeviceMgtAPIUtils.getGroupManagementProviderService().getGroupFilterValues(currentUser, null);
+                    }
+                }
+            }
+            if (isConfig) {
+                if (permissions.contains("/permission/admin/device-mgt/platform-configurations/view")) {
+                    PlatformConfiguration config = DeviceMgtAPIUtils.getPlatformConfigurationManagementService().
+                            getConfiguration(MDMAppConstants.RegistryConstants.GENERAL_CONFIG_RESOURCE_PATH);
+                    configList = config.getConfiguration();
+                }
+            }
             List<String> deviceTypeNames = new ArrayList<>();
             List<String> ownershipNames = new ArrayList<>();
             List<String> statusNames = new ArrayList<>();
@@ -1633,9 +1669,23 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             deviceFilters.setDeviceTypes(deviceTypeNames);
             deviceFilters.setOwnerships(ownershipNames);
             deviceFilters.setStatuses(statusNames);
+            deviceFilters.setConfigs(configList);
+            deviceFilters.setGroups(groupFilters);
             return Response.status(Response.Status.OK).entity(deviceFilters).build();
         } catch (DeviceManagementException e) {
             String msg = "Error occurred white retrieving device types to be used in device filters.";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (UserManagementException e) {
+            String msg = "Error occurred while retrieving permission details to be used in device filters.";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (GroupManagementException e) {
+            String msg = "Error occurred while retrieving group data for device filters values.";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (ConfigurationManagementException e) {
+            String msg = "Error occurred while retrieving config data for device filter values.";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }

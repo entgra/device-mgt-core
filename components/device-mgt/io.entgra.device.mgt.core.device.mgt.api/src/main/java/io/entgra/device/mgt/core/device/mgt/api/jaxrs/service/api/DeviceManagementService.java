@@ -2749,7 +2749,15 @@ public interface DeviceManagementService {
                             message = "Error occurred while getting the version data.",
                             response = ErrorResponse.class)
             })
-    Response getDeviceFilters();
+    Response getDeviceFilters(
+            @ApiParam(
+                name = "isGroups",
+                value = "Check if group data is needed", required = false)
+            @QueryParam("isGroups") boolean isGroups,
+            @ApiParam(
+                name = "isConfig",
+                value = "Check if config data is needed", required = false)
+            @QueryParam("isConfig") boolean isConfig);
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)

@@ -21,9 +21,9 @@ package io.entgra.device.mgt.core.device.mgt.core.dao;
 import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.GroupPaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
-import io.entgra.device.mgt.core.device.mgt.common.exceptions.ReportManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.DeviceGroup;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.DeviceGroupRoleWrapper;
+import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupFilter;
 
 import java.util.List;
 import java.util.Map;
@@ -222,6 +222,16 @@ public interface GroupDAO {
     List<DeviceGroup> getGroups(GroupPaginationRequest paginationRequest, int tenantId) throws GroupManagementDAOException;
 
     /**
+     * Get paginated list of Device Groups Names in tenant for filtering.
+     *
+     * @param paginationRequest to filter results.
+     * @param tenantId of user's tenant.
+     * @return List of all Groups in the provided filter.
+     * @throws GroupManagementDAOException
+     */
+    List<GroupFilter> getGroupFilterDetails(GroupPaginationRequest paginationRequest, int tenantId) throws GroupManagementDAOException;
+
+    /**
      * Get paginated list of Device Groups in tenant with specified device group ids.
      *
      * @param paginationRequest to filter results.
@@ -254,6 +264,15 @@ public interface GroupDAO {
      * @throws GroupManagementDAOException
      */
     List<DeviceGroup> getGroups(List<Integer> deviceGroupIds, int tenantId) throws GroupManagementDAOException;
+
+    /**
+     * Get the list of Device Groups in tenant for filtering.
+     *
+     * @param tenantId of user's tenant.
+     * @return List of all Device Groups in the provided filter.
+     * @throws GroupManagementDAOException
+     */
+    List<GroupFilter> getGroupFilterDetails(List<Integer> deviceGroupIds, int tenantId) throws GroupManagementDAOException;
 
     /**
      * Get the list of Device Groups in tenant.
