@@ -26,12 +26,14 @@ public class DeviceSubscriptionData {
 
     private int subId;
     private String action;
-    private long actionTriggeredTimestamp;
+    private Timestamp actionTriggeredTimestamp;
+    private String actionTriggeredFrom;
     private String actionTriggeredBy;
     private String actionType;
     private String status;
     private Device device;
     private String currentInstalledVersion;
+    private int deviceId;
 
     public String getAction() {
         return action;
@@ -39,14 +41,6 @@ public class DeviceSubscriptionData {
 
     public void setAction(String action) {
         this.action = action;
-    }
-
-    public long getActionTriggeredTimestamp() {
-        return actionTriggeredTimestamp;
-    }
-
-    public void setActionTriggeredTimestamp(long actionTriggeredTimestamp) {
-        this.actionTriggeredTimestamp = actionTriggeredTimestamp;
     }
 
     public String getActionTriggeredBy() {
@@ -91,5 +85,29 @@ public class DeviceSubscriptionData {
 
     public void setSubId(int subId) {
         this.subId = subId;
+    }
+
+    public int getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(int deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    public String getActionTriggeredFrom() {
+        return actionTriggeredFrom;
+    }
+
+    public void setActionTriggeredFrom(String actionTriggeredFrom) {
+        this.actionTriggeredFrom = actionTriggeredFrom;
+    }
+
+    public Timestamp getActionTriggeredTimestamp() {
+        return actionTriggeredTimestamp;
+    }
+
+    public void setActionTriggeredTimestamp(Timestamp actionTriggeredTimestamp) {
+        this.actionTriggeredTimestamp = actionTriggeredTimestamp;
     }
 }

@@ -17,6 +17,10 @@
  */
 package io.entgra.device.mgt.core.application.mgt.core.dao.impl.subscription;
 
+import io.entgra.device.mgt.core.application.mgt.common.dto.GroupSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceOperationDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.RoleSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.UserSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.core.dao.SubscriptionDAO;
 import io.entgra.device.mgt.core.application.mgt.core.dao.impl.AbstractDAOImpl;
 import io.entgra.device.mgt.core.application.mgt.core.exception.UnexpectedServerErrorException;
@@ -1635,4 +1639,258 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
             throw new ApplicationManagementDAOException(msg, e);
         }
     }
+
+    @Override
+    public List<GroupSubscriptionDTO> getGroupsSubscriptionDetailsByUUID(String uuid, boolean unsubscribe, int tenantId)
+            throws ApplicationManagementDAOException {
+        if (log.isDebugEnabled()) {
+            log.debug("Request received in DAO Layer to get groups related to the given UUID.");
+        }
+        try {
+            Connection conn = this.getDBConnection();
+            List<GroupSubscriptionDTO> groupDetails = new ArrayList<>();
+            String sql = "SELECT GS.GROUP_NAME, GS.SUBSCRIBED_BY, GS.SUBSCRIBED_TIMESTAMP, GS.UNSUBSCRIBED, " +
+                    "GS.UNSUBSCRIBED_BY, GS.UNSUBSCRIBED_TIMESTAMP, GS.AP_APP_RELEASE_ID " +
+                    "FROM AP_GROUP_SUBSCRIPTION GS " +
+                    "JOIN AP_APP_RELEASE AR ON GS.AP_APP_RELEASE_ID = AR.ID " +
+                    "WHERE AR.UUID = ? AND GS.UNSUBSCRIBED = ? AND AR.TENANT_ID = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, uuid);
+                ps.setBoolean(2, unsubscribe);
+                ps.setInt(3, tenantId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    GroupSubscriptionDTO groupDetail;
+                    while (rs.next()) {
+                        groupDetail = new GroupSubscriptionDTO();
+                        groupDetail.setGroupName(rs.getString("GROUP_NAME"));
+                        groupDetail.setSubscribedBy(rs.getString("SUBSCRIBED_BY"));
+                        groupDetail.setSubscribedTimestamp(rs.getTimestamp("SUBSCRIBED_TIMESTAMP"));
+                        groupDetail.setUnsubscribed(rs.getBoolean("UNSUBSCRIBED"));
+                        groupDetail.setUnsubscribedBy(rs.getString("UNSUBSCRIBED_BY"));
+                        groupDetail.setUnsubscribedTimestamp(rs.getTimestamp("UNSUBSCRIBED_TIMESTAMP"));
+                        groupDetail.setAppReleaseId(rs.getInt("AP_APP_RELEASE_ID"));
+
+                        groupDetails.add(groupDetail);
+                    }
+                }
+                return groupDetails;
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection to get groups for the given UUID.";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "SQL Error occurred while getting groups for the given UUID.";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public List<UserSubscriptionDTO> getUserSubscriptionsByUUID(String uuid, boolean unsubscribe, int tenantId)
+            throws ApplicationManagementDAOException {
+        if (log.isDebugEnabled()) {
+            log.debug("Request received in DAO Layer to get user subscriptions related to the given UUID.");
+        }
+        try {
+            Connection conn = this.getDBConnection();
+            List<UserSubscriptionDTO> userSubscriptions = new ArrayList<>();
+            String sql = "SELECT US.USER_NAME, US.SUBSCRIBED_BY, US.SUBSCRIBED_TIMESTAMP, US.UNSUBSCRIBED, " +
+                    "US.UNSUBSCRIBED_BY, US.UNSUBSCRIBED_TIMESTAMP, US.AP_APP_RELEASE_ID, AR.UUID " +
+                    "FROM AP_USER_SUBSCRIPTION US " +
+                    "JOIN AP_APP_RELEASE AR ON US.AP_APP_RELEASE_ID = AR.ID " +
+                    "WHERE AR.UUID = ? AND US.UNSUBSCRIBED = ? AND AR.TENANT_ID = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, uuid);
+                ps.setBoolean(2, unsubscribe);
+                ps.setInt(3, tenantId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        UserSubscriptionDTO userSubscription;
+                        userSubscription = new UserSubscriptionDTO();
+                        userSubscription.setUserName(rs.getString("USER_NAME"));
+                        userSubscription.setSubscribedBy(rs.getString("SUBSCRIBED_BY"));
+                        userSubscription.setSubscribedTimestamp(rs.getTimestamp("SUBSCRIBED_TIMESTAMP"));
+                        userSubscription.setUnsubscribed(rs.getBoolean("UNSUBSCRIBED"));
+                        userSubscription.setUnsubscribedBy(rs.getString("UNSUBSCRIBED_BY"));
+                        userSubscription.setUnsubscribedTimestamp(rs.getTimestamp("UNSUBSCRIBED_TIMESTAMP"));
+                        userSubscription.setAppReleaseId(rs.getInt("AP_APP_RELEASE_ID"));
+
+                        userSubscriptions.add(userSubscription);
+                    }
+                }
+                return userSubscriptions;
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection to get user subscriptions for the given UUID.";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "SQL Error occurred while getting user subscriptions for the given UUID.";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public List<RoleSubscriptionDTO> getRoleSubscriptionsByUUID(String uuid, boolean unsubscribe, int tenantId)
+            throws ApplicationManagementDAOException {
+        if (log.isDebugEnabled()) {
+            log.debug("Request received in DAO Layer to get role subscriptions related to the given UUID.");
+        }
+        try {
+            Connection conn = this.getDBConnection();
+            List<RoleSubscriptionDTO>  roleSubscriptions = new ArrayList<>();
+            String sql = "SELECT ARS.ROLE_NAME, ARS.SUBSCRIBED_BY, ARS.SUBSCRIBED_TIMESTAMP, ARS.UNSUBSCRIBED, " +
+                    "ARS.UNSUBSCRIBED_BY, ARS.UNSUBSCRIBED_TIMESTAMP, ARS.AP_APP_RELEASE_ID " +
+                    "FROM AP_ROLE_SUBSCRIPTION ARS " +
+                    "JOIN AP_APP_RELEASE AAR ON ARS.AP_APP_RELEASE_ID = AAR.ID " +
+                    "WHERE AAR.UUID = ? AND ARS.UNSUBSCRIBED = ? AND AAR.TENANT_ID = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, uuid);
+                ps.setBoolean(2, unsubscribe);
+                ps.setInt(3, tenantId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    RoleSubscriptionDTO roleSubscription;
+                    while (rs.next()) {
+                        roleSubscription = new RoleSubscriptionDTO();
+                        roleSubscription.setRoleName(rs.getString("ROLE_NAME"));
+                        roleSubscription.setSubscribedBy(rs.getString("SUBSCRIBED_BY"));
+                        roleSubscription.setSubscribedTimestamp(rs.getTimestamp("SUBSCRIBED_TIMESTAMP"));
+                        roleSubscription.setUnsubscribed(rs.getBoolean("UNSUBSCRIBED"));
+                        roleSubscription.setUnsubscribedBy(rs.getString("UNSUBSCRIBED_BY"));
+                        roleSubscription.setUnsubscribedTimestamp(rs.getTimestamp("UNSUBSCRIBED_TIMESTAMP"));
+                        roleSubscription.setAppReleaseId(rs.getInt("AP_APP_RELEASE_ID"));
+
+                        roleSubscriptions.add(roleSubscription);
+                    }
+                }
+                return roleSubscriptions;
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection to get role subscriptions for the given UUID.";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "SQL Error occurred while getting role subscriptions for the given UUID.";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public List<DeviceOperationDTO> getDeviceSubscriptionsOperationsByUUID(String uuid, int tenantId)
+            throws ApplicationManagementDAOException {
+        if (log.isDebugEnabled()) {
+            log.debug("Request received in DAO Layer to get device subscriptions related to the given UUID.");
+        }
+        try {
+            Connection conn = this.getDBConnection();
+            List<DeviceOperationDTO> deviceSubscriptions = new ArrayList<>();
+            String sql = "SELECT " +
+                    "  aar.UUID, " +
+                    "  ads.DM_DEVICE_ID, " +
+                    "  aasom.OPERATION_ID, " +
+                    "  ads.STATUS, " +
+                    "  ads.ACTION_TRIGGERED_FROM, " +
+                    "  ads.SUBSCRIBED_TIMESTAMP AS ACTION_TRIGGERED_AT, " +
+                    "  ads.AP_APP_RELEASE_ID " +
+                    "FROM AP_APP_SUB_OP_MAPPING aasom " +
+                    "JOIN AP_DEVICE_SUBSCRIPTION ads ON aasom.AP_DEVICE_SUBSCRIPTION_ID = ads.ID " +
+                    "JOIN AP_APP_RELEASE aar ON ads.AP_APP_RELEASE_ID = aar.ID " +
+                    "WHERE aar.UUID = ? AND aar.TENANT_ID = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, uuid);
+                ps.setInt(2, tenantId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    DeviceOperationDTO deviceSubscription;
+                    while (rs.next()) {
+                        deviceSubscription = new DeviceOperationDTO();
+                        deviceSubscription.setDeviceId(rs.getInt("DM_DEVICE_ID"));
+                        deviceSubscription.setUuid(rs.getString("UUID"));
+                        deviceSubscription.setStatus(rs.getString("STATUS"));
+                        deviceSubscription.setOperationId(rs.getInt("OPERATION_ID"));
+                        deviceSubscription.setActionTriggeredFrom(rs.getString("ACTION_TRIGGERED_FROM"));
+                        deviceSubscription.setActionTriggeredAt(rs.getTimestamp("ACTION_TRIGGERED_AT"));
+                        deviceSubscription.setAppReleaseId(rs.getInt("AP_APP_RELEASE_ID"));
+
+                        deviceSubscriptions.add(deviceSubscription);
+                    }
+                }
+            }
+            return deviceSubscriptions;
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection to get device subscriptions for the given UUID.";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "SQL Error occurred while getting device subscriptions for the given UUID.";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public List<DeviceSubscriptionDTO> getDeviceSubscriptionsDetails(int appReleaseId, int tenantId) throws
+            ApplicationManagementDAOException {
+        if (log.isDebugEnabled()) {
+            log.debug("Getting device subscriptions for the application release id " + appReleaseId
+                    + " from the database");
+        }
+        String sql = "SELECT "
+                + "DS.ID AS ID, "
+                + "DS.SUBSCRIBED_BY AS SUBSCRIBED_BY, "
+                + "DS.SUBSCRIBED_TIMESTAMP AS SUBSCRIBED_AT, "
+                + "DS.UNSUBSCRIBED AS IS_UNSUBSCRIBED, "
+                + "DS.UNSUBSCRIBED_BY AS UNSUBSCRIBED_BY, "
+                + "DS.UNSUBSCRIBED_TIMESTAMP AS UNSUBSCRIBED_AT, "
+                + "DS.ACTION_TRIGGERED_FROM AS ACTION_TRIGGERED_FROM, "
+                + "DS.STATUS AS STATUS,"
+                + "DS.DM_DEVICE_ID AS DEVICE_ID "
+                + "FROM AP_DEVICE_SUBSCRIPTION DS "
+                + "WHERE DS.AP_APP_RELEASE_ID = ? AND DS.TENANT_ID=?";
+
+        try {
+            Connection conn = this.getDBConnection();
+            try (PreparedStatement ps = conn.prepareStatement(sql))  {
+                ps.setInt(1, appReleaseId);
+                ps.setInt(2, tenantId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("Successfully retrieved device subscriptions for application release id "
+                                + appReleaseId);
+                    }
+                    List<DeviceSubscriptionDTO> deviceSubscriptions = new ArrayList<>();
+
+                    DeviceSubscriptionDTO subscription;
+                    while (rs.next()) {
+                        subscription = new DeviceSubscriptionDTO();
+                        subscription.setId(rs.getInt("ID"));
+                        subscription.setSubscribedBy(rs.getString("SUBSCRIBED_BY"));
+                        subscription.setSubscribedTimestamp(rs.getTimestamp("SUBSCRIBED_AT"));
+                        subscription.setUnsubscribed(rs.getBoolean("IS_UNSUBSCRIBED"));
+                        subscription.setUnsubscribedBy(rs.getString("UNSUBSCRIBED_BY"));
+                        subscription.setUnsubscribedTimestamp(rs.getTimestamp("UNSUBSCRIBED_AT"));
+                        subscription.setActionTriggeredFrom(rs.getString("ACTION_TRIGGERED_FROM"));
+                        subscription.setStatus(rs.getString("STATUS"));
+                        subscription.setDeviceId(rs.getInt("DEVICE_ID"));
+
+                        deviceSubscriptions.add(subscription);
+                    }
+                    return deviceSubscriptions;
+                }
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection for getting device subscription for "
+                    + "application Id: " + appReleaseId + ".";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred while while running SQL to get device subscription data for application ID: " + appReleaseId;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+    }
+
+
 }

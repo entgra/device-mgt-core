@@ -22,6 +22,10 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.dao.TenantDAO;
+import io.entgra.device.mgt.core.device.mgt.core.dto.OwnerWithDeviceDTO;
+import io.entgra.device.mgt.core.device.mgt.core.dto.OperationDTO;
+import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.dao.OperationManagementDAOException;
+import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.dao.OperationManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.extensions.logger.spi.EntgraLogger;
 import io.entgra.device.mgt.core.notification.logger.DeviceEnrolmentLogContext;
 import io.entgra.device.mgt.core.notification.logger.impl.EntgraDeviceEnrolmentLoggerImpl;
@@ -120,6 +124,7 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceStatusDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceTypeDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.EnrollmentDAO;
+import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.dao.OperationDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import io.entgra.device.mgt.core.device.mgt.core.device.details.mgt.DeviceDetailsMgtException;
 import io.entgra.device.mgt.core.device.mgt.core.device.details.mgt.DeviceInformationManager;
@@ -173,6 +178,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     private final DeviceDAO deviceDAO;
     private final DeviceTypeDAO deviceTypeDAO;
     private final EnrollmentDAO enrollmentDAO;
+    private final OperationDAO operationDAO;
     private final ApplicationDAO applicationDAO;
     private MetadataDAO metadataDAO;
     private final DeviceStatusDAO deviceStatusDAO;
@@ -185,6 +191,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         this.applicationDAO = DeviceManagementDAOFactory.getApplicationDAO();
         this.deviceTypeDAO = DeviceManagementDAOFactory.getDeviceTypeDAO();
         this.enrollmentDAO = DeviceManagementDAOFactory.getEnrollmentDAO();
+        this.operationDAO = OperationManagementDAOFactory.getOperationDAO();
         this.metadataDAO = MetadataManagementDAOFactory.getMetadataDAO();
         this.deviceStatusDAO = DeviceManagementDAOFactory.getDeviceStatusDAO();
         this.tenantDao = DeviceManagementDAOFactory.getTenantDAO();
@@ -5339,4 +5346,52 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             DeviceManagementDAOFactory.closeConnection();
         }
     }
+
+    @Override
+    public OwnerWithDeviceDTO getOwnersWithDeviceIds(String owner) throws DeviceManagementDAOException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        OwnerWithDeviceDTO ownerWithDeviceDTO;
+
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            ownerWithDeviceDTO = this.enrollmentDAO.getOwnersWithDeviceIds(owner, tenantId);
+        } catch (DeviceManagementDAOException | SQLException e) {
+            String msg = "Error occurred while retrieving device IDs for owner: " + owner;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+
+        // Add device count to the DTO
+        if (ownerWithDeviceDTO != null) {
+            List<Integer> deviceIds = ownerWithDeviceDTO.getDeviceIds();
+            if (deviceIds != null) {
+                ownerWithDeviceDTO.setDeviceCount(deviceIds.size());
+            } else {
+                ownerWithDeviceDTO.setDeviceCount(0);
+            }
+        }
+
+        return ownerWithDeviceDTO;
+    }
+
+    @Override
+    public OperationDTO getOperationDetailsById(int operationId) throws OperationManagementException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        OperationDTO operationDetails;
+        try {
+            OperationManagementDAOFactory.openConnection();
+            operationDetails = this.operationDAO.getOperationDetailsById(operationId, tenantId);
+        } catch (SQLException | OperationManagementDAOException e) {
+            String msg = "Error occurred while retrieving operation details for operation ID: " + operationId;
+            log.error(msg, e);
+            throw new OperationManagementException(msg, e);
+        } finally {
+            OperationManagementDAOFactory.closeConnection();
+        }
+
+        return operationDetails;
+    }
+
 }

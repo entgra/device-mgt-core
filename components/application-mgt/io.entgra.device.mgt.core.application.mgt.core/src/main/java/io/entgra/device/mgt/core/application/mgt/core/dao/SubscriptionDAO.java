@@ -18,8 +18,12 @@
 package io.entgra.device.mgt.core.application.mgt.core.dao;
 
 import io.entgra.device.mgt.core.application.mgt.common.ExecutionStatus;
-import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.GroupSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.UserSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceOperationDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.RoleSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ScheduledSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.SubscriptionManagementException;
 import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManagementDAOException;
@@ -312,4 +316,62 @@ public interface SubscriptionDAO {
      * @throws ApplicationManagementDAOException thrown if an error occurs while deleting data
      */
     void deleteScheduledSubscriptionByTenant(int tenantId) throws ApplicationManagementDAOException;
+
+    /**
+     * This method is used to get the details of groups related to a UUID.
+     *
+     * @param uuid the UUID of the application release.
+     * @param unsubscribe the Status of the subscription.
+     * @param tenantId id of the current tenant.
+     * @return groupDetails - list of group details related to the UUID.
+     * @throws ApplicationManagementDAOException if connection establishment fails.
+     */
+    List<GroupSubscriptionDTO> getGroupsSubscriptionDetailsByUUID(String uuid, boolean unsubscribe, int tenantId)
+            throws ApplicationManagementDAOException;
+
+    /**
+     * This method is used to get the details of user subscriptions related to a UUID.
+     *
+     * @param uuid the UUID of the application release.
+     * @param unsubscribe the Status of the subscription.
+     * @param tenantId id of the current tenant.
+     * @return userSubscriptions - list of user subscription details related to the UUID.
+     * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
+     */
+    List<UserSubscriptionDTO> getUserSubscriptionsByUUID(String uuid, boolean unsubscribe, int tenantId)
+            throws ApplicationManagementDAOException;
+
+    /**
+     * This method is used to get the details of role subscriptions related to a UUID.
+     *
+     * @param uuid the UUID of the application release.
+     * @param unsubscribe the Status of the subscription.
+     * @param tenantId id of the current tenant.
+     * @return roleSubscriptions - list of role subscription details related to the UUID.
+     * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
+     */
+    List<RoleSubscriptionDTO>  getRoleSubscriptionsByUUID(String uuid, boolean unsubscribe, int tenantId)
+            throws ApplicationManagementDAOException;
+
+    /**
+     * This method is used to get the details of device subscriptions related to a UUID.
+     *
+     * @param uuid the UUID of the application release.
+     * @param tenantId id of the current tenant.
+     * @return deviceSubscriptions - list of device subscription details related to the UUID.
+     * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
+     */
+    List<DeviceOperationDTO> getDeviceSubscriptionsOperationsByUUID(String uuid, int tenantId)
+            throws ApplicationManagementDAOException;
+
+    /**
+     * This method is used to get the details of device subscriptions related to a UUID.
+     *
+     * @param appReleaseId the appReleaseId of the application release.
+     * @param tenantId id of the current tenant.
+     * @return deviceSubscriptions - list of device subscription details related to the UUID.
+     * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
+     */
+    List<DeviceSubscriptionDTO> getDeviceSubscriptionsDetails(int appReleaseId, int tenantId)
+            throws ApplicationManagementDAOException;
 }
