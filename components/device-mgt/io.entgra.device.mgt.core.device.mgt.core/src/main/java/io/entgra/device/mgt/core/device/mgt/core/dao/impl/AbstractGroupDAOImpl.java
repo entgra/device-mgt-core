@@ -26,6 +26,7 @@ import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.GroupPaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.DeviceGroup;
+import io.entgra.device.mgt.core.device.mgt.core.dto.GroupDetailsDTO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.GroupDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.GroupManagementDAOException;
 import io.entgra.device.mgt.core.device.mgt.core.dao.GroupManagementDAOFactory;
@@ -1436,5 +1437,44 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
             throw new GroupManagementDAOException(msg, e);
         }
         return groupUnassignedDeviceList;
+    }
+
+    @Override
+    public GroupDetailsDTO getGroupDetailsWithDeviceIds(String groupName, int tenantId) throws GroupManagementDAOException {
+        if (log.isDebugEnabled()) {
+            log.debug("Request received in DAO Layer to get group details and device IDs for group: " + groupName);
+        }
+
+        GroupDetailsDTO groupDetails = new GroupDetailsDTO();
+        List<Integer> deviceIds = new ArrayList<>();
+
+        String sql = "SELECT g.ID AS GROUP_ID, g.GROUP_NAME, g.OWNER, dgm.DEVICE_ID "
+                + "FROM DM_GROUP g "
+                + "JOIN DM_DEVICE_GROUP_MAP dgm ON g.ID = dgm.GROUP_ID "
+                + "WHERE g.GROUP_NAME = ? AND g.TENANT_ID = ?";
+
+        try (Connection conn = GroupManagementDAOFactory.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, groupName);
+            stmt.setInt(2, tenantId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    if (groupDetails.getGroupId() == 0) {
+                        groupDetails.setGroupId(rs.getInt("GROUP_ID"));
+                        groupDetails.setGroupName(rs.getString("GROUP_NAME"));
+                        groupDetails.setGroupOwner(rs.getString("OWNER"));
+                    }
+                    deviceIds.add(rs.getInt("DEVICE_ID"));
+                }
+            }
+        } catch (SQLException e) {
+            throw new GroupManagementDAOException("Error occurred while retrieving group details and device IDs for group: "
+                    + groupName, e);
+        }
+
+        groupDetails.setDeviceIds(deviceIds);
+        groupDetails.setDeviceCount(deviceIds.size());
+        return groupDetails;
     }
 }

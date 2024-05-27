@@ -21,9 +21,11 @@ import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
 import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo;
 import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo.Status;
+import io.entgra.device.mgt.core.device.mgt.core.dto.OwnerWithDeviceDTO;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 
 public interface EnrollmentDAO {
 
@@ -94,5 +96,13 @@ public interface EnrollmentDAO {
      */
     boolean addDeviceStatus(int enrolmentId, EnrolmentInfo.Status status) throws DeviceManagementDAOException;
 
-
+    /**
+     * Retrieves owners and the list of device IDs related to an owner.
+     *
+     * @param owner    the owner whose device IDs need to be retrieved
+     * @param tenantId the ID of the tenant
+     * @return a map containing owner details, device IDs, and device count
+     * @throws DeviceManagementDAOException if an error occurs while fetching the data
+     */
+    OwnerWithDeviceDTO getOwnersWithDeviceIds(String owner, int tenantId) throws DeviceManagementDAOException;
 }
