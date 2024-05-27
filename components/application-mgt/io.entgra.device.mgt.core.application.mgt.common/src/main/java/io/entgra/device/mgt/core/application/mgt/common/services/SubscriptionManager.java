@@ -20,10 +20,14 @@ package io.entgra.device.mgt.core.application.mgt.common.services;
 import io.entgra.device.mgt.core.application.mgt.common.ApplicationInstallResponse;
 import io.entgra.device.mgt.core.application.mgt.common.CategorizedSubscriptionResult;
 import io.entgra.device.mgt.core.application.mgt.common.ExecutionStatus;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionType;
+import io.entgra.device.mgt.core.application.mgt.common.dto.GroupSubscriptionDetailDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ScheduledSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.UserSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.RoleSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceOperationDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException;
 import io.entgra.device.mgt.core.application.mgt.common.exception.SubscriptionManagementException;
-import io.entgra.device.mgt.core.application.mgt.common.SubscriptionType;
 import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
@@ -31,6 +35,7 @@ import io.entgra.device.mgt.core.device.mgt.common.app.mgt.App;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Activity;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -218,4 +223,45 @@ public interface SubscriptionManager {
      * @throws {@link SubscriptionManagementException} Exception of the subscription management
      */
     Activity getOperationAppDetails(String id) throws SubscriptionManagementException;
+
+    /**
+     * Retrieves the group details associated with a given app release UUID.
+     *
+     * @param uuid the UUID of the app release
+     * @return a list of maps containing group details and their associated devices
+     * @throws ApplicationManagementException if an error occurs while fetching the group details
+     */
+    List<GroupSubscriptionDetailDTO> getGroupsSubscriptionDetailsByUUID(String uuid, String subscriptionStatus)
+            throws ApplicationManagementException;
+
+    /**
+     * Retrieves the user details associated with a given app release UUID.
+     *
+     * @param uuid the UUID of the app release
+     * @return a list of maps containing user details and their associated devices
+     * @throws ApplicationManagementException if an error occurs while fetching the group details
+    */
+    List<UserSubscriptionDTO> getUserSubscriptionsByUUID(String uuid, String subscriptionStatus)
+            throws ApplicationManagementException;
+
+    /**
+     * Retrieves the Role details associated with a given app release UUID.
+     *
+     * @param uuid the UUID of the app release
+     * @return a list of maps containing role details and their associated devices
+     * @throws ApplicationManagementException if an error occurs while fetching the group details
+     */
+    List<RoleSubscriptionDTO> getRoleSubscriptionsByUUID(String uuid, String subscriptionStatus)
+            throws ApplicationManagementException;
+
+    /**
+     * This method is responsible for retrieving device subscription details related to the given UUID.
+     *
+     * @param uuid the UUID of the application release.
+     * @return List of device subscription details.
+     * @throws SubscriptionManagementException if there is an error while fetching the details.
+     */
+    List<DeviceOperationDTO> getDeviceSubscriptionsOperationsByUUID(String uuid)
+            throws ApplicationManagementException;
+
 }

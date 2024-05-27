@@ -23,25 +23,43 @@ import io.entgra.device.mgt.core.application.mgt.common.CategorizedSubscriptionR
 import java.sql.Timestamp;
 import java.util.Map;
 
-public class UserSubscriptionDTO {
-
-    private String userName;
+public class GroupSubscriptionDetailDTO {
+    private int groupId;
+    private String groupName;
+    private String groupOwner;
     private String subscribedBy;
     private Timestamp subscribedTimestamp;
-    private boolean unsubscribed;
+    private boolean isUnsubscribed;
     private String unsubscribedBy;
     private Timestamp unsubscribedTimestamp;
     private int appReleaseId;
     private int deviceCount;
-    private Map<String, Double> statusPercentages;
     private CategorizedSubscriptionResult devices;
+    private Map<String, Double> statusPercentages;
 
-    public String getUserName() {
-        return userName;
+    // Getters and Setters
+    public int getGroupId() {
+        return groupId;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
+    public void setGroupId(int groupId) {
+        this.groupId = groupId;
+    }
+
+    public String getGroupName() {
+        return groupName;
+    }
+
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
+    }
+
+    public String getGroupOwner() {
+        return groupOwner;
+    }
+
+    public void setGroupOwner(String groupOwner) {
+        this.groupOwner = groupOwner;
     }
 
     public String getSubscribedBy() {
@@ -61,15 +79,11 @@ public class UserSubscriptionDTO {
     }
 
     public boolean isUnsubscribed() {
-        return unsubscribed;
-    }
-
-    public boolean getUnsubscribed() {
-        return unsubscribed;
+        return isUnsubscribed;
     }
 
     public void setUnsubscribed(boolean unsubscribed) {
-        this.unsubscribed = unsubscribed;
+        isUnsubscribed = unsubscribed;
     }
 
     public String getUnsubscribedBy() {
@@ -104,14 +118,6 @@ public class UserSubscriptionDTO {
         this.deviceCount = deviceCount;
     }
 
-    public Map<String, Double> getStatusPercentages() {
-        return statusPercentages;
-    }
-
-    public void setStatusPercentages(Map<String, Double> statusPercentages) {
-        this.statusPercentages = statusPercentages;
-    }
-
     public CategorizedSubscriptionResult getDevices() {
         return devices;
     }
@@ -120,5 +126,11 @@ public class UserSubscriptionDTO {
         this.devices = devices;
     }
 
-}
+    public Map<String, Double> getStatusPercentages() {
+        return statusPercentages;
+    }
 
+    public void setStatusPercentages(Map<String, Double> statusPercentages) {
+        this.statusPercentages = statusPercentages;
+    }
+}

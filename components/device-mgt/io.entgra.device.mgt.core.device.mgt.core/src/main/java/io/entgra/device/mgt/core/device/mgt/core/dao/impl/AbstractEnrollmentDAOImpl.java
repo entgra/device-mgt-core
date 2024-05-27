@@ -26,6 +26,7 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOExceptio
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dao.EnrollmentDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.util.DeviceManagementDAOUtil;
+import io.entgra.device.mgt.core.device.mgt.core.dto.OwnerWithDeviceDTO;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -33,9 +34,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.ArrayList;
 
 public abstract class AbstractEnrollmentDAOImpl implements EnrollmentDAO {
 
@@ -555,6 +556,38 @@ public abstract class AbstractEnrollmentDAOImpl implements EnrollmentDAO {
         enrolmentInfo.setStatus(EnrolmentInfo.Status.valueOf(rs.getString("STATUS")));
         enrolmentInfo.setId(rs.getInt("ID"));
         return enrolmentInfo;
+    }
+
+    @Override
+    public OwnerWithDeviceDTO getOwnersWithDeviceIds(String owner, int tenantId) throws DeviceManagementDAOException {
+
+        OwnerWithDeviceDTO ownerDetails = new OwnerWithDeviceDTO();
+        List<Integer> deviceIds = new ArrayList<>();
+        int deviceCount = 0;
+
+        String sql = "SELECT DEVICE_ID, OWNER FROM DM_ENROLMENT WHERE OWNER = ? AND TENANT_ID = ?";
+
+        try (Connection conn = this.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, owner);
+            stmt.setInt(2, tenantId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    if (ownerDetails.getUserName() == null) {
+                        ownerDetails.setUserName(rs.getString("OWNER"));
+                    }
+                    deviceIds.add(rs.getInt("DEVICE_ID"));
+                    deviceCount++;
+                }
+            }
+        } catch (SQLException e) {
+            throw new DeviceManagementDAOException("Error occurred while retrieving owners and device IDs for owner: " + owner, e);
+        }
+
+        ownerDetails.setDeviceIds(deviceIds);
+        ownerDetails.setDeviceCount(deviceCount);
+        return ownerDetails;
     }
 
 }
