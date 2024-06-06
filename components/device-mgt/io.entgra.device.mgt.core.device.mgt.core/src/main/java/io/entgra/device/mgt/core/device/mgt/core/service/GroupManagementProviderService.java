@@ -30,6 +30,7 @@ import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupAlreadyExistEx
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupNotExistException;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.RoleDoesNotExistException;
+import io.entgra.device.mgt.core.device.mgt.core.dto.GroupDetailsDTO;
 import org.wso2.carbon.user.api.AuthorizationManager;
 import org.wso2.carbon.user.api.UserStoreManager;
 
@@ -371,4 +372,14 @@ public interface GroupManagementProviderService {
     DeviceTypesOfGroups getDeviceTypesOfGroups(List<String> identifiers) throws GroupManagementException;
 
     DeviceGroup getUserOwnGroup(int groupId, boolean requireGroupProps, int depth) throws GroupManagementException;
+
+    /**
+     * Get group details and device IDs for a given group name.
+     *
+     * @param groupName the name of the group.
+     * @return a map containing group details and device IDs.
+     * @throws GroupManagementException if an error occurs while fetching group details.
+     */
+    GroupDetailsDTO getGroupDetailsWithDeviceIds(String groupName) throws GroupManagementException;
+
 }
