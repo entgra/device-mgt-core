@@ -21,6 +21,7 @@ import io.entgra.device.mgt.core.application.mgt.common.ApplicationInstallRespon
 import io.entgra.device.mgt.core.application.mgt.common.CategorizedSubscriptionResult;
 import io.entgra.device.mgt.core.application.mgt.common.ExecutionStatus;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionType;
+import io.entgra.device.mgt.core.application.mgt.common.dto.CategorizedSubscriptionCountsDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.GroupSubscriptionDetailDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ScheduledSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.UserSubscriptionDTO;
@@ -35,7 +36,6 @@ import io.entgra.device.mgt.core.device.mgt.common.app.mgt.App;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Activity;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -262,6 +262,17 @@ public interface SubscriptionManager {
      * @throws SubscriptionManagementException if there is an error while fetching the details.
      */
     List<DeviceOperationDTO> getDeviceSubscriptionsOperationsByUUID(String uuid)
+            throws ApplicationManagementException;
+
+    /**
+     * This method is responsible for retrieving device counts details related to the given UUID.
+     *
+     * @param uuid the UUID of the application release.
+     * @return {@link List<CategorizedSubscriptionCountsDTO>} which contains counts of subscriptions
+       and unsubscription for each subscription type.
+     * @throws SubscriptionManagementException if there is an error while fetching the details.
+     */
+    List<CategorizedSubscriptionCountsDTO> getSubscriptionCountsByUUID(String uuid)
             throws ApplicationManagementException;
 
 }
