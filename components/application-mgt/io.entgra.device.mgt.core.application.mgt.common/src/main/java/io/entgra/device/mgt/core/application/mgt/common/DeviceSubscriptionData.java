@@ -75,9 +75,13 @@ public class DeviceSubscriptionData {
         this.device = device;
     }
 
-    public String getCurrentInstalledVersion() { return currentInstalledVersion; }
+    public String getCurrentInstalledVersion() {
+        return currentInstalledVersion;
+    }
 
-    public void setCurrentInstalledVersion(String currentInstalledVersion) { this.currentInstalledVersion = currentInstalledVersion; }
+    public void setCurrentInstalledVersion(String currentInstalledVersion) {
+        this.currentInstalledVersion = currentInstalledVersion;
+    }
 
     public int getSubId() {
         return subId;

@@ -24,6 +24,7 @@ import io.entgra.device.mgt.core.application.mgt.common.ApplicationSubscriptionI
 import io.entgra.device.mgt.core.application.mgt.common.ApplicationType;
 import io.entgra.device.mgt.core.application.mgt.common.CategorizedSubscriptionResult;
 import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionData;
+import io.entgra.device.mgt.core.application.mgt.common.dto.CategorizedSubscriptionCountsDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.GroupSubscriptionDetailDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.UserSubscriptionDTO;
@@ -42,6 +43,7 @@ import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationPolicyDTO
 import io.entgra.device.mgt.core.application.mgt.common.dto.VppAssetDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.VppUserDTO;
 import io.entgra.device.mgt.core.application.mgt.common.services.VPPApplicationManager;
+import io.entgra.device.mgt.core.application.mgt.core.dao.ApplicationReleaseDAO;
 import io.entgra.device.mgt.core.application.mgt.core.dao.VppApplicationDAO;
 import io.entgra.device.mgt.core.application.mgt.core.exception.BadRequestException;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
@@ -143,12 +145,14 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
     private SubscriptionDAO subscriptionDAO;
     private ApplicationDAO applicationDAO;
     private VppApplicationDAO vppApplicationDAO;
+    private ApplicationReleaseDAO applicationReleaseDAO;
     private LifecycleStateManager lifecycleStateManager;
 
     public SubscriptionManagerImpl() {
         this.lifecycleStateManager = DataHolder.getInstance().getLifecycleStateManager();
         this.subscriptionDAO = ApplicationManagementDAOFactory.getSubscriptionDAO();
         this.applicationDAO = ApplicationManagementDAOFactory.getApplicationDAO();
+        this.applicationReleaseDAO = ApplicationManagementDAOFactory.getApplicationReleaseDAO();
         this.vppApplicationDAO = ApplicationManagementDAOFactory.getVppApplicationDAO();
     }
 
@@ -2128,6 +2132,62 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             throw new ApplicationManagementException(msg, e);
         } catch (OperationManagementException e) {
             throw new RuntimeException(e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+    }
+
+    @Override
+    public List<CategorizedSubscriptionCountsDTO> getSubscriptionCountsByUUID(String uuid)
+            throws ApplicationManagementException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        if (uuid == null || uuid.isEmpty()) {
+            throw new IllegalArgumentException("UUID cannot be null or empty.");
+        }
+
+        try {
+            ConnectionManagerUtil.openDBConnection();
+
+            ApplicationReleaseDTO applicationReleaseDTO = this.applicationReleaseDAO.getReleaseByUUID(uuid, tenantId);
+            if (applicationReleaseDTO == null) {
+                String msg = "Couldn't find an application release for application release UUID: " + uuid;
+                log.error(msg);
+                throw new NotFoundException(msg);
+            }
+            int appReleaseId = applicationReleaseDTO.getId();
+
+            List<CategorizedSubscriptionCountsDTO> subscriptionCounts = new ArrayList<>();
+
+            subscriptionCounts.add(new CategorizedSubscriptionCountsDTO(
+                    "ALL",
+                    subscriptionDAO.getAllSubscriptionCount(appReleaseId, tenantId),
+                    subscriptionDAO.getAllUnsubscriptionCount(appReleaseId, tenantId)));
+            subscriptionCounts.add(new CategorizedSubscriptionCountsDTO(
+                    "DEVICE",
+                    subscriptionDAO.getDeviceSubscriptionCount(appReleaseId, tenantId),
+                    subscriptionDAO.getDeviceUnsubscriptionCount(appReleaseId, tenantId)));
+            subscriptionCounts.add(new CategorizedSubscriptionCountsDTO(
+                    "GROUP",
+                    subscriptionDAO.getGroupSubscriptionCount(appReleaseId, tenantId),
+                    subscriptionDAO.getGroupUnsubscriptionCount(appReleaseId, tenantId)));
+            subscriptionCounts.add(new CategorizedSubscriptionCountsDTO(
+                    "ROLE",
+                    subscriptionDAO.getRoleSubscriptionCount(appReleaseId, tenantId),
+                    subscriptionDAO.getRoleUnsubscriptionCount(appReleaseId, tenantId)));
+            subscriptionCounts.add(new CategorizedSubscriptionCountsDTO(
+                    "USER",
+                    subscriptionDAO.getUserSubscriptionCount(appReleaseId, tenantId),
+                    subscriptionDAO.getUserUnsubscriptionCount(appReleaseId, tenantId)));
+
+            return subscriptionCounts;
+        } catch (ApplicationManagementDAOException e) {
+            String msg = "Error occurred while retrieving subscriptions counts for UUID: " + uuid;
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while retrieving the database connection";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
         } finally {
             ConnectionManagerUtil.closeDBConnection();
         }
