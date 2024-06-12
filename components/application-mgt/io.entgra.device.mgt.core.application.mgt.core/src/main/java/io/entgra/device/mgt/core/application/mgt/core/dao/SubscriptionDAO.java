@@ -374,4 +374,114 @@ public interface SubscriptionDAO {
      */
     List<DeviceSubscriptionDTO> getDeviceSubscriptionsDetails(int appReleaseId, int tenantId)
             throws ApplicationManagementDAOException;
+
+    /**
+     * This method is used to get the counts of all subscription types related to a UUID.
+     *
+     * @param appReleaseId the appReleaseId of the application release.
+     * @param tenantId id of the current tenant.
+     * @return {@link int} which contains the count of the subscription type
+     * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
+     */
+    int getAllSubscriptionCount(int appReleaseId, int tenantId)
+            throws ApplicationManagementDAOException;
+
+    /**
+     * This method is used to get the counts of all unsubscription types related to a UUID.
+     *
+     * @param appReleaseId the UUID of the application release.
+     * @param tenantId id of the current tenant.
+     * @return {@link int} which contains the count of the subscription type
+     * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
+     */
+    int getAllUnsubscriptionCount(int appReleaseId, int tenantId)
+            throws ApplicationManagementDAOException;
+
+    /**
+     * This method is used to get the counts of device subscriptions related to a UUID.
+     *
+     * @param appReleaseId the UUID of the application release.
+     * @param tenantId id of the current tenant.
+     * @return {@link int} which contains the count of the subscription type
+     * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
+     */
+    int getDeviceSubscriptionCount(int appReleaseId, int tenantId)
+            throws ApplicationManagementDAOException;
+
+    /**
+     * This method is used to get the counts of device unsubscription related to a UUID.
+     *
+     * @param appReleaseId the UUID of the application release.
+     * @param tenantId id of the current tenant.
+     * @return {@link int} which contains the count of the subscription type
+     * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
+     */
+    int getDeviceUnsubscriptionCount(int appReleaseId, int tenantId)
+            throws ApplicationManagementDAOException;
+
+    /**
+     * This method is used to get the counts of group subscriptions related to a UUID.
+     *
+     * @param appReleaseId the UUID of the application release.
+     * @param tenantId id of the current tenant.
+     * @return {@link int} which contains the count of the subscription type
+     * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
+     */
+    int getGroupSubscriptionCount(int appReleaseId, int tenantId)
+            throws ApplicationManagementDAOException;
+
+    /**
+     * This method is used to get the counts of group unsubscription related to a UUID.
+     *
+     * @param appReleaseId the UUID of the application release.
+     * @param tenantId id of the current tenant.
+     * @return {@link int} which contains the count of the subscription type
+     * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
+     */
+    int getGroupUnsubscriptionCount(int appReleaseId, int tenantId)
+            throws ApplicationManagementDAOException;
+
+    /**
+     * This method is used to get the counts of role subscriptions related to a UUID.
+     *
+     * @param appReleaseId the UUID of the application release.
+     * @param tenantId id of the current tenant.
+     * @return {@link int} which contains the count of the subscription type
+     * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
+     */
+    int getRoleSubscriptionCount(int appReleaseId, int tenantId)
+            throws ApplicationManagementDAOException;
+
+    /**
+     * This method is used to get the counts of role unsubscription related to a UUID.
+     *
+     * @param appReleaseId the UUID of the application release.
+     * @param tenantId id of the current tenant.
+     * @return {@link int} which contains the count of the subscription type
+     * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
+     */
+    int getRoleUnsubscriptionCount(int appReleaseId, int tenantId)
+            throws ApplicationManagementDAOException;
+
+    /**
+     * This method is used to get the counts of user subscriptions related to a UUID.
+     *
+     * @param appReleaseId the UUID of the application release.
+     * @param tenantId id of the current tenant.
+     * @return {@link int} which contains the count of the subscription type
+     * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
+     */
+    int getUserSubscriptionCount(int appReleaseId, int tenantId)
+            throws ApplicationManagementDAOException;
+
+    /**
+     * This method is used to get the counts of user unsubscription related to a UUID.
+     *
+     * @param appReleaseId the UUID of the application release.
+     * @param tenantId id of the current tenant.
+     * @return {@link int} which contains the count of the subscription type
+     * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
+     */
+    int getUserUnsubscriptionCount(int appReleaseId, int tenantId)
+            throws ApplicationManagementDAOException;
 }
