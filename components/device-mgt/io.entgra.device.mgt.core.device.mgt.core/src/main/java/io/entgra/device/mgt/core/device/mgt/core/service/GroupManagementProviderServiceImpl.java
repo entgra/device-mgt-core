@@ -1688,7 +1688,8 @@ public class GroupManagementProviderServiceImpl implements GroupManagementProvid
     }
 
     @Override
-    public GroupDetailsDTO getGroupDetailsWithDeviceIds(String groupName) throws GroupManagementException {
+    public GroupDetailsDTO getGroupDetailsWithDevices(String groupName, int offset, int limit)
+            throws GroupManagementException {
         if (log.isDebugEnabled()) {
             log.debug("Retrieving group details and device IDs for group: " + groupName);
         }
@@ -1697,7 +1698,7 @@ public class GroupManagementProviderServiceImpl implements GroupManagementProvid
 
         try {
             GroupManagementDAOFactory.openConnection();
-            groupDetailsWithDevices = this.groupDAO.getGroupDetailsWithDeviceIds(groupName, tenantId);
+            groupDetailsWithDevices = this.groupDAO.getGroupDetailsWithDevices(groupName, tenantId, offset, limit);
         } catch (GroupManagementDAOException | SQLException e) {
             String msg = "Error occurred while retrieving group details and device IDs for group: " + groupName;
             log.error(msg, e);
@@ -1706,9 +1707,8 @@ public class GroupManagementProviderServiceImpl implements GroupManagementProvid
             GroupManagementDAOFactory.closeConnection();
         }
 
-        // Add device count
         if (groupDetailsWithDevices != null) {
-            List<Integer> deviceIds = (List<Integer>) groupDetailsWithDevices.getDeviceIds();
+            List<Integer> deviceIds = groupDetailsWithDevices.getDeviceIds();
             if (deviceIds != null) {
                 groupDetailsWithDevices.setDeviceCount(deviceIds.size());
             } else {

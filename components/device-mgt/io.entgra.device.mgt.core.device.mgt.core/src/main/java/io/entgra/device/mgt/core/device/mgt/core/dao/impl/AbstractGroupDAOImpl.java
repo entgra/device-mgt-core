@@ -1440,23 +1440,31 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
     }
 
     @Override
-    public GroupDetailsDTO getGroupDetailsWithDeviceIds(String groupName, int tenantId) throws GroupManagementDAOException {
+    public GroupDetailsDTO getGroupDetailsWithDevices(String groupName, int tenantId, int offset, int limit)
+            throws GroupManagementDAOException {
         if (log.isDebugEnabled()) {
             log.debug("Request received in DAO Layer to get group details and device IDs for group: " + groupName);
         }
 
         GroupDetailsDTO groupDetails = new GroupDetailsDTO();
         List<Integer> deviceIds = new ArrayList<>();
+        Map<Integer, String> deviceOwners = new HashMap<>();
+        Map<Integer, String> deviceStatuses = new HashMap<>();
 
-        String sql = "SELECT g.ID AS GROUP_ID, g.GROUP_NAME, g.OWNER, dgm.DEVICE_ID "
-                + "FROM DM_GROUP g "
-                + "JOIN DM_DEVICE_GROUP_MAP dgm ON g.ID = dgm.GROUP_ID "
-                + "WHERE g.GROUP_NAME = ? AND g.TENANT_ID = ?";
+        String sql =
+                "SELECT g.ID AS GROUP_ID, g.GROUP_NAME, g.OWNER, e.OWNER AS DEVICE_OWNER, e.STATUS AS DEVICE_STATUS, dgm.DEVICE_ID "
+                        + "FROM DM_GROUP g "
+                        + "JOIN DM_DEVICE_GROUP_MAP dgm ON g.ID = dgm.GROUP_ID "
+                        + "JOIN DM_ENROLMENT e ON dgm.DEVICE_ID = e.DEVICE_ID "
+                        + "WHERE g.GROUP_NAME = ? AND g.TENANT_ID = ? " +
+                        "LIMIT ? OFFSET ?";
 
         try (Connection conn = GroupManagementDAOFactory.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, groupName);
             stmt.setInt(2, tenantId);
+            stmt.setInt(3, limit);
+            stmt.setInt(4, offset);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -1465,7 +1473,10 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
                         groupDetails.setGroupName(rs.getString("GROUP_NAME"));
                         groupDetails.setGroupOwner(rs.getString("OWNER"));
                     }
-                    deviceIds.add(rs.getInt("DEVICE_ID"));
+                    int deviceId = rs.getInt("DEVICE_ID");
+                    deviceIds.add(deviceId);
+                    deviceOwners.put(deviceId, rs.getString("DEVICE_OWNER"));
+                    deviceStatuses.put(deviceId, rs.getString("DEVICE_STATUS"));
                 }
             }
         } catch (SQLException e) {
@@ -1475,6 +1486,8 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
 
         groupDetails.setDeviceIds(deviceIds);
         groupDetails.setDeviceCount(deviceIds.size());
+        groupDetails.setDeviceOwners(deviceOwners);
+        groupDetails.setDeviceStatuses(deviceStatuses);
         return groupDetails;
     }
 }

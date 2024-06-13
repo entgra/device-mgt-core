@@ -22,6 +22,7 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.dao.TenantDAO;
+import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceDetailsDTO;
 import io.entgra.device.mgt.core.device.mgt.core.dto.OwnerWithDeviceDTO;
 import io.entgra.device.mgt.core.device.mgt.core.dto.OperationDTO;
 import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.dao.OperationManagementDAOException;
@@ -5354,7 +5355,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
 
         try {
             DeviceManagementDAOFactory.openConnection();
-            ownerWithDeviceDTO = this.enrollmentDAO.getOwnersWithDeviceIds(owner, tenantId);
+            ownerWithDeviceDTO = this.enrollmentDAO.getOwnersWithDevices(owner, tenantId);
         } catch (DeviceManagementDAOException | SQLException e) {
             String msg = "Error occurred while retrieving device IDs for owner: " + owner;
             log.error(msg, e);
@@ -5363,7 +5364,6 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             DeviceManagementDAOFactory.closeConnection();
         }
 
-        // Add device count to the DTO
         if (ownerWithDeviceDTO != null) {
             List<Integer> deviceIds = ownerWithDeviceDTO.getDeviceIds();
             if (deviceIds != null) {
@@ -5374,6 +5374,54 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         }
 
         return ownerWithDeviceDTO;
+    }
+
+    @Override
+    public OwnerWithDeviceDTO getOwnerWithDeviceByDeviceId(int deviceId)
+            throws DeviceManagementDAOException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        OwnerWithDeviceDTO deviceOwnerWithStatus;
+
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            deviceOwnerWithStatus = enrollmentDAO.getOwnerWithDeviceByDeviceId(deviceId, tenantId);
+        } catch (DeviceManagementDAOException | SQLException e) {
+            String msg = "Error occurred while retrieving owner and status for device ID: " + deviceId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+
+        if (deviceOwnerWithStatus != null) {
+            List<Integer> deviceIds = deviceOwnerWithStatus.getDeviceIds();
+            if (deviceIds != null) {
+                deviceOwnerWithStatus.setDeviceCount(deviceIds.size());
+            } else {
+                deviceOwnerWithStatus.setDeviceCount(0);
+            }
+        }
+
+        return deviceOwnerWithStatus;
+    }
+
+    @Override
+    public List<DeviceDetailsDTO> getDevicesByTenantId(int tenantId)
+            throws DeviceManagementDAOException {
+        List<DeviceDetailsDTO> devices;
+
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            devices = enrollmentDAO.getDevicesByTenantId(tenantId);
+        } catch (DeviceManagementDAOException | SQLException e) {
+            String msg = "Error occurred while retrieving devices for tenant ID: " + tenantId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+
+        return devices;
     }
 
     @Override

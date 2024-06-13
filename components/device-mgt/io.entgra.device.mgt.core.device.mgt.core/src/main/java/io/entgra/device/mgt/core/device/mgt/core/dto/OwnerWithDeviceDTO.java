@@ -25,6 +25,7 @@ public class OwnerWithDeviceDTO {
     private String userName;
     private List<Integer> deviceIds;
     private int deviceCount;
+    private String deviceStatus;
 
     public String getUserName() {
         return userName;
@@ -48,5 +49,13 @@ public class OwnerWithDeviceDTO {
 
     public void setDeviceCount(int deviceCount) {
         this.deviceCount = deviceCount;
+    }
+
+    public String getDeviceStatus() {
+        return deviceStatus;
+    }
+
+    public void setDeviceStatus(String deviceStatus) {
+        this.deviceStatus = deviceStatus;
     }
 }

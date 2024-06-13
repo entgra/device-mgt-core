@@ -34,6 +34,8 @@ public class GroupSubscriptionDetailDTO {
     private Timestamp unsubscribedTimestamp;
     private int appReleaseId;
     private int deviceCount;
+    private String deviceOwner;
+    private String deviceStatus;
     private CategorizedSubscriptionResult devices;
     private Map<String, Double> statusPercentages;
 
@@ -132,5 +134,21 @@ public class GroupSubscriptionDetailDTO {
 
     public void setStatusPercentages(Map<String, Double> statusPercentages) {
         this.statusPercentages = statusPercentages;
+    }
+
+    public String getDeviceOwner() {
+        return deviceOwner;
+    }
+
+    public void setDeviceOwner(String deviceOwner) {
+        this.deviceOwner = deviceOwner;
+    }
+
+    public String getDeviceStatus() {
+        return deviceStatus;
+    }
+
+    public void setDeviceStatus(String deviceStatus) {
+        this.deviceStatus = deviceStatus;
     }
 }

@@ -19,6 +19,7 @@
 package io.entgra.device.mgt.core.device.mgt.core.dto;
 
 import java.util.List;
+import java.util.Map;
 
 public class GroupDetailsDTO {
     private int groupId;
@@ -26,6 +27,10 @@ public class GroupDetailsDTO {
     private String groupOwner;
     private List<Integer> deviceIds;
     private int deviceCount;
+    private String deviceOwner;
+    private String deviceStatus;
+    private Map<Integer, String> deviceOwners;
+    private Map<Integer, String> deviceStatuses;
 
     public int getGroupId() {
         return groupId;
@@ -67,4 +72,35 @@ public class GroupDetailsDTO {
         this.deviceCount = deviceCount;
     }
 
+    public String getDeviceOwner() {
+        return deviceOwner;
+    }
+
+    public void setDeviceOwner(String deviceOwner) {
+        this.deviceOwner = deviceOwner;
+    }
+
+    public String getDeviceStatus() {
+        return deviceStatus;
+    }
+
+    public void setDeviceStatus(String deviceStatus) {
+        this.deviceStatus = deviceStatus;
+    }
+
+    public Map<Integer, String> getDeviceOwners() {
+        return deviceOwners;
+    }
+
+    public void setDeviceOwners(Map<Integer, String> deviceOwners) {
+        this.deviceOwners = deviceOwners;
+    }
+
+    public Map<Integer, String> getDeviceStatuses() {
+        return deviceStatuses;
+    }
+
+    public void setDeviceStatuses(Map<Integer, String> deviceStatuses) {
+        this.deviceStatuses = deviceStatuses;
+    }
 }
