@@ -25,8 +25,8 @@ public class CategorizedSubscriptionResult {
     private List<DeviceSubscriptionData> pendingDevices;
     private List<DeviceSubscriptionData> errorDevices;
     private List<DeviceSubscriptionData> newDevices;
+    private List<DeviceSubscriptionData> subscribedDevices;
 
-    // without newDevices
     public CategorizedSubscriptionResult(List<DeviceSubscriptionData> installedDevices,
                                          List<DeviceSubscriptionData> pendingDevices,
                                          List<DeviceSubscriptionData> errorDevices) {
@@ -34,9 +34,9 @@ public class CategorizedSubscriptionResult {
         this.pendingDevices = pendingDevices;
         this.errorDevices = errorDevices;
         this.newDevices = null;
+        this.subscribedDevices = null;
     }
 
-    // with newDevices
     public CategorizedSubscriptionResult(List<DeviceSubscriptionData> installedDevices,
                                          List<DeviceSubscriptionData> pendingDevices,
                                          List<DeviceSubscriptionData> errorDevices,
@@ -45,6 +45,19 @@ public class CategorizedSubscriptionResult {
         this.pendingDevices = pendingDevices;
         this.errorDevices = errorDevices;
         this.newDevices = newDevices;
+        this.subscribedDevices = null;
+    }
+
+    public CategorizedSubscriptionResult(List<DeviceSubscriptionData> installedDevices,
+                                         List<DeviceSubscriptionData> pendingDevices,
+                                         List<DeviceSubscriptionData> errorDevices,
+                                         List<DeviceSubscriptionData> newDevices,
+                                         List<DeviceSubscriptionData> subscribedDevices) {
+        this.installedDevices = installedDevices;
+        this.pendingDevices = pendingDevices;
+        this.errorDevices = errorDevices;
+        this.newDevices = newDevices;
+        this.subscribedDevices = subscribedDevices;
     }
 
     public List<DeviceSubscriptionData> getInstalledDevices() {
@@ -78,4 +91,13 @@ public class CategorizedSubscriptionResult {
     public void setNewDevices(List<DeviceSubscriptionData> newDevices) {
         this.newDevices = newDevices;
     }
+
+    public List<DeviceSubscriptionData> getSubscribedDevices() {
+        return subscribedDevices;
+    }
+
+    public void setSubscribedDevices(List<DeviceSubscriptionData> subscribedDevices) {
+        this.subscribedDevices = subscribedDevices;
+    }
 }
+

@@ -33,6 +33,7 @@ public class UserSubscriptionDTO {
     private Timestamp unsubscribedTimestamp;
     private int appReleaseId;
     private int deviceCount;
+    private String deviceStatus;
     private Map<String, Double> statusPercentages;
     private CategorizedSubscriptionResult devices;
 
@@ -120,5 +121,12 @@ public class UserSubscriptionDTO {
         this.devices = devices;
     }
 
+    public String getDeviceStatus() {
+        return deviceStatus;
+    }
+
+    public void setDeviceStatus(String deviceStatus) {
+        this.deviceStatus = deviceStatus;
+    }
 }
 

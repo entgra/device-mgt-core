@@ -2779,7 +2779,8 @@ public class GenericOperationDAOImpl implements OperationDAO {
     }
 
     @Override
-    public OperationDTO getOperationDetailsById(int operationId, int tenantId) throws OperationManagementDAOException {
+    public OperationDTO getOperationDetailsById(int operationId, int tenantId)
+            throws OperationManagementDAOException {
         OperationDTO operationDetails = new OperationDTO();
 
         String sql = "SELECT ID, OPERATION_CODE, OPERATION_DETAILS, OPERATION_PROPERTIES " +
