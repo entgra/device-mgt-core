@@ -34,6 +34,11 @@ public class DeviceSubscriptionData {
     private Device device;
     private String currentInstalledVersion;
     private int deviceId;
+    private String deviceOwner;
+    private String deviceStatus;
+    private boolean unsubscribed;
+    private String unsubscribedBy;
+    private Timestamp unsubscribedTimestamp;
 
     public String getAction() {
         return action;
@@ -113,5 +118,45 @@ public class DeviceSubscriptionData {
 
     public void setActionTriggeredTimestamp(Timestamp actionTriggeredTimestamp) {
         this.actionTriggeredTimestamp = actionTriggeredTimestamp;
+    }
+
+    public String getDeviceOwner() {
+        return deviceOwner;
+    }
+
+    public void setDeviceOwner(String deviceOwner) {
+        this.deviceOwner = deviceOwner;
+    }
+
+    public String getDeviceStatus() {
+        return deviceStatus;
+    }
+
+    public void setDeviceStatus(String deviceStatus) {
+        this.deviceStatus = deviceStatus;
+    }
+
+    public boolean isUnsubscribed() {
+        return unsubscribed;
+    }
+
+    public void setUnsubscribed(boolean unsubscribed) {
+        this.unsubscribed = unsubscribed;
+    }
+
+    public String getUnsubscribedBy() {
+        return unsubscribedBy;
+    }
+
+    public void setUnsubscribedBy(String unsubscribedBy) {
+        this.unsubscribedBy = unsubscribedBy;
+    }
+
+    public Timestamp getUnsubscribedTimestamp() {
+        return unsubscribedTimestamp;
+    }
+
+    public void setUnsubscribedTimestamp(Timestamp unsubscribedTimestamp) {
+        this.unsubscribedTimestamp = unsubscribedTimestamp;
     }
 }

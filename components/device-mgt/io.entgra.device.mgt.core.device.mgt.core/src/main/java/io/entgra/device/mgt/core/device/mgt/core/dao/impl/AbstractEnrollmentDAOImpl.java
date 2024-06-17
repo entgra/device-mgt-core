@@ -27,6 +27,7 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dao.EnrollmentDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import io.entgra.device.mgt.core.device.mgt.core.dto.OwnerWithDeviceDTO;
+import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceDetailsDTO;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -559,13 +560,16 @@ public abstract class AbstractEnrollmentDAOImpl implements EnrollmentDAO {
     }
 
     @Override
-    public OwnerWithDeviceDTO getOwnersWithDeviceIds(String owner, int tenantId) throws DeviceManagementDAOException {
+    public OwnerWithDeviceDTO getOwnersWithDevices(String owner, int tenantId)
+            throws DeviceManagementDAOException {
 
         OwnerWithDeviceDTO ownerDetails = new OwnerWithDeviceDTO();
         List<Integer> deviceIds = new ArrayList<>();
         int deviceCount = 0;
 
-        String sql = "SELECT DEVICE_ID, OWNER FROM DM_ENROLMENT WHERE OWNER = ? AND TENANT_ID = ?";
+        String sql = "SELECT DEVICE_ID, OWNER, STATUS AS DEVICE_STATUS " +
+                "FROM DM_ENROLMENT " +
+                "WHERE OWNER = ? AND TENANT_ID = ?";
 
         try (Connection conn = this.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -586,8 +590,69 @@ public abstract class AbstractEnrollmentDAOImpl implements EnrollmentDAO {
         }
 
         ownerDetails.setDeviceIds(deviceIds);
+        ownerDetails.setDeviceStatus("DEVICE_STATUS");
         ownerDetails.setDeviceCount(deviceCount);
         return ownerDetails;
     }
 
+    @Override
+    public OwnerWithDeviceDTO getOwnerWithDeviceByDeviceId(int deviceId, int tenantId)
+            throws DeviceManagementDAOException {
+        OwnerWithDeviceDTO deviceOwnerWithStatus = new OwnerWithDeviceDTO();
+
+        String sql = "SELECT DEVICE_ID, OWNER, STATUS AS DEVICE_STATUS " +
+                "FROM DM_ENROLMENT " +
+                "WHERE DEVICE_ID = ? AND TENANT_ID = ?";
+
+        try (Connection conn = this.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, deviceId);
+            stmt.setInt(2, tenantId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    deviceOwnerWithStatus.setUserName(rs.getString("OWNER"));
+                    deviceOwnerWithStatus.setDeviceStatus(rs.getString("DEVICE_STATUS"));
+                    List<Integer> deviceIds = new ArrayList<>();
+                    deviceIds.add(rs.getInt("DEVICE_ID"));
+                    deviceOwnerWithStatus.setDeviceIds(deviceIds);
+                }
+            }
+        } catch (SQLException e) {
+            throw new DeviceManagementDAOException("Error occurred while retrieving owner and status for device ID: "
+                    + deviceId, e);
+        }
+
+        return deviceOwnerWithStatus;
+    }
+
+    @Override
+    public List<DeviceDetailsDTO> getDevicesByTenantId(int tenantId)
+            throws DeviceManagementDAOException {
+        List<DeviceDetailsDTO> devices = new ArrayList<>();
+        String sql = "SELECT DEVICE_ID, OWNER, STATUS " +
+                "FROM DM_ENROLMENT " +
+                "WHERE TENANT_ID = ?";
+
+        try (Connection conn = this.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, tenantId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    DeviceDetailsDTO device = new DeviceDetailsDTO();
+                    device.setDeviceId(rs.getInt("DEVICE_ID"));
+                    device.setOwner(rs.getString("OWNER"));
+                    device.setStatus(rs.getString("STATUS"));
+                    devices.add(device);
+                }
+            }
+        } catch (SQLException e) {
+            throw new DeviceManagementDAOException("Error occurred while retrieving devices for tenant ID: "
+                    + tenantId, e);
+        }
+
+        return devices;
+    }
 }

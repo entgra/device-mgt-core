@@ -127,5 +127,14 @@ public interface OperationDAO {
     int getDeviceActivitiesCount(ActivityPaginationRequest activityPaginationRequest)
             throws OperationManagementDAOException;
 
-    OperationDTO getOperationDetailsById(int operationId, int tenantId) throws OperationManagementDAOException;
+    /**
+     * This method is used to get the details of device subscriptions related to a UUID.
+     *
+     * @param operationId the operationId of the operation to be retrieved.
+     * @param tenantId id of the current tenant.
+     * @return {@link OperationDTO} which contains the details of device operations.
+     * @throws OperationManagementDAOException if connection establishment or SQL execution fails.
+     */
+    OperationDTO getOperationDetailsById(int operationId, int tenantId)
+            throws OperationManagementDAOException;
 }

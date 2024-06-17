@@ -19,6 +19,7 @@
 package io.entgra.device.mgt.core.device.mgt.core.service;
 
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.Application;
+import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceDetailsDTO;
 import io.entgra.device.mgt.core.device.mgt.core.dto.OperationDTO;
 import io.entgra.device.mgt.core.device.mgt.core.dto.OwnerWithDeviceDTO;
 import org.apache.commons.collections.map.SingletonMap;
@@ -1080,16 +1081,33 @@ public interface DeviceManagementProviderService {
      * Get owner details and device IDs for a given owner and tenant.
      *
      * @param owner the name of the owner.
-     * @return a map containing owner details (Owner, DeviceIds, DeviceCount).
+     * @return {@link OwnerWithDeviceDTO} which contains a list of devices related to a user.
      * @throws DeviceManagementException if an error occurs while fetching owner details.
      */
     OwnerWithDeviceDTO getOwnersWithDeviceIds(String owner) throws DeviceManagementDAOException;
 
     /**
+     * Get owner details and device IDs for a given owner and tenant.
+     *
+     * @param deviceId the deviceId of the device.
+     * @return {@link OwnerWithDeviceDTO} which contains a list of devices related to a user.
+     * @throws DeviceManagementException if an error occurs while fetching owner details.
+     */
+    OwnerWithDeviceDTO getOwnerWithDeviceByDeviceId(int deviceId) throws DeviceManagementDAOException;
+
+    /**
+     * Get owner details and device IDs for a given owner and tenant.
+     * @param tenantId the tenant id which devices need to be retried
+     * @return {@link DeviceDetailsDTO} which contains devices details.
+     * @throws DeviceManagementException if an error occurs while fetching owner details.
+     */
+    List<DeviceDetailsDTO> getDevicesByTenantId(int tenantId) throws DeviceManagementDAOException;
+
+    /**
      * Get operation details by operation code.
      *
      * @param operationId the id of the operation.
-     * @return Map containing operation ID, operation code, operation details, and operation properties.
+     * @return {@link OperationDTO} which contains operation details.
      * @throws OperationManagementException if an error occurs while fetching the operation details.
      */
     OperationDTO getOperationDetailsById(int operationId) throws OperationManagementException;
