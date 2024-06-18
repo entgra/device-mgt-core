@@ -567,9 +567,10 @@ public abstract class AbstractEnrollmentDAOImpl implements EnrollmentDAO {
         List<Integer> deviceIds = new ArrayList<>();
         int deviceCount = 0;
 
-        String sql = "SELECT DEVICE_ID, OWNER, STATUS AS DEVICE_STATUS " +
-                "FROM DM_ENROLMENT " +
-                "WHERE OWNER = ? AND TENANT_ID = ?";
+        String sql = "SELECT e.DEVICE_ID, e.OWNER, e.STATUS AS DEVICE_STATUS, d.NAME AS DEVICE_NAME " +
+                "FROM DM_ENROLMENT e " +
+                "JOIN DM_DEVICE d ON e.DEVICE_ID = d.ID " +
+                "WHERE e.OWNER = ? AND e.TENANT_ID = ?";
 
         try (Connection conn = this.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -591,6 +592,7 @@ public abstract class AbstractEnrollmentDAOImpl implements EnrollmentDAO {
 
         ownerDetails.setDeviceIds(deviceIds);
         ownerDetails.setDeviceStatus("DEVICE_STATUS");
+        ownerDetails.setDeviceNames("DEVICE_NAME");
         ownerDetails.setDeviceCount(deviceCount);
         return ownerDetails;
     }
@@ -600,9 +602,10 @@ public abstract class AbstractEnrollmentDAOImpl implements EnrollmentDAO {
             throws DeviceManagementDAOException {
         OwnerWithDeviceDTO deviceOwnerWithStatus = new OwnerWithDeviceDTO();
 
-        String sql = "SELECT DEVICE_ID, OWNER, STATUS AS DEVICE_STATUS " +
-                "FROM DM_ENROLMENT " +
-                "WHERE DEVICE_ID = ? AND TENANT_ID = ?";
+        String sql = "SELECT e.DEVICE_ID, e.OWNER, e.STATUS AS DEVICE_STATUS, d.NAME AS DEVICE_NAME " +
+                "FROM DM_ENROLMENT e " +
+                "JOIN DM_DEVICE d ON e.DEVICE_ID = d.ID " +
+                "WHERE e.DEVICE_ID = ? AND e.TENANT_ID = ?";
 
         try (Connection conn = this.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -616,6 +619,7 @@ public abstract class AbstractEnrollmentDAOImpl implements EnrollmentDAO {
                     List<Integer> deviceIds = new ArrayList<>();
                     deviceIds.add(rs.getInt("DEVICE_ID"));
                     deviceOwnerWithStatus.setDeviceIds(deviceIds);
+                    deviceOwnerWithStatus.setDeviceNames(rs.getString("DEVICE_NAME"));
                 }
             }
         } catch (SQLException e) {
