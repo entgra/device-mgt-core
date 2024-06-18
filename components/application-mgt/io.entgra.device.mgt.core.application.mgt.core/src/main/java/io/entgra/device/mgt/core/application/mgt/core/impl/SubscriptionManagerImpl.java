@@ -2634,23 +2634,23 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             List<CategorizedSubscriptionCountsDTO> subscriptionCounts = new ArrayList<>();
 
             subscriptionCounts.add(new CategorizedSubscriptionCountsDTO(
-                    "ALL",
+                    "All",
                     subscriptionDAO.getAllSubscriptionCount(appReleaseId, tenantId),
                     subscriptionDAO.getAllUnsubscriptionCount(appReleaseId, tenantId)));
             subscriptionCounts.add(new CategorizedSubscriptionCountsDTO(
-                    "DEVICE",
+                    "Device",
                     subscriptionDAO.getDeviceSubscriptionCount(appReleaseId, tenantId),
                     subscriptionDAO.getDeviceUnsubscriptionCount(appReleaseId, tenantId)));
             subscriptionCounts.add(new CategorizedSubscriptionCountsDTO(
-                    "GROUP",
+                    "Group",
                     subscriptionDAO.getGroupSubscriptionCount(appReleaseId, tenantId),
                     subscriptionDAO.getGroupUnsubscriptionCount(appReleaseId, tenantId)));
             subscriptionCounts.add(new CategorizedSubscriptionCountsDTO(
-                    "ROLE",
+                    "Role",
                     subscriptionDAO.getRoleSubscriptionCount(appReleaseId, tenantId),
                     subscriptionDAO.getRoleUnsubscriptionCount(appReleaseId, tenantId)));
             subscriptionCounts.add(new CategorizedSubscriptionCountsDTO(
-                    "USER",
+                    "User",
                     subscriptionDAO.getUserSubscriptionCount(appReleaseId, tenantId),
                     subscriptionDAO.getUserUnsubscriptionCount(appReleaseId, tenantId)));
 
