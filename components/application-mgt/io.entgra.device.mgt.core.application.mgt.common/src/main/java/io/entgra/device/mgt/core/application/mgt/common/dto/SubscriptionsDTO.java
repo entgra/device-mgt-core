@@ -23,45 +23,45 @@ import io.entgra.device.mgt.core.application.mgt.common.CategorizedSubscriptionR
 import java.sql.Timestamp;
 import java.util.Map;
 
-public class GroupSubscriptionDetailDTO {
-    private int groupId;
-    private String groupName;
-    private String groupOwner;
+public class SubscriptionsDTO {
+    private int id;
+    private String owner;
+    private String name;
     private String subscribedBy;
     private Timestamp subscribedTimestamp;
-    private boolean isUnsubscribed;
+    private boolean unsubscribed;
     private String unsubscribedBy;
     private Timestamp unsubscribedTimestamp;
+    private String subscribedFrom;
     private int appReleaseId;
     private int deviceCount;
     private String deviceOwner;
     private String deviceStatus;
-    private CategorizedSubscriptionResult devices;
     private Map<String, Double> statusPercentages;
+    private CategorizedSubscriptionResult devices;
 
-    // Getters and Setters
-    public int getGroupId() {
-        return groupId;
+    public int getId() {
+        return id;
     }
 
-    public void setGroupId(int groupId) {
-        this.groupId = groupId;
+    public void setId(int id) {
+        this.id = id;
     }
 
-    public String getGroupName() {
-        return groupName;
+    public String getOwner() {
+        return owner;
     }
 
-    public void setGroupName(String groupName) {
-        this.groupName = groupName;
+    public void setOwner(String owner) {
+        this.owner = owner;
     }
 
-    public String getGroupOwner() {
-        return groupOwner;
+    public String getName() {
+        return name;
     }
 
-    public void setGroupOwner(String groupOwner) {
-        this.groupOwner = groupOwner;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getSubscribedBy() {
@@ -80,14 +80,6 @@ public class GroupSubscriptionDetailDTO {
         this.subscribedTimestamp = subscribedTimestamp;
     }
 
-    public boolean isUnsubscribed() {
-        return isUnsubscribed;
-    }
-
-    public void setUnsubscribed(boolean unsubscribed) {
-        isUnsubscribed = unsubscribed;
-    }
-
     public String getUnsubscribedBy() {
         return unsubscribedBy;
     }
@@ -102,6 +94,14 @@ public class GroupSubscriptionDetailDTO {
 
     public void setUnsubscribedTimestamp(Timestamp unsubscribedTimestamp) {
         this.unsubscribedTimestamp = unsubscribedTimestamp;
+    }
+
+    public String getSubscribedFrom() {
+        return subscribedFrom;
+    }
+
+    public void setSubscribedFrom(String subscribedFrom) {
+        this.subscribedFrom = subscribedFrom;
     }
 
     public int getAppReleaseId() {
@@ -120,22 +120,6 @@ public class GroupSubscriptionDetailDTO {
         this.deviceCount = deviceCount;
     }
 
-    public CategorizedSubscriptionResult getDevices() {
-        return devices;
-    }
-
-    public void setDevices(CategorizedSubscriptionResult devices) {
-        this.devices = devices;
-    }
-
-    public Map<String, Double> getStatusPercentages() {
-        return statusPercentages;
-    }
-
-    public void setStatusPercentages(Map<String, Double> statusPercentages) {
-        this.statusPercentages = statusPercentages;
-    }
-
     public String getDeviceOwner() {
         return deviceOwner;
     }
@@ -150,5 +134,29 @@ public class GroupSubscriptionDetailDTO {
 
     public void setDeviceStatus(String deviceStatus) {
         this.deviceStatus = deviceStatus;
+    }
+
+    public Map<String, Double> getStatusPercentages() {
+        return statusPercentages;
+    }
+
+    public void setStatusPercentages(Map<String, Double> statusPercentages) {
+        this.statusPercentages = statusPercentages;
+    }
+
+    public CategorizedSubscriptionResult getDevices() {
+        return devices;
+    }
+
+    public void setDevices(CategorizedSubscriptionResult devices) {
+        this.devices = devices;
+    }
+
+    public boolean getUnsubscribed() {
+        return unsubscribed;
+    }
+
+    public void setUnsubscribed(boolean unsubscribed) {
+        this.unsubscribed = unsubscribed;
     }
 }

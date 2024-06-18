@@ -19,8 +19,7 @@ package io.entgra.device.mgt.core.application.mgt.core.dao.impl.subscription;
 
 import io.entgra.device.mgt.core.application.mgt.common.dto.GroupSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceOperationDTO;
-import io.entgra.device.mgt.core.application.mgt.common.dto.RoleSubscriptionDTO;
-import io.entgra.device.mgt.core.application.mgt.common.dto.UserSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionsDTO;
 import io.entgra.device.mgt.core.application.mgt.core.dao.SubscriptionDAO;
 import io.entgra.device.mgt.core.application.mgt.core.dao.impl.AbstractDAOImpl;
 import io.entgra.device.mgt.core.application.mgt.core.exception.UnexpectedServerErrorException;
@@ -1694,14 +1693,14 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
     }
 
     @Override
-    public List<UserSubscriptionDTO> getUserSubscriptionsByAppReleaseID(int appReleaseId, boolean unsubscribe, int tenantId,
-                                                                        int offset, int limit) throws ApplicationManagementDAOException {
+    public List<SubscriptionsDTO> getUserSubscriptionsByAppReleaseID(int appReleaseId, boolean unsubscribe, int tenantId,
+                                                                     int offset, int limit) throws ApplicationManagementDAOException {
         if (log.isDebugEnabled()) {
             log.debug("Request received in DAO Layer to get user subscriptions related to the given UUID.");
         }
         try {
             Connection conn = this.getDBConnection();
-            List<UserSubscriptionDTO> userSubscriptions = new ArrayList<>();
+            List<SubscriptionsDTO> userSubscriptions = new ArrayList<>();
 
             String subscriptionStatusTime = unsubscribe ? "US.UNSUBSCRIBED_TIMESTAMP" : "US.SUBSCRIBED_TIMESTAMP";
             String sql = "SELECT US.USER_NAME, US.SUBSCRIBED_BY, US.SUBSCRIBED_TIMESTAMP, US.UNSUBSCRIBED, " +
@@ -1718,9 +1717,9 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                 ps.setInt(5, offset);
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        UserSubscriptionDTO userSubscription;
-                        userSubscription = new UserSubscriptionDTO();
-                        userSubscription.setUserName(rs.getString("USER_NAME"));
+                        SubscriptionsDTO userSubscription;
+                        userSubscription = new SubscriptionsDTO();
+                        userSubscription.setName(rs.getString("USER_NAME"));
                         userSubscription.setSubscribedBy(rs.getString("SUBSCRIBED_BY"));
                         userSubscription.setSubscribedTimestamp(rs.getTimestamp("SUBSCRIBED_TIMESTAMP"));
                         userSubscription.setUnsubscribed(rs.getBoolean("UNSUBSCRIBED"));
@@ -1745,14 +1744,14 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
     }
 
     @Override
-    public List<RoleSubscriptionDTO> getRoleSubscriptionsByAppReleaseID(int appReleaseId, boolean unsubscribe, int tenantId, int offset,
+    public List<SubscriptionsDTO> getRoleSubscriptionsByAppReleaseID(int appReleaseId, boolean unsubscribe, int tenantId, int offset,
                                                                         int limit) throws ApplicationManagementDAOException {
         if (log.isDebugEnabled()) {
             log.debug("Request received in DAO Layer to get role subscriptions related to the given AppReleaseID.");
         }
         try {
             Connection conn = this.getDBConnection();
-            List<RoleSubscriptionDTO>  roleSubscriptions = new ArrayList<>();
+            List<SubscriptionsDTO>  roleSubscriptions = new ArrayList<>();
 
             String subscriptionStatusTime = unsubscribe ? "ARS.UNSUBSCRIBED_TIMESTAMP" : "ARS.SUBSCRIBED_TIMESTAMP";
             String sql = "SELECT ARS.ROLE_NAME, ARS.SUBSCRIBED_BY, ARS.SUBSCRIBED_TIMESTAMP, ARS.UNSUBSCRIBED, " +
@@ -1768,10 +1767,10 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                 ps.setInt(4, limit);
                 ps.setInt(5, offset);
                 try (ResultSet rs = ps.executeQuery()) {
-                    RoleSubscriptionDTO roleSubscription;
+                    SubscriptionsDTO roleSubscription;
                     while (rs.next()) {
-                        roleSubscription = new RoleSubscriptionDTO();
-                        roleSubscription.setRoleName(rs.getString("ROLE_NAME"));
+                        roleSubscription = new SubscriptionsDTO();
+                        roleSubscription.setName(rs.getString("ROLE_NAME"));
                         roleSubscription.setSubscribedBy(rs.getString("SUBSCRIBED_BY"));
                         roleSubscription.setSubscribedTimestamp(rs.getTimestamp("SUBSCRIBED_TIMESTAMP"));
                         roleSubscription.setUnsubscribed(rs.getBoolean("UNSUBSCRIBED"));

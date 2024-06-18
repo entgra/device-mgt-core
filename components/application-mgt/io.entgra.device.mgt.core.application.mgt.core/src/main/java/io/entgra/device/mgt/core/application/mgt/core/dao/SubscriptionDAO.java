@@ -19,11 +19,10 @@ package io.entgra.device.mgt.core.application.mgt.core.dao;
 
 import io.entgra.device.mgt.core.application.mgt.common.ExecutionStatus;
 import io.entgra.device.mgt.core.application.mgt.common.dto.GroupSubscriptionDTO;
-import io.entgra.device.mgt.core.application.mgt.common.dto.UserSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionsDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceOperationDTO;
-import io.entgra.device.mgt.core.application.mgt.common.dto.RoleSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ScheduledSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.SubscriptionManagementException;
 import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManagementDAOException;
@@ -339,10 +338,10 @@ public interface SubscriptionDAO {
      * @param tenantId id of the current tenant.
      * @param offset the offset for the data set
      * @param limit the limit for the data set
-     * @return {@link UserSubscriptionDTO} which contains the details of user subscriptions.
+     * @return {@link SubscriptionsDTO} which contains the details of subscriptions.
      * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
      */
-    List<UserSubscriptionDTO> getUserSubscriptionsByAppReleaseID(int appReleaseId, boolean unsubscribe, int tenantId,
+    List<SubscriptionsDTO> getUserSubscriptionsByAppReleaseID(int appReleaseId, boolean unsubscribe, int tenantId,
                                                                  int offset, int limit) throws ApplicationManagementDAOException;
 
     /**
@@ -353,10 +352,10 @@ public interface SubscriptionDAO {
      * @param tenantId id of the current tenant.
      * @param offset the offset for the data set
      * @param limit the limit for the data set
-     * @return {@link RoleSubscriptionDTO} which contains the details of role subscriptions.
+     * @return {@link SubscriptionsDTO} which contains the details of subscriptions.
      * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
      */
-    List<RoleSubscriptionDTO>  getRoleSubscriptionsByAppReleaseID(int appReleaseId, boolean unsubscribe, int tenantId, int offset, int limit)
+    List<SubscriptionsDTO>  getRoleSubscriptionsByAppReleaseID(int appReleaseId, boolean unsubscribe, int tenantId, int offset, int limit)
             throws ApplicationManagementDAOException;
 
     /**
