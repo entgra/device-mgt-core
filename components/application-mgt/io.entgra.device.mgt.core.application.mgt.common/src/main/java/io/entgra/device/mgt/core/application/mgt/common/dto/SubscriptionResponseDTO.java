@@ -5,9 +5,7 @@ import java.util.List;
 public class SubscriptionResponseDTO {
 
     private String UUID;
-    private List<GroupSubscriptionDetailDTO> GroupsSubscriptions;
-    private List<UserSubscriptionDTO> UserSubscriptions;
-    private List<RoleSubscriptionDTO> RolesSubscriptions;
+    private List<SubscriptionsDTO> subscriptions;
     private List<DeviceOperationDTO> DevicesOperations;
 
     public String getUUID() {
@@ -18,35 +16,19 @@ public class SubscriptionResponseDTO {
         this.UUID = UUID;
     }
 
-    public List<GroupSubscriptionDetailDTO> getGroupsSubscriptions() {
-        return GroupsSubscriptions;
-    }
-
-    public void setGroupsSubscriptions(List<GroupSubscriptionDetailDTO> groupsSubscriptions) {
-        GroupsSubscriptions = groupsSubscriptions;
-    }
-
-    public List<UserSubscriptionDTO> getUserSubscriptions() {
-        return UserSubscriptions;
-    }
-
-    public void setUserSubscriptions(List<UserSubscriptionDTO> userSubscriptions) {
-        UserSubscriptions = userSubscriptions;
-    }
-
-    public List<RoleSubscriptionDTO> getRolesSubscriptions() {
-        return RolesSubscriptions;
-    }
-
-    public void setRolesSubscriptions(List<RoleSubscriptionDTO> rolesSubscriptions) {
-        RolesSubscriptions = rolesSubscriptions;
-    }
-
     public List<DeviceOperationDTO> getDevicesOperations() {
         return DevicesOperations;
     }
 
     public void setDevicesOperations(List<DeviceOperationDTO> devicesOperations) {
         DevicesOperations = devicesOperations;
+    }
+
+    public List<SubscriptionsDTO> getSubscriptions() {
+        return subscriptions;
+    }
+
+    public void setSubscriptions(List<SubscriptionsDTO> subscriptions) {
+        this.subscriptions = subscriptions;
     }
 }
