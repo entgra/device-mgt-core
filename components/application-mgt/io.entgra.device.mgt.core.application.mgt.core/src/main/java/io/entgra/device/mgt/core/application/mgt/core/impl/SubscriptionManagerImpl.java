@@ -26,9 +26,7 @@ import io.entgra.device.mgt.core.application.mgt.common.CategorizedSubscriptionR
 import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionData;
 import io.entgra.device.mgt.core.application.mgt.common.dto.CategorizedSubscriptionCountsDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
-import io.entgra.device.mgt.core.application.mgt.common.dto.GroupSubscriptionDetailDTO;
-import io.entgra.device.mgt.core.application.mgt.common.dto.UserSubscriptionDTO;
-import io.entgra.device.mgt.core.application.mgt.common.dto.RoleSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionsDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceOperationDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionResponseDTO;
 import io.entgra.device.mgt.core.application.mgt.common.DeviceTypes;
@@ -1706,8 +1704,8 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
     }
 
     @Override
-    public List<GroupSubscriptionDetailDTO> getGroupsSubscriptionDetailsByUUID(String uuid, String subscriptionStatus, int offset,
-                                                                               int limit) throws ApplicationManagementException {
+    public List<SubscriptionsDTO> getGroupsSubscriptionDetailsByUUID(String uuid, String subscriptionStatus, int offset,
+                                                                     int limit) throws ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         boolean unsubscribe = subscriptionStatus.equals("unsubscribed");
         String groupName;
@@ -1724,7 +1722,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             }
             int appReleaseId = applicationReleaseDTO.getId();
 
-            List<GroupSubscriptionDetailDTO> groupDetailsWithDevices = new ArrayList<>();
+            List<SubscriptionsDTO> groupDetailsWithDevices = new ArrayList<>();
 
             List<GroupSubscriptionDTO> groupDetails =
                     subscriptionDAO.getGroupsSubscriptionDetailsByAppReleaseID(appReleaseId, unsubscribe, tenantId, offset, limit);
@@ -1741,10 +1739,10 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                 GroupDetailsDTO groupDetailWithDevices =
                         groupManagementProviderService.getGroupDetailsWithDevices(groupName, offset, limit);
 
-                GroupSubscriptionDetailDTO groupDetailDTO = new GroupSubscriptionDetailDTO();
-                groupDetailDTO.setGroupId(groupDetailWithDevices.getGroupId());
-                groupDetailDTO.setGroupName(groupDetail.getGroupName());
-                groupDetailDTO.setGroupOwner(groupDetailWithDevices.getGroupOwner());
+                SubscriptionsDTO groupDetailDTO = new SubscriptionsDTO();
+                groupDetailDTO.setId(groupDetailWithDevices.getGroupId());
+                groupDetailDTO.setName(groupDetail.getGroupName());
+                groupDetailDTO.setOwner(groupDetailWithDevices.getGroupOwner());
                 groupDetailDTO.setSubscribedBy(groupDetail.getSubscribedBy());
                 groupDetailDTO.setSubscribedTimestamp(groupDetail.getSubscribedTimestamp());
                 groupDetailDTO.setUnsubscribed(groupDetail.isUnsubscribed());
@@ -1787,6 +1785,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                             deviceDetail.setActionType(subscription.getActionTriggeredFrom());
                             deviceDetail.setDeviceOwner(groupDetailWithDevices.getDeviceOwners().get(deviceId));
                             deviceDetail.setDeviceStatus(groupDetailWithDevices.getDeviceStatuses().get(deviceId));
+                            deviceDetail.setDeviceName(groupDetailWithDevices.getDeviceNames().get(deviceId));
                             deviceDetail.setSubId(subscription.getId());
                             deviceDetail.setActionTriggeredBy(subscription.getSubscribedBy());
                             deviceDetail.setActionTriggeredTimestamp(subscription.getSubscribedTimestamp());
@@ -1824,6 +1823,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                                 subscribedDeviceDetail.setDeviceId(subscribedDevice.getDeviceId());
                                 subscribedDeviceDetail.setDeviceOwner(groupDetailWithDevices.getDeviceOwners().get(deviceId));
                                 subscribedDeviceDetail.setDeviceStatus(groupDetailWithDevices.getDeviceStatuses().get(deviceId));
+                                subscribedDeviceDetail.setDeviceName(groupDetailWithDevices.getDeviceNames().get(deviceId));
                                 subscribedDeviceDetail.setSubId(subscribedDevice.getId());
                                 subscribedDeviceDetail.setActionTriggeredBy(subscribedDevice.getSubscribedBy());
                                 subscribedDeviceDetail.setActionTriggeredTimestamp(subscribedDevice.getSubscribedTimestamp());
@@ -1840,6 +1840,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                             newDeviceDetail.setDeviceId(deviceId);
                             newDeviceDetail.setDeviceOwner(groupDetailWithDevices.getDeviceOwners().get(deviceId));
                             newDeviceDetail.setDeviceStatus(groupDetailWithDevices.getDeviceStatuses().get(deviceId));
+                            newDeviceDetail.setDeviceName(groupDetailWithDevices.getDeviceNames().get(deviceId));
                             newDevices.add(newDeviceDetail);
                             statusCounts.put("NEW", statusCounts.get("NEW") + 1);
                         }
@@ -1886,7 +1887,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
     }
 
     @Override
-    public List<UserSubscriptionDTO> getUserSubscriptionsByUUID(String uuid, String subscriptionStatus, int offset, int limit)
+    public List<SubscriptionsDTO> getUserSubscriptionsByUUID(String uuid, String subscriptionStatus, int offset, int limit)
             throws ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         boolean unsubscribe = subscriptionStatus.equals("unsubscribed");
@@ -1904,9 +1905,9 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             }
             int appReleaseId = applicationReleaseDTO.getId();
 
-            List<UserSubscriptionDTO> userSubscriptionsWithDevices = new ArrayList<>();
+            List<SubscriptionsDTO> userSubscriptionsWithDevices = new ArrayList<>();
 
-            List<UserSubscriptionDTO> userSubscriptions =
+            List<SubscriptionsDTO> userSubscriptions =
                     subscriptionDAO.getUserSubscriptionsByAppReleaseID(appReleaseId, unsubscribe, tenantId, offset, limit);
             if (userSubscriptions == null) {
                 throw new ApplicationManagementException("User details not found for appReleaseId: " + appReleaseId);
@@ -1914,15 +1915,15 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
 
             DeviceManagementProviderService deviceManagementProviderService = HelperUtil.getDeviceManagementProviderService();
 
-            for (UserSubscriptionDTO userSubscription : userSubscriptions) {
-                userName = userSubscription.getUserName();
+            for (SubscriptionsDTO userSubscription : userSubscriptions) {
+                userName = userSubscription.getName();
 
                 // Retrieve owner details and device IDs for the user using the service layer
                 OwnerWithDeviceDTO ownerDetailsWithDevices =
                         deviceManagementProviderService.getOwnersWithDeviceIds(userName);
 
-                UserSubscriptionDTO userSubscriptionDTO = new UserSubscriptionDTO();
-                userSubscriptionDTO.setUserName(userSubscription.getUserName());
+                SubscriptionsDTO userSubscriptionDTO = new SubscriptionsDTO();
+                userSubscriptionDTO.setName(userSubscription.getName());
                 userSubscriptionDTO.setSubscribedBy(userSubscription.getSubscribedBy());
                 userSubscriptionDTO.setSubscribedTimestamp(userSubscription.getSubscribedTimestamp());
                 userSubscriptionDTO.setUnsubscribed(userSubscription.getUnsubscribed());
@@ -1964,6 +1965,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                             deviceDetail.setSubId(subscription.getId());
                             deviceDetail.setDeviceOwner(ownerDetailsWithDevices.getUserName());
                             deviceDetail.setDeviceStatus(ownerDetailsWithDevices.getDeviceStatus());
+                            deviceDetail.setDeviceName(ownerDetailsWithDevices.getDeviceNames());
                             deviceDetail.setActionType(subscription.getActionTriggeredFrom());
                             deviceDetail.setStatus(subscription.getStatus());
                             deviceDetail.setActionType(subscription.getActionTriggeredFrom());
@@ -2001,6 +2003,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                             if (subscribedDevice.getDeviceId() == deviceId) {
                                 DeviceSubscriptionData subscribedDeviceDetail = new DeviceSubscriptionData();
                                 subscribedDeviceDetail.setDeviceId(subscribedDevice.getDeviceId());
+                                subscribedDeviceDetail.setDeviceName(ownerDetailsWithDevices.getDeviceNames());
                                 subscribedDeviceDetail.setDeviceOwner(ownerDetailsWithDevices.getUserName());
                                 subscribedDeviceDetail.setDeviceStatus(ownerDetailsWithDevices.getDeviceStatus());
                                 subscribedDeviceDetail.setSubId(subscribedDevice.getId());
@@ -2019,6 +2022,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                             newDeviceDetail.setDeviceId(deviceId);
                             newDeviceDetail.setDeviceOwner(ownerDetailsWithDevices.getUserName());
                             newDeviceDetail.setDeviceStatus(ownerDetailsWithDevices.getDeviceStatus());
+                            newDeviceDetail.setDeviceName(ownerDetailsWithDevices.getDeviceNames());
                             newDevices.add(newDeviceDetail);
                             statusCounts.put("NEW", statusCounts.get("NEW") + 1);
                         }
@@ -2063,7 +2067,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
     }
 
     @Override
-    public List<RoleSubscriptionDTO> getRoleSubscriptionsByUUID(String uuid, String subscriptionStatus, int offset, int limit)
+    public List<SubscriptionsDTO> getRoleSubscriptionsByUUID(String uuid, String subscriptionStatus, int offset, int limit)
             throws ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         boolean unsubscribe = subscriptionStatus.equals("unsubscribed");
@@ -2081,9 +2085,9 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             }
             int appReleaseId = applicationReleaseDTO.getId();
 
-            List<RoleSubscriptionDTO> roleSubscriptionsWithDevices = new ArrayList<>();
+            List<SubscriptionsDTO> roleSubscriptionsWithDevices = new ArrayList<>();
 
-            List<RoleSubscriptionDTO> roleSubscriptions =
+            List<SubscriptionsDTO> roleSubscriptions =
                     subscriptionDAO.getRoleSubscriptionsByAppReleaseID(appReleaseId, unsubscribe, tenantId, offset, limit);
             if (roleSubscriptions == null) {
                 throw new ApplicationManagementException("Role details not found for appReleaseId: " + appReleaseId);
@@ -2091,11 +2095,11 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
 
             DeviceManagementProviderService deviceManagementProviderService = HelperUtil.getDeviceManagementProviderService();
 
-            for (RoleSubscriptionDTO roleSubscription : roleSubscriptions) {
-                roleName = roleSubscription.getRoleName();
+            for (SubscriptionsDTO roleSubscription : roleSubscriptions) {
+                roleName = roleSubscription.getName();
 
-                RoleSubscriptionDTO roleSubscriptionDTO = new RoleSubscriptionDTO();
-                roleSubscriptionDTO.setRoleName(roleSubscription.getRoleName());
+                SubscriptionsDTO roleSubscriptionDTO = new SubscriptionsDTO();
+                roleSubscriptionDTO.setName(roleSubscription.getName());
                 roleSubscriptionDTO.setSubscribedBy(roleSubscription.getSubscribedBy());
                 roleSubscriptionDTO.setSubscribedTimestamp(roleSubscription.getSubscribedTimestamp());
                 roleSubscriptionDTO.setUnsubscribed(roleSubscription.getUnsubscribed());
@@ -2148,6 +2152,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                             if (deviceSubscription.getDeviceId() == deviceId) {
                                 DeviceSubscriptionData deviceDetail = new DeviceSubscriptionData();
                                 deviceDetail.setDeviceId(deviceSubscription.getDeviceId());
+                                deviceDetail.setDeviceName(ownerDetailsWithDevices.getDeviceNames());
                                 deviceDetail.setDeviceOwner(ownerDetailsWithDevices.getUserName());
                                 deviceDetail.setDeviceStatus(ownerDetailsWithDevices.getDeviceStatus());
                                 deviceDetail.setActionType(deviceSubscription.getActionTriggeredFrom());
@@ -2188,6 +2193,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                                 if (subscribedDevice.getDeviceId() == deviceId) {
                                     DeviceSubscriptionData subscribedDeviceDetail = new DeviceSubscriptionData();
                                     subscribedDeviceDetail.setDeviceId(subscribedDevice.getDeviceId());
+                                    subscribedDeviceDetail.setDeviceName(ownerDetailsWithDevices.getDeviceNames());
                                     subscribedDeviceDetail.setDeviceOwner(ownerDetailsWithDevices.getUserName());
                                     subscribedDeviceDetail.setDeviceStatus(ownerDetailsWithDevices.getDeviceStatus());
                                     subscribedDeviceDetail.setSubId(subscribedDevice.getId());
@@ -2204,6 +2210,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                             if (!isSubscribedDevice) {
                                 DeviceSubscriptionData newDeviceDetail = new DeviceSubscriptionData();
                                 newDeviceDetail.setDeviceId(deviceId);
+                                newDeviceDetail.setDeviceName(ownerDetailsWithDevices.getDeviceNames());
                                 newDeviceDetail.setDeviceOwner(ownerDetailsWithDevices.getUserName());
                                 newDeviceDetail.setDeviceStatus(ownerDetailsWithDevices.getDeviceStatus());
                                 newDevices.add(newDeviceDetail);
@@ -2339,6 +2346,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                     DeviceSubscriptionData deviceDetail = new DeviceSubscriptionData();
                     deviceDetail.setDeviceId(subscription.getDeviceId());
                     deviceDetail.setSubId(subscription.getId());
+                    deviceDetail.setDeviceName(ownerWithDevice.getDeviceNames());
                     deviceDetail.setDeviceOwner(ownerWithDevice.getUserName());
                     deviceDetail.setDeviceStatus(ownerWithDevice.getDeviceStatus());
                     deviceDetail.setActionType(subscription.getActionTriggeredFrom());
@@ -2374,6 +2382,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                     if (!allSubscription.isUnsubscribed()) {
                         DeviceSubscriptionData subscribedDeviceDetail = new DeviceSubscriptionData();
                         subscribedDeviceDetail.setDeviceId(allSubscription.getDeviceId());
+                        subscribedDeviceDetail.setDeviceName(ownerWithDevice.getDeviceNames());
                         subscribedDeviceDetail.setDeviceOwner(ownerWithDevice.getUserName());
                         subscribedDeviceDetail.setDeviceStatus(ownerWithDevice.getDeviceStatus());
                         subscribedDeviceDetail.setSubId(allSubscription.getId());
@@ -2396,6 +2405,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                         && (allDevicesMap.containsKey(deviceId))) {
                     DeviceSubscriptionData newDeviceDetail = new DeviceSubscriptionData();
                     newDeviceDetail.setDeviceId(deviceId);
+                    newDeviceDetail.setDeviceName(ownerWithDevice.getDeviceNames());
                     newDeviceDetail.setDeviceOwner(ownerWithDevice.getUserName());
                     newDeviceDetail.setDeviceStatus(ownerWithDevice.getDeviceStatus());
                     newDevices.add(newDeviceDetail);
@@ -2496,6 +2506,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                     DeviceSubscriptionDTO subscription = allSubscriptionMap.get(deviceId);
                     DeviceSubscriptionData deviceDetail = new DeviceSubscriptionData();
                     deviceDetail.setDeviceId(subscription.getDeviceId());
+                    deviceDetail.setDeviceName(ownerWithDevice.getDeviceNames());
                     deviceDetail.setSubId(subscription.getId());
                     deviceDetail.setDeviceOwner(ownerWithDevice.getUserName());
                     deviceDetail.setDeviceStatus(ownerWithDevice.getDeviceStatus());
@@ -2529,6 +2540,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                 } else {
                     DeviceSubscriptionData newDeviceDetail = new DeviceSubscriptionData();
                     newDeviceDetail.setDeviceId(deviceId);
+                    newDeviceDetail.setDeviceName(ownerWithDevice.getDeviceNames());
                     newDeviceDetail.setDeviceOwner(ownerWithDevice.getUserName());
                     newDeviceDetail.setDeviceStatus(ownerWithDevice.getDeviceStatus());
                     newDevices.add(newDeviceDetail);

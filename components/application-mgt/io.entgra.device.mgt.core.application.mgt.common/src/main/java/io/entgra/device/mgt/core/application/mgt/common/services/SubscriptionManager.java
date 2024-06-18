@@ -22,10 +22,8 @@ import io.entgra.device.mgt.core.application.mgt.common.CategorizedSubscriptionR
 import io.entgra.device.mgt.core.application.mgt.common.ExecutionStatus;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionType;
 import io.entgra.device.mgt.core.application.mgt.common.dto.CategorizedSubscriptionCountsDTO;
-import io.entgra.device.mgt.core.application.mgt.common.dto.GroupSubscriptionDetailDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ScheduledSubscriptionDTO;
-import io.entgra.device.mgt.core.application.mgt.common.dto.UserSubscriptionDTO;
-import io.entgra.device.mgt.core.application.mgt.common.dto.RoleSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionsDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceOperationDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionResponseDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException;
@@ -232,10 +230,10 @@ public interface SubscriptionManager {
      * @param subscriptionStatus the status of the subscription (subscribed or unsubscribed)
      * @param offset the offset for the data set
      * @param limit the limit for the data set
-     * @return {@link GroupSubscriptionDetailDTO} which contains the details of group subscriptions.
+     * @return {@link SubscriptionsDTO} which contains the details of subscriptions.
      * @throws ApplicationManagementException if an error occurs while fetching the group details
      */
-    List<GroupSubscriptionDetailDTO> getGroupsSubscriptionDetailsByUUID(String uuid, String subscriptionStatus, int offset, int limit)
+    List<SubscriptionsDTO> getGroupsSubscriptionDetailsByUUID(String uuid, String subscriptionStatus, int offset, int limit)
             throws ApplicationManagementException;
 
     /**
@@ -245,10 +243,10 @@ public interface SubscriptionManager {
      * @param subscriptionStatus the status of the subscription (subscribed or unsubscribed)
      * @param offset the offset for the data set
      * @param limit the limit for the data set
-     * @return {@link UserSubscriptionDTO} which contains the details of user subscriptions.
+     * @return {@link SubscriptionsDTO} which contains the details of subscriptions.
      * @throws ApplicationManagementException if an error occurs while fetching the user details
     */
-    List<UserSubscriptionDTO> getUserSubscriptionsByUUID(String uuid, String subscriptionStatus, int offset, int limit)
+    List<SubscriptionsDTO> getUserSubscriptionsByUUID(String uuid, String subscriptionStatus, int offset, int limit)
             throws ApplicationManagementException;
 
     /**
@@ -258,10 +256,10 @@ public interface SubscriptionManager {
      * @param subscriptionStatus the status of the subscription (subscribed or unsubscribed)
      * @param offset the offset for the data set
      * @param limit the limit for the data set
-     * @return {@link RoleSubscriptionDTO} which contains the details of role subscriptions.
+     * @return {@link SubscriptionsDTO} which contains the details of subscriptions.
      * @throws ApplicationManagementException if an error occurs while fetching the role details
      */
-    List<RoleSubscriptionDTO> getRoleSubscriptionsByUUID(String uuid, String subscriptionStatus, int offset, int limit)
+    List<SubscriptionsDTO> getRoleSubscriptionsByUUID(String uuid, String subscriptionStatus, int offset, int limit)
             throws ApplicationManagementException;
 
     /**

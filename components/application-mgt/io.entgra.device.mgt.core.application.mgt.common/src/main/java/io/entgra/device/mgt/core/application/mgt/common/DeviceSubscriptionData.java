@@ -39,6 +39,7 @@ public class DeviceSubscriptionData {
     private boolean unsubscribed;
     private String unsubscribedBy;
     private Timestamp unsubscribedTimestamp;
+    private String deviceName;
 
     public String getAction() {
         return action;
@@ -158,5 +159,13 @@ public class DeviceSubscriptionData {
 
     public void setUnsubscribedTimestamp(Timestamp unsubscribedTimestamp) {
         this.unsubscribedTimestamp = unsubscribedTimestamp;
+    }
+
+    public String getDeviceName() {
+        return deviceName;
+    }
+
+    public void setDeviceName(String deviceName) {
+        this.deviceName = deviceName;
     }
 }
