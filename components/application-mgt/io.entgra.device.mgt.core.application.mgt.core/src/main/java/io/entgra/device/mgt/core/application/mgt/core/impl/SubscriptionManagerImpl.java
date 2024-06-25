@@ -1851,7 +1851,8 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                 Map<String, Double> statusPercentages = new HashMap<>();
                 for (Map.Entry<String, Integer> entry : statusCounts.entrySet()) {
                     double percentage = ((double) entry.getValue() / totalDevices) * 100;
-                    statusPercentages.put(entry.getKey(), percentage);
+                    String formattedPercentage = String.format("%.2f", percentage);
+                    statusPercentages.put(entry.getKey(), Double.valueOf(formattedPercentage));
                 }
 
                 CategorizedSubscriptionResult categorizedSubscriptionResult;
@@ -2033,7 +2034,8 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                 Map<String, Double> statusPercentages = new HashMap<>();
                 for (Map.Entry<String, Integer> entry : statusCounts.entrySet()) {
                     double percentage = ((double) entry.getValue() / totalDevices) * 100;
-                    statusPercentages.put(entry.getKey(), percentage);
+                    String formattedPercentage = String.format("%.2f", percentage);
+                    statusPercentages.put(entry.getKey(), Double.valueOf(formattedPercentage));
                 }
 
                 CategorizedSubscriptionResult categorizedSubscriptionResult;
@@ -2225,7 +2227,8 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                 Map<String, Double> statusPercentages = new HashMap<>();
                 for (Map.Entry<String, Integer> entry : statusCounts.entrySet()) {
                     double percentage = totalDevices == 0 ? 0.0 : ((double) entry.getValue() / totalDevices) * 100;
-                    statusPercentages.put(entry.getKey(), percentage);
+                    String formattedPercentage = String.format("%.2f", percentage);
+                    statusPercentages.put(entry.getKey(), Double.valueOf(formattedPercentage));
                 }
 
                 CategorizedSubscriptionResult categorizedSubscriptionResult;
@@ -2417,7 +2420,8 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             Map<String, Double> statusPercentages = new HashMap<>();
             for (Map.Entry<String, Integer> entry : statusCounts.entrySet()) {
                 double percentage = ((double) entry.getValue() / totalDevices) * 100;
-                statusPercentages.put(entry.getKey(), percentage);
+                String formattedPercentage = String.format("%.2f", percentage);
+                statusPercentages.put(entry.getKey(), Double.valueOf(formattedPercentage));
             }
 
             CategorizedSubscriptionResult categorizedSubscriptionResult;
@@ -2552,7 +2556,8 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             Map<String, Double> statusPercentages = new HashMap<>();
             for (Map.Entry<String, Integer> entry : statusCounts.entrySet()) {
                 double percentage = ((double) entry.getValue() / totalDevices) * 100;
-                statusPercentages.put(entry.getKey(), percentage);
+                String formattedPercentage = String.format("%.2f", percentage);
+                statusPercentages.put(entry.getKey(), Double.valueOf(formattedPercentage));
             }
 
             CategorizedSubscriptionResult categorizedSubscriptionResult =
