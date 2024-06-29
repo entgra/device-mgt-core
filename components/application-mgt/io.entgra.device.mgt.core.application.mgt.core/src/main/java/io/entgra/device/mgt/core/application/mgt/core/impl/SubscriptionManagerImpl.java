@@ -2582,7 +2582,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
     }
 
     @Override
-    public List<DeviceOperationDTO> getDeviceSubscriptionsOperationsByUUID(String uuid, int offset, int limit)
+    public List<DeviceOperationDTO> getSubscriptionOperationsByUUIDAndDeviceID(int deviceId, String uuid, int offset, int limit)
             throws ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         if (uuid == null || uuid.isEmpty()) {
@@ -2601,7 +2601,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
 
             DeviceManagementProviderService deviceManagementProviderService = HelperUtil.getDeviceManagementProviderService();
             List<DeviceOperationDTO> deviceSubscriptions =
-                    subscriptionDAO.getDeviceSubscriptionsOperationsByAppReleaseID(appReleaseId, tenantId, offset, limit);
+                    subscriptionDAO.getSubscriptionOperationsByAppReleaseIDAndDeviceID(appReleaseId, deviceId, tenantId, offset, limit);
             for (DeviceOperationDTO deviceSubscription : deviceSubscriptions) {
                 Integer operationId = deviceSubscription.getOperationId();
                 if (operationId != null) {
@@ -2610,6 +2610,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                         deviceSubscription.setOperationCode(operationDetails.getOperationCode());
                         deviceSubscription.setOperationDetails(operationDetails.getOperationDetails());
                         deviceSubscription.setOperationProperties(operationDetails.getOperationProperties());
+                        deviceSubscription.setOperationResponses(operationDetails.getOperationResponses());
                     }
                 }
             }

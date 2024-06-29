@@ -19,46 +19,16 @@
 package io.entgra.device.mgt.core.device.mgt.core.dto;
 
 import org.json.JSONObject;
-
-import java.sql.Timestamp;
+import java.util.List;
 
 public class OperationDTO {
-    private int deviceId;
-    private String uuid;
-    private String status;
     private int operationId;
-    private String actionTriggeredFrom;
-    private Timestamp actionTriggeredAt;
-    private int appReleaseId;
     private String operationCode;
     private JSONObject operationDetails;
     private JSONObject operationProperties;
+    private List<OperationResponseDTO> operationResponses;
 
     // Getters and Setters
-
-    public int getDeviceId() {
-        return deviceId;
-    }
-
-    public void setDeviceId(int deviceId) {
-        this.deviceId = deviceId;
-    }
-
-    public String getUuid() {
-        return uuid;
-    }
-
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
 
     public int getOperationId() {
         return operationId;
@@ -66,30 +36,6 @@ public class OperationDTO {
 
     public void setOperationId(int operationId) {
         this.operationId = operationId;
-    }
-
-    public String getActionTriggeredFrom() {
-        return actionTriggeredFrom;
-    }
-
-    public void setActionTriggeredFrom(String actionTriggeredFrom) {
-        this.actionTriggeredFrom = actionTriggeredFrom;
-    }
-
-    public Timestamp getActionTriggeredAt() {
-        return actionTriggeredAt;
-    }
-
-    public void setActionTriggeredAt(Timestamp actionTriggeredAt) {
-        this.actionTriggeredAt = actionTriggeredAt;
-    }
-
-    public int getAppReleaseId() {
-        return appReleaseId;
-    }
-
-    public void setAppReleaseId(int appReleaseId) {
-        this.appReleaseId = appReleaseId;
     }
 
     public String getOperationCode() {
@@ -114,5 +60,13 @@ public class OperationDTO {
 
     public void setOperationProperties(JSONObject operationProperties) {
         this.operationProperties = operationProperties;
+    }
+
+    public List<OperationResponseDTO> getOperationResponses() {
+        return operationResponses;
+    }
+
+    public void setOperationResponses(List<OperationResponseDTO> operationResponses) {
+        this.operationResponses = operationResponses;
     }
 }

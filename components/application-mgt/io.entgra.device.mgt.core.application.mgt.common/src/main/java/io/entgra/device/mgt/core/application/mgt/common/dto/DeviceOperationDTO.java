@@ -18,7 +18,10 @@
 
 package io.entgra.device.mgt.core.application.mgt.common.dto;
 
+import io.entgra.device.mgt.core.device.mgt.core.dto.OperationResponseDTO;
+
 import java.sql.Timestamp;
+import java.util.List;
 
 public class DeviceOperationDTO {
     private int deviceId;
@@ -31,7 +34,7 @@ public class DeviceOperationDTO {
     private String operationCode;
     private Object operationDetails;
     private Object operationProperties;
-
+    private List<OperationResponseDTO> operationResponses;
 
     public int getDeviceId() {
         return deviceId;
@@ -111,5 +114,13 @@ public class DeviceOperationDTO {
 
     public void setOperationProperties(Object operationProperties) {
         this.operationProperties = operationProperties;
+    }
+
+    public List<OperationResponseDTO> getOperationResponses() {
+        return operationResponses;
+    }
+
+    public void setOperationResponses(List<OperationResponseDTO> operationResponses) {
+        this.operationResponses = operationResponses;
     }
 }

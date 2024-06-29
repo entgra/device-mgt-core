@@ -1856,10 +1856,10 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
     }
 
     @Override
-    public List<DeviceOperationDTO> getDeviceSubscriptionsOperationsByAppReleaseID(
-            int appReleaseId, int tenantId, int offset, int limit) throws ApplicationManagementDAOException {
+    public List<DeviceOperationDTO> getSubscriptionOperationsByAppReleaseIDAndDeviceID(
+            int appReleaseId, int deviceId, int tenantId, int offset, int limit) throws ApplicationManagementDAOException {
         if (log.isDebugEnabled()) {
-            log.debug("Request received in DAO Layer to get device subscriptions related to the given AppReleaseID.");
+            log.debug("Request received in DAO Layer to get device subscriptions related to the given AppReleaseID and DeviceID.");
         }
         try {
             Connection conn = this.getDBConnection();
@@ -1872,14 +1872,18 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                     "  ads.SUBSCRIBED_TIMESTAMP AS ACTION_TRIGGERED_AT, " +
                     "  ads.AP_APP_RELEASE_ID " +
                     "FROM AP_APP_SUB_OP_MAPPING aasom " +
-                    "JOIN AP_DEVICE_SUBSCRIPTION ads ON aasom.AP_DEVICE_SUBSCRIPTION_ID = ads.ID " +
-                    "WHERE ads.AP_APP_RELEASE_ID = ? AND ads.TENANT_ID = ? " +
+                    "JOIN AP_DEVICE_SUBSCRIPTION ads " +
+                    "ON aasom.AP_DEVICE_SUBSCRIPTION_ID = ads.ID " +
+                    "WHERE ads.AP_APP_RELEASE_ID = ? " +
+                    "AND ads.DM_DEVICE_ID = ? " +
+                    "AND ads.TENANT_ID = ? " +
                     "LIMIT ? OFFSET ?";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, appReleaseId);
-                ps.setInt(2, tenantId);
-                ps.setInt(3, limit);
-                ps.setInt(4, offset);
+                ps.setInt(2, deviceId);
+                ps.setInt(3, tenantId);
+                ps.setInt(4, limit);
+                ps.setInt(5, offset);
                 try (ResultSet rs = ps.executeQuery()) {
                     DeviceOperationDTO deviceSubscription;
                     while (rs.next()) {
@@ -1897,11 +1901,11 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
             }
             return deviceSubscriptions;
         } catch (DBConnectionException e) {
-            String msg = "Error occurred while obtaining the DB connection to get device subscriptions for the given UUID.";
+            String msg = "Error occurred while obtaining the DB connection to get device subscriptions for the given AppReleaseID and DeviceID.";
             log.error(msg, e);
             throw new ApplicationManagementDAOException(msg, e);
         } catch (SQLException e) {
-            String msg = "SQL Error occurred while getting device subscriptions for the given UUID.";
+            String msg = "SQL Error occurred while getting device subscriptions for the given AppReleaseID and DeviceID.";
             log.error(msg, e);
             throw new ApplicationManagementDAOException(msg, e);
         }

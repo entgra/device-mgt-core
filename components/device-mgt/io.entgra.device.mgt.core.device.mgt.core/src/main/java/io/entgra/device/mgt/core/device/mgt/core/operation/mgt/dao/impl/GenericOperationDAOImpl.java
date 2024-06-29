@@ -28,6 +28,7 @@ import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.OperationRespon
 import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
 import io.entgra.device.mgt.core.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import io.entgra.device.mgt.core.device.mgt.core.dto.OperationDTO;
+import io.entgra.device.mgt.core.device.mgt.core.dto.OperationResponseDTO;
 import io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation;
 import io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.OperationResponseMeta;
 import io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.ProfileOperation;
@@ -2783,36 +2784,58 @@ public class GenericOperationDAOImpl implements OperationDAO {
             throws OperationManagementDAOException {
         OperationDTO operationDetails = new OperationDTO();
 
-        String sql = "SELECT ID, OPERATION_CODE, OPERATION_DETAILS, OPERATION_PROPERTIES " +
-                "FROM DM_OPERATION " +
-                "WHERE ID = ? AND TENANT_ID = ?";
+        String sql = "SELECT o.ID, " +
+                "o.OPERATION_CODE, " +
+                "o.OPERATION_DETAILS, " +
+                "o.OPERATION_PROPERTIES, " +
+                "r.OPERATION_RESPONSE, " +
+                "r.RECEIVED_TIMESTAMP " +
+                "FROM DM_OPERATION o " +
+                "LEFT JOIN DM_DEVICE_OPERATION_RESPONSE r " +
+                "ON o.ID = r.OPERATION_ID " +
+                "WHERE o.ID = ? " +
+                "AND o.TENANT_ID = ?";
 
-        try (Connection conn = OperationManagementDAOFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, operationId);
-            stmt.setInt(2, tenantId);
+        try {
+            Connection conn = OperationManagementDAOFactory.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, operationId);
+                stmt.setInt(2, tenantId);
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    operationDetails.setOperationId(rs.getInt("ID"));
-                    operationDetails.setOperationCode(rs.getString("OPERATION_CODE"));
+                try (ResultSet rs = stmt.executeQuery()) {
+                    List<OperationResponseDTO> responses = new ArrayList<>();
+                    while (rs.next()) {
+                        if (operationDetails.getOperationId() == 0) {
+                            operationDetails.setOperationId(rs.getInt("ID"));
+                            operationDetails.setOperationCode(rs.getString("OPERATION_CODE"));
+                            Blob detailsBlob = rs.getBlob("OPERATION_DETAILS");
+                            if (detailsBlob != null) {
+                                JSONObject operationDetailsJson = OperationDAOUtil.convertBlobToJsonObject(detailsBlob);
+                                operationDetails.setOperationDetails(operationDetailsJson);
+                            }
+                            Blob propertiesBlob = rs.getBlob("OPERATION_PROPERTIES");
+                            if (propertiesBlob != null) {
+                                JSONObject operationPropertiesJson = OperationDAOUtil.convertBlobToJsonObject(propertiesBlob);
+                                operationDetails.setOperationProperties(operationPropertiesJson);
+                            }
+                        }
 
-                    Blob detailsBlob = rs.getBlob("OPERATION_DETAILS");
-                    if (detailsBlob != null) {
-                        JSONObject operationDetailsJson = OperationDAOUtil.convertBlobToJsonObject(detailsBlob);
-                        operationDetails.setOperationDetails(operationDetailsJson);
+                        String response = rs.getString("OPERATION_RESPONSE");
+                        Timestamp responseTimestamp = rs.getTimestamp("RECEIVED_TIMESTAMP");
+                        if (response != null && responseTimestamp != null) {
+                            OperationResponseDTO operationResponse = new OperationResponseDTO();
+                            operationResponse.setOperationResponse(response);
+                            operationResponse.setResponseTimeStamp(responseTimestamp);
+                            responses.add(operationResponse);
+                        }
                     }
-
-                    Blob propertiesBlob = rs.getBlob("OPERATION_PROPERTIES");
-                    if (propertiesBlob != null) {
-                        JSONObject operationPropertiesJson = OperationDAOUtil.convertBlobToJsonObject(propertiesBlob);
-                        operationDetails.setOperationProperties(operationPropertiesJson);
-                    }
+                    operationDetails.setOperationResponses(responses);
                 }
             }
         } catch (SQLException e) {
-            throw new OperationManagementDAOException("Error occurred while retrieving operation details for operation ID: "
-                    + operationId, e);
+            String msg = "Error occurred while retrieving operation details for operation ID: " + operationId;
+            log.error(msg, e);
+            throw new OperationManagementDAOException(msg, e);
         }
 
         return operationDetails;
