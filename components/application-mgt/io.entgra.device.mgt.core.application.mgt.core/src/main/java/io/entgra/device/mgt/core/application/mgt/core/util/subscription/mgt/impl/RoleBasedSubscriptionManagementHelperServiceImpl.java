@@ -17,11 +17,14 @@
  *
  */
 
-package io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt;
+package io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.impl;
 
+import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionData;
+import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionFilterCriteria;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionInfo;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
-import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionsDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException;
 import io.entgra.device.mgt.core.application.mgt.common.exception.DBConnectionException;
 import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManagementDAOException;
@@ -29,8 +32,7 @@ import io.entgra.device.mgt.core.application.mgt.core.exception.NotFoundExceptio
 import io.entgra.device.mgt.core.application.mgt.core.internal.DataHolder;
 import io.entgra.device.mgt.core.application.mgt.core.util.ConnectionManagerUtil;
 import io.entgra.device.mgt.core.application.mgt.core.util.HelperUtil;
-import io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.bean.DeviceSubscriptionStatus;
-import io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.bean.RoleBasedSubscriptionInfo;
+import io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.SubscriptionManagementHelperUtil;
 import io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.service.SubscriptionManagementHelperService;
 import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
@@ -46,26 +48,33 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class RoleBasedSubscriptionManagementHelperServiceImpl implements SubscriptionManagementHelperService {
     private static final Log log = LogFactory.getLog(RoleBasedSubscriptionManagementHelperServiceImpl.class);
-    private final RoleBasedSubscriptionInfo roleBasedSubscriptionInfo;
-    private final boolean isUnsubscribe;
-    public RoleBasedSubscriptionManagementHelperServiceImpl(RoleBasedSubscriptionInfo roleBasedSubscriptionInfo) {
-        this.roleBasedSubscriptionInfo = roleBasedSubscriptionInfo;
-        this.isUnsubscribe = "unsubscribed".equals(roleBasedSubscriptionInfo.getSubscriptionStatus());
+    private RoleBasedSubscriptionManagementHelperServiceImpl() {}
+    private static class RoleBasedSubscriptionManagementHelperServiceImplHolder {
+        private static final RoleBasedSubscriptionManagementHelperServiceImpl INSTANCE
+                = new RoleBasedSubscriptionManagementHelperServiceImpl();
+    }
+
+    public static RoleBasedSubscriptionManagementHelperServiceImpl getInstance() {
+        return RoleBasedSubscriptionManagementHelperServiceImplHolder.INSTANCE;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<DeviceSubscriptionDTO> getStatusBaseSubscriptions(int limit, int offset) throws ApplicationManagementException {
+    public List<DeviceSubscriptionData> getStatusBaseSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
+            throws ApplicationManagementException {
+        final boolean isUnsubscribe = Objects.equals("unsubscribe", subscriptionInfo.getSubscriptionStatus());
         List<DeviceSubscriptionDTO> deviceSubscriptionDTOS;
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+
         try {
             UserStoreManager userStoreManager = DataHolder.getInstance().getRealmService().
                     getTenantUserRealm(tenantId).getUserStoreManager();
             String[] usersWithRole =
-                    userStoreManager.getUserListOfRole(roleBasedSubscriptionInfo.getRoleName());
+                    userStoreManager.getUserListOfRole(subscriptionInfo.getIdentifier());
             List<Device> deviceListOwnByRole = new ArrayList<>();
             for (String user : usersWithRole) {
                 PaginationRequest paginationRequest = new PaginationRequest(offset, limit);
@@ -78,36 +87,37 @@ public class RoleBasedSubscriptionManagementHelperServiceImpl implements Subscri
                 }
             }
 
-            List<Integer> deviceIds = (List<Integer>) deviceListOwnByRole.stream().map(Device::getId);
+            List<Integer> deviceIdsOwnByRole = deviceListOwnByRole.stream().map(Device::getId).collect(Collectors.toList());
 
             ConnectionManagerUtil.openDBConnection();
             ApplicationReleaseDTO applicationReleaseDTO = applicationReleaseDAO.
-                    getReleaseByUUID(roleBasedSubscriptionInfo.getApplicationUUID(), tenantId);
+                    getReleaseByUUID(subscriptionInfo.getApplicationUUID(), tenantId);
             if (applicationReleaseDTO == null) {
                 String msg = "Couldn't find an application release for application release UUID: " +
-                        roleBasedSubscriptionInfo.getApplicationUUID();
+                        subscriptionInfo.getApplicationUUID();
                 log.error(msg);
                 throw new NotFoundException(msg);
             }
 
-            if (Objects.equals(DeviceSubscriptionStatus.NEW.toString(),
-                    roleBasedSubscriptionInfo.getDeviceSubscriptionStatus().toString())) {
+            String deviceSubscriptionStatus = SubscriptionManagementHelperUtil.getDeviceSubscriptionStatus(subscriptionInfo);
+            DeviceSubscriptionFilterCriteria deviceSubscriptionFilterCriteria = subscriptionInfo.getDeviceSubscriptionFilterCriteria();
+
+            if (Objects.equals("NEW", deviceSubscriptionStatus)) {
 
                 deviceSubscriptionDTOS = subscriptionDAO.getSubscriptionDetailsByDeviceIds(applicationReleaseDTO.getId(),
-                        isUnsubscribe, tenantId, deviceIds, null, RoleBasedSubscriptionInfo.TRIGGERED_FROM_VALUE,
-                        null, null, limit, offset);
-                for (Integer deviceId : deviceIds) {
-                    DeviceSubscriptionDTO deviceSubscriptionDTO = new DeviceSubscriptionDTO();
-                    deviceSubscriptionDTO.setDeviceId(deviceId);
-                    deviceSubscriptionDTOS.remove(deviceSubscriptionDTO);
+                        isUnsubscribe, tenantId, deviceIdsOwnByRole, null,
+                        subscriptionInfo.getSubscriptionType(), deviceSubscriptionFilterCriteria.getTriggeredBy(),
+                        null, limit, offset);
+                for (DeviceSubscriptionDTO deviceSubscriptionDTO: deviceSubscriptionDTOS) {
+                    deviceListOwnByRole.remove(new Device(deviceSubscriptionDTO.getId()));
                 }
-                return deviceSubscriptionDTOS;
+                deviceIdsOwnByRole = deviceListOwnByRole.stream().map(Device::getId).collect(Collectors.toList());
+
             }
 
             deviceSubscriptionDTOS =  subscriptionDAO.getSubscriptionDetailsByDeviceIds(applicationReleaseDTO.getId(),
-                    isUnsubscribe, tenantId, deviceIds, roleBasedSubscriptionInfo.getDeviceSubscriptionStatus().
-                            toString(), RoleBasedSubscriptionInfo.TRIGGERED_FROM_VALUE,
-                    null, null, limit, offset);
+                    isUnsubscribe, tenantId, deviceIdsOwnByRole, deviceSubscriptionStatus, subscriptionInfo.getSubscriptionType(),
+                    deviceSubscriptionFilterCriteria.getTriggeredBy(), deviceSubscriptionStatus, limit, offset);
 
         } catch (UserStoreException e) {
             String msg = "Error encountered while getting the user management store for tenant id " + tenantId;
@@ -121,27 +131,36 @@ public class RoleBasedSubscriptionManagementHelperServiceImpl implements Subscri
             String msg = "Error encountered while connecting to the database";
             log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
         }
-        return deviceSubscriptionDTOS;
+        return SubscriptionManagementHelperUtil.getDeviceSubscriptionData(deviceSubscriptionDTOS,
+                subscriptionInfo.getDeviceSubscriptionFilterCriteria());
     }
 
     @Override
-    public List<SubscriptionsDTO> getSubscriptions(int limit, int offset) throws ApplicationManagementException {
+    public List<SubscriptionEntity> getSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
+            throws ApplicationManagementException {
+        final boolean isUnsubscribe = Objects.equals("unsubscribe", subscriptionInfo.getSubscriptionStatus());
         final int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         try {
             ConnectionManagerUtil.openDBConnection();
             ApplicationReleaseDTO applicationReleaseDTO = applicationReleaseDAO.
-                    getReleaseByUUID(roleBasedSubscriptionInfo.getApplicationUUID(), tenantId);
+                    getReleaseByUUID(subscriptionInfo.getApplicationUUID(), tenantId);
             if (applicationReleaseDTO == null) {
                 String msg = "Couldn't find an application release for application release UUID: " +
-                        roleBasedSubscriptionInfo.getApplicationUUID();
+                        subscriptionInfo.getApplicationUUID();
                 log.error(msg);
                 throw new NotFoundException(msg);
             }
             return subscriptionDAO.
                     getRoleSubscriptionsByAppReleaseID(applicationReleaseDTO.getId(), isUnsubscribe, tenantId, offset, limit);
         } catch (DBConnectionException | ApplicationManagementDAOException e) {
-            throw new RuntimeException(e);
+            String msg = "Error encountered while connecting to the database";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
         }
     }
 

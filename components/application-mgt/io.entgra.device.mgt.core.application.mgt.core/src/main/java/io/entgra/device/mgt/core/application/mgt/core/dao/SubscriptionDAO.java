@@ -19,6 +19,7 @@ package io.entgra.device.mgt.core.application.mgt.core.dao;
 
 import io.entgra.device.mgt.core.application.mgt.common.ExecutionStatus;
 import io.entgra.device.mgt.core.application.mgt.common.dto.GroupSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
 import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionsDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
@@ -327,7 +328,7 @@ public interface SubscriptionDAO {
      * @return {@link GroupSubscriptionDTO} which contains the details of group subscriptions.
      * @throws ApplicationManagementDAOException if connection establishment fails.
      */
-    List<GroupSubscriptionDTO> getGroupsSubscriptionDetailsByAppReleaseID(int appReleaseId, boolean unsubscribe, int tenantId, int offset, int limit)
+    List<SubscriptionEntity> getGroupsSubscriptionDetailsByAppReleaseID(int appReleaseId, boolean unsubscribe, int tenantId, int offset, int limit)
             throws ApplicationManagementDAOException;
 
     /**
@@ -355,7 +356,7 @@ public interface SubscriptionDAO {
      * @return {@link SubscriptionsDTO} which contains the details of subscriptions.
      * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
      */
-    List<SubscriptionsDTO>  getRoleSubscriptionsByAppReleaseID(int appReleaseId, boolean unsubscribe, int tenantId, int offset, int limit)
+    List<SubscriptionEntity>  getRoleSubscriptionsByAppReleaseID(int appReleaseId, boolean unsubscribe, int tenantId, int offset, int limit)
             throws ApplicationManagementDAOException;
 
     /**

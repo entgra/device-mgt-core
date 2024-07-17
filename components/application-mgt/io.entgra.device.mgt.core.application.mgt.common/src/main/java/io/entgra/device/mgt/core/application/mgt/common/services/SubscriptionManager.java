@@ -19,9 +19,13 @@ package io.entgra.device.mgt.core.application.mgt.common.services;
 
 import io.entgra.device.mgt.core.application.mgt.common.ApplicationInstallResponse;
 import io.entgra.device.mgt.core.application.mgt.common.CategorizedSubscriptionResult;
+import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionData;
 import io.entgra.device.mgt.core.application.mgt.common.ExecutionStatus;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionInfo;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionType;
 import io.entgra.device.mgt.core.application.mgt.common.dto.CategorizedSubscriptionCountsDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ScheduledSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionsDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceOperationDTO;
@@ -260,8 +264,13 @@ public interface SubscriptionManager {
      * @return {@link SubscriptionsDTO} which contains the details of subscriptions.
      * @throws ApplicationManagementException if an error occurs while fetching the role details
      */
-    List<SubscriptionsDTO> getRoleSubscriptionsByUUID(String uuid, String subscriptionStatus, PaginationRequest request,
-                                                      int offset, int limit) throws ApplicationManagementException;
+//    List<SubscriptionsDTO> getRoleSubscriptionsByUUID(String uuid, String subscriptionStatus, PaginationRequest request,
+//                                                      int offset, int limit) throws ApplicationManagementException;
+    List<SubscriptionEntity> getSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
+            throws ApplicationManagementException;
+
+    List<DeviceSubscriptionData> getStatusBaseSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
+            throws ApplicationManagementException;
 
     /**
      * Retrieves the Device Subscription details associated with a given app release UUID.

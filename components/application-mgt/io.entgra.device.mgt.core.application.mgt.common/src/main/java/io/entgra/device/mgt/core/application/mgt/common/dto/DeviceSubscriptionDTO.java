@@ -35,6 +35,14 @@ public class DeviceSubscriptionDTO {
     private int appReleaseId;
     private String appUuid;
 
+    public DeviceSubscriptionDTO() {
+
+    }
+    public DeviceSubscriptionDTO(int deviceId, String status) {
+        this.deviceId = deviceId;
+        this.status = status;
+    }
+
     public int getId() {
         return id;
     }

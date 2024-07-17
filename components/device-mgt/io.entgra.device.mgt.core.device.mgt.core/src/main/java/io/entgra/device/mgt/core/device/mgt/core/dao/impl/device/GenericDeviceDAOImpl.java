@@ -457,6 +457,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                     "e.ID AS ENROLMENT_ID " +
                     "FROM DM_ENROLMENT e, " +
                     "(SELECT d.ID, " +
+                    "d.LAST_UPDATED_TIMESTAMP, " +
                     "d.DEVICE_IDENTIFICATION " +
                     "FROM DM_DEVICE d WHERE d.TENANT_ID = ?) d1 " +
                     "WHERE d1.ID = e.DEVICE_ID AND e.TENANT_ID = ? ";
