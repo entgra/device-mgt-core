@@ -19,6 +19,7 @@
 package io.entgra.device.mgt.core.application.mgt.common.dto;
 
 import java.sql.Timestamp;
+import java.util.Objects;
 
 public class DeviceSubscriptionDTO {
 
@@ -120,5 +121,18 @@ public class DeviceSubscriptionDTO {
 
     public void setAppUuid(String appUuid) {
         this.appUuid = appUuid;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DeviceSubscriptionDTO that = (DeviceSubscriptionDTO) o;
+        return deviceId == that.deviceId;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(deviceId);
     }
 }

@@ -161,6 +161,7 @@ import javax.xml.bind.Marshaller;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Type;
+import java.sql.Array;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -5359,25 +5360,13 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         OwnerWithDeviceDTO ownerWithDeviceDTO;
 
-        List<String> allowingDeviceStatuses = new ArrayList<>();
-        allowingDeviceStatuses.add(EnrolmentInfo.Status.ACTIVE.toString());
-        allowingDeviceStatuses.add(EnrolmentInfo.Status.INACTIVE.toString());
-        allowingDeviceStatuses.add(EnrolmentInfo.Status.UNREACHABLE.toString());
+        List<String> allowingDeviceStatuses = Arrays.asList(EnrolmentInfo.Status.ACTIVE.toString(),
+                EnrolmentInfo.Status.INACTIVE.toString(), EnrolmentInfo.Status.UNREACHABLE.toString());
 
         try {
             DeviceManagementDAOFactory.openConnection();
-            ownerWithDeviceDTO = this.enrollmentDAO.getOwnersWithDevices(owner, allowingDeviceStatuses, tenantId, deviceTypeId, deviceOwner, deviceName, deviceStatus);
-            if (ownerWithDeviceDTO == null) {
-                String msg = "No data found for owner: " + owner;
-                log.error(msg);
-                throw new DeviceManagementDAOException(msg);
-            }
-            List<Integer> deviceIds = ownerWithDeviceDTO.getDeviceIds();
-            if (deviceIds != null) {
-                ownerWithDeviceDTO.setDeviceCount(deviceIds.size());
-            } else {
-                ownerWithDeviceDTO.setDeviceCount(0);
-            }
+            ownerWithDeviceDTO = this.enrollmentDAO.getOwnersWithDevices(owner, allowingDeviceStatuses,
+                    tenantId, deviceTypeId, deviceOwner, deviceName, deviceStatus);
         } catch (DeviceManagementDAOException | SQLException e) {
             String msg = "Error occurred while retrieving device IDs for owner: " + owner;
             log.error(msg, e);
@@ -5387,6 +5376,41 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         }
         return ownerWithDeviceDTO;
     }
+
+//    @Override
+//    public OwnerWithDeviceDTO getOwnersWithDeviceIds(String owner, int deviceTypeId, String deviceOwner, String deviceName, String deviceStatus)
+//            throws DeviceManagementDAOException {
+//        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+//        OwnerWithDeviceDTO ownerWithDeviceDTO;
+//
+//        List<String> allowingDeviceStatuses = new ArrayList<>();
+//        allowingDeviceStatuses.add(EnrolmentInfo.Status.ACTIVE.toString());
+//        allowingDeviceStatuses.add(EnrolmentInfo.Status.INACTIVE.toString());
+//        allowingDeviceStatuses.add(EnrolmentInfo.Status.UNREACHABLE.toString());
+//
+//        try {
+//            DeviceManagementDAOFactory.openConnection();
+//            ownerWithDeviceDTO = this.enrollmentDAO.getOwnersWithDevices(owner, allowingDeviceStatuses, tenantId, deviceTypeId, deviceOwner, deviceName, deviceStatus);
+//            if (ownerWithDeviceDTO == null) {
+//                String msg = "No data found for owner: " + owner;
+//                log.error(msg);
+//                throw new DeviceManagementDAOException(msg);
+//            }
+//            List<Integer> deviceIds = ownerWithDeviceDTO.getDeviceIds();
+//            if (deviceIds != null) {
+//                ownerWithDeviceDTO.setDeviceCount(deviceIds.size());
+//            } else {
+//                ownerWithDeviceDTO.setDeviceCount(0);
+//            }
+//        } catch (DeviceManagementDAOException | SQLException e) {
+//            String msg = "Error occurred while retrieving device IDs for owner: " + owner;
+//            log.error(msg, e);
+//            throw new DeviceManagementDAOException(msg, e);
+//        } finally {
+//            DeviceManagementDAOFactory.closeConnection();
+//        }
+//        return ownerWithDeviceDTO;
+//    }
 
 
     @Override

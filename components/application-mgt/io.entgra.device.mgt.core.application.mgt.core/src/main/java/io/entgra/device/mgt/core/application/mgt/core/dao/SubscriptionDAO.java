@@ -399,7 +399,8 @@ public interface SubscriptionDAO {
      */
     List<DeviceSubscriptionDTO> getSubscriptionDetailsByDeviceIds(int appReleaseId, boolean unsubscribe, int tenantId,
                                                                   List<Integer> deviceIds, String actionStatus, String actionType,
-                                                                  String actionTriggeredBy, String tabActionStatus) throws ApplicationManagementDAOException;
+                                                                  String actionTriggeredBy, String tabActionStatus,
+                                                                  int limit, int offset) throws ApplicationManagementDAOException;
 
     /**
      * This method is used to get the details of device subscriptions related to a UUID.
