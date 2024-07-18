@@ -19,6 +19,7 @@ package io.entgra.device.mgt.core.application.mgt.core.dao.impl.subscription;
 
 import io.entgra.device.mgt.core.application.mgt.common.dto.GroupSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceOperationDTO;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
 import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionsDTO;
 import io.entgra.device.mgt.core.application.mgt.core.dao.SubscriptionDAO;
 import io.entgra.device.mgt.core.application.mgt.core.dao.impl.AbstractDAOImpl;
@@ -1641,14 +1642,14 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
     }
 
     @Override
-    public List<GroupSubscriptionDTO> getGroupsSubscriptionDetailsByAppReleaseID(int appReleaseId, boolean unsubscribe, int tenantId, int offset, int limit)
+    public List<SubscriptionEntity> getGroupsSubscriptionDetailsByAppReleaseID(int appReleaseId, boolean unsubscribe, int tenantId, int offset, int limit)
             throws ApplicationManagementDAOException {
         if (log.isDebugEnabled()) {
             log.debug("Request received in DAO Layer to get groups related to the given AppReleaseID.");
         }
         try {
             Connection conn = this.getDBConnection();
-            List<GroupSubscriptionDTO> groupDetails = new ArrayList<>();
+            List<SubscriptionEntity> subscriptionEntities = new ArrayList<>();
 
             String subscriptionStatusTime = unsubscribe ? "GS.UNSUBSCRIBED_TIMESTAMP" : "GS.SUBSCRIBED_TIMESTAMP";
             String sql = "SELECT GS.GROUP_NAME, GS.SUBSCRIBED_BY, GS.SUBSCRIBED_TIMESTAMP, GS.UNSUBSCRIBED, " +
@@ -1665,21 +1666,21 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                 ps.setInt(5, offset);
 
                 try (ResultSet rs = ps.executeQuery()) {
-                    GroupSubscriptionDTO groupDetail;
+                    SubscriptionEntity subscriptionEntity;
                     while (rs.next()) {
-                        groupDetail = new GroupSubscriptionDTO();
-                        groupDetail.setGroupName(rs.getString("GROUP_NAME"));
-                        groupDetail.setSubscribedBy(rs.getString("SUBSCRIBED_BY"));
-                        groupDetail.setSubscribedTimestamp(rs.getTimestamp("SUBSCRIBED_TIMESTAMP"));
-                        groupDetail.setUnsubscribed(rs.getBoolean("UNSUBSCRIBED"));
-                        groupDetail.setUnsubscribedBy(rs.getString("UNSUBSCRIBED_BY"));
-                        groupDetail.setUnsubscribedTimestamp(rs.getTimestamp("UNSUBSCRIBED_TIMESTAMP"));
-                        groupDetail.setAppReleaseId(rs.getInt("AP_APP_RELEASE_ID"));
+                        subscriptionEntity = new SubscriptionEntity();
+                        subscriptionEntity.setIdentity(rs.getString("GROUP_NAME"));
+                        subscriptionEntity.setSubscribedBy(rs.getString("SUBSCRIBED_BY"));
+                        subscriptionEntity.setSubscribedTimestamp(rs.getTimestamp("SUBSCRIBED_TIMESTAMP"));
+                        subscriptionEntity.setUnsubscribed(rs.getBoolean("UNSUBSCRIBED"));
+                        subscriptionEntity.setUnsubscribedBy(rs.getString("UNSUBSCRIBED_BY"));
+                        subscriptionEntity.setUnsubscribedTimestamp(rs.getTimestamp("UNSUBSCRIBED_TIMESTAMP"));
+                        subscriptionEntity.setApplicationReleaseId(rs.getInt("AP_APP_RELEASE_ID"));
 
-                        groupDetails.add(groupDetail);
+                        subscriptionEntities.add(subscriptionEntity);
                     }
                 }
-                return groupDetails;
+                return subscriptionEntities;
             }
         } catch (DBConnectionException e) {
             String msg = "Error occurred while obtaining the DB connection to get groups for the given UUID.";
@@ -1744,14 +1745,14 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
     }
 
     @Override
-    public List<SubscriptionsDTO> getRoleSubscriptionsByAppReleaseID(int appReleaseId, boolean unsubscribe, int tenantId, int offset,
-                                                                        int limit) throws ApplicationManagementDAOException {
+    public List<SubscriptionEntity> getRoleSubscriptionsByAppReleaseID(int appReleaseId, boolean unsubscribe, int tenantId, int offset,
+                                                                       int limit) throws ApplicationManagementDAOException {
         if (log.isDebugEnabled()) {
             log.debug("Request received in DAO Layer to get role subscriptions related to the given AppReleaseID.");
         }
         try {
             Connection conn = this.getDBConnection();
-            List<SubscriptionsDTO>  roleSubscriptions = new ArrayList<>();
+            List<SubscriptionEntity> subscriptionEntities = new ArrayList<>();
 
             String subscriptionStatusTime = unsubscribe ? "ARS.UNSUBSCRIBED_TIMESTAMP" : "ARS.SUBSCRIBED_TIMESTAMP";
             String sql = "SELECT ARS.ROLE_NAME, ARS.SUBSCRIBED_BY, ARS.SUBSCRIBED_TIMESTAMP, ARS.UNSUBSCRIBED, " +
@@ -1767,21 +1768,21 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                 ps.setInt(4, limit);
                 ps.setInt(5, offset);
                 try (ResultSet rs = ps.executeQuery()) {
-                    SubscriptionsDTO roleSubscription;
+                    SubscriptionEntity subscriptionEntity;
                     while (rs.next()) {
-                        roleSubscription = new SubscriptionsDTO();
-                        roleSubscription.setName(rs.getString("ROLE_NAME"));
-                        roleSubscription.setSubscribedBy(rs.getString("SUBSCRIBED_BY"));
-                        roleSubscription.setSubscribedTimestamp(rs.getTimestamp("SUBSCRIBED_TIMESTAMP"));
-                        roleSubscription.setUnsubscribed(rs.getBoolean("UNSUBSCRIBED"));
-                        roleSubscription.setUnsubscribedBy(rs.getString("UNSUBSCRIBED_BY"));
-                        roleSubscription.setUnsubscribedTimestamp(rs.getTimestamp("UNSUBSCRIBED_TIMESTAMP"));
-                        roleSubscription.setAppReleaseId(rs.getInt("AP_APP_RELEASE_ID"));
+                        subscriptionEntity = new SubscriptionEntity();
+                        subscriptionEntity.setIdentity(rs.getString("ROLE_NAME"));
+                        subscriptionEntity.setSubscribedBy(rs.getString("SUBSCRIBED_BY"));
+                        subscriptionEntity.setSubscribedTimestamp(rs.getTimestamp("SUBSCRIBED_TIMESTAMP"));
+                        subscriptionEntity.setUnsubscribed(rs.getBoolean("UNSUBSCRIBED"));
+                        subscriptionEntity.setUnsubscribedBy(rs.getString("UNSUBSCRIBED_BY"));
+                        subscriptionEntity.setUnsubscribedTimestamp(rs.getTimestamp("UNSUBSCRIBED_TIMESTAMP"));
+                        subscriptionEntity.setApplicationReleaseId(rs.getInt("AP_APP_RELEASE_ID"));
 
-                        roleSubscriptions.add(roleSubscription);
+                        subscriptionEntities.add(subscriptionEntity);
                     }
                 }
-                return roleSubscriptions;
+                return subscriptionEntities;
             }
         } catch (DBConnectionException e) {
             String msg = "Error occurred while obtaining the DB connection to get role subscriptions for the given UUID.";
@@ -1913,7 +1914,8 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
     @Override
     public List<DeviceSubscriptionDTO> getSubscriptionDetailsByDeviceIds(int appReleaseId, boolean unsubscribe, int tenantId,
                                                                          List<Integer> deviceIds, String actionStatus, String actionType,
-                                                                         String actionTriggeredBy, String tabActionStatus) throws ApplicationManagementDAOException {
+                                                                         String actionTriggeredBy, String tabActionStatus,
+                                                                         int offset, int limit) throws ApplicationManagementDAOException {
         if (log.isDebugEnabled()) {
             log.debug("Getting device subscriptions for the application release id " + appReleaseId
                     + " and device ids " + deviceIds + " from the database");
@@ -1945,7 +1947,8 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                 sql.append(" AND DS.SUBSCRIBED_BY LIKE ? ");
             }
 
-            sql.append("ORDER BY ").append(subscriptionStatusTime).append(" DESC");
+            sql.append("ORDER BY ").append(subscriptionStatusTime).
+                    append(" DESC ").append("LIMIT ? OFFSET ?");
 
             try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
                 int paramIdx = 1;
@@ -1965,6 +1968,9 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                 if (actionTriggeredBy != null && !actionTriggeredBy.isEmpty()) {
                     ps.setString(paramIdx++, "%" + actionTriggeredBy + "%");
                 }
+
+                ps.setInt(paramIdx++, limit);
+                ps.setInt(paramIdx++, offset);
 
                 try (ResultSet rs = ps.executeQuery()) {
                     if (log.isDebugEnabled()) {
@@ -2001,6 +2007,98 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
         }
 
     }
+
+//    @Override
+//    public List<DeviceSubscriptionDTO> getSubscriptionDetailsByDeviceIds(int appReleaseId, boolean unsubscribe, int tenantId,
+//                                                                         List<Integer> deviceIds, String actionStatus, String actionType,
+//                                                                         String actionTriggeredBy, String tabActionStatus) throws ApplicationManagementDAOException {
+//        if (log.isDebugEnabled()) {
+//            log.debug("Getting device subscriptions for the application release id " + appReleaseId
+//                    + " and device ids " + deviceIds + " from the database");
+//        }
+//        try {
+//            Connection conn = this.getDBConnection();
+//            String subscriptionStatusTime = unsubscribe ? "DS.UNSUBSCRIBED_TIMESTAMP" : "DS.SUBSCRIBED_TIMESTAMP";
+//            StringBuilder sql = new StringBuilder("SELECT "
+//                    + "DS.ID AS ID, "
+//                    + "DS.SUBSCRIBED_BY AS SUBSCRIBED_BY, "
+//                    + "DS.SUBSCRIBED_TIMESTAMP AS SUBSCRIBED_AT, "
+//                    + "DS.UNSUBSCRIBED AS IS_UNSUBSCRIBED, "
+//                    + "DS.UNSUBSCRIBED_BY AS UNSUBSCRIBED_BY, "
+//                    + "DS.UNSUBSCRIBED_TIMESTAMP AS UNSUBSCRIBED_AT, "
+//                    + "DS.ACTION_TRIGGERED_FROM AS ACTION_TRIGGERED_FROM, "
+//                    + "DS.STATUS AS STATUS, "
+//                    + "DS.DM_DEVICE_ID AS DEVICE_ID "
+//                    + "FROM AP_DEVICE_SUBSCRIPTION DS "
+//                    + "WHERE DS.AP_APP_RELEASE_ID = ? AND DS.UNSUBSCRIBED = ? AND DS.TENANT_ID = ? AND DS.DM_DEVICE_ID IN (" +
+//                    deviceIds.stream().map(id -> "?").collect(Collectors.joining(",")) + ") ");
+//
+//            if (actionStatus != null && !actionStatus.isEmpty()) {
+//                sql.append(" AND DS.STATUS = ? ");
+//            }
+//            if (actionType != null && !actionType.isEmpty()) {
+//                sql.append(" AND DS.ACTION_TRIGGERED_FROM = ? ");
+//            }
+//            if (actionTriggeredBy != null && !actionTriggeredBy.isEmpty()) {
+//                sql.append(" AND DS.SUBSCRIBED_BY LIKE ? ");
+//            }
+//
+//            sql.append("ORDER BY ").append(subscriptionStatusTime).append(" DESC");
+//
+//            try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+//                int paramIdx = 1;
+//                ps.setInt(paramIdx++, appReleaseId);
+//                ps.setBoolean(paramIdx++, unsubscribe);
+//                ps.setInt(paramIdx++, tenantId);
+//                for (int i = 0; i < deviceIds.size(); i++) {
+//                    ps.setInt(paramIdx++, deviceIds.get(i));
+//                }
+//
+//                if (actionStatus != null && !actionStatus.isEmpty()) {
+//                    ps.setString(paramIdx++, actionStatus);
+//                }
+//                if (actionType != null && !actionType.isEmpty()) {
+//                    ps.setString(paramIdx++, actionType);
+//                }
+//                if (actionTriggeredBy != null && !actionTriggeredBy.isEmpty()) {
+//                    ps.setString(paramIdx++, "%" + actionTriggeredBy + "%");
+//                }
+//
+//                try (ResultSet rs = ps.executeQuery()) {
+//                    if (log.isDebugEnabled()) {
+//                        log.debug("Successfully retrieved device subscriptions for application release id "
+//                                + appReleaseId + " and device ids " + deviceIds);
+//                    }
+//                    List<DeviceSubscriptionDTO> subscriptions = new ArrayList<>();
+//                    while (rs.next()) {
+//                        DeviceSubscriptionDTO subscription = new DeviceSubscriptionDTO();
+//                        subscription.setId(rs.getInt("ID"));
+//                        subscription.setSubscribedBy(rs.getString("SUBSCRIBED_BY"));
+//                        subscription.setSubscribedTimestamp(rs.getTimestamp("SUBSCRIBED_AT"));
+//                        subscription.setUnsubscribed(rs.getBoolean("IS_UNSUBSCRIBED"));
+//                        subscription.setUnsubscribedBy(rs.getString("UNSUBSCRIBED_BY"));
+//                        subscription.setUnsubscribedTimestamp(rs.getTimestamp("UNSUBSCRIBED_AT"));
+//                        subscription.setActionTriggeredFrom(rs.getString("ACTION_TRIGGERED_FROM"));
+//                        subscription.setStatus(rs.getString("STATUS"));
+//                        subscription.setDeviceId(rs.getInt("DEVICE_ID"));
+//                        subscriptions.add(subscription);
+//                    }
+//                    return subscriptions;
+//                }
+//            } catch (SQLException e) {
+//                String msg = "Error occurred while running SQL to get device subscription data for application ID: " + appReleaseId
+//                        + " and device ids: " + deviceIds + ".";
+//                log.error(msg, e);
+//                throw new ApplicationManagementDAOException(msg, e);
+//            }
+//        } catch (DBConnectionException e) {
+//            String msg = "Error occurred while obtaining the DB connection for getting device subscriptions for "
+//                    + "application Id: " + appReleaseId + " and device ids: " + deviceIds + ".";
+//            log.error(msg, e);
+//            throw new ApplicationManagementDAOException(msg, e);
+//        }
+//
+//    }
 
     @Override
     public List<DeviceSubscriptionDTO> getAllSubscriptionsDetails(int appReleaseId, boolean unsubscribe, int tenantId,
