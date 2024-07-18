@@ -342,7 +342,7 @@ public interface SubscriptionDAO {
      * @return {@link SubscriptionsDTO} which contains the details of subscriptions.
      * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
      */
-    List<SubscriptionsDTO> getUserSubscriptionsByAppReleaseID(int appReleaseId, boolean unsubscribe, int tenantId,
+    List<SubscriptionEntity> getUserSubscriptionsByAppReleaseID(int appReleaseId, boolean unsubscribe, int tenantId,
                                                                  int offset, int limit) throws ApplicationManagementDAOException;
 
     /**

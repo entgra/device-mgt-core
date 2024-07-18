@@ -1694,14 +1694,14 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
     }
 
     @Override
-    public List<SubscriptionsDTO> getUserSubscriptionsByAppReleaseID(int appReleaseId, boolean unsubscribe, int tenantId,
+    public List<SubscriptionEntity> getUserSubscriptionsByAppReleaseID(int appReleaseId, boolean unsubscribe, int tenantId,
                                                                      int offset, int limit) throws ApplicationManagementDAOException {
         if (log.isDebugEnabled()) {
             log.debug("Request received in DAO Layer to get user subscriptions related to the given UUID.");
         }
         try {
             Connection conn = this.getDBConnection();
-            List<SubscriptionsDTO> userSubscriptions = new ArrayList<>();
+            List<SubscriptionEntity> subscriptionEntities = new ArrayList<>();
 
             String subscriptionStatusTime = unsubscribe ? "US.UNSUBSCRIBED_TIMESTAMP" : "US.SUBSCRIBED_TIMESTAMP";
             String sql = "SELECT US.USER_NAME, US.SUBSCRIBED_BY, US.SUBSCRIBED_TIMESTAMP, US.UNSUBSCRIBED, " +
@@ -1717,21 +1717,21 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                 ps.setInt(4, limit);
                 ps.setInt(5, offset);
                 try (ResultSet rs = ps.executeQuery()) {
+                    SubscriptionEntity subscriptionEntity;
                     while (rs.next()) {
-                        SubscriptionsDTO userSubscription;
-                        userSubscription = new SubscriptionsDTO();
-                        userSubscription.setName(rs.getString("USER_NAME"));
-                        userSubscription.setSubscribedBy(rs.getString("SUBSCRIBED_BY"));
-                        userSubscription.setSubscribedTimestamp(rs.getTimestamp("SUBSCRIBED_TIMESTAMP"));
-                        userSubscription.setUnsubscribed(rs.getBoolean("UNSUBSCRIBED"));
-                        userSubscription.setUnsubscribedBy(rs.getString("UNSUBSCRIBED_BY"));
-                        userSubscription.setUnsubscribedTimestamp(rs.getTimestamp("UNSUBSCRIBED_TIMESTAMP"));
-                        userSubscription.setAppReleaseId(rs.getInt("AP_APP_RELEASE_ID"));
+                        subscriptionEntity = new SubscriptionEntity();
+                        subscriptionEntity.setIdentity(rs.getString("USER_NAME"));
+                        subscriptionEntity.setSubscribedBy(rs.getString("SUBSCRIBED_BY"));
+                        subscriptionEntity.setSubscribedTimestamp(rs.getTimestamp("SUBSCRIBED_TIMESTAMP"));
+                        subscriptionEntity.setUnsubscribed(rs.getBoolean("UNSUBSCRIBED"));
+                        subscriptionEntity.setUnsubscribedBy(rs.getString("UNSUBSCRIBED_BY"));
+                        subscriptionEntity.setUnsubscribedTimestamp(rs.getTimestamp("UNSUBSCRIBED_TIMESTAMP"));
+                        subscriptionEntity.setApplicationReleaseId(rs.getInt("AP_APP_RELEASE_ID"));
 
-                        userSubscriptions.add(userSubscription);
+                        subscriptionEntities.add(subscriptionEntity);
                     }
                 }
-                return userSubscriptions;
+                return subscriptionEntities;
             }
         } catch (DBConnectionException e) {
             String msg = "Error occurred while obtaining the DB connection to get user subscriptions for the given UUID.";
@@ -1948,7 +1948,11 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
             }
 
             sql.append("ORDER BY ").append(subscriptionStatusTime).
-                    append(" DESC ").append("LIMIT ? OFFSET ?");
+                    append(" DESC ");
+
+            if (offset >= 0 && limit >= 0) {
+                sql.append("LIMIT ? OFFSET ?");
+            }
 
             try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
                 int paramIdx = 1;
@@ -1969,8 +1973,10 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                     ps.setString(paramIdx++, "%" + actionTriggeredBy + "%");
                 }
 
-                ps.setInt(paramIdx++, limit);
-                ps.setInt(paramIdx++, offset);
+                if (offset >= 0 && limit >= 0) {
+                    ps.setInt(paramIdx++, limit);
+                    ps.setInt(paramIdx, offset);
+                }
 
                 try (ResultSet rs = ps.executeQuery()) {
                     if (log.isDebugEnabled()) {
@@ -2134,8 +2140,11 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
             sql.append(" AND ").append(actionTriggeredColumn).append(" LIKE ? ");
         }
 
-        sql.append("ORDER BY ").append(subscriptionStatusTime).append(" DESC ")
-                .append("LIMIT ? OFFSET ?");
+        sql.append("ORDER BY ").append(subscriptionStatusTime).append(" DESC ");
+
+        if (limit >= 0 && offset >= 0) {
+            sql.append("LIMIT ? OFFSET ?");
+        }
 
         try {
             Connection conn = this.getDBConnection();
@@ -2155,8 +2164,10 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                     ps.setString(paramIdx++, "%" + actionTriggeredBy + "%");
                 }
 
-                ps.setInt(paramIdx++, limit);
-                ps.setInt(paramIdx++, offset);
+                if (limit >= 0 && offset >= 0) {
+                    ps.setInt(paramIdx++, limit);
+                    ps.setInt(paramIdx, offset);
+                }
 
                 try (ResultSet rs = ps.executeQuery()) {
                     if (log.isDebugEnabled()) {

@@ -35,6 +35,7 @@ import io.entgra.device.mgt.core.application.mgt.core.util.ConnectionManagerUtil
 import io.entgra.device.mgt.core.application.mgt.core.util.HelperUtil;
 import io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.SubscriptionManagementHelperUtil;
 import io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.service.SubscriptionManagementHelperService;
+import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.dto.GroupDetailsDTO;
@@ -45,6 +46,7 @@ import org.wso2.carbon.context.PrivilegedCarbonContext;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class GroupBasedSubscriptionManagementHelperServiceImpl implements SubscriptionManagementHelperService {
     private static final Log log = LogFactory.getLog(GroupBasedSubscriptionManagementHelperServiceImpl.class);
@@ -65,7 +67,7 @@ public class GroupBasedSubscriptionManagementHelperServiceImpl implements Subscr
         final boolean isUnsubscribe = Objects.equals("unsubscribe", subscriptionInfo.getSubscriptionStatus());
         List<DeviceSubscriptionDTO> deviceSubscriptionDTOS;
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
-        // todo: check and refactor
+
         try {
             ConnectionManagerUtil.openDBConnection();
             ApplicationReleaseDTO applicationReleaseDTO = applicationReleaseDAO.
@@ -89,28 +91,40 @@ public class GroupBasedSubscriptionManagementHelperServiceImpl implements Subscr
             DeviceSubscriptionFilterCriteria deviceSubscriptionFilterCriteria = subscriptionInfo.getDeviceSubscriptionFilterCriteria();
 
             GroupManagementProviderService groupManagementProviderService = HelperUtil.getGroupManagementProviderService();
-            GroupDetailsDTO groupDetailsDTO = groupManagementProviderService.getGroupDetailsWithDevices(subscriptionInfo.getIdentifier(),
-                    applicationDTO.getDeviceTypeId(), deviceSubscriptionFilterCriteria.getOwner(), deviceSubscriptionFilterCriteria.getName(),
-                    deviceSubscriptionFilterCriteria.getDeviceStatus(), offset, limit);
-
-            List<Integer> deviceIdsOwnByGroup = groupDetailsDTO.getDeviceIds();
+            GroupDetailsDTO groupDetailsDTO;
+            List<Integer> deviceIdsOwnByGroup;
 
             if (Objects.equals("NEW", deviceSubscriptionStatus)) {
+                groupDetailsDTO = groupManagementProviderService.getGroupDetailsWithDevices(subscriptionInfo.getIdentifier(),
+                        applicationDTO.getDeviceTypeId(), deviceSubscriptionFilterCriteria.getOwner(), deviceSubscriptionFilterCriteria.getName(),
+                        deviceSubscriptionFilterCriteria.getDeviceStatus(), -1, -1);
+                deviceIdsOwnByGroup = groupDetailsDTO.getDeviceIds();
+
+                deviceSubscriptionDTOS = subscriptionDAO.getSubscriptionDetailsByDeviceIds(applicationReleaseDTO.getId(),
+                        isUnsubscribe, tenantId, deviceIdsOwnByGroup, null,
+                        subscriptionInfo.getSubscriptionType(), deviceSubscriptionFilterCriteria.getTriggeredBy(),
+                        null, -1, -1);
+
+                List<Integer> deviceIdsOfSubscription = deviceSubscriptionDTOS.stream().
+                        map(DeviceSubscriptionDTO::getDeviceId).collect(Collectors.toList());
+
+                List<Integer> newDeviceIds = HelperUtil.getDeviceManagementProviderService().
+                        getDevicesNotInGivenIdList(deviceIdsOfSubscription, new PaginationRequest(offset, limit));
+                deviceSubscriptionDTOS = newDeviceIds.stream().map(DeviceSubscriptionDTO::new).collect(Collectors.toList());
+            } else {
+                groupDetailsDTO = groupManagementProviderService.getGroupDetailsWithDevices(subscriptionInfo.getIdentifier(),
+                        applicationDTO.getDeviceTypeId(), deviceSubscriptionFilterCriteria.getOwner(), deviceSubscriptionFilterCriteria.getName(),
+                        deviceSubscriptionFilterCriteria.getDeviceStatus(), offset, limit);
+                deviceIdsOwnByGroup = groupDetailsDTO.getDeviceIds();
 
                 deviceSubscriptionDTOS = subscriptionDAO.getSubscriptionDetailsByDeviceIds(applicationReleaseDTO.getId(),
                         isUnsubscribe, tenantId, deviceIdsOwnByGroup, null,
                         subscriptionInfo.getSubscriptionType(), deviceSubscriptionFilterCriteria.getTriggeredBy(),
                         null, limit, offset);
-                for (DeviceSubscriptionDTO deviceSubscriptionDTO: deviceSubscriptionDTOS) {
-                    deviceIdsOwnByGroup.remove(deviceSubscriptionDTO.getDeviceId());
-                }
             }
 
-            deviceSubscriptionDTOS = subscriptionDAO.getSubscriptionDetailsByDeviceIds(applicationReleaseDTO.getId(),
-                    isUnsubscribe, tenantId, deviceIdsOwnByGroup, deviceSubscriptionStatus, subscriptionInfo.getSubscriptionType(),
-                    deviceSubscriptionFilterCriteria.getTriggeredBy(), deviceSubscriptionStatus, limit, offset);
-        return SubscriptionManagementHelperUtil.getDeviceSubscriptionData(deviceSubscriptionDTOS,
-                subscriptionInfo.getDeviceSubscriptionFilterCriteria());
+            return SubscriptionManagementHelperUtil.getDeviceSubscriptionData(deviceSubscriptionDTOS,
+                    subscriptionInfo.getDeviceSubscriptionFilterCriteria());
 
         } catch (GroupManagementException e) {
             String msg = "Error encountered while retrieving group details for group: " + subscriptionInfo.getIdentifier();
@@ -156,6 +170,6 @@ public class GroupBasedSubscriptionManagementHelperServiceImpl implements Subscr
 
     @Override
     public void getSubscriptionStatistics() throws ApplicationManagementException {
-
+        // todo: analytics engine
     }
 }

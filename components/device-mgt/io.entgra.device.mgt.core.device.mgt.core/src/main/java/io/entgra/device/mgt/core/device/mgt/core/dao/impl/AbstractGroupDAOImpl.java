@@ -1494,8 +1494,9 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
         if (deviceStatus != null && !deviceStatus.isEmpty()) {
             sql.append(" AND e.STATUS = ?");
         }
-
-        sql.append(" LIMIT ? OFFSET ?");
+        if (limit >= 0 && offset >=0 ) {
+            sql.append(" LIMIT ? OFFSET ?");
+        }
 
         Connection conn = null;
         try {
@@ -1519,8 +1520,10 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
                     stmt.setString(index++, deviceStatus);
                 }
 
-                stmt.setInt(index++, limit);
-                stmt.setInt(index++, offset);
+                if (limit >= 0 && offset >=0 ) {
+                    stmt.setInt(index++, limit);
+                    stmt.setInt(index++, offset);
+                }
 
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
