@@ -864,4 +864,10 @@ public interface DeviceDAO {
      * @throws DeviceManagementDAOException
      */
     int getCountOfDevicesNotInGroup(PaginationRequest request, int tenantId) throws DeviceManagementDAOException;
+
+    List<Integer> getDevicesNotInGivenIdList(PaginationRequest request, List<Integer> deviceIds, int tenantId)
+            throws DeviceManagementDAOException;
+
+    List<Device> getDevicesByDeviceIds(PaginationRequest paginationRequest, List<Integer> deviceIds, int tenantId)
+            throws DeviceManagementDAOException;
 }

@@ -19,6 +19,7 @@
 
 package io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.service;
 
+import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscription;
 import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionData;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionInfo;
@@ -36,7 +37,7 @@ public interface SubscriptionManagementHelperService {
     SubscriptionDAO subscriptionDAO = ApplicationManagementDAOFactory.getSubscriptionDAO();
     ApplicationDAO applicationDAO = ApplicationManagementDAOFactory.getApplicationDAO();
     ApplicationReleaseDAO applicationReleaseDAO = ApplicationManagementDAOFactory.getApplicationReleaseDAO();
-    List<DeviceSubscriptionData> getStatusBaseSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
+    List<DeviceSubscription> getStatusBaseSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
             throws ApplicationManagementException;
     List<SubscriptionEntity> getSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
             throws ApplicationManagementException;

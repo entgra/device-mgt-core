@@ -38,6 +38,11 @@ public class DeviceSubscriptionDTO {
     public DeviceSubscriptionDTO() {
 
     }
+
+    public DeviceSubscriptionDTO(int deviceId) {
+        this.deviceId = deviceId;
+    }
+
     public DeviceSubscriptionDTO(int deviceId, String status) {
         this.deviceId = deviceId;
         this.status = status;

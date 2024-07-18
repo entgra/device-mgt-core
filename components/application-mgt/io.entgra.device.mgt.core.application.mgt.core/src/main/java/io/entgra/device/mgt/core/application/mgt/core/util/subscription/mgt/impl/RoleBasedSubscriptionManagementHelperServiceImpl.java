@@ -19,6 +19,7 @@
 
 package io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.impl;
 
+import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscription;
 import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionData;
 import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionFilterCriteria;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
@@ -64,13 +65,14 @@ public class RoleBasedSubscriptionManagementHelperServiceImpl implements Subscri
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<DeviceSubscriptionData> getStatusBaseSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
+    public List<DeviceSubscription> getStatusBaseSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
             throws ApplicationManagementException {
         final boolean isUnsubscribe = Objects.equals("unsubscribe", subscriptionInfo.getSubscriptionStatus());
         List<DeviceSubscriptionDTO> deviceSubscriptionDTOS;
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
 
         try {
+            ConnectionManagerUtil.openDBConnection();
             UserStoreManager userStoreManager = DataHolder.getInstance().getRealmService().
                     getTenantUserRealm(tenantId).getUserStoreManager();
             String[] usersWithRole =
@@ -89,7 +91,6 @@ public class RoleBasedSubscriptionManagementHelperServiceImpl implements Subscri
 
             List<Integer> deviceIdsOwnByRole = deviceListOwnByRole.stream().map(Device::getId).collect(Collectors.toList());
 
-            ConnectionManagerUtil.openDBConnection();
             ApplicationReleaseDTO applicationReleaseDTO = applicationReleaseDAO.
                     getReleaseByUUID(subscriptionInfo.getApplicationUUID(), tenantId);
             if (applicationReleaseDTO == null) {
@@ -102,22 +103,23 @@ public class RoleBasedSubscriptionManagementHelperServiceImpl implements Subscri
             String deviceSubscriptionStatus = SubscriptionManagementHelperUtil.getDeviceSubscriptionStatus(subscriptionInfo);
             DeviceSubscriptionFilterCriteria deviceSubscriptionFilterCriteria = subscriptionInfo.getDeviceSubscriptionFilterCriteria();
 
+            deviceSubscriptionDTOS = subscriptionDAO.getSubscriptionDetailsByDeviceIds(applicationReleaseDTO.getId(),
+                    isUnsubscribe, tenantId, deviceIdsOwnByRole, null,
+                    subscriptionInfo.getSubscriptionType(), deviceSubscriptionFilterCriteria.getTriggeredBy(),
+                    null, limit, offset);
+
             if (Objects.equals("NEW", deviceSubscriptionStatus)) {
 
-                deviceSubscriptionDTOS = subscriptionDAO.getSubscriptionDetailsByDeviceIds(applicationReleaseDTO.getId(),
-                        isUnsubscribe, tenantId, deviceIdsOwnByRole, null,
-                        subscriptionInfo.getSubscriptionType(), deviceSubscriptionFilterCriteria.getTriggeredBy(),
-                        null, limit, offset);
-                for (DeviceSubscriptionDTO deviceSubscriptionDTO: deviceSubscriptionDTOS) {
-                    deviceListOwnByRole.remove(new Device(deviceSubscriptionDTO.getId()));
-                }
-                deviceIdsOwnByRole = deviceListOwnByRole.stream().map(Device::getId).collect(Collectors.toList());
+                List<Integer> deviceIdsOfSubscription = deviceSubscriptionDTOS.stream().
+                        map(DeviceSubscriptionDTO::getDeviceId).collect(Collectors.toList());
 
+                List<Integer> newDeviceIds = HelperUtil.getDeviceManagementProviderService().
+                        getDevicesNotInGivenIdList(deviceIdsOfSubscription, new PaginationRequest(offset, limit));
+                deviceSubscriptionDTOS = newDeviceIds.stream().map(DeviceSubscriptionDTO::new).collect(Collectors.toList());
             }
 
-            deviceSubscriptionDTOS =  subscriptionDAO.getSubscriptionDetailsByDeviceIds(applicationReleaseDTO.getId(),
-                    isUnsubscribe, tenantId, deviceIdsOwnByRole, deviceSubscriptionStatus, subscriptionInfo.getSubscriptionType(),
-                    deviceSubscriptionFilterCriteria.getTriggeredBy(), deviceSubscriptionStatus, limit, offset);
+            return SubscriptionManagementHelperUtil.getDeviceSubscriptionData(deviceSubscriptionDTOS,
+                    subscriptionInfo.getDeviceSubscriptionFilterCriteria());
 
         } catch (UserStoreException e) {
             String msg = "Error encountered while getting the user management store for tenant id " + tenantId;
@@ -134,8 +136,6 @@ public class RoleBasedSubscriptionManagementHelperServiceImpl implements Subscri
         } finally {
             ConnectionManagerUtil.closeDBConnection();
         }
-        return SubscriptionManagementHelperUtil.getDeviceSubscriptionData(deviceSubscriptionDTOS,
-                subscriptionInfo.getDeviceSubscriptionFilterCriteria());
     }
 
     @Override

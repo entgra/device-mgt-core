@@ -19,6 +19,7 @@
 
 package io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.impl;
 
+import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscription;
 import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionData;
 import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionFilterCriteria;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
@@ -34,6 +35,7 @@ import io.entgra.device.mgt.core.application.mgt.core.util.ConnectionManagerUtil
 import io.entgra.device.mgt.core.application.mgt.core.util.HelperUtil;
 import io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.SubscriptionManagementHelperUtil;
 import io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.service.SubscriptionManagementHelperService;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.dto.GroupDetailsDTO;
 import io.entgra.device.mgt.core.device.mgt.core.service.GroupManagementProviderService;
@@ -57,13 +59,13 @@ public class GroupBasedSubscriptionManagementHelperServiceImpl implements Subscr
     }
 
     @Override
-    public List<DeviceSubscriptionData> getStatusBaseSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
+    public List<DeviceSubscription> getStatusBaseSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
             throws ApplicationManagementException {
 
         final boolean isUnsubscribe = Objects.equals("unsubscribe", subscriptionInfo.getSubscriptionStatus());
         List<DeviceSubscriptionDTO> deviceSubscriptionDTOS;
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
-
+        // todo: check and refactor
         try {
             ConnectionManagerUtil.openDBConnection();
             ApplicationReleaseDTO applicationReleaseDTO = applicationReleaseDAO.
@@ -107,6 +109,8 @@ public class GroupBasedSubscriptionManagementHelperServiceImpl implements Subscr
             deviceSubscriptionDTOS = subscriptionDAO.getSubscriptionDetailsByDeviceIds(applicationReleaseDTO.getId(),
                     isUnsubscribe, tenantId, deviceIdsOwnByGroup, deviceSubscriptionStatus, subscriptionInfo.getSubscriptionType(),
                     deviceSubscriptionFilterCriteria.getTriggeredBy(), deviceSubscriptionStatus, limit, offset);
+        return SubscriptionManagementHelperUtil.getDeviceSubscriptionData(deviceSubscriptionDTOS,
+                subscriptionInfo.getDeviceSubscriptionFilterCriteria());
 
         } catch (GroupManagementException e) {
             String msg = "Error encountered while retrieving group details for group: " + subscriptionInfo.getIdentifier();
@@ -116,12 +120,12 @@ public class GroupBasedSubscriptionManagementHelperServiceImpl implements Subscr
             String msg = "Error encountered while connecting to the database";
             log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
+        } catch (DeviceManagementException e) {
+            throw new RuntimeException(e);
         } finally {
             ConnectionManagerUtil.closeDBConnection();
         }
 
-        return SubscriptionManagementHelperUtil.getDeviceSubscriptionData(deviceSubscriptionDTOS,
-                subscriptionInfo.getDeviceSubscriptionFilterCriteria());
     }
 
     @Override

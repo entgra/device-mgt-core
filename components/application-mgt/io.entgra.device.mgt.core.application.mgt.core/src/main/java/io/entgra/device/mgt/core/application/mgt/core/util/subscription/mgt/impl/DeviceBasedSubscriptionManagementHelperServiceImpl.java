@@ -19,6 +19,7 @@
 
 package io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.impl;
 
+import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscription;
 import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionData;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionInfo;
@@ -31,7 +32,7 @@ import java.util.List;
 
 public class DeviceBasedSubscriptionManagementHelperServiceImpl implements SubscriptionManagementHelperService {
     @Override
-    public List<DeviceSubscriptionData> getStatusBaseSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset) throws ApplicationManagementException {
+    public List<DeviceSubscription> getStatusBaseSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset) throws ApplicationManagementException {
         return null;
     }
 

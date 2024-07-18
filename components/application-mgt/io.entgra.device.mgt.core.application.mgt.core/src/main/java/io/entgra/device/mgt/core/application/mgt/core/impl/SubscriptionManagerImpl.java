@@ -23,6 +23,7 @@ import io.entgra.device.mgt.core.application.mgt.common.ApplicationInstallRespon
 import io.entgra.device.mgt.core.application.mgt.common.ApplicationSubscriptionInfo;
 import io.entgra.device.mgt.core.application.mgt.common.ApplicationType;
 import io.entgra.device.mgt.core.application.mgt.common.CategorizedSubscriptionResult;
+import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscription;
 import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionData;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionInfo;
@@ -1729,7 +1730,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
     }
 
     @Override
-    public List<DeviceSubscriptionData> getStatusBaseSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
+    public List<DeviceSubscription> getStatusBaseSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
             throws ApplicationManagementException {
         SubscriptionManagementHelperService subscriptionManagementHelperService =
                 SubscriptionManagementServiceProvider.getInstance().getSubscriptionManagementHelperService(subscriptionInfo);
