@@ -402,6 +402,8 @@ public interface SubscriptionDAO {
                                                                   List<Integer> deviceIds, String actionStatus, String actionType,
                                                                   String actionTriggeredBy, String tabActionStatus,
                                                                   int limit, int offset) throws ApplicationManagementDAOException;
+    int getDeviceSubscriptionCount(int appReleaseId, boolean unsubscribe, int tenantId, String actionStatus, String actionType,
+                                   String actionTriggeredBy) throws ApplicationManagementDAOException;
 
     /**
      * This method is used to get the details of device subscriptions related to a UUID.

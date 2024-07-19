@@ -36,17 +36,20 @@ import java.util.stream.Collectors;
 
 public class SubscriptionManagementHelperUtil {
     public static List<DeviceSubscription> getDeviceSubscriptionData(List<DeviceSubscriptionDTO> deviceSubscriptionDTOS,
-                                                                     DeviceSubscriptionFilterCriteria deviceSubscriptionFilterCriteria) throws DeviceManagementException {
+                                                                     DeviceSubscriptionFilterCriteria deviceSubscriptionFilterCriteria,
+                                                                     boolean isUnsubscribed)
+            throws DeviceManagementException {
         List<Integer> deviceIds = deviceSubscriptionDTOS.stream().map(DeviceSubscriptionDTO::getDeviceId).collect(Collectors.toList());
         PaginationRequest paginationRequest = new PaginationRequest(0, -1);
         paginationRequest.setDeviceName(deviceSubscriptionFilterCriteria.getName());
         paginationRequest.setDeviceStatus(deviceSubscriptionFilterCriteria.getDeviceStatus());
         paginationRequest.setOwner(deviceSubscriptionFilterCriteria.getOwner());
         List<Device> devices = HelperUtil.getDeviceManagementProviderService().getDevicesByDeviceIds(paginationRequest, deviceIds);
-        return populateDeviceData(deviceSubscriptionDTOS, devices);
+        return populateDeviceData(deviceSubscriptionDTOS, devices, isUnsubscribed);
     }
 
-    private static List<DeviceSubscription> populateDeviceData(List<DeviceSubscriptionDTO> deviceSubscriptionDTOS, List<Device> devices) {
+    private static List<DeviceSubscription> populateDeviceData(List<DeviceSubscriptionDTO> deviceSubscriptionDTOS,
+                                                               List<Device> devices, boolean isUnsubscribed) {
         List<DeviceSubscription> deviceSubscriptions = new ArrayList<>();
         for (Device device : devices) {
             int idx = deviceSubscriptionDTOS.indexOf(new DeviceSubscriptionDTO(device.getId()));
@@ -61,7 +64,8 @@ public class SubscriptionManagementHelperUtil {
                 deviceSubscription.setOwnershipType(device.getEnrolmentInfo().getOwnership().name());
                 deviceSubscription.setDateOfLastUpdate(new Timestamp(device.getEnrolmentInfo().getDateOfLastUpdate()));
                 SubscriptionData subscriptionData = new SubscriptionData();
-                subscriptionData.setTriggeredBy(deviceSubscriptionDTO.getActionTriggeredFrom());
+                subscriptionData.setTriggeredBy(isUnsubscribed ? deviceSubscriptionDTO.getUnsubscribedBy() :
+                        deviceSubscriptionDTO.getSubscribedBy());
                 subscriptionData.setTriggeredAt(deviceSubscriptionDTO.getSubscribedTimestamp());
                 subscriptionData.setSubscriptionType(deviceSubscriptionDTO.getStatus());
                 deviceSubscription.setSubscriptionData(subscriptionData);
