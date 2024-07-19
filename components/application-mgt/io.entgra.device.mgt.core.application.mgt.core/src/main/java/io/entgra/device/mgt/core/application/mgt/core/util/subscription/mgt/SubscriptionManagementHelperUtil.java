@@ -23,11 +23,14 @@ import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscription;
 import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionFilterCriteria;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionData;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionInfo;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionStatistics;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionStatisticDTO;
 import io.entgra.device.mgt.core.application.mgt.core.util.HelperUtil;
 import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
+import org.jetbrains.annotations.NotNull;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -63,16 +66,22 @@ public class SubscriptionManagementHelperUtil {
                 deviceSubscription.setDeviceStatus(device.getEnrolmentInfo().getStatus().name());
                 deviceSubscription.setOwnershipType(device.getEnrolmentInfo().getOwnership().name());
                 deviceSubscription.setDateOfLastUpdate(new Timestamp(device.getEnrolmentInfo().getDateOfLastUpdate()));
-                SubscriptionData subscriptionData = new SubscriptionData();
-                subscriptionData.setTriggeredBy(isUnsubscribed ? deviceSubscriptionDTO.getUnsubscribedBy() :
-                        deviceSubscriptionDTO.getSubscribedBy());
-                subscriptionData.setTriggeredAt(deviceSubscriptionDTO.getSubscribedTimestamp());
-                subscriptionData.setSubscriptionType(deviceSubscriptionDTO.getStatus());
+                SubscriptionData subscriptionData = getSubscriptionData(isUnsubscribed, deviceSubscriptionDTO);
                 deviceSubscription.setSubscriptionData(subscriptionData);
                 deviceSubscriptions.add(deviceSubscription);
             }
         }
         return deviceSubscriptions;
+    }
+
+    private static SubscriptionData getSubscriptionData(boolean isUnsubscribed, DeviceSubscriptionDTO deviceSubscriptionDTO) {
+        SubscriptionData subscriptionData = new SubscriptionData();
+        subscriptionData.setTriggeredBy(isUnsubscribed ? deviceSubscriptionDTO.getUnsubscribedBy() :
+                deviceSubscriptionDTO.getSubscribedBy());
+        subscriptionData.setTriggeredAt(deviceSubscriptionDTO.getSubscribedTimestamp());
+        subscriptionData.setDeviceSubscriptionStatus(deviceSubscriptionDTO.getStatus());
+        subscriptionData.setSubscriptionType(deviceSubscriptionDTO.getActionTriggeredFrom());
+        return subscriptionData;
     }
 
     public static String getDeviceSubscriptionStatus(SubscriptionInfo subscriptionInfo) {
@@ -83,5 +92,23 @@ public class SubscriptionManagementHelperUtil {
     public static String getDeviceSubscriptionStatus(String deviceSubscriptionStatusFilter, String deviceSubscriptionStatus) {
         return (deviceSubscriptionStatusFilter != null && !deviceSubscriptionStatusFilter.isEmpty()) ?
                 deviceSubscriptionStatusFilter : deviceSubscriptionStatus;
+    }
+
+    public static SubscriptionStatistics getSubscriptionStatistics(SubscriptionStatisticDTO subscriptionStatisticDTO, int allDeviceCount) {
+        SubscriptionStatistics subscriptionStatistics = new SubscriptionStatistics();
+        subscriptionStatistics.setCompletedPercentage(
+                getPercentage(subscriptionStatisticDTO.getCompletedDeviceCount(), allDeviceCount));
+        subscriptionStatistics.setPendingPercentage(
+                getPercentage(subscriptionStatisticDTO.getPendingDevicesCount(), allDeviceCount));
+        subscriptionStatistics.setFailedPercentage(
+                getPercentage(subscriptionStatisticDTO.getFailedDevicesCount(), allDeviceCount));
+        return subscriptionStatistics;
+    }
+
+    public static float getPercentage(int numerator, int denominator) {
+        if (denominator <= 0) {
+            return 0.0f;
+        }
+        return (float) numerator/denominator;
     }
 }

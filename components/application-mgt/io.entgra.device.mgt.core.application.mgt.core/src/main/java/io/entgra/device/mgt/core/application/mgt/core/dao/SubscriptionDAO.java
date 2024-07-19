@@ -20,6 +20,7 @@ package io.entgra.device.mgt.core.application.mgt.core.dao;
 import io.entgra.device.mgt.core.application.mgt.common.ExecutionStatus;
 import io.entgra.device.mgt.core.application.mgt.common.dto.GroupSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
+import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionStatisticDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionsDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
@@ -521,4 +522,8 @@ public interface SubscriptionDAO {
      * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
      */
     int getUserUnsubscriptionCount(int appReleaseId, int tenantId) throws ApplicationManagementDAOException;
+
+    SubscriptionStatisticDTO getSubscriptionStatistic(String subscriptionType, boolean isUnsubscribed, int tenantId)
+            throws ApplicationManagementDAOException;
+
 }

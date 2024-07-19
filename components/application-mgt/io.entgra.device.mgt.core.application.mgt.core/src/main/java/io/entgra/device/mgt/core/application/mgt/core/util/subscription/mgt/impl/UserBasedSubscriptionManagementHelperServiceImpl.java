@@ -24,6 +24,7 @@ import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionFilter
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionInfo;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionResponse;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionStatistics;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException;
@@ -165,7 +166,8 @@ public class UserBasedSubscriptionManagementHelperServiceImpl implements Subscri
     }
 
     @Override
-    public void getSubscriptionStatistics() throws ApplicationManagementException {
+    public SubscriptionStatistics getSubscriptionStatistics(SubscriptionInfo subscriptionInfo) throws ApplicationManagementException {
         // todo: analytics engine
+        return null;
     }
 }

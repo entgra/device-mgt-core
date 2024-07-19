@@ -20,6 +20,7 @@ package io.entgra.device.mgt.core.application.mgt.core.dao.impl.subscription;
 import io.entgra.device.mgt.core.application.mgt.common.dto.GroupSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceOperationDTO;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
+import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionStatisticDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionsDTO;
 import io.entgra.device.mgt.core.application.mgt.core.dao.SubscriptionDAO;
 import io.entgra.device.mgt.core.application.mgt.core.dao.impl.AbstractDAOImpl;
@@ -47,6 +48,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -2650,6 +2652,56 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
         } catch (DBConnectionException e) {
             String msg = "Error occurred while obtaining the DB connection for getting user unsubscription count for appReleaseId: "
                     + appReleaseId + ".";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public SubscriptionStatisticDTO getSubscriptionStatistic(String subscriptionType, boolean isUnsubscribed, int tenantId)
+            throws ApplicationManagementDAOException {
+        SubscriptionStatisticDTO subscriptionStatisticDTO = new SubscriptionStatisticDTO();
+        boolean doesAllEntriesRequired = true;
+        try {
+            Connection connection = getDBConnection();
+            String sql = "SELECT COUNT(DISTINCT ID) AS COUNT, " +
+                    "STATUS FROM AP_DEVICE_SUBSCRIPTION WHERE " +
+                    "TENANT_ID = ? AND UNSUBSCRIBED = ?";
+            if (!Objects.equals(subscriptionType, "DEVICE")) {
+                sql = sql + " AND ACTION_TRIGGERED_FROM = ?";
+                doesAllEntriesRequired = false;
+            }
+            sql = sql + " GROUP BY (STATUS)";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                int idx = 1;
+
+                preparedStatement.setInt(idx++, tenantId);
+                preparedStatement.setBoolean(idx++, isUnsubscribed);
+                if (!doesAllEntriesRequired) {
+                    preparedStatement.setString(idx, subscriptionType);
+                }
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    while (resultSet.next()) {
+                        int count = resultSet.getInt("COUNT");
+                        String status = resultSet.getString("STATUS");
+                        if (Objects.equals(status, "COMPLETED")) {
+                            subscriptionStatisticDTO.setCompletedDeviceCount(count);
+                        } else if (Objects.equals(status, "PENDING")) {
+                            subscriptionStatisticDTO.setPendingDevicesCount(count);
+                        } else {
+                            subscriptionStatisticDTO.setFailedDevicesCount(count);
+                        }
+                    }
+                }
+            }
+            return subscriptionStatisticDTO;
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection for getting subscription statistics";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred while running SQL for getting subscription statistics";
             log.error(msg, e);
             throw new ApplicationManagementDAOException(msg, e);
         }

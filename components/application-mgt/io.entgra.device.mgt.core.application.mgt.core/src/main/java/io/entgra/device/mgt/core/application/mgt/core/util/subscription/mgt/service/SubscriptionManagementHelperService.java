@@ -24,6 +24,7 @@ import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionData;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionInfo;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionResponse;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionStatistics;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionsDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException;
@@ -42,5 +43,6 @@ public interface SubscriptionManagementHelperService {
             throws ApplicationManagementException;
     SubscriptionResponse getSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
             throws ApplicationManagementException;
-    void getSubscriptionStatistics() throws ApplicationManagementException;
+    SubscriptionStatistics getSubscriptionStatistics(SubscriptionInfo subscriptionInfo)
+            throws ApplicationManagementException;
 }

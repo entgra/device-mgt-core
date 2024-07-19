@@ -1556,4 +1556,29 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
             throw new GroupManagementDAOException(msg, e);
         }
     }
+
+    @Override
+    public int getDeviceCount(String groupName, int tenantId) throws GroupManagementDAOException {
+        int deviceCount = 0;
+        try {
+            Connection connection = GroupManagementDAOFactory.getConnection();
+            String sql = "SELECT COUNT(d.ID) AS COUNT FROM DM_GROUP d INNER JOIN " +
+                    "DM_DEVICE_GROUP_MAP m ON  " +
+                    "d.ID = m.GROUP_ID WHERE TENANT_ID = ? AND d.GROUP_NAME = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1, tenantId);
+                preparedStatement.setString(2, groupName);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        deviceCount = resultSet.getInt("COUNT");
+                    }
+                }
+            }
+            return deviceCount;
+        } catch (SQLException e) {
+            String msg = "Error occurred while retrieving device count for the group: " + groupName;
+            log.error(msg, e);
+            throw new GroupManagementDAOException(msg, e);
+        }
+    }
 }

@@ -25,9 +25,11 @@ import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionFilter
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionInfo;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionResponse;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionStatistics;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionStatisticDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException;
 import io.entgra.device.mgt.core.application.mgt.common.exception.DBConnectionException;
 import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManagementDAOException;
@@ -44,6 +46,7 @@ import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProvide
 import io.entgra.device.mgt.core.device.mgt.core.service.GroupManagementProviderService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jetbrains.annotations.NotNull;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 
 import java.util.List;
@@ -126,7 +129,7 @@ public class GroupBasedSubscriptionManagementHelperServiceImpl implements Subscr
                 deviceSubscriptionDTOS = subscriptionDAO.getSubscriptionDetailsByDeviceIds(applicationReleaseDTO.getId(),
                         isUnsubscribe, tenantId, deviceIdsOwnByGroup, subscriptionInfo.getDeviceSubscriptionStatus(),
                         subscriptionInfo.getSubscriptionType(), deviceSubscriptionFilterCriteria.getTriggeredBy(),
-                        null, limit, offset);
+                        null, -1, -1);
 
                 deviceCount = subscriptionDAO.getDeviceSubscriptionCount(applicationReleaseDTO.getId(), isUnsubscribe, tenantId,
                         subscriptionInfo.getDeviceSubscriptionStatus(), subscriptionInfo.getSubscriptionType(),
@@ -179,7 +182,26 @@ public class GroupBasedSubscriptionManagementHelperServiceImpl implements Subscr
     }
 
     @Override
-    public void getSubscriptionStatistics() throws ApplicationManagementException {
-        // todo: analytics engine
+    public SubscriptionStatistics getSubscriptionStatistics(SubscriptionInfo subscriptionInfo)
+            throws ApplicationManagementException {
+        final boolean isUnsubscribe = Objects.equals("unsubscribe", subscriptionInfo.getSubscriptionStatus());
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        try {
+            ConnectionManagerUtil.openDBConnection();
+            SubscriptionStatisticDTO subscriptionStatisticDTO = subscriptionDAO.
+                    getSubscriptionStatistic(subscriptionInfo.getSubscriptionType(), isUnsubscribe, tenantId);
+            int allDeviceCount = HelperUtil.getGroupManagementProviderService().getDeviceCount(subscriptionInfo.getIdentifier());
+            return SubscriptionManagementHelperUtil.getSubscriptionStatistics(subscriptionStatisticDTO, allDeviceCount);
+        } catch (ApplicationManagementDAOException e) {
+            String msg = "Error encountered while getting subscription statistics for group: " + subscriptionInfo.getIdentifier();
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } catch (GroupManagementException e) {
+            String msg = "Error encountered while getting device subscription for group: " + subscriptionInfo.getIdentifier();
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
     }
 }
