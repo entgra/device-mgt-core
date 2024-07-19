@@ -20,7 +20,6 @@
 package io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt;
 
 import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscription;
-import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionData;
 import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionFilterCriteria;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionData;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionInfo;
@@ -30,6 +29,7 @@ import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -56,6 +56,10 @@ public class SubscriptionManagementHelperUtil {
                 deviceSubscription.setDeviceIdentifier(device.getDeviceIdentifier());
                 deviceSubscription.setDeviceOwner(device.getEnrolmentInfo().getOwner());
                 deviceSubscription.setDeviceType(device.getType());
+                deviceSubscription.setDeviceName(device.getName());
+                deviceSubscription.setDeviceStatus(device.getEnrolmentInfo().getStatus().name());
+                deviceSubscription.setOwnershipType(device.getEnrolmentInfo().getOwnership().name());
+                deviceSubscription.setDateOfLastUpdate(new Timestamp(device.getEnrolmentInfo().getDateOfLastUpdate()));
                 SubscriptionData subscriptionData = new SubscriptionData();
                 subscriptionData.setTriggeredBy(deviceSubscriptionDTO.getActionTriggeredFrom());
                 subscriptionData.setTriggeredAt(deviceSubscriptionDTO.getSubscribedTimestamp());

@@ -19,13 +19,25 @@
 
 package io.entgra.device.mgt.core.application.mgt.common;
 
+import java.sql.Timestamp;
+
 public class DeviceSubscription {
+    private String deviceName;
     private String deviceIdentifier;
     private String deviceStatus;
     private String deviceOwner;
     private String deviceType;
     private String ownershipType;
+    private Timestamp dateOfLastUpdate;
     private SubscriptionData subscriptionData;
+
+    public String getDeviceName() {
+        return deviceName;
+    }
+
+    public void setDeviceName(String deviceName) {
+        this.deviceName = deviceName;
+    }
 
     public String getDeviceIdentifier() {
         return deviceIdentifier;
@@ -65,6 +77,14 @@ public class DeviceSubscription {
 
     public void setOwnershipType(String ownershipType) {
         this.ownershipType = ownershipType;
+    }
+
+    public Timestamp getDateOfLastUpdate() {
+        return dateOfLastUpdate;
+    }
+
+    public void setDateOfLastUpdate(Timestamp dateOfLastUpdate) {
+        this.dateOfLastUpdate = dateOfLastUpdate;
     }
 
     public SubscriptionData getSubscriptionData() {
