@@ -103,12 +103,11 @@ public class RoleBasedSubscriptionManagementHelperServiceImpl implements Subscri
             String deviceSubscriptionStatus = SubscriptionManagementHelperUtil.getDeviceSubscriptionStatus(subscriptionInfo);
             DeviceSubscriptionFilterCriteria deviceSubscriptionFilterCriteria = subscriptionInfo.getDeviceSubscriptionFilterCriteria();
 
-            deviceSubscriptionDTOS = subscriptionDAO.getSubscriptionDetailsByDeviceIds(applicationReleaseDTO.getId(),
-                    isUnsubscribe, tenantId, deviceIdsOwnByRole, null,
-                    subscriptionInfo.getSubscriptionType(), deviceSubscriptionFilterCriteria.getTriggeredBy(),
-                    null, limit, offset);
-
             if (Objects.equals("NEW", deviceSubscriptionStatus)) {
+                deviceSubscriptionDTOS = subscriptionDAO.getSubscriptionDetailsByDeviceIds(applicationReleaseDTO.getId(),
+                        isUnsubscribe, tenantId, deviceIdsOwnByRole, null,
+                        subscriptionInfo.getSubscriptionType(), deviceSubscriptionFilterCriteria.getTriggeredBy(),
+                        null, -1, -1);
 
                 List<Integer> deviceIdsOfSubscription = deviceSubscriptionDTOS.stream().
                         map(DeviceSubscriptionDTO::getDeviceId).collect(Collectors.toList());
@@ -116,6 +115,11 @@ public class RoleBasedSubscriptionManagementHelperServiceImpl implements Subscri
                 List<Integer> newDeviceIds = HelperUtil.getDeviceManagementProviderService().
                         getDevicesNotInGivenIdList(deviceIdsOfSubscription, new PaginationRequest(offset, limit));
                 deviceSubscriptionDTOS = newDeviceIds.stream().map(DeviceSubscriptionDTO::new).collect(Collectors.toList());
+            } else {
+                deviceSubscriptionDTOS = subscriptionDAO.getSubscriptionDetailsByDeviceIds(applicationReleaseDTO.getId(),
+                        isUnsubscribe, tenantId, deviceIdsOwnByRole, null,
+                        subscriptionInfo.getSubscriptionType(), deviceSubscriptionFilterCriteria.getTriggeredBy(),
+                        null, limit, offset);
             }
 
             return SubscriptionManagementHelperUtil.getDeviceSubscriptionData(deviceSubscriptionDTOS,
@@ -166,6 +170,6 @@ public class RoleBasedSubscriptionManagementHelperServiceImpl implements Subscri
 
     @Override
     public void getSubscriptionStatistics() throws ApplicationManagementException {
-
+        // todo: analytics engine
     }
 }

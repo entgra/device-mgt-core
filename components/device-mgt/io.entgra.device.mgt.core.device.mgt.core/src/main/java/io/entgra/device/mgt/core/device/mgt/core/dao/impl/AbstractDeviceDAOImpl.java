@@ -3337,7 +3337,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         try {
             Connection connection = getConnection();
             String sql = "SELECT e.DEVICE_ID, d.DEVICE_IDENTIFICATION, e.STATUS, e.OWNER, d.NAME AS DEVICE_NAME, " +
-                    "e.DEVICE_TYPE FROM DM_DEVICE d INNER JOIN DM_ENROLMENT e " +
+                    "e.DEVICE_TYPE, e.OWNERSHIP, e.DATE_OF_LAST_UPDATE FROM DM_DEVICE d INNER JOIN DM_ENROLMENT e " +
                     "WHERE d.ID = e.DEVICE_ID AND d.TENANT_ID = ? AND e.DEVICE_ID IN (" + deviceIdStringList+ ") " +
                     "AND e.STATUS NOT IN ('DELETED', 'REMOVED')";
 
@@ -3379,6 +3379,8 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                         EnrolmentInfo enrolmentInfo = new EnrolmentInfo();
                         enrolmentInfo.setStatus(EnrolmentInfo.Status.valueOf(resultSet.getString("STATUS")));
                         enrolmentInfo.setOwner(resultSet.getString("OWNER"));
+                        enrolmentInfo.setOwnership(EnrolmentInfo.OwnerShip.valueOf(resultSet.getString("OWNERSHIP")));
+                        enrolmentInfo.setDateOfLastUpdate(resultSet.getTimestamp("DATE_OF_LAST_UPDATE").getTime());
                         device.setEnrolmentInfo(enrolmentInfo);
                         devices.add(device);
                     }
