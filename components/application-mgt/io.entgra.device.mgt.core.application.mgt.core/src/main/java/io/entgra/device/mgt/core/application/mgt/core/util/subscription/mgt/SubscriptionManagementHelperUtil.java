@@ -59,6 +59,7 @@ public class SubscriptionManagementHelperUtil {
             if (idx >= 0) {
                 DeviceSubscriptionDTO deviceSubscriptionDTO = deviceSubscriptionDTOS.get(idx);
                 DeviceSubscription deviceSubscription = new DeviceSubscription();
+                deviceSubscription.setDeviceId(device.getId());
                 deviceSubscription.setDeviceIdentifier(device.getDeviceIdentifier());
                 deviceSubscription.setDeviceOwner(device.getEnrolmentInfo().getOwner());
                 deviceSubscription.setDeviceType(device.getType());
@@ -102,6 +103,10 @@ public class SubscriptionManagementHelperUtil {
                 getPercentage(subscriptionStatisticDTO.getPendingDevicesCount(), allDeviceCount));
         subscriptionStatistics.setFailedPercentage(
                 getPercentage(subscriptionStatisticDTO.getFailedDevicesCount(), allDeviceCount));
+        subscriptionStatistics.setNewDevicesPercentage(getPercentage((allDeviceCount -
+                subscriptionStatisticDTO.getCompletedDeviceCount() -
+                subscriptionStatisticDTO.getPendingDevicesCount() -
+                subscriptionStatisticDTO.getFailedDevicesCount()), allDeviceCount));
         return subscriptionStatistics;
     }
 
@@ -109,6 +114,6 @@ public class SubscriptionManagementHelperUtil {
         if (denominator <= 0) {
             return 0.0f;
         }
-        return (float) numerator/denominator;
+        return ((float) numerator / (float) denominator) * 100;
     }
 }

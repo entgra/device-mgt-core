@@ -22,6 +22,7 @@ package io.entgra.device.mgt.core.application.mgt.common;
 import java.sql.Timestamp;
 
 public class DeviceSubscription {
+    private int deviceId;
     private String deviceName;
     private String deviceIdentifier;
     private String deviceStatus;
@@ -30,6 +31,14 @@ public class DeviceSubscription {
     private String ownershipType;
     private Timestamp dateOfLastUpdate;
     private SubscriptionData subscriptionData;
+
+    public int getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(int deviceId) {
+        this.deviceId = deviceId;
+    }
 
     public String getDeviceName() {
         return deviceName;

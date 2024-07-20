@@ -25,6 +25,7 @@ import io.entgra.device.mgt.core.application.mgt.common.ExecutionStatus;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionInfo;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionResponse;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionStatistics;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionType;
 import io.entgra.device.mgt.core.application.mgt.common.dto.CategorizedSubscriptionCountsDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
@@ -229,78 +230,13 @@ public interface SubscriptionManager {
      */
     Activity getOperationAppDetails(String id) throws SubscriptionManagementException;
 
-    /**
-     * Retrieves the group details associated with a given app release UUID.
-     *
-     * @param uuid the UUID of the app release
-     * @param subscriptionStatus the status of the subscription (subscribed or unsubscribed)
-     * @param offset the offset for the data set
-     * @param limit the limit for the data set
-     * @return {@link SubscriptionsDTO} which contains the details of subscriptions.
-     * @throws ApplicationManagementException if an error occurs while fetching the group details
-     */
-    public List<SubscriptionsDTO> getGroupsSubscriptionDetailsByUUID(String uuid, String subscriptionStatus,
-                                                                     PaginationRequest request, int offset,
-                                                                     int limit) throws ApplicationManagementException;
-
-    /**
-     * Retrieves the user details associated with a given app release UUID.
-     *
-     * @param uuid the UUID of the app release
-     * @param subscriptionStatus the status of the subscription (subscribed or unsubscribed)
-     * @param offset the offset for the data set
-     * @param limit the limit for the data set
-     * @return {@link SubscriptionsDTO} which contains the details of subscriptions.
-     * @throws ApplicationManagementException if an error occurs while fetching the user details
-    */
-    List<SubscriptionsDTO> getUserSubscriptionsByUUID(String uuid, String subscriptionStatus, PaginationRequest request,
-                                                      int offset, int limit) throws ApplicationManagementException;
-
-    /**
-     * Retrieves the Role details associated with a given app release UUID.
-     *
-     * @param uuid the UUID of the app release
-     * @param subscriptionStatus the status of the subscription (subscribed or unsubscribed)
-     * @param offset the offset for the data set
-     * @param limit the limit for the data set
-     * @return {@link SubscriptionsDTO} which contains the details of subscriptions.
-     * @throws ApplicationManagementException if an error occurs while fetching the role details
-     */
-//    List<SubscriptionsDTO> getRoleSubscriptionsByUUID(String uuid, String subscriptionStatus, PaginationRequest request,
-//                                                      int offset, int limit) throws ApplicationManagementException;
     SubscriptionResponse getSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
             throws ApplicationManagementException;
 
     SubscriptionResponse getStatusBaseSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
             throws ApplicationManagementException;
 
-    /**
-     * Retrieves the Device Subscription details associated with a given app release UUID.
-     *
-     * @param uuid the UUID of the app release
-     * @param subscriptionStatus the status of the subscription (subscribed or unsubscribed)
-     * @param offset the offset for the data set
-     * @param limit the limit for the data set
-     * @return {@link DeviceSubscriptionResponseDTO} which contains the details of device subscriptions.
-     * @throws ApplicationManagementException if an error occurs while fetching the device subscription details
-     */
-    DeviceSubscriptionResponseDTO getDeviceSubscriptionsDetailsByUUID(String uuid, String subscriptionStatus,
-                                                                      PaginationRequest request, int offset,
-                                                                      int limit) throws ApplicationManagementException;
-
-    /**
-     * Retrieves the All Device details associated with a given app release UUID.
-     *
-     * @param uuid the UUID of the app release
-     * @param subscriptionStatus the status of the subscription (subscribed or unsubscribed)
-     * @param offset the offset for the data set
-     * @param limit the limit for the data set
-     * @return {@link DeviceSubscriptionResponseDTO} which contains the details of device subscriptions.
-     * @throws ApplicationManagementException if an error occurs while fetching the subscription details
-     */
-    DeviceSubscriptionResponseDTO getAllSubscriptionDetailsByUUID(String uuid, String subscriptionStatus,
-                                                                  PaginationRequest request, int offset,
-                                                                  int limit) throws ApplicationManagementException;
+    SubscriptionStatistics getStatistics(SubscriptionInfo subscriptionInfo) throws ApplicationManagementException;
 
     /**
      * This method is responsible for retrieving device subscription details related to the given UUID.

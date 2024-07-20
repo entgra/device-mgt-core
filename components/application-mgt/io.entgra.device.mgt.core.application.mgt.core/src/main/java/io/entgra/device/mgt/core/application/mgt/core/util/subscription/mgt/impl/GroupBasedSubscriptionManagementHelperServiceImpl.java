@@ -171,7 +171,9 @@ public class GroupBasedSubscriptionManagementHelperServiceImpl implements Subscr
             }
             List<SubscriptionEntity> subscriptionEntities = subscriptionDAO.
                     getGroupsSubscriptionDetailsByAppReleaseID(applicationReleaseDTO.getId(), isUnsubscribe, tenantId, offset, limit);
-            return new SubscriptionResponse(subscriptionInfo.getApplicationUUID(), subscriptionEntities);
+            int subscriptionCount = isUnsubscribe ? subscriptionDAO.getGroupUnsubscriptionCount(applicationReleaseDTO.getId(), tenantId) :
+                    subscriptionDAO.getGroupSubscriptionCount(applicationReleaseDTO.getId(), tenantId);
+            return new SubscriptionResponse(subscriptionInfo.getApplicationUUID(), subscriptionCount, subscriptionEntities);
         } catch (DBConnectionException | ApplicationManagementDAOException e) {
             String msg = "Error encountered while connecting to the database";
             log.error(msg, e);

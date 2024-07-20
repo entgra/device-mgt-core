@@ -27,6 +27,7 @@ import io.entgra.device.mgt.core.application.mgt.common.SubscriptionResponse;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionStatistics;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionStatisticDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException;
 import io.entgra.device.mgt.core.application.mgt.common.exception.DBConnectionException;
 import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManagementDAOException;
@@ -61,7 +62,6 @@ public class UserBasedSubscriptionManagementHelperServiceImpl implements Subscri
         return UserBasedSubscriptionManagementHelperServiceImpl.UserBasedSubscriptionManagementHelperServiceImplHolder.INSTANCE;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public SubscriptionResponse getStatusBaseSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
             throws ApplicationManagementException {
@@ -72,17 +72,7 @@ public class UserBasedSubscriptionManagementHelperServiceImpl implements Subscri
 
         try {
             ConnectionManagerUtil.openDBConnection();
-            List<Device> deviceListOwnByUser = new ArrayList<>();
-            PaginationRequest paginationRequest = new PaginationRequest(offset, limit);
-            paginationRequest.setOwner(subscriptionInfo.getIdentifier());
-            paginationRequest.setStatusList(Arrays.asList("ACTIVE", "INACTIVE", "UNREACHABLE"));
-            PaginationResult ownDeviceIds = HelperUtil.getDeviceManagementProviderService().
-                    getAllDevicesIdList(paginationRequest);
-            if (ownDeviceIds.getData() != null) {
-                deviceListOwnByUser.addAll((List<Device>)ownDeviceIds.getData());
-            }
-
-            List<Integer> deviceIdsOwnByUser = deviceListOwnByUser.stream().map(Device::getId).collect(Collectors.toList());
+            List<Integer> deviceIdsOwnByUser = getDeviceIdsOwnByUser(subscriptionInfo.getIdentifier());
 
             ApplicationReleaseDTO applicationReleaseDTO = applicationReleaseDAO.
                     getReleaseByUUID(subscriptionInfo.getApplicationUUID(), tenantId);
@@ -155,7 +145,9 @@ public class UserBasedSubscriptionManagementHelperServiceImpl implements Subscri
             }
             List<SubscriptionEntity> subscriptionEntities = subscriptionDAO.
                     getUserSubscriptionsByAppReleaseID(applicationReleaseDTO.getId(), isUnsubscribe, tenantId, offset, limit);
-            return new SubscriptionResponse(subscriptionInfo.getApplicationUUID(), subscriptionEntities);
+            int subscriptionCount = isUnsubscribe ? subscriptionDAO.getUserUnsubscriptionCount(applicationReleaseDTO.getId(), tenantId) :
+                    subscriptionDAO.getUserSubscriptionCount(applicationReleaseDTO.getId(), tenantId);
+            return new SubscriptionResponse(subscriptionInfo.getApplicationUUID(), subscriptionCount, subscriptionEntities);
         } catch (DBConnectionException | ApplicationManagementDAOException e) {
             String msg = "Error encountered while connecting to the database";
             log.error(msg, e);
@@ -167,7 +159,34 @@ public class UserBasedSubscriptionManagementHelperServiceImpl implements Subscri
 
     @Override
     public SubscriptionStatistics getSubscriptionStatistics(SubscriptionInfo subscriptionInfo) throws ApplicationManagementException {
-        // todo: analytics engine
-        return null;
+        final boolean isUnsubscribe = Objects.equals("unsubscribe", subscriptionInfo.getSubscriptionStatus());
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        try {
+            ConnectionManagerUtil.openDBConnection();
+            SubscriptionStatisticDTO subscriptionStatisticDTO = subscriptionDAO.
+                    getSubscriptionStatistic(subscriptionInfo.getSubscriptionType(), isUnsubscribe, tenantId);
+            int allDeviceCount = getDeviceIdsOwnByUser(subscriptionInfo.getIdentifier()).size();
+            return SubscriptionManagementHelperUtil.getSubscriptionStatistics(subscriptionStatisticDTO, allDeviceCount);
+        } catch (DeviceManagementException | ApplicationManagementDAOException e) {
+            String msg = "Error encountered while getting subscription statistics for user: " + subscriptionInfo.getIdentifier();
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Integer> getDeviceIdsOwnByUser(String username) throws DeviceManagementException {
+        List<Device> deviceListOwnByUser = new ArrayList<>();
+        PaginationRequest paginationRequest = new PaginationRequest(-1, -1);
+        paginationRequest.setOwner(username);
+        paginationRequest.setStatusList(Arrays.asList("ACTIVE", "INACTIVE", "UNREACHABLE"));
+        PaginationResult ownDeviceIds = HelperUtil.getDeviceManagementProviderService().
+                getAllDevicesIdList(paginationRequest);
+        if (ownDeviceIds.getData() != null) {
+            deviceListOwnByUser.addAll((List<Device>)ownDeviceIds.getData());
+        }
+        return deviceListOwnByUser.stream().map(Device::getId).collect(Collectors.toList());
     }
 }

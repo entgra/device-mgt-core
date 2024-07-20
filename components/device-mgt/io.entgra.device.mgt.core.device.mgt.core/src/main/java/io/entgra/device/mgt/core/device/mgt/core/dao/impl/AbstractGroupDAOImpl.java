@@ -1564,7 +1564,7 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
             Connection connection = GroupManagementDAOFactory.getConnection();
             String sql = "SELECT COUNT(d.ID) AS COUNT FROM DM_GROUP d INNER JOIN " +
                     "DM_DEVICE_GROUP_MAP m ON  " +
-                    "d.ID = m.GROUP_ID WHERE TENANT_ID = ? AND d.GROUP_NAME = ?";
+                    "d.ID = m.GROUP_ID WHERE d.TENANT_ID = ? AND d.GROUP_NAME = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, tenantId);
                 preparedStatement.setString(2, groupName);

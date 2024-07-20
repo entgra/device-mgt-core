@@ -20,7 +20,6 @@
 package io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.impl;
 
 import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscription;
-import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionData;
 import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionFilterCriteria;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionInfo;
@@ -28,6 +27,7 @@ import io.entgra.device.mgt.core.application.mgt.common.SubscriptionResponse;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionStatistics;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionStatisticDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException;
 import io.entgra.device.mgt.core.application.mgt.common.exception.DBConnectionException;
 import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManagementDAOException;
@@ -66,7 +66,6 @@ public class RoleBasedSubscriptionManagementHelperServiceImpl implements Subscri
         return RoleBasedSubscriptionManagementHelperServiceImplHolder.INSTANCE;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public SubscriptionResponse getStatusBaseSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
             throws ApplicationManagementException {
@@ -77,23 +76,7 @@ public class RoleBasedSubscriptionManagementHelperServiceImpl implements Subscri
 
         try {
             ConnectionManagerUtil.openDBConnection();
-            UserStoreManager userStoreManager = DataHolder.getInstance().getRealmService().
-                    getTenantUserRealm(tenantId).getUserStoreManager();
-            String[] usersWithRole =
-                    userStoreManager.getUserListOfRole(subscriptionInfo.getIdentifier());
-            List<Device> deviceListOwnByRole = new ArrayList<>();
-            for (String user : usersWithRole) {
-                PaginationRequest paginationRequest = new PaginationRequest(offset, limit);
-                paginationRequest.setOwner(user);
-                paginationRequest.setStatusList(Arrays.asList("ACTIVE", "INACTIVE", "UNREACHABLE"));
-                PaginationResult ownDeviceIds = HelperUtil.getDeviceManagementProviderService().
-                        getAllDevicesIdList(paginationRequest);
-                if (ownDeviceIds.getData() != null) {
-                    deviceListOwnByRole.addAll((List<Device>)ownDeviceIds.getData());
-                }
-            }
-
-            List<Integer> deviceIdsOwnByRole = deviceListOwnByRole.stream().map(Device::getId).collect(Collectors.toList());
+            List<Integer> deviceIdsOwnByRole = getDeviceIdsOwnByRole(subscriptionInfo.getIdentifier(), tenantId);
 
             ApplicationReleaseDTO applicationReleaseDTO = applicationReleaseDAO.
                     getReleaseByUUID(subscriptionInfo.getApplicationUUID(), tenantId);
@@ -117,7 +100,8 @@ public class RoleBasedSubscriptionManagementHelperServiceImpl implements Subscri
                 List<Integer> deviceIdsOfSubscription = deviceSubscriptionDTOS.stream().
                         map(DeviceSubscriptionDTO::getDeviceId).collect(Collectors.toList());
 
-                List<Integer> newDeviceIds = deviceManagementProviderService.getDevicesNotInGivenIdList(deviceIdsOfSubscription, new PaginationRequest(offset, limit));
+                List<Integer> newDeviceIds = deviceManagementProviderService.getDevicesNotInGivenIdList(deviceIdsOfSubscription,
+                        new PaginationRequest(offset, limit));
                 deviceSubscriptionDTOS = newDeviceIds.stream().map(DeviceSubscriptionDTO::new).collect(Collectors.toList());
                 deviceCount = deviceManagementProviderService.getDeviceCountNotInGivenIdList(deviceIdsOfSubscription);
             } else {
@@ -169,7 +153,9 @@ public class RoleBasedSubscriptionManagementHelperServiceImpl implements Subscri
             }
             List<SubscriptionEntity> subscriptionEntities =  subscriptionDAO.
                     getRoleSubscriptionsByAppReleaseID(applicationReleaseDTO.getId(), isUnsubscribe, tenantId, offset, limit);
-            return new SubscriptionResponse(subscriptionInfo.getApplicationUUID(), subscriptionEntities);
+            int subscriptionCount = isUnsubscribe ? subscriptionDAO.getRoleUnsubscriptionCount(applicationReleaseDTO.getId(), tenantId) :
+                    subscriptionDAO.getRoleSubscriptionCount(applicationReleaseDTO.getId(), tenantId);
+            return new SubscriptionResponse(subscriptionInfo.getApplicationUUID(), subscriptionCount, subscriptionEntities);
         } catch (DBConnectionException | ApplicationManagementDAOException e) {
             String msg = "Error encountered while connecting to the database";
             log.error(msg, e);
@@ -181,6 +167,40 @@ public class RoleBasedSubscriptionManagementHelperServiceImpl implements Subscri
 
     @Override
     public SubscriptionStatistics getSubscriptionStatistics(SubscriptionInfo subscriptionInfo) throws ApplicationManagementException {
-        return null;
+        final boolean isUnsubscribe = Objects.equals("unsubscribe", subscriptionInfo.getSubscriptionStatus());
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        try {
+            ConnectionManagerUtil.openDBConnection();
+            SubscriptionStatisticDTO subscriptionStatisticDTO = subscriptionDAO.
+                    getSubscriptionStatistic(subscriptionInfo.getSubscriptionType(), isUnsubscribe, tenantId);
+            int allDeviceCount = getDeviceIdsOwnByRole(subscriptionInfo.getIdentifier(), tenantId).size();
+            return SubscriptionManagementHelperUtil.getSubscriptionStatistics(subscriptionStatisticDTO, allDeviceCount);
+        } catch (DeviceManagementException | ApplicationManagementDAOException | UserStoreException e) {
+            String msg = "Error encountered while getting subscription statistics for role: " + subscriptionInfo.getIdentifier();
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Integer> getDeviceIdsOwnByRole(String roleName, int tenantId) throws UserStoreException, DeviceManagementException {
+        UserStoreManager userStoreManager = DataHolder.getInstance().getRealmService().
+                getTenantUserRealm(tenantId).getUserStoreManager();
+        String[] usersWithRole =
+                userStoreManager.getUserListOfRole(roleName);
+        List<Device> deviceListOwnByRole = new ArrayList<>();
+        for (String user : usersWithRole) {
+            PaginationRequest paginationRequest = new PaginationRequest(-1, -1);
+            paginationRequest.setOwner(user);
+            paginationRequest.setStatusList(Arrays.asList("ACTIVE", "INACTIVE", "UNREACHABLE"));
+            PaginationResult ownDeviceIds = HelperUtil.getDeviceManagementProviderService().
+                    getAllDevicesIdList(paginationRequest);
+            if (ownDeviceIds.getData() != null) {
+                deviceListOwnByRole.addAll((List<Device>)ownDeviceIds.getData());
+            }
+        }
+        return deviceListOwnByRole.stream().map(Device::getId).collect(Collectors.toList());
     }
 }
