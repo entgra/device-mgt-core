@@ -20,6 +20,7 @@ package io.entgra.device.mgt.core.application.mgt.core.dao;
 import io.entgra.device.mgt.core.application.mgt.common.ExecutionStatus;
 import io.entgra.device.mgt.core.application.mgt.common.dto.GroupSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
+import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionStatisticDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionsDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
@@ -400,8 +401,10 @@ public interface SubscriptionDAO {
      */
     List<DeviceSubscriptionDTO> getSubscriptionDetailsByDeviceIds(int appReleaseId, boolean unsubscribe, int tenantId,
                                                                   List<Integer> deviceIds, String actionStatus, String actionType,
-                                                                  String actionTriggeredBy, String tabActionStatus,
-                                                                  int limit, int offset) throws ApplicationManagementDAOException;
+                                                                  String actionTriggeredBy, int limit, int offset) throws ApplicationManagementDAOException;
+    int getDeviceSubscriptionCount(int appReleaseId, boolean unsubscribe, int tenantId,
+                                   List<Integer> deviceIds, String actionStatus, String actionType,
+                                   String actionTriggeredBy) throws ApplicationManagementDAOException;
 
     /**
      * This method is used to get the details of device subscriptions related to a UUID.
@@ -419,6 +422,10 @@ public interface SubscriptionDAO {
      */
     List<DeviceSubscriptionDTO> getAllSubscriptionsDetails(int appReleaseId, boolean unsubscribe, int tenantId, String actionStatus, String actionType,
                                                            String actionTriggeredBy, int offset, int limit) throws ApplicationManagementDAOException;
+
+    int getAllSubscriptionsCount(int appReleaseId, boolean unsubscribe, int tenantId,
+                              String actionStatus, String actionType, String actionTriggeredBy)
+            throws ApplicationManagementDAOException;
 
     /**
      * This method is used to get the counts of all subscription types related to a UUID.
@@ -519,4 +526,8 @@ public interface SubscriptionDAO {
      * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
      */
     int getUserUnsubscriptionCount(int appReleaseId, int tenantId) throws ApplicationManagementDAOException;
+
+    SubscriptionStatisticDTO getSubscriptionStatistic(List<Integer> deviceIds, String subscriptionType, boolean isUnsubscribed,
+                                                      int tenantId) throws ApplicationManagementDAOException;
+
 }

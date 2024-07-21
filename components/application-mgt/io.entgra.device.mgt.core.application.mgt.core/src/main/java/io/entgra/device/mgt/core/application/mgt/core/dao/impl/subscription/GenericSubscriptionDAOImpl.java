@@ -17,9 +17,11 @@
  */
 package io.entgra.device.mgt.core.application.mgt.core.dao.impl.subscription;
 
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionMetadata;
 import io.entgra.device.mgt.core.application.mgt.common.dto.GroupSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceOperationDTO;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
+import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionStatisticDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionsDTO;
 import io.entgra.device.mgt.core.application.mgt.core.dao.SubscriptionDAO;
 import io.entgra.device.mgt.core.application.mgt.core.dao.impl.AbstractDAOImpl;
@@ -47,6 +49,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -1914,8 +1917,7 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
     @Override
     public List<DeviceSubscriptionDTO> getSubscriptionDetailsByDeviceIds(int appReleaseId, boolean unsubscribe, int tenantId,
                                                                          List<Integer> deviceIds, String actionStatus, String actionType,
-                                                                         String actionTriggeredBy, String tabActionStatus,
-                                                                         int offset, int limit) throws ApplicationManagementDAOException {
+                                                                         String actionTriggeredBy, int limit, int offset) throws ApplicationManagementDAOException {
         if (log.isDebugEnabled()) {
             log.debug("Getting device subscriptions for the application release id " + appReleaseId
                     + " and device ids " + deviceIds + " from the database");
@@ -2012,6 +2014,71 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
             throw new ApplicationManagementDAOException(msg, e);
         }
 
+    }
+
+    @Override
+    public int getDeviceSubscriptionCount(int appReleaseId, boolean unsubscribe, int tenantId,
+                                          List<Integer> deviceIds, String actionStatus, String actionType,
+                                          String actionTriggeredBy) throws ApplicationManagementDAOException {
+        int deviceCount = 0;
+        try {
+            Connection conn = this.getDBConnection();
+            StringBuilder sql = new StringBuilder("SELECT COUNT(DISTINCT DS.DM_DEVICE_ID) AS COUNT "
+                    + "FROM AP_DEVICE_SUBSCRIPTION DS "
+                    + "WHERE DS.AP_APP_RELEASE_ID = ? AND DS.UNSUBSCRIBED = ? AND DS.TENANT_ID = ? AND DS.DM_DEVICE_ID IN (" +
+                    deviceIds.stream().map(id -> "?").collect(Collectors.joining(",")) + ") ");
+
+            if (actionStatus != null && !actionStatus.isEmpty()) {
+                sql.append(" AND DS.STATUS = ? ");
+            }
+            if (actionType != null && !actionType.isEmpty()) {
+                sql.append(" AND DS.ACTION_TRIGGERED_FROM = ? ");
+            }
+            if (actionTriggeredBy != null && !actionTriggeredBy.isEmpty()) {
+                sql.append(" AND DS.SUBSCRIBED_BY LIKE ?");
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                int paramIdx = 1;
+                ps.setInt(paramIdx++, appReleaseId);
+                ps.setBoolean(paramIdx++, unsubscribe);
+                ps.setInt(paramIdx++, tenantId);
+                for (int i = 0; i < deviceIds.size(); i++) {
+                    ps.setInt(paramIdx++, deviceIds.get(i));
+                }
+
+                if (actionStatus != null && !actionStatus.isEmpty()) {
+                    ps.setString(paramIdx++, actionStatus);
+                }
+                if (actionType != null && !actionType.isEmpty()) {
+                    ps.setString(paramIdx++, actionType);
+                }
+                if (actionTriggeredBy != null && !actionTriggeredBy.isEmpty()) {
+                    ps.setString(paramIdx, "%" + actionTriggeredBy + "%");
+                }
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("Successfully retrieved device subscriptions for application release id "
+                                + appReleaseId + " and device ids " + deviceIds);
+                    }
+                    if (rs.next()) {
+                        deviceCount = rs.getInt("COUNT");
+                    }
+                    return deviceCount;
+                }
+            } catch (SQLException e) {
+                String msg = "Error occurred while running SQL to get device subscription data for application ID: " + appReleaseId
+                        + " and device ids: " + deviceIds + ".";
+                log.error(msg, e);
+                throw new ApplicationManagementDAOException(msg, e);
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection for getting device subscriptions for "
+                    + "application Id: " + appReleaseId + " and device ids: " + deviceIds + ".";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
     }
 
 //    @Override
@@ -2192,6 +2259,72 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                     }
                     return deviceSubscriptions;
                 }
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection for getting device subscription for "
+                    + "application Id: " + appReleaseId + ".";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred while running SQL to get device subscription data for application ID: " + appReleaseId;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public int getAllSubscriptionsCount(int appReleaseId, boolean unsubscribe, int tenantId,
+                                                                  String actionStatus, String actionType, String actionTriggeredBy)
+            throws ApplicationManagementDAOException {
+        int deviceCount = 0;
+        if (log.isDebugEnabled()) {
+            log.debug("Getting device subscriptions for the application release id " + appReleaseId
+                    + " from the database");
+        }
+
+        String actionTriggeredColumn = unsubscribe ? "DS.UNSUBSCRIBED_BY" : "DS.SUBSCRIBED_BY";
+        StringBuilder sql = new StringBuilder("SELECT COUNT(DISTINCT DS.DM_DEVICE_ID) AS COUNT "
+                + "FROM AP_DEVICE_SUBSCRIPTION DS "
+                + "WHERE DS.AP_APP_RELEASE_ID = ? AND DS.UNSUBSCRIBED = ? AND DS.TENANT_ID = ? ");
+
+        if (actionStatus != null && !actionStatus.isEmpty()) {
+            sql.append(" AND DS.STATUS = ? ");
+        }
+        if (actionType != null && !actionType.isEmpty()) {
+            sql.append(" AND DS.ACTION_TRIGGERED_FROM = ? ");
+        }
+        if (actionTriggeredBy != null && !actionTriggeredBy.isEmpty()) {
+            sql.append(" AND ").append(actionTriggeredColumn).append(" LIKE ?");
+        }
+
+        try {
+            Connection conn = this.getDBConnection();
+            try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                int paramIdx = 1;
+                ps.setInt(paramIdx++, appReleaseId);
+                ps.setBoolean(paramIdx++, unsubscribe);
+                ps.setInt(paramIdx++, tenantId);
+
+                if (actionStatus != null && !actionStatus.isEmpty()) {
+                    ps.setString(paramIdx++, actionStatus);
+                }
+                if (actionType != null && !actionType.isEmpty()) {
+                    ps.setString(paramIdx++, actionType);
+                }
+                if (actionTriggeredBy != null && !actionTriggeredBy.isEmpty()) {
+                    ps.setString(paramIdx++, "%" + actionTriggeredBy + "%");
+                }
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("Successfully retrieved device subscriptions for application release id "
+                                + appReleaseId);
+                    }
+                    if (rs.next()) {
+                        deviceCount = rs.getInt("COUNT");
+                    }
+                }
+                return deviceCount;
             }
         } catch (DBConnectionException e) {
             String msg = "Error occurred while obtaining the DB connection for getting device subscription for "
@@ -2592,6 +2725,58 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
         } catch (DBConnectionException e) {
             String msg = "Error occurred while obtaining the DB connection for getting user unsubscription count for appReleaseId: "
                     + appReleaseId + ".";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public SubscriptionStatisticDTO getSubscriptionStatistic(List<Integer> deviceIds, String subscriptionType,
+                                                             boolean isUnsubscribed, int tenantId)
+            throws ApplicationManagementDAOException {
+        SubscriptionStatisticDTO subscriptionStatisticDTO = new SubscriptionStatisticDTO();
+        String deviceIdsString = deviceIds.stream().map(String::valueOf).collect(Collectors.joining(","));
+        boolean doesAllEntriesRequired = true;
+        try {
+            Connection connection = getDBConnection();
+            String sql = "SELECT COUNT(DISTINCT ID) AS COUNT, " +
+                    "STATUS FROM AP_DEVICE_SUBSCRIPTION WHERE " +
+                    "TENANT_ID = ? AND UNSUBSCRIBED = ? AND DM_DEVICE_ID IN ("+ deviceIdsString + ")";
+            if (!Objects.equals(subscriptionType, SubscriptionMetadata.SubscriptionTypes.DEVICE)) {
+                sql = sql + " AND ACTION_TRIGGERED_FROM = ?";
+                doesAllEntriesRequired = false;
+            }
+            sql = sql + " GROUP BY (STATUS)";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                int idx = 1;
+
+                preparedStatement.setInt(idx++, tenantId);
+                preparedStatement.setBoolean(idx++, isUnsubscribed);
+                if (!doesAllEntriesRequired) {
+                    preparedStatement.setString(idx, subscriptionType);
+                }
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    while (resultSet.next()) {
+                        int count = resultSet.getInt("COUNT");
+                        String status = resultSet.getString("STATUS");
+                        if (Objects.equals(status, "COMPLETED")) {
+                            subscriptionStatisticDTO.setCompletedDeviceCount(count);
+                        } else if (Objects.equals(status, "PENDING")) {
+                            subscriptionStatisticDTO.setPendingDevicesCount(count);
+                        } else {
+                            subscriptionStatisticDTO.setFailedDevicesCount(count);
+                        }
+                    }
+                }
+            }
+            return subscriptionStatisticDTO;
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection for getting subscription statistics";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred while running SQL for getting subscription statistics";
             log.error(msg, e);
             throw new ApplicationManagementDAOException(msg, e);
         }

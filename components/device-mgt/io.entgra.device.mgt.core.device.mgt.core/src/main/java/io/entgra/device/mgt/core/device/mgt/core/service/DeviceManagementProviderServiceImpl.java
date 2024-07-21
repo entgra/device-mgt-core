@@ -5621,6 +5621,54 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
+    public List<Integer> getDevicesInGivenIdList(List<Integer> deviceIds, PaginationRequest paginationRequest)
+            throws DeviceManagementException {
+
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        if (paginationRequest == null) {
+            String msg = "Received null for pagination request";
+            log.error(msg);
+            throw new DeviceManagementException(msg);
+        }
+
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            return deviceDAO.getDevicesInGivenIdList(paginationRequest, deviceIds, tenantId);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error encountered while getting device ids";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error encountered while getting the database connection";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
+
+    @Override
+    public int getDeviceCountNotInGivenIdList(List<Integer> deviceIds)
+            throws DeviceManagementException {
+
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            return deviceDAO.getDeviceCountNotInGivenIdList(deviceIds, tenantId);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error encountered while getting device ids";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error encountered while getting the database connection";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
+
+    @Override
     public List<Device> getDevicesByDeviceIds(PaginationRequest paginationRequest, List<Integer> deviceIds)
             throws DeviceManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
