@@ -20,6 +20,7 @@
 package io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt;
 
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionInfo;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionMetadata;
 import io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.impl.DeviceBasedSubscriptionManagementHelperServiceImpl;
 import io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.impl.GroupBasedSubscriptionManagementHelperServiceImpl;
 import io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.impl.RoleBasedSubscriptionManagementHelperServiceImpl;
@@ -29,10 +30,7 @@ import io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.serv
 import java.util.Objects;
 
 public class SubscriptionManagementServiceProvider {
-    private SubscriptionManagementServiceProvider() {}
-
-    private static class SubscriptionManagementProviderServiceHolder {
-        private static final SubscriptionManagementServiceProvider INSTANCE = new SubscriptionManagementServiceProvider();
+    private SubscriptionManagementServiceProvider() {
     }
 
     public static SubscriptionManagementServiceProvider getInstance() {
@@ -44,10 +42,18 @@ public class SubscriptionManagementServiceProvider {
     }
 
     private SubscriptionManagementHelperService getSubscriptionManagementHelperService(String subscriptionType) {
-        if (Objects.equals(subscriptionType, "role")) return RoleBasedSubscriptionManagementHelperServiceImpl.getInstance();
-        if (Objects.equals(subscriptionType, "group")) return GroupBasedSubscriptionManagementHelperServiceImpl.getInstance();
-        if (Objects.equals(subscriptionType, "user")) return UserBasedSubscriptionManagementHelperServiceImpl.getInstance();
-        if (Objects.equals(subscriptionType, "device")) return DeviceBasedSubscriptionManagementHelperServiceImpl.getInstance();
+        if (Objects.equals(subscriptionType, SubscriptionMetadata.SubscriptionTypes.ROLE))
+            return RoleBasedSubscriptionManagementHelperServiceImpl.getInstance();
+        if (Objects.equals(subscriptionType, SubscriptionMetadata.SubscriptionTypes.GROUP))
+            return GroupBasedSubscriptionManagementHelperServiceImpl.getInstance();
+        if (Objects.equals(subscriptionType, SubscriptionMetadata.SubscriptionTypes.USER))
+            return UserBasedSubscriptionManagementHelperServiceImpl.getInstance();
+        if (Objects.equals(subscriptionType, SubscriptionMetadata.SubscriptionTypes.DEVICE))
+            return DeviceBasedSubscriptionManagementHelperServiceImpl.getInstance();
         throw new UnsupportedOperationException("Subscription type: " + subscriptionType + " not supports");
+    }
+
+    private static class SubscriptionManagementProviderServiceHolder {
+        private static final SubscriptionManagementServiceProvider INSTANCE = new SubscriptionManagementServiceProvider();
     }
 }

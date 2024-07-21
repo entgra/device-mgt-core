@@ -30,7 +30,6 @@ import io.entgra.device.mgt.core.application.mgt.core.util.HelperUtil;
 import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
-import org.jetbrains.annotations.NotNull;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -87,7 +86,7 @@ public class SubscriptionManagementHelperUtil {
 
     public static String getDeviceSubscriptionStatus(SubscriptionInfo subscriptionInfo) {
         return getDeviceSubscriptionStatus(subscriptionInfo.getDeviceSubscriptionFilterCriteria().
-                        getFilteringDeviceSubscriptionStatus(), subscriptionInfo.getDeviceSubscriptionStatus());
+                getFilteringDeviceSubscriptionStatus(), subscriptionInfo.getDeviceSubscriptionStatus());
     }
 
     public static String getDeviceSubscriptionStatus(String deviceSubscriptionStatusFilter, String deviceSubscriptionStatus) {

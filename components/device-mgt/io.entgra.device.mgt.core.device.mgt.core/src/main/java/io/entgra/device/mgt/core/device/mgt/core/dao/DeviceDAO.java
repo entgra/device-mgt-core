@@ -868,6 +868,9 @@ public interface DeviceDAO {
     List<Integer> getDevicesNotInGivenIdList(PaginationRequest request, List<Integer> deviceIds, int tenantId)
             throws DeviceManagementDAOException;
 
+    List<Integer> getDevicesInGivenIdList(PaginationRequest request, List<Integer> deviceIds, int tenantId)
+            throws DeviceManagementDAOException;
+
     int getDeviceCountNotInGivenIdList(List<Integer> deviceIds, int tenantId)
             throws DeviceManagementDAOException;
 

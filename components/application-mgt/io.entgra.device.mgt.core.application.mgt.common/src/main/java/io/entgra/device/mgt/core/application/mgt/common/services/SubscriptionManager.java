@@ -230,12 +230,34 @@ public interface SubscriptionManager {
      */
     Activity getOperationAppDetails(String id) throws SubscriptionManagementException;
 
+    /**
+     * Get subscription data describes by {@link SubscriptionInfo} entity
+     * @param subscriptionInfo {@link SubscriptionInfo}
+     * @param limit Limit value
+     * @param offset Offset value
+     * @return {@link SubscriptionResponse}
+     * @throws ApplicationManagementException Throws when error encountered while getting subscription data
+     */
     SubscriptionResponse getSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
             throws ApplicationManagementException;
 
+    /**
+     * Get status based subscription data describes by {@link SubscriptionInfo} entity
+     * @param subscriptionInfo {@link SubscriptionInfo}
+     * @param limit Limit value
+     * @param offset Offset value
+     * @return {@link SubscriptionResponse}
+     * @throws ApplicationManagementException Throws when error encountered while getting subscription data
+     */
     SubscriptionResponse getStatusBaseSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
             throws ApplicationManagementException;
 
+    /**
+     * Get subscription statistics related data describes by the {@link SubscriptionInfo}
+     * @param subscriptionInfo {@link SubscriptionInfo}
+     * @return {@link SubscriptionStatistics}
+     * @throws ApplicationManagementException Throws when error encountered while getting statistics
+     */
     SubscriptionStatistics getStatistics(SubscriptionInfo subscriptionInfo) throws ApplicationManagementException;
 
     /**

@@ -17,8 +17,20 @@
  *
  */
 
-package io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.bean;
+package io.entgra.device.mgt.core.application.mgt.common;
 
-public enum DeviceSubscriptionStatus {
-    COMPLETED, ERROR, NEW, SUBSCRIBED
+public class SubscriptionMetadata {
+    public static final class DeviceSubscriptionStatus {
+        public static final String NEW = "NEW";
+        public static final String PENDING = "PENDING";
+        public static final String COMPLETED = "COMPLETED";
+        public static final String FAILED = "FAILED";
+    }
+
+    public static final class SubscriptionTypes {
+        public static final String ROLE = "role";
+        public static final String DEVICE = "device";
+        public static final String GROUP = "group";
+        public static final String USER = "user";
+    }
 }

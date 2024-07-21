@@ -1698,6 +1698,14 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
         }
     }
 
+    /**
+     * Get subscription data describes by {@link SubscriptionInfo} entity
+     * @param subscriptionInfo {@link SubscriptionInfo}
+     * @param limit Limit value
+     * @param offset Offset value
+     * @return {@link SubscriptionResponse}
+     * @throws ApplicationManagementException Throws when error encountered while getting subscription data
+     */
     @Override
     public SubscriptionResponse getSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
             throws ApplicationManagementException {
@@ -1706,6 +1714,14 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
         return subscriptionManagementHelperService.getSubscriptions(subscriptionInfo, limit, offset);
     }
 
+    /**
+     * Get status based subscription data describes by {@link SubscriptionInfo} entity
+     * @param subscriptionInfo {@link SubscriptionInfo}
+     * @param limit Limit value
+     * @param offset Offset value
+     * @return {@link SubscriptionResponse}
+     * @throws ApplicationManagementException Throws when error encountered while getting subscription data
+     */
     @Override
     public SubscriptionResponse getStatusBaseSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
             throws ApplicationManagementException {
@@ -1714,6 +1730,12 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
         return subscriptionManagementHelperService.getStatusBaseSubscriptions(subscriptionInfo, limit, offset);
     }
 
+    /**
+     * Get subscription statistics related data describes by the {@link SubscriptionInfo}
+     * @param subscriptionInfo {@link SubscriptionInfo}
+     * @return {@link SubscriptionStatistics}
+     * @throws ApplicationManagementException Throws when error encountered while getting statistics
+     */
     @Override
     public SubscriptionStatistics getStatistics(SubscriptionInfo subscriptionInfo) throws ApplicationManagementException {
         return SubscriptionManagementServiceProvider.getInstance().getSubscriptionManagementHelperService(subscriptionInfo).
@@ -1791,13 +1813,9 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             List<CategorizedSubscriptionCountsDTO> subscriptionCounts = new ArrayList<>();
 
             subscriptionCounts.add(new CategorizedSubscriptionCountsDTO(
-                    "All",
+                    "Device",
                     subscriptionDAO.getAllSubscriptionCount(appReleaseId, tenantId),
                     subscriptionDAO.getAllUnsubscriptionCount(appReleaseId, tenantId)));
-            subscriptionCounts.add(new CategorizedSubscriptionCountsDTO(
-                    "Device",
-                    subscriptionDAO.getDeviceSubscriptionCount(appReleaseId, tenantId),
-                    subscriptionDAO.getDeviceUnsubscriptionCount(appReleaseId, tenantId)));
             subscriptionCounts.add(new CategorizedSubscriptionCountsDTO(
                     "Group",
                     subscriptionDAO.getGroupSubscriptionCount(appReleaseId, tenantId),

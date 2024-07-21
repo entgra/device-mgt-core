@@ -1155,6 +1155,9 @@ public interface DeviceManagementProviderService {
 
     List<Integer> getDevicesNotInGivenIdList(List<Integer> deviceIds, PaginationRequest paginationRequest)
             throws DeviceManagementException;
+
+    List<Integer> getDevicesInGivenIdList(List<Integer> deviceIds, PaginationRequest paginationRequest)
+            throws DeviceManagementException;
     int getDeviceCountNotInGivenIdList(List<Integer> deviceIds) throws DeviceManagementException;
 
     List<Device> getDevicesByDeviceIds(PaginationRequest paginationRequest, List<Integer> deviceIds)

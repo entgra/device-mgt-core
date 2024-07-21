@@ -23,6 +23,7 @@ import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscription;
 import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionFilterCriteria;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionInfo;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionMetadata;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionResponse;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionStatistics;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
@@ -53,11 +54,10 @@ import java.util.stream.Collectors;
 
 public class UserBasedSubscriptionManagementHelperServiceImpl implements SubscriptionManagementHelperService {
     private static final Log log = LogFactory.getLog(UserBasedSubscriptionManagementHelperServiceImpl.class);
-    private UserBasedSubscriptionManagementHelperServiceImpl() {}
-    private static class UserBasedSubscriptionManagementHelperServiceImplHolder {
-        private static final UserBasedSubscriptionManagementHelperServiceImpl INSTANCE
-                = new UserBasedSubscriptionManagementHelperServiceImpl();
+
+    private UserBasedSubscriptionManagementHelperServiceImpl() {
     }
+
     public static UserBasedSubscriptionManagementHelperServiceImpl getInstance() {
         return UserBasedSubscriptionManagementHelperServiceImpl.UserBasedSubscriptionManagementHelperServiceImplHolder.INSTANCE;
     }
@@ -87,29 +87,30 @@ public class UserBasedSubscriptionManagementHelperServiceImpl implements Subscri
             DeviceSubscriptionFilterCriteria deviceSubscriptionFilterCriteria = subscriptionInfo.getDeviceSubscriptionFilterCriteria();
             DeviceManagementProviderService deviceManagementProviderService = HelperUtil.getDeviceManagementProviderService();
 
-            if (Objects.equals("NEW", deviceSubscriptionStatus)) {
+            if (Objects.equals(SubscriptionMetadata.DeviceSubscriptionStatus.NEW, deviceSubscriptionStatus)) {
                 deviceSubscriptionDTOS = subscriptionDAO.getSubscriptionDetailsByDeviceIds(applicationReleaseDTO.getId(),
                         isUnsubscribe, tenantId, deviceIdsOwnByUser, null,
-                        subscriptionInfo.getSubscriptionType(), deviceSubscriptionFilterCriteria.getTriggeredBy(),
-                        null, -1, -1);
+                        subscriptionInfo.getSubscriptionType(), deviceSubscriptionFilterCriteria.getTriggeredBy(), -1, -1);
 
                 List<Integer> deviceIdsOfSubscription = deviceSubscriptionDTOS.stream().
                         map(DeviceSubscriptionDTO::getDeviceId).collect(Collectors.toList());
 
-                List<Integer> newDeviceIds = deviceManagementProviderService.getDevicesNotInGivenIdList(deviceIdsOfSubscription,
+                for (Integer deviceId : deviceIdsOfSubscription) {
+                    deviceIdsOwnByUser.remove(deviceId);
+                }
+                List<Integer> paginatedNewDeviceIds = deviceManagementProviderService.getDevicesInGivenIdList(deviceIdsOwnByUser,
                         new PaginationRequest(offset, limit));
-                deviceSubscriptionDTOS = newDeviceIds.stream().map(DeviceSubscriptionDTO::new).collect(Collectors.toList());
+                deviceSubscriptionDTOS = paginatedNewDeviceIds.stream().map(DeviceSubscriptionDTO::new).collect(Collectors.toList());
 
-                deviceCount = deviceManagementProviderService.getDeviceCountNotInGivenIdList(deviceIdsOfSubscription);
+                deviceCount = deviceIdsOwnByUser.size();
             } else {
                 deviceSubscriptionDTOS = subscriptionDAO.getSubscriptionDetailsByDeviceIds(applicationReleaseDTO.getId(),
                         isUnsubscribe, tenantId, deviceIdsOwnByUser, subscriptionInfo.getDeviceSubscriptionStatus(),
-                        subscriptionInfo.getSubscriptionType(), deviceSubscriptionFilterCriteria.getTriggeredBy(),
-                        null, limit, offset);
+                        subscriptionInfo.getSubscriptionType(), deviceSubscriptionFilterCriteria.getTriggeredBy(), limit, offset);
 
-                deviceCount = subscriptionDAO.getDeviceSubscriptionCount(applicationReleaseDTO.getId(), isUnsubscribe, tenantId,
-                        subscriptionInfo.getDeviceSubscriptionStatus(), subscriptionInfo.getSubscriptionType(),
-                        deviceSubscriptionFilterCriteria.getTriggeredBy());
+                deviceCount = subscriptionDAO.getDeviceSubscriptionCount(applicationReleaseDTO.getId(),
+                        isUnsubscribe, tenantId, deviceIdsOwnByUser, subscriptionInfo.getDeviceSubscriptionStatus(),
+                        subscriptionInfo.getSubscriptionType(), deviceSubscriptionFilterCriteria.getTriggeredBy());
             }
 
             List<DeviceSubscription> deviceSubscriptions = SubscriptionManagementHelperUtil.getDeviceSubscriptionData(deviceSubscriptionDTOS,
@@ -163,9 +164,10 @@ public class UserBasedSubscriptionManagementHelperServiceImpl implements Subscri
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         try {
             ConnectionManagerUtil.openDBConnection();
+            List<Integer> deviceIdsOwnByUser = getDeviceIdsOwnByUser(subscriptionInfo.getIdentifier());
             SubscriptionStatisticDTO subscriptionStatisticDTO = subscriptionDAO.
-                    getSubscriptionStatistic(subscriptionInfo.getSubscriptionType(), isUnsubscribe, tenantId);
-            int allDeviceCount = getDeviceIdsOwnByUser(subscriptionInfo.getIdentifier()).size();
+                    getSubscriptionStatistic(deviceIdsOwnByUser, subscriptionInfo.getSubscriptionType(), isUnsubscribe, tenantId);
+            int allDeviceCount = deviceIdsOwnByUser.size();
             return SubscriptionManagementHelperUtil.getSubscriptionStatistics(subscriptionStatisticDTO, allDeviceCount);
         } catch (DeviceManagementException | ApplicationManagementDAOException e) {
             String msg = "Error encountered while getting subscription statistics for user: " + subscriptionInfo.getIdentifier();
@@ -185,8 +187,13 @@ public class UserBasedSubscriptionManagementHelperServiceImpl implements Subscri
         PaginationResult ownDeviceIds = HelperUtil.getDeviceManagementProviderService().
                 getAllDevicesIdList(paginationRequest);
         if (ownDeviceIds.getData() != null) {
-            deviceListOwnByUser.addAll((List<Device>)ownDeviceIds.getData());
+            deviceListOwnByUser.addAll((List<Device>) ownDeviceIds.getData());
         }
         return deviceListOwnByUser.stream().map(Device::getId).collect(Collectors.toList());
+    }
+
+    private static class UserBasedSubscriptionManagementHelperServiceImplHolder {
+        private static final UserBasedSubscriptionManagementHelperServiceImpl INSTANCE
+                = new UserBasedSubscriptionManagementHelperServiceImpl();
     }
 }

@@ -401,9 +401,9 @@ public interface SubscriptionDAO {
      */
     List<DeviceSubscriptionDTO> getSubscriptionDetailsByDeviceIds(int appReleaseId, boolean unsubscribe, int tenantId,
                                                                   List<Integer> deviceIds, String actionStatus, String actionType,
-                                                                  String actionTriggeredBy, String tabActionStatus,
-                                                                  int limit, int offset) throws ApplicationManagementDAOException;
-    int getDeviceSubscriptionCount(int appReleaseId, boolean unsubscribe, int tenantId, String actionStatus, String actionType,
+                                                                  String actionTriggeredBy, int limit, int offset) throws ApplicationManagementDAOException;
+    int getDeviceSubscriptionCount(int appReleaseId, boolean unsubscribe, int tenantId,
+                                   List<Integer> deviceIds, String actionStatus, String actionType,
                                    String actionTriggeredBy) throws ApplicationManagementDAOException;
 
     /**
@@ -422,6 +422,10 @@ public interface SubscriptionDAO {
      */
     List<DeviceSubscriptionDTO> getAllSubscriptionsDetails(int appReleaseId, boolean unsubscribe, int tenantId, String actionStatus, String actionType,
                                                            String actionTriggeredBy, int offset, int limit) throws ApplicationManagementDAOException;
+
+    int getAllSubscriptionsCount(int appReleaseId, boolean unsubscribe, int tenantId,
+                              String actionStatus, String actionType, String actionTriggeredBy)
+            throws ApplicationManagementDAOException;
 
     /**
      * This method is used to get the counts of all subscription types related to a UUID.
@@ -523,7 +527,7 @@ public interface SubscriptionDAO {
      */
     int getUserUnsubscriptionCount(int appReleaseId, int tenantId) throws ApplicationManagementDAOException;
 
-    SubscriptionStatisticDTO getSubscriptionStatistic(String subscriptionType, boolean isUnsubscribed, int tenantId)
-            throws ApplicationManagementDAOException;
+    SubscriptionStatisticDTO getSubscriptionStatistic(List<Integer> deviceIds, String subscriptionType, boolean isUnsubscribed,
+                                                      int tenantId) throws ApplicationManagementDAOException;
 
 }

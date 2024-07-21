@@ -3328,6 +3328,33 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
     }
 
     @Override
+    public List<Integer> getDevicesInGivenIdList(PaginationRequest request, List<Integer> deviceIds, int tenantId)
+            throws DeviceManagementDAOException {
+        List<Integer> filteredDeviceIds = new ArrayList<>();
+        String deviceIdStringList = deviceIds.stream().map(String::valueOf).collect(Collectors.joining(","));
+        try {
+            Connection connection = getConnection();
+            String sql = "SELECT ID AS DEVICE_ID FROM DM_DEVICE WHERE ID IN " +
+                    "(" + deviceIdStringList + ") AND TENANT_ID = ? LIMIT ? OFFSET ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1, tenantId);
+                preparedStatement.setInt(2, request.getRowCount());
+                preparedStatement.setInt(3, request.getStartIndex());
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    while (resultSet.next()) {
+                        filteredDeviceIds.add(resultSet.getInt("DEVICE_ID"));
+                    }
+                }
+                return filteredDeviceIds;
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while retrieving device ids in: " + filteredDeviceIds;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
     public int getDeviceCountNotInGivenIdList(List<Integer> deviceIds, int tenantId)
             throws DeviceManagementDAOException {
         int deviceCount = 0;
