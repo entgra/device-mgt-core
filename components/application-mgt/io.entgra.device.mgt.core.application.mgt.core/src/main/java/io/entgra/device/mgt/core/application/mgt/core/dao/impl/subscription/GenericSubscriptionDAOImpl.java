@@ -1665,15 +1665,24 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                     "GS.AP_APP_RELEASE_ID " +
                     "FROM AP_GROUP_SUBSCRIPTION GS " +
                     "WHERE GS.AP_APP_RELEASE_ID = ? " +
-                    "AND GS.UNSUBSCRIBED = ? AND GS.TENANT_ID = ? " +
-                    "ORDER BY " + subscriptionStatusTime + " DESC " +
-                    "LIMIT ? OFFSET ?";
+                    "AND GS.UNSUBSCRIBED = ? " +
+                    "AND GS.TENANT_ID = ? " +
+                    "ORDER BY " + subscriptionStatusTime + " DESC ";
+
+            // Append limit and offset only if limit is not -1
+            if (limit != -1) {
+                sql = sql + " LIMIT ? OFFSET ?";
+            }
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, appReleaseId);
                 ps.setBoolean(2, unsubscribe);
                 ps.setInt(3, tenantId);
-                ps.setInt(4, limit);
-                ps.setInt(5, offset);
+
+                // Set limit and offset parameters only if limit is not -1
+                if (limit != -1) {
+                    ps.setInt(4, limit);
+                    ps.setInt(5, offset);
+                }
 
                 try (ResultSet rs = ps.executeQuery()) {
                     SubscriptionEntity subscriptionEntity;
@@ -2795,11 +2804,10 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
         try {
             Connection connection = getDBConnection();
             String sql = "SELECT COUNT(DISTINCT ID) AS COUNT, " +
-                    "STATUS " +
-                    "FROM AP_DEVICE_SUBSCRIPTION " +
+                    "STATUS FROM AP_DEVICE_SUBSCRIPTION " +
                     "WHERE TENANT_ID = ? " +
-                    "AND UNSUBSCRIBED = ? " +
-                    "AND DM_DEVICE_ID IN ("+
+                    "AND UNSUBSCRIBED = ?" +
+                    "AND DM_DEVICE_ID IN (" +
                     deviceIds.stream().map(id -> "?").collect(Collectors.joining(",")) + ")";
 
             if (!Objects.equals(subscriptionType, SubscriptionMetadata.SubscriptionTypes.DEVICE)) {
@@ -2851,4 +2859,39 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
             throw new ApplicationManagementDAOException(msg, e);
         }
     }
+
+    public int countSubscriptionsByStatus(int appReleaseId, int tenantId, String actionStatus, String actionTriggeredFrom) throws ApplicationManagementDAOException {
+        if (log.isDebugEnabled()) {
+            log.debug("Request received in DAO Layer to count device subscriptions by status and actionTriggeredFrom for the given AppReleaseID.");
+        }
+        try {
+            Connection conn = this.getDBConnection();
+            String sql = "SELECT COUNT(*) FROM AP_DEVICE_SUBSCRIPTION " +
+             "WHERE AP_APP_RELEASE_ID = ? " +
+             "AND TENANT_ID = ? " +
+             "AND STATUS = ?" +
+             " AND ACTION_TRIGGERED_FROM = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, appReleaseId);
+                ps.setInt(2, tenantId);
+                ps.setString(3, actionStatus);
+                ps.setString(4, actionTriggeredFrom);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
+                }
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection to count device subscriptions by status and action trigger.";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "SQL Error occurred while counting device subscriptions by status and action trigger.";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+        return 0;
+    }
+
 }

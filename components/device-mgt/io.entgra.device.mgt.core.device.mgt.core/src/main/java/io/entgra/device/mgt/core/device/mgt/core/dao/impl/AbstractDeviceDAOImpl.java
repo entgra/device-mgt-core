@@ -3306,9 +3306,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         List<Integer> filteredDeviceIds = new ArrayList<>();
         try {
             Connection connection = getConnection();
-            String sql = "SELECT ID AS DEVICE_ID " +
-                    "FROM DM_DEVICE " +
-                    "WHERE TENANT_ID = ?";
+            String sql = "SELECT ID AS DEVICE_ID FROM DM_DEVICE WHERE TENANT_ID = ?";
 
             if (deviceIds != null && !deviceIds.isEmpty()) {
                 sql += " AND ID NOT IN ( " + deviceIds.stream().map(id -> "?").collect(Collectors.joining(",")) + ")";
@@ -3521,7 +3519,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         boolean isDeviceNameProvided = false;
         try {
             Connection connection = getConnection();
-            String sql = "SELECT COUNT(DISTINCT e.DEVICE_ID) " +
+            String sql = "SELECT COUNT(DISTINCT e.DEVICE_ID) AS COUNT " +
                     "FROM DM_DEVICE d " +
                     "INNER JOIN DM_ENROLMENT e " +
                     "ON d.ID = e.DEVICE_ID " +
