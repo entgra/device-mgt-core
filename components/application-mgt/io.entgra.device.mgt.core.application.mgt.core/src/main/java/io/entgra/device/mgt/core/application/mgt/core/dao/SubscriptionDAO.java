@@ -400,10 +400,10 @@ public interface SubscriptionDAO {
      * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
      */
     List<DeviceSubscriptionDTO> getSubscriptionDetailsByDeviceIds(int appReleaseId, boolean unsubscribe, int tenantId,
-                                                                  List<Integer> deviceIds, String actionStatus, String actionType,
+                                                                  List<Integer> deviceIds, List<String> actionStatus, String actionType,
                                                                   String actionTriggeredBy, int limit, int offset) throws ApplicationManagementDAOException;
     int getDeviceSubscriptionCount(int appReleaseId, boolean unsubscribe, int tenantId,
-                                   List<Integer> deviceIds, String actionStatus, String actionType,
+                                   List<Integer> deviceIds, List<String> actionStatus, String actionType,
                                    String actionTriggeredBy) throws ApplicationManagementDAOException;
 
     /**
@@ -420,11 +420,11 @@ public interface SubscriptionDAO {
      * @return {@link DeviceOperationDTO} which contains the details of device subscriptions.
      * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
      */
-    List<DeviceSubscriptionDTO> getAllSubscriptionsDetails(int appReleaseId, boolean unsubscribe, int tenantId, String actionStatus, String actionType,
+    List<DeviceSubscriptionDTO> getAllSubscriptionsDetails(int appReleaseId, boolean unsubscribe, int tenantId, List<String> actionStatus, String actionType,
                                                            String actionTriggeredBy, int offset, int limit) throws ApplicationManagementDAOException;
 
     int getAllSubscriptionsCount(int appReleaseId, boolean unsubscribe, int tenantId,
-                              String actionStatus, String actionType, String actionTriggeredBy)
+                              List<String> actionStatus, String actionType, String actionTriggeredBy)
             throws ApplicationManagementDAOException;
 
     /**

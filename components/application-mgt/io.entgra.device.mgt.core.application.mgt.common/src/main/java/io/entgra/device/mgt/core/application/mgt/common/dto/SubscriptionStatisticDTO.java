@@ -20,9 +20,21 @@
 package io.entgra.device.mgt.core.application.mgt.common.dto;
 
 public class SubscriptionStatisticDTO {
-    private int completedDeviceCount;
-    private int pendingDevicesCount;
-    private int failedDevicesCount;
+    private int completedDeviceCount = 0;
+    private int pendingDevicesCount = 0;
+    private int failedDevicesCount = 0;
+
+    public void addToComplete(int count) {
+        completedDeviceCount += count;
+    }
+
+    public void addToPending(int count) {
+        pendingDevicesCount += count;
+    }
+
+    public void addToFailed(int count) {
+        failedDevicesCount += count ;
+    }
 
     public int getCompletedDeviceCount() {
         return completedDeviceCount;

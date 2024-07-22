@@ -23,6 +23,7 @@ import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscription;
 import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionFilterCriteria;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionData;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionInfo;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionMetadata;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionStatistics;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionStatisticDTO;
@@ -114,5 +115,9 @@ public class SubscriptionManagementHelperUtil {
             return 0.0f;
         }
         return ((float) numerator / (float) denominator) * 100;
+    }
+
+    public static List<String> getDBSubscriptionStatus(String deviceSubscriptionStatus) {
+        return SubscriptionMetadata.deviceSubscriptionStatusToDBSubscriptionStatusMap.get(deviceSubscriptionStatus);
     }
 }
