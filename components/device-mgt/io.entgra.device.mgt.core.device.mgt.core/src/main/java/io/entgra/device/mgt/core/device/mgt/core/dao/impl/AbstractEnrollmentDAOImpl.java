@@ -589,8 +589,11 @@ public abstract class AbstractEnrollmentDAOImpl implements EnrollmentDAO {
                         "e.DEVICE_IDENTIFICATION AS DEVICE_IDENTIFICATION " +
                         "FROM DM_ENROLMENT e " +
                         "JOIN DM_DEVICE d ON e.DEVICE_ID = d.ID " +
-                        "WHERE e.OWNER = ? AND e.TENANT_ID = ? AND d.DEVICE_TYPE_ID = ? AND e.STATUS IN (" + deviceFilters + ")");
+                        "WHERE e.OWNER = ? AND e.TENANT_ID = ? AND e.STATUS IN (" + deviceFilters + ")");
 
+        if (deviceTypeId != 0) {
+            sql.append(" AND d.DEVICE_TYPE_ID = ?");
+        }
         if (deviceOwner != null && !deviceOwner.isEmpty()) {
             sql.append(" AND e.OWNER LIKE ?");
         }
@@ -607,9 +610,11 @@ public abstract class AbstractEnrollmentDAOImpl implements EnrollmentDAO {
                 int index = 1;
                 stmt.setString(index++, owner);
                 stmt.setInt(index++, tenantId);
-                stmt.setInt(index++, deviceTypeId);
                 for (String status : allowingDeviceStatuses) {
                     stmt.setString(index++, status);
+                }
+                if (deviceTypeId != 0) {
+                    stmt.setInt(index++, deviceTypeId);
                 }
 
                 if (deviceOwner != null && !deviceOwner.isEmpty()) {
@@ -808,8 +813,11 @@ public abstract class AbstractEnrollmentDAOImpl implements EnrollmentDAO {
         StringBuilder sql = new StringBuilder("SELECT e.DEVICE_ID, e.OWNER, e.STATUS, e.DEVICE_TYPE, e.DEVICE_IDENTIFICATION " +
                 "FROM DM_ENROLMENT e " +
                 "JOIN DM_DEVICE d ON e.DEVICE_ID = d.ID " +
-                "WHERE e.TENANT_ID = ? AND e.STATUS IN (" + deviceFilters.toString() + ") AND d.DEVICE_TYPE_ID = ?");
+                "WHERE e.TENANT_ID = ? AND e.STATUS IN (" + deviceFilters.toString() + ")");
 
+        if (deviceTypeId != 0) {
+            sql.append(" AND d.DEVICE_TYPE_ID = ?");
+        }
         if (deviceOwner != null && !deviceOwner.isEmpty()) {
             sql.append(" AND e.OWNER LIKE ?");
         }
@@ -827,7 +835,9 @@ public abstract class AbstractEnrollmentDAOImpl implements EnrollmentDAO {
                 for (String status : allowingDeviceStatuses) {
                     stmt.setString(index++, status);
                 }
-                stmt.setInt(index++, deviceTypeId);
+                if (deviceTypeId != 0) {
+                    stmt.setInt(index++, deviceTypeId);
+                }
 
                 if (deviceOwner != null && !deviceOwner.isEmpty()) {
                     stmt.setString(index++, "%" + deviceOwner + "%");
