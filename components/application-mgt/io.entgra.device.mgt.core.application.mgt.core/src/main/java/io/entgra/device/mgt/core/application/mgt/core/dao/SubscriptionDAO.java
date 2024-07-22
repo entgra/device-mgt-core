@@ -529,5 +529,15 @@ public interface SubscriptionDAO {
 
     SubscriptionStatisticDTO getSubscriptionStatistic(List<Integer> deviceIds, String subscriptionType, boolean isUnsubscribed,
                                                       int tenantId) throws ApplicationManagementDAOException;
-
+    /**
+     * This method is used to get the counts of devices related to a UUID.
+     *
+     * @param appReleaseId the UUID of the application release.
+     * @param tenantId id of the current tenant.
+     * @param actionStatus categorized status.
+     * @param actionTriggeredFrom type of the action.
+     * @return {@link int} which contains the count of the subscription type
+     * @throws ApplicationManagementDAOException if connection establishment or SQL execution fails.
+     */
+    int countSubscriptionsByStatus(int appReleaseId, int tenantId, String actionStatus, String actionTriggeredFrom) throws ApplicationManagementDAOException;
 }
