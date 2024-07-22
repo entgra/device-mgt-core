@@ -3488,6 +3488,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
+    // todo: fix the join query
     @Override
     public int getDeviceCountByDeviceIds(PaginationRequest paginationRequest, List<Integer> deviceIds, int tenantId)
             throws DeviceManagementDAOException {
@@ -3500,8 +3501,8 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         boolean isDeviceNameProvided = false;
         try {
             Connection connection = getConnection();
-            String sql = "SELECT COUNT(DISTINCT e.DEVICE_ID) AS COUNT FROM DM_DEVICE d INNER JOIN DM_ENROLMENT e " +
-                    "WHERE d.ID = e.DEVICE_ID AND d.TENANT_ID = ? AND e.DEVICE_ID IN (" + deviceIdStringList+ ") " +
+            String sql = "SELECT COUNT(DISTINCT e.DEVICE_ID) FROM DM_ENROLMENT e " +
+                    "WHERE e.TENANT_ID = ? AND e.DEVICE_ID IN (" + deviceIdStringList+ ") " +
                     "AND e.STATUS NOT IN ('DELETED', 'REMOVED')";
 
             if (paginationRequest.getOwner() != null) {
