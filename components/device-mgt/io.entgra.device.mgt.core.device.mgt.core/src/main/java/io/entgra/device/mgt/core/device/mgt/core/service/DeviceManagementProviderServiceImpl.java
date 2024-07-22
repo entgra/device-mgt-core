@@ -5596,7 +5596,6 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     @Override
     public List<Integer> getDevicesNotInGivenIdList(List<Integer> deviceIds, PaginationRequest paginationRequest)
             throws DeviceManagementException {
-
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         if (paginationRequest == null) {
             String msg = "Received null for pagination request";

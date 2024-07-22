@@ -79,6 +79,7 @@ public class DeviceBasedSubscriptionManagementHelperServiceImpl implements Subsc
             String deviceSubscriptionStatus = SubscriptionManagementHelperUtil.getDeviceSubscriptionStatus(subscriptionInfo);
             DeviceSubscriptionFilterCriteria deviceSubscriptionFilterCriteria = subscriptionInfo.getDeviceSubscriptionFilterCriteria();
             DeviceManagementProviderService deviceManagementProviderService = HelperUtil.getDeviceManagementProviderService();
+            List<String> dbSubscriptionStatus = SubscriptionManagementHelperUtil.getDBSubscriptionStatus(subscriptionInfo.getDeviceSubscriptionStatus());
 
             if (Objects.equals(SubscriptionMetadata.DeviceSubscriptionStatus.NEW, deviceSubscriptionStatus)) {
                 deviceSubscriptionDTOS = subscriptionDAO.getAllSubscriptionsDetails(applicationReleaseDTO.
@@ -96,11 +97,11 @@ public class DeviceBasedSubscriptionManagementHelperServiceImpl implements Subsc
                 deviceCount = deviceManagementProviderService.getDeviceCountNotInGivenIdList(deviceIdsOfSubscription);
             } else {
                 deviceSubscriptionDTOS = subscriptionDAO.getAllSubscriptionsDetails(applicationReleaseDTO.
-                        getId(), isUnsubscribe, tenantId, subscriptionInfo.getDeviceSubscriptionStatus(), null,
+                        getId(), isUnsubscribe, tenantId, dbSubscriptionStatus, null,
                         deviceSubscriptionFilterCriteria.getTriggeredBy(), offset, limit);
 
                 deviceCount = subscriptionDAO.getAllSubscriptionsCount(applicationReleaseDTO.
-                                getId(), isUnsubscribe, tenantId, subscriptionInfo.getDeviceSubscriptionStatus(), null,
+                                getId(), isUnsubscribe, tenantId, dbSubscriptionStatus, null,
                         deviceSubscriptionFilterCriteria.getTriggeredBy());
             }
             List<DeviceSubscription> deviceSubscriptions = SubscriptionManagementHelperUtil.getDeviceSubscriptionData(deviceSubscriptionDTOS,

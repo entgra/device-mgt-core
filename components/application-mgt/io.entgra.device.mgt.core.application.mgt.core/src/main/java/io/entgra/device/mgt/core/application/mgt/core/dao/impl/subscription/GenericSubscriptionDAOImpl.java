@@ -46,6 +46,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1914,14 +1915,20 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
         }
     }
 
+    // passed the required list for the action status
     @Override
     public List<DeviceSubscriptionDTO> getSubscriptionDetailsByDeviceIds(int appReleaseId, boolean unsubscribe, int tenantId,
-                                                                         List<Integer> deviceIds, String actionStatus, String actionType,
+                                                                         List<Integer> deviceIds, List<String> actionStatus, String actionType,
                                                                          String actionTriggeredBy, int limit, int offset) throws ApplicationManagementDAOException {
         if (log.isDebugEnabled()) {
             log.debug("Getting device subscriptions for the application release id " + appReleaseId
                     + " and device ids " + deviceIds + " from the database");
         }
+
+        if (deviceIds == null || deviceIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         try {
             Connection conn = this.getDBConnection();
             String subscriptionStatusTime = unsubscribe ? "DS.UNSUBSCRIBED_TIMESTAMP" : "DS.SUBSCRIBED_TIMESTAMP";
@@ -1940,7 +1947,8 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                     deviceIds.stream().map(id -> "?").collect(Collectors.joining(",")) + ") ");
 
             if (actionStatus != null && !actionStatus.isEmpty()) {
-                sql.append(" AND DS.STATUS = ? ");
+                sql.append(" AND DS.STATUS IN (").
+                        append(actionStatus.stream().map(status -> "?").collect(Collectors.joining(","))).append(") ");
             }
             if (actionType != null && !actionType.isEmpty()) {
                 sql.append(" AND DS.ACTION_TRIGGERED_FROM = ? ");
@@ -1961,16 +1969,20 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                 ps.setInt(paramIdx++, appReleaseId);
                 ps.setBoolean(paramIdx++, unsubscribe);
                 ps.setInt(paramIdx++, tenantId);
-                for (int i = 0; i < deviceIds.size(); i++) {
-                    ps.setInt(paramIdx++, deviceIds.get(i));
+                for (Integer deviceId : deviceIds) {
+                    ps.setInt(paramIdx++, deviceId);
                 }
 
                 if (actionStatus != null && !actionStatus.isEmpty()) {
-                    ps.setString(paramIdx++, actionStatus);
+                    for (String status : actionStatus) {
+                        ps.setString(paramIdx++, status);
+                    }
                 }
+
                 if (actionType != null && !actionType.isEmpty()) {
                     ps.setString(paramIdx++, actionType);
                 }
+
                 if (actionTriggeredBy != null && !actionTriggeredBy.isEmpty()) {
                     ps.setString(paramIdx++, "%" + actionTriggeredBy + "%");
                 }
@@ -2018,9 +2030,12 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
 
     @Override
     public int getDeviceSubscriptionCount(int appReleaseId, boolean unsubscribe, int tenantId,
-                                          List<Integer> deviceIds, String actionStatus, String actionType,
+                                          List<Integer> deviceIds, List<String> actionStatus, String actionType,
                                           String actionTriggeredBy) throws ApplicationManagementDAOException {
         int deviceCount = 0;
+
+        if (deviceIds == null || deviceIds.isEmpty()) return deviceCount;
+
         try {
             Connection conn = this.getDBConnection();
             StringBuilder sql = new StringBuilder("SELECT COUNT(DISTINCT DS.DM_DEVICE_ID) AS COUNT "
@@ -2029,8 +2044,10 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                     deviceIds.stream().map(id -> "?").collect(Collectors.joining(",")) + ") ");
 
             if (actionStatus != null && !actionStatus.isEmpty()) {
-                sql.append(" AND DS.STATUS = ? ");
+                sql.append(" AND DS.STATUS IN (").
+                        append(actionStatus.stream().map(status -> "?").collect(Collectors.joining(","))).append(") ");
             }
+
             if (actionType != null && !actionType.isEmpty()) {
                 sql.append(" AND DS.ACTION_TRIGGERED_FROM = ? ");
             }
@@ -2043,16 +2060,20 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                 ps.setInt(paramIdx++, appReleaseId);
                 ps.setBoolean(paramIdx++, unsubscribe);
                 ps.setInt(paramIdx++, tenantId);
-                for (int i = 0; i < deviceIds.size(); i++) {
-                    ps.setInt(paramIdx++, deviceIds.get(i));
+                for (Integer deviceId : deviceIds) {
+                    ps.setInt(paramIdx++, deviceId);
                 }
 
                 if (actionStatus != null && !actionStatus.isEmpty()) {
-                    ps.setString(paramIdx++, actionStatus);
+                    for (String status : actionStatus) {
+                        ps.setString(paramIdx++, status);
+                    }
                 }
+
                 if (actionType != null && !actionType.isEmpty()) {
                     ps.setString(paramIdx++, actionType);
                 }
+
                 if (actionTriggeredBy != null && !actionTriggeredBy.isEmpty()) {
                     ps.setString(paramIdx, "%" + actionTriggeredBy + "%");
                 }
@@ -2175,7 +2196,7 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
 
     @Override
     public List<DeviceSubscriptionDTO> getAllSubscriptionsDetails(int appReleaseId, boolean unsubscribe, int tenantId,
-                                                                  String actionStatus, String actionType, String actionTriggeredBy,
+                                                                  List<String> actionStatus, String actionType, String actionTriggeredBy,
                                                                   int offset, int limit) throws ApplicationManagementDAOException {
         if (log.isDebugEnabled()) {
             log.debug("Getting device subscriptions for the application release id " + appReleaseId
@@ -2198,8 +2219,10 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                 + "WHERE DS.AP_APP_RELEASE_ID = ? AND DS.UNSUBSCRIBED = ? AND DS.TENANT_ID = ? ");
 
         if (actionStatus != null && !actionStatus.isEmpty()) {
-            sql.append(" AND DS.STATUS = ? ");
+            sql.append(" AND DS.STATUS IN (").
+                    append(actionStatus.stream().map(status -> "?").collect(Collectors.joining(","))).append(") ");
         }
+
         if (actionType != null && !actionType.isEmpty()) {
             sql.append(" AND DS.ACTION_TRIGGERED_FROM = ? ");
         }
@@ -2222,11 +2245,15 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                 ps.setInt(paramIdx++, tenantId);
 
                 if (actionStatus != null && !actionStatus.isEmpty()) {
-                    ps.setString(paramIdx++, actionStatus);
+                    for (String status : actionStatus) {
+                        ps.setString(paramIdx++, status);
+                    }
                 }
+
                 if (actionType != null && !actionType.isEmpty()) {
                     ps.setString(paramIdx++, actionType);
                 }
+
                 if (actionTriggeredBy != null && !actionTriggeredBy.isEmpty()) {
                     ps.setString(paramIdx++, "%" + actionTriggeredBy + "%");
                 }
@@ -2274,7 +2301,7 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
 
     @Override
     public int getAllSubscriptionsCount(int appReleaseId, boolean unsubscribe, int tenantId,
-                                                                  String actionStatus, String actionType, String actionTriggeredBy)
+                                                                  List<String> actionStatus, String actionType, String actionTriggeredBy)
             throws ApplicationManagementDAOException {
         int deviceCount = 0;
         if (log.isDebugEnabled()) {
@@ -2288,7 +2315,8 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                 + "WHERE DS.AP_APP_RELEASE_ID = ? AND DS.UNSUBSCRIBED = ? AND DS.TENANT_ID = ? ");
 
         if (actionStatus != null && !actionStatus.isEmpty()) {
-            sql.append(" AND DS.STATUS = ? ");
+            sql.append(" AND DS.STATUS IN (").
+                    append(actionStatus.stream().map(status -> "?").collect(Collectors.joining(","))).append(") ");
         }
         if (actionType != null && !actionType.isEmpty()) {
             sql.append(" AND DS.ACTION_TRIGGERED_FROM = ? ");
@@ -2306,8 +2334,11 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                 ps.setInt(paramIdx++, tenantId);
 
                 if (actionStatus != null && !actionStatus.isEmpty()) {
-                    ps.setString(paramIdx++, actionStatus);
+                    for (String status : actionStatus) {
+                        ps.setString(paramIdx++, status);
+                    }
                 }
+
                 if (actionType != null && !actionType.isEmpty()) {
                     ps.setString(paramIdx++, actionType);
                 }
@@ -2730,42 +2761,56 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
         }
     }
 
+    // todo: fixed the status
     @Override
     public SubscriptionStatisticDTO getSubscriptionStatistic(List<Integer> deviceIds, String subscriptionType,
                                                              boolean isUnsubscribed, int tenantId)
             throws ApplicationManagementDAOException {
         SubscriptionStatisticDTO subscriptionStatisticDTO = new SubscriptionStatisticDTO();
-        String deviceIdsString = deviceIds.stream().map(String::valueOf).collect(Collectors.joining(","));
+        if (deviceIds == null || deviceIds.isEmpty()) return subscriptionStatisticDTO;
+
         boolean doesAllEntriesRequired = true;
         try {
             Connection connection = getDBConnection();
             String sql = "SELECT COUNT(DISTINCT ID) AS COUNT, " +
                     "STATUS FROM AP_DEVICE_SUBSCRIPTION WHERE " +
-                    "TENANT_ID = ? AND UNSUBSCRIBED = ? AND DM_DEVICE_ID IN ("+ deviceIdsString + ")";
+                    "TENANT_ID = ? AND UNSUBSCRIBED = ? AND DM_DEVICE_ID IN ("+
+                    deviceIds.stream().map(id -> "?").collect(Collectors.joining(",")) + ")";
+
             if (!Objects.equals(subscriptionType, SubscriptionMetadata.SubscriptionTypes.DEVICE)) {
-                sql = sql + " AND ACTION_TRIGGERED_FROM = ?";
+                sql += " AND ACTION_TRIGGERED_FROM = ?";
                 doesAllEntriesRequired = false;
             }
-            sql = sql + " GROUP BY (STATUS)";
+
+            sql += " GROUP BY (STATUS)";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 int idx = 1;
 
                 preparedStatement.setInt(idx++, tenantId);
                 preparedStatement.setBoolean(idx++, isUnsubscribed);
+                for (Integer deviceId : deviceIds) {
+                    preparedStatement.setInt(idx++, deviceId);
+                }
+
                 if (!doesAllEntriesRequired) {
                     preparedStatement.setString(idx, subscriptionType);
                 }
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     while (resultSet.next()) {
+                        // add the error and in progress
                         int count = resultSet.getInt("COUNT");
                         String status = resultSet.getString("STATUS");
-                        if (Objects.equals(status, "COMPLETED")) {
-                            subscriptionStatisticDTO.setCompletedDeviceCount(count);
-                        } else if (Objects.equals(status, "PENDING")) {
-                            subscriptionStatisticDTO.setPendingDevicesCount(count);
-                        } else {
-                            subscriptionStatisticDTO.setFailedDevicesCount(count);
+
+                        if (SubscriptionMetadata.DBSubscriptionStatus.COMPLETED_STATUS_LIST.contains(status)) {
+                            subscriptionStatisticDTO.addToComplete(count);
+                        }
+
+                        if (SubscriptionMetadata.DBSubscriptionStatus.PENDING_STATUS_LIST.contains(status)) {
+                            subscriptionStatisticDTO.addToPending(count);
+                        }
+                        if (SubscriptionMetadata.DBSubscriptionStatus.ERROR_STATUS_LIST.contains(status)) {
+                            subscriptionStatisticDTO.addToFailed(count);
                         }
                     }
                 }
