@@ -26,6 +26,7 @@ import io.entgra.device.mgt.core.application.mgt.common.SubscriptionInfo;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionMetadata;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionResponse;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionStatistics;
+import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionStatisticDTO;
@@ -83,6 +84,13 @@ public class UserBasedSubscriptionManagementHelperServiceImpl implements Subscri
                 throw new NotFoundException(msg);
             }
 
+            ApplicationDTO applicationDTO = this.applicationDAO.getAppWithRelatedRelease(subscriptionInfo.getApplicationUUID(), tenantId);
+            if (applicationDTO == null) {
+                String msg = "Application not found for the release UUID: " + subscriptionInfo.getApplicationUUID();
+                log.error(msg);
+                throw new NotFoundException(msg);
+            }
+
             String deviceSubscriptionStatus = SubscriptionManagementHelperUtil.getDeviceSubscriptionStatus(subscriptionInfo);
             DeviceSubscriptionFilterCriteria deviceSubscriptionFilterCriteria = subscriptionInfo.getDeviceSubscriptionFilterCriteria();
             DeviceManagementProviderService deviceManagementProviderService = HelperUtil.getDeviceManagementProviderService();
@@ -110,11 +118,10 @@ public class UserBasedSubscriptionManagementHelperServiceImpl implements Subscri
                         null, deviceSubscriptionFilterCriteria.getTriggeredBy(), -1, -1);
 
                 deviceCount = SubscriptionManagementHelperUtil.getTotalDeviceSubscriptionCount(deviceSubscriptionDTOS,
-                        subscriptionInfo.getDeviceSubscriptionFilterCriteria());
+                        subscriptionInfo.getDeviceSubscriptionFilterCriteria(), applicationDTO.getDeviceTypeId());
             }
-
             List<DeviceSubscription> deviceSubscriptions = SubscriptionManagementHelperUtil.getDeviceSubscriptionData(deviceSubscriptionDTOS,
-                    subscriptionInfo.getDeviceSubscriptionFilterCriteria(), isUnsubscribe, limit, offset);
+                    subscriptionInfo.getDeviceSubscriptionFilterCriteria(), isUnsubscribe, applicationDTO.getDeviceTypeId(), limit, offset);
             return new SubscriptionResponse(subscriptionInfo.getApplicationUUID(), deviceCount, deviceSubscriptions);
         } catch (DeviceManagementException e) {
             String msg = "Error encountered while getting device details";

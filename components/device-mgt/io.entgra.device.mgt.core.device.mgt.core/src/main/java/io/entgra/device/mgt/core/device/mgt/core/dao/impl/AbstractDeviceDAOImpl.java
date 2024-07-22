@@ -3424,7 +3424,10 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             Connection connection = getConnection();
             String sql = "SELECT e.DEVICE_ID, d.DEVICE_IDENTIFICATION, e.STATUS, e.OWNER, d.NAME AS DEVICE_NAME, " +
                     "e.DEVICE_TYPE, e.OWNERSHIP, e.DATE_OF_LAST_UPDATE FROM DM_DEVICE d INNER JOIN DM_ENROLMENT e " +
-                    "WHERE d.ID = e.DEVICE_ID AND d.TENANT_ID = ? AND e.DEVICE_ID IN (" + deviceIdStringList+ ") " +
+                    "ON d.ID = e.DEVICE_ID " +
+                    "WHERE d.DEVICE_TYPE_ID = ? " +
+                    "AND d.TENANT_ID = ? " +
+                    "AND e.DEVICE_ID IN (" + deviceIdStringList+ ") " +
                     "AND e.STATUS NOT IN ('DELETED', 'REMOVED')";
 
             if (paginationRequest.getOwner() != null) {
@@ -3446,6 +3449,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 int parameterIdx = 1;
+                preparedStatement.setInt(parameterIdx++, paginationRequest.getDeviceTypeId());
                 preparedStatement.setInt(parameterIdx++, tenantId);
 
                 for (Integer deviceId : deviceIds) {
@@ -3488,6 +3492,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
+    // todo: fix the join query
     @Override
     public int getDeviceCountByDeviceIds(PaginationRequest paginationRequest, List<Integer> deviceIds, int tenantId)
             throws DeviceManagementDAOException {
@@ -3500,8 +3505,11 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         boolean isDeviceNameProvided = false;
         try {
             Connection connection = getConnection();
-            String sql = "SELECT COUNT(DISTINCT e.DEVICE_ID) AS COUNT FROM DM_DEVICE d INNER JOIN DM_ENROLMENT e " +
-                    "WHERE d.ID = e.DEVICE_ID AND d.TENANT_ID = ? AND e.DEVICE_ID IN (" + deviceIdStringList+ ") " +
+            String sql = "SELECT COUNT(DISTINCT e.DEVICE_ID) FROM DM_DEVICE d INNER JOIN DM_ENROLMENT e " +
+                    "ON d.ID = e.DEVICE_ID " +
+                    "WHERE e.TENANT_ID = ? " +
+                    "AND e.DEVICE_ID IN (" + deviceIdStringList+ ") " +
+                    "AND d.DEVICE_TYPE_ID = ? " +
                     "AND e.STATUS NOT IN ('DELETED', 'REMOVED')";
 
             if (paginationRequest.getOwner() != null) {
@@ -3527,6 +3535,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                     preparedStatement.setInt(parameterIdx++, deviceId);
                 }
 
+                preparedStatement.setInt(parameterIdx++, paginationRequest.getDeviceTypeId());
                 if (isOwnerProvided)
                     preparedStatement.setString(parameterIdx++, "%" + paginationRequest.getOwner() + "%");
                 if (isDeviceStatusProvided)

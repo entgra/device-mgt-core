@@ -131,10 +131,10 @@ public class GroupBasedSubscriptionManagementHelperServiceImpl implements Subscr
                         null, deviceSubscriptionFilterCriteria.getTriggeredBy(), -1, -1);
 
                 deviceCount = SubscriptionManagementHelperUtil.getTotalDeviceSubscriptionCount(deviceSubscriptionDTOS,
-                        subscriptionInfo.getDeviceSubscriptionFilterCriteria());
+                        subscriptionInfo.getDeviceSubscriptionFilterCriteria(), applicationDTO.getDeviceTypeId());
             }
             List<DeviceSubscription> deviceSubscriptions = SubscriptionManagementHelperUtil.getDeviceSubscriptionData(deviceSubscriptionDTOS,
-                    subscriptionInfo.getDeviceSubscriptionFilterCriteria(), isUnsubscribe, limit, offset);
+                    subscriptionInfo.getDeviceSubscriptionFilterCriteria(), isUnsubscribe, applicationDTO.getDeviceTypeId(), limit, offset);
             return new SubscriptionResponse(subscriptionInfo.getApplicationUUID(), deviceCount, deviceSubscriptions);
         } catch (GroupManagementException e) {
             String msg = "Error encountered while retrieving group details for group: " + subscriptionInfo.getIdentifier();
