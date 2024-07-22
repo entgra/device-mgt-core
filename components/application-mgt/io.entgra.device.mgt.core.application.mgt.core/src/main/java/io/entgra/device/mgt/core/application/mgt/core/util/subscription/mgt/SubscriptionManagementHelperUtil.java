@@ -38,6 +38,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class SubscriptionManagementHelperUtil {
+
+    /**
+     * Retrieves device subscription data based on the provided filters.
+     *
+     * @param deviceSubscriptionDTOS List of DeviceSubscriptionDTO objects.
+     * @param deviceSubscriptionFilterCriteria Filter criteria for device subscription.
+     * @param isUnsubscribed Boolean indicating whether to filter unsubscribed devices.
+     * @param deviceTypeId Device type ID.
+     * @param limit Limit for pagination.
+     * @param offset Offset for pagination.
+     * @return List of DeviceSubscription objects.
+     * @throws DeviceManagementException If an error occurs during device management.
+     */
     public static List<DeviceSubscription> getDeviceSubscriptionData(List<DeviceSubscriptionDTO> deviceSubscriptionDTOS,
                                                                      DeviceSubscriptionFilterCriteria deviceSubscriptionFilterCriteria,
                                                                      boolean isUnsubscribed, int deviceTypeId, int limit, int offset)
@@ -52,6 +65,15 @@ public class SubscriptionManagementHelperUtil {
         return populateDeviceData(deviceSubscriptionDTOS, devices, isUnsubscribed);
     }
 
+    /**
+     * Retrieves the total count of device subscriptions based on the provided filters.
+     *
+     * @param deviceSubscriptionDTOS List of DeviceSubscriptionDTO objects.
+     * @param deviceSubscriptionFilterCriteria Filter criteria for device subscription.
+     * @param deviceTypeId Device type ID.
+     * @return int Total count of device subscriptions.
+     * @throws DeviceManagementException If an error occurs during device management.
+     */
     public static int getTotalDeviceSubscriptionCount(List<DeviceSubscriptionDTO> deviceSubscriptionDTOS,
                                                       DeviceSubscriptionFilterCriteria deviceSubscriptionFilterCriteria, int deviceTypeId)
             throws DeviceManagementException {
@@ -64,6 +86,14 @@ public class SubscriptionManagementHelperUtil {
         return HelperUtil.getDeviceManagementProviderService().getDeviceCountByDeviceIds(paginationRequest, deviceIds);
     }
 
+    /**
+     * Populates device subscription data based on the provided devices and subscription DTOs.
+     *
+     * @param deviceSubscriptionDTOS List of DeviceSubscriptionDTO objects.
+     * @param devices List of Device objects.
+     * @param isUnsubscribed Boolean indicating whether to filter unsubscribed devices.
+     * @return List of DeviceSubscription objects.
+     */
     private static List<DeviceSubscription> populateDeviceData(List<DeviceSubscriptionDTO> deviceSubscriptionDTOS,
                                                                List<Device> devices, boolean isUnsubscribed) {
         List<DeviceSubscription> deviceSubscriptions = new ArrayList<>();
@@ -88,6 +118,13 @@ public class SubscriptionManagementHelperUtil {
         return deviceSubscriptions;
     }
 
+    /**
+     * Creates a SubscriptionData object based on the provided subscription DTO.
+     *
+     * @param isUnsubscribed Boolean indicating whether to filter unsubscribed devices.
+     * @param deviceSubscriptionDTO DeviceSubscriptionDTO object.
+     * @return SubscriptionData object.
+     */
     private static SubscriptionData getSubscriptionData(boolean isUnsubscribed, DeviceSubscriptionDTO deviceSubscriptionDTO) {
         SubscriptionData subscriptionData = new SubscriptionData();
         subscriptionData.setTriggeredBy(isUnsubscribed ? deviceSubscriptionDTO.getUnsubscribedBy() :
@@ -99,16 +136,36 @@ public class SubscriptionManagementHelperUtil {
         return subscriptionData;
     }
 
+    /**
+     * Retrieves the device subscription status based on the provided subscription info.
+     *
+     * @param subscriptionInfo SubscriptionInfo object.
+     * @return Device subscription status.
+     */
     public static String getDeviceSubscriptionStatus(SubscriptionInfo subscriptionInfo) {
         return getDeviceSubscriptionStatus(subscriptionInfo.getDeviceSubscriptionFilterCriteria().
                 getFilteringDeviceSubscriptionStatus(), subscriptionInfo.getDeviceSubscriptionStatus());
     }
 
+    /**
+     * Retrieves the device subscription status based on the provided filter and status.
+     *
+     * @param deviceSubscriptionStatusFilter Filtered device subscription status.
+     * @param deviceSubscriptionStatus Device subscription status.
+     * @return Device subscription status.
+     */
     public static String getDeviceSubscriptionStatus(String deviceSubscriptionStatusFilter, String deviceSubscriptionStatus) {
         return (deviceSubscriptionStatusFilter != null && !deviceSubscriptionStatusFilter.isEmpty()) ?
                 deviceSubscriptionStatusFilter : deviceSubscriptionStatus;
     }
 
+    /**
+     * Retrieves subscription statistics based on the provided subscription statistics DTO and device count.
+     *
+     * @param subscriptionStatisticDTO SubscriptionStatisticDTO object.
+     * @param allDeviceCount Total count of all devices.
+     * @return SubscriptionStatistics object.
+     */
     public static SubscriptionStatistics getSubscriptionStatistics(SubscriptionStatisticDTO subscriptionStatisticDTO, int allDeviceCount) {
         SubscriptionStatistics subscriptionStatistics = new SubscriptionStatistics();
         subscriptionStatistics.setCompletedPercentage(
@@ -124,6 +181,13 @@ public class SubscriptionManagementHelperUtil {
         return subscriptionStatistics;
     }
 
+    /**
+     * Calculates the percentages.
+     *
+     * @param numerator Numerator value.
+     * @param denominator Denominator value.
+     * @return Calculated percentage.
+     */
     public static float getPercentage(int numerator, int denominator) {
         if (denominator <= 0) {
             return 0.0f;
@@ -131,6 +195,12 @@ public class SubscriptionManagementHelperUtil {
         return ((float) numerator / (float) denominator) * 100;
     }
 
+    /**
+     * Retrieves database subscription statuses based on the provided device subscription status.
+     *
+     * @param deviceSubscriptionStatus Device subscription status.
+     * @return List of database subscription statuses.
+     */
     public static List<String> getDBSubscriptionStatus(String deviceSubscriptionStatus) {
         return SubscriptionMetadata.deviceSubscriptionStatusToDBSubscriptionStatusMap.get(deviceSubscriptionStatus);
     }

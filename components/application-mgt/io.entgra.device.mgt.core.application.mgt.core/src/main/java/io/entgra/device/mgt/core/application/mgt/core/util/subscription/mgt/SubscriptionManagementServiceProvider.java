@@ -33,14 +33,22 @@ public class SubscriptionManagementServiceProvider {
     private SubscriptionManagementServiceProvider() {
     }
 
-    public static SubscriptionManagementServiceProvider getInstance() {
-        return SubscriptionManagementProviderServiceHolder.INSTANCE;
-    }
-
+    /**
+     * Retrieves the appropriate SubscriptionManagementHelperService based on the provided SubscriptionInfo.
+     *
+     * @param subscriptionInfo SubscriptionInfo object containing the subscription type.
+     * @return SubscriptionManagementHelperService implementation based on the subscription type.
+     */
     public SubscriptionManagementHelperService getSubscriptionManagementHelperService(SubscriptionInfo subscriptionInfo) {
         return getSubscriptionManagementHelperService(subscriptionInfo.getSubscriptionType());
     }
 
+    /**
+     * Retrieves the appropriate SubscriptionManagementHelperService based on the subscription type.
+     *
+     * @param subscriptionType Type of the subscription.
+     * @return SubscriptionManagementHelperService implementation based on the subscription type.
+     */
     private SubscriptionManagementHelperService getSubscriptionManagementHelperService(String subscriptionType) {
         if (Objects.equals(subscriptionType, SubscriptionMetadata.SubscriptionTypes.ROLE))
             return RoleBasedSubscriptionManagementHelperServiceImpl.getInstance();
