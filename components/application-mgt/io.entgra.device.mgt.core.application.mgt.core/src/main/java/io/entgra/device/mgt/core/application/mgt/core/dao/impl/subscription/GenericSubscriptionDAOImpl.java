@@ -1656,10 +1656,17 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
             List<SubscriptionEntity> subscriptionEntities = new ArrayList<>();
 
             String subscriptionStatusTime = unsubscribe ? "GS.UNSUBSCRIBED_TIMESTAMP" : "GS.SUBSCRIBED_TIMESTAMP";
-            String sql = "SELECT GS.GROUP_NAME, GS.SUBSCRIBED_BY, GS.SUBSCRIBED_TIMESTAMP, GS.UNSUBSCRIBED, " +
-                    "GS.UNSUBSCRIBED_BY, GS.UNSUBSCRIBED_TIMESTAMP, GS.AP_APP_RELEASE_ID " +
+            String sql = "SELECT GS.GROUP_NAME, " +
+                    "GS.SUBSCRIBED_BY, " +
+                    "GS.SUBSCRIBED_TIMESTAMP, " +
+                    "GS.UNSUBSCRIBED, " +
+                    "GS.UNSUBSCRIBED_BY, " +
+                    "GS.UNSUBSCRIBED_TIMESTAMP, " +
+                    "GS.AP_APP_RELEASE_ID " +
                     "FROM AP_GROUP_SUBSCRIPTION GS " +
-                    "WHERE GS.AP_APP_RELEASE_ID = ? AND GS.UNSUBSCRIBED = ? AND GS.TENANT_ID = ? " +
+                    "WHERE GS.AP_APP_RELEASE_ID = ? " +
+                    "AND GS.UNSUBSCRIBED = ? " +
+                    "AND GS.TENANT_ID = ? " +
                     "ORDER BY " + subscriptionStatusTime + " DESC ";
 
             // Append limit and offset only if limit is not -1
@@ -1716,10 +1723,17 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
             List<SubscriptionEntity> subscriptionEntities = new ArrayList<>();
 
             String subscriptionStatusTime = unsubscribe ? "US.UNSUBSCRIBED_TIMESTAMP" : "US.SUBSCRIBED_TIMESTAMP";
-            String sql = "SELECT US.USER_NAME, US.SUBSCRIBED_BY, US.SUBSCRIBED_TIMESTAMP, US.UNSUBSCRIBED, " +
-                    "US.UNSUBSCRIBED_BY, US.UNSUBSCRIBED_TIMESTAMP, US.AP_APP_RELEASE_ID " +
+            String sql = "SELECT US.USER_NAME, " +
+                    "US.SUBSCRIBED_BY, " +
+                    "US.SUBSCRIBED_TIMESTAMP, " +
+                    "US.UNSUBSCRIBED, " +
+                    "US.UNSUBSCRIBED_BY, " +
+                    "US.UNSUBSCRIBED_TIMESTAMP, " +
+                    "US.AP_APP_RELEASE_ID " +
                     "FROM AP_USER_SUBSCRIPTION US " +
-                    "WHERE US.AP_APP_RELEASE_ID = ? AND US.UNSUBSCRIBED = ? AND US.TENANT_ID = ? " +
+                    "WHERE US.AP_APP_RELEASE_ID = ? " +
+                    "AND US.UNSUBSCRIBED = ? " +
+                    "AND US.TENANT_ID = ? " +
                     "ORDER BY " + subscriptionStatusTime + " DESC " +
                     "LIMIT ? OFFSET ?";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -1767,10 +1781,17 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
             List<SubscriptionEntity> subscriptionEntities = new ArrayList<>();
 
             String subscriptionStatusTime = unsubscribe ? "ARS.UNSUBSCRIBED_TIMESTAMP" : "ARS.SUBSCRIBED_TIMESTAMP";
-            String sql = "SELECT ARS.ROLE_NAME, ARS.SUBSCRIBED_BY, ARS.SUBSCRIBED_TIMESTAMP, ARS.UNSUBSCRIBED, " +
-                    "ARS.UNSUBSCRIBED_BY, ARS.UNSUBSCRIBED_TIMESTAMP, ARS.AP_APP_RELEASE_ID " +
+            String sql = "SELECT ARS.ROLE_NAME, " +
+                    "ARS.SUBSCRIBED_BY, " +
+                    "ARS.SUBSCRIBED_TIMESTAMP, " +
+                    "ARS.UNSUBSCRIBED, " +
+                    "ARS.UNSUBSCRIBED_BY, " +
+                    "ARS.UNSUBSCRIBED_TIMESTAMP, " +
+                    "ARS.AP_APP_RELEASE_ID " +
                     "FROM AP_ROLE_SUBSCRIPTION ARS " +
-                    "WHERE ARS.AP_APP_RELEASE_ID = ? AND ARS.UNSUBSCRIBED = ? AND ARS.TENANT_ID = ? " +
+                    "WHERE ARS.AP_APP_RELEASE_ID = ? " +
+                    "AND ARS.UNSUBSCRIBED = ? " +
+                    "AND ARS.TENANT_ID = ? " +
                     "ORDER BY " + subscriptionStatusTime + " DESC " +
                     "LIMIT ? OFFSET ?";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -1951,8 +1972,11 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                     + "DS.STATUS AS STATUS, "
                     + "DS.DM_DEVICE_ID AS DEVICE_ID "
                     + "FROM AP_DEVICE_SUBSCRIPTION DS "
-                    + "WHERE DS.AP_APP_RELEASE_ID = ? AND DS.UNSUBSCRIBED = ? AND DS.TENANT_ID = ? AND DS.DM_DEVICE_ID IN (" +
-                    deviceIds.stream().map(id -> "?").collect(Collectors.joining(",")) + ") ");
+                    + "WHERE DS.AP_APP_RELEASE_ID = ? "
+                    + "AND DS.UNSUBSCRIBED = ? "
+                    + "AND DS.TENANT_ID = ? "
+                    + "AND DS.DM_DEVICE_ID IN ("
+                    + deviceIds.stream().map(id -> "?").collect(Collectors.joining(",")) + ") ");
 
             if (actionStatus != null && !actionStatus.isEmpty()) {
                 sql.append(" AND DS.STATUS IN (").
@@ -2048,8 +2072,11 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
             Connection conn = this.getDBConnection();
             StringBuilder sql = new StringBuilder("SELECT COUNT(DISTINCT DS.DM_DEVICE_ID) AS COUNT "
                     + "FROM AP_DEVICE_SUBSCRIPTION DS "
-                    + "WHERE DS.AP_APP_RELEASE_ID = ? AND DS.UNSUBSCRIBED = ? AND DS.TENANT_ID = ? AND DS.DM_DEVICE_ID IN (" +
-                    deviceIds.stream().map(id -> "?").collect(Collectors.joining(",")) + ") ");
+                    + "WHERE DS.AP_APP_RELEASE_ID = ? "
+                    + "AND DS.UNSUBSCRIBED = ? "
+                    + "AND DS.TENANT_ID = ? "
+                    + "AND DS.DM_DEVICE_ID IN ("
+                    + deviceIds.stream().map(id -> "?").collect(Collectors.joining(",")) + ") ");
 
             if (actionStatus != null && !actionStatus.isEmpty()) {
                 sql.append(" AND DS.STATUS IN (").
@@ -2224,7 +2251,9 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                 + "DS.STATUS AS STATUS, "
                 + "DS.DM_DEVICE_ID AS DEVICE_ID "
                 + "FROM AP_DEVICE_SUBSCRIPTION DS "
-                + "WHERE DS.AP_APP_RELEASE_ID = ? AND DS.UNSUBSCRIBED = ? AND DS.TENANT_ID = ? ");
+                + "WHERE DS.AP_APP_RELEASE_ID = ? "
+                + "AND DS.UNSUBSCRIBED = ? "
+                + "AND DS.TENANT_ID = ? ");
 
         if (actionStatus != null && !actionStatus.isEmpty()) {
             sql.append(" AND DS.STATUS IN (").
@@ -2309,18 +2338,18 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
 
     @Override
     public int getAllSubscriptionsCount(int appReleaseId, boolean unsubscribe, int tenantId,
-                                                                  List<String> actionStatus, String actionType, String actionTriggeredBy)
+                                        List<String> actionStatus, String actionType, String actionTriggeredBy)
             throws ApplicationManagementDAOException {
-        int deviceCount = 0;
         if (log.isDebugEnabled()) {
             log.debug("Getting device subscriptions for the application release id " + appReleaseId
                     + " from the database");
         }
-
         String actionTriggeredColumn = unsubscribe ? "DS.UNSUBSCRIBED_BY" : "DS.SUBSCRIBED_BY";
         StringBuilder sql = new StringBuilder("SELECT COUNT(DISTINCT DS.DM_DEVICE_ID) AS COUNT "
                 + "FROM AP_DEVICE_SUBSCRIPTION DS "
-                + "WHERE DS.AP_APP_RELEASE_ID = ? AND DS.UNSUBSCRIBED = ? AND DS.TENANT_ID = ? ");
+                + "WHERE DS.AP_APP_RELEASE_ID = ? "
+                + "AND DS.UNSUBSCRIBED = ? "
+                + "AND DS.TENANT_ID = ? ");
 
         if (actionStatus != null && !actionStatus.isEmpty()) {
             sql.append(" AND DS.STATUS IN (").
@@ -2332,7 +2361,6 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
         if (actionTriggeredBy != null && !actionTriggeredBy.isEmpty()) {
             sql.append(" AND ").append(actionTriggeredColumn).append(" LIKE ?");
         }
-
         try {
             Connection conn = this.getDBConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
@@ -2346,24 +2374,19 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                         ps.setString(paramIdx++, status);
                     }
                 }
-
                 if (actionType != null && !actionType.isEmpty()) {
                     ps.setString(paramIdx++, actionType);
                 }
                 if (actionTriggeredBy != null && !actionTriggeredBy.isEmpty()) {
                     ps.setString(paramIdx++, "%" + actionTriggeredBy + "%");
                 }
-
                 try (ResultSet rs = ps.executeQuery()) {
                     if (log.isDebugEnabled()) {
                         log.debug("Successfully retrieved device subscriptions for application release id "
                                 + appReleaseId);
                     }
-                    if (rs.next()) {
-                        deviceCount = rs.getInt("COUNT");
-                    }
+                    return rs.next() ? rs.getInt("COUNT") : 0;
                 }
-                return deviceCount;
             }
         } catch (DBConnectionException e) {
             String msg = "Error occurred while obtaining the DB connection for getting device subscription for "
@@ -2781,8 +2804,10 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
         try {
             Connection connection = getDBConnection();
             String sql = "SELECT COUNT(DISTINCT ID) AS COUNT, " +
-                    "STATUS FROM AP_DEVICE_SUBSCRIPTION WHERE " +
-                    "TENANT_ID = ? AND UNSUBSCRIBED = ? AND DM_DEVICE_ID IN (" +
+                    "STATUS FROM AP_DEVICE_SUBSCRIPTION " +
+                    "WHERE TENANT_ID = ? " +
+                    "AND UNSUBSCRIBED = ?" +
+                    "AND DM_DEVICE_ID IN (" +
                     deviceIds.stream().map(id -> "?").collect(Collectors.joining(",")) + ")";
 
             if (!Objects.equals(subscriptionType, SubscriptionMetadata.SubscriptionTypes.DEVICE)) {
@@ -2841,7 +2866,11 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
         }
         try {
             Connection conn = this.getDBConnection();
-            String sql = "SELECT COUNT(*) FROM AP_DEVICE_SUBSCRIPTION WHERE AP_APP_RELEASE_ID = ? AND TENANT_ID = ? AND STATUS = ? AND ACTION_TRIGGERED_FROM = ?";
+            String sql = "SELECT COUNT(*) FROM AP_DEVICE_SUBSCRIPTION " +
+             "WHERE AP_APP_RELEASE_ID = ? " +
+             "AND TENANT_ID = ? " +
+             "AND STATUS = ?" +
+             " AND ACTION_TRIGGERED_FROM = ?";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, appReleaseId);
                 ps.setInt(2, tenantId);

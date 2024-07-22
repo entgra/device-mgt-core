@@ -3349,8 +3349,12 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         String deviceIdStringList = deviceIds.stream().map(id -> "?").collect(Collectors.joining(","));
         try {
             Connection connection = getConnection();
-            String sql = "SELECT ID AS DEVICE_ID FROM DM_DEVICE WHERE ID IN " +
-                    "(" + deviceIdStringList + ") AND TENANT_ID = ? LIMIT ? OFFSET ?";
+            String sql = "SELECT ID AS DEVICE_ID " +
+                    "FROM DM_DEVICE " +
+                    "WHERE ID IN (" + deviceIdStringList + ")" +
+                    " AND TENANT_ID = ? " +
+                    "LIMIT ? " +
+                    "OFFSET ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 int paraIdx = 1;
                 for (Integer deviceId : deviceIds) {
@@ -3380,7 +3384,9 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         int deviceCount = 0;
         try {
             Connection connection = getConnection();
-            String sql = "SELECT COUNT(ID) AS COUNT FROM DM_DEVICE WHERE TENANT_ID = ?";
+            String sql = "SELECT COUNT(ID) AS COUNT " +
+                    "FROM DM_DEVICE " +
+                    "WHERE TENANT_ID = ?";
 
             if (deviceIds != null && !deviceIds.isEmpty()) {
                 sql += " AND ID NOT IN ( " + deviceIds.stream().map(id -> "?").collect(Collectors.joining(",")) + ")";
@@ -3422,8 +3428,16 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         boolean isDeviceNameProvided = false;
         try {
             Connection connection = getConnection();
-            String sql = "SELECT e.DEVICE_ID, d.DEVICE_IDENTIFICATION, e.STATUS, e.OWNER, d.NAME AS DEVICE_NAME, " +
-                    "e.DEVICE_TYPE, e.OWNERSHIP, e.DATE_OF_LAST_UPDATE FROM DM_DEVICE d INNER JOIN DM_ENROLMENT e " +
+            String sql = "SELECT e.DEVICE_ID, " +
+                    "d.DEVICE_IDENTIFICATION, " +
+                    "e.STATUS, " +
+                    "e.OWNER, " +
+                    "d.NAME AS DEVICE_NAME, " +
+                    "e.DEVICE_TYPE, " +
+                    "e.OWNERSHIP, " +
+                    "e.DATE_OF_LAST_UPDATE " +
+                    "FROM DM_DEVICE d " +
+                    "INNER JOIN DM_ENROLMENT e " +
                     "ON d.ID = e.DEVICE_ID " +
                     "WHERE d.DEVICE_TYPE_ID = ? " +
                     "AND d.TENANT_ID = ? " +
@@ -3506,7 +3520,8 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         try {
             Connection connection = getConnection();
             String sql = "SELECT COUNT(DISTINCT e.DEVICE_ID) AS COUNT " +
-                    "FROM DM_DEVICE d INNER JOIN DM_ENROLMENT e " +
+                    "FROM DM_DEVICE d " +
+                    "INNER JOIN DM_ENROLMENT e " +
                     "ON d.ID = e.DEVICE_ID " +
                     "WHERE e.TENANT_ID = ? " +
                     "AND e.DEVICE_ID IN (" + deviceIdStringList+ ") " +
