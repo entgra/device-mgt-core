@@ -876,4 +876,7 @@ public interface DeviceDAO {
 
     List<Device> getDevicesByDeviceIds(PaginationRequest paginationRequest, List<Integer> deviceIds, int tenantId)
             throws DeviceManagementDAOException;
+
+    int getDeviceCountByDeviceIds(PaginationRequest paginationRequest, List<Integer> deviceIds, int tenantId)
+            throws DeviceManagementDAOException;
 }

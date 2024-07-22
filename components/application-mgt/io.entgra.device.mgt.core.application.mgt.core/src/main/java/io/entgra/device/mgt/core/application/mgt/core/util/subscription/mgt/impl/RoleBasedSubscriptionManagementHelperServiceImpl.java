@@ -112,13 +112,12 @@ public class RoleBasedSubscriptionManagementHelperServiceImpl implements Subscri
                         isUnsubscribe, tenantId, deviceIdsOwnByRole, dbSubscriptionStatus,
                         subscriptionInfo.getSubscriptionType(), deviceSubscriptionFilterCriteria.getTriggeredBy(), limit, offset);
 
-                deviceCount = subscriptionDAO.getDeviceSubscriptionCount(applicationReleaseDTO.getId(),
-                        isUnsubscribe, tenantId, deviceIdsOwnByRole, dbSubscriptionStatus,
-                        subscriptionInfo.getSubscriptionType(), deviceSubscriptionFilterCriteria.getTriggeredBy());
+                deviceCount = SubscriptionManagementHelperUtil.getTotalDeviceSubscriptionCount(deviceSubscriptionDTOS,
+                        subscriptionInfo.getDeviceSubscriptionFilterCriteria());
             }
             List<DeviceSubscription> deviceSubscriptions = SubscriptionManagementHelperUtil.
                     getDeviceSubscriptionData(deviceSubscriptionDTOS,
-                            subscriptionInfo.getDeviceSubscriptionFilterCriteria(), isUnsubscribe);
+                            subscriptionInfo.getDeviceSubscriptionFilterCriteria(), isUnsubscribe, limit, offset);
             return new SubscriptionResponse(subscriptionInfo.getApplicationUUID(), deviceCount, deviceSubscriptions);
 
         } catch (UserStoreException e) {
@@ -175,7 +174,7 @@ public class RoleBasedSubscriptionManagementHelperServiceImpl implements Subscri
             ConnectionManagerUtil.openDBConnection();
             List<Integer> deviceIdsOwnByRole = getDeviceIdsOwnByRole(subscriptionInfo.getIdentifier(), tenantId);
             SubscriptionStatisticDTO subscriptionStatisticDTO = subscriptionDAO.
-                    getSubscriptionStatistic(deviceIdsOwnByRole, subscriptionInfo.getSubscriptionType(), isUnsubscribe, tenantId);
+                    getSubscriptionStatistic(deviceIdsOwnByRole, null, isUnsubscribe, tenantId);
             int allDeviceCount = deviceIdsOwnByRole.size();
             return SubscriptionManagementHelperUtil.getSubscriptionStatistics(subscriptionStatisticDTO, allDeviceCount);
         } catch (DeviceManagementException | ApplicationManagementDAOException | UserStoreException e) {

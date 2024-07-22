@@ -107,15 +107,14 @@ public class UserBasedSubscriptionManagementHelperServiceImpl implements Subscri
             } else {
                 deviceSubscriptionDTOS = subscriptionDAO.getSubscriptionDetailsByDeviceIds(applicationReleaseDTO.getId(),
                         isUnsubscribe, tenantId, deviceIdsOwnByUser, dbSubscriptionStatus,
-                        null, deviceSubscriptionFilterCriteria.getTriggeredBy(), limit, offset);
+                        null, deviceSubscriptionFilterCriteria.getTriggeredBy(), -1, -1);
 
-                deviceCount = subscriptionDAO.getDeviceSubscriptionCount(applicationReleaseDTO.getId(),
-                        isUnsubscribe, tenantId, deviceIdsOwnByUser, dbSubscriptionStatus,
-                        null, deviceSubscriptionFilterCriteria.getTriggeredBy());
+                deviceCount = SubscriptionManagementHelperUtil.getTotalDeviceSubscriptionCount(deviceSubscriptionDTOS,
+                        subscriptionInfo.getDeviceSubscriptionFilterCriteria());
             }
 
             List<DeviceSubscription> deviceSubscriptions = SubscriptionManagementHelperUtil.getDeviceSubscriptionData(deviceSubscriptionDTOS,
-                    subscriptionInfo.getDeviceSubscriptionFilterCriteria(), isUnsubscribe);
+                    subscriptionInfo.getDeviceSubscriptionFilterCriteria(), isUnsubscribe, limit, offset);
             return new SubscriptionResponse(subscriptionInfo.getApplicationUUID(), deviceCount, deviceSubscriptions);
         } catch (DeviceManagementException e) {
             String msg = "Error encountered while getting device details";
@@ -167,7 +166,7 @@ public class UserBasedSubscriptionManagementHelperServiceImpl implements Subscri
             ConnectionManagerUtil.openDBConnection();
             List<Integer> deviceIdsOwnByUser = getDeviceIdsOwnByUser(subscriptionInfo.getIdentifier());
             SubscriptionStatisticDTO subscriptionStatisticDTO = subscriptionDAO.
-                    getSubscriptionStatistic(deviceIdsOwnByUser, subscriptionInfo.getSubscriptionType(), isUnsubscribe, tenantId);
+                    getSubscriptionStatistic(deviceIdsOwnByUser, null, isUnsubscribe, tenantId);
             int allDeviceCount = deviceIdsOwnByUser.size();
             return SubscriptionManagementHelperUtil.getSubscriptionStatistics(subscriptionStatisticDTO, allDeviceCount);
         } catch (DeviceManagementException | ApplicationManagementDAOException e) {

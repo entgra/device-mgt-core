@@ -40,15 +40,26 @@ import java.util.stream.Collectors;
 public class SubscriptionManagementHelperUtil {
     public static List<DeviceSubscription> getDeviceSubscriptionData(List<DeviceSubscriptionDTO> deviceSubscriptionDTOS,
                                                                      DeviceSubscriptionFilterCriteria deviceSubscriptionFilterCriteria,
-                                                                     boolean isUnsubscribed)
+                                                                     boolean isUnsubscribed, int limit, int offset)
             throws DeviceManagementException {
         List<Integer> deviceIds = deviceSubscriptionDTOS.stream().map(DeviceSubscriptionDTO::getDeviceId).collect(Collectors.toList());
-        PaginationRequest paginationRequest = new PaginationRequest(0, -1);
+        PaginationRequest paginationRequest = new PaginationRequest(offset, limit);
         paginationRequest.setDeviceName(deviceSubscriptionFilterCriteria.getName());
         paginationRequest.setDeviceStatus(deviceSubscriptionFilterCriteria.getDeviceStatus());
         paginationRequest.setOwner(deviceSubscriptionFilterCriteria.getOwner());
         List<Device> devices = HelperUtil.getDeviceManagementProviderService().getDevicesByDeviceIds(paginationRequest, deviceIds);
         return populateDeviceData(deviceSubscriptionDTOS, devices, isUnsubscribed);
+    }
+
+    public static int getTotalDeviceSubscriptionCount(List<DeviceSubscriptionDTO> deviceSubscriptionDTOS,
+                                                      DeviceSubscriptionFilterCriteria deviceSubscriptionFilterCriteria)
+            throws DeviceManagementException {
+        List<Integer> deviceIds = deviceSubscriptionDTOS.stream().map(DeviceSubscriptionDTO::getDeviceId).collect(Collectors.toList());
+        PaginationRequest paginationRequest = new PaginationRequest(-1, -1);
+        paginationRequest.setDeviceName(deviceSubscriptionFilterCriteria.getName());
+        paginationRequest.setDeviceStatus(deviceSubscriptionFilterCriteria.getDeviceStatus());
+        paginationRequest.setOwner(deviceSubscriptionFilterCriteria.getOwner());
+        return HelperUtil.getDeviceManagementProviderService().getDeviceCountByDeviceIds(paginationRequest, deviceIds);
     }
 
     private static List<DeviceSubscription> populateDeviceData(List<DeviceSubscriptionDTO> deviceSubscriptionDTOS,
@@ -82,6 +93,7 @@ public class SubscriptionManagementHelperUtil {
         subscriptionData.setTriggeredAt(deviceSubscriptionDTO.getSubscribedTimestamp());
         subscriptionData.setDeviceSubscriptionStatus(deviceSubscriptionDTO.getStatus());
         subscriptionData.setSubscriptionType(deviceSubscriptionDTO.getActionTriggeredFrom());
+        subscriptionData.setSubscriptionId(deviceSubscriptionDTO.getId());
         return subscriptionData;
     }
 

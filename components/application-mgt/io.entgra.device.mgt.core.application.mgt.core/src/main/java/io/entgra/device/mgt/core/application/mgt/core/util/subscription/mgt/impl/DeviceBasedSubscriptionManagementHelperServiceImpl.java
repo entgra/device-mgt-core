@@ -98,14 +98,13 @@ public class DeviceBasedSubscriptionManagementHelperServiceImpl implements Subsc
             } else {
                 deviceSubscriptionDTOS = subscriptionDAO.getAllSubscriptionsDetails(applicationReleaseDTO.
                         getId(), isUnsubscribe, tenantId, dbSubscriptionStatus, null,
-                        deviceSubscriptionFilterCriteria.getTriggeredBy(), offset, limit);
+                        deviceSubscriptionFilterCriteria.getTriggeredBy(), -1, -1);
 
-                deviceCount = subscriptionDAO.getAllSubscriptionsCount(applicationReleaseDTO.
-                                getId(), isUnsubscribe, tenantId, dbSubscriptionStatus, null,
-                        deviceSubscriptionFilterCriteria.getTriggeredBy());
+                deviceCount = SubscriptionManagementHelperUtil.getTotalDeviceSubscriptionCount(deviceSubscriptionDTOS,
+                        subscriptionInfo.getDeviceSubscriptionFilterCriteria());
             }
             List<DeviceSubscription> deviceSubscriptions = SubscriptionManagementHelperUtil.getDeviceSubscriptionData(deviceSubscriptionDTOS,
-                    subscriptionInfo.getDeviceSubscriptionFilterCriteria(), isUnsubscribe);
+                    subscriptionInfo.getDeviceSubscriptionFilterCriteria(), isUnsubscribe, limit, offset);
             return new SubscriptionResponse(subscriptionInfo.getApplicationUUID(), deviceCount, deviceSubscriptions);
         } catch (DeviceManagementException e) {
             String msg = "Error encountered while getting device details";

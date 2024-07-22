@@ -1162,4 +1162,6 @@ public interface DeviceManagementProviderService {
 
     List<Device> getDevicesByDeviceIds(PaginationRequest paginationRequest, List<Integer> deviceIds)
             throws DeviceManagementException;
+    public int getDeviceCountByDeviceIds(PaginationRequest paginationRequest, List<Integer> deviceIds)
+            throws DeviceManagementException;
 }

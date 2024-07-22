@@ -23,6 +23,7 @@ import java.sql.Timestamp;
 
 public class DeviceSubscription {
     private int deviceId;
+    private int subscriptionId;
     private String deviceName;
     private String deviceIdentifier;
     private String deviceStatus;
@@ -31,6 +32,14 @@ public class DeviceSubscription {
     private String ownershipType;
     private Timestamp dateOfLastUpdate;
     private SubscriptionData subscriptionData;
+
+    public int getSubscriptionId() {
+        return subscriptionId;
+    }
+
+    public void setSubscriptionId(int subscriptionId) {
+        this.subscriptionId = subscriptionId;
+    }
 
     public int getDeviceId() {
         return deviceId;
