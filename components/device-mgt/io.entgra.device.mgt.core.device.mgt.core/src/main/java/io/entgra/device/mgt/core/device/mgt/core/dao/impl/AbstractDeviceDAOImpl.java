@@ -3428,7 +3428,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                     "AND e.STATUS NOT IN ('DELETED', 'REMOVED')";
 
             if (paginationRequest.getOwner() != null) {
-                sql = sql + " AND e.OWNER = ?";
+                sql = sql + " AND e.OWNER LIKE ?";
                 isOwnerProvided = true;
             }
 
@@ -3438,9 +3438,11 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             }
 
             if (paginationRequest.getDeviceName() != null) {
-                sql = sql + " AND d.NAME = ?";
+                sql = sql + " AND d.NAME LIKE ?";
                 isDeviceNameProvided = true;
             }
+
+            sql = sql + " LIMIT ? OFFSET ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 int parameterIdx = 1;
@@ -3451,11 +3453,14 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 }
 
                 if (isOwnerProvided)
-                    preparedStatement.setString(parameterIdx++, paginationRequest.getOwner());
+                    preparedStatement.setString(parameterIdx++, "%" + paginationRequest.getOwner() + "%");
                 if (isDeviceStatusProvided)
                     preparedStatement.setString(parameterIdx++, paginationRequest.getDeviceStatus());
                 if (isDeviceNameProvided)
-                    preparedStatement.setString(parameterIdx, paginationRequest.getDeviceName());
+                    preparedStatement.setString(parameterIdx++, "%" + paginationRequest.getDeviceName() + "%");
+
+                preparedStatement.setInt(parameterIdx++, paginationRequest.getRowCount());
+                preparedStatement.setInt(parameterIdx, paginationRequest.getStartIndex());
 
                 try(ResultSet resultSet = preparedStatement.executeQuery()) {
                     Device device;
@@ -3478,6 +3483,66 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             return devices;
         } catch (SQLException e) {
             String msg = "Error occurred while retrieving devices for device ids in: " + deviceIds;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public int getDeviceCountByDeviceIds(PaginationRequest paginationRequest, List<Integer> deviceIds, int tenantId)
+            throws DeviceManagementDAOException {
+        int deviceCount = 0;
+        if (deviceIds == null || deviceIds.isEmpty()) return deviceCount;
+
+        String deviceIdStringList = deviceIds.stream().map(id -> "?").collect(Collectors.joining(","));
+        boolean isOwnerProvided = false;
+        boolean isDeviceStatusProvided = false;
+        boolean isDeviceNameProvided = false;
+        try {
+            Connection connection = getConnection();
+            String sql = "SELECT COUNT(DISTINCT e.DEVICE_ID) AS COUNT FROM DM_DEVICE d INNER JOIN DM_ENROLMENT e " +
+                    "WHERE d.ID = e.DEVICE_ID AND d.TENANT_ID = ? AND e.DEVICE_ID IN (" + deviceIdStringList+ ") " +
+                    "AND e.STATUS NOT IN ('DELETED', 'REMOVED')";
+
+            if (paginationRequest.getOwner() != null) {
+                sql = sql + " AND e.OWNER LIKE ?";
+                isOwnerProvided = true;
+            }
+
+            if (paginationRequest.getDeviceStatus() != null) {
+                sql = sql + " AND e.STATUS = ?";
+                isDeviceStatusProvided = true;
+            }
+
+            if (paginationRequest.getDeviceName() != null) {
+                sql = sql + " AND d.NAME LIKE ?";
+                isDeviceNameProvided = true;
+            }
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                int parameterIdx = 1;
+                preparedStatement.setInt(parameterIdx++, tenantId);
+
+                for (Integer deviceId : deviceIds) {
+                    preparedStatement.setInt(parameterIdx++, deviceId);
+                }
+
+                if (isOwnerProvided)
+                    preparedStatement.setString(parameterIdx++, "%" + paginationRequest.getOwner() + "%");
+                if (isDeviceStatusProvided)
+                    preparedStatement.setString(parameterIdx++, paginationRequest.getDeviceStatus());
+                if (isDeviceNameProvided)
+                    preparedStatement.setString(parameterIdx, "%" + paginationRequest.getDeviceName() + "%");
+
+                try(ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        deviceCount = resultSet.getInt("COUNT");
+                    }
+                }
+            }
+            return deviceCount;
+        } catch (SQLException e) {
+            String msg = "Error occurred while retrieving device count for device ids in: " + deviceIds;
             log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }

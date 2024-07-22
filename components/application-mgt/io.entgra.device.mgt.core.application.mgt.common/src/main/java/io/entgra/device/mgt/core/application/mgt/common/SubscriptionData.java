@@ -26,6 +26,7 @@ public class SubscriptionData {
     private String triggeredBy;
     private String subscriptionType;
     private Timestamp triggeredAt;
+    private int subscriptionId;
 
     public String getDeviceSubscriptionStatus() {
         return deviceSubscriptionStatus;
@@ -57,5 +58,13 @@ public class SubscriptionData {
 
     public void setTriggeredAt(Timestamp triggeredAt) {
         this.triggeredAt = triggeredAt;
+    }
+
+    public int getSubscriptionId() {
+        return subscriptionId;
+    }
+
+    public void setSubscriptionId(int subscriptionId) {
+        this.subscriptionId = subscriptionId;
     }
 }
