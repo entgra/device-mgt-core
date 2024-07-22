@@ -3505,7 +3505,8 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         boolean isDeviceNameProvided = false;
         try {
             Connection connection = getConnection();
-            String sql = "SELECT COUNT(DISTINCT e.DEVICE_ID) FROM DM_DEVICE d INNER JOIN DM_ENROLMENT e " +
+            String sql = "SELECT COUNT(DISTINCT e.DEVICE_ID) AS COUNT " +
+                    "FROM DM_DEVICE d INNER JOIN DM_ENROLMENT e " +
                     "ON d.ID = e.DEVICE_ID " +
                     "WHERE e.TENANT_ID = ? " +
                     "AND e.DEVICE_ID IN (" + deviceIdStringList+ ") " +
