@@ -20,8 +20,14 @@ package io.entgra.device.mgt.core.device.mgt.core.service;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.ConflictException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.dao.TenantDAO;
+import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceDetailsDTO;
+import io.entgra.device.mgt.core.device.mgt.core.dto.OwnerWithDeviceDTO;
+import io.entgra.device.mgt.core.device.mgt.core.dto.OperationDTO;
+import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.dao.OperationManagementDAOException;
+import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.dao.OperationManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.extensions.logger.spi.EntgraLogger;
 import io.entgra.device.mgt.core.notification.logger.DeviceEnrolmentLogContext;
 import io.entgra.device.mgt.core.notification.logger.impl.EntgraDeviceEnrolmentLoggerImpl;
@@ -120,6 +126,7 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceStatusDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceTypeDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.EnrollmentDAO;
+import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.dao.OperationDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import io.entgra.device.mgt.core.device.mgt.core.device.details.mgt.DeviceDetailsMgtException;
 import io.entgra.device.mgt.core.device.mgt.core.device.details.mgt.DeviceInformationManager;
@@ -173,6 +180,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     private final DeviceDAO deviceDAO;
     private final DeviceTypeDAO deviceTypeDAO;
     private final EnrollmentDAO enrollmentDAO;
+    private final OperationDAO operationDAO;
     private final ApplicationDAO applicationDAO;
     private MetadataDAO metadataDAO;
     private final DeviceStatusDAO deviceStatusDAO;
@@ -185,6 +193,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         this.applicationDAO = DeviceManagementDAOFactory.getApplicationDAO();
         this.deviceTypeDAO = DeviceManagementDAOFactory.getDeviceTypeDAO();
         this.enrollmentDAO = DeviceManagementDAOFactory.getEnrollmentDAO();
+        this.operationDAO = OperationManagementDAOFactory.getOperationDAO();
         this.metadataDAO = MetadataManagementDAOFactory.getMetadataDAO();
         this.deviceStatusDAO = DeviceManagementDAOFactory.getDeviceStatusDAO();
         this.tenantDao = DeviceManagementDAOFactory.getTenantDAO();
@@ -3909,6 +3918,10 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         DeviceCacheManagerImpl.getInstance().removeDeviceFromCache(deviceIdentifier, this.getTenantId());
     }
 
+    private void updateDeviceInCache(DeviceIdentifier deviceIdentifier, Device device) {
+        DeviceCacheManagerImpl.getInstance().updateDeviceInCache(deviceIdentifier, device, this.getTenantId());
+    }
+
     /***
      * This method removes a given list of devices from the cache
      * @param deviceList list of DeviceCacheKey objects
@@ -5334,6 +5347,384 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         } catch (TransactionManagementException e) {
             String msg = "Error while initiating transaction when trying to delete tenant info of '" + tenantId + "'";
             log.error(msg);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
+
+    @Override
+    public OwnerWithDeviceDTO getOwnersWithDeviceIds(String owner, int deviceTypeId, String deviceOwner, String deviceName, String deviceStatus)
+            throws DeviceManagementDAOException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        OwnerWithDeviceDTO ownerWithDeviceDTO;
+
+        List<String> allowingDeviceStatuses = Arrays.asList(EnrolmentInfo.Status.ACTIVE.toString(),
+                EnrolmentInfo.Status.INACTIVE.toString(), EnrolmentInfo.Status.UNREACHABLE.toString());
+
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            ownerWithDeviceDTO = this.enrollmentDAO.getOwnersWithDevices(owner, allowingDeviceStatuses,
+                    tenantId, deviceTypeId, deviceOwner, deviceName, deviceStatus);
+        } catch (DeviceManagementDAOException | SQLException e) {
+            String msg = "Error occurred while retrieving device IDs for owner: " + owner;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+        return ownerWithDeviceDTO;
+    }
+
+//    @Override
+//    public OwnerWithDeviceDTO getOwnersWithDeviceIds(String owner, int deviceTypeId, String deviceOwner, String deviceName, String deviceStatus)
+//            throws DeviceManagementDAOException {
+//        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+//        OwnerWithDeviceDTO ownerWithDeviceDTO;
+//
+//        List<String> allowingDeviceStatuses = new ArrayList<>();
+//        allowingDeviceStatuses.add(EnrolmentInfo.Status.ACTIVE.toString());
+//        allowingDeviceStatuses.add(EnrolmentInfo.Status.INACTIVE.toString());
+//        allowingDeviceStatuses.add(EnrolmentInfo.Status.UNREACHABLE.toString());
+//
+//        try {
+//            DeviceManagementDAOFactory.openConnection();
+//            ownerWithDeviceDTO = this.enrollmentDAO.getOwnersWithDevices(owner, allowingDeviceStatuses, tenantId, deviceTypeId, deviceOwner, deviceName, deviceStatus);
+//            if (ownerWithDeviceDTO == null) {
+//                String msg = "No data found for owner: " + owner;
+//                log.error(msg);
+//                throw new DeviceManagementDAOException(msg);
+//            }
+//            List<Integer> deviceIds = ownerWithDeviceDTO.getDeviceIds();
+//            if (deviceIds != null) {
+//                ownerWithDeviceDTO.setDeviceCount(deviceIds.size());
+//            } else {
+//                ownerWithDeviceDTO.setDeviceCount(0);
+//            }
+//        } catch (DeviceManagementDAOException | SQLException e) {
+//            String msg = "Error occurred while retrieving device IDs for owner: " + owner;
+//            log.error(msg, e);
+//            throw new DeviceManagementDAOException(msg, e);
+//        } finally {
+//            DeviceManagementDAOFactory.closeConnection();
+//        }
+//        return ownerWithDeviceDTO;
+//    }
+
+
+    @Override
+    public OwnerWithDeviceDTO getOwnerWithDeviceByDeviceId(int deviceId, String deviceOwner, String deviceName, String deviceStatus)
+            throws DeviceManagementDAOException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        OwnerWithDeviceDTO deviceOwnerWithStatus;
+
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            deviceOwnerWithStatus = enrollmentDAO.getOwnerWithDeviceByDeviceId(deviceId, tenantId, deviceOwner, deviceName, deviceStatus);
+            if (deviceOwnerWithStatus == null) {
+                throw new DeviceManagementDAOException("No data found for device ID: " + deviceId);
+            }
+            List<Integer> deviceIds = deviceOwnerWithStatus.getDeviceIds();
+            if (deviceIds != null) {
+                deviceOwnerWithStatus.setDeviceCount(deviceIds.size());
+            } else {
+                deviceOwnerWithStatus.setDeviceCount(0);
+            }
+        } catch (DeviceManagementDAOException | SQLException e) {
+            String msg = "Error occurred while retrieving owner and status for device ID: " + deviceId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+        return deviceOwnerWithStatus;
+    }
+
+    @Override
+    public List<DeviceDetailsDTO> getDevicesByTenantId(int tenantId, int deviceTypeId, String deviceOwner, String deviceStatus)
+            throws DeviceManagementDAOException {
+        List<DeviceDetailsDTO> devices;
+        List<String> allowingDeviceStatuses = new ArrayList<>();
+        allowingDeviceStatuses.add(EnrolmentInfo.Status.ACTIVE.toString());
+        allowingDeviceStatuses.add(EnrolmentInfo.Status.INACTIVE.toString());
+        allowingDeviceStatuses.add(EnrolmentInfo.Status.UNREACHABLE.toString());
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            devices = enrollmentDAO.getDevicesByTenantId(tenantId, allowingDeviceStatuses, deviceTypeId, deviceOwner, deviceStatus);
+            if (devices == null || devices.isEmpty()) {
+                String msg = "No devices found for tenant ID: " + tenantId;
+                log.error(msg);
+                throw new DeviceManagementDAOException(msg);
+            }
+        } catch (DeviceManagementDAOException | SQLException e) {
+            String msg = "Error occurred while retrieving devices for tenant ID: " + tenantId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+        return devices;
+    }
+
+
+    @Override
+    public OperationDTO getOperationDetailsById(int operationId) throws OperationManagementException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        OperationDTO operationDetails;
+        try {
+            OperationManagementDAOFactory.openConnection();
+            operationDetails = this.operationDAO.getOperationDetailsById(operationId, tenantId);
+            if (operationDetails == null) {
+                String msg = "No operation details found for operation ID: " + operationId;
+                log.error(msg);
+                throw new OperationManagementException(msg);
+            }
+        } catch (SQLException | OperationManagementDAOException e) {
+            String msg = "Error occurred while retrieving operation details for operation ID: " + operationId;
+            log.error(msg, e);
+            throw new OperationManagementException(msg, e);
+        } finally {
+            OperationManagementDAOFactory.closeConnection();
+        }
+        return operationDetails;
+    }
+
+    @Override
+    public PaginationResult getDevicesNotInGroup(PaginationRequest request, boolean requireDeviceInfo)
+            throws DeviceManagementException {
+        if (request == null) {
+            String msg = "Received incomplete pagination request for method getDevicesNotInGroup";
+            log.error(msg);
+            throw new DeviceManagementException(msg);
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("Get devices not in group with pagination " + request.toString() +
+                    " and requiredDeviceInfo: " + requireDeviceInfo);
+        }
+        PaginationResult paginationResult = new PaginationResult();
+        List<Device> devicesNotInGroup = null;
+        int count = 0;
+        int tenantId = this.getTenantId();
+        DeviceManagerUtil.validateDeviceListPageSize(request);
+
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            if (request.getGroupId() != 0) {
+                devicesNotInGroup = deviceDAO.searchDevicesNotInGroup(request, tenantId);
+                count = deviceDAO.getCountOfDevicesNotInGroup(request, tenantId);
+            } else {
+                String msg = "Group ID is not provided for method getDevicesNotInGroup";
+                log.error(msg);
+                throw new DeviceManagementException(msg);
+            }
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred while retrieving device list that are not in the specified group for the current tenant";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (Exception e) {
+            String msg = "Error occurred in getDevicesNotInGroup";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+
+        if (requireDeviceInfo && devicesNotInGroup != null && !devicesNotInGroup.isEmpty()) {
+            paginationResult.setData(populateAllDeviceInfo(devicesNotInGroup));
+        } else {
+            paginationResult.setData(devicesNotInGroup);
+        }
+
+        paginationResult.setRecordsFiltered(count);
+        paginationResult.setRecordsTotal(count);
+        return paginationResult;
+    }
+
+    @Override
+    public Device updateDeviceName(Device device, String deviceType, String deviceId)
+            throws DeviceManagementException, DeviceNotFoundException, ConflictException {
+        Device persistedDevice = this.getDevice(new DeviceIdentifier(deviceId, deviceType), true);
+        if (persistedDevice == null) {
+            String msg = "Device not found for the given deviceId and deviceType";
+            log.error(msg);
+            throw new DeviceNotFoundException(msg);
+        }
+        if (persistedDevice.getName().equals(device.getName())) {
+            String msg = "Device names are the same.";
+            log.info(msg);
+            throw new ConflictException(msg);
+        }
+        persistedDevice.setName(device.getName());
+        if (log.isDebugEnabled()) {
+            log.debug("Rename Device name of: " + persistedDevice.getId() + " of type '" + persistedDevice.getType() + "'");
+        }
+        DeviceManager deviceManager = this.getDeviceManager(persistedDevice.getType());
+        if (deviceManager == null) {
+            String msg = "Device Manager associated with the device type '" + persistedDevice.getType() + "' is null. " +
+                    "Therefore, not attempting method 'modifyEnrolment'";
+            log.error(msg);
+            throw new DeviceManagementException(msg);
+        }
+        DeviceIdentifier deviceIdentifier = new DeviceIdentifier(persistedDevice.getDeviceIdentifier(), persistedDevice.getType());
+        try {
+            DeviceManagementDAOFactory.beginTransaction();
+            int tenantId = this.getTenantId();
+            deviceDAO.updateDevice(persistedDevice, tenantId);
+            DeviceManagementDAOFactory.commitTransaction();
+            this.updateDeviceInCache(deviceIdentifier, persistedDevice);
+            return persistedDevice;
+        } catch (DeviceManagementDAOException e) {
+            DeviceManagementDAOFactory.rollbackTransaction();
+            String msg = "Error occurred while renaming the device '" + persistedDevice.getId() + "'";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (TransactionManagementException e) {
+            DeviceManagementDAOFactory.rollbackTransaction();
+            String msg = "Error occurred while initiating transaction to rename device: " + persistedDevice.getId();
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
+
+    @Override
+    public List<Integer> getDevicesNotInGivenIdList(List<Integer> deviceIds)
+            throws DeviceManagementException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            return deviceDAO.getDevicesNotInGivenIdList(deviceIds, tenantId);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error encountered while getting device ids";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error encountered while getting the database connection";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
+
+    @Override
+    public List<Integer> getDevicesInGivenIdList(List<Integer> deviceIds)
+            throws DeviceManagementException {
+
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            return deviceDAO.getDevicesInGivenIdList(deviceIds, tenantId);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error encountered while getting device ids";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error encountered while getting the database connection";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
+
+    @Override
+    public int getDeviceCountNotInGivenIdList(List<Integer> deviceIds)
+            throws DeviceManagementException {
+
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            return deviceDAO.getDeviceCountNotInGivenIdList(deviceIds, tenantId);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error encountered while getting device ids";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error encountered while getting the database connection";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
+
+    @Override
+    public List<Device> getDevicesByDeviceIds(PaginationRequest paginationRequest, List<Integer> deviceIds)
+            throws DeviceManagementException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        if (paginationRequest == null) {
+            String msg = "Received null for pagination request";
+            log.error(msg);
+            throw new DeviceManagementException(msg);
+        }
+
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            return deviceDAO.getDevicesByDeviceIds(paginationRequest, deviceIds, tenantId);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error encountered while getting devices for device ids in " + deviceIds;
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error encountered while getting the database connection";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
+
+    @Override
+    public int getDeviceCountByDeviceIds(PaginationRequest paginationRequest, List<Integer> deviceIds)
+            throws DeviceManagementException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        if (paginationRequest == null) {
+            String msg = "Received null for pagination request";
+            log.error(msg);
+            throw new DeviceManagementException(msg);
+        }
+
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            return deviceDAO.getDeviceCountByDeviceIds(paginationRequest, deviceIds, tenantId);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error encountered while getting devices for device ids in " + deviceIds;
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error encountered while getting the database connection";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
+
+    @Override
+    public List<Integer> getDeviceIdsByStatus(List<String> statuses) throws DeviceManagementException {
+        if (statuses == null || statuses.isEmpty()) {
+            String msg = "Received null or empty list for statuses";
+            log.error(msg);
+            throw new DeviceManagementException(msg);
+        }
+
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            return deviceDAO.getDeviceIdsByStatus(statuses);
+        } catch (DeviceManagementException e) {
+            String msg = "Error encountered while getting device IDs for statuses: " + statuses;
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error encountered while getting the database connection";
+            log.error(msg, e);
             throw new DeviceManagementException(msg, e);
         } finally {
             DeviceManagementDAOFactory.closeConnection();

@@ -19,17 +19,42 @@
 package io.entgra.device.mgt.core.application.mgt.core.impl;
 
 import com.google.gson.Gson;
+import io.entgra.device.mgt.core.application.mgt.common.ApplicationInstallResponse;
+import io.entgra.device.mgt.core.application.mgt.common.ApplicationSubscriptionInfo;
+import io.entgra.device.mgt.core.application.mgt.common.ApplicationType;
+import io.entgra.device.mgt.core.application.mgt.common.CategorizedSubscriptionResult;
+import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionData;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionInfo;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionResponse;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionStatistics;
+import io.entgra.device.mgt.core.application.mgt.common.dto.CategorizedSubscriptionCountsDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceOperationDTO;
+import io.entgra.device.mgt.core.application.mgt.common.DeviceTypes;
+import io.entgra.device.mgt.core.application.mgt.common.ExecutionStatus;
+import io.entgra.device.mgt.core.application.mgt.common.SubAction;
+import io.entgra.device.mgt.core.application.mgt.common.SubscribingDeviceIdHolder;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionType;
+import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.ScheduledSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationPolicyDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.VppAssetDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.VppUserDTO;
 import io.entgra.device.mgt.core.application.mgt.common.services.VPPApplicationManager;
+import io.entgra.device.mgt.core.application.mgt.core.dao.ApplicationReleaseDAO;
 import io.entgra.device.mgt.core.application.mgt.core.dao.VppApplicationDAO;
 import io.entgra.device.mgt.core.application.mgt.core.exception.BadRequestException;
+import io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.SubscriptionManagementServiceProvider;
+import io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.service.SubscriptionManagementHelperService;
+import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
+import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
 import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
 import io.entgra.device.mgt.core.application.mgt.core.exception.UnexpectedServerErrorException;
+import io.entgra.device.mgt.core.device.mgt.core.dto.OperationDTO;
 import io.entgra.device.mgt.core.device.mgt.extensions.logger.spi.EntgraLogger;
 import io.entgra.device.mgt.core.notification.logger.AppInstallLogContext;
 import io.entgra.device.mgt.core.notification.logger.impl.EntgraAppInstallLoggerImpl;
-import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.lang.StringUtils;
 
 import org.apache.http.HttpResponse;
@@ -45,20 +70,6 @@ import org.json.JSONObject;
 import io.entgra.device.mgt.core.apimgt.application.extension.dto.ApiApplicationKey;
 import io.entgra.device.mgt.core.apimgt.application.extension.exception.APIManagerException;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import io.entgra.device.mgt.core.application.mgt.common.ApplicationInstallResponse;
-import io.entgra.device.mgt.core.application.mgt.common.ApplicationSubscriptionInfo;
-import io.entgra.device.mgt.core.application.mgt.common.ApplicationType;
-import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionData;
-import io.entgra.device.mgt.core.application.mgt.common.DeviceTypes;
-import io.entgra.device.mgt.core.application.mgt.common.ExecutionStatus;
-import io.entgra.device.mgt.core.application.mgt.common.SubAction;
-import io.entgra.device.mgt.core.application.mgt.common.SubscriptionType;
-import io.entgra.device.mgt.core.application.mgt.common.SubscribingDeviceIdHolder;
-import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationDTO;
-import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationPolicyDTO;
-import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
-import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
-import io.entgra.device.mgt.core.application.mgt.common.dto.ScheduledSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException;
 import io.entgra.device.mgt.core.application.mgt.common.exception.DBConnectionException;
 import io.entgra.device.mgt.core.application.mgt.common.exception.LifecycleManagementException;
@@ -131,12 +142,14 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
     private SubscriptionDAO subscriptionDAO;
     private ApplicationDAO applicationDAO;
     private VppApplicationDAO vppApplicationDAO;
+    private ApplicationReleaseDAO applicationReleaseDAO;
     private LifecycleStateManager lifecycleStateManager;
 
     public SubscriptionManagerImpl() {
         this.lifecycleStateManager = DataHolder.getInstance().getLifecycleStateManager();
         this.subscriptionDAO = ApplicationManagementDAOFactory.getSubscriptionDAO();
         this.applicationDAO = ApplicationManagementDAOFactory.getApplicationDAO();
+        this.applicationReleaseDAO = ApplicationManagementDAOFactory.getApplicationReleaseDAO();
         this.vppApplicationDAO = ApplicationManagementDAOFactory.getVppApplicationDAO();
     }
 
@@ -1505,16 +1518,19 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
     }
 
     @Override
-    public PaginationResult getAppSubscriptionDetails(PaginationRequest request, String appUUID, String actionStatus,
-                                                      String action, String installedVersion) throws ApplicationManagementException {
+    public CategorizedSubscriptionResult getAppSubscriptionDetails(PaginationRequest request, String appUUID, String actionStatus,
+                                                                   String action, String installedVersion) throws ApplicationManagementException {
         int limitValue = request.getRowCount();
         int offsetValue = request.getStartIndex();
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
-        DeviceManagementProviderService deviceManagementProviderService = HelperUtil
-                .getDeviceManagementProviderService();
+        DeviceManagementProviderService deviceManagementProviderService = HelperUtil.getDeviceManagementProviderService();
+        List<DeviceSubscriptionData> installedDevices = new ArrayList<>();
+        List<DeviceSubscriptionData> pendingDevices = new ArrayList<>();
+        List<DeviceSubscriptionData> errorDevices = new ArrayList<>();
+
         if (offsetValue < 0 || limitValue <= 0) {
-            String msg = "Found incompatible values for offset and limit. Hence please check the request and resend. "
-                    + "Offset " + offsetValue + " limit " + limitValue;
+            String msg = "Found incompatible values for offset and limit. Hence please check the request and resend. " +
+                    "Offset " + offsetValue + " limit " + limitValue;
             log.error(msg);
             throw new BadRequestException(msg);
         }
@@ -1532,31 +1548,26 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             List<DeviceSubscriptionDTO> deviceSubscriptionDTOS = subscriptionDAO
                     .getDeviceSubscriptions(applicationReleaseId, tenantId, actionStatus, action);
             if (deviceSubscriptionDTOS.isEmpty()) {
-                PaginationResult paginationResult = new PaginationResult();
-                paginationResult.setData(new ArrayList<>());
-                paginationResult.setRecordsFiltered(0);
-                paginationResult.setRecordsTotal(0);
-                return paginationResult;
+                return new CategorizedSubscriptionResult(new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
             }
             List<Integer> deviceIdList = deviceSubscriptionDTOS.stream().map(DeviceSubscriptionDTO::getDeviceId)
                     .collect(Collectors.toList());
-            Map<Integer,String> currentVersionsMap = subscriptionDAO.getCurrentInstalledAppVersion(applicationDTO.getId(),deviceIdList, installedVersion);
+            Map<Integer, String> currentVersionsMap =
+                    subscriptionDAO.getCurrentInstalledAppVersion(applicationDTO.getId(), deviceIdList, installedVersion);
             try {
-                //pass the device id list to device manager service method
-                PaginationResult paginationResult = deviceManagementProviderService.getAppSubscribedDevices
-                        (request, deviceIdList);
-                List<DeviceSubscriptionData> deviceSubscriptionDataList = new ArrayList<>();
+                // Pass the device id list to device manager service method
+                PaginationResult paginationResult = deviceManagementProviderService.getAppSubscribedDevices(request, deviceIdList);
 
                 if (!paginationResult.getData().isEmpty()) {
                     List<Device> devices = (List<Device>) paginationResult.getData();
                     for (Device device : devices) {
-                        if(installedVersion != null && !installedVersion.isEmpty() && !currentVersionsMap.containsKey(device.getId())){
+                        if (installedVersion != null && !installedVersion.isEmpty() && !currentVersionsMap.containsKey(device.getId())) {
                             continue;
                         }
                         DeviceSubscriptionData deviceSubscriptionData = new DeviceSubscriptionData();
-                        if(currentVersionsMap.containsKey(device.getId())){
+                        if (currentVersionsMap.containsKey(device.getId())) {
                             deviceSubscriptionData.setCurrentInstalledVersion(currentVersionsMap.get(device.getId()));
-                        }else{
+                        } else {
                             deviceSubscriptionData.setCurrentInstalledVersion("-");
                         }
                         for (DeviceSubscriptionDTO subscription : deviceSubscriptionDTOS) {
@@ -1565,39 +1576,51 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                                 if (subscription.isUnsubscribed()) {
                                     deviceSubscriptionData.setAction(Constants.UNSUBSCRIBED);
                                     deviceSubscriptionData.setActionTriggeredBy(subscription.getUnsubscribedBy());
-                                    deviceSubscriptionData
-                                            .setActionTriggeredTimestamp(subscription.getUnsubscribedTimestamp().getTime() / 1000);
+                                    deviceSubscriptionData.setActionTriggeredTimestamp(subscription.getUnsubscribedTimestamp());
                                 } else {
                                     deviceSubscriptionData.setAction(Constants.SUBSCRIBED);
                                     deviceSubscriptionData.setActionTriggeredBy(subscription.getSubscribedBy());
-                                    deviceSubscriptionData
-                                            .setActionTriggeredTimestamp(subscription.getSubscribedTimestamp().getTime() / 1000);
+                                    deviceSubscriptionData.setActionTriggeredTimestamp(subscription.getSubscribedTimestamp());
                                 }
                                 deviceSubscriptionData.setActionType(subscription.getActionTriggeredFrom());
                                 deviceSubscriptionData.setStatus(subscription.getStatus());
                                 deviceSubscriptionData.setSubId(subscription.getId());
-                                deviceSubscriptionDataList.add(deviceSubscriptionData);
+
+                                // Categorize the subscription data based on its status
+                                switch (subscription.getStatus()) {
+                                    case "COMPLETED":
+                                        installedDevices.add(deviceSubscriptionData);
+                                        break;
+                                    case "ERROR":
+                                    case "INVALID":
+                                    case "UNAUTHORIZED":
+                                        errorDevices.add(deviceSubscriptionData);
+                                        break;
+                                    case "IN_PROGRESS":
+                                    case "PENDING":
+                                    case "REPEATED":
+                                        pendingDevices.add(deviceSubscriptionData);
+                                        break;
+                                }
                                 break;
                             }
                         }
                     }
                 }
-                paginationResult.setData(deviceSubscriptionDataList);
-                return paginationResult;
+                return new CategorizedSubscriptionResult(installedDevices, pendingDevices, errorDevices);
             } catch (DeviceManagementException e) {
-                String msg = "service error occurred while getting device data from the device management service. "
-                        + "Device ids " + deviceIdList;
+                String msg = "Service error occurred while getting device data from the device management service. " +
+                        "Device ids " + deviceIdList;
                 log.error(msg, e);
                 throw new ApplicationManagementException(msg, e);
             }
         } catch (ApplicationManagementDAOException e) {
-            String msg =
-                    "Error occurred when getting application release data for application release UUID: " + appUUID;
+            String msg = "Error occurred when getting application release data for application release UUID: " + appUUID;
             log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
         } catch (DBConnectionException e) {
-            String msg = "DB Connection error occurred while trying to get subscription data of application which has "
-                    + "application release UUID " + appUUID;
+            String msg = "DB Connection error occurred while trying to get subscription data of application which has " +
+                    "application release UUID " + appUUID;
             log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
         } finally {
@@ -1675,4 +1698,148 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
         }
     }
 
+    /**
+     * Get subscription data describes by {@link SubscriptionInfo} entity
+     * @param subscriptionInfo {@link SubscriptionInfo}
+     * @param limit Limit value
+     * @param offset Offset value
+     * @return {@link SubscriptionResponse}
+     * @throws ApplicationManagementException Throws when error encountered while getting subscription data
+     */
+    @Override
+    public SubscriptionResponse getSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
+            throws ApplicationManagementException {
+        SubscriptionManagementHelperService subscriptionManagementHelperService =
+                SubscriptionManagementServiceProvider.getInstance().getSubscriptionManagementHelperService(subscriptionInfo);
+        return subscriptionManagementHelperService.getSubscriptions(subscriptionInfo, limit, offset);
+    }
+
+    /**
+     * Get status based subscription data describes by {@link SubscriptionInfo} entity
+     * @param subscriptionInfo {@link SubscriptionInfo}
+     * @param limit Limit value
+     * @param offset Offset value
+     * @return {@link SubscriptionResponse}
+     * @throws ApplicationManagementException Throws when error encountered while getting subscription data
+     */
+    @Override
+    public SubscriptionResponse getStatusBaseSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
+            throws ApplicationManagementException {
+        SubscriptionManagementHelperService subscriptionManagementHelperService =
+                SubscriptionManagementServiceProvider.getInstance().getSubscriptionManagementHelperService(subscriptionInfo);
+        return subscriptionManagementHelperService.getStatusBaseSubscriptions(subscriptionInfo, limit, offset);
+    }
+
+    /**
+     * Get subscription statistics related data describes by the {@link SubscriptionInfo}
+     * @param subscriptionInfo {@link SubscriptionInfo}
+     * @return {@link SubscriptionStatistics}
+     * @throws ApplicationManagementException Throws when error encountered while getting statistics
+     */
+    @Override
+    public SubscriptionStatistics getStatistics(SubscriptionInfo subscriptionInfo) throws ApplicationManagementException {
+        return SubscriptionManagementServiceProvider.getInstance().getSubscriptionManagementHelperService(subscriptionInfo).
+                getSubscriptionStatistics(subscriptionInfo);
+    }
+
+    @Override
+    public List<DeviceOperationDTO> getSubscriptionOperationsByUUIDAndDeviceID(int deviceId, String uuid)
+            throws ApplicationManagementException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        if (uuid == null || uuid.isEmpty()) {
+            throw new IllegalArgumentException("UUID cannot be null or empty.");
+        }
+        try {
+            ConnectionManagerUtil.openDBConnection();
+
+            ApplicationReleaseDTO applicationReleaseDTO = this.applicationReleaseDAO.getReleaseByUUID(uuid, tenantId);
+            if (applicationReleaseDTO == null) {
+                String msg = "Couldn't find an application release for application release UUID: " + uuid;
+                log.error(msg);
+                throw new NotFoundException(msg);
+            }
+            int appReleaseId = applicationReleaseDTO.getId();
+
+            DeviceManagementProviderService deviceManagementProviderService = HelperUtil.getDeviceManagementProviderService();
+            List<DeviceOperationDTO> deviceSubscriptions =
+                    subscriptionDAO.getSubscriptionOperationsByAppReleaseIDAndDeviceID(appReleaseId, deviceId, tenantId);
+            for (DeviceOperationDTO deviceSubscription : deviceSubscriptions) {
+                Integer operationId = deviceSubscription.getOperationId();
+                if (operationId != null) {
+                    OperationDTO operationDetails = deviceManagementProviderService.getOperationDetailsById(operationId);
+                    if (operationDetails != null) {
+                        deviceSubscription.setOperationCode(operationDetails.getOperationCode());
+                        deviceSubscription.setOperationDetails(operationDetails.getOperationDetails());
+                        deviceSubscription.setOperationProperties(operationDetails.getOperationProperties());
+                        deviceSubscription.setOperationResponses(operationDetails.getOperationResponses());
+                    }
+                }
+            }
+            return deviceSubscriptions;
+        } catch (ApplicationManagementDAOException e) {
+            String msg = "Error occurred while retrieving device subscriptions for UUID: " + uuid;
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while retrieving the database connection";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } catch (OperationManagementException e) {
+            throw new RuntimeException(e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+    }
+
+    @Override
+    public List<CategorizedSubscriptionCountsDTO> getSubscriptionCountsByUUID(String uuid)
+            throws ApplicationManagementException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        if (uuid == null || uuid.isEmpty()) {
+            throw new IllegalArgumentException("UUID cannot be null or empty.");
+        }
+
+        try {
+            ConnectionManagerUtil.openDBConnection();
+
+            ApplicationReleaseDTO applicationReleaseDTO = this.applicationReleaseDAO.getReleaseByUUID(uuid, tenantId);
+            if (applicationReleaseDTO == null) {
+                String msg = "Couldn't find an application release for application release UUID: " + uuid;
+                log.error(msg);
+                throw new NotFoundException(msg);
+            }
+            int appReleaseId = applicationReleaseDTO.getId();
+
+            List<CategorizedSubscriptionCountsDTO> subscriptionCounts = new ArrayList<>();
+
+            subscriptionCounts.add(new CategorizedSubscriptionCountsDTO(
+                    "Device",
+                    subscriptionDAO.getAllSubscriptionCount(appReleaseId, tenantId),
+                    subscriptionDAO.getAllUnsubscriptionCount(appReleaseId, tenantId)));
+            subscriptionCounts.add(new CategorizedSubscriptionCountsDTO(
+                    "Group",
+                    subscriptionDAO.getGroupSubscriptionCount(appReleaseId, tenantId),
+                    subscriptionDAO.getGroupUnsubscriptionCount(appReleaseId, tenantId)));
+            subscriptionCounts.add(new CategorizedSubscriptionCountsDTO(
+                    "Role",
+                    subscriptionDAO.getRoleSubscriptionCount(appReleaseId, tenantId),
+                    subscriptionDAO.getRoleUnsubscriptionCount(appReleaseId, tenantId)));
+            subscriptionCounts.add(new CategorizedSubscriptionCountsDTO(
+                    "User",
+                    subscriptionDAO.getUserSubscriptionCount(appReleaseId, tenantId),
+                    subscriptionDAO.getUserUnsubscriptionCount(appReleaseId, tenantId)));
+
+            return subscriptionCounts;
+        } catch (ApplicationManagementDAOException e) {
+            String msg = "Error occurred while retrieving subscriptions counts for UUID: " + uuid;
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while retrieving the database connection";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+    }
 }

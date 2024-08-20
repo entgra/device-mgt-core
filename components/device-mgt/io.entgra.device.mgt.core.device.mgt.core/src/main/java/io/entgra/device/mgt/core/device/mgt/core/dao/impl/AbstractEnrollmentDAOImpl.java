@@ -18,6 +18,9 @@
 package io.entgra.device.mgt.core.device.mgt.core.dao.impl;
 
 import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
+import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.dao.util.OperationDAOUtil;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.DeviceManagementConstants;
@@ -26,6 +29,8 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOExceptio
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dao.EnrollmentDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.util.DeviceManagementDAOUtil;
+import io.entgra.device.mgt.core.device.mgt.core.dto.OwnerWithDeviceDTO;
+import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceDetailsDTO;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -33,11 +38,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.ArrayList;
 
 public abstract class AbstractEnrollmentDAOImpl implements EnrollmentDAO {
+    private static final Log log = LogFactory.getLog(AbstractEnrollmentDAOImpl.class);
 
     @Override
     public EnrolmentInfo addEnrollment(int deviceId, DeviceIdentifier deviceIdentifier, EnrolmentInfo enrolmentInfo,
@@ -555,6 +561,309 @@ public abstract class AbstractEnrollmentDAOImpl implements EnrollmentDAO {
         enrolmentInfo.setStatus(EnrolmentInfo.Status.valueOf(rs.getString("STATUS")));
         enrolmentInfo.setId(rs.getInt("ID"));
         return enrolmentInfo;
+    }
+
+    @Override
+    public OwnerWithDeviceDTO getOwnersWithDevices(String owner, List<String> allowingDeviceStatuses, int tenantId,
+                                                   int deviceTypeId, String deviceOwner, String deviceName,
+                                                   String deviceStatus) throws DeviceManagementDAOException {
+        Connection conn = null;
+        OwnerWithDeviceDTO ownerDetails = new OwnerWithDeviceDTO();
+        List<Integer> deviceIds = new ArrayList<>();
+        int deviceCount = 0;
+
+        StringBuilder deviceFilters = new StringBuilder();
+        for (int i = 0; i < allowingDeviceStatuses.size(); i++) {
+            deviceFilters.append("?");
+            if (i < allowingDeviceStatuses.size() - 1) {
+                deviceFilters.append(",");
+            }
+        }
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT e.DEVICE_ID, " +
+                        "e.OWNER, " +
+                        "e.STATUS AS DEVICE_STATUS, " +
+                        "d.NAME AS DEVICE_NAME, " +
+                        "e.DEVICE_TYPE AS DEVICE_TYPE, " +
+                        "e.DEVICE_IDENTIFICATION AS DEVICE_IDENTIFICATION " +
+                        "FROM DM_ENROLMENT e " +
+                        "JOIN DM_DEVICE d ON e.DEVICE_ID = d.ID " +
+                        "WHERE e.OWNER = ? AND e.TENANT_ID = ? AND e.STATUS IN (" + deviceFilters + ")");
+
+        if (deviceTypeId != 0) {
+            sql.append(" AND d.DEVICE_TYPE_ID = ?");
+        }
+        if (deviceOwner != null && !deviceOwner.isEmpty()) {
+            sql.append(" AND e.OWNER LIKE ?");
+        }
+        if (deviceName != null && !deviceName.isEmpty()) {
+            sql.append(" AND d.NAME LIKE ?");
+        }
+        if (deviceStatus != null && !deviceStatus.isEmpty()) {
+            sql.append(" AND e.STATUS = ?");
+        }
+
+        try {
+            conn = this.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+                int index = 1;
+                stmt.setString(index++, owner);
+                stmt.setInt(index++, tenantId);
+                for (String status : allowingDeviceStatuses) {
+                    stmt.setString(index++, status);
+                }
+                if (deviceTypeId != 0) {
+                    stmt.setInt(index++, deviceTypeId);
+                }
+
+                if (deviceOwner != null && !deviceOwner.isEmpty()) {
+                    stmt.setString(index++, "%" + deviceOwner + "%");
+                }
+                if (deviceName != null && !deviceName.isEmpty()) {
+                    stmt.setString(index++, "%" + deviceName + "%");
+                }
+                if (deviceStatus != null && !deviceStatus.isEmpty()) {
+                    stmt.setString(index++, deviceStatus);
+                }
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        deviceIds.add(rs.getInt("DEVICE_ID"));
+                        deviceCount++;
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while retrieving owners and device IDs for owner: " + owner;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        }
+        ownerDetails.setUserName(deviceOwner);
+        ownerDetails.setDeviceIds(deviceIds);
+        ownerDetails.setDeviceCount(deviceCount);
+        return ownerDetails;
+    }
+
+//    @Override
+//    public OwnerWithDeviceDTO getOwnersWithDevices(String owner, List<String> allowingDeviceStatuses, int tenantId,
+//                                                   int deviceTypeId, String deviceOwner, String deviceName,
+//                                                   String deviceStatus) throws DeviceManagementDAOException {
+//        Connection conn = null;
+//        OwnerWithDeviceDTO ownerDetails = new OwnerWithDeviceDTO();
+//        List<Integer> deviceIds = new ArrayList<>();
+//        int deviceCount = 0;
+//
+//        StringBuilder deviceFilters = new StringBuilder();
+//        for (int i = 0; i < allowingDeviceStatuses.size(); i++) {
+//            deviceFilters.append("?");
+//            if (i < allowingDeviceStatuses.size() - 1) {
+//                deviceFilters.append(",");
+//            }
+//        }
+//
+//        StringBuilder sql = new StringBuilder(
+//                "SELECT e.DEVICE_ID, " +
+//                        "e.OWNER, " +
+//                        "e.STATUS AS DEVICE_STATUS, " +
+//                        "d.NAME AS DEVICE_NAME, " +
+//                        "e.DEVICE_TYPE AS DEVICE_TYPE, " +
+//                        "e.DEVICE_IDENTIFICATION AS DEVICE_IDENTIFICATION " +
+//                "FROM DM_ENROLMENT e " +
+//                "JOIN DM_DEVICE d ON e.DEVICE_ID = d.ID " +
+//                "WHERE e.OWNER = ? AND e.TENANT_ID = ? AND d.DEVICE_TYPE_ID = ? AND e.STATUS IN (" + deviceFilters + ")");
+//
+//        if (deviceOwner != null && !deviceOwner.isEmpty()) {
+//            sql.append(" AND e.OWNER LIKE ?");
+//        }
+//        if (deviceName != null && !deviceName.isEmpty()) {
+//            sql.append(" AND d.NAME LIKE ?");
+//        }
+//        if (deviceStatus != null && !deviceStatus.isEmpty()) {
+//            sql.append(" AND e.STATUS = ?");
+//        }
+//
+//        try {
+//            conn = this.getConnection();
+//            try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+//                int index = 1;
+//                stmt.setString(index++, owner);
+//                stmt.setInt(index++, tenantId);
+//                stmt.setInt(index++, deviceTypeId);
+//                for (String status : allowingDeviceStatuses) {
+//                    stmt.setString(index++, status);
+//                }
+//
+//                if (deviceOwner != null && !deviceOwner.isEmpty()) {
+//                    stmt.setString(index++, "%" + deviceOwner + "%");
+//                }
+//                if (deviceName != null && !deviceName.isEmpty()) {
+//                    stmt.setString(index++, "%" + deviceName + "%");
+//                }
+//                if (deviceStatus != null && !deviceStatus.isEmpty()) {
+//                    stmt.setString(index++, deviceStatus);
+//                }
+//
+//                try (ResultSet rs = stmt.executeQuery()) {
+//                    while (rs.next()) {
+//                        if (ownerDetails.getUserName() == null) {
+//                            ownerDetails.setUserName(rs.getString("OWNER"));
+//                        }
+//                        ownerDetails.setDeviceStatus(rs.getString("DEVICE_STATUS"));
+//                        ownerDetails.setDeviceNames(rs.getString("DEVICE_NAME"));
+//                        ownerDetails.setDeviceTypes(rs.getString("DEVICE_TYPE"));
+//                        ownerDetails.setDeviceIdentifiers(rs.getString("DEVICE_IDENTIFICATION"));
+//                        deviceIds.add(rs.getInt("DEVICE_ID"));
+//                        deviceCount++;
+//                    }
+//                }
+//            }
+//        } catch (SQLException e) {
+//            String msg = "Error occurred while retrieving owners and device IDs for owner: " + owner;
+//            log.error(msg, e);
+//            throw new DeviceManagementDAOException(msg, e);
+//        }
+//        ownerDetails.setDeviceIds(deviceIds);
+//        ownerDetails.setDeviceCount(deviceCount);
+//        return ownerDetails;
+//    }
+
+    @Override
+    public OwnerWithDeviceDTO getOwnerWithDeviceByDeviceId(int deviceId, int tenantId, String deviceOwner, String deviceName,
+                                                           String deviceStatus) throws DeviceManagementDAOException {
+        OwnerWithDeviceDTO deviceOwnerWithStatus = new OwnerWithDeviceDTO();
+        Connection conn = null;
+        List<Integer> deviceIds = new ArrayList<>();
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT e.DEVICE_ID, " +
+                        "e.OWNER, " +
+                        "e.STATUS AS DEVICE_STATUS, " +
+                        "d.NAME AS DEVICE_NAME, " +
+                        "e.DEVICE_TYPE, " +
+                        "e.DEVICE_IDENTIFICATION " +
+                "FROM DM_ENROLMENT e " +
+                "JOIN DM_DEVICE d ON e.DEVICE_ID = d.ID " +
+                "WHERE e.DEVICE_ID = ? AND e.TENANT_ID = ?");
+
+        if (deviceOwner != null && !deviceOwner.isEmpty()) {
+            sql.append(" AND e.OWNER LIKE ?");
+        }
+        if (deviceName != null && !deviceName.isEmpty()) {
+            sql.append(" AND d.NAME LIKE ?");
+        }
+        if (deviceStatus != null && !deviceStatus.isEmpty()) {
+            sql.append(" AND e.STATUS = ?");
+        }
+
+        try {
+            conn = this.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+                int paramIndex = 1;
+                stmt.setInt(paramIndex++, deviceId);
+                stmt.setInt(paramIndex++, tenantId);
+
+                // Set filter parameters if provided
+                if (deviceOwner != null && !deviceOwner.isEmpty()) {
+                    stmt.setString(paramIndex++, "%" + deviceOwner + "%");
+                }
+                if (deviceName != null && !deviceName.isEmpty()) {
+                    stmt.setString(paramIndex++, "%" + deviceName + "%");
+                }
+                if (deviceStatus != null && !deviceStatus.isEmpty()) {
+                    stmt.setString(paramIndex++, deviceStatus);
+                }
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        deviceOwnerWithStatus.setUserName(rs.getString("OWNER"));
+                        deviceOwnerWithStatus.setDeviceStatus(rs.getString("DEVICE_STATUS"));
+                        deviceIds.add(rs.getInt("DEVICE_ID"));
+                        deviceOwnerWithStatus.setDeviceIds(deviceIds);
+                        deviceOwnerWithStatus.setDeviceNames(rs.getString("DEVICE_NAME"));
+                        deviceOwnerWithStatus.setDeviceTypes(rs.getString("DEVICE_TYPE"));
+                        deviceOwnerWithStatus.setDeviceIdentifiers(rs.getString("DEVICE_IDENTIFICATION"));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while retrieving owner and status for device ID: " + deviceId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        }
+        return deviceOwnerWithStatus;
+    }
+
+    @Override
+    public List<DeviceDetailsDTO> getDevicesByTenantId(int tenantId, List<String> allowingDeviceStatuses, int deviceTypeId,
+                                                       String deviceOwner, String deviceStatus) throws DeviceManagementDAOException {
+        List<DeviceDetailsDTO> devices = new ArrayList<>();
+        if (allowingDeviceStatuses.isEmpty()) {
+            return devices;
+        }
+
+        StringBuilder deviceFilters = new StringBuilder();
+        for (int i = 0; i < allowingDeviceStatuses.size(); i++) {
+            deviceFilters.append("?");
+            if (i < allowingDeviceStatuses.size() - 1) {
+                deviceFilters.append(",");
+            }
+        }
+
+        StringBuilder sql = new StringBuilder("SELECT e.DEVICE_ID, e.OWNER, e.STATUS, e.DEVICE_TYPE, e.DEVICE_IDENTIFICATION " +
+                "FROM DM_ENROLMENT e " +
+                "JOIN DM_DEVICE d ON e.DEVICE_ID = d.ID " +
+                "WHERE e.TENANT_ID = ? AND e.STATUS IN (" + deviceFilters.toString() + ")");
+
+        if (deviceTypeId != 0) {
+            sql.append(" AND d.DEVICE_TYPE_ID = ?");
+        }
+        if (deviceOwner != null && !deviceOwner.isEmpty()) {
+            sql.append(" AND e.OWNER LIKE ?");
+        }
+        if (deviceStatus != null && !deviceStatus.isEmpty()) {
+            sql.append(" AND e.STATUS = ?");
+        }
+
+        Connection conn = null;
+
+        try {
+            conn = this.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+                int index = 1;
+                stmt.setInt(index++, tenantId);
+                for (String status : allowingDeviceStatuses) {
+                    stmt.setString(index++, status);
+                }
+                if (deviceTypeId != 0) {
+                    stmt.setInt(index++, deviceTypeId);
+                }
+
+                if (deviceOwner != null && !deviceOwner.isEmpty()) {
+                    stmt.setString(index++, "%" + deviceOwner + "%");
+                }
+                if (deviceStatus != null && !deviceStatus.isEmpty()) {
+                    stmt.setString(index++, deviceStatus);
+                }
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        DeviceDetailsDTO device = new DeviceDetailsDTO();
+                        device.setDeviceId(rs.getInt("DEVICE_ID"));
+                        device.setOwner(rs.getString("OWNER"));
+                        device.setStatus(rs.getString("STATUS"));
+                        device.setType(rs.getString("DEVICE_TYPE"));
+                        device.setDeviceIdentifier(rs.getString("DEVICE_IDENTIFICATION"));
+                        devices.add(device);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while retrieving devices for tenant ID: " + tenantId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        }
+        return devices;
     }
 
 }

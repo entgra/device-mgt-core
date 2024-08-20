@@ -19,7 +19,6 @@
 package io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import io.entgra.device.mgt.core.application.mgt.common.ApplicationInstallResponse;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionType;
 import io.entgra.device.mgt.core.application.mgt.common.exception.SubscriptionManagementException;
@@ -44,6 +43,7 @@ import org.wso2.carbon.context.PrivilegedCarbonContext;
 import io.entgra.device.mgt.core.device.mgt.common.*;
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.Application;
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.ApplicationManagementException;
+import io.entgra.device.mgt.core.device.mgt.common.app.mgt.MobileAppTypes;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationException;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationService;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceData;
@@ -147,6 +147,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             @QueryParam("customProperty") String customProperty,
             @QueryParam("status") List<String> status,
             @QueryParam("groupId") int groupId,
+            @QueryParam("excludeGroupId") int excludeGroupId,
             @QueryParam("since") String since,
             @HeaderParam("If-Modified-Since") String ifModifiedSince,
             @QueryParam("requireDeviceInfo") boolean requireDeviceInfo,
@@ -209,7 +210,22 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                     request.setStatusList(status);
                 }
             }
-            // this is the user who initiates the request
+
+            if (excludeGroupId != 0) {
+                request.setGroupId(excludeGroupId);
+
+                if (user != null && !user.isEmpty()) {
+                    request.setOwner(MultitenantUtils.getTenantAwareUsername(user));
+                } else if (userPattern != null && !userPattern.isEmpty()) {
+                    request.setOwnerPattern(userPattern);
+                }
+
+                result = dms.getDevicesNotInGroup(request, requireDeviceInfo);
+                devices.setList((List<Device>) result.getData());
+                devices.setCount(result.getRecordsTotal());
+                return Response.status(Response.Status.OK).entity(devices).build();
+            }
+
             String authorizedUser = CarbonContext.getThreadLocalCarbonContext().getUsername();
 
             if (groupId != 0) {
@@ -541,22 +557,49 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
     @Path("/type/{deviceType}/id/{deviceId}/rename")
     public Response renameDevice(Device device, @PathParam("deviceType") String deviceType,
                                  @PathParam("deviceId") String deviceId) {
+        if (device == null) {
+            String msg = "Required values are not set to rename device";
+            log.error(msg);
+            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+        }
+        if (StringUtils.isEmpty(device.getName())) {
+            String msg = "Device name is not set to rename device";
+            log.error(msg);
+            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+        }
         DeviceManagementProviderService deviceManagementProviderService = DeviceMgtAPIUtils.getDeviceManagementService();
         try {
-            Device persistedDevice = deviceManagementProviderService.getDevice(new DeviceIdentifier
-                    (deviceId, deviceType), true);
-            persistedDevice.setName(device.getName());
-            System.out.println("This is rename device");
-            boolean responseOfmodifyEnrollment = deviceManagementProviderService.modifyEnrollment(persistedDevice);
-            boolean responseOfDeviceNameChanged = deviceManagementProviderService.sendDeviceNameChangedNotification(
-                    persistedDevice);
-            boolean response = responseOfmodifyEnrollment && responseOfDeviceNameChanged;
-
-            return Response.status(Response.Status.CREATED).entity(response).build();
-        } catch (DeviceManagementException e) {
-            String msg = "Error encountered while updating requested device of type : " + deviceType ;
+            Device updatedDevice = deviceManagementProviderService.updateDeviceName(device, deviceType, deviceId);
+            if (updatedDevice != null) {
+                boolean notificationResponse = deviceManagementProviderService.sendDeviceNameChangedNotification(updatedDevice);
+                if (notificationResponse) {
+                    return Response.status(Response.Status.CREATED).entity(updatedDevice).build();
+                } else {
+                    String msg = "Device updated successfully, but failed to send notification.";
+                    log.warn(msg);
+                    return Response.status(Response.Status.CREATED).entity(updatedDevice).header("Warning", msg).build();
+                }
+            } else {
+                String msg = "Device update failed for device of type : " + deviceType;
+                log.error(msg);
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+            }
+        } catch (BadRequestException e) {
+            String msg = "Bad request: " + e.getMessage();
             log.error(msg, e);
             return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+        } catch (DeviceNotFoundException e) {
+            String msg = "Device not found: " + e.getMessage();
+            log.error(msg, e);
+            return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+        } catch (DeviceManagementException e) {
+            String msg = "Error encountered while updating requested device of type : " + deviceType;
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (ConflictException e) {
+            String msg = "Conflict encountered while updating requested device of type : " + deviceType;
+            log.error(msg, e);
+            return Response.status(Response.Status.CONFLICT).entity(msg).build();
         }
     }
 
@@ -1069,7 +1112,6 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             @QueryParam("version") String version,
             @QueryParam("user") String user) {
         List<DeviceIdentifier> deviceIdentifiers = new ArrayList<>();
-        Operation operation = new Operation();
         try {
             RequestValidationUtil.validateDeviceIdentifier(type, id);
             Device device = DeviceMgtAPIUtils.getDeviceManagementService().getDevice(id, false);
@@ -1090,11 +1132,12 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                 //if the applications not installed via entgra store
             } else {
                 if (Constants.ANDROID.equals(type)) {
-                    ApplicationUninstallation applicationUninstallation = new ApplicationUninstallation(packageName, "PUBLIC", name, platform, version, user);
-                    Gson gson = new Gson();
+                    ApplicationUninstallation applicationUninstallation = new ApplicationUninstallation(packageName,
+                            MobileAppTypes.PUBLIC.toString(), name, platform, version, user);
+                    ProfileOperation operation = new ProfileOperation();
                     operation.setCode(MDMAppConstants.AndroidConstants.UNMANAGED_APP_UNINSTALL);
                     operation.setType(Operation.Type.PROFILE);
-                    operation.setPayLoad(gson.toJson(applicationUninstallation));
+                    operation.setPayLoad(applicationUninstallation.toJson());
                     DeviceManagementProviderService deviceManagementProviderService = HelperUtil
                             .getDeviceManagementProviderService();
                     Activity activity = deviceManagementProviderService.addOperation(

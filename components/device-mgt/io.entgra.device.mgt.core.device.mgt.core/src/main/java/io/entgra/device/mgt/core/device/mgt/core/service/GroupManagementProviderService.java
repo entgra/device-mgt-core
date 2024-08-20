@@ -30,6 +30,8 @@ import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupAlreadyExistEx
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupNotExistException;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.RoleDoesNotExistException;
+import io.entgra.device.mgt.core.device.mgt.core.dao.GroupManagementDAOException;
+import io.entgra.device.mgt.core.device.mgt.core.dto.GroupDetailsDTO;
 import org.wso2.carbon.user.api.AuthorizationManager;
 import org.wso2.carbon.user.api.UserStoreManager;
 
@@ -371,4 +373,23 @@ public interface GroupManagementProviderService {
     DeviceTypesOfGroups getDeviceTypesOfGroups(List<String> identifiers) throws GroupManagementException;
 
     DeviceGroup getUserOwnGroup(int groupId, boolean requireGroupProps, int depth) throws GroupManagementException;
+
+    /**
+     * Get group details and device IDs for a given group name.
+     *
+     * @param groupName the name of the group.
+     * @param deviceTypeId the device type id
+     * @param deviceOwner owner of the device
+     * @param deviceName name of the device
+     * @param deviceStatus status of the device
+     * @param offset the offset for the data set
+     * @param limit the limit for the data set
+     * @return {@link GroupDetailsDTO} which containing group details and a list of device IDs
+     * @throws GroupManagementException if an error occurs while fetching group details.
+     */
+    GroupDetailsDTO getGroupDetailsWithDevices(String groupName, int deviceTypeId, String deviceOwner, String deviceName, String deviceStatus,
+                                               int offset, int limit) throws GroupManagementException;
+
+    int getDeviceCount(String groupName) throws GroupManagementException;
+
 }

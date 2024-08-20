@@ -20,7 +20,7 @@
     <parent>
         <artifactId>tenant-mgt</artifactId>
         <groupId>io.entgra.device.mgt.core</groupId>
-        <version>5.0.42-SNAPSHOT</version>
+        <version>5.2.4-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -60,6 +60,7 @@
                             org.wso2.carbon.stratos.common.beans,
                             org.wso2.carbon.stratos.common.exception,
                             org.wso2.carbon.stratos.common.listeners,
+                            org.wso2.carbon.tenant.mgt.services,
                             io.entgra.device.mgt.core.device.mgt.common.metadata.mgt,
                             io.entgra.device.mgt.core.device.mgt.common.exceptions,
                             io.entgra.device.mgt.core.device.mgt.common.permission.mgt,

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - 2023, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
+ * Copyright (c) 2018 - 2024, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
  *
  * Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -16,17 +16,12 @@
  * under the License.
  */
 
-package io.entgra.device.mgt.core.application.mgt.common.dto;
+package io.entgra.device.mgt.core.tenant.mgt.common.spi;
 
-import java.sql.Timestamp;
+import io.entgra.device.mgt.core.tenant.mgt.common.exception.TenantMgtException;
 
-public class UserSubscriptionDTO {
-    private int id;
-    private String subscribedBy;
-    private Timestamp subscribedTimestamp;
-    private boolean isUnsubscribed;
-    private String unsubscribedBy;
-    private Timestamp unsubscribedTimestamp;
-    private String subscribedFrom;
-    private String userName;
+public interface TenantManagerAdminService {
+
+    void deleteTenant(String tenantDomain) throws TenantMgtException;
+    int getTenantId(String tenantDomain) throws TenantMgtException;
 }

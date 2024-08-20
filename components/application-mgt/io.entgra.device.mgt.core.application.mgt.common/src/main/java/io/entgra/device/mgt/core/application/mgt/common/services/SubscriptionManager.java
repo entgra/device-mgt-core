@@ -18,11 +18,23 @@
 package io.entgra.device.mgt.core.application.mgt.common.services;
 
 import io.entgra.device.mgt.core.application.mgt.common.ApplicationInstallResponse;
+import io.entgra.device.mgt.core.application.mgt.common.CategorizedSubscriptionResult;
+import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscription;
+import io.entgra.device.mgt.core.application.mgt.common.DeviceSubscriptionData;
 import io.entgra.device.mgt.core.application.mgt.common.ExecutionStatus;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionInfo;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionResponse;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionStatistics;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionType;
+import io.entgra.device.mgt.core.application.mgt.common.dto.CategorizedSubscriptionCountsDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ScheduledSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.SubscriptionsDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceOperationDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionResponseDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException;
 import io.entgra.device.mgt.core.application.mgt.common.exception.SubscriptionManagementException;
-import io.entgra.device.mgt.core.application.mgt.common.SubscriptionType;
 import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
@@ -194,7 +206,7 @@ public interface SubscriptionManager {
      * application release for given UUID, if an error occurred while getting device details of subscribed device ids,
      * if an error occurred while getting subscription details of given application release UUID.
      */
-    PaginationResult getAppSubscriptionDetails(PaginationRequest request, String appUUID, String actionStatus, String action, String installedVersion)
+    CategorizedSubscriptionResult getAppSubscriptionDetails(PaginationRequest request, String appUUID, String actionStatus, String action, String installedVersion)
             throws ApplicationManagementException;
 
     /***
@@ -217,4 +229,57 @@ public interface SubscriptionManager {
      * @throws {@link SubscriptionManagementException} Exception of the subscription management
      */
     Activity getOperationAppDetails(String id) throws SubscriptionManagementException;
+
+    /**
+     * Get subscription data describes by {@link SubscriptionInfo} entity
+     * @param subscriptionInfo {@link SubscriptionInfo}
+     * @param limit Limit value
+     * @param offset Offset value
+     * @return {@link SubscriptionResponse}
+     * @throws ApplicationManagementException Throws when error encountered while getting subscription data
+     */
+    SubscriptionResponse getSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
+            throws ApplicationManagementException;
+
+    /**
+     * Get status based subscription data describes by {@link SubscriptionInfo} entity
+     * @param subscriptionInfo {@link SubscriptionInfo}
+     * @param limit Limit value
+     * @param offset Offset value
+     * @return {@link SubscriptionResponse}
+     * @throws ApplicationManagementException Throws when error encountered while getting subscription data
+     */
+    SubscriptionResponse getStatusBaseSubscriptions(SubscriptionInfo subscriptionInfo, int limit, int offset)
+            throws ApplicationManagementException;
+
+    /**
+     * Get subscription statistics related data describes by the {@link SubscriptionInfo}
+     * @param subscriptionInfo {@link SubscriptionInfo}
+     * @return {@link SubscriptionStatistics}
+     * @throws ApplicationManagementException Throws when error encountered while getting statistics
+     */
+    SubscriptionStatistics getStatistics(SubscriptionInfo subscriptionInfo) throws ApplicationManagementException;
+
+    /**
+     * This method is responsible for retrieving device subscription details related to the given UUID.
+     *
+     * @param deviceId the deviceId of the device that need to get operation details.
+     * @param uuid the UUID of the application release.
+     * @return {@link DeviceOperationDTO} which contains the details of device subscriptions.
+     * @throws SubscriptionManagementException if there is an error while fetching the details.
+     */
+    List<DeviceOperationDTO> getSubscriptionOperationsByUUIDAndDeviceID(int deviceId, String uuid)
+            throws ApplicationManagementException;
+
+    /**
+     * This method is responsible for retrieving device counts details related to the given UUID.
+     *
+     * @param uuid the UUID of the application release.
+     * @return {@link List<CategorizedSubscriptionCountsDTO>} which contains counts of subscriptions
+       and unsubscription for each subscription type.
+     * @throws SubscriptionManagementException if there is an error while fetching the details.
+     */
+    List<CategorizedSubscriptionCountsDTO> getSubscriptionCountsByUUID(String uuid)
+            throws ApplicationManagementException;
+
 }
