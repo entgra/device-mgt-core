@@ -20,6 +20,8 @@ package io.entgra.device.mgt.core.apimgt.webapp.publisher;
 
 import com.google.gson.Gson;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.constants.Constants;
+import io.entgra.device.mgt.core.apimgt.webapp.publisher.config.Tenants;
+import io.entgra.device.mgt.core.apimgt.webapp.publisher.config.WebappPublisherConfig;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.dto.ApiScope;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.exception.APIManagerPublisherException;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.internal.APIPublisherDataHolder;
@@ -37,9 +39,13 @@ import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.core.ServerStartupObserver;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Stack;
 
 public class APIPublisherStartupHandler implements ServerStartupObserver {
@@ -112,6 +118,7 @@ public class APIPublisherStartupHandler implements ServerStartupObserver {
             try {
                 PrivilegedCarbonContext.startTenantFlow();
                 PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(tenantDomain, true);
+                updateApiPublishingEnabledTenants(tenantDomain);
                 updateScopeMetadataEntryWithDefaultScopes();
             } finally {
                 PrivilegedCarbonContext.endTenantFlow();
@@ -200,6 +207,33 @@ public class APIPublisherStartupHandler implements ServerStartupObserver {
             log.error("Metadata entry already exists for " + Constants.PERM_SCOPE_MAPPING_META_KEY);
         } catch (MetadataManagementException e) {
             log.error("Error encountered while updating permission scope mapping metadata with default scopes");
+        }
+    }
+
+    private void updateApiPublishingEnabledTenants(String superTenantDomain) {
+        MetadataManagementService metadataManagementService = APIPublisherDataHolder.getInstance().getMetadataManagementService();
+        WebappPublisherConfig webappPublisherConfig = WebappPublisherConfig.getInstance();
+
+        Metadata tenantsEntry = new Metadata();
+        List<String> tenants = new ArrayList<>();
+
+        tenants.add(superTenantDomain);
+        tenants.addAll(webappPublisherConfig.getTenants().getTenant());
+
+        tenantsEntry.setMetaKey(Constants.API_PUBLISHING_ENABLED_TENANT_LIST_KEY);
+        tenantsEntry.setMetaValue(gson.toJson(tenants));
+
+        try {
+            if (metadataManagementService.retrieveMetadata(Constants.API_PUBLISHING_ENABLED_TENANT_LIST_KEY) == null) {
+                metadataManagementService.createMetadata(tenantsEntry);
+                return;
+            }
+
+            metadataManagementService.updateMetadata(tenantsEntry);
+        } catch (MetadataKeyAlreadyExistsException e) {
+            log.error("Metadata entry already exists for " + Constants.API_PUBLISHING_ENABLED_TENANT_LIST_KEY);
+        } catch (MetadataManagementException e) {
+            log.error("Error encountered while updating api publish enabled tenants metadata with default scopes");
         }
     }
 }

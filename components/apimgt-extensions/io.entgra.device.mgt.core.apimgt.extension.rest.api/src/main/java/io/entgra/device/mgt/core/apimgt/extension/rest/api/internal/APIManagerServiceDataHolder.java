@@ -19,6 +19,7 @@
 package io.entgra.device.mgt.core.apimgt.extension.rest.api.internal;
 
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.APIApplicationServices;
+import io.entgra.device.mgt.core.apimgt.extension.rest.api.IOAuthClientService;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.PublisherRESTAPIServices;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.ConsumerRESTAPIServices;
 import org.wso2.carbon.apimgt.impl.APIManagerConfigurationService;
@@ -32,6 +33,7 @@ public class APIManagerServiceDataHolder {
     private PublisherRESTAPIServices publisherRESTAPIServices;
     private RealmService realmService;
     private TenantManager tenantManager;
+    private IOAuthClientService ioAuthClientService;
 
     private static APIManagerServiceDataHolder thisInstance = new APIManagerServiceDataHolder();
 
@@ -40,7 +42,7 @@ public class APIManagerServiceDataHolder {
     private APIManagerServiceDataHolder() {
     }
 
-    static APIManagerServiceDataHolder getInstance() {
+    public static APIManagerServiceDataHolder getInstance() {
         return thisInstance;
     }
 
@@ -101,5 +103,16 @@ public class APIManagerServiceDataHolder {
 
     public void setConsumerRESTAPIServices(ConsumerRESTAPIServices consumerRESTAPIServices) {
         this.consumerRESTAPIServices = consumerRESTAPIServices;
+    }
+
+    public IOAuthClientService getIoAuthClientService() {
+        if (ioAuthClientService == null) {
+            throw new IllegalStateException("OAuth client service is not initialized properly");
+        }
+        return ioAuthClientService;
+    }
+
+    public void setIoAuthClientService(IOAuthClientService ioAuthClientService) {
+        this.ioAuthClientService = ioAuthClientService;
     }
 }
