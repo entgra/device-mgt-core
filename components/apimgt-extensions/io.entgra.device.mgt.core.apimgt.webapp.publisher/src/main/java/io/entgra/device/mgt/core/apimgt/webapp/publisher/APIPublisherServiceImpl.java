@@ -435,13 +435,11 @@ public class APIPublisherServiceImpl implements APIPublisherService {
     }
 
     @Override
-    public void addDefaultScopesIfNotExist() throws APIManagerPublisherException {
+    public void addDefaultScopesIfNotExist(List<DefaultPermission> defaultPermissions) throws APIManagerPublisherException {
         WebappPublisherConfig config = WebappPublisherConfig.getInstance();
         List<String> tenants = new ArrayList<>(Collections.singletonList(APIConstants.SUPER_TENANT_DOMAIN));
         tenants.addAll(config.getTenants().getTenant());
 
-        DeviceManagementConfig deviceManagementConfig = DeviceConfigurationManager.getInstance().getDeviceManagementConfig();
-        DefaultPermissions defaultPermissions = deviceManagementConfig.getDefaultPermissions();
         APIApplicationServices apiApplicationServices = APIPublisherDataHolder.getInstance().getApiApplicationServices();
         PublisherRESTAPIServices publisherRESTAPIServices = APIPublisherDataHolder.getInstance().getPublisherRESTAPIServices();
 
@@ -460,7 +458,7 @@ public class APIPublisherServiceImpl implements APIPublisherService {
                                 apiApplicationKey.getClientId(), apiApplicationKey.getClientSecret());
 
                 Scope scope = new Scope();
-                for (DefaultPermission defaultPermission : defaultPermissions.getDefaultPermissions()) {
+                for (DefaultPermission defaultPermission : defaultPermissions) {
                     if (!publisherRESTAPIServices.isSharedScopeNameExists(apiApplicationKey, accessTokenInfo,
                             defaultPermission.getScopeMapping().getKey())) {
                         ScopeMapping scopeMapping = defaultPermission.getScopeMapping();

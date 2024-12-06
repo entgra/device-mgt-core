@@ -49,11 +49,7 @@ public class DeviceAccessAuthorizationServiceImpl implements DeviceAccessAuthori
     private static Log log = LogFactory.getLog(DeviceAccessAuthorizationServiceImpl.class);
 
     public DeviceAccessAuthorizationServiceImpl() {
-        try {
-            this.addAdminPermissionToRegistry();
-        } catch (PermissionManagementException e) {
-            log.error("Unable to add the emm-admin permission to the registry.", e);
-        }
+        log.info("DeviceAccessAuthorizationServiceImpl initialized.");
     }
 
     @Override
@@ -233,12 +229,5 @@ public class DeviceAccessAuthorizationServiceImpl implements DeviceAccessAuthori
 
     private int getTenantId() {
         return CarbonContext.getThreadLocalCarbonContext().getTenantId();
-    }
-
-    private boolean addAdminPermissionToRegistry() throws PermissionManagementException {
-        Permission permission = new Permission();
-        permission.setName(CDM_ADMIN);
-        permission.setPath(PermissionUtils.getAbsolutePermissionPath(CDM_ADMIN_PERMISSION));
-        return PermissionUtils.putPermission(permission);
     }
 }
