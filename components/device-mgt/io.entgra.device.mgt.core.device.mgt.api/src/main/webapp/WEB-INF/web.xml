@@ -52,6 +52,7 @@
             /api/device-mgt/v1.0/whitelabel/.*/favicon,
             /api/device-mgt/v1.0/whitelabel/.*/logo,
             /api/device-mgt/v1.0/whitelabel/.*/icon,
+            /api/device-mgt/v1.0/notifications/stream
         </param-value>
     </context-param>
 
