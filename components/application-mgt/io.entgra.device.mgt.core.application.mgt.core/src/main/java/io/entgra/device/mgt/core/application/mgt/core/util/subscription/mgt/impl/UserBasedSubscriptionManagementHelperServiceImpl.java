@@ -43,6 +43,8 @@ import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
+import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOException;
+import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceDetailsDTO;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -181,10 +183,20 @@ public class UserBasedSubscriptionManagementHelperServiceImpl implements Subscri
             List<Integer> deviceIdsOwnByUser = getDeviceIdsOwnByUser(subscriptionInfo.getIdentifier());
             SubscriptionStatisticDTO subscriptionStatisticDTO = subscriptionDAO.
                     getSubscriptionStatistic(deviceIdsOwnByUser, isUnsubscribe, tenantId, applicationReleaseDTO.getId());
-            int allDeviceCount = deviceIdsOwnByUser.size();
+            List <DeviceDetailsDTO> devices = HelperUtil.getDeviceManagementProviderService().getDevicesByTenantId(tenantId,
+                    applicationDAO.getApplication(applicationReleaseDTO.getUuid(), tenantId).getDeviceTypeId(), subscriptionInfo.getIdentifier(), null);
+            int allDeviceCount = devices.size();
             return SubscriptionManagementHelperUtil.getSubscriptionStatistics(subscriptionStatisticDTO, allDeviceCount);
-        } catch (DeviceManagementException | ApplicationManagementDAOException e) {
-            String msg = "Error encountered while getting subscription statistics for user: " + subscriptionInfo.getIdentifier();
+        } catch (DeviceManagementException e) {
+            String msg = "Error encountered while retrieving device management data";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } catch (ApplicationManagementDAOException e) {
+            String msg = "Error encountered while accessing application management data";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error encountered while retrieving device data";
             log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
         } finally {
