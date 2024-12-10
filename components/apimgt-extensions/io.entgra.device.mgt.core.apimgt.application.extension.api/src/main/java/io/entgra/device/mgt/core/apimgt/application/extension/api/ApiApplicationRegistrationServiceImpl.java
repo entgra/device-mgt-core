@@ -21,9 +21,11 @@ package io.entgra.device.mgt.core.apimgt.application.extension.api;
 import io.entgra.device.mgt.core.apimgt.application.extension.APIManagementProviderService;
 import io.entgra.device.mgt.core.apimgt.application.extension.api.util.APIUtil;
 import io.entgra.device.mgt.core.apimgt.application.extension.api.util.RegistrationProfile;
-import io.entgra.device.mgt.core.apimgt.application.extension.constants.ApiApplicationConstants;
-import io.entgra.device.mgt.core.apimgt.application.extension.dto.ApiApplicationKey;
+import io.entgra.device.mgt.core.apimgt.application.extension.bean.ApiApplicationProfile;
+import io.entgra.device.mgt.core.apimgt.application.extension.bean.ApiApplicationKey;
 import io.entgra.device.mgt.core.apimgt.application.extension.exception.APIManagerException;
+import io.entgra.device.mgt.core.apimgt.extension.rest.api.exceptions.BadRequestException;
+import io.entgra.device.mgt.core.apimgt.extension.rest.api.exceptions.UnexpectedResponseException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -37,6 +39,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.util.Arrays;
+import java.util.HashSet;
 
 
 public class ApiApplicationRegistrationServiceImpl implements ApiApplicationRegistrationService {
@@ -57,15 +60,20 @@ public class ApiApplicationRegistrationServiceImpl implements ApiApplicationRegi
                 String msg = "Invalid tenant domain : " + tenantDomain;
                 return Response.status(Response.Status.NOT_ACCEPTABLE).entity(msg).build();
             }
+
             String username = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUserRealm()
                     .getRealmConfiguration().getAdminUserName();
             PrivilegedCarbonContext.getThreadLocalCarbonContext().setUsername(username);
+
+            ApiApplicationProfile apiApplicationProfile = new ApiApplicationProfile();
+            apiApplicationProfile.setApplicationName(applicationName);
+            apiApplicationProfile.setTags(APIUtil.getDefaultTags());
+            apiApplicationProfile.setGrantTypes("");
+
+
             APIManagementProviderService apiManagementProviderService = APIUtil.getAPIManagementProviderService();
-            ApiApplicationKey apiApplicationKey = apiManagementProviderService.generateAndRetrieveApplicationKeys(
-                    applicationName, APIUtil.getDefaultTags(),
-                    ApiApplicationConstants.DEFAULT_TOKEN_TYPE, username, false,
-                    ApiApplicationConstants.DEFAULT_VALIDITY_PERIOD, PrivilegedCarbonContext.getThreadLocalCarbonContext().getUserRealm()
-                            .getRealmConfiguration().getAdminPassword(), null, null, null, false);
+            ApiApplicationKey apiApplicationKey =
+                    apiManagementProviderService.registerApiApplication(apiApplicationProfile);
             return Response.status(Response.Status.CREATED).entity(apiApplicationKey.toString()).build();
         } catch (APIManagerException e) {
             String msg = "Error occurred while registering an application '" + applicationName + "'";
@@ -79,6 +87,10 @@ public class ApiApplicationRegistrationServiceImpl implements ApiApplicationRegi
             String msg = "Failed to retrieve the device service";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (BadRequestException | UnexpectedResponseException e) {
+            String msg = "Error encountered while registering api application";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         } finally {
             PrivilegedCarbonContext.endTenantFlow();
         }
@@ -89,61 +101,40 @@ public class ApiApplicationRegistrationServiceImpl implements ApiApplicationRegi
     public Response register(RegistrationProfile registrationProfile) {
         try {
             if ((registrationProfile.getTags() != null && registrationProfile.getTags().length != 0)) {
-                if (!APIUtil.getAllowedApisTags().containsAll(Arrays.asList(registrationProfile.getTags()))) {
-                    return Response.status(Response.Status.NOT_ACCEPTABLE).entity("APIs(Tags) are not allowed to this user."
+                if (!new HashSet<>(APIUtil.getAllowedApisTags()).containsAll(Arrays.asList(registrationProfile.getTags()))) {
+                    return Response.status(Response.Status.NOT_ACCEPTABLE).entity("APIs(Tags) are not allowed to this" +
+                            " user."
                     ).build();
                 }
             }
-            String username = APIUtil.getAuthenticatedUser();
-
             APIManagementProviderService apiManagementProviderService = APIUtil.getAPIManagementProviderService();
-            String validityPeriod;
-            if (registrationProfile.getValidityPeriod() == null) {
-                validityPeriod  =  ApiApplicationConstants.DEFAULT_VALIDITY_PERIOD;
-            } else {
-                validityPeriod = registrationProfile.getValidityPeriod();
-            }
 
-            String applicationName = registrationProfile.getApplicationName();
+            ApiApplicationProfile apiApplicationProfile = new ApiApplicationProfile();
+            apiApplicationProfile.setApplicationName(registrationProfile.getApplicationName());
+            apiApplicationProfile.setTags(registrationProfile.getTags());
+            apiApplicationProfile.setCallbackUrl(registrationProfile.getCallbackUrl());
+            apiApplicationProfile.setGrantTypes(String.join(" ", registrationProfile.getSupportedGrantTypes()));
 
-            if (username.equals(registrationProfile.getUsername())) {
-                synchronized (ApiApplicationRegistrationServiceImpl.class) {
-                    ApiApplicationKey apiApplicationKey = apiManagementProviderService.generateAndRetrieveApplicationKeys(
-                            applicationName, registrationProfile.getTags(),
-                            ApiApplicationConstants.DEFAULT_TOKEN_TYPE, username,
-                            registrationProfile.isAllowedToAllDomains(), validityPeriod,
-                            registrationProfile.getPassword(), null, registrationProfile.getSupportedGrantTypes(),
-                            registrationProfile.getCallbackUrl(), false);
-                    return Response.status(Response.Status.CREATED).entity(apiApplicationKey.toString()).build();
-                }
-            }
-
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setUsername(PrivilegedCarbonContext.
-                    getThreadLocalCarbonContext().getUserRealm().getRealmConfiguration().getAdminUserName());
-
-            synchronized (ApiApplicationRegistrationServiceImpl.class) {
-                ApiApplicationKey apiApplicationKey = apiManagementProviderService.generateAndRetrieveApplicationKeys(
-                        applicationName, registrationProfile.getTags(),
-                        ApiApplicationConstants.DEFAULT_TOKEN_TYPE, registrationProfile.getUsername(),
-                        registrationProfile.isAllowedToAllDomains(), validityPeriod,
-                        registrationProfile.getPassword(), null, registrationProfile.getSupportedGrantTypes(),
-                        registrationProfile.getCallbackUrl(), false);
-                return Response.status(Response.Status.CREATED).entity(apiApplicationKey.toString()).build();
-            }
-        } catch (APIManagerException e) {
-            String msg = "Error occurred while registering an application with apis '"
-                    + StringUtils.join(registrationProfile.getTags(), ",") + "'";
+            ApiApplicationKey apiApplicationKey =
+                    apiManagementProviderService.registerApiApplication(apiApplicationProfile);
+            return Response.status(Response.Status.CREATED).entity(apiApplicationKey).build();
+        } catch (BadRequestException e) {
+            String msg =
+                    "Received bad request for registering api application " + registrationProfile.getApplicationName();
             log.error(msg, e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("false").build();
-        } catch (DeviceManagementException e) {
-            String msg = "Failed to retrieve the device service";
+            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+        } catch (UnexpectedResponseException e) {
+            String msg =
+                    "Received unexpected response when registering the api application " + registrationProfile.getApplicationName();
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
-        } catch (UserStoreException e) {
-            String msg = "Failed to access user space.";
+        } catch (DeviceManagementException | APIManagerException e) {
+            String msg =
+                    "Error occurred while registering an application " + registrationProfile.getApplicationName() +
+                            " with apis '"
+                            + StringUtils.join(registrationProfile.getTags(), ",") + "'";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
-
 }
