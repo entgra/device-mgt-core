@@ -77,6 +77,7 @@ public abstract class BaseTestCase {
         LifecycleStateManager lifecycleStateManager = ApplicationManagementUtil.getLifecycleStateMangerInstance();
         DataHolder.getInstance().setLifecycleStateManger(lifecycleStateManager);
 
+        // https://roadmap.entgra.net/issues/12367
         // TODO: Fix the null pointer exceptions caused by unavailability of MetadataManagementService and WebappPublisherConfig
         // in the `APIPublisherStartupHandler.updateScopeMetadataEntryAndRegistryWithDefaultScopes`
         // and `publisher.addDefaultScopesIfNotExist` methods inside the `init` method.

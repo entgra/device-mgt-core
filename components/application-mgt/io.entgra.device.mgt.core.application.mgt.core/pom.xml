@@ -52,8 +52,8 @@
                             io.entgra.device.mgt.core.apimgt.application.extension;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.apimgt.application.extension.dto;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.apimgt.application.extension.exception;version="${io.entgra.device.mgt.core.version.range}",
-                            io.entgra.device.mgt.core.apimgt.webapp.publisher.*,
-                            io.entgra.device.mgt.core.apimgt.webapp.publisher.exception*,
+                            io.entgra.device.mgt.core.apimgt.webapp.publisher;version="${io.entgra.device.mgt.core.version.range}",
+                            io.entgra.device.mgt.core.apimgt.webapp.publisher.exception;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.application.mgt.common;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.application.mgt.common.config;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.application.mgt.common.dto;version="${io.entgra.device.mgt.core.version.range}",
@@ -105,7 +105,7 @@
                             org.apache.commons.httpclient.methods;version="[3.1,4)",
                             org.apache.commons.io;version="[2.4,3)",
                             org.apache.commons.lang;version="[2.6,3)",
-                            org.apache.commons.lang3.*;version="[3.11,4)",
+                            org.apache.commons.lang3;version="[3.12,4)",
                             org.apache.commons.logging;version="[1.2,2)",
                             org.apache.commons.validator.routines;version="[1.7,2)",
                             <!--org.apache.cxf.jaxrs.ext.multipart;version="[3.5,4)",-->
@@ -124,7 +124,7 @@
                             org.quartz;version="[2.1,3)",
                             org.wso2.carbon.apimgt.api;version="[9.28,10)",
                             org.wso2.carbon.apimgt.api.model;version="[9.28,10)",
-                            org.wso2.carbon.apimgt.impl.*;version="${carbon.api.mgt.version.range}",
+                            org.wso2.carbon.apimgt.impl;version="${carbon.api.mgt.version.range}",
                             org.wso2.carbon.context;version="[4.8,5)",
                             org.wso2.carbon.ndatasource.core;version="[4.8,5)",
                             org.wso2.carbon.ntask.common;version="[4.9,5)",
@@ -451,19 +451,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.wso2.carbon.apimgt</groupId>
-            <artifactId>org.wso2.carbon.apimgt.impl</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>io.entgra.device.mgt.core</groupId>
             <artifactId>io.entgra.device.mgt.core.apimgt.webapp.publisher</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.12.0</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

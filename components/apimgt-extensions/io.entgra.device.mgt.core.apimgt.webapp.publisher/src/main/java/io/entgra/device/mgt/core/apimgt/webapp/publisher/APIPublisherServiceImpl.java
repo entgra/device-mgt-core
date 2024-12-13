@@ -462,10 +462,8 @@ public class APIPublisherServiceImpl implements APIPublisherService {
                     if (!publisherRESTAPIServices.isSharedScopeNameExists(apiApplicationKey, accessTokenInfo,
                             defaultPermission.getScopeMapping().getKey())) {
                         ScopeMapping scopeMapping = defaultPermission.getScopeMapping();
-
                         List<String> bindings = new ArrayList<>(
                                 Arrays.asList(scopeMapping.getDefaultRoles().split(",")));
-                        bindings.add(ADMIN_ROLE_KEY);
                         scope.setName(scopeMapping.getKey());
                         scope.setDescription(scopeMapping.getName());
                         scope.setDisplayName(scopeMapping.getName());
@@ -473,10 +471,18 @@ public class APIPublisherServiceImpl implements APIPublisherService {
                         publisherRESTAPIServices.addNewSharedScope(apiApplicationKey, accessTokenInfo, scope);
                     }
                 }
-            } catch (BadRequestException | UnexpectedResponseException | APIServicesException e) {
-                String errorMsg = "Error occurred while adding default scopes";
+            } catch (BadRequestException e) {
+                String errorMsg = "Bad request while adding default scopes for tenant: " + tenantDomain;
                 log.error(errorMsg, e);
-                throw new APIManagerPublisherException(e);
+                throw new APIManagerPublisherException(errorMsg, e);
+            } catch (UnexpectedResponseException e) {
+                String errorMsg = "Unexpected response while adding default scopes for tenant: " + tenantDomain;
+                log.error(errorMsg, e);
+                throw new APIManagerPublisherException(errorMsg, e);
+            } catch (APIServicesException e) {
+                String errorMsg = "API services exception while adding default scopes for tenant: " + tenantDomain;
+                log.error(errorMsg, e);
+                throw new APIManagerPublisherException(errorMsg, e);
             } finally {
                 APIPublisherUtils.removeScopePublishUserIfExists(tenantDomain);
                 PrivilegedCarbonContext.endTenantFlow();

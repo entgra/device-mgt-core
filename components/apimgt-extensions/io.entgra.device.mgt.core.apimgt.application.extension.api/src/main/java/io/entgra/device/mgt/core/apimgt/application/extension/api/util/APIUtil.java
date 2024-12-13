@@ -53,8 +53,6 @@ public class APIUtil {
 
     private static final String DEFAULT_DEVICE_ORGANIZATION_MGT_TAG= "device_organization_management";
 
-    public static final String PERMISSION_PROPERTY_NAME = "name";
-
     public static String getAuthenticatedUser() {
         PrivilegedCarbonContext threadLocalCarbonContext = PrivilegedCarbonContext.getThreadLocalCarbonContext();
         String username = threadLocalCarbonContext.getUsername();

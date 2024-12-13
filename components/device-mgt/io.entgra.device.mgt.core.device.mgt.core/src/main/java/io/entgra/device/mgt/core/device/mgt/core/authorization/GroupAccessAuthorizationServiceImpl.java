@@ -41,7 +41,6 @@ import java.util.List;
 public class GroupAccessAuthorizationServiceImpl implements GroupAccessAuthorizationService {
 
     private final static String GROUP_ADMIN_PERMISSION = "/device-mgt/devices/any-group/permitted-actions-under-owning-group";
-    private final static String GROUP_ADMIN = "Group Management Administrator";
     private static Log log = LogFactory.getLog(DeviceAccessAuthorizationServiceImpl.class);
 
     public GroupAccessAuthorizationServiceImpl() {

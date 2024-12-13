@@ -87,7 +87,7 @@
             <MappedScopeDetails>
                 <Name>Create Applications</Name>
                 <Key>am:admin:lc:app:create</Key>
-                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+                <DefaultRoles>admin, Internal/devicemgt-user</DefaultRoles>
             </MappedScopeDetails>
         </LifecycleState>
         <LifecycleState name="In-Review">
@@ -100,7 +100,7 @@
             <MappedScopeDetails>
                 <Name>Review Applications</Name>
                 <Key>am:admin:lc:app:review</Key>
-                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+                <DefaultRoles>admin, Internal/devicemgt-user</DefaultRoles>
             </MappedScopeDetails>
         </LifecycleState>
         <LifecycleState name="Approved">
@@ -112,7 +112,7 @@
             <MappedScopeDetails>
                 <Name>Approve Applications</Name>
                 <Key>am:admin:lc:app:approve</Key>
-                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+                <DefaultRoles>admin, Internal/devicemgt-user</DefaultRoles>
             </MappedScopeDetails>
         </LifecycleState>
         <LifecycleState name="Rejected">
@@ -124,7 +124,7 @@
             <MappedScopeDetails>
                 <Name>Reject Applications</Name>
                 <Key>am:admin:lc:app:reject</Key>
-                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+                <DefaultRoles>admin, Internal/devicemgt-user</DefaultRoles>
             </MappedScopeDetails>
         </LifecycleState>
         <LifecycleState name="Published">
@@ -137,7 +137,7 @@
             <MappedScopeDetails>
                 <Name>Publish Applications</Name>
                 <Key>am:admin:lc:app:publish</Key>
-                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+                <DefaultRoles>admin, Internal/devicemgt-user</DefaultRoles>
             </MappedScopeDetails>
         </LifecycleState>
         <LifecycleState name="Blocked">
@@ -149,7 +149,7 @@
             <MappedScopeDetails>
                 <Name>Block Applications</Name>
                 <Key>am:admin:lc:app:block</Key>
-                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+                <DefaultRoles>admin, Internal/devicemgt-user</DefaultRoles>
             </MappedScopeDetails>
         </LifecycleState>
         <LifecycleState name="Deprecated">
@@ -161,7 +161,7 @@
             <MappedScopeDetails>
                 <Name>Deprecate Application</Name>
                 <Key>am:admin:lc:app:deprecate</Key>
-                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+                <DefaultRoles>admin, Internal/devicemgt-user</DefaultRoles>
             </MappedScopeDetails>
         </LifecycleState>
         <LifecycleState name="Retired">
@@ -170,7 +170,7 @@
             <MappedScopeDetails>
                 <Name>Retire Applications</Name>
                 <Key>am:admin:lc:app:retire</Key>
-                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+                <DefaultRoles>admin, Internal/devicemgt-user</DefaultRoles>
             </MappedScopeDetails>
         </LifecycleState>
     </LifecycleStates>

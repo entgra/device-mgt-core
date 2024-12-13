@@ -64,7 +64,9 @@ public class LifecycleStateManager {
             APIPublisherStartupHandler.updateScopeMetadataEntryAndRegistryWithDefaultScopes(allDefaultPermissions);
             publisher.addDefaultScopesIfNotExist(allDefaultPermissions);
         } catch (APIManagerPublisherException e) {
-            log.error("Failed to update API publisher with default permissions.", e);
+            String errorMsg = "Failed to update API publisher with default permissions.";
+            log.error(errorMsg, e);
+            throw new LifecycleManagementException(errorMsg, e);
         }
     }
 

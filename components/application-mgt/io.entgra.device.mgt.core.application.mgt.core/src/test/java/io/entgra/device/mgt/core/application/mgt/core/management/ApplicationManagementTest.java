@@ -182,6 +182,7 @@ public class ApplicationManagementTest extends BaseTestCase {
         entAppReleaseWrappers.add(releaseWrapper);
         applicationWrapper.setEntAppReleaseWrappers(entAppReleaseWrappers);
 
+        // https://roadmap.entgra.net/issues/12367
         // TODO: Uncomment the line below after fixing the BaseTestCase setupDataSource test issue.
         // ApplicationManager manager = new ApplicationManagerImpl();
         // manager.createApplication(applicationWrapper, false);
