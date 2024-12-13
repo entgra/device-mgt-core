@@ -435,6 +435,8 @@
         <Scope>tm:tags:delete</Scope>
         <Scope>tm:tags:mapping:create</Scope>
         <Scope>tm:tags:mapping:delete</Scope>
+        <Scope>and:conf:zero-touch-sync</Scope>
+        <Scope>and:conf:zero-touch-clean</Scope>
     </Scopes>
     <SSOConfiguration>
         <Issuer>device-mgt</Issuer>
