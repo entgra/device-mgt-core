@@ -463,9 +463,13 @@ public class APIPublisherServiceImpl implements APIPublisherService {
                             defaultPermission.getScopeMapping().getKey())) {
                         ScopeMapping scopeMapping = defaultPermission.getScopeMapping();
 
-                        List<String> bindings = new ArrayList<>(
-                                Arrays.asList(scopeMapping.getDefaultRoles().split(",")));
-                        bindings.add(ADMIN_ROLE_KEY);
+                        boolean isAssignableToDefaultRoles = defaultPermission.isAssignableToDefaultRoles() == null
+                                || defaultPermission.isAssignableToDefaultRoles();
+                        List<String> bindings = new ArrayList<>();
+                        if (isAssignableToDefaultRoles) {
+                            bindings.addAll(Arrays.asList(scopeMapping.getDefaultRoles().split(",")));
+                            bindings.add(ADMIN_ROLE_KEY);
+                        }
                         scope.setName(scopeMapping.getKey());
                         scope.setDescription(scopeMapping.getName());
                         scope.setDisplayName(scopeMapping.getName());

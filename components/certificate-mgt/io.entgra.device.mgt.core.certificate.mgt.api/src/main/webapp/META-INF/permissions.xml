@@ -28,7 +28,6 @@
     it will result 403 error at the runtime.
 -->
 <PermissionConfiguration>
-    <APIVersion></APIVersion>
     <!-- Device related APIs -->
     <Permission>
         <name>get certificate in the database</name>

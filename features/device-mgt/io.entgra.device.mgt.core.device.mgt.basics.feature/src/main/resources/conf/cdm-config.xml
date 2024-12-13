@@ -237,6 +237,141 @@
                 <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
             </MappedScopeDetails>
         </DefaultPermission>
+        <DefaultPermission>
+            <Name>/permission/admin/device-mgt/ui-permissions/hide-unauthorized-functions</Name>
+            <MappedScopeDetails>
+                <Name>Hide unauthorized functions</Name>
+                <Key>dm:hide:unauthorized:functions</Key>
+                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+            </MappedScopeDetails>
+            <IsAssignableToDefaultRoles>false</IsAssignableToDefaultRoles>
+        </DefaultPermission>
+        <DefaultPermission>
+            <Name>/permission/admin/device-mgt/ui-permissions/endpoints/hide-all-device-menu</Name>
+            <MappedScopeDetails>
+                <Name>Hide All Device Menu from the sider</Name>
+                <Key>dm:hide:all:device</Key>
+                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+            </MappedScopeDetails>
+            <IsAssignableToDefaultRoles>false</IsAssignableToDefaultRoles>
+        </DefaultPermission>
+        <DefaultPermission>
+            <Name>/permission/admin/device-mgt/ui-permissions/endpoints/hide-enroll-device</Name>
+            <MappedScopeDetails>
+                <Name>Hide Enroll Device Menu from the sider</Name>
+                <Key>dm:hide:enroll:device</Key>
+                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+            </MappedScopeDetails>
+            <IsAssignableToDefaultRoles>false</IsAssignableToDefaultRoles>
+        </DefaultPermission>
+        <DefaultPermission>
+            <Name>/permission/admin/device-mgt/ui-permissions/endpoints/hide-abm-device</Name>
+            <MappedScopeDetails>
+                <Name>Hide ABM Device Menu from the sider</Name>
+                <Key>dm:hide:abm:device</Key>
+                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+            </MappedScopeDetails>
+            <IsAssignableToDefaultRoles>false</IsAssignableToDefaultRoles>
+        </DefaultPermission>
+        <DefaultPermission>
+            <Name>/permission/admin/device-mgt/ui-permissions/endpoints/hide-abm-profile</Name>
+            <MappedScopeDetails>
+                <Name>Hide ABM Profile Menu from the sider</Name>
+                <Key>dm:hide:abm:profile</Key>
+                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+            </MappedScopeDetails>
+            <IsAssignableToDefaultRoles>false</IsAssignableToDefaultRoles>
+        </DefaultPermission>
+        <DefaultPermission>
+            <Name>/permission/admin/device-mgt/ui-permissions/hide-policies</Name>
+            <MappedScopeDetails>
+                <Name>Hide Policies Menu from the sider</Name>
+                <Key>dm:hide:policies</Key>
+                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+            </MappedScopeDetails>
+            <IsAssignableToDefaultRoles>false</IsAssignableToDefaultRoles>
+        </DefaultPermission>
+        <DefaultPermission>
+            <Name>/permission/admin/device-mgt/ui-permissions/hide-geo-fences</Name>
+            <MappedScopeDetails>
+                <Name>Hide Geo Fences Menu from the sider</Name>
+                <Key>dm:hide:geo:fences</Key>
+                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+            </MappedScopeDetails>
+            <IsAssignableToDefaultRoles>false</IsAssignableToDefaultRoles>
+        </DefaultPermission>
+        <DefaultPermission>
+            <Name>/permission/admin/device-mgt/ui-permissions/hide-device-locations</Name>
+            <MappedScopeDetails>
+                <Name>Hide Device Locations Menu from the sider</Name>
+                <Key>dm:hide:device:locations</Key>
+                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+            </MappedScopeDetails>
+            <IsAssignableToDefaultRoles>false</IsAssignableToDefaultRoles>
+        </DefaultPermission>
+        <DefaultPermission>
+            <Name>/permission/admin/device-mgt/ui-permissions/config/hide-configurations</Name>
+            <MappedScopeDetails>
+                <Name>Hide Configurations Menu from the sider</Name>
+                <Key>dm:hide:config:configurations</Key>
+                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+            </MappedScopeDetails>
+            <IsAssignableToDefaultRoles>false</IsAssignableToDefaultRoles>
+        </DefaultPermission>
+        <DefaultPermission>
+            <Name>/permission/admin/device-mgt/ui-permissions/config/hide-users</Name>
+            <MappedScopeDetails>
+                <Name>Hide Users Menu of the Configurations from the sider</Name>
+                <Key>dm:hide:config:users</Key>
+                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+            </MappedScopeDetails>
+            <IsAssignableToDefaultRoles>false</IsAssignableToDefaultRoles>
+        </DefaultPermission>
+        <DefaultPermission>
+            <Name>/permission/admin/device-mgt/ui-permissions/config/hide-roles</Name>
+            <MappedScopeDetails>
+                <Name>Hide Roles Menu of the Configurations from the sider</Name>
+                <Key>dm:hide:config:roles</Key>
+                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+            </MappedScopeDetails>
+            <IsAssignableToDefaultRoles>false</IsAssignableToDefaultRoles>
+        </DefaultPermission>
+        <DefaultPermission>
+            <Name>/permission/admin/device-mgt/ui-permissions/config/hide-groups</Name>
+            <MappedScopeDetails>
+                <Name>Hide Groups Menu of the Configurations from the sider</Name>
+                <Key>dm:hide:config:groups</Key>
+                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+            </MappedScopeDetails>
+            <IsAssignableToDefaultRoles>false</IsAssignableToDefaultRoles>
+        </DefaultPermission>
+        <DefaultPermission>
+            <Name>/permission/admin/device-mgt/ui-permissions/config/hide-certificates</Name>
+            <MappedScopeDetails>
+                <Name>Hide Certificates Menu of the Configurations from the sider</Name>
+                <Key>dm:hide:config:certificates</Key>
+                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+            </MappedScopeDetails>
+            <IsAssignableToDefaultRoles>false</IsAssignableToDefaultRoles>
+        </DefaultPermission>
+        <DefaultPermission>
+            <Name>/permission/admin/device-mgt/ui-permissions/config/hide-platform-config</Name>
+            <MappedScopeDetails>
+                <Name>Hide Platform Configuration Menu of the Configurations from the sider</Name>
+                <Key>dm:hide:config:platform:config</Key>
+                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+            </MappedScopeDetails>
+            <IsAssignableToDefaultRoles>false</IsAssignableToDefaultRoles>
+        </DefaultPermission>
+        <DefaultPermission>
+            <Name>/permission/admin/device-mgt/ui-permissions/config/hide-device-tracker</Name>
+            <MappedScopeDetails>
+                <Name>Hide Device Tracker Menu of the Configurations from the sider</Name>
+                <Key>dm:hide:device:tracker</Key>
+                <DefaultRoles>Internal/devicemgt-user</DefaultRoles>
+            </MappedScopeDetails>
+            <IsAssignableToDefaultRoles>false</IsAssignableToDefaultRoles>
+        </DefaultPermission>
     </DefaultPermissions>
 </DeviceMgtConfiguration>
 
