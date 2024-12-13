@@ -104,9 +104,9 @@ public class APIPublisherStartupHandler implements ServerStartupObserver {
                 }
             }
 
+            DeviceManagementConfig deviceManagementConfig = DeviceConfigurationManager.getInstance().getDeviceManagementConfig();
+            DefaultPermissions defaultPermissions = deviceManagementConfig.getDefaultPermissions();
             try {
-                DeviceManagementConfig deviceManagementConfig = DeviceConfigurationManager.getInstance().getDeviceManagementConfig();
-                DefaultPermissions defaultPermissions = deviceManagementConfig.getDefaultPermissions();
                 publisher.updateScopeRoleMapping();
                 publisher.addDefaultScopesIfNotExist(defaultPermissions.getDefaultPermissions());
             } catch (APIManagerPublisherException e) {
@@ -114,8 +114,6 @@ public class APIPublisherStartupHandler implements ServerStartupObserver {
             }
 
             try {
-                DeviceManagementConfig deviceManagementConfig = DeviceConfigurationManager.getInstance().getDeviceManagementConfig();
-                DefaultPermissions defaultPermissions = deviceManagementConfig.getDefaultPermissions();
                 PrivilegedCarbonContext.startTenantFlow();
                 PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(tenantDomain, true);
                 updateScopeMetadataEntryAndRegistryWithDefaultScopes(defaultPermissions.getDefaultPermissions());
@@ -201,12 +199,11 @@ public class APIPublisherStartupHandler implements ServerStartupObserver {
             APIPublisherDataHolder.getInstance().setPermScopeMapping(permScopeMap);
             log.info(Constants.PERM_SCOPE_MAPPING_META_KEY + "entry updated successfully");
         } catch (MetadataKeyAlreadyExistsException e) {
-            log.error("Metadata entry already exists for " + Constants.PERM_SCOPE_MAPPING_META_KEY);
+            log.error("Metadata entry already exists for " + Constants.PERM_SCOPE_MAPPING_META_KEY, e);
         } catch (MetadataManagementException e) {
-            log.error("Error encountered while updating permission scope mapping metadata with default scopes");
+            log.error("Error encountered while updating permission scope mapping metadata with default scopes", e);
         } catch (PermissionManagementException e) {
-            String msg = "Error when adding default permission to the registry ";
-            log.error(msg, e);
+            log.error("Error when adding default permission to the registry", e);
         }
     }
 }

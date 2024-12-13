@@ -463,9 +463,15 @@ public class APIPublisherServiceImpl implements APIPublisherService {
                             defaultPermission.getScopeMapping().getKey())) {
                         ScopeMapping scopeMapping = defaultPermission.getScopeMapping();
 
-                        List<String> bindings = new ArrayList<>(
-                                Arrays.asList(scopeMapping.getDefaultRoles().split(",")));
-                        bindings.add(ADMIN_ROLE_KEY);
+                        List<String> bindings = new ArrayList<>(Arrays.asList(scopeMapping.getDefaultRoles().split(",")));
+
+                        boolean isAssignableToDefaultRoles = defaultPermission.isAssignableToDefaultRoles() == null
+                                || defaultPermission.isAssignableToDefaultRoles();
+                        if (isAssignableToDefaultRoles) {
+                            bindings.add(ADMIN_ROLE_KEY);
+                        } else {
+                            bindings.remove(ADMIN_ROLE_KEY);
+                        }
                         scope.setName(scopeMapping.getKey());
                         scope.setDescription(scopeMapping.getName());
                         scope.setDisplayName(scopeMapping.getName());
@@ -473,8 +479,16 @@ public class APIPublisherServiceImpl implements APIPublisherService {
                         publisherRESTAPIServices.addNewSharedScope(apiApplicationKey, accessTokenInfo, scope);
                     }
                 }
-            } catch (BadRequestException | UnexpectedResponseException | APIServicesException e) {
-                String errorMsg = "Error occurred while adding default scopes";
+            } catch (BadRequestException e) {
+                String errorMsg = "Bad request while adding default scopes for tenant: " + tenantDomain;
+                log.error(errorMsg, e);
+                throw new APIManagerPublisherException(e);
+            } catch (UnexpectedResponseException e) {
+                String errorMsg = "Unexpected response while adding default scopes for tenant: " + tenantDomain;
+                log.error(errorMsg, e);
+                throw new APIManagerPublisherException(e);
+            } catch (APIServicesException e) {
+                String errorMsg = "API services exception while adding default scopes for tenant: " + tenantDomain;
                 log.error(errorMsg, e);
                 throw new APIManagerPublisherException(e);
             } finally {
