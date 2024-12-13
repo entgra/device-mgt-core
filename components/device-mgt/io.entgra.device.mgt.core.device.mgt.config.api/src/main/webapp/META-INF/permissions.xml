@@ -28,7 +28,6 @@
     it will result 403 error at the runtime.
 -->
 <PermissionConfiguration>
-    <APIVersion></APIVersion>
     <!--Permission Tree Name-->
     <Permission>
         <name>Device Management Configuration</name>
