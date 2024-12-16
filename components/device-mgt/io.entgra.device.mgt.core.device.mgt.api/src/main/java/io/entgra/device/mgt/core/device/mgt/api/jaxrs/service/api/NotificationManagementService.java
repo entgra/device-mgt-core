@@ -29,6 +29,10 @@ import javax.validation.constraints.Size;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Notifications related REST-API.
@@ -64,6 +68,13 @@ import javax.ws.rs.core.Response;
                         key = "dm:notif:mark-checked",
                         roles = {"Internal/devicemgt-user"},
                         permissions = {"/device-mgt/notifications/update"}
+                ),
+                @Scope(
+                        name = "Streaming Device Notifications",
+                        description = "Real-time streaming of device notifications",
+                        key = "dm:notifications:stream",
+                        roles = {"Internal/devicemgt-user"},
+                        permissions = {"/device-mgt/notifications/stream"}
                 )
         }
 )
@@ -226,4 +237,48 @@ public interface NotificationManagementService {
             }
     )
     Response clearAllNotifications();
+
+    /**
+     * SSE endpoint to send real-time notifications to the client.
+     * @return StreamingOutput for SSE response.
+     */
+    @GET
+    @Path("/stream")
+    @Produces("text/event-stream")
+    @ApiOperation(
+            value = "Stream Real-Time Notifications",
+            notes = "Streams real-time notifications to the client via Server-Sent Events.",
+            response = StreamingOutput.class,
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = "scope", value = "dm:notifications:stream")
+                    })
+            }
+    )
+    default Response streamNotifications() {
+        StreamingOutput streamingOutput = new StreamingOutput() {
+            public void write(OutputStream output) throws IOException {
+                String notification = "data: {\"message\": \"New Notification\"}\n\n";
+                while (true) {
+                    try {
+                        System.out.println("Sending the notification: " + notification);
+                        output.write(notification.getBytes(StandardCharsets.UTF_8));
+                        output.flush();
+
+                        Thread.sleep(5000);
+                    } catch (InterruptedException e) {
+                        break;
+                    }
+                }
+            }
+        };
+
+        return Response.ok(streamingOutput)
+                .header("Cache-Control", "no-cache")
+                .header("Connection", "keep-alive")
+                .header("Content-Type", "text/event-stream;charset=UTF-8")
+                .header("Access-Control-Allow-Origin", "*")
+                .build();
+    }
 }
+
