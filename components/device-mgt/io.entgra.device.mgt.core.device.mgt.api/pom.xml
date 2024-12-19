@@ -17,7 +17,8 @@
   ~ under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <parent>
         <artifactId>device-mgt</artifactId>
@@ -29,8 +30,8 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>io.entgra.device.mgt.core.device.mgt.api</artifactId>
     <packaging>war</packaging>
-    <name>Entgra Device Management - Mobile Device Management API</name>
-    <description>Entgra Device Management - Mobile Device Management API</description>
+    <name>Entgra Device Management - Device Management API</name>
+    <description>Entgra Device Management - Device Management API</description>
     <url>https://entgra.io</url>
 
     <build>
@@ -101,9 +102,10 @@
                                 </goals>
                                 <configuration>
                                     <tasks>
-                                        <copy todir="${basedir}/../../../repository/deployment/server/webapps" overwrite="true">
+                                        <copy todir="${basedir}/../../../repository/deployment/server/webapps"
+                                              overwrite="true">
                                             <fileset dir="${basedir}/target">
-                                                <include name="api#device-mgt#v1.0.war" />
+                                                <include name="api#device-mgt#v1.0.war"/>
                                             </fileset>
                                         </copy>
                                     </tasks>
@@ -148,8 +150,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>commons-httpclient.wso2</groupId>
-            <artifactId>commons-httpclient</artifactId>
+            <groupId>org.wso2.orbit.org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -269,6 +271,7 @@
         <dependency>
             <groupId>org.json.wso2</groupId>
             <artifactId>json</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>commons-codec.wso2</groupId>
@@ -408,12 +411,6 @@
             <groupId>io.entgra.device.mgt.core</groupId>
             <artifactId>io.entgra.device.mgt.core.application.mgt.common</artifactId>
             <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.wso2.orbit.javax.xml.bind</groupId>
-                    <artifactId>jaxb-api</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.entgra.device.mgt.core</groupId>
@@ -466,9 +463,24 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.wso2.orbit.com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>io.entgra.device.mgt.core</groupId>
             <artifactId>io.entgra.device.mgt.core.tenant.mgt.common</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.entgra.device.mgt.core</groupId>
+            <artifactId>io.entgra.device.mgt.core.policy.mgt.common</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.entgra.device.mgt.core</groupId>
+            <artifactId>io.entgra.device.mgt.core.transport.mgt.email.sender.core</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

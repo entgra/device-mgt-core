@@ -167,7 +167,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.wso2.apache.httpcomponents</groupId>
+            <groupId>org.wso2.orbit.org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <scope>test</scope>
         </dependency>
@@ -199,6 +199,11 @@
         <dependency>
             <groupId>io.entgra.device.mgt.core</groupId>
             <artifactId>io.entgra.device.mgt.core.server.bootup.heartbeat.beacon</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.orbit.javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
             <scope>provided</scope>
         </dependency>
     </dependencies>

@@ -52,8 +52,8 @@
             <artifactId>jackson-jaxrs</artifactId>
         </dependency>
         <dependency>
-            <groupId>commons-httpclient.wso2</groupId>
-            <artifactId>commons-httpclient</artifactId>
+            <groupId>org.wso2.orbit.org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -116,8 +116,8 @@
                     <artifactId>ant</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>commons-httpclient.wso2</groupId>
-                    <artifactId>commons-httpclient</artifactId>
+                    <groupId>org.wso2.orbit.org.apache.httpcomponents</groupId>
+                    <artifactId>httpclient</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.eclipse.equinox</groupId>
@@ -159,6 +159,11 @@
 			<artifactId>org.wso2.carbon.registry.core</artifactId>
 			<scope>provided</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.wso2.orbit.javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>

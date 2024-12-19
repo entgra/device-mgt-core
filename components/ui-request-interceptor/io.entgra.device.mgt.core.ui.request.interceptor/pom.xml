@@ -162,7 +162,7 @@
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>commons-httpclient</artifactId>
+                    <artifactId>httpclient</artifactId>
                     <groupId>commons-httpclient</groupId>
                 </exclusion>
                 <exclusion>

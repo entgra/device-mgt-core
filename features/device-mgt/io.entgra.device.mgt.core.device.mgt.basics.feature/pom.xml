@@ -103,6 +103,9 @@
                                 <importBundleDef>
                                     org.wso2.carbon.registry:org.wso2.carbon.registry.indexing:${carbon.registry.version}
                                 </importBundleDef>
+                                <importBundleDef>
+                                    javax.ws.rs:javax.ws.rs-api:${javax.ws.rs.version}
+                                </importBundleDef>
                             </importBundles>
                             <importFeatures>
                                 <importFeatureDef>

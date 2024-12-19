@@ -27,12 +27,12 @@ import javax.ws.rs.core.MultivaluedMap;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 
 public class GsonMessageBodyHandler {
 
     public static final String DATE_FORMAT = "EEE, d MMM yyyy HH:mm:ss Z";
     private Gson gson;
-    private static final String UTF_8 = "UTF-8";
 
     public boolean isReadable(Class<?> aClass, Type type, Annotation[] annotations, MediaType mediaType) {
         return true;
@@ -50,12 +50,8 @@ public class GsonMessageBodyHandler {
             MultivaluedMap<String, String> stringStringMultivaluedMap, InputStream entityStream)
             throws IOException, WebApplicationException {
 
-        InputStreamReader reader = new InputStreamReader(entityStream, "UTF-8");
-
-        try {
+        try (InputStreamReader reader = new InputStreamReader(entityStream, StandardCharsets.UTF_8)) {
             return getGson().fromJson(reader, type);
-        } finally {
-            reader.close();
         }
     }
 
@@ -71,11 +67,8 @@ public class GsonMessageBodyHandler {
             MultivaluedMap<String, Object> stringObjectMultivaluedMap, OutputStream entityStream)
             throws IOException, WebApplicationException {
 
-        OutputStreamWriter writer = new OutputStreamWriter(entityStream, UTF_8);
-        try {
+        try (OutputStreamWriter writer = new OutputStreamWriter(entityStream, StandardCharsets.UTF_8)) {
             getGson().toJson(object, type, writer);
-        } finally {
-            writer.close();
         }
     }
 }

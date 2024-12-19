@@ -43,6 +43,10 @@
             <groupId>io.entgra.device.mgt.core</groupId>
             <artifactId>io.entgra.device.mgt.core.device.mgt.common</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-core</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -98,7 +102,9 @@
                                 <bundleDef>
                                     io.entgra.device.mgt.core:io.entgra.device.mgt.core.device.mgt.common:${io.entgra.device.mgt.core.version}
                                 </bundleDef>
-                                <bundleDef>com.sun.jersey:jersey-core</bundleDef>
+                                <bundleDef>
+                                    com.sun.jersey:jersey-core:${jersey.version}
+                                </bundleDef>
                             </bundles>
                             <importFeatures>
                                 <importFeatureDef>org.wso2.carbon.core.server:${carbon.kernel.version}
