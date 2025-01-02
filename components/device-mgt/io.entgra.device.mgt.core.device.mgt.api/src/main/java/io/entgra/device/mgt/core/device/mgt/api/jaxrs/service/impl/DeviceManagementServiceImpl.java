@@ -213,7 +213,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                 }
             }
             if (type != null && !type.isEmpty()) {
-                if (type  == "web-clip"){
+                if (type.equals("web-clip")){
                     request.setDeviceType("ANY");
                 }
                 request.setDeviceType(type);
