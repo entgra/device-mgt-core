@@ -311,6 +311,12 @@ public interface DeviceManagementService {
             @QueryParam("excludeGroupId")
                     int excludeGroupId,
             @ApiParam(
+                    name = "excludeTagId",
+                    value = "Id of the Tag that needs to get the devices that are not belong.",
+                    required = false)
+            @QueryParam("excludeTagId")
+            int excludeTagId,
+            @ApiParam(
                     name = "since",
                     value = "Checks if the requested variant was created since the specified date-time.\n" +
                             "Provide the value in the following format: EEE, d MMM yyyy HH:mm:ss Z.\n" +

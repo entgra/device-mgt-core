@@ -5529,6 +5529,63 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
+    public PaginationResult getDevicesNotInTag(PaginationRequest request, boolean requireDeviceInfo)
+            throws DeviceManagementException {
+        if (request == null) {
+            String msg = "Received incomplete pagination request for method getDevicesNotInTag";
+            log.error(msg);
+            throw new DeviceManagementException(msg);
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("Get devices not in tag with pagination " + request.toString() +
+                    " and requiredDeviceInfo: " + requireDeviceInfo);
+        }
+        PaginationResult paginationResult = new PaginationResult();
+        List<Device> devicesNotInTag = null;
+        int count = 0;
+        int tenantId = this.getTenantId();
+        DeviceManagerUtil.validateDeviceListPageSize(request);
+
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            if (request.getTagId() != 0) {
+                devicesNotInTag = deviceDAO.searchDevicesNotInTag(request, tenantId);
+                count = deviceDAO.getCountOfDevicesNotInTag(request, tenantId);
+            } else {
+                String msg = "Tag ID is not provided for method getDevicesNotInTag";
+                log.error(msg);
+                throw new DeviceManagementException(msg);
+            }
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred while retrieving device list that are not in the specified Tag for the current tenant";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (Exception e) {
+            String msg = "Error occurred in getDevicesNotInTag";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+
+        if (devicesNotInTag != null && !devicesNotInTag.isEmpty()) {
+            if (requireDeviceInfo) {
+                paginationResult.setData(populateAllDeviceInfo(devicesNotInTag));
+            } else {
+                paginationResult.setData(devicesNotInTag);
+            }
+        }
+
+        paginationResult.setRecordsFiltered(count);
+        paginationResult.setRecordsTotal(count);
+        return paginationResult;
+    }
+
+    @Override
     public Device updateDeviceName(Device device, String deviceType, String deviceId)
             throws DeviceManagementException, DeviceNotFoundException, ConflictException {
         Device persistedDevice = this.getDevice(new DeviceIdentifier(deviceId, deviceType), true);
