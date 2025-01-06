@@ -3343,7 +3343,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
     @Override
     public int getCountOfDevicesNotInTag(PaginationRequest request, int tenantId) throws DeviceManagementDAOException {
         int deviceCount = 0;
-        int groupId = request.getGroupId();
+        int tagId = request.getTagId();
         String deviceType = request.getDeviceType();
         boolean isDeviceTypeProvided = false;
         String deviceName = request.getDeviceName();
@@ -3363,27 +3363,35 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             Connection conn = getConnection();
             String sql = "SELECT COUNT(d1.DEVICE_ID) AS DEVICE_COUNT " +
                     "FROM DM_ENROLMENT e, " +
-                    "(SELECT gd.ID AS DEVICE_ID, " +
-                    "gd.DESCRIPTION, " +
-                    "gd.NAME, " +
-                    "gd.DEVICE_IDENTIFICATION " +
-                    "FROM DM_DEVICE gd " +
-                    "WHERE gd.ID NOT IN (SELECT dgm.DEVICE_ID " +
-                    "FROM DM_DEVICE_GROUP_MAP dgm " +
-                    "WHERE dgm.GROUP_ID = ?) " +
-                    "AND gd.TENANT_ID = ?";
+                    "(SELECT d.ID AS DEVICE_ID, " +
+                    "d.DESCRIPTION, " +
+                    "d.NAME, " +
+                    "d.DEVICE_IDENTIFICATION " +
+                    "FROM DM_DEVICE d WHERE d.TENANT_ID = ?) d1 " +
+//                    "WHERE gd.ID NOT IN (SELECT dgm.DEVICE_ID " +
+//                    "FROM DM_DEVICE_GROUP_MAP dgm " +
+//                    "WHERE dgm.GROUP_ID = ?) " +
+//                    "AND gd.TENANT_ID = ?";
+                    "WHERE e.ID NOT IN ( " +
+                    "SELECT e.ID " +
+                    "FROM DM_ENROLMENT e " +
+                    "LEFT JOIN DM_DEVICE_TAG_MAPPING dtm ON e.ID = dtm.ENROLMENT_ID " +
+                    "LEFT JOIN DM_TAG t ON dtm.TAG_ID = t.ID " +
+                    "WHERE e.TENANT_ID = ? " +
+                    "AND t.ID = ? ) " +
+                    "AND e.TENANT_ID = ?";
 
             if (deviceName != null && !deviceName.isEmpty()) {
-                sql += " AND gd.NAME LIKE ?";
+                sql += " AND d1.NAME LIKE ?";
                 isDeviceNameProvided = true;
             }
-            sql += " AND 1=1";
+//            sql += " AND 1=1";
 
             if (since != null) {
-                sql += " AND gd.LAST_UPDATED_TIMESTAMP > ?";
+                sql += " AND d1.LAST_UPDATED_TIMESTAMP > ?";
                 isSinceProvided = true;
             }
-            sql += " ) d1 WHERE d1.DEVICE_ID = e.DEVICE_ID AND e.TENANT_ID = ?";
+            sql += " AND d1.DEVICE_ID = e.DEVICE_ID";
 
             if (deviceType != null && !deviceType.isEmpty()) {
                 sql += " AND e.DEVICE_TYPE = ?";
@@ -3409,7 +3417,9 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
 
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 int paramIdx = 1;
-                stmt.setInt(paramIdx++, groupId);
+                stmt.setInt(paramIdx++, tenantId);
+                stmt.setInt(paramIdx++, tenantId);
+                stmt.setInt(paramIdx++, tagId);
                 stmt.setInt(paramIdx++, tenantId);
                 if (isDeviceNameProvided) {
                     stmt.setString(paramIdx++, "%" + deviceName + "%");
@@ -3417,7 +3427,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 if (isSinceProvided) {
                     stmt.setTimestamp(paramIdx++, new Timestamp(since.getTime()));
                 }
-                stmt.setInt(paramIdx++, tenantId);
+//                stmt.setInt(paramIdx++, tenantId);
                 if (isDeviceTypeProvided) {
                     stmt.setString(paramIdx++, deviceType);
                 }
@@ -3443,7 +3453,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 }
             }
         } catch (SQLException e) {
-            String msg = "Error occurred while retrieving count of devices not in group: " + groupId;
+            String msg = "Error occurred while retrieving count of devices not in tag: " + tagId;
             log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }

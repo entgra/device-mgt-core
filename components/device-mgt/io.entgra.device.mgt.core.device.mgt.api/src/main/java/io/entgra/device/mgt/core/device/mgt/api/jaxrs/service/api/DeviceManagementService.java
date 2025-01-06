@@ -315,7 +315,7 @@ public interface DeviceManagementService {
                     value = "Id of the Tag that needs to get the devices that are not belong.",
                     required = false)
             @QueryParam("excludeTagId")
-            int excludeTagId,
+                    int excludeTagId,
             @ApiParam(
                     name = "since",
                     value = "Checks if the requested variant was created since the specified date-time.\n" +

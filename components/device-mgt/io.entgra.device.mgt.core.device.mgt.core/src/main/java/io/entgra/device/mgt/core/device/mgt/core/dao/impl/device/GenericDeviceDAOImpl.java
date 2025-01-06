@@ -1909,7 +1909,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
     @Override
     public List<Device> searchDevicesNotInTag(PaginationRequest request, int tenantId) throws DeviceManagementDAOException {
         List<Device> devices = null;
-        int groupId = request.getGroupId();
+        int tagId = request.getTagId();
         String deviceType = request.getDeviceType();
         boolean isDeviceTypeProvided = false;
         String deviceName = request.getDeviceName();
@@ -1943,36 +1943,34 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                     "e.DATE_OF_ENROLMENT, " +
                     "e.ID AS ENROLMENT_ID " +
                     "FROM DM_ENROLMENT e, " +
-                    "(SELECT gd.DEVICE_ID, " +
-                    "gd.DESCRIPTION, " +
-                    "gd.NAME, " +
-                    "gd.DEVICE_IDENTIFICATION, " +
-                    "gd.LAST_UPDATED_TIMESTAMP " +
-                    "FROM " +
                     "(SELECT d.ID AS DEVICE_ID, " +
                     "d.DESCRIPTION,  " +
                     "d.NAME, " +
                     "d.DEVICE_IDENTIFICATION, " +
                     "d.LAST_UPDATED_TIMESTAMP " +
-                    "FROM DM_DEVICE d " +
-                    "WHERE d.ID NOT IN " +
-                    "(SELECT dgm.DEVICE_ID " +
-                    "FROM DM_DEVICE_GROUP_MAP dgm " +
-                    "WHERE  dgm.GROUP_ID = ?) " +
-                    "AND d.TENANT_ID = ?";
+                    "FROM DM_DEVICE d WHERE d.TENANT_ID = ? ) d1 " +
+                    "WHERE e.ID NOT IN (" +
+                    "SELECT e.ID " +
+                    "FROM DM_ENROLMENT e " +
+                    "LEFT JOIN DM_DEVICE_TAG_MAPPING dtm ON e.ID = dtm.ENROLMENT_ID " +
+                    "LEFT JOIN DM_TAG t ON dtm.TAG_ID = t.ID " +
+                    "WHERE e.TENANT_ID = ? " +
+                    "AND t.ID = ? ) " +
+                    "AND e.TENANT_ID = ?";
 
             if (deviceName != null && !deviceName.isEmpty()) {
-                sql = sql + " AND d.NAME LIKE ?";
+                sql = sql + " AND d1.NAME LIKE ?";
                 isDeviceNameProvided = true;
             }
-            sql = sql + ") gd";
-            sql = sql + " WHERE 1 = 1";
+//            sql = sql + ") gd";
+//            sql = sql + " WHERE 1 = 1";
 
             if (since != null) {
-                sql = sql + " AND gd.LAST_UPDATED_TIMESTAMP > ?";
+                sql = sql + " AND d1.LAST_UPDATED_TIMESTAMP > ?";
                 isSinceProvided = true;
             }
-            sql = sql + " ) d1 WHERE d1.DEVICE_ID = e.DEVICE_ID AND e.TENANT_ID = ? ";
+//            sql = sql + " ) d1 WHERE d1.DEVICE_ID = e.DEVICE_ID AND e.TENANT_ID = ? ";
+            sql = sql + " AND d1.DEVICE_ID = e.DEVICE_ID";
 
             if (deviceType != null && !deviceType.isEmpty()) {
                 sql = sql + " AND e.DEVICE_TYPE = ?";
@@ -1998,7 +1996,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
 
             if (serial != null || !request.getCustomProperty().isEmpty()) {
                 if (serial != null) {
-                    sql += "AND EXISTS (" +
+                    sql += " AND EXISTS (" +
                             "SELECT VALUE_FIELD " +
                             "FROM DM_DEVICE_INFO di " +
                             "WHERE di.DEVICE_ID = d1.DEVICE_ID " +
@@ -2008,7 +2006,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                 }
                 if (!request.getCustomProperty().isEmpty()) {
                     for (Map.Entry<String, String> entry : request.getCustomProperty().entrySet()) {
-                        sql += "AND EXISTS (" +
+                        sql += " AND EXISTS (" +
                                 "SELECT VALUE_FIELD " +
                                 "FROM DM_DEVICE_INFO di2 " +
                                 "WHERE di2.DEVICE_ID = d1.DEVICE_ID " +
@@ -2021,7 +2019,9 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
 
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 int paramIdx = 1;
-                stmt.setInt(paramIdx++, groupId);
+                stmt.setInt(paramIdx++, tenantId);
+                stmt.setInt(paramIdx++, tenantId);
+                stmt.setInt(paramIdx++, tagId);
                 stmt.setInt(paramIdx++, tenantId);
                 if (isDeviceNameProvided) {
                     stmt.setString(paramIdx++, "%" + deviceName + "%");
@@ -2068,7 +2068,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
             }
         } catch (SQLException e) {
             String msg = "Error occurred while retrieving information of" +
-                    " devices not belonging to group : " + groupId;
+                    " devices not belonging to tagId : " + tagId;
             log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
