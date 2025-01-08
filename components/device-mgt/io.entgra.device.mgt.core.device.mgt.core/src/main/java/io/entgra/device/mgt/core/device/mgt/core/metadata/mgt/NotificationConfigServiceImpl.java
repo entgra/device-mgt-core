@@ -1,5 +1,24 @@
+/*
+ * Copyright (c) 2018 - 2023, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
+ *
+ * Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package io.entgra.device.mgt.core.device.mgt.core.metadata.mgt;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -13,9 +32,13 @@ import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.dao.util.MetadataC
 import io.entgra.device.mgt.core.device.mgt.core.dto.notification.mgt.NotificationConfigDTO;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 
 public class NotificationConfigServiceImpl {
@@ -29,24 +52,15 @@ public class NotificationConfigServiceImpl {
 
     public void addNotificationConfigContext(int tenantId, List<NotificationConfigDTO> configurations) throws MetadataManagementException {
         try {
-            MetadataManagementDAOFactory.beginTransaction();
             if (!metadataDAO.isExist(tenantId, MetadataConstants.NOTIFICATION_CONFIG_META_KEY)) {
                 Metadata configMetadata = constructNotificationConfigContext(configurations);
                 metadataDAO.addMetadata(tenantId, configMetadata);
             }
-        } catch (TransactionManagementException e) {
-            MetadataManagementDAOFactory.rollbackTransaction();
-            String message = "Error occurred while opening connection to the database";
-            log.error(message, e);
         } catch (MetadataManagementDAOException e) {
-            MetadataManagementDAOFactory.rollbackTransaction();
             String message = "Error adding notification configuration context";
             log.error(message, e);
-        } finally {
-            MetadataManagementDAOFactory.commitTransaction();
         }
     }
-
 
     /**
      * Constructs a Metadata object for Notification Configuration using ObjectMapper.
@@ -85,44 +99,45 @@ public class NotificationConfigServiceImpl {
      */
 
 
-    public void deleteNotificationConfigContext(int tenantId, String operationId) throws MetadataManagementException {
+    public void deleteNotificationConfigContext(int tenantId, String operationId) throws MetadataManagementDAOException {
         try {
-            MetadataManagementDAOFactory.beginTransaction();
             Metadata existingMetadata = metadataDAO.getMetadata(tenantId, MetadataConstants.NOTIFICATION_CONFIG_META_KEY);
             if (existingMetadata == null) {
-                throw new MetadataManagementException("No notification configuration context found for tenant: " + tenantId);
+                String message = "No notification configuration context found for tenant: " + tenantId;
+                throw new NoSuchElementException(message);
             }
+
             ObjectMapper objectMapper = new ObjectMapper();
             List<NotificationConfigDTO> configurations = objectMapper.readValue(
                     existingMetadata.getMetaValue(),
                     objectMapper.getTypeFactory().constructCollectionType(List.class, NotificationConfigDTO.class)
             );
+
             boolean isRemoved = configurations.removeIf(config -> config.getOperationId().equals(operationId));
             if (!isRemoved) {
-                throw new MetadataManagementException("No configuration found with operationId: " + operationId);
+                String message = "No configuration found with operationId: " + operationId;
+                log.error(message);
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
             }
+
             existingMetadata.setMetaValue(objectMapper.writeValueAsString(configurations));
             metadataDAO.updateMetadata(tenantId, existingMetadata);
 
-        } catch (TransactionManagementException e) {
-            MetadataManagementDAOFactory.rollbackTransaction();
-            String message = "Error occurred while managing the database transaction";
-            log.error(message, e);
-            throw new MetadataManagementException(message, e);
+        } catch (NoSuchElementException | IllegalArgumentException e) {
+            log.error(e.getMessage(), e);
+            throw e;
         } catch (MetadataManagementDAOException e) {
-            MetadataManagementDAOFactory.rollbackTransaction();
-            String message = "Error deleting notification configuration context";
+            String message = "Error accessing database for metadata update";
             log.error(message, e);
-            throw new MetadataManagementException(message, e);
+            throw new MetadataManagementDAOException(message, e);
         } catch (Exception e) {
-            MetadataManagementDAOFactory.rollbackTransaction();
             String message = "Unexpected error occurred while deleting notification configuration";
             log.error(message, e);
-            throw new MetadataManagementException(message, e);
-        } finally {
-            MetadataManagementDAOFactory.commitTransaction();
+            throw new RuntimeException(message, e);
         }
     }
+
+
 
     /**
      * Updates an existing notification configuration or adds a new configuration to the Metadata context for a given tenant.
@@ -139,60 +154,66 @@ public class NotificationConfigServiceImpl {
 
     public void upsertNotificationConfigContext(int tenantId, NotificationConfigDTO updatedConfig) throws MetadataManagementException {
         try {
-            MetadataManagementDAOFactory.beginTransaction();
-            Metadata existingMetadata = metadataDAO.getMetadata(tenantId, MetadataConstants.NOTIFICATION_CONFIG_META_KEY);
+            Metadata existingMetadata;
+            try {
+                existingMetadata = metadataDAO.getMetadata(tenantId, MetadataConstants.NOTIFICATION_CONFIG_META_KEY);
+            } catch (MetadataManagementDAOException e) {
+                throw new MetadataManagementException("Error fetching metadata for tenant ID: " + tenantId, e);
+            }
 
             ObjectMapper objectMapper = new ObjectMapper();
             List<NotificationConfigDTO> configurations;
 
-            if (existingMetadata != null) {
-                configurations = objectMapper.readValue(
-                        existingMetadata.getMetaValue(),
-                        objectMapper.getTypeFactory().constructCollectionType(List.class, NotificationConfigDTO.class)
-                );
+            try {
+                if (existingMetadata != null) {
+                    configurations = objectMapper.readValue(
+                            existingMetadata.getMetaValue(),
+                            objectMapper.getTypeFactory().constructCollectionType(List.class, NotificationConfigDTO.class)
+                    );
 
-                boolean isUpdated = false;
-
-                for (int i = 0; i < configurations.size(); i++) {
-                    if (configurations.get(i).getOperationId().equals(updatedConfig.getOperationId())) {
-                        configurations.set(i, updatedConfig);
-                        isUpdated = true;
-                        break;
+                    boolean isUpdated = false;
+                    for (int i = 0; i < configurations.size(); i++) {
+                        if (configurations.get(i).getOperationId().equals(updatedConfig.getOperationId())) {
+                            configurations.set(i, updatedConfig);
+                            isUpdated = true;
+                            break;
+                        }
                     }
-                }
-                if (!isUpdated) {
+                    if (!isUpdated) {
+                        configurations.add(updatedConfig);
+                    }
+                } else {
+                    configurations = new ArrayList<>();
                     configurations.add(updatedConfig);
                 }
-            } else {
-                configurations = new ArrayList<>();
-                configurations.add(updatedConfig);
+            } catch (IOException e) {
+                throw new MetadataManagementException("Error processing JSON while reading or updating configurations", e);
             }
 
             Metadata updatedMetadata = new Metadata();
             updatedMetadata.setMetaKey(MetadataConstants.NOTIFICATION_CONFIG_META_KEY);
-            updatedMetadata.setMetaValue(objectMapper.writeValueAsString(configurations));
-
-            if (existingMetadata != null) {
-                metadataDAO.updateMetadata(tenantId, updatedMetadata);
-            } else {
-                metadataDAO.addMetadata(tenantId, updatedMetadata);
+            try {
+                updatedMetadata.setMetaValue(objectMapper.writeValueAsString(configurations));
+            } catch (JsonProcessingException e) {
+                throw new MetadataManagementException("Error serializing configurations to JSON", e);
             }
 
-            MetadataManagementDAOFactory.commitTransaction();
-        } catch (MetadataManagementDAOException e) {
-            MetadataManagementDAOFactory.rollbackTransaction();
-            String message = "Error updating or adding notification configuration context";
-            log.error(message, e);
-            throw new MetadataManagementException(message, e);
+            try {
+                if (existingMetadata != null) {
+                    metadataDAO.updateMetadata(tenantId, updatedMetadata);
+                } else {
+                    metadataDAO.addMetadata(tenantId, updatedMetadata);
+                }
+            } catch (MetadataManagementDAOException e) {
+                throw new MetadataManagementException("Error saving metadata for tenant ID: " + tenantId, e);
+            }
         } catch (Exception e) {
             MetadataManagementDAOFactory.rollbackTransaction();
-            String message = "Error processing notification configuration context";
+            String message = "Unexpected error while processing notification configuration context";
             log.error(message, e);
             throw new MetadataManagementException(message, e);
         }
     }
-
-
 }
 
 
