@@ -1055,7 +1055,7 @@ public interface DeviceManagementProviderService {
      * @return list of applications {@link Application}
      * @throws DeviceManagementException if any service level or DAO level error occurs
      */
-    List<Application> getInstalledApplicationsOnDevice(Device device, int offset, int limit)
+    List<Application> getInstalledApplicationsOnDevice(Device device, int offset, int limit, int isSystemApp)
             throws DeviceManagementException;
     /**
      * This method is for getting the installed application list of a device
@@ -1112,7 +1112,7 @@ public interface DeviceManagementProviderService {
      * @throws DeviceManagementException if an error occurs while fetching owner details.
      */
     List<DeviceDetailsDTO> getDevicesByTenantId(int tenantId, int deviceTypeId, String deviceOwner, String deviceStatus)
-            throws DeviceManagementDAOException;
+            throws DeviceManagementException;
 
     /**
      * Get operation details by operation code.
