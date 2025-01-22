@@ -22,12 +22,14 @@ import io.entgra.device.mgt.core.apimgt.extension.rest.api.APIApplicationService
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.IOAuthClientService;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.PublisherRESTAPIServices;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.ConsumerRESTAPIServices;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.apimgt.impl.APIManagerConfigurationService;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.user.core.tenant.TenantManager;
 
 public class APIManagerServiceDataHolder {
-
+    private static final Log log = LogFactory.getLog(APIManagerServiceDataHolder.class);
     private APIApplicationServices apiApplicationServices;
     private APIManagerConfigurationService apiManagerConfigurationService;
     private PublisherRESTAPIServices publisherRESTAPIServices;
@@ -107,7 +109,9 @@ public class APIManagerServiceDataHolder {
 
     public IOAuthClientService getIoAuthClientService() {
         if (ioAuthClientService == null) {
-            throw new IllegalStateException("OAuth client service is not initialized properly");
+            String msg = "OAuth client service is not initialized properly";
+            log.error(msg);
+            throw new IllegalStateException(msg);
         }
         return ioAuthClientService;
     }

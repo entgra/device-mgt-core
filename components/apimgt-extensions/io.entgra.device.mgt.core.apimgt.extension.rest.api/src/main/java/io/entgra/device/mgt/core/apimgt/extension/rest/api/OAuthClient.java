@@ -140,6 +140,7 @@ public class OAuthClient implements IOAuthClientService {
                 String msg =
                         "Error occurred while executing the request : [ " + request.method() + ":" + request.url() +
                                 " ]";
+                log.error(msg, ex);
                 throw new OAuthClientException(msg, ex);
             }
         }
@@ -278,14 +279,23 @@ public class OAuthClient implements IOAuthClientService {
                 Keys keys = idnDynamicClientRegistration();
                 Tokens tokens = idnTokenGeneration(keys);
                 constructedWrapper = new CacheWrapper(keys, tokens);
+            } catch (OAuthClientException e) {
+                String msg = "Failed to register DCR client and obtain a token";
+                log.error(msg, e);
+            } catch (IOException e) {
+                String msg = "Error encountered in token acquiring process";
+                log.error(msg, e);
             } catch (Exception e) {
-                log.error("Error encountered while updating the cache", e);
+                String msg = "Error encountered while updating the cache";
+                log.error(msg, e);
             }
             return constructedWrapper;
         });
 
         if (cacheWrapper == null) {
-            throw new OAuthClientException("Failed to obtain tokens. Hence aborting request intercepting sequence");
+            String msg = "Failed to obtain tokens. Hence aborting request intercepting sequence";
+            log.error(msg);
+            throw new OAuthClientException(msg);
         }
 
         return new Request.Builder(request).header(Constants.AUTHORIZATION_HEADER_NAME,
@@ -304,26 +314,34 @@ public class OAuthClient implements IOAuthClientService {
             try {
                 Tokens tokens = idnTokenRefresh(value.keys, value.tokens.refreshToken);
                 updatedCacheWrapper = new CacheWrapper(value.keys, tokens);
+            } catch (OAuthClientException e) {
+                String msg = "Failed to refresh the token using refresh token";
+                log.error(msg, e);
+            } catch (IOException e) {
+                String msg = "Error encountered while executing token retrieving request";
+                log.error(msg, e);
             } catch (Exception e) {
-                log.error("Error encountered while updating the cache", e);
+                String msg = "Error encountered while updating the cache";
+                log.error(msg, e);
             }
             return updatedCacheWrapper;
         });
 
         if (cacheWrapper == null) {
-            throw new OAuthClientException("Failed to refresh tokens. Hence aborting request executing process");
+            String msg = "Failed to refresh tokens. Hence aborting request executing process";
+            log.error(msg);
+            throw new OAuthClientException(msg);
         }
     }
 
     private Keys mapKeys(ResponseBody responseBody) throws IOException {
-        Keys keys = new Keys();
         if (responseBody == null) {
-            if (log.isDebugEnabled()) {
-                log.debug("Received empty request body for mapping into keys");
-            }
-            return keys;
+            String msg = "Received empty request body for mapping into keys";
+            log.error(msg);
+            throw new IllegalStateException(msg);
         }
 
+        Keys keys = new Keys();
         JsonObject jsonObject = gson.fromJson(responseBody.string(), JsonObject.class);
         keys.consumerKey = jsonObject.get("clientId").getAsString();
         keys.consumerSecret = jsonObject.get("clientSecret").getAsString();
@@ -331,14 +349,13 @@ public class OAuthClient implements IOAuthClientService {
     }
 
     private Tokens mapTokens(ResponseBody responseBody) throws IOException {
-        Tokens tokens = new Tokens();
         if (responseBody == null) {
-            if (log.isDebugEnabled()) {
-                log.debug("Received empty request body for mapping into tokens");
-            }
-            return tokens;
+            String msg = "Received empty request body for mapping into tokens";
+            log.error(msg);
+            throw new IllegalStateException(msg);
         }
 
+        Tokens tokens = new Tokens();
         JsonObject jsonObject = gson.fromJson(responseBody.string(), JsonObject.class);
         tokens.accessToken = jsonObject.get("access_token").getAsString();
         tokens.refreshToken = jsonObject.get("refresh_token").getAsString();

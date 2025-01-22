@@ -88,28 +88,48 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
     private static final String UNLIMITED_TIER = "Unlimited";
     private static final Gson gson = new Gson();
 
+    /**
+     * Construct request body for acquiring token
+     *
+     * @param tokenCreationProfile {@link TokenCreationProfile}
+     * @return Constructed json body payload object
+     */
     private static JSONObject generateRequestBody(TokenCreationProfile tokenCreationProfile) {
         JSONObject requestBody = new JSONObject();
 
-        if ("password".equals(tokenCreationProfile.getGrantType())) {
-            requestBody.put("username", tokenCreationProfile.getUsername());
-            requestBody.put("password", tokenCreationProfile.getPassword());
+        switch (tokenCreationProfile.getGrantType()) {
+            case "password": {
+                requestBody.put("username", tokenCreationProfile.getUsername());
+                requestBody.put("password", tokenCreationProfile.getPassword());
+                break;
+            }
+            case "refresh_token": {
+                requestBody.put("refresh_token", tokenCreationProfile.getRefreshToken());
+                break;
+            }
+            case "authorization_code": {
+                requestBody.put("code", tokenCreationProfile.getCode());
+                requestBody.put("redirect_uri", tokenCreationProfile.getCallbackUrl());
+                break;
+            }
+            default: {
+                requestBody.put("grant_type", tokenCreationProfile.getGrantType());
+            }
         }
 
-        if ("refresh_token".equals(tokenCreationProfile.getGrantType())) {
-            requestBody.put("refresh_token", tokenCreationProfile.getRefreshToken());
-        }
-
-        if ("authorization_code".equals(tokenCreationProfile.getGrantType())) {
-            requestBody.put("code", tokenCreationProfile.getCode());
-            requestBody.put("redirect_uri", tokenCreationProfile.getCallbackUrl());
-        }
-
-        requestBody.put("grant_type", tokenCreationProfile.getGrantType());
         requestBody.put("scope", tokenCreationProfile.getScope());
         return requestBody;
     }
 
+    /**
+     * Create API application describe by {@link ApiApplicationProfile}
+     *
+     * @param apiApplicationProfile {@link ApiApplicationProfile}
+     * @return Return created API application details by populating {@link ApiApplicationKey}
+     * @throws APIManagerException         Throws when error encountered while API application creation
+     * @throws BadRequestException         Throws when API application profile contains an invalid properties
+     * @throws UnexpectedResponseException Throws when unexpected error encountered while invoking REST services
+     */
     private static ApiApplicationKey createApiApplication(ApiApplicationProfile apiApplicationProfile)
             throws APIManagerException, BadRequestException, UnexpectedResponseException {
         if (apiApplicationProfile.getGrantTypes().contains("authorization_code")
@@ -133,7 +153,7 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
             Set<APIInfo> apis = new HashSet<>();
             for (String tag : apiApplicationProfile.getTags()) {
                 Map<String, String> queryParam = new HashMap<>();
-                queryParam.putIfAbsent("tag", tag);
+                queryParam.put("tag", tag);
                 apis.addAll(Arrays.asList(consumerRESTAPIServices.getAllApis(queryParam, new HashMap<>())));
             }
 
@@ -149,6 +169,18 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
 
     }
 
+    /**
+     * Update an existing API application according to {@link ApiApplicationProfile}
+     *
+     * @param application           Existing API application
+     * @param apiApplicationProfile {@link ApiApplicationProfile}
+     * @param apis                  Existing subscription APIs
+     * @return Return created API application details by populating {@link ApiApplicationKey}
+     * @throws BadRequestException         Throws when API application profile contains an invalid properties
+     * @throws UnexpectedResponseException Throws when unexpected error encountered while invoking REST services
+     * @throws APIServicesException        Throws when error encountered while executing REST API invocations
+     * @throws APIManagerException         Throws when error encountered while API updating application
+     */
     private static ApiApplicationKey updateAndRetrieveApplicationKeys(Application application,
                                                                       ApiApplicationProfile apiApplicationProfile,
                                                                       Set<APIInfo> apis)
@@ -194,6 +226,17 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
         return new ApiApplicationKey(applicationKey.getConsumerKey(), applicationKey.getConsumerSecret());
     }
 
+    /**
+     * Create API application and generate application keys
+     *
+     * @param apiApplicationProfile {@link ApiApplicationProfile}
+     * @param apis                  Set of API definitions associated with the tags
+     * @return Return created API application details by populating {@link ApiApplicationKey}
+     * @throws BadRequestException         Throws when API application profile contains an invalid properties
+     * @throws UnexpectedResponseException Throws when unexpected error encountered while invoking REST services
+     * @throws APIServicesException        Throws when error encountered while executing REST API invocations
+     * @throws APIManagerException         Throws when error encountered while API creating application
+     */
     private static ApiApplicationKey createAndRetrieveApplicationKeys(ApiApplicationProfile apiApplicationProfile,
                                                                       Set<APIInfo> apis)
             throws BadRequestException, UnexpectedResponseException, APIServicesException, APIManagerException {
@@ -216,6 +259,18 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
                 apiApplicationProfile.getCallbackUrl());
     }
 
+    /**
+     * Generate API application keys
+     *
+     * @param applicationId API application ID to retrieve application keys
+     * @param grantTypes    Grant types
+     * @param callbackUrl   Callback URL
+     * @return Return created API application details by populating {@link ApiApplicationKey}
+     * @throws APIManagerException         Throws when error encountered while API getting application keys
+     * @throws BadRequestException         Throws when API application profile contains an invalid properties
+     * @throws UnexpectedResponseException Throws when unexpected error encountered while invoking REST services
+     * @throws APIServicesException        Throws when error encountered while executing REST API invocations
+     */
     private static ApiApplicationKey generateApplicationKeys(String applicationId, String grantTypes,
                                                              String callbackUrl)
             throws APIManagerException, BadRequestException, UnexpectedResponseException, APIServicesException {
@@ -225,7 +280,9 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
         KeyManager[] keyManagers = consumerRESTAPIServices.getAllKeyManagers();
 
         if (keyManagers.length != 1) {
-            throw new APIManagerException("Found invalid number of key managers.");
+            String msg = "Found invalid number of key managers.";
+            log.error(msg);
+            throw new APIManagerException(msg);
         }
 
         ApplicationKey applicationKey = consumerRESTAPIServices.generateApplicationKeys(applicationId,
@@ -234,6 +291,13 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
         return new ApiApplicationKey(applicationKey.getConsumerKey(), applicationKey.getConsumerSecret());
     }
 
+    /**
+     * Construct subscription list
+     *
+     * @param applicationId API application ID
+     * @param apiInfos      API definitions associated with tags
+     * @return Returns list of subscriptions
+     */
     private static List<Subscription> constructSubscriptionList(String applicationId, Set<APIInfo> apiInfos) {
         return apiInfos.stream().map(apiInfo -> {
             Subscription subscription = new Subscription();
@@ -298,19 +362,29 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
         try {
             Metadata metaData =
                     metadataManagementService.retrieveMetadata(Constants.API_PUBLISHING_ENABLED_TENANT_LIST_KEY);
-            if (metaData != null) {
-                JsonArray tenants = gson.fromJson(metaData.getMetaValue(), JsonArray.class);
+            if (metaData == null) {
+                String msg = "Null retrieved for the metadata entry when getting API publishing enabled tenant " +
+                        "domains.";
+                log.error(msg);
+                throw new APIManagerException(msg);
+            }
 
-                for (JsonElement tenant : tenants) {
-                    String currentTenantDomain =
-                            PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain(true);
-                    if (Objects.equals(tenant.getAsString(), currentTenantDomain)) {
-                        flowStartingDomain = currentTenantDomain;
-                    }
+            JsonArray tenants = gson.fromJson(metaData.getMetaValue(), JsonArray.class);
+
+            String currentTenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain(true);
+            // Here we are checking whether that the current tenant is API publishing enabled tenant or not
+            // If the current tenant belongs to a publishing enabled tenant, then start the api application
+            // registration sequences in current tenant space, otherwise in the super tenant
+            for (JsonElement tenant : tenants) {
+                if (Objects.equals(tenant.getAsString(), currentTenantDomain)) {
+                    flowStartingDomain = currentTenantDomain;
+                    break;
                 }
             }
-        } catch (MetadataManagementException metadataManagementException) {
-            log.warn("Failed to load API publishing enabled tenant domains from meta data registry.");
+        } catch (MetadataManagementException e) {
+            String msg = "Failed to load API publishing enabled tenant domains from meta data registry.";
+            log.error(msg, e);
+            throw new APIManagerException(msg, e);
         }
 
         if (log.isDebugEnabled()) {
