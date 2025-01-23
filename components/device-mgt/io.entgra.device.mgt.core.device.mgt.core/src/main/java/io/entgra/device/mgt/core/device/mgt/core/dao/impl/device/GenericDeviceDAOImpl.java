@@ -2029,7 +2029,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                 if (isSinceProvided) {
                     stmt.setTimestamp(paramIdx++, new Timestamp(since.getTime()));
                 }
-                stmt.setInt(paramIdx++, tenantId);
+//                stmt.setInt(paramIdx++, tenantId);
                 if (isDeviceTypeProvided) {
                     stmt.setString(paramIdx++, deviceType);
                 }
