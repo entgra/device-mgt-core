@@ -159,13 +159,11 @@ public final class DeviceManagementDAOUtil {
         enrolmentInfo.setDateOfEnrolment(rs.getTimestamp("DATE_OF_ENROLMENT").getTime());
         enrolmentInfo.setDateOfLastUpdate(rs.getTimestamp("DATE_OF_LAST_UPDATE").getTime());
         enrolmentInfo.setStatus(EnrolmentInfo.Status.valueOf(rs.getString("STATUS")));
-        if (isTagsProvided) {
+        String tagColumn = rs.getString("TAGS");
+        if (isTagsProvided || tagColumn != null) {
             List<String> tags = new ArrayList<>();
-            String tagColumn = rs.getString("TAGS");
-            if (tagColumn != null) {
-                for (String tag : tagColumn.split(",")) {
-                    tags.add(tag.trim());
-                }
+            for (String tag : tagColumn.split(",")) {
+                tags.add(tag.trim());
             }
             enrolmentInfo.setTags(tags);
         }

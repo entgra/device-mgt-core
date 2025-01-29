@@ -171,7 +171,10 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                     + "e.IS_TRANSFERRED, "
                     + "e.DATE_OF_LAST_UPDATE, "
                     + "e.DATE_OF_ENROLMENT, "
-                    + "e.ID AS ENROLMENT_ID "
+                    + "e.ID AS ENROLMENT_ID, "
+                    + "( SELECT GROUP_CONCAT(t.NAME ORDER BY t.NAME SEPARATOR ', ') "
+                    + "FROM DM_DEVICE_TAG_MAPPING dtm JOIN DM_TAG t ON dtm.TAG_ID = t.ID "
+                    + "WHERE dtm.ENROLMENT_ID = e.ID ) AS TAGS "
                     + "FROM DM_ENROLMENT e, "
                     + "(SELECT "
                     + "d.ID, "
@@ -195,7 +198,13 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 sql += "e.OWNERSHIP = ? AND ";
             }
 
-            sql += "TENANT_ID = ? ORDER BY e.DATE_OF_LAST_UPDATE DESC";
+            sql += "e.ID IN (" +
+                    "SELECT e.ID " +
+                    "FROM DM_ENROLMENT e " +
+                    "LEFT JOIN DM_DEVICE_TAG_MAPPING dtm ON e.ID = dtm.ENROLMENT_ID " +
+                    "LEFT JOIN DM_TAG t ON dtm.TAG_ID = t.ID) ";
+
+            sql += "AND TENANT_ID = ? ORDER BY e.DATE_OF_LAST_UPDATE DESC";
 
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 int paramIndx = 1;
