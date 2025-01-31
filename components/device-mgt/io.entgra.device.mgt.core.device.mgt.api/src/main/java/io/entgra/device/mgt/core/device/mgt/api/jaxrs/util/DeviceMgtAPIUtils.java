@@ -145,7 +145,6 @@ public class DeviceMgtAPIUtils {
     private static final String TRUST_STORE_TYPE = "JKS";
     private static final String KEY_MANAGER_TYPE = "SunX509"; //Default Key Manager Type
     private static final String TRUST_MANAGER_TYPE = "SunX509"; //Default Trust Manager Type
-    private static final String SSLV3 = "SSLv3";
     private static final String EVENT_CACHE_MANAGER_NAME = "mqttAuthorizationCacheManager";
     private static final String EVENT_CACHE_NAME = "mqttAuthorizationCache";
     public static final String DAS_ADMIN_SERVICE_EP = "https://" + DAS_HOST_NAME + ":" + DAS_PORT + "/services/";
@@ -1040,13 +1039,19 @@ public class DeviceMgtAPIUtils {
      */
     private static void initSSLConnection() throws NoSuchAlgorithmException, UnrecoverableKeyException,
             KeyStoreException, KeyManagementException {
+        final String tlsProtocol = System.getProperty("tls.protocol");
         KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KEY_MANAGER_TYPE);
         keyManagerFactory.init(keyStore, keyStorePassword);
         TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TRUST_MANAGER_TYPE);
         trustManagerFactory.init(trustStore);
 
         // Create and initialize SSLContext for HTTPS communication
-        sslContext = SSLContext.getInstance(SSLV3);
+        if (tlsProtocol == null) {
+            String msg = "Null received for system property : [tls.protocol]";
+            log.error(msg);
+            throw new IllegalStateException(msg);
+        }
+        sslContext = SSLContext.getInstance(tlsProtocol);
         sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
         SSLContext.setDefault(sslContext);
     }

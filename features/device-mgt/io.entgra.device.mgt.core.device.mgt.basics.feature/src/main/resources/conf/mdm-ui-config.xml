@@ -394,8 +394,11 @@
         <Scope>win:ops:firewall-info</Scope>
         <Scope>win:ops:os-updates-info</Scope>
         <Scope>win:ops:enterprise-app-install</Scope>
+        <Scope>win:ops:wns-config</Scope>
+        <Scope>win:ops:send-notif</Scope>
         <Scope>win:microsoft-store:search</Scope>
         <Scope>win:updates:read</Scope>
+        <Scope>win:ops:os-updates-install</Scope>
         <Scope>admin:tenant:view</Scope>
         <Scope>dm:admin:devices:usage:view</Scope>
         <Scope>and:ops:clear-app</Scope>
@@ -437,6 +440,8 @@
         <Scope>tm:tags:delete</Scope>
         <Scope>tm:tags:mapping:create</Scope>
         <Scope>tm:tags:mapping:delete</Scope>
+        <Scope>and:conf:zero-touch-sync</Scope>
+        <Scope>and:conf:zero-touch-clean</Scope>
         <Scope>dm:devices:any:permitted</Scope>
         <Scope>dm:device:api:subscribe</Scope>
         <Scope>dm:hide:unauthorized:functions</Scope>
