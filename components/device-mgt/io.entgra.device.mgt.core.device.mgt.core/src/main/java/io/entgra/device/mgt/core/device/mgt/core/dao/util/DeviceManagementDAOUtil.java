@@ -159,11 +159,13 @@ public final class DeviceManagementDAOUtil {
         enrolmentInfo.setDateOfEnrolment(rs.getTimestamp("DATE_OF_ENROLMENT").getTime());
         enrolmentInfo.setDateOfLastUpdate(rs.getTimestamp("DATE_OF_LAST_UPDATE").getTime());
         enrolmentInfo.setStatus(EnrolmentInfo.Status.valueOf(rs.getString("STATUS")));
-        String tagColumn = rs.getString("TAGS");
-        if (isTagsProvided || tagColumn != null) {
+        if (isTagsProvided) {
             List<String> tags = new ArrayList<>();
-            for (String tag : tagColumn.split(",")) {
-                tags.add(tag.trim());
+            String tagColumn = rs.getString("TAGS");
+            if (tagColumn != null) {
+                for (String tag : tagColumn.split(",")) {
+                    tags.add(tag.trim());
+                }
             }
             enrolmentInfo.setTags(tags);
         }
@@ -303,8 +305,8 @@ public final class DeviceManagementDAOUtil {
 
     //This method will retrieve most appropriate device information when there are multiple device enrollments for
     //a single device. We'll give the highest priority to active devices.
-    public static Device loadMatchingDevice(ResultSet rs, boolean deviceInfoIncluded) throws SQLException {
-        Device device = loadDevice(rs);
+    public static Device loadMatchingDevice(ResultSet rs, boolean deviceInfoIncluded, boolean isTagsProvided) throws SQLException {
+        Device device = loadDevice(rs, isTagsProvided);
         if (deviceInfoIncluded) {
             device.setDeviceInfo(loadDeviceInfo(rs));
         }

@@ -222,7 +222,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 stmt.setInt(paramIndx, tenantId);
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                        device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false);
+                        device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false, true);
                     }
                 }
             }
@@ -266,7 +266,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             stmt.setInt(4, tenantId);
             rs = stmt.executeQuery();
             if (rs.next()) {
-                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false);
+                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false, false);
             }
         } catch (SQLException e) {
             throw new DeviceManagementDAOException("Error occurred while listing devices for type " +
@@ -311,7 +311,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             stmt.setInt(3, tenantId);
             rs = stmt.executeQuery();
             if (rs.next()) {
-                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false);
+                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false, false);
             }
         } catch (SQLException e) {
             throw new DeviceManagementDAOException("Error occurred while listing device " +
@@ -347,7 +347,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             stmt.setString(5, owner);
             rs = stmt.executeQuery();
             if (rs.next()) {
-                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false);
+                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false, false);
             }
         } catch (SQLException e) {
             throw new DeviceManagementDAOException("Error occurred while listing devices for type " +
@@ -384,7 +384,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             stmt.setInt(paramIdx, tenantId);
             rs = stmt.executeQuery();
             if (rs.next()) {
-                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false);
+                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false, false);
             }
         } catch (SQLException e) {
             throw new DeviceManagementDAOException("Error occurred while listing device for type " +
@@ -585,7 +585,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             stmt.setInt(paramIdx, tenantId);
             rs = stmt.executeQuery();
             if (rs.next()) {
-                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false);
+                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false, false);
             }
         } catch (SQLException e) {
             throw new DeviceManagementDAOException("Error occurred while listing device for id " +
@@ -623,7 +623,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             stmt.setString(6, deviceIdentifier.getType());
             rs = stmt.executeQuery();
             if (rs.next()) {
-                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false);
+                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false, false);
             }
         } catch (SQLException e) {
             throw new DeviceManagementDAOException("Error occurred while listing device for type " +
