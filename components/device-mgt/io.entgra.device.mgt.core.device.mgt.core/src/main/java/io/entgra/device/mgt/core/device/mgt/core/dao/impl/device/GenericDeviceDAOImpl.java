@@ -1962,14 +1962,12 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                 sql = sql + " AND d1.NAME LIKE ?";
                 isDeviceNameProvided = true;
             }
-//            sql = sql + ") gd";
-//            sql = sql + " WHERE 1 = 1";
 
             if (since != null) {
                 sql = sql + " AND d1.LAST_UPDATED_TIMESTAMP > ?";
                 isSinceProvided = true;
             }
-//            sql = sql + " ) d1 WHERE d1.DEVICE_ID = e.DEVICE_ID AND e.TENANT_ID = ? ";
+
             sql = sql + " AND d1.DEVICE_ID = e.DEVICE_ID";
 
             if (deviceType != null && !deviceType.isEmpty()) {
@@ -2029,7 +2027,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                 if (isSinceProvided) {
                     stmt.setTimestamp(paramIdx++, new Timestamp(since.getTime()));
                 }
-//                stmt.setInt(paramIdx++, tenantId);
+
                 if (isDeviceTypeProvided) {
                     stmt.setString(paramIdx++, deviceType);
                 }

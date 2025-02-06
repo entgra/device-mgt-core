@@ -3377,10 +3377,6 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                     "d.NAME, " +
                     "d.DEVICE_IDENTIFICATION " +
                     "FROM DM_DEVICE d WHERE d.TENANT_ID = ?) d1 " +
-//                    "WHERE gd.ID NOT IN (SELECT dgm.DEVICE_ID " +
-//                    "FROM DM_DEVICE_GROUP_MAP dgm " +
-//                    "WHERE dgm.GROUP_ID = ?) " +
-//                    "AND gd.TENANT_ID = ?";
                     "WHERE e.ID NOT IN ( " +
                     "SELECT e.ID " +
                     "FROM DM_ENROLMENT e " +
@@ -3394,7 +3390,6 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 sql += " AND d1.NAME LIKE ?";
                 isDeviceNameProvided = true;
             }
-//            sql += " AND 1=1";
 
             if (since != null) {
                 sql += " AND d1.LAST_UPDATED_TIMESTAMP > ?";
@@ -3436,7 +3431,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 if (isSinceProvided) {
                     stmt.setTimestamp(paramIdx++, new Timestamp(since.getTime()));
                 }
-//                stmt.setInt(paramIdx++, tenantId);
+
                 if (isDeviceTypeProvided) {
                     stmt.setString(paramIdx++, deviceType);
                 }
