@@ -122,6 +122,10 @@ public class DeviceManagementDAOFactory {
         return new DeviceTypeDAOImpl();
     }
 
+    public static DeviceTypeEventDAO getDeviceTypeEventDAO() {
+        return new DeviceTypeEventDAOImpl();
+    }
+
     public static EnrollmentDAO getEnrollmentDAO() {
         if (databaseEngine != null) {
             switch (databaseEngine) {

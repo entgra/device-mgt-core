@@ -17,14 +17,16 @@
  */
 package io.entgra.device.mgt.core.device.mgt.core;
 
+import io.entgra.device.mgt.core.device.mgt.common.tag.mgt.Tag;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
 import io.entgra.device.mgt.core.device.mgt.common.GroupPaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.DeviceGroup;
 import io.entgra.device.mgt.core.device.mgt.common.tag.mgt.Tag;
+import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.*;
 import io.entgra.device.mgt.core.device.mgt.core.common.TestDataHolder;
 import io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementDataHolder;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.registry.core.config.RegistryContext;
 import org.wso2.carbon.registry.core.exceptions.RegistryException;
 import org.wso2.carbon.registry.core.internal.RegistryDataHolder;
@@ -41,6 +43,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TestUtils {
+
 
     private static final Log log = LogFactory.getLog(TestUtils.class);
 
@@ -165,5 +168,24 @@ public class TestUtils {
         RegistryContext context = RegistryContext.getBaseInstance(is, realmService);
         context.setSetup(true);
         return context.getEmbeddedRegistryService();
+    }
+
+    public static List<DeviceTypeEvent> getDeviceTypeEvents() {
+        List<DeviceTypeEvent> events = new ArrayList<>();
+
+        // Create and populate the first event
+        DeviceTypeEvent event1 = new DeviceTypeEvent();
+        event1.setEventName("event1");
+        event1.setEventTopicStructure("topic1/structure");
+        EventAttributeList eventAttributeList = new EventAttributeList();
+        Attribute attributes1 = new Attribute();
+        attributes1.setName("attr1");
+        attributes1.setType(AttributeType.INT);
+        eventAttributeList.setList(new ArrayList<Attribute>(){{add(attributes1);}});
+        event1.setEventAttributeList(eventAttributeList);
+        event1.setTransportType(TransportType.MQTT);
+
+        events.add(event1);
+        return events;
     }
 }
