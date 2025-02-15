@@ -112,9 +112,8 @@ public class TaskManagementServiceImpl implements TaskManagementService {
             // add into the ntask core
             Map<String, String> taskProperties = TaskManagementUtil
                     .populateNTaskProperties(dynamicTask, nTaskName, serverHashIdx);
-            TaskInfo.TriggerInfo triggerInfo = new TaskInfo.TriggerInfo();
-            triggerInfo.setCronExpression(dynamicTask.getCronExpression());
-            TaskInfo taskInfo = new TaskInfo(nTaskName, dynamicTask.getTaskClassName(), taskProperties, triggerInfo);
+            TaskInfo taskInfo = new TaskInfo(nTaskName, dynamicTask.getTaskClassName(), taskProperties,
+                    dynamicTask.getTriggerInfo());
             taskManager.registerTask(taskInfo);
             taskManager.scheduleTask(nTaskName);
             if (!dynamicTask.isEnabled()) {
@@ -153,6 +152,7 @@ public class TaskManagementServiceImpl implements TaskManagementService {
             if (existingTask != null) {
                 existingTask.setEnabled(dynamicTask.isEnabled());
                 existingTask.setCronExpression(dynamicTask.getCronExpression());
+                existingTask.setIntervalMillis(dynamicTask.getIntervalMillis());
                 dynamicTaskDAO.updateDynamicTask(existingTask, tenantId);
                 if (!dynamicTask.getProperties().isEmpty()) {
                     dynamicTaskPropDAO.updateDynamicTaskProps(dynamicTaskId, dynamicTask.getProperties(), tenantId);
@@ -171,17 +171,13 @@ public class TaskManagementServiceImpl implements TaskManagementService {
                 Map<String, String> taskProperties = TaskManagementUtil
                         .populateNTaskProperties(dynamicTask, nTaskName);
                 taskInfo.setProperties(taskProperties);
-
-                TaskInfo.TriggerInfo triggerInfo;
-                if (taskInfo.getTriggerInfo() == null) {
-                    triggerInfo = new TaskInfo.TriggerInfo();
-                } else {
-                    triggerInfo = taskInfo.getTriggerInfo();
-                }
-                triggerInfo.setCronExpression(dynamicTask.getCronExpression());
-                taskInfo.setTriggerInfo(triggerInfo);
+                taskInfo.setTriggerInfo(dynamicTask.getTriggerInfo());
                 taskManager.registerTask(taskInfo);
                 taskManager.rescheduleTask(nTaskName);
+
+                if (!dynamicTask.isEnabled()) {
+                    taskManager.pauseTask(nTaskName);
+                }
             } else {
                 String msg = "Task '" + nTaskName + "' is not exists in the n task core "
                         + "Hence cannot update the task.";
