@@ -1745,12 +1745,10 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                 case MDMAppConstants.WindowsConstants.UNINSTALL_ENTERPRISE_APPLICATION:
                 case MDMAppConstants.WindowsConstants.INSTALL_STORE_APPLICATION:
                 case MDMAppConstants.WindowsConstants.UNINSTALL_STORE_APPLICATION:
-
                     DeviceMgtAPIUtils.getDeviceManagementService().updateOperation(device, operation);
                     ApplicationManager applicationManager = DeviceMgtAPIUtils.getApplicationManager();
                     applicationManager.updateSubsStatus(device.getId(), operation.getId(), operation.getStatus().toString());
                     break;
-
                 default:
                     String msg = "Unsupported operation code: " + operation.getCode();
                     log.error(msg);
