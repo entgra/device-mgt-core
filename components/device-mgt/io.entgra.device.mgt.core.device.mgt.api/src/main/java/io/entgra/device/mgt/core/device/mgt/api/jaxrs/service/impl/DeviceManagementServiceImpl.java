@@ -1739,7 +1739,11 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             DeviceMgtAPIUtils.getDeviceManagementService().updateOperation(device, operation);
 
             if (MDMAppConstants.AndroidConstants.OPCODE_INSTALL_APPLICATION.equals(operation.getCode()) ||
-                    MDMAppConstants.AndroidConstants.OPCODE_UNINSTALL_APPLICATION.equals(operation.getCode())) {
+                    MDMAppConstants.AndroidConstants.OPCODE_UNINSTALL_APPLICATION.equals(operation.getCode()) ||
+                    MDMAppConstants.WindowsConstants.INSTALL_ENTERPRISE_APPLICATION.equals(operation.getCode()) ||
+                    MDMAppConstants.WindowsConstants.UNINSTALL_ENTERPRISE_APPLICATION.equals(operation.getCode()) ||
+                    MDMAppConstants.WindowsConstants.INSTALL_STORE_APPLICATION.equals(operation.getCode()) ||
+                    MDMAppConstants.WindowsConstants.UNINSTALL_STORE_APPLICATION.equals(operation.getCode())) {
                 ApplicationManager applicationManager = DeviceMgtAPIUtils.getApplicationManager();
                 applicationManager.updateSubsStatus(device.getId(), operation.getId(), operation.getStatus().toString());
             }
