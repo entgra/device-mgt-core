@@ -20,6 +20,7 @@ package io.entgra.device.mgt.core.device.mgt.core.internal;
 
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.APIApplicationServices;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.PublisherRESTAPIServices;
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.NotificationConfigurationService;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.GroupAccessAuthorizationService;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
 import io.entgra.device.mgt.core.server.bootup.heartbeat.beacon.service.HeartBeatManagementService;
@@ -101,6 +102,7 @@ public class DeviceManagementDataHolder {
     private APIApplicationServices apiApplicationServices;
     private PublisherRESTAPIServices publisherRESTAPIServices;
     private DeviceManagementStartupHandler deviceManagementStartupHandler;
+    private NotificationConfigurationService notificationConfigurationService;
 
     private final Map<DeviceType, DeviceStatusTaskPluginConfig> deviceStatusTaskPluginConfigs = Collections.synchronizedMap(
             new HashMap<>());
@@ -465,5 +467,11 @@ public class DeviceManagementDataHolder {
 
     public void setDeviceManagementStartupHandler(DeviceManagementStartupHandler deviceManagementStartupHandler) {
         this.deviceManagementStartupHandler = deviceManagementStartupHandler;
+    }
+    public NotificationConfigurationService getNotificationConfigurationService() {
+        return notificationConfigurationService;
+    }
+    public void setNotificationConfigurationService(NotificationConfigurationService notificationConfigurationService) {
+        this.notificationConfigurationService = notificationConfigurationService;
     }
 }

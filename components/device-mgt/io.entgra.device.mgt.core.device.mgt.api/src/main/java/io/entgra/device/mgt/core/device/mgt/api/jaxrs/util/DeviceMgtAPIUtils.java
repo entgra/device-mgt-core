@@ -28,6 +28,8 @@ import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceTypeVersionWra
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.OperationStatusBean;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.analytics.EventAttributeList;
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.NotificationConfigurationService;
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.NotificationConfigurationServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.InputValidationException;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.RequestValidationUtil;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.GroupAccessAuthorizationService;
@@ -169,7 +171,7 @@ public class DeviceMgtAPIUtils {
     private static volatile APIPublisherService apiPublisher;
     private static volatile TenantManagerAdminService tenantManagerAdminService;
     private static volatile TagManagementProviderService tagManagementService;
-
+    private static volatile NotificationConfigurationService notificationConfigurationService;
     static {
         String keyStorePassword = ServerConfiguration.getInstance().getFirstProperty("Security.KeyStore.Password");
         String trustStorePassword = ServerConfiguration.getInstance().getFirstProperty(
@@ -1351,4 +1353,18 @@ public class DeviceMgtAPIUtils {
         }
         return tenantManagerAdminService;
     }
+
+
+    public static NotificationConfigurationService getNotificationConfigurationService() {
+        NotificationConfigurationService notificationConfigurationService;
+        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        notificationConfigurationService = (NotificationConfigurationService) ctx.getOSGiService(
+                NotificationConfigurationService.class, null);
+        if (notificationConfigurationService == null) {
+            throw new IllegalStateException("Notification Configuration service not initialized.");
+        }
+        return notificationConfigurationService;
+    }
+
+
 }

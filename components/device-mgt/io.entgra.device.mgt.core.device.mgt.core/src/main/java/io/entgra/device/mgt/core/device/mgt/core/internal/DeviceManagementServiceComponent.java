@@ -17,6 +17,8 @@
  */
 package io.entgra.device.mgt.core.device.mgt.core.internal;
 
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.NotificationConfigurationService;
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.NotificationConfigurationServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.GroupAccessAuthorizationService;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.MetadataManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
@@ -334,6 +336,12 @@ public class DeviceManagementServiceComponent {
         MetadataManagementService metadataManagementService = new MetadataManagementServiceImpl();
         DeviceManagementDataHolder.getInstance().setMetadataManagementService(metadataManagementService);
         bundleContext.registerService(MetadataManagementService.class.getName(), metadataManagementService, null);
+
+        /* Registering Notification Configuration Service */
+        NotificationConfigurationService notificationConfigurationService = new NotificationConfigurationServiceImpl();
+        DeviceManagementDataHolder.getInstance().setNotificationConfigurationService(notificationConfigurationService);
+        bundleContext.registerService(NotificationConfigurationService.class.getName(), notificationConfigurationService, null);
+
 
         /* Registering Whitelabel Service */
         try {
