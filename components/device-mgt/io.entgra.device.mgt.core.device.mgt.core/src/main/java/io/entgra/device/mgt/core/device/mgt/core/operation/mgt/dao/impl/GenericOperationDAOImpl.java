@@ -29,6 +29,7 @@ import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
 import io.entgra.device.mgt.core.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import io.entgra.device.mgt.core.device.mgt.core.dto.OperationDTO;
 import io.entgra.device.mgt.core.device.mgt.core.dto.OperationResponseDTO;
+import io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.DeviceOperationDetails;
 import io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation;
 import io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.OperationResponseMeta;
 import io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.ProfileOperation;
@@ -128,6 +129,39 @@ public class GenericOperationDAOImpl implements OperationDAO {
         return isUpdated;
     }
 
+    @Override
+    public DeviceOperationDetails getDeviceOperationDetails(int enrolmentId, int operationId)
+            throws OperationManagementDAOException {
+        PreparedStatement stmt = null;
+        ResultSet resultSet = null;
+        DeviceOperationDetails deviceOperationDetails = null;
+        try {
+            Connection connection = OperationManagementDAOFactory.getConnection();
+            String query =
+                    "SELECT DEVICE_ID, " +
+                            "OPERATION_CODE, " +
+                            "DEVICE_TYPE " +
+                            "FROM DM_ENROLMENT_OP_MAPPING " +
+                    "WHERE ENROLMENT_ID = ?" +
+                            " AND OPERATION_ID = ?";
+            stmt = connection.prepareStatement(query);
+            stmt.setInt(1, enrolmentId);
+            stmt.setInt(2, operationId);
+            resultSet = stmt.executeQuery();
+            if (resultSet.next()) {
+                int deviceId = resultSet.getInt("DEVICE_ID");
+                String operationCode = resultSet.getString("OPERATION_CODE");
+                String deviceType = resultSet.getString("DEVICE_TYPE");
+                deviceOperationDetails = new DeviceOperationDetails(deviceId, operationCode, deviceType);
+            }
+        } catch (SQLException e) {
+            throw new OperationManagementDAOException("Error occurred while fetching device operation details.", e);
+        } finally {
+            OperationManagementDAOUtil.cleanupResources(stmt, resultSet);
+        }
+        return deviceOperationDetails;
+    }
+
     public int updateOperationByDeviceTypeAndInitialStatus(String deiceType, String initialStatus, String requiredStatus)
             throws OperationManagementDAOException {
         int numOfRecordsUpdated;
@@ -158,6 +192,36 @@ public class GenericOperationDAOImpl implements OperationDAO {
                     e.getMessage(), e);
         }
         return numOfRecordsUpdated;
+    }
+
+    @Override
+    public List<DeviceOperationDetails> getUpdatedOperationsByDeviceTypeAndStatus(
+            String deviceType, String requiredStatus) throws OperationManagementDAOException {
+        List<DeviceOperationDetails> operationDetailsList = new ArrayList<>();
+        String query =
+                "SELECT " +
+                        "DEVICE_ID, " +
+                        "OPERATION_ID, " +
+                        "OPERATION_CODE " +
+                        "FROM DM_ENROLMENT_OP_MAPPING " +
+                "WHERE DEVICE_TYPE = ? " +
+                        "AND STATUS = ?";
+        try (Connection connection = OperationManagementDAOFactory.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, deviceType);
+            stmt.setString(2, requiredStatus);
+            try (ResultSet resultSet = stmt.executeQuery()) {
+                while (resultSet.next()) {
+                    int deviceId = resultSet.getInt("DEVICE_ID");
+                    String operationCode = resultSet.getString("OPERATION_CODE");
+                    operationDetailsList.add(new DeviceOperationDetails(deviceId, operationCode, deviceType));
+                }
+            }
+        } catch (SQLException e) {
+            throw new OperationManagementDAOException("Error fetching updated operation details for device type: "
+                    + deviceType + " with status: " + requiredStatus, e);
+        }
+        return operationDetailsList;
     }
 
     @Override

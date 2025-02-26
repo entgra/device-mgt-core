@@ -23,6 +23,8 @@ import io.entgra.device.mgt.core.device.mgt.common.push.notification.PushNotific
 import io.entgra.device.mgt.core.device.mgt.common.type.mgt.DeviceTypeDefinitionProvider;
 import io.entgra.device.mgt.core.device.mgt.common.type.mgt.DeviceTypeMetaDefinition;
 import io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.config.*;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 
 import java.util.ArrayList;
@@ -35,6 +37,8 @@ import java.util.Map;
  */
 public class HTTPDeviceTypeManagerService extends DeviceTypeManagerService implements DeviceTypeDefinitionProvider {
 
+    private static final Log log = LogFactory.getLog(HTTPDeviceTypeManagerService.class);
+    private static final String FEATURE_TYPE_OPERATION = "operation";
     private DeviceTypeMetaDefinition deviceTypeMetaDefinition;
     private static final String DEFAULT_PULL_NOTIFICATION_CLASS_NAME = "io.entgra.device.mgt.core.device.mgt.extensions.pull.notification.PullNotificationSubscriberImpl";
 

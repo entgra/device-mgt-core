@@ -67,11 +67,7 @@ import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManage
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionUtils;
 import io.entgra.device.mgt.core.device.mgt.core.privacy.PrivacyComplianceProvider;
 import io.entgra.device.mgt.core.device.mgt.core.search.mgt.SearchManagerService;
-import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
-import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeEventManagementProviderService;
-import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeStatisticManagementProviderService;
-import io.entgra.device.mgt.core.device.mgt.core.service.GroupManagementProviderService;
-import io.entgra.device.mgt.core.device.mgt.core.service.TagManagementProviderService;
+import io.entgra.device.mgt.core.device.mgt.core.service.*;
 import io.entgra.device.mgt.core.device.mgt.core.traccar.api.service.DeviceAPIClientService;
 import io.entgra.device.mgt.core.identity.jwt.client.extension.JWTClient;
 import io.entgra.device.mgt.core.identity.jwt.client.extension.exception.JWTClientException;
@@ -140,7 +136,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.stream.Collectors;
 
 /**
  * MDMAPIUtils class provides utility function used by CDM REST-API classes.
@@ -190,6 +185,7 @@ public class DeviceMgtAPIUtils {
     private static volatile TagManagementProviderService tagManagementService;
     private static volatile DeviceTypeEventManagementProviderService deviceTypeEventManagementProviderService;
     private static volatile DeviceTypeStatisticManagementProviderService deviceTypeStatisticManagementProviderService;
+    private static volatile DeviceFeatureOperations deviceFeatureOperations;
 
     static {
         String keyStorePassword = ServerConfiguration.getInstance().getFirstProperty("Security.KeyStore.Password");
@@ -1478,5 +1474,27 @@ public class DeviceMgtAPIUtils {
             }
         }
         return tenantManagerAdminService;
+    }
+
+    /**
+     * Initializing and accessing method for DeviceFeatureOperations.
+     *
+     * @return DeviceFeatureOperations instance
+     * @throws IllegalStateException if DeviceFeatureOperations cannot be initialized
+     */
+    public static DeviceFeatureOperations getDeviceFeatureOperations() {
+        if (deviceFeatureOperations == null) {
+            synchronized (DeviceMgtAPIUtils.class) {
+                if (deviceFeatureOperations == null) {
+                    PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+                    deviceFeatureOperations = (DeviceFeatureOperations) ctx.getOSGiService(
+                            DeviceFeatureOperations.class, null);
+                    if (deviceFeatureOperations == null) {
+                        throw new IllegalStateException("DeviceStatusManagementService Management service not initialized.");
+                    }
+                }
+            }
+        }
+        return deviceFeatureOperations;
     }
 }
