@@ -192,6 +192,7 @@
                             io.entgra.device.mgt.core.device.mgt.common.spi;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.device.mgt.common.type.mgt;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.device.mgt.core.service;version="${io.entgra.device.mgt.core.version.range}",
+                            io.entgra.device.mgt.core.device.mgt.core.dao;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.device.mgt.extensions.device.type.template,
                             io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.config,
                             io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.dao,

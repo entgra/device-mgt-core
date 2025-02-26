@@ -22,12 +22,17 @@ import io.entgra.device.mgt.core.device.mgt.common.DeviceStatusTaskPluginConfig;
 import io.entgra.device.mgt.core.device.mgt.common.OperationMonitoringTaskConfig;
 import io.entgra.device.mgt.core.device.mgt.core.config.DeviceConfigurationManager;
 import io.entgra.device.mgt.core.device.mgt.core.config.DeviceManagementConfig;
+import io.entgra.device.mgt.core.device.mgt.core.config.datasource.DataSourceConfig;
 import io.entgra.device.mgt.core.device.mgt.core.config.operation.timeout.OperationTimeout;
 import io.entgra.device.mgt.core.device.mgt.core.config.operation.timeout.OperationTimeoutConfiguration;
+import io.entgra.device.mgt.core.device.mgt.core.config.ui.UIConfigurationManager;
+import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceFeatureOperationsDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
 import io.entgra.device.mgt.core.device.mgt.core.operation.timeout.task.OperationTimeoutTaskException;
 import io.entgra.device.mgt.core.device.mgt.core.operation.timeout.task.OperationTimeoutTaskManagerService;
 import io.entgra.device.mgt.core.device.mgt.core.operation.timeout.task.impl.OperationTimeoutTaskManagerServiceImpl;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceFeatureOperations;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceFeatureOperationsImpl;
 import io.entgra.device.mgt.core.device.mgt.core.status.task.DeviceStatusTaskException;
 import io.entgra.device.mgt.core.device.mgt.core.status.task.DeviceStatusTaskManagerService;
 import io.entgra.device.mgt.core.device.mgt.core.status.task.impl.DeviceStatusTaskManagerServiceImpl;
@@ -69,6 +74,20 @@ public class DeviceTaskManagerServiceComponent {
             if (deviceManagementConfig != null && deviceManagementConfig.getOperationTimeoutConfiguration() != null) {
                 startOperationTimeoutTask(componentContext.getBundleContext());
             }
+            //Register the DeviceFeatureOperations service to retrieve device type operation details.
+            DeviceConfigurationManager.getInstance().initConfig();
+            UIConfigurationManager.getInstance().initConfig();
+            DeviceManagementConfig config =
+                    DeviceConfigurationManager.getInstance().getDeviceManagementConfig();
+            DataSourceConfig dsConfig = config.getDeviceManagementConfigRepository().getDataSourceConfig();
+            DeviceFeatureOperationsDAOFactory.init(dsConfig);
+            DeviceConfigurationManager deviceConfigManager = DeviceConfigurationManager.getInstance();
+            DeviceFeatureOperationsDAOFactory.init(deviceConfigManager.getDeviceManagementConfig()
+                    .getDeviceManagementConfigRepository().getDataSourceConfig());
+            DeviceFeatureOperations deviceFeatureOperations = new DeviceFeatureOperationsImpl();
+            componentContext.getBundleContext().registerService(DeviceFeatureOperations.class.getName(),
+                    deviceFeatureOperations, null);
+            deviceFeatureOperations.getDeviceFeatureOperations();
         } catch (Throwable e) {
             log.error("Error occurred while initializing device task manager service.", e);
         }
