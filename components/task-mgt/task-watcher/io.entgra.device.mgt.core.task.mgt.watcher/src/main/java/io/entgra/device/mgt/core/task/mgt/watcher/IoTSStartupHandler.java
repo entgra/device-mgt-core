@@ -235,6 +235,13 @@ public class IoTSStartupHandler implements ServerStartupObserver {
                     if (log.isDebugEnabled()) {
                         log.debug("New task -'" + nTaskName + "' created according to the dynamic task table.");
                     }
+
+                    if (!dt.isEnabled()) {
+                        taskManager.pauseTask(nTaskName);
+                        if (log.isDebugEnabled()) {
+                            log.debug("Task - '" + nTaskName + "' disabled according to the dynamic task table.");
+                        }
+                    }
                 }
             }
             PrivilegedCarbonContext.endTenantFlow();
