@@ -441,6 +441,10 @@
         <Scope>tm:tags:delete</Scope>
         <Scope>tm:tags:mapping:create</Scope>
         <Scope>tm:tags:mapping:delete</Scope>
+        <Scope>dm:configurations:create</Scope>
+        <Scope>dm:configurations:view</Scope>
+        <Scope>dm:configurations:delete</Scope>
+        <Scope>dm:configurations:update</Scope>
         <Scope>and:conf:zero-touch-sync</Scope>
         <Scope>and:conf:zero-touch-clean</Scope>
         <Scope>dm:devices:any:permitted</Scope>
