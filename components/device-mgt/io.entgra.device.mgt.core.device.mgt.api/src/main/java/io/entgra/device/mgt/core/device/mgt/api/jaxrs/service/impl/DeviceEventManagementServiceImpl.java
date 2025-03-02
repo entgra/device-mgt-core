@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - 2023, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
+ * Copyright (c) 2018 - 2025, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
  *
  * Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -25,6 +25,7 @@ import io.entgra.device.mgt.core.apimgt.analytics.extension.dto.EventStreamData;
 import io.entgra.device.mgt.core.apimgt.analytics.extension.dto.MetaData;
 import io.entgra.device.mgt.core.apimgt.analytics.extension.dto.Property;
 import io.entgra.device.mgt.core.apimgt.analytics.extension.exception.EventPublisherDeployerException;
+import io.entgra.device.mgt.core.apimgt.analytics.extension.exception.EventReceiverDeployerException;
 import io.entgra.device.mgt.core.apimgt.analytics.extension.exception.EventStreamDeployerException;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.DeviceEventManagementService;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.Constants;
@@ -42,15 +43,6 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.databridge.commons.StreamDefinition;
 import org.wso2.carbon.databridge.commons.exception.MalformedStreamDefinitionException;
-import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.analytics.Attribute;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.analytics.AttributeType;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.analytics.DeviceTypeEvent;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.analytics.EventAttributeList;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.analytics.TransportType;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.DeviceEventManagementService;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.Constants;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.DeviceMgtAPIUtils;
 import org.wso2.carbon.event.input.adapter.core.InputEventAdapterConfiguration;
 import org.wso2.carbon.event.output.adapter.core.OutputEventAdapterConfiguration;
 import org.wso2.carbon.event.publisher.core.EventPublisherService;
@@ -143,7 +135,7 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
 //        return eventRecords;
 //    }
 
-//    private static List<String> getRecordIds(List<SearchResultEntry> searchResults) {
+    //    private static List<String> getRecordIds(List<SearchResultEntry> searchResults) {
 //        List<String> ids = new ArrayList<>();
 //        for (SearchResultEntry searchResult : searchResults) {
 //            ids.add(searchResult.getId());

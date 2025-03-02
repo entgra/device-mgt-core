@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - 2023, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
+ * Copyright (c) 2018 - 2025, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
  *
  * Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -17,16 +17,19 @@
  */
 package io.entgra.device.mgt.core.device.mgt.core;
 
-import io.entgra.device.mgt.core.device.mgt.common.tag.mgt.Tag;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
 import io.entgra.device.mgt.core.device.mgt.common.GroupPaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.DeviceGroup;
 import io.entgra.device.mgt.core.device.mgt.common.tag.mgt.Tag;
-import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.*;
+import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.Attribute;
+import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.AttributeType;
+import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.DeviceTypeEvent;
+import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.EventAttributeList;
+import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.TransportType;
 import io.entgra.device.mgt.core.device.mgt.core.common.TestDataHolder;
 import io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementDataHolder;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.registry.core.config.RegistryContext;
 import org.wso2.carbon.registry.core.exceptions.RegistryException;
 import org.wso2.carbon.registry.core.internal.RegistryDataHolder;
@@ -71,7 +74,7 @@ public class TestUtils {
         }
     }
 
-    public static DeviceGroup createDeviceGroup1(){
+    public static DeviceGroup createDeviceGroup1() {
         DeviceGroup group = new DeviceGroup();
         group.setName("TEST_GROUP_01");
         group.setDescription("TEST_GROUP_01 - Description");
@@ -80,7 +83,7 @@ public class TestUtils {
     }
 
 
-    public static DeviceGroup createDeviceGroup2(){
+    public static DeviceGroup createDeviceGroup2() {
         DeviceGroup group = new DeviceGroup();
         group.setName("TEST_GROUP_02");
         group.setDescription("TEST_GROUP_02 - Description");
@@ -88,7 +91,7 @@ public class TestUtils {
         return group;
     }
 
-    public static DeviceGroup createDeviceGroup3(){
+    public static DeviceGroup createDeviceGroup3() {
         DeviceGroup group = new DeviceGroup();
         group.setName("TEST_GROUP_03");
         group.setDescription("TEST_GROUP_03 - Description");
@@ -96,7 +99,7 @@ public class TestUtils {
         return group;
     }
 
-    public static DeviceGroup createDeviceGroup4(){
+    public static DeviceGroup createDeviceGroup4() {
         DeviceGroup group = new DeviceGroup();
         group.setName("TEST_GROUP_04");
         group.setDescription("TEST_GROUP_04 - Description");
@@ -105,11 +108,11 @@ public class TestUtils {
     }
 
     public static Tag getTag1() {
-        return new Tag(1,"tag1", "This is tag1");
+        return new Tag(1, "tag1", "This is tag1");
     }
 
     public static Tag getTag2() {
-        return new Tag( 2, "tag2", "This is tag2");
+        return new Tag(2, "tag2", "This is tag2");
     }
 
     public static Tag getTag1Dao() {
@@ -117,7 +120,7 @@ public class TestUtils {
     }
 
     public static Tag getTag2Dao() {
-        return new Tag( "tag2", "This is tag2");
+        return new Tag("tag2", "This is tag2");
     }
 
     public static Tag getTag3() {
@@ -144,12 +147,12 @@ public class TestUtils {
         return tagList;
     }
 
-    public static GroupPaginationRequest createPaginationRequest(){
+    public static GroupPaginationRequest createPaginationRequest() {
         GroupPaginationRequest request = new GroupPaginationRequest(0, 5);
         return request;
     }
 
-    public static List<DeviceIdentifier> getDeviceIdentifiersList(){
+    public static List<DeviceIdentifier> getDeviceIdentifiersList() {
         DeviceIdentifier identifier = new DeviceIdentifier();
         identifier.setId("12345");
         identifier.setType(TestDataHolder.TEST_DEVICE_TYPE);
@@ -181,7 +184,9 @@ public class TestUtils {
         Attribute attributes1 = new Attribute();
         attributes1.setName("attr1");
         attributes1.setType(AttributeType.INT);
-        eventAttributeList.setList(new ArrayList<Attribute>(){{add(attributes1);}});
+        eventAttributeList.setList(new ArrayList<Attribute>() {{
+            add(attributes1);
+        }});
         event1.setEventAttributeList(eventAttributeList);
         event1.setTransportType(TransportType.MQTT);
 

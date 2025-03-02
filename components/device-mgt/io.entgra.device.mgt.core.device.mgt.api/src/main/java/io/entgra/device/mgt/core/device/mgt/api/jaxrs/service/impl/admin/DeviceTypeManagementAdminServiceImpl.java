@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - 2023, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
+ * Copyright (c) 2018 - 2025, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
  *
  * Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -20,12 +20,10 @@ package io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.admin;
 
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceTypeVersionWrapper;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.base.MultitenantConstants;
-import org.wso2.carbon.context.PrivilegedCarbonContext;
-import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.admin.DeviceTypeManagementAdminService;
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.DeviceMgtAPIUtils;
 import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.PlatformConfiguration;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.spi.DeviceManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.type.mgt.DeviceTypeMetaDefinition;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
@@ -36,19 +34,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.DeviceMgtAPIUtils;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.admin.DeviceTypeManagementAdminService;
 
-
-import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -105,9 +97,9 @@ public class DeviceTypeManagementAdminServiceImpl implements DeviceTypeManagemen
             try {
                 String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
                 if (deviceTypeMetaDefinition.isSharedWithAllTenants() &&
-                    !MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
+                        !MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
                     String msg = "Invalid request, device type can only be shared with all the tenants " +
-                                 "only if the request is sent by the super tenant";
+                            "only if the request is sent by the super tenant";
                     log.error(msg);
                     return Response.status(Response.Status.FORBIDDEN).entity(msg).build();
                 }
@@ -116,11 +108,11 @@ public class DeviceTypeManagementAdminServiceImpl implements DeviceTypeManagemen
                     return Response.status(Response.Status.CONFLICT).entity(msg).build();
                 }
                 Matcher matcher = patternMatcher.matcher(deviceType.getName());
-                if(matcher.find()) {
+                if (matcher.find()) {
                     DeviceManagementService httpDeviceTypeManagerService =
                             DeviceMgtAPIUtils.getDeviceTypeGeneratorService()
                                     .populateDeviceManagementService(deviceType.getName(),
-                                                                     deviceType.getDeviceTypeMetaDefinition());
+                                            deviceType.getDeviceTypeMetaDefinition());
                     DeviceMgtAPIUtils.getDeviceManagementService().registerDeviceType(httpDeviceTypeManagerService);
                     return Response.status(Response.Status.OK).build();
                 } else {
@@ -144,7 +136,7 @@ public class DeviceTypeManagementAdminServiceImpl implements DeviceTypeManagemen
         if (deviceType != null && deviceType.getDeviceTypeMetaDefinition() != null) {
             if (deviceType.getName() == null || !deviceType.getName().equals(type)) {
                 return Response.status(Response.Status.BAD_REQUEST).entity("Type name mismatch. Expected: '" + type +
-                        "' Found: '"+ deviceType.getName() + "'").build();
+                        "' Found: '" + deviceType.getName() + "'").build();
             }
             try {
                 if (DeviceMgtAPIUtils.getDeviceManagementService().getDeviceType(type) == null) {
@@ -192,7 +184,7 @@ public class DeviceTypeManagementAdminServiceImpl implements DeviceTypeManagemen
         boolean isSaved;
         if (platformConfiguration.getType() == null || !platformConfiguration.getType().equals(type)) {
             return Response.status(Response.Status.BAD_REQUEST).entity("Type name mismatch. Expected: '" + type +
-                    "' Found: '"+ platformConfiguration.getType() + "'").build();
+                    "' Found: '" + platformConfiguration.getType() + "'").build();
         }
         try {
             isSaved = DeviceMgtAPIUtils.getDeviceManagementService().saveConfiguration(platformConfiguration);
@@ -296,7 +288,7 @@ public class DeviceTypeManagementAdminServiceImpl implements DeviceTypeManagemen
                 return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
             }
         } catch (DeviceManagementException e) {
-            String msg = "Error occurred while updating device type: " + deviceTypeName ;
+            String msg = "Error occurred while updating device type: " + deviceTypeName;
             log.error(msg, e);
             return Response.serverError().entity(msg).build();
         }
@@ -331,7 +323,7 @@ public class DeviceTypeManagementAdminServiceImpl implements DeviceTypeManagemen
                 return Response.status(Response.Status.OK).build();
             }
         } catch (DeviceManagementException e) {
-            String msg = "Error occurred while updating device type: " + deviceTypeVersion.getDeviceTypeId() ;
+            String msg = "Error occurred while updating device type: " + deviceTypeVersion.getDeviceTypeId();
             log.error(msg, e);
             return Response.serverError().entity(msg).build();
         }
@@ -350,7 +342,7 @@ public class DeviceTypeManagementAdminServiceImpl implements DeviceTypeManagemen
                 log.error(msg);
                 return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
             }
-            if (!deviceManagementProviderService.deleteDeviceType(deviceTypeName, deviceType)){
+            if (!deviceManagementProviderService.deleteDeviceType(deviceTypeName, deviceType)) {
                 String msg = "Error occurred while deleting device of type: " + deviceTypeName;
                 log.error(msg);
                 return Response.serverError().entity(msg).build();

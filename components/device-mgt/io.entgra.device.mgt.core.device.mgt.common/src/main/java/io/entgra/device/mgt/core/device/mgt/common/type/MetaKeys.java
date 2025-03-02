@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 - 2024 Entgra (Pvt) Ltd, Inc - All Rights Reserved.
+ * Copyright (C) 2018 - 2025 Entgra (Pvt) Ltd, Inc - All Rights Reserved.
  *
  * Unauthorised copying/redistribution of this file, via any medium is strictly prohibited.
  *
@@ -20,13 +20,13 @@ package io.entgra.device.mgt.core.device.mgt.common.type;
 
 public final class MetaKeys {
 
-   // Private constructor to prevent instantiation
-   private MetaKeys() {
-      throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
-   }
+    // Private constructor to prevent instantiation
+    private MetaKeys() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+    }
 
-   // Constants for Meta Keys
-   public static final String EVENT_DEFINITIONS = "EVENT_DEFINITIONS";
+    // Constants for Meta Keys
+    public static final String EVENT_DEFINITIONS = "EVENT_DEFINITIONS";
 
 }
 

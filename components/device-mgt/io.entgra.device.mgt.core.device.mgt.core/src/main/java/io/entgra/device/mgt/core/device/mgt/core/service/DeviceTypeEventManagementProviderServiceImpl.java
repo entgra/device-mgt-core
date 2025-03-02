@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 - 2024 Entgra (Pvt) Ltd, Inc - All Rights Reserved.
+ * Copyright (C) 2018 - 2025 Entgra (Pvt) Ltd, Inc - All Rights Reserved.
  *
  * Unauthorised copying/redistribution of this file, via any medium is strictly prohibited.
  *
@@ -27,172 +27,173 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceTypeEventDAO;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.CarbonContext;
+
 import java.util.List;
 
-public class DeviceTypeEventManagementProviderServiceImpl implements DeviceTypeEventManagementProviderService{
+public class DeviceTypeEventManagementProviderServiceImpl implements DeviceTypeEventManagementProviderService {
 
-   private static final Log log = LogFactory.getLog(DeviceTypeEventManagementProviderServiceImpl.class);
-   private final DeviceTypeEventDAO deviceTypeEventDAO;
+    private static final Log log = LogFactory.getLog(DeviceTypeEventManagementProviderServiceImpl.class);
+    private final DeviceTypeEventDAO deviceTypeEventDAO;
 
-   public DeviceTypeEventManagementProviderServiceImpl() {
-      this.deviceTypeEventDAO = DeviceManagementDAOFactory.getDeviceTypeEventDAO();
-   }
+    public DeviceTypeEventManagementProviderServiceImpl() {
+        this.deviceTypeEventDAO = DeviceManagementDAOFactory.getDeviceTypeEventDAO();
+    }
 
-   @Override
-   public List<DeviceTypeEvent> getDeviceTypeEventDefinitions(String deviceType) throws DeviceManagementException {
-      try {
-         DeviceManagementDAOFactory.beginTransaction();
-         int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
-         List<DeviceTypeEvent> eventDefinitions = deviceTypeEventDAO.getDeviceTypeEventDefinitions(deviceType,tenantId);
-         DeviceManagementDAOFactory.commitTransaction();
-         return eventDefinitions;
-      } catch (TransactionManagementException e) {
-         String msg = "Error occurred while initiating transaction.";
-         log.error(msg, e);
-         throw new DeviceManagementException(msg, e);
-      } catch (DeviceManagementDAOException e) {
-         DeviceManagementDAOFactory.rollbackTransaction();
-         String msg = "Error occurred while retrieving event definitions.";
-         log.error(msg, e);
-         throw new DeviceManagementException(msg, e);
-      } catch (Exception e) {
-         String msg = "Error occurred in retrieving event definitions.";
-         log.error(msg, e);
-         throw new DeviceManagementException(msg, e);
-      } finally {
-         DeviceManagementDAOFactory.closeConnection();
-      }
-   }
+    @Override
+    public List<DeviceTypeEvent> getDeviceTypeEventDefinitions(String deviceType) throws DeviceManagementException {
+        try {
+            DeviceManagementDAOFactory.beginTransaction();
+            int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
+            List<DeviceTypeEvent> eventDefinitions = deviceTypeEventDAO.getDeviceTypeEventDefinitions(deviceType, tenantId);
+            DeviceManagementDAOFactory.commitTransaction();
+            return eventDefinitions;
+        } catch (TransactionManagementException e) {
+            String msg = "Error occurred while initiating transaction.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (DeviceManagementDAOException e) {
+            DeviceManagementDAOFactory.rollbackTransaction();
+            String msg = "Error occurred while retrieving event definitions.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (Exception e) {
+            String msg = "Error occurred in retrieving event definitions.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
 
-   @Override
-   public String getDeviceTypeEventDefinitionsAsJson(String deviceType) throws DeviceManagementException {
-      try {
-         DeviceManagementDAOFactory.beginTransaction();
-         int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
-         String eventDefinitionsJson = deviceTypeEventDAO.getDeviceTypeEventDefinitionsAsJson(deviceType,tenantId);
-         DeviceManagementDAOFactory.commitTransaction();
-         return eventDefinitionsJson;
-      } catch (TransactionManagementException e) {
-         String msg = "Error occurred while initiating transaction.";
-         log.error(msg, e);
-         throw new DeviceManagementException(msg, e);
-      } catch (DeviceManagementDAOException e) {
-         DeviceManagementDAOFactory.rollbackTransaction();
-         String msg = "Error occurred while retrieving event definitions.";
-         log.error(msg, e);
-         throw new DeviceManagementException(msg, e);
-      } catch (Exception e) {
-         String msg = "Error occurred in retrieving event definitions.";
-         log.error(msg, e);
-         throw new DeviceManagementException(msg, e);
-      } finally {
-         DeviceManagementDAOFactory.closeConnection();
-      }
-   }
+    @Override
+    public String getDeviceTypeEventDefinitionsAsJson(String deviceType) throws DeviceManagementException {
+        try {
+            DeviceManagementDAOFactory.beginTransaction();
+            int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
+            String eventDefinitionsJson = deviceTypeEventDAO.getDeviceTypeEventDefinitionsAsJson(deviceType, tenantId);
+            DeviceManagementDAOFactory.commitTransaction();
+            return eventDefinitionsJson;
+        } catch (TransactionManagementException e) {
+            String msg = "Error occurred while initiating transaction.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (DeviceManagementDAOException e) {
+            DeviceManagementDAOFactory.rollbackTransaction();
+            String msg = "Error occurred while retrieving event definitions.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (Exception e) {
+            String msg = "Error occurred in retrieving event definitions.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
 
-   @Override
-   public boolean isDeviceTypeMetaExist(String deviceType) throws DeviceManagementException {
-      try {
-         DeviceManagementDAOFactory.beginTransaction();
-         int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
-         boolean metaExist = deviceTypeEventDAO.isDeviceTypeMetaExist(deviceType,tenantId);
-         DeviceManagementDAOFactory.commitTransaction();
-         return metaExist;
-      } catch (TransactionManagementException e) {
-         String msg = "Error occurred while initiating transaction.";
-         log.error(msg, e);
-         throw new DeviceManagementException(msg, e);
-      } catch (DeviceManagementDAOException e) {
-         DeviceManagementDAOFactory.rollbackTransaction();
-         String msg = "Error occurred while retrieving event definitions.";
-         log.error(msg, e);
-         throw new DeviceManagementException(msg, e);
-      } catch (Exception e) {
-         String msg = "Error occurred in retrieving event definitions.";
-         log.error(msg, e);
-         throw new DeviceManagementException(msg, e);
-      } finally {
-         DeviceManagementDAOFactory.closeConnection();
-      }
-   }
+    @Override
+    public boolean isDeviceTypeMetaExist(String deviceType) throws DeviceManagementException {
+        try {
+            DeviceManagementDAOFactory.beginTransaction();
+            int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
+            boolean metaExist = deviceTypeEventDAO.isDeviceTypeMetaExist(deviceType, tenantId);
+            DeviceManagementDAOFactory.commitTransaction();
+            return metaExist;
+        } catch (TransactionManagementException e) {
+            String msg = "Error occurred while initiating transaction.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (DeviceManagementDAOException e) {
+            DeviceManagementDAOFactory.rollbackTransaction();
+            String msg = "Error occurred while retrieving event definitions.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (Exception e) {
+            String msg = "Error occurred in retrieving event definitions.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
 
-   @Override
-   public boolean createDeviceTypeMetaWithEvents(String deviceType, List<DeviceTypeEvent> deviceTypeEvents) throws DeviceManagementException {
-      try {
-         DeviceManagementDAOFactory.beginTransaction();
-         int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
-         boolean isCreated = deviceTypeEventDAO.createDeviceTypeMetaWithEvents(deviceType,tenantId, deviceTypeEvents);
-         DeviceManagementDAOFactory.commitTransaction();
-         return isCreated;
-      } catch (TransactionManagementException e) {
-         String msg = "Error occurred while initiating transaction.";
-         log.error(msg, e);
-         throw new DeviceManagementException(msg, e);
-      } catch (DeviceManagementDAOException e) {
-         DeviceManagementDAOFactory.rollbackTransaction();
-         String msg = "Error occurred while updating event definitions.";
-         log.error(msg, e);
-         throw new DeviceManagementException(msg, e);
-      } catch (Exception e) {
-         String msg = "Error occurred in updating event definitions.";
-         log.error(msg, e);
-         throw new DeviceManagementException(msg, e);
-      } finally {
-         DeviceManagementDAOFactory.closeConnection();
-      }
-   }
+    @Override
+    public boolean createDeviceTypeMetaWithEvents(String deviceType, List<DeviceTypeEvent> deviceTypeEvents) throws DeviceManagementException {
+        try {
+            DeviceManagementDAOFactory.beginTransaction();
+            int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
+            boolean isCreated = deviceTypeEventDAO.createDeviceTypeMetaWithEvents(deviceType, tenantId, deviceTypeEvents);
+            DeviceManagementDAOFactory.commitTransaction();
+            return isCreated;
+        } catch (TransactionManagementException e) {
+            String msg = "Error occurred while initiating transaction.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (DeviceManagementDAOException e) {
+            DeviceManagementDAOFactory.rollbackTransaction();
+            String msg = "Error occurred while updating event definitions.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (Exception e) {
+            String msg = "Error occurred in updating event definitions.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
 
-   @Override
-   public boolean updateDeviceTypeMetaWithEvents(String deviceType, List<DeviceTypeEvent> deviceTypeEvents) throws DeviceManagementException {
-      try {
-         DeviceManagementDAOFactory.beginTransaction();
-         int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
-         boolean isUpdated = deviceTypeEventDAO.updateDeviceTypeMetaWithEvents(deviceType,tenantId,deviceTypeEvents);
-         DeviceManagementDAOFactory.commitTransaction();
-         return isUpdated;
-      } catch (TransactionManagementException e) {
-         String msg = "Error occurred while initiating transaction.";
-         log.error(msg, e);
-         throw new DeviceManagementException(msg, e);
-      } catch (DeviceManagementDAOException e) {
-         DeviceManagementDAOFactory.rollbackTransaction();
-         String msg = "Error occurred while updating event definitions.";
-         log.error(msg, e);
-         throw new DeviceManagementException(msg, e);
-      } catch (Exception e) {
-         String msg = "Error occurred in updating event definitions.";
-         log.error(msg, e);
-         throw new DeviceManagementException(msg, e);
-      } finally {
-         DeviceManagementDAOFactory.closeConnection();
-      }
-   }
+    @Override
+    public boolean updateDeviceTypeMetaWithEvents(String deviceType, List<DeviceTypeEvent> deviceTypeEvents) throws DeviceManagementException {
+        try {
+            DeviceManagementDAOFactory.beginTransaction();
+            int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
+            boolean isUpdated = deviceTypeEventDAO.updateDeviceTypeMetaWithEvents(deviceType, tenantId, deviceTypeEvents);
+            DeviceManagementDAOFactory.commitTransaction();
+            return isUpdated;
+        } catch (TransactionManagementException e) {
+            String msg = "Error occurred while initiating transaction.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (DeviceManagementDAOException e) {
+            DeviceManagementDAOFactory.rollbackTransaction();
+            String msg = "Error occurred while updating event definitions.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (Exception e) {
+            String msg = "Error occurred in updating event definitions.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
 
-   @Override
-   public boolean deleteDeviceTypeEventDefinitions(String deviceType) throws DeviceManagementException {
-      try {
-         DeviceManagementDAOFactory.beginTransaction();
-         int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
-         boolean isDeleted = deviceTypeEventDAO.deleteDeviceTypeEventDefinitions(deviceType,tenantId);
-         DeviceManagementDAOFactory.commitTransaction();
-         return isDeleted;
-      } catch (TransactionManagementException e) {
-         String msg = "Error occurred while initiating transaction.";
-         log.error(msg, e);
-         throw new DeviceManagementException(msg, e);
-      } catch (DeviceManagementDAOException e) {
-         DeviceManagementDAOFactory.rollbackTransaction();
-         String msg = "Error occurred while updating event definitions.";
-         log.error(msg, e);
-         throw new DeviceManagementException(msg, e);
-      } catch (Exception e) {
-         String msg = "Error occurred in updating event definitions.";
-         log.error(msg, e);
-         throw new DeviceManagementException(msg, e);
-      } finally {
-         DeviceManagementDAOFactory.closeConnection();
-      }
-   }
+    @Override
+    public boolean deleteDeviceTypeEventDefinitions(String deviceType) throws DeviceManagementException {
+        try {
+            DeviceManagementDAOFactory.beginTransaction();
+            int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
+            boolean isDeleted = deviceTypeEventDAO.deleteDeviceTypeEventDefinitions(deviceType, tenantId);
+            DeviceManagementDAOFactory.commitTransaction();
+            return isDeleted;
+        } catch (TransactionManagementException e) {
+            String msg = "Error occurred while initiating transaction.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (DeviceManagementDAOException e) {
+            DeviceManagementDAOFactory.rollbackTransaction();
+            String msg = "Error occurred while updating event definitions.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (Exception e) {
+            String msg = "Error occurred in updating event definitions.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
 
 
 }

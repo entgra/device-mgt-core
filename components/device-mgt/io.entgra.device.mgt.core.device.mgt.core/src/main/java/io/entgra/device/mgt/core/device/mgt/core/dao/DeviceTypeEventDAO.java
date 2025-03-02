@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 - 2024 Entgra (Pvt) Ltd, Inc - All Rights Reserved.
+ * Copyright (C) 2018 - 2025 Entgra (Pvt) Ltd, Inc - All Rights Reserved.
  *
  * Unauthorised copying/redistribution of this file, via any medium is strictly prohibited.
  *
@@ -21,7 +21,6 @@ package io.entgra.device.mgt.core.device.mgt.core.dao;
 
 import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.DeviceTypeEvent;
 
-import javax.ws.rs.core.Response;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -34,7 +33,7 @@ public interface DeviceTypeEventDAO {
     List<DeviceTypeEvent> getDeviceTypeEventDefinitions(String deviceType, int tenantId) throws DeviceManagementDAOException;
 
     boolean createDeviceTypeMetaWithEvents(String deviceType, int tenantId,
-                                            List<DeviceTypeEvent> deviceTypeEvents)
+                                           List<DeviceTypeEvent> deviceTypeEvents)
             throws DeviceManagementDAOException;
 
     boolean updateDeviceTypeMetaWithEvents(String deviceType, int tenantId, List<DeviceTypeEvent> deviceTypeEvents)

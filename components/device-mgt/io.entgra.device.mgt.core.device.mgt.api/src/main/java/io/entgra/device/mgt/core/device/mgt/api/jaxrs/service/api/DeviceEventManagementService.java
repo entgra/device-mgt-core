@@ -18,6 +18,11 @@
 
 package io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api;
 
+import io.entgra.device.mgt.core.apimgt.annotations.Scope;
+import io.entgra.device.mgt.core.apimgt.annotations.Scopes;
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.Constants;
+import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.DeviceTypeEvent;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -29,11 +34,6 @@ import io.swagger.annotations.Info;
 import io.swagger.annotations.ResponseHeader;
 import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.annotations.Tag;
-import io.entgra.device.mgt.core.apimgt.annotations.Scope;
-import io.entgra.device.mgt.core.apimgt.annotations.Scopes;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
-import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.DeviceTypeEvent;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.Constants;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -146,7 +146,7 @@ public interface DeviceEventManagementService {
     )
     Response deployDeviceTypeEventDefinitions(
             @ApiParam(name = "type", value = "The device type, such as android, ios, and windows.")
-            @PathParam("type")String deviceType,
+            @PathParam("type") String deviceType,
             @ApiParam(name = "skipPersist", value = "Is it required to persist the data or not")
             @QueryParam("skipPersist") boolean skipPersist,
             @ApiParam(name = "isSharedWithAllTenants", value = "Should artifacts be available to all tenants")
@@ -206,7 +206,7 @@ public interface DeviceEventManagementService {
     )
     Response updateDeviceTypeEventDefinitions(
             @ApiParam(name = "type", value = "The device type, such as android, ios, and windows.")
-            @PathParam("type")String deviceType,
+            @PathParam("type") String deviceType,
             @ApiParam(name = "skipPersist", value = "Is it required to persist the data or not")
             @QueryParam("skipPersist") boolean skipPersist,
             @ApiParam(name = "isSharedWithAllTenants", value = "Should artifacts be available to all tenants")
@@ -265,7 +265,7 @@ public interface DeviceEventManagementService {
     )
     Response deleteDeviceTypeEventDefinitions(@ApiParam(name = "type", value = "The device type, such as android, " +
             "ios, and windows.")
-                                              @PathParam("type")String deviceType);
+                                              @PathParam("type") String deviceType);
 
 //    @GET
 //    @Path("/{type}/{deviceId}")
@@ -496,5 +496,5 @@ public interface DeviceEventManagementService {
     )
     Response getDeviceTypeEventDefinitions(
             @ApiParam(name = "type", value = "The type of the device, such as android, ios, or windows.")
-            @PathParam("type")String deviceType) ;
+            @PathParam("type") String deviceType);
 }
