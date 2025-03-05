@@ -18,11 +18,17 @@
 
 package io.entgra.device.mgt.core.notification.mgt.core.internal;
 
+import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.MetadataManagementServiceImpl;
+import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
+import io.entgra.device.mgt.core.device.mgt.core.internal.TenantCreateObserver;
+import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationConfigService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationManagementService;
 import io.entgra.device.mgt.core.notification.mgt.core.config.NotificationConfigurationManager;
 import io.entgra.device.mgt.core.notification.mgt.core.dao.factory.NotificationManagementDAOFactory;
+import io.entgra.device.mgt.core.notification.mgt.core.impl.NotificationConfigServiceImpl;
 import io.entgra.device.mgt.core.notification.mgt.core.impl.NotificationManagementServiceImpl;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.BundleContext;
@@ -33,6 +39,8 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.carbon.utils.Axis2ConfigurationContextObserver;
 
 
 @Component(
@@ -48,6 +56,7 @@ public class NotificationManagementServiceComponent {
         try {
             NotificationConfigurationManager notificationConfigManager = NotificationConfigurationManager.getInstance();
             NotificationManagementDAOFactory.init(notificationConfigManager.getNotificationManagementRepository().getDataSourceConfig());
+
             NotificationManagementService notificationManagementService = new NotificationManagementServiceImpl();
             bundleContext.registerService(NotificationManagementService.class.getName(),
                     notificationManagementService, null);
@@ -55,6 +64,28 @@ public class NotificationManagementServiceComponent {
             String msg = "Error occurred while activating " + NotificationManagementServiceComponent.class.getName();
             log.error(msg, t);
         }
+
+
+        try {
+            NotificationConfigService notificationConfigurationService = new NotificationConfigServiceImpl();
+            bundleContext.registerService(NotificationConfigService.class.getName(),
+                    notificationConfigurationService, null);
+        } catch (Throwable t) {
+            String msg = "Error occurred while activating " + NotificationManagementServiceComponent.class.getName();
+            log.error(msg, t);
+        }
+
+        try {
+            MetadataManagementService metaDataManagementService = new MetadataManagementServiceImpl();
+            bundleContext.registerService(MetadataManagementService.class.getName(),
+                    metaDataManagementService, null);
+        } catch (Throwable t) {
+            String msg = "Error occurred while activating " + NotificationManagementServiceComponent.class.getName();
+            log.error(msg, t);
+        }
+
+
+
     }
 
     @SuppressWarnings("unused")
@@ -69,13 +100,17 @@ public class NotificationManagementServiceComponent {
             cardinality = ReferenceCardinality.MANDATORY,
             policy = ReferencePolicy.DYNAMIC,
             unbind = "unsetDeviceManagementProviderService")
-    protected void setDeviceManagementProviderService(
-            DeviceManagementProviderService deviceManagementProviderService) {
+    protected void setDeviceManagementProviderService(DeviceManagementProviderService deviceManagementProviderService) {
         NotificationManagementDataHolder.getInstance().setDeviceManagementProviderService(deviceManagementProviderService);
+
     }
+
 
     protected void unsetDeviceManagementProviderService(
             DeviceManagementProviderService deviceManagementProviderService) {
         NotificationManagementDataHolder.getInstance().setDeviceManagementProviderService(deviceManagementProviderService);
+
     }
+
+
 }

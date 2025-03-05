@@ -21,7 +21,10 @@ package io.entgra.device.mgt.core.notification.mgt.api.service;
 
 import io.entgra.device.mgt.core.apimgt.annotations.Scope;
 import io.entgra.device.mgt.core.apimgt.annotations.Scopes;
+import io.entgra.device.mgt.core.notification.mgt.api.beans.ErrorResponse;
+import io.entgra.device.mgt.core.notification.mgt.common.beans.NotificationConfig;
 import io.swagger.annotations.*;
+import org.apache.axis2.transport.http.HTTPConstants;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -150,4 +153,40 @@ public interface NotificationService {
 //            }
 //    )
 //    Response createNotification(Notification notification);
+@GET
+@ApiOperation(
+        produces = MediaType.APPLICATION_JSON,
+        httpMethod = HTTPConstants.HEADER_GET,
+        value = "View Notification Configurations",
+        notes = "Retrieve the list of notification configurations for the current tenant.",
+        tags = "Notification Configuration Management",
+        extensions = {
+                @Extension(properties = {
+                        @ExtensionProperty(name = "Scope", value = "dm:notificationConfig:view"),
+                        @ExtensionProperty(name = "context", value = "/api/notification-mgt/v1.0/notification-configuration")
+                })
+        }
+)
+@ApiResponses(
+        value = {
+                @ApiResponse(
+                        code = 200,
+                        message = "OK. \n Successfully retrieved notification configurations.",
+                        response = NotificationConfig.class,
+                        responseContainer = "List"
+                ),
+                @ApiResponse(
+                        code = 404,
+                        message = "Not Found. \n No configurations found for the tenant.",
+                        response = ErrorResponse.class
+                ),
+                @ApiResponse(
+                        code = 500,
+                        message = "Internal Server Error. \n Server error occurred while retrieving configurations.",
+                        response = ErrorResponse.class
+                )
+        }
+)
+@Produces(MediaType.APPLICATION_JSON)
+Response getNotificationConfigurations();
 }

@@ -20,9 +20,13 @@
 package io.entgra.device.mgt.core.notification.mgt.api.impl;
 
 import io.entgra.device.mgt.core.notification.mgt.api.service.NotificationService;
+import io.entgra.device.mgt.core.notification.mgt.api.util.NotificationConfigurationApiUtil;
 import io.entgra.device.mgt.core.notification.mgt.api.util.NotificationManagementApiUtil;
+import io.entgra.device.mgt.core.notification.mgt.common.beans.NotificationConfigurationList;
 import io.entgra.device.mgt.core.notification.mgt.common.dto.Notification;
+import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationConfigurationServiceException;
 import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementException;
+import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationConfigService;
 import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationManagementService;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.logging.Log;
@@ -58,6 +62,27 @@ public class NotificationServiceImpl implements NotificationService {
             String msg = "Error occurred while retrieving notifications";
             log.error(msg, e);
             return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+    @GET
+    @Override
+    public Response getNotificationConfigurations(){
+        try {
+            NotificationConfigService notificationConfigService =
+                    NotificationConfigurationApiUtil.getNotificationConfigurationService();
+            // Retrieve configurations from the service layer
+            NotificationConfigurationList configurations = notificationConfigService.getNotificationConfigurations();
+            if (configurations.isEmpty()) {
+                String msg = "No notification configurations found for tenant ID: ";
+                log.warn(msg);
+                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+            }
+            return Response.status(Response.Status.OK).entity(configurations).build();
+        }
+        catch (NotificationConfigurationServiceException e) {
+            String msg = "Unexpected error occurred while retrieving notification configurations.";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
 }
