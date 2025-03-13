@@ -112,6 +112,12 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
                 requestBody.put("redirect_uri", tokenCreationProfile.getCallbackUrl());
                 break;
             }
+            case "client_credentials": {
+                break;
+            }
+            default: {
+                throw new IllegalArgumentException("Unsupported grant type : [" + tokenCreationProfile.getGrantType() + "]");
+            }
         }
 
         requestBody.put("grant_type", tokenCreationProfile.getGrantType());
