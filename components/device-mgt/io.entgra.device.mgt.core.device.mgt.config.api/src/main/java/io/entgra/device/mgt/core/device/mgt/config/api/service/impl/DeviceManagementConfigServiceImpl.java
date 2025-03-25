@@ -114,6 +114,11 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
             deviceProps.put("token", token);
             DeviceConfiguration devicesConfiguration =
                     dms.getDeviceConfiguration(deviceProps);
+
+            devicesConfiguration.setMqttGateway("tcp://" + System.getProperty("mqtt.broker.host") + ":" + System.getProperty("mqtt.broker.port"));
+            devicesConfiguration.setHttpGateway("http://" + System.getProperty("iot.gateway.host") + ":" + System.getProperty("iot.gateway.http.port"));
+            devicesConfiguration.setHttpsGateway("https://" + System.getProperty("iot.gateway.host") + ":" + System.getProperty("iot.gateway.https.port"));
+
             if (withAccessToken) setAccessTokenToDeviceConfigurations(devicesConfiguration);
                 else setOTPTokenToDeviceConfigurations(devicesConfiguration);
             return Response.status(Response.Status.OK).entity(devicesConfiguration).build();
