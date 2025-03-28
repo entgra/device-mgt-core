@@ -34,6 +34,7 @@ public class DeviceSubscriptionDTO {
     private int deviceId;
     private int appReleaseId;
     private String appUuid;
+    private int operationId;
 
     public DeviceSubscriptionDTO() {
 
@@ -134,6 +135,14 @@ public class DeviceSubscriptionDTO {
 
     public void setAppUuid(String appUuid) {
         this.appUuid = appUuid;
+    }
+
+    public int getOperationId() {
+        return operationId;
+    }
+
+    public void setOperationId(int operationId) {
+        this.operationId = operationId;
     }
 
     @Override

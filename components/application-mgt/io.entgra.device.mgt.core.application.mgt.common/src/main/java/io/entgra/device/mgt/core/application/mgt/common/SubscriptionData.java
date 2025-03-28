@@ -27,6 +27,7 @@ public class SubscriptionData {
     private String subscriptionType;
     private Timestamp triggeredAt;
     private int subscriptionId;
+    private int operationId;
 
     public String getDeviceSubscriptionStatus() {
         return deviceSubscriptionStatus;
@@ -66,5 +67,12 @@ public class SubscriptionData {
 
     public void setSubscriptionId(int subscriptionId) {
         this.subscriptionId = subscriptionId;
+    }
+
+    public int getOperationId() {
+    return operationId;
+    }
+    public void setOperationId(int operationId) {
+        this.operationId = operationId;
     }
 }

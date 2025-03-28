@@ -113,6 +113,7 @@ public class SubscriptionManagementHelperUtil {
                 SubscriptionData subscriptionData = getSubscriptionData(isUnsubscribed, deviceSubscriptionDTO);
                 deviceSubscription.setSubscriptionData(subscriptionData);
                 deviceSubscriptions.add(deviceSubscription);
+
             }
         }
         return deviceSubscriptions;
@@ -133,6 +134,7 @@ public class SubscriptionManagementHelperUtil {
         subscriptionData.setDeviceSubscriptionStatus(deviceSubscriptionDTO.getStatus());
         subscriptionData.setSubscriptionType(deviceSubscriptionDTO.getActionTriggeredFrom());
         subscriptionData.setSubscriptionId(deviceSubscriptionDTO.getId());
+        subscriptionData.setOperationId(deviceSubscriptionDTO.getOperationId());
         return subscriptionData;
     }
 
