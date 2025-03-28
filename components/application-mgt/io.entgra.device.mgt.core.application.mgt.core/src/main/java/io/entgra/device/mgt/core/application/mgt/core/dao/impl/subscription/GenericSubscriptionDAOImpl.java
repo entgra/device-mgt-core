@@ -2395,6 +2395,8 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                         subscription.setActionTriggeredFrom(rs.getString("ACTION_TRIGGERED_FROM"));
                         subscription.setStatus(rs.getString("STATUS"));
                         subscription.setDeviceId(rs.getInt("DEVICE_ID"));
+                        Integer lastOperationId = getLastOperationIdForSubId(subscription.getId(), tenantId);
+                        subscription.setOperationId(lastOperationId);
 
                         deviceSubscriptions.add(subscription);
                     }
@@ -2412,6 +2414,36 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
             throw new ApplicationManagementDAOException(msg, e);
         }
     }
+
+    public Integer getLastOperationIdForSubId(int subId, int tenantId) throws ApplicationManagementDAOException {
+        try {
+            Connection conn = this.getDBConnection();
+            String sql = "SELECT OPERATION_ID "
+                    + "FROM AP_APP_SUB_OP_MAPPING "
+                    + "WHERE AP_DEVICE_SUBSCRIPTION_ID = ? AND TENANT_ID = ? "
+                    + "ORDER BY OPERATION_ID DESC LIMIT 1";
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, subId);
+                stmt.setInt(2, tenantId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getInt("OPERATION_ID");
+                    }
+                }
+            }
+            return null;
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection to get the last operation id for subscription id.";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred while processing SQL to get the last operation id for subscription id.";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+    }
+
 
     @Override
     public int getAllSubscriptionsCount(int appReleaseId, boolean unsubscribe, int tenantId,
