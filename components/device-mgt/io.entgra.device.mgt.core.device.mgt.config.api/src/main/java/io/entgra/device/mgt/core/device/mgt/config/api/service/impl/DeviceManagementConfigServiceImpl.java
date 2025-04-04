@@ -89,7 +89,8 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
     @Produces(MediaType.APPLICATION_JSON)
     public Response getConfiguration(@HeaderParam("token") String token,
                                      @QueryParam("properties") String properties,
-                                     @QueryParam("withAccessToken") boolean withAccessToken) {
+                                     @QueryParam("withAccessToken") boolean withAccessToken,
+                                     @QueryParam("withGateways") boolean withGateways) {
         DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
         try {
             if (token == null || token.isEmpty()) {
@@ -115,10 +116,11 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
             DeviceConfiguration devicesConfiguration =
                     dms.getDeviceConfiguration(deviceProps);
 
-            devicesConfiguration.setMqttGateway("tcp://" + System.getProperty("mqtt.broker.host") + ":" + System.getProperty("mqtt.broker.port"));
-            devicesConfiguration.setHttpGateway("http://" + System.getProperty("iot.gateway.host") + ":" + System.getProperty("iot.gateway.http.port"));
-            devicesConfiguration.setHttpsGateway("https://" + System.getProperty("iot.gateway.host") + ":" + System.getProperty("iot.gateway.https.port"));
-
+            if (withGateways) {
+                devicesConfiguration.setMqttGateway("tcp://" + System.getProperty("mqtt.broker.host") + ":" + System.getProperty("mqtt.broker.port"));
+                devicesConfiguration.setHttpGateway("http://" + System.getProperty("iot.gateway.host") + ":" + System.getProperty("iot.gateway.http.port"));
+                devicesConfiguration.setHttpsGateway("https://" + System.getProperty("iot.gateway.host") + ":" + System.getProperty("iot.gateway.https.port"));
+            }
             if (withAccessToken) setAccessTokenToDeviceConfigurations(devicesConfiguration);
                 else setOTPTokenToDeviceConfigurations(devicesConfiguration);
             return Response.status(Response.Status.OK).entity(devicesConfiguration).build();

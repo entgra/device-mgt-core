@@ -52,13 +52,13 @@ public class DeviceConfiguration {
     @ApiModelProperty(name = "deviceOwner", value = "Owner of the selected device", required = true)
     private String deviceOwner;
 
-    @ApiModelProperty(name = "mqttGateway", value = "Mqtt Gateway to communicate with the server", required = true)
+    @ApiModelProperty(name = "mqttGateway", value = "Mqtt Gateway to communicate with the server")
     private String mqttGateway;
 
-    @ApiModelProperty(name = "httpsGateway", value = "Https Gateway to communicate with the server", required = true)
+    @ApiModelProperty(name = "httpsGateway", value = "Https Gateway to communicate with the server")
     private String httpsGateway;
 
-    @ApiModelProperty(name = "httpGateway", value = "Http Gateway to communicate with the server", required = true)
+    @ApiModelProperty(name = "httpGateway", value = "Http Gateway to communicate with the server")
     private String httpGateway;
 
     public String getDeviceId() {
