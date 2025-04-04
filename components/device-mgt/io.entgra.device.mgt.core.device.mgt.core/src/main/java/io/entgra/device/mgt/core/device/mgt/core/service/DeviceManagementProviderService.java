@@ -1184,4 +1184,7 @@ public interface DeviceManagementProviderService {
      * @throws DeviceManagementException if any service level or DAO level error occurs.
      */
     List<Integer> getDeviceIdsByStatus(List<String> statuses) throws DeviceManagementException;
+
+    PaginationResult getDevicesNotInTag(PaginationRequest request, boolean requireDeviceInfo)
+            throws DeviceManagementException;;
 }
