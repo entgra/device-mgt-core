@@ -335,6 +335,8 @@ public class DeviceManagementServiceComponent {
         DeviceManagementDataHolder.getInstance().setMetadataManagementService(metadataManagementService);
         bundleContext.registerService(MetadataManagementService.class.getName(), metadataManagementService, null);
 
+
+
         /* Registering Whitelabel Service */
         try {
             WhiteLabelManagementService whiteLabelManagementService = new WhiteLabelManagementServiceImpl();

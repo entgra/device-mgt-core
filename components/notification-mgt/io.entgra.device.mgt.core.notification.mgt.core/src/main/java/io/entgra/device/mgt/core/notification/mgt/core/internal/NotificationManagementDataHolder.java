@@ -18,6 +18,9 @@
 package io.entgra.device.mgt.core.notification.mgt.core.internal;
 
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
+import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationConfigService;
+import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
+
 
 /**
  * DataHolder is responsible for holding the references to OSGI Services.
@@ -25,6 +28,7 @@ import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProvide
 public class NotificationManagementDataHolder {
 
     private DeviceManagementProviderService deviceManagementService;
+    private MetadataManagementService metaDataManagementService;
 
     private static NotificationManagementDataHolder thisInstance = new NotificationManagementDataHolder();
 
@@ -38,5 +42,13 @@ public class NotificationManagementDataHolder {
 
     public void setDeviceManagementProviderService(DeviceManagementProviderService deviceManagementService) {
         this.deviceManagementService = deviceManagementService;
+    }
+
+    public MetadataManagementService getMetaDataManagementService() {
+        return metaDataManagementService;
+    }
+
+    public void setMetaDataManagementService(MetadataManagementService metaDataManagementService) {
+        this.metaDataManagementService = metaDataManagementService;
     }
 }

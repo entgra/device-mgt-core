@@ -169,7 +169,6 @@ public class DeviceMgtAPIUtils {
     private static volatile APIPublisherService apiPublisher;
     private static volatile TenantManagerAdminService tenantManagerAdminService;
     private static volatile TagManagementProviderService tagManagementService;
-
     static {
         String keyStorePassword = ServerConfiguration.getInstance().getFirstProperty("Security.KeyStore.Password");
         String trustStorePassword = ServerConfiguration.getInstance().getFirstProperty(

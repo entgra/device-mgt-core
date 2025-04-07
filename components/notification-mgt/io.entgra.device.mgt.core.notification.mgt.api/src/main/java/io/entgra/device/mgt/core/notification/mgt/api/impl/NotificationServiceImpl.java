@@ -60,4 +60,5 @@ public class NotificationServiceImpl implements NotificationService {
             return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
+
 }

@@ -18,11 +18,15 @@
 
 package io.entgra.device.mgt.core.notification.mgt.core.internal;
 
+import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
+import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationConfigService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationManagementService;
 import io.entgra.device.mgt.core.notification.mgt.core.config.NotificationConfigurationManager;
 import io.entgra.device.mgt.core.notification.mgt.core.dao.factory.NotificationManagementDAOFactory;
+import io.entgra.device.mgt.core.notification.mgt.core.impl.NotificationConfigServiceImpl;
 import io.entgra.device.mgt.core.notification.mgt.core.impl.NotificationManagementServiceImpl;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.BundleContext;
@@ -44,17 +48,47 @@ public class NotificationManagementServiceComponent {
     @SuppressWarnings("unused")
     @Activate
     protected void activate(ComponentContext componentContext) {
+        if (log.isDebugEnabled()) {
+            log.debug("Initializing Notification management core bundle");
+        }
         BundleContext bundleContext = componentContext.getBundleContext();
+        if (log.isDebugEnabled()) {
+            log.debug("Initializing Notification management core bundle");
+        }
         try {
             NotificationConfigurationManager notificationConfigManager = NotificationConfigurationManager.getInstance();
             NotificationManagementDAOFactory.init(notificationConfigManager.getNotificationManagementRepository().getDataSourceConfig());
+
             NotificationManagementService notificationManagementService = new NotificationManagementServiceImpl();
             bundleContext.registerService(NotificationManagementService.class.getName(),
                     notificationManagementService, null);
         } catch (Throwable t) {
+            String msg = "Error occurred while activating Notification Configuration Service";
+            log.error(msg, t);
+        }
+
+//        try {
+//            MetadataManagementService metaDataManagementService = new MetadataManagementServiceImpl();
+//            NotificationManagementDataHolder.getInstance().setMetaDataManagementService(metaDataManagementService);
+//            bundleContext.registerService(MetadataManagementService.class.getName(),
+//                    metaDataManagementService, null);
+//        } catch (Throwable t) {
+//            String msg = "Error occurred while activating Meta Data Management Service " ;
+//            log.error(msg, t);
+//        }
+
+
+        /* Registering Notification Configuration  Service */
+
+        try {
+            NotificationConfigService notificationConfigurationService = new NotificationConfigServiceImpl();
+            bundleContext.registerService(NotificationConfigService.class.getName(),
+                    notificationConfigurationService, null);
+        } catch (Throwable t) {
             String msg = "Error occurred while activating " + NotificationManagementServiceComponent.class.getName();
             log.error(msg, t);
         }
+
     }
 
     @SuppressWarnings("unused")
@@ -69,13 +103,33 @@ public class NotificationManagementServiceComponent {
             cardinality = ReferenceCardinality.MANDATORY,
             policy = ReferencePolicy.DYNAMIC,
             unbind = "unsetDeviceManagementProviderService")
-    protected void setDeviceManagementProviderService(
-            DeviceManagementProviderService deviceManagementProviderService) {
+    protected void setDeviceManagementProviderService(DeviceManagementProviderService deviceManagementProviderService) {
         NotificationManagementDataHolder.getInstance().setDeviceManagementProviderService(deviceManagementProviderService);
+
+    }
+
+    @Reference(
+            name = "io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementServiceComponent",
+            service = io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            bind = "setMetadataManagementService",
+            unbind = "unsetMetadataManagementService")
+    protected void setMetadataManagementService(MetadataManagementService metaDataManagementService) {
+        NotificationManagementDataHolder.getInstance().setMetaDataManagementService(metaDataManagementService);
+        if (log.isDebugEnabled()) {
+            log.debug("Meta data Management Service is set successfully");
+        }
     }
 
     protected void unsetDeviceManagementProviderService(
             DeviceManagementProviderService deviceManagementProviderService) {
-        NotificationManagementDataHolder.getInstance().setDeviceManagementProviderService(deviceManagementProviderService);
+        NotificationManagementDataHolder.getInstance().setDeviceManagementProviderService(null);
+    }
+    protected void unsetMetadataManagementService(MetadataManagementService metaDataManagementService) {
+        NotificationManagementDataHolder.getInstance().setMetaDataManagementService(null);
+        if (log.isDebugEnabled()) {
+            log.debug("Meta data Management Service is unset successfully");
+        }
     }
 }
