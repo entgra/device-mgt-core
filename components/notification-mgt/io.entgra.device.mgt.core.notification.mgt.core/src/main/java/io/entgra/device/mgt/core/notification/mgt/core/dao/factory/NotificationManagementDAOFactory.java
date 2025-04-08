@@ -19,9 +19,10 @@
 
 package io.entgra.device.mgt.core.notification.mgt.core.dao.factory;
 
-import io.entgra.device.mgt.core.device.mgt.common.DeviceManagementConstants;
-import io.entgra.device.mgt.core.device.mgt.common.exceptions.IllegalTransactionStateException;
-import io.entgra.device.mgt.core.device.mgt.common.exceptions.UnsupportedDatabaseEngineException;
+import io.entgra.device.mgt.core.notification.mgt.common.util.NotificationManagementConstants;
+import io.entgra.device.mgt.core.notification.mgt.common.exception.IllegalTransactionStateException;
+import io.entgra.device.mgt.core.notification.mgt.common.exception.TransactionManagementException;
+import io.entgra.device.mgt.core.notification.mgt.common.exception.UnsupportedDatabaseEngineException;
 import io.entgra.device.mgt.core.notification.mgt.core.config.datasource.JNDILookupDefinition;
 import io.entgra.device.mgt.core.notification.mgt.core.config.datasource.NotificationDatasourceConfiguration;
 import io.entgra.device.mgt.core.notification.mgt.core.dao.NotificationManagementDAO;
@@ -30,7 +31,6 @@ import io.entgra.device.mgt.core.notification.mgt.core.dao.impl.H2NotificationMa
 import io.entgra.device.mgt.core.notification.mgt.core.dao.impl.OracleNotificationManagementDAOImpl;
 import io.entgra.device.mgt.core.notification.mgt.core.dao.impl.PostgreNotificationManagementDAOImpl;
 import io.entgra.device.mgt.core.notification.mgt.core.dao.impl.SQLServerNotificationManagementDAOImpl;
-import io.entgra.device.mgt.core.notification.mgt.core.exception.NotificationManagementDAOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -105,35 +105,46 @@ public class NotificationManagementDAOFactory {
             throw new IllegalStateException("Database is not initialized properly.");
         }
         switch (productName) {
-            case DeviceManagementConstants.DataBaseTypes.DB_TYPE_ORACLE:
+            case NotificationManagementConstants.DataBaseTypes.DB_TYPE_ORACLE:
                 return new OracleNotificationManagementDAOImpl();
-            case DeviceManagementConstants.DataBaseTypes.DB_TYPE_MSSQL:
+            case NotificationManagementConstants.DataBaseTypes.DB_TYPE_MSSQL:
                 return new SQLServerNotificationManagementDAOImpl();
-            case DeviceManagementConstants.DataBaseTypes.DB_TYPE_POSTGRESQL:
+            case NotificationManagementConstants.DataBaseTypes.DB_TYPE_POSTGRESQL:
                 return new PostgreNotificationManagementDAOImpl();
-            case DeviceManagementConstants.DataBaseTypes.DB_TYPE_H2:
+            case NotificationManagementConstants.DataBaseTypes.DB_TYPE_H2:
                 return new H2NotificationManagementDAOImpl();
-            case DeviceManagementConstants.DataBaseTypes.DB_TYPE_MYSQL:
+            case NotificationManagementConstants.DataBaseTypes.DB_TYPE_MYSQL:
                 return new GenericNotificationManagementDAOImpl();
             default:
                 throw new UnsupportedDatabaseEngineException("Unsupported database product: " + productName);
         }
     }
 
-    public static void openConnection() throws NotificationManagementDAOException {
-        Connection connection = currentConnection.get();
-        if (connection != null) {
-            log.error("A connection is already active within this thread. currentConnection: " + connection);
-            throw new IllegalTransactionStateException("A transaction is already active within this thread.");
+    public static void beginTransaction() throws TransactionManagementException {
+        Connection conn = currentConnection.get();
+        if (conn != null) {
+            throw new IllegalTransactionStateException("A transaction is already active within the context of " +
+                    "this particular thread. Therefore, calling 'beginTransaction/openConnection' while another " +
+                    "transaction is already active is a sign of improper transaction handling");
         }
         try {
-            connection = dataSource.getConnection();
-            currentConnection.set(connection);
+            conn = dataSource.getConnection();
+            conn.setAutoCommit(false);
+            currentConnection.set(conn);
         } catch (SQLException e) {
-            String msg = "Error encountered while acquiring connection from the datasource";
-            log.error(msg, e);
-            throw new NotificationManagementDAOException(msg, e);
+            throw new TransactionManagementException("Error occurred while retrieving config.datasource connection", e);
         }
+    }
+
+    public static void openConnection() throws SQLException {
+        Connection conn = currentConnection.get();
+        if (conn != null) {
+            throw new IllegalTransactionStateException("A transaction is already active within the context of " +
+                    "this particular thread. Therefore, calling 'beginTransaction/openConnection' while another " +
+                    "transaction is already active is a sign of improper transaction handling");
+        }
+        conn = dataSource.getConnection();
+        currentConnection.set(conn);
     }
 
     public static Connection getConnection() {
@@ -155,22 +166,6 @@ public class NotificationManagementDAOFactory {
             log.warn("Error encountered while closing the connection", e);
         }
         currentConnection.remove();
-    }
-
-    public static void beginTransaction() throws NotificationManagementDAOException {
-        Connection connection = currentConnection.get();
-        if (connection != null) {
-            throw new IllegalTransactionStateException("A transaction is already active within this thread.");
-        }
-        try {
-            connection = dataSource.getConnection();
-            connection.setAutoCommit(false);
-            currentConnection.set(connection);
-        } catch (SQLException e) {
-            String msg = "Error encountered while acquiring connection from the datasource";
-            log.error(msg, e);
-            throw new NotificationManagementDAOException(msg, e);
-        }
     }
 
     public static void rollbackTransaction() {

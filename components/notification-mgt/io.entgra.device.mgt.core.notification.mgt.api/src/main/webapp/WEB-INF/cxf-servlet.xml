@@ -52,7 +52,6 @@
         <property name="scan" value="true"/>
     </bean>
 
-
     <bean id="notificationConfigurationService" class="io.entgra.device.mgt.core.notification.mgt.api.impl.NotificationConfigurationServiceImpl"/>
     <bean id="notificationService" class="io.entgra.device.mgt.core.notification.mgt.api.impl.NotificationServiceImpl"/>
     <bean id="jsonProvider" class="io.entgra.device.mgt.core.notification.mgt.api.common.GsonMessageBodyHandler"/>

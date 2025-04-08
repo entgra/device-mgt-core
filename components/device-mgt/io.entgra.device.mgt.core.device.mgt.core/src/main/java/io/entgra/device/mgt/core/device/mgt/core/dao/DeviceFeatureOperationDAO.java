@@ -26,10 +26,23 @@ import java.util.List;
 public interface DeviceFeatureOperationDAO {
     /**
      * Updates or inserts device feature details into the DM_OPERATION_DETAILS table.
-     *
      * @param deviceFeatureInfoList A list of {@link DeviceFeatureInfo} to be updated or inserted.
      * @throws DeviceManagementDAOException If any error occurs while processing the update.
      */
     void updateDeviceFeatureDetails(List<DeviceFeatureInfo> deviceFeatureInfoList)
             throws DeviceManagementDAOException;
+
+    /**
+     * Retrieves a list of device operation details filtered by operation code, operation name, and/or device type.
+     * If any of the provided parameters are {@code null} or empty, they will be ignored in the filtering process.
+     * This allows for partial filtering or fetching all records when no filters are provided.
+     * @param code the operation code to filter by (optional).
+     * @param name the operation name to filter by (optional).
+     * @param type the device type to filter by (optional).
+     * @return a list of {@link DeviceFeatureInfo} objects that match the provided filters.
+     * @throws DeviceManagementDAOException if an error occurs while accessing the database.
+     */
+    List<DeviceFeatureInfo> getOperationDetails(String code, String name, String type)
+            throws DeviceManagementDAOException;
+
 }

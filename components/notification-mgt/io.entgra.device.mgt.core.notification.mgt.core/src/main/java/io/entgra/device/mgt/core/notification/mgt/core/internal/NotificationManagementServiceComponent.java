@@ -19,14 +19,21 @@
 package io.entgra.device.mgt.core.notification.mgt.core.internal;
 
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
+import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationConfigurationServiceException;
 import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationConfigService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationManagementService;
 import io.entgra.device.mgt.core.notification.mgt.core.config.NotificationConfigurationManager;
+import io.entgra.device.mgt.core.notification.mgt.core.config.archive.NotificationArchiveConfigManager;
 import io.entgra.device.mgt.core.notification.mgt.core.dao.factory.NotificationManagementDAOFactory;
+import io.entgra.device.mgt.core.notification.mgt.core.dao.factory.archive.NotificationArchivalDestDAOFactory;
+import io.entgra.device.mgt.core.notification.mgt.core.dao.factory.archive.NotificationArchivalSourceDAOFactory;
+import io.entgra.device.mgt.core.notification.mgt.core.exception.NotificationArchivalTaskManagerException;
 import io.entgra.device.mgt.core.notification.mgt.core.impl.NotificationConfigServiceImpl;
 import io.entgra.device.mgt.core.notification.mgt.core.impl.NotificationManagementServiceImpl;
-
+import io.entgra.device.mgt.core.notification.mgt.core.task.NotificationArchivalTaskManager;
+import io.entgra.device.mgt.core.notification.mgt.core.task.NotificationArchivalTaskManagerImpl;
+import io.entgra.device.mgt.core.notification.mgt.core.util.Constants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.BundleContext;
@@ -37,7 +44,8 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
-
+import org.wso2.carbon.ntask.core.service.TaskService;
+import org.wso2.carbon.user.core.service.RealmService;
 
 @Component(
         name = "io.entgra.device.mgt.core.notification.mgt.core.internal.NotificationManagementServiceComponent",
@@ -48,47 +56,45 @@ public class NotificationManagementServiceComponent {
     @SuppressWarnings("unused")
     @Activate
     protected void activate(ComponentContext componentContext) {
-        if (log.isDebugEnabled()) {
-            log.debug("Initializing Notification management core bundle");
-        }
         BundleContext bundleContext = componentContext.getBundleContext();
-        if (log.isDebugEnabled()) {
-            log.debug("Initializing Notification management core bundle");
-        }
         try {
             NotificationConfigurationManager notificationConfigManager = NotificationConfigurationManager.getInstance();
-            NotificationManagementDAOFactory.init(notificationConfigManager.getNotificationManagementRepository().getDataSourceConfig());
-
+            NotificationManagementDAOFactory.init(notificationConfigManager
+                    .getNotificationManagementRepository().getDataSourceConfig());
+            NotificationArchivalSourceDAOFactory.init(notificationConfigManager
+                    .getNotificationManagementRepository().getDataSourceConfig());
+            NotificationArchiveConfigManager notificationArchConfigManager =
+                    NotificationArchiveConfigManager.getInstance();
+            NotificationArchivalDestDAOFactory.init(notificationArchConfigManager
+                    .getNotificationArchiveRepository().getDataSourceConfig());
             NotificationManagementService notificationManagementService = new NotificationManagementServiceImpl();
             bundleContext.registerService(NotificationManagementService.class.getName(),
                     notificationManagementService, null);
-        } catch (Throwable t) {
-            String msg = "Error occurred while activating Notification Configuration Service";
-            log.error(msg, t);
-        }
-
-//        try {
-//            MetadataManagementService metaDataManagementService = new MetadataManagementServiceImpl();
-//            NotificationManagementDataHolder.getInstance().setMetaDataManagementService(metaDataManagementService);
-//            bundleContext.registerService(MetadataManagementService.class.getName(),
-//                    metaDataManagementService, null);
-//        } catch (Throwable t) {
-//            String msg = "Error occurred while activating Meta Data Management Service " ;
-//            log.error(msg, t);
-//        }
-
-
-        /* Registering Notification Configuration  Service */
-
-        try {
             NotificationConfigService notificationConfigurationService = new NotificationConfigServiceImpl();
             bundleContext.registerService(NotificationConfigService.class.getName(),
                     notificationConfigurationService, null);
-        } catch (Throwable t) {
+            try {
+                notificationConfigurationService.setDefaultNotificationArchiveMetadata(
+                                Constants.DEFAULT_ARCHIVE_TYPE,
+                                Constants.DEFAULT_ARCHIVE_PERIOD);
+            } catch (NotificationConfigurationServiceException e) {
+                log.error("Failed to set default notification archive metadata", e);
+            }
+            NotificationArchivalTaskManager archivalTaskManager = new NotificationArchivalTaskManagerImpl();
+            try {
+                archivalTaskManager.startTask();
+            } catch (NotificationArchivalTaskManagerException e) {
+                String message = e.getMessage();
+                if (message != null && message.contains("is already active for tenant")) {
+                    log.info("Notification archival task is already scheduled. Skipping...");
+                } else {
+                    log.error("Error occurred while starting the Notification Archival Task.", e);
+                }
+            }
+        } catch (Throwable e) {
             String msg = "Error occurred while activating " + NotificationManagementServiceComponent.class.getName();
-            log.error(msg, t);
+            log.error(msg, e);
         }
-
     }
 
     @SuppressWarnings("unused")
@@ -97,6 +103,11 @@ public class NotificationManagementServiceComponent {
         // Do nothing
     }
 
+    /**
+     * Sets DeviceManagementProviderService.
+     *
+     * @param deviceManagementProviderService An instance of DeviceManagementProviderService
+     */
     @Reference(
             name = "device.mgt.provider.service",
             service = io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService.class,
@@ -104,10 +115,25 @@ public class NotificationManagementServiceComponent {
             policy = ReferencePolicy.DYNAMIC,
             unbind = "unsetDeviceManagementProviderService")
     protected void setDeviceManagementProviderService(DeviceManagementProviderService deviceManagementProviderService) {
-        NotificationManagementDataHolder.getInstance().setDeviceManagementProviderService(deviceManagementProviderService);
-
+        NotificationManagementDataHolder.getInstance()
+                .setDeviceManagementProviderService(deviceManagementProviderService);
     }
 
+    /**
+     * Unsets DeviceManagementProviderService.
+     *
+     * @param deviceManagementProviderService An instance of DeviceManagementProviderService
+     */
+    protected void unsetDeviceManagementProviderService(
+            DeviceManagementProviderService deviceManagementProviderService) {
+        NotificationManagementDataHolder.getInstance().setDeviceManagementProviderService(null);
+    }
+
+    /**
+     * Sets MetadataManagementService.
+     *
+     * @param metaDataManagementService An instance of MetadataManagementService
+     */
     @Reference(
             name = "io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementServiceComponent",
             service = io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService.class,
@@ -122,14 +148,76 @@ public class NotificationManagementServiceComponent {
         }
     }
 
-    protected void unsetDeviceManagementProviderService(
-            DeviceManagementProviderService deviceManagementProviderService) {
-        NotificationManagementDataHolder.getInstance().setDeviceManagementProviderService(null);
-    }
+    /**
+     * Unsets MetadataManagementService.
+     *
+     * @param metaDataManagementService An instance of MetadataManagementService
+     */
     protected void unsetMetadataManagementService(MetadataManagementService metaDataManagementService) {
         NotificationManagementDataHolder.getInstance().setMetaDataManagementService(null);
         if (log.isDebugEnabled()) {
             log.debug("Meta data Management Service is unset successfully");
+        }
+    }
+
+    /**
+     * Sets RealmService.
+     *
+     * @param realmService An instance of RealmService
+     */
+    @Reference(
+            name = "realm.service",
+            service = org.wso2.carbon.user.core.service.RealmService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetRealmService")
+    protected void setRealmService(RealmService realmService) {
+        if (log.isDebugEnabled()) {
+            log.debug("Setting Realm Service");
+        }
+        NotificationManagementDataHolder.getInstance().setRealmService(realmService);
+    }
+
+    /**
+     * Unsets RealmService.
+     *
+     * @param realmService An instance of RealmService
+     */
+    protected void unsetRealmService(RealmService realmService) {
+        if (log.isDebugEnabled()) {
+            log.debug("Unsetting Realm Service");
+        }
+        NotificationManagementDataHolder.getInstance().setRealmService(null);
+    }
+
+    /**
+     * Sets TaskService.
+     *
+     * @param taskService An instance of RealmService
+     */
+    @Reference(
+            name = "ntask.component",
+            service = org.wso2.carbon.ntask.core.service.TaskService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            bind = "setTaskService",
+            unbind = "unsetTaskService")
+    protected void setTaskService(TaskService taskService) {
+        NotificationManagementDataHolder.getInstance().setTaskService(taskService);
+        if (log.isDebugEnabled()) {
+            log.debug("Task service is set successfully");
+        }
+    }
+
+    /**
+     * Unsets TaskService.
+     *
+     * @param taskService An instance of RealmService
+     */
+    protected void unsetTaskService(TaskService taskService) {
+        NotificationManagementDataHolder.getInstance().setTaskService(null);
+        if (log.isDebugEnabled()) {
+            log.debug("Task service is unset successfully");
         }
     }
 }

@@ -19,41 +19,31 @@
 
 package io.entgra.device.mgt.core.notification.mgt.common.dto;
 
-public class DeviceFeatureInfo {
-    private String deviceType;
-    private String operationCode;
-    private String name;
-    private String description;
+import java.util.List;
 
-    public String getDeviceType() {
-        return deviceType;
+public class PaginatedUserNotificationResponse {
+    private List<UserNotificationPayload> notifications;
+    private int totalCount;
+
+    public PaginatedUserNotificationResponse(List<UserNotificationPayload> notifications, int totalCount) {
+        this.notifications = notifications;
+        this.totalCount = totalCount;
     }
 
-    public void setDeviceType(String deviceType) {
-        this.deviceType = deviceType;
+    public List<UserNotificationPayload> getNotifications() {
+        return notifications;
     }
 
-    public String getOperationCode() {
-        return operationCode;
+    public void setNotifications(List<UserNotificationPayload> notifications) {
+        this.notifications = notifications;
     }
 
-    public void setOperationCode(String operationCode) {
-        this.operationCode = operationCode;
+    public int getTotalCount() {
+        return totalCount;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
+    public void setTotalCount(int totalCount) {
+        this.totalCount = totalCount;
     }
 }
+

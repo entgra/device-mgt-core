@@ -471,6 +471,10 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>io.entgra.device.mgt.core</groupId>
+            <artifactId>io.entgra.device.mgt.core.notification.mgt.common</artifactId>
+        </dependency>
     </dependencies>
 </project>
 

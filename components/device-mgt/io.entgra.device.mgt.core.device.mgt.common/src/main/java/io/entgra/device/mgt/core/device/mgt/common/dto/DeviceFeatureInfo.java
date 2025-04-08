@@ -20,6 +20,7 @@
 package io.entgra.device.mgt.core.device.mgt.common.dto;
 
 public class DeviceFeatureInfo {
+    private int id;
     private String deviceType;
     private String operationCode;
     private String name;
@@ -55,5 +56,13 @@ public class DeviceFeatureInfo {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }

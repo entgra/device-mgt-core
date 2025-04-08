@@ -23,8 +23,8 @@ import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Activity;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.OperationResponse;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.DeviceActivity;
-import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOException;
 import io.entgra.device.mgt.core.device.mgt.core.dto.OperationDTO;
+import io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.DeviceOperationDetails;
 import io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation;
 import io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.OperationResponseMeta;
 import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.OperationMapping;
@@ -61,8 +61,30 @@ public interface OperationDAO {
     boolean updateOperationStatus(int enrolmentId, int operationId,Operation.Status status)
             throws OperationManagementDAOException;
 
+    /**
+     * Retrieves the details of a device operation for a given enrolment ID and operation ID.
+     *
+     * @param enrolmentId The enrolment ID of the device.
+     * @param operationId The ID of the operation.
+     * @return DeviceOperationDetails containing details about the operation.
+     * @throws OperationManagementDAOException If an error occurs while retrieving the operation details.
+     */
+    DeviceOperationDetails getDeviceOperationDetails(int enrolmentId, int operationId)
+            throws OperationManagementDAOException;
+
     int updateOperationByDeviceTypeAndInitialStatus(String deiceType, String initialStatus, String requiredStatus)
             throws OperationManagementDAOException;
+
+    /**
+     * Retrieves a list of updated operations for a specific device type and status.
+     *
+     * @param deviceType     The type of the device for which operations need to be fetched.
+     * @param requiredStatus The status of the operations to filter the results.
+     * @return A list of {@link DeviceOperationDetails} containing details of updated operations.
+     * @throws OperationManagementDAOException If an error occurs while fetching the operation details from the database.
+     */
+    List<DeviceOperationDetails> getUpdatedOperationsByDeviceTypeAndStatus(
+            String deviceType, String requiredStatus) throws OperationManagementDAOException;
 
     void updateEnrollmentOperationsStatus(int enrolmentId, String operationCode, Operation.Status existingStatus,
                                           Operation.Status newStatus) throws OperationManagementDAOException;
