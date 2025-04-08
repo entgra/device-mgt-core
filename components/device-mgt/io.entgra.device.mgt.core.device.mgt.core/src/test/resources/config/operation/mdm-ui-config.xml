@@ -319,6 +319,8 @@
         <Scope>gm:admin:groups:add</Scope>
         <Scope>dm:notif:mark-checked</Scope>
         <Scope>dm:notifications:view</Scope>
+        <Scope>dm:notif:archive</Scope>
+        <Scope>dm:notif:delete</Scope>
         <Scope>dm:notificationConfig:view</Scope>
         <Scope>dm:notificationConfig:create</Scope>
         <Scope>dm:notificationConfig:update</Scope>

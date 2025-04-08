@@ -21,15 +21,29 @@ package io.entgra.device.mgt.core.notification.mgt.api.service;
 
 import io.entgra.device.mgt.core.apimgt.annotations.Scope;
 import io.entgra.device.mgt.core.apimgt.annotations.Scopes;
-import io.swagger.annotations.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Extension;
+import io.swagger.annotations.ExtensionProperty;
+import io.swagger.annotations.Info;
+import io.swagger.annotations.SwaggerDefinition;
+import io.swagger.annotations.Tag;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
 
 /**
  * Notifications related REST-API.
@@ -64,6 +78,20 @@ import javax.ws.rs.core.Response;
                         key = "dm:notif:mark-checked",
                         roles = {"Internal/devicemgt-user"},
                         permissions = {"/device-mgt/notifications/update"}
+                ),
+                @Scope(
+                        name = "Archive the Notifications",
+                        description = "Archive the Notifications",
+                        key = "dm:notif:archive",
+                        roles = {"Internal/devicemgt-user"},
+                        permissions = {"/device-mgt/notifications/archive"}
+                ),
+                @Scope(
+                        name = "Delete the Notification",
+                        description = "Delete the Notifications",
+                        key = "dm:notif:delete",
+                        roles = {"Internal/devicemgt-user"},
+                        permissions = {"/device-mgt/notifications/delete"}
                 )
         }
 )
@@ -129,26 +157,226 @@ public interface NotificationService {
             @QueryParam("limit")
             int limit);
 
-//    @POST
-//    @Path("/create")
-//    @ApiOperation(
-//            produces = MediaType.APPLICATION_JSON,
-//            httpMethod = HttpMethod.POST,
-//            value = "Create a new notification",
-//            notes = "Creates and stores a new notification in the system",
-//            tags = {"notifications", "device_management"},
-//            extensions = {
-//                    @Extension(properties = {
-//                            @ExtensionProperty(name = SCOPE, value = "dm:notifications:create")
-//                    })
-//            }
-//    )
-//    @ApiResponses(
-//            value = {
-//                    @ApiResponse(code = 201, message = "Created. Successfully created notification", response = Notification.class),
-//                    @ApiResponse(code = 500, message = "Internal Server Error. Error occurred while creating notification", response = Response.class)
-//            }
-//    )
-//    Response createNotification(Notification notification);
+    @GET
+    @Path("/user")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Get Notifications With User Read/Unread Status",
+            notes = "Retrieve notifications for a specific user with their read/unread status.",
+            tags = "Notification Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = SCOPE, value = "dm:notifications:view")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. Successfully retrieved notifications with status.",
+                            response = Response.class),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. Invalid request or missing parameters.",
+                            response = Response.class),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. No notifications found for the user.",
+                            response = Response.class),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. An error occurred while retrieving notifications.",
+                            response = Response.class)
+            }
+    )
+    Response getUserNotificationsWithStatus(
+            @ApiParam(
+                    name = "username",
+                    value = "Username to retrieve notifications for",
+                    required = true)
+            @QueryParam("username")
+            String username,
+            @ApiParam(
+                    name = "status",
+                    value = "Notification isRead status to filter by (e.g., UNREAD, READ)",
+                    required = false)
+            @QueryParam("isRead")
+            Boolean isRead,
+            @ApiParam(
+                    name = "limit",
+                    value = "Maximum number of results to return",
+                    required = false,
+                    defaultValue = "10")
+            @QueryParam("limit")
+            int limit,
+            @ApiParam(
+                    name = "offset",
+                    value = "Starting index for result pagination",
+                    required = false,
+                    defaultValue = "0")
+            @QueryParam("offset")
+            int offset);
 
+    @PUT
+    @Path("/mark-action")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "PUT",
+            value = "Update Notification Action",
+            notes = "Mark one or more notifications as READ or UNREAD for a given user.",
+            tags = "Notification Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = SCOPE, value = "dm:notif:mark-checked")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. Successfully updated notification action.",
+                            response = Response.class),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. Missing or invalid parameters.",
+                            response = Response.class),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. Failed to update notification action.",
+                            response = Response.class)
+            }
+    )
+    Response updateNotificationAction(
+            @ApiParam(
+                    name = "notificationId",
+                    value = "List of notification IDs to update",
+                    required = true)
+            @QueryParam("notificationId")
+            List<Integer> notificationIds,
+            @ApiParam(
+                    name = "username",
+                    value = "Username for whom the notification actions should be updated",
+                    required = true)
+            @QueryParam("username")
+            String username,
+            @ApiParam(
+                    name = "action",
+                    value = "Action type to set (e.g., READ, UNREAD)",
+                    required = true,
+                    allowableValues = "READ, UNREAD")
+            @QueryParam("action")
+            String actionType
+    );
+
+    @DELETE
+    @Path("/delete")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "DELETE",
+            value = "Delete User Notifications",
+            notes = "Delete one or more notifications for a specific user." +
+                    " If 'all=true' is passed, all notifications for the user will be deleted.",
+            tags = "Notification Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = SCOPE, value = "dm:notif:delete")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. Successfully deleted notifications.",
+                            response = Response.class),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. Missing or invalid parameters.",
+                            response = Response.class),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. Failed to delete notifications.",
+                            response = Response.class)
+            }
+    )
+    Response deleteUserNotifications(
+            @ApiParam(
+                    name = "username",
+                    value = "Username for whom the notifications should be deleted",
+                    required = true)
+            @QueryParam("username")
+            String username,
+            @ApiParam(
+                    name = "all",
+                    value = "Whether to delete all notifications for the user. " +
+                            "If true, the body can be omitted.",
+                    required = false)
+            @QueryParam("all")
+            @DefaultValue("false")
+            boolean deleteAll,
+            @ApiParam(
+                    name = "notificationIds",
+                    value = "List of Notification IDs to be deleted (passed in request body). " +
+                            "Ignored if 'all=true'.",
+                    required = false)
+            List<Integer> notificationIds
+    );
+
+    @POST
+    @Path("/archive")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "POST",
+            value = "Archive User Notifications",
+            notes = "Archive one or more notifications for a specific user. " +
+                    "If 'all=true' is passed, all notifications for the user will be archived.",
+            tags = "Notification Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = SCOPE, value = "dm:notif:archive")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. Successfully archived notifications.",
+                            response = Response.class),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. Missing or invalid parameters.",
+                            response = Response.class),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. Failed to archive notifications.",
+                            response = Response.class)
+            }
+    )
+    Response archiveUserNotifications(
+            @ApiParam(
+                    name = "username",
+                    value = "Username for whom the notifications should be archived",
+                    required = true)
+            @QueryParam("username")
+            String username,
+
+            @ApiParam(
+                    name = "all",
+                    value = "Whether to archive all notifications for the user. " +
+                            "If true, the body can be omitted.",
+                    required = false)
+            @QueryParam("all")
+            @DefaultValue("false")
+            boolean archiveAll,
+            @ApiParam(
+                    name = "notificationIds",
+                    value = "List of Notification IDs to be archived (passed in request body). " +
+                            "Ignored if 'all=true'.",
+                    required = false)
+            List<Integer> notificationIds
+    );
 }

@@ -17,10 +17,12 @@
  *
  */
 
-package io.entgra.device.mgt.core.notification.mgt.core.dao.impl;
+package io.entgra.device.mgt.core.notification.mgt.core.task;
 
-public class GenericNotificationManagementDAO extends GenericNotificationManagementDAOImpl {
-    public GenericNotificationManagementDAO() {
-        super();
-    }
+import io.entgra.device.mgt.core.notification.mgt.core.exception.NotificationArchivalTaskManagerException;
+
+public interface NotificationArchivalTaskManager {
+    void startTask() throws NotificationArchivalTaskManagerException;
+
+    void stopTask() throws NotificationArchivalTaskManagerException;
 }

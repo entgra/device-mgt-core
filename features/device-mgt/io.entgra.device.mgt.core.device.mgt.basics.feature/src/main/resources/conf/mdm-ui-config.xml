@@ -336,6 +336,8 @@
         <Scope>gm:admin:groups:add</Scope>
         <Scope>dm:notif:mark-checked</Scope>
         <Scope>dm:notifications:view</Scope>
+        <Scope>dm:notif:archive</Scope>
+        <Scope>dm:notif:delete</Scope>
         <Scope>cm:cert:delete</Scope>
         <Scope>cm:cert:details:get</Scope>
         <Scope>cm:cert:view</Scope>
