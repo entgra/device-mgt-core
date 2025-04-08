@@ -23,6 +23,7 @@ import org.wso2.carbon.core.util.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 public class JWTConfig {
@@ -98,7 +99,12 @@ public class JWTConfig {
 	 * @param properties load the config from the properties file.
 	 */
 	public JWTConfig(Properties properties) {
-		issuer = properties.getProperty(JWT_ISSUER, null);
+		String iss = properties.getProperty(JWT_ISSUER, null);
+		if (iss != null) {
+			iss = Utils.replaceSystemProperty(iss);
+			iss = resolvePlaceholders(iss);
+			issuer = getIss(iss);
+		}
 		skew = Integer.parseInt(properties.getProperty(SERVER_TIME_SKEW, "0"));
 		issuedInternal = Integer.parseInt(properties.getProperty(JWT_ISSUED_AT,"0"));
 		expirationTime = Integer.parseInt(properties.getProperty(JWT_EXPIRATION_TIME,"15"));
@@ -106,6 +112,11 @@ public class JWTConfig {
 		jti = properties.getProperty(JWT_TOKEN_ID, null);
 		String audience = properties.getProperty(JWT_AUDIENCE, null);
 		if(audience != null) {
+			//Replace system property
+			audience = Utils.replaceSystemProperty(audience);
+			//Replace custom placeholders with system property values
+			audience = resolvePlaceholders(audience);
+			//Split and clean
 			audiences = getAudience(audience);
 		}
 		//get Keystore params
@@ -124,6 +135,10 @@ public class JWTConfig {
 			audiences.add(audi.trim());
 		}
 		return audiences;
+	}
+
+	public static String getIss(String issuer) {
+		return issuer;
 	}
 
 	public String getIssuer() {
@@ -171,10 +186,33 @@ public class JWTConfig {
 	}
 
 	public String getTokenEndpoint() {
-		return Utils.replaceSystemProperty(tokenEndpoint);
+		String endpoint = Utils.replaceSystemProperty(tokenEndpoint);
+		return resolvePlaceholders(endpoint);
+
 	}
 
 	public String getJwtGrantType() {
 		return jwtGrantType;
+	}
+
+	private String resolvePlaceholders(String input) {
+		Map<String, String> placeholders = Map.of(
+				"${iot.gateway.host}", System.getProperty("iot.gateway.host",""),
+				"${iot.gateway.https.port}", System.getProperty("iot.gateway.https.port", ""),
+				"${iot.core.host}", System.getProperty("iot.core.host", ""),
+				"${iot.core.https.port}", System.getProperty("iot.core.https.port", ""),
+				"${iot.apim.host}", System.getProperty("iot.apim.host", ""),
+				"${iot.apim.https.port}", System.getProperty("iot.apim.https.port", ""),
+				"${iot.keymanager.host}", System.getProperty("iot.keymanager.host", ""),
+				"${iot.keymanager.https.port}", System.getProperty("iot.keymanager.https.port", "")
+		);
+
+		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+			if (entry.getValue() != null) {
+				input = input.replace(entry.getKey(), entry.getValue());
+			}
+		}
+
+		return input;
 	}
 }
