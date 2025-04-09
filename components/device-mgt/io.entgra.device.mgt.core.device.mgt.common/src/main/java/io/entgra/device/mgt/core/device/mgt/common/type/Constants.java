@@ -18,15 +18,22 @@
  */
 package io.entgra.device.mgt.core.device.mgt.common.type;
 
-public final class MetaKeys {
+public final class Constants {
 
     // Private constructor to prevent instantiation
-    private MetaKeys() {
+    private Constants() {
         throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }
 
     // Constants for Meta Keys
     public static final String EVENT_DEFINITIONS = "EVENT_DEFINITIONS";
+    public static final String EVENT_NAME = "eventName";
+    public static final String TRANSPORT = "transport";
+    public static final String NAME = "name";
+    public static final String TYPE = "type";
+    public static final String ATTRIBUTES = "attributes";
+    public static final String EVENT_ATTRIBUTES = "eventAttributes";
+    public static final String EVENT_TOPIC_STRUCTURE = "eventTopicStructure";
 
 }
 

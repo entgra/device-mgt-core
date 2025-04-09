@@ -71,21 +71,21 @@ import java.util.List;
                         description = "Add or Update Event Definitions for a device type",
                         key = "dm:device-type:event:modify",
                         roles = {"Internal/devicemgt-user"},
-                        permissions = {"/device-mgt/devices/owning-device/event/modify"}
+                        permissions = {"/device-mgt/device-type/event/modify"}
                 ),
                 @Scope(
                         name = "Get Event Definitions of a Device Type",
                         description = "Get Event Definitions of a Device Type",
                         key = "dm:device-type:event:view",
                         roles = {"Internal/devicemgt-user"},
-                        permissions = {"/device-mgt/devices/owning-device/event/view"}
+                        permissions = {"/device-mgt/device-type/event/view"}
                 ),
                 @Scope(
                         name = "Delete Event Definitions for a device type",
                         description = "Delete Event Definitions for a device type",
                         key = "dm:device-type:event:delete",
                         roles = {"Internal/devicemgt-user"},
-                        permissions = {"/device-mgt/devices/owning-device/event/delete"}
+                        permissions = {"/device-mgt/device-type/event/delete"}
                 ),
         }
 )
@@ -137,6 +137,9 @@ public interface DeviceEventManagementService {
                     @ApiResponse(
                             code = 406,
                             message = "Not Acceptable.\n The requested media type is not supported"),
+                    @ApiResponse(
+                            code = 409,
+                            message = "Conflict.\n The event definitions already exist."),
                     @ApiResponse(
                             code = 500,
                             message = "Internal Server Error. \n Server error occurred while deploying the " +

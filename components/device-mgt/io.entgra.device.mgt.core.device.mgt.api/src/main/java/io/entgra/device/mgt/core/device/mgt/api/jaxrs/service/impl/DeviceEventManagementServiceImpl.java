@@ -175,19 +175,16 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                                                      @Valid List<DeviceTypeEvent> deviceTypeEvents) {
 
         try {
-            // Check if the device type event definitions already exist
-            boolean metaExist = DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
-                    .isDeviceTypeMetaExist(deviceType);
-
-            // If they already exist, return 409 Conflict
-            if (metaExist) {
+            // Check if the device type event definitions already exist, If they already exist, return 409 Conflict
+            if (DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
+                    .isDeviceTypeMetaExist(deviceType)) {
                 return Response.status(Response.Status.CONFLICT)
                         .entity("Device type event definitions already exist for device type: " + deviceType)
                         .build();
             }
-            boolean isCreated = DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
-                    .createDeviceTypeMetaWithEvents(deviceType, deviceTypeEvents);
-            if (isCreated) {
+            if (DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
+                    .createDeviceTypeMetaWithEvents(deviceType, deviceTypeEvents)) {
+                log.info("Device type event definitions updated and metadata created successfully in the database.");
                 processDeviceTypeEventDefinitions(deviceType, skipPersist, isSharedWithAllTenants, deviceTypeEvents);
             }
             return Response.ok().entity("Device type event definitions updated and metadata created successfully.").build();
@@ -208,9 +205,9 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
 
         try {
             removeDeviceTypeEventFiles(deviceType);
-            boolean isUpdated = DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
-                    .updateDeviceTypeMetaWithEvents(deviceType, deviceTypeEvents);
-            if (isUpdated) {
+            if (DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
+                    .updateDeviceTypeMetaWithEvents(deviceType, deviceTypeEvents)) {
+                log.info("Device type event definitions updated and metadata created successfully in the database.");
                 processDeviceTypeEventDefinitions(deviceType, skipPersist, isSharedWithAllTenants, deviceTypeEvents);
             }
             return Response.ok().entity("Device type event definitions updated and metadata updated successfully.").build();
