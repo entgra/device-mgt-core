@@ -372,6 +372,13 @@
                     <method>POST</method>
                     <contentType>application/json</contentType>
                     <permission>/device-mgt/devices/owning-device/operations/android/wipe</permission>
+                    <filters>
+                        <filter>
+                            <property>ownership</property>
+                            <value>COPE</value>
+                            <description>This feature is only available in COPE/COSU</description>
+                        </filter>
+                    </filters>
                 </metadata>
             </Operation>
         </Feature>
