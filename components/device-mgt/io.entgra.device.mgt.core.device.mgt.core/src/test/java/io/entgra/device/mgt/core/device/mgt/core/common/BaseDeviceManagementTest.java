@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - 2023, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
+ * Copyright (c) 2018 - 2025, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
  *
  * Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -59,6 +59,7 @@ import javax.xml.bind.Unmarshaller;
 import java.io.File;
 import java.io.InputStream;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 
 public abstract class BaseDeviceManagementTest {
@@ -199,5 +200,23 @@ public abstract class BaseDeviceManagementTest {
 
     protected boolean isMock() {
         return mock;
+    }
+
+    // Assuming a method to get a database connection is already implemented
+    protected Connection getConnection() throws SQLException {
+        return DeviceManagementDAOFactory.getConnection();
+    }
+
+    /**
+     * Executes an SQL update query (INSERT, UPDATE, DELETE).
+     *
+     * @param sql The SQL query to execute.
+     * @throws SQLException If an error occurs while executing the query.
+     */
+    protected void executeUpdate(String sql) throws SQLException {
+        try (Connection connection = getConnection();
+             Statement statement = connection.createStatement()) {
+            statement.executeUpdate(sql);
+        }
     }
 }
