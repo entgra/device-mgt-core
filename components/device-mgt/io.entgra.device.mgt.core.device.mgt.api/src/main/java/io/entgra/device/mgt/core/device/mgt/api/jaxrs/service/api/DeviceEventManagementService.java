@@ -201,6 +201,9 @@ public interface DeviceEventManagementService {
                             code = 406,
                             message = "Not Acceptable.\n The requested media type is not supported"),
                     @ApiResponse(
+                            code = 409,
+                            message = "Conflict.\n Device type event definitions not updated due to devices that are already enrolled."),
+                    @ApiResponse(
                             code = 500,
                             message = "Internal Server Error. \n Server error occurred while updating " +
                                     "event definitions for a device type.",
@@ -259,6 +262,9 @@ public interface DeviceEventManagementService {
                     @ApiResponse(
                             code = 406,
                             message = "Not Acceptable.\n The requested media type is not supported"),
+                    @ApiResponse(
+                            code = 409,
+                            message = "Conflict.\n Device type event definitions not deleted due to devices that are already enrolled."),
                     @ApiResponse(
                             code = 500,
                             message = "Internal Server Error. \n Server error occurred while deleting the " +

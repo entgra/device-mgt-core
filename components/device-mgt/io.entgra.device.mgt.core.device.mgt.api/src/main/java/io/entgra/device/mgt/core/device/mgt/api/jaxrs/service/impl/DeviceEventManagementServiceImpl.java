@@ -30,11 +30,14 @@ import io.entgra.device.mgt.core.apimgt.analytics.extension.exception.EventStrea
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.DeviceEventManagementService;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.Constants;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.DeviceMgtAPIUtils;
+import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
+import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.Attribute;
 import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.DeviceTypeEvent;
 import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.EventAttributeList;
 import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.TransportType;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.client.Stub;
 import org.apache.commons.lang.StringUtils;
@@ -204,11 +207,21 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                                                      @Valid List<DeviceTypeEvent> deviceTypeEvents) {
 
         try {
-            removeDeviceTypeEventFiles(deviceType);
-            if (DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
-                    .updateDeviceTypeMetaWithEvents(deviceType, deviceTypeEvents)) {
-                log.info("Device type event definitions updated and metadata created successfully in the database.");
-                processDeviceTypeEventDefinitions(deviceType, skipPersist, isSharedWithAllTenants, deviceTypeEvents);
+            DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
+            PaginationRequest request = new PaginationRequest(0, 1);
+            request.setDeviceType(deviceType);
+            PaginationResult result = dms.getDevicesByType(request);
+            if (result.getRecordsTotal() == 0) {
+                removeDeviceTypeEventFiles(deviceType);
+                if (DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
+                        .updateDeviceTypeMetaWithEvents(deviceType, deviceTypeEvents)) {
+                    log.info("Device type event definitions updated and metadata created successfully in the database.");
+                    processDeviceTypeEventDefinitions(deviceType, skipPersist, isSharedWithAllTenants, deviceTypeEvents);
+                }
+            } else {
+                return Response.status(Response.Status.CONFLICT)
+                        .entity("Device type event definitions are not updated due to devices that are already enrolled.")
+                        .build();
             }
             return Response.ok().entity("Device type event definitions updated and metadata updated successfully.").build();
         } catch (DeviceManagementException e) {
@@ -351,11 +364,20 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                 log.error(errorMessage);
                 return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
             }
-            // Remove artifacts from file system
-            removeDeviceTypeEventFiles(deviceType);
-
-            // Remove metadata from the database
-            DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService().deleteDeviceTypeEventDefinitions(deviceType);
+            DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
+            PaginationRequest request = new PaginationRequest(0, 1);
+            request.setDeviceType(deviceType);
+            PaginationResult result = dms.getDevicesByType(request);
+            if (result.getRecordsTotal() == 0) {
+                // Remove artifacts from file system
+                removeDeviceTypeEventFiles(deviceType);
+                // Remove metadata from the database
+                DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService().deleteDeviceTypeEventDefinitions(deviceType);
+            } else {
+                return Response.status(Response.Status.CONFLICT)
+                        .entity("Device type event definitions are not deleted due to devices that are already enrolled.")
+                        .build();
+            }
             return Response.ok().entity("Device type event definitions deleted successfully").build();
         } catch (DeviceManagementException e) {
             log.error("Failed to access device management service, tenantDomain: " + tenantDomain, e);
