@@ -474,9 +474,11 @@
         <Scope>am:admin:lc:app:block</Scope>
         <Scope>am:admin:lc:app:deprecate</Scope>
         <Scope>am:admin:lc:app:retire</Scope>
+        <Scope>dm:ssoconfig:view</Scope>
     </Scopes>
     <SSOConfiguration>
         <Issuer>device-mgt</Issuer>
+        <SSOEnabled>true</SSOEnabled>
     </SSOConfiguration>
 </UIConfiguration>
 

@@ -23,4 +23,5 @@ public class MetadataConstants {
     public static final String ALLOWED_DEVICE_STATUS_META_KEY = "allowed_device_status";
 
     public static final String IS_DEVICE_STATUS_CHECK_META_KEY = "device-status-check";
+    public static final String SSO_CONFIGURATION_META_KEY = "sso-configuration";
 }

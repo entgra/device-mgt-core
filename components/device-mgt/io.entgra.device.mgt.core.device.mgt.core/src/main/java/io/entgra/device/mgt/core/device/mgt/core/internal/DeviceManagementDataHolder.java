@@ -22,6 +22,7 @@ import io.entgra.device.mgt.core.apimgt.extension.rest.api.APIApplicationService
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.PublisherRESTAPIServices;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.GroupAccessAuthorizationService;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
+import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.SSOConfigurationManagementService;
 import io.entgra.device.mgt.core.server.bootup.heartbeat.beacon.service.HeartBeatManagementService;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import io.entgra.device.mgt.core.device.mgt.common.DeviceStatusTaskPluginConfig;
@@ -101,6 +102,7 @@ public class DeviceManagementDataHolder {
     private APIApplicationServices apiApplicationServices;
     private PublisherRESTAPIServices publisherRESTAPIServices;
     private DeviceManagementStartupHandler deviceManagementStartupHandler;
+    private SSOConfigurationManagementService sSOConfigurationManagementService;
 
     private final Map<DeviceType, DeviceStatusTaskPluginConfig> deviceStatusTaskPluginConfigs = Collections.synchronizedMap(
             new HashMap<>());
@@ -465,5 +467,13 @@ public class DeviceManagementDataHolder {
 
     public void setDeviceManagementStartupHandler(DeviceManagementStartupHandler deviceManagementStartupHandler) {
         this.deviceManagementStartupHandler = deviceManagementStartupHandler;
+    }
+
+    public SSOConfigurationManagementService getsSOConfigurationManagementService() {
+        return sSOConfigurationManagementService;
+    }
+
+    public void setsSOConfigurationManagementService(SSOConfigurationManagementService sSOConfigurationManagementService) {
+        this.sSOConfigurationManagementService = sSOConfigurationManagementService;
     }
 }

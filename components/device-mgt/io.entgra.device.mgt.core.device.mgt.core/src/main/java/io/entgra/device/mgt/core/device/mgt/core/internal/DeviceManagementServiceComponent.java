@@ -20,8 +20,10 @@ package io.entgra.device.mgt.core.device.mgt.core.internal;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.GroupAccessAuthorizationService;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.MetadataManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
+import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.SSOConfigurationManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.authorization.GroupAccessAuthorizationServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.DeviceStatusManagementServiceImpl;
+import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.SSOConfigurationManagementServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.service.TagManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.service.TagManagementProviderServiceImpl;
 import io.entgra.device.mgt.core.server.bootup.heartbeat.beacon.service.HeartBeatManagementService;
@@ -356,6 +358,15 @@ public class DeviceManagementServiceComponent {
         }
         bundleContext.registerService(DeviceStatusManagementService.class.getName(), deviceStatusManagementService, null);
 
+        /* Registering SSO Configuration ManagementService */
+        SSOConfigurationManagementService ssoService = new SSOConfigurationManagementServiceImpl();
+        DeviceManagementDataHolder.getInstance().setsSOConfigurationManagementService(ssoService);
+        try {
+            ssoService.addDefaultSSOConfigurationIfNotExist(tenantId);
+        } catch (MetadataManagementException e) {
+            log.error("Error occurred while initializing SSO Configuration Management Service", e);
+        }
+        bundleContext.registerService(SSOConfigurationManagementService.class.getName(), ssoService, null);
         /* Registering Event Configuration Service */
         EventConfigurationProviderService eventConfigurationService = new EventConfigurationProviderServiceImpl();
         DeviceManagementDataHolder.getInstance().setEventConfigurationProviderService(eventConfigurationService);

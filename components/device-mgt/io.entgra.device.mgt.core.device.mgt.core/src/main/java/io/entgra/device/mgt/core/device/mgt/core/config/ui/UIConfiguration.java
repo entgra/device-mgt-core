@@ -35,10 +35,9 @@ public class UIConfiguration {
     private int loginCacheCapacity;
     private Billing billing;
     private HubspotChat hubspotChat;
-
     private DeviceInfoConfigurations deviceInfoConfigurations;
-
     private DeviceStatusConfigurations deviceStatusConfigurations;
+    private SSOConfiguration ssoConfiguration;
 
     @XmlElement(name = "AppRegistration", required = true)
     public AppRegistration getAppRegistration() {
@@ -120,5 +119,14 @@ public class UIConfiguration {
 
     public void setDeviceStatusConfigurations(DeviceStatusConfigurations deviceStatusConfigurations) {
         this.deviceStatusConfigurations = deviceStatusConfigurations;
+    }
+
+    @XmlElement(name = "SSOConfiguration", required = true)
+    public SSOConfiguration getSsoConfiguration() {
+        return ssoConfiguration;
+    }
+
+    public void setSsoConfiguration(SSOConfiguration ssoConfiguration) {
+        this.ssoConfiguration = ssoConfiguration;
     }
 }

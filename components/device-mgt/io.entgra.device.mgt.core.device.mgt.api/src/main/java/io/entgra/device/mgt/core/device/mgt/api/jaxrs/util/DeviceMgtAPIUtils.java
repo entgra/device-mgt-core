@@ -32,6 +32,7 @@ import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.InputVal
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.RequestValidationUtil;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.GroupAccessAuthorizationService;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
+import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.SSOConfigurationManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManagerServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.service.TagManagementProviderService;
 import io.entgra.device.mgt.core.tenant.mgt.common.spi.TenantManagerAdminService;
@@ -169,6 +170,7 @@ public class DeviceMgtAPIUtils {
     private static volatile APIPublisherService apiPublisher;
     private static volatile TenantManagerAdminService tenantManagerAdminService;
     private static volatile TagManagementProviderService tagManagementService;
+    private static SSOConfigurationManagementService sSOConfigurationManagementService;
 
     static {
         String keyStorePassword = ServerConfiguration.getInstance().getFirstProperty("Security.KeyStore.Password");
@@ -1350,5 +1352,28 @@ public class DeviceMgtAPIUtils {
             }
         }
         return tenantManagerAdminService;
+    }
+
+    /**
+     * Initializing and accessing method for SSOConfigurationManagementService.
+     *
+     * @return WhiteLabelManagementService instance
+     * @throws IllegalStateException if SSOConfigurationManagementService cannot be initialized
+     */
+    public static SSOConfigurationManagementService getSSOConfigurationManagementService() {
+        if (sSOConfigurationManagementService == null) {
+            synchronized (DeviceMgtAPIUtils.class) {
+                if (sSOConfigurationManagementService == null) {
+                    PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+                    sSOConfigurationManagementService = (SSOConfigurationManagementService) ctx.getOSGiService(
+                            SSOConfigurationManagementService.class, null);
+                    if (sSOConfigurationManagementService == null) {
+                        throw new IllegalStateException("SSOConfigurationManagementService Management service not" +
+                                " initialized.");
+                    }
+                }
+            }
+        }
+        return sSOConfigurationManagementService;
     }
 }
