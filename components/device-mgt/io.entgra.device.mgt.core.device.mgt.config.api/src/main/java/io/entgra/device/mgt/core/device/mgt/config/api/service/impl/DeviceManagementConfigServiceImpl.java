@@ -21,6 +21,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
 import org.apache.commons.logging.Log;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.OTPManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.operation.change.status.task.OperationConfigurationService;
@@ -30,6 +31,7 @@ import io.entgra.device.mgt.core.device.mgt.core.operation.change.status.task.ex
 import io.entgra.device.mgt.core.device.mgt.core.operation.change.status.task.exceptions.OperationConfigNotFoundException;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.base.MultitenantConstants;
+import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import io.entgra.device.mgt.core.device.mgt.common.AppRegistrationCredentials;
 import io.entgra.device.mgt.core.device.mgt.common.ApplicationRegistrationException;
@@ -40,7 +42,6 @@ import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementEx
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceNotFoundException;
 import io.entgra.device.mgt.core.device.mgt.common.general.TenantDetail;
 import io.entgra.device.mgt.core.device.mgt.common.permission.mgt.PermissionManagementException;
-import io.entgra.device.mgt.core.device.mgt.common.exceptions.OTPManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.otp.mgt.OTPEmailTypes;
 import io.entgra.device.mgt.core.device.mgt.common.otp.mgt.dto.OneTimePinDTO;
 import io.entgra.device.mgt.core.device.mgt.common.spi.OTPManagementService;
@@ -117,9 +118,15 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
                     dms.getDeviceConfiguration(deviceProps);
 
             if (withGateways) {
-                devicesConfiguration.setMqttGateway("tcp://" + System.getProperty("mqtt.broker.host") + ":" + System.getProperty("mqtt.broker.port"));
-                devicesConfiguration.setHttpGateway("http://" + System.getProperty("iot.core.host") + ":" + System.getProperty("iot.core.http.port"));
-                devicesConfiguration.setHttpsGateway("https://" + System.getProperty("iot.core.host") + ":" + System.getProperty("iot.core.https.port"));
+                devicesConfiguration.setMqttGateway("tcp://"
+                        + System.getProperty(DeviceManagementConstants.ConfigurationManagement.MQTT_BROKER_HOST)
+                        + ":" + System.getProperty(DeviceManagementConstants.ConfigurationManagement.MQTT_BROKER_HTTPS_PORT));
+                devicesConfiguration.setHttpGateway("http://"
+                        + System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HOST)
+                        + ":" + System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HTTPS_PORT));
+                devicesConfiguration.setHttpsGateway("https://"
+                        + System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HOST)
+                        + ":" + System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HTTPS_PORT));
             }
             if (withAccessToken) setAccessTokenToDeviceConfigurations(devicesConfiguration);
                 else setOTPTokenToDeviceConfigurations(devicesConfiguration);
@@ -217,8 +224,45 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
                     System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_GATEWAY_HTTPS_PORT),
                     kmConfig.getAdminUsername(),
                     kmConfig.getAdminPassword());
+            String type = devicesConfiguration.getDeviceType();
+            String id = devicesConfiguration.getDeviceId();
+            StringBuilder scopes = new StringBuilder(
+                    DeviceManagementConstants.ConfigurationManagement.SCOPE_DEVICE_PREFIX +
+                            type.replace(" ", "") + ":" + id);
+
+            try {
+                DeviceManagementProviderService deviceManagementProviderService = DeviceMgtAPIUtils.getDeviceManagementService();
+                List<String> mqttEventTopicStructure = new ArrayList<>();
+                DeviceType deviceType = deviceManagementProviderService.getDeviceType(type);
+                if (deviceType != null && deviceType.getDeviceTypeMetaDefinition() != null) {
+                    mqttEventTopicStructure = deviceType.getDeviceTypeMetaDefinition().getMqttEventTopicStructures();
+                }
+                String tenantDomain = CarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+                for (String topic : mqttEventTopicStructure) {
+                    if (topic.contains(DeviceManagementConstants.ConfigurationManagement.TOPIC_ID_PLACEHOLDER)) {
+                        topic = topic.replace(DeviceManagementConstants.ConfigurationManagement.TOPIC_ID_PLACEHOLDER, id);
+                    }
+                    topic = topic.replace("/", ":");
+                    scopes.append(" " + DeviceManagementConstants.ConfigurationManagement.SCOPE_PUB_PREFIX).append(topic);
+                }
+                // Scope for retrieving operations
+                scopes.append(" " + DeviceManagementConstants.ConfigurationManagement.SCOPE_SUB_PREFIX)
+                        .append(tenantDomain).append(":").append(type).append(":")
+                        .append(id).append(DeviceManagementConstants.ConfigurationManagement.SCOPE_OPERATION_SUFFIX);
+                // Scope for updating operations
+                scopes.append(" " + DeviceManagementConstants.ConfigurationManagement.SCOPE_PUB_PREFIX)
+                        .append(tenantDomain).append(":").append(type).append(":")
+                        .append(id).append(DeviceManagementConstants.ConfigurationManagement.SCOPE_UPDATE_OPERATION_SUFFIX);
+                // Append predefined static scopes
+                scopes.append(" " + DeviceManagementConstants.ConfigurationManagement.SCOPES_FOR_TOKEN);
+            }
+            catch (DeviceManagementException e) {
+                String msg = "Error occurred while retrieving device, device id : " +  id + ", device type : " + type;
+                log.error(msg, e);
+                throw new DeviceManagementException(msg, e);
+            }
             AccessTokenInfo accessTokenForAdmin = DeviceManagerUtil.getAccessTokenForDeviceOwner(
-                    DeviceManagementConstants.ConfigurationManagement.SCOPES_FOR_TOKEN,
+                    scopes.toString(),
                     credentials.getClient_id(), credentials.getClient_secret(),
                     devicesConfiguration.getDeviceOwner());
             devicesConfiguration.setAccessToken(accessTokenForAdmin.getAccessToken());

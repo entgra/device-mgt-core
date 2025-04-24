@@ -38,16 +38,23 @@ public final class DeviceManagementConstants {
         private ConfigurationManagement(){
             throw new AssertionError();
         }
-        public static final String SCOPES_FOR_TOKEN = "dm:devices:ops:view dm:device:event:publish win:devices:enroll";
+        public static final String SCOPES_FOR_TOKEN = "dm:devices:ops:view dm:device:event:publish";
         public static final String IOT_GATEWAY_HOST = "iot.gateway.host";
         public static final String IOT_GATEWAY_HTTPS_PORT = "iot.gateway.https.port";
         public static final String IOT_CORE_HOST = "iot.core.host";
         public static final String IOT_CORE_HTTPS_PORT = "iot.core.https.port";
+        public static final String MQTT_BROKER_HOST = "mqtt.broker.host";
+        public static final String MQTT_BROKER_HTTPS_PORT = "mqtt.broker.port";
+        public static final String SCOPE_PUB_PREFIX = "perm:topic:pub:";
+        public static final String SCOPE_SUB_PREFIX = "perm:topic:sub:";
+        public static final String SCOPE_OPERATION_SUFFIX = ":operation";
+        public static final String SCOPE_UPDATE_OPERATION_SUFFIX = ":update:operation";
+        public static final String SCOPE_DEVICE_PREFIX = "device:";
+        public static final String TOPIC_ID_PLACEHOLDER = "${deviceId}";
         public static final String APPLICATION_REGISTRATION_API_ENDPOINT =
                 "/api-application-registration/register";
         public static final String AUTHORIZATION_HEADER = "authorization";
         public static final String BASIC_AUTH = "Basic";
-
     }
     public static final class Common {
         private Common() {
