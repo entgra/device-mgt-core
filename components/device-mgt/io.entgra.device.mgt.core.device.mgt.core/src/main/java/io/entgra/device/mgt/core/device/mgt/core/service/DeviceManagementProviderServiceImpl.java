@@ -5714,4 +5714,39 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             DeviceManagementDAOFactory.closeConnection();
         }
     }
+
+    @Override
+    public List<Device> getGroupedDevicesBasedOnProperties(int groupId, Map<String, String> propertiesMap) throws DeviceManagementException {
+        List<Device> devices;
+        try {
+            int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+            DeviceManagementDAOFactory.openConnection();
+            devices = deviceDAO.queryDeviceIDsBasedDeviceProperties(propertiesMap, tenantId, groupId);
+            if (devices == null) {
+                if (log.isDebugEnabled()) {
+                    log.debug("No device is found against criteria : " + propertiesMap + ", tenantId "
+                            + tenantId + " and groupId " + groupId);
+                }
+                return null;
+            }
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred while obtaining devices in group " + groupId + " based on criteria : "
+                    + propertiesMap;
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        }  finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+        return devices;
+    }
+
+    public List<? extends Operation> getDeviceOperations(DeviceIdentifier deviceId, Operation.Status status, String operationCode)
+            throws OperationManagementException {
+        return pluginRepository.getOperationManager(deviceId.getType(), this.getTenantId())
+                .getOperationsByDeviceOperationCodeAndStatus(deviceId, status, operationCode);
+    }
 }

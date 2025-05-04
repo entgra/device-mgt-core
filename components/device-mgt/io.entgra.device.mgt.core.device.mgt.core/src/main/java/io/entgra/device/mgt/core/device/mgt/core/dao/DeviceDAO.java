@@ -178,6 +178,10 @@ public interface DeviceDAO {
     Device getDevice(DeviceIdentifier deviceIdentifier, Date ifModifiedSince, int tenantId) throws
                                                                                             DeviceManagementDAOException;
 
+
+    List<Device> queryDeviceIDsBasedDeviceProperties(Map<String, String> deviceProps, int tenantId, int groupId)
+            throws DeviceManagementDAOException;
+
     /**
      * Retrieves a list of devices based on a given criteria of properties
      * @param deviceProps properties by which devices need to be filtered

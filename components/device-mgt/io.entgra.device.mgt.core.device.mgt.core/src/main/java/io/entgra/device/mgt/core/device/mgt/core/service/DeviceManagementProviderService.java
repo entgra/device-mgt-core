@@ -1169,4 +1169,25 @@ public interface DeviceManagementProviderService {
      * @throws DeviceManagementException if any service level or DAO level error occurs.
      */
     List<Integer> getDeviceIdsByStatus(List<String> statuses) throws DeviceManagementException;
+
+
+    /**
+     * This method is used to retrieve the list of devices based on the group id and properties map.
+     * @param groupId
+     * @param propertiesMap
+     * @return
+     * @throws DeviceManagementException
+     */
+    List<Device> getGroupedDevicesBasedOnProperties(int groupId, Map<String, String> propertiesMap)
+            throws DeviceManagementException;
+
+    /**
+     * This method is used to retrieve the list of operations for a given device id and status.
+     * @param deviceId
+     * @param status
+     * @param operationCode
+     * @return
+     */
+    List<? extends Operation> getDeviceOperations(DeviceIdentifier deviceId, Operation.Status status, String operationCode)
+            throws OperationManagementException;
 }

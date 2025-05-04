@@ -156,4 +156,15 @@ public interface OperationManager {
 
     List<Activity> getActivities(List<String> deviceTypes, String operationCode, long updatedSince, String operationStatus)
             throws OperationManagementException;
+
+    /**
+     * Method to retrieve the list of operations placed for device with specified status and operation code.
+     * @param deviceId
+     * @param status
+     * @param operationCode
+     * @return
+     * @throws OperationManagementException
+     */
+    List<? extends Operation> getOperationsByDeviceOperationCodeAndStatus(DeviceIdentifier deviceId, Operation.Status status, String operationCode)
+            throws OperationManagementException;
 }

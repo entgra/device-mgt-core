@@ -18,11 +18,8 @@
 
 package io.entgra.device.mgt.core.device.mgt.core.dao.impl;
 
-import io.entgra.device.mgt.core.device.mgt.common.Device;
-import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
-import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo;
+import io.entgra.device.mgt.core.device.mgt.common.*;
 import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo.Status;
-import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.DevicePropertyInfo;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceData;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationHistorySnapshot;
@@ -47,14 +44,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.StringJoiner;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
@@ -384,6 +374,56 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             DeviceManagementDAOUtil.cleanupResources(stmt, rs);
         }
         return device;
+    }
+
+    @Override
+    public List<Device> queryDeviceIDsBasedDeviceProperties(Map<String, String> deviceProps, int tenantId, int groupId)
+            throws DeviceManagementDAOException {
+        Connection conn;
+        PreparedStatement stmt = null;
+        ResultSet resultSet = null;
+        List<Device> devices = new ArrayList<>();
+        if (deviceProps.isEmpty()) {
+            return devices;
+        }
+        try {
+            Set<Device> devicesSet = new HashSet<>();
+            Device device;
+            conn = this.getConnection();
+            for (Map.Entry<String, String> entry : deviceProps.entrySet()) {
+                stmt = conn.prepareStatement("SELECT ID, NAME, DEVICE_IDENTIFICATION from DM_DEVICE " +
+                        "where DEVICE_IDENTIFICATION IN (" +
+                            "SELECT DEVICE_IDENTIFICATION FROM DM_DEVICE_PROPERTIES " +
+                            "WHERE (PROPERTY_NAME , PROPERTY_VALUE) IN ((?, ?)) " +
+                            "AND TENANT_ID = ? AND DEVICE_IDENTIFICATION IN (" +
+                                "SELECT DEVICE_IDENTIFICATION from DM_DEVICE D " +
+                                "INNER JOIN DM_DEVICE_GROUP_MAP M " +
+                                "ON D.ID = M.DEVICE_ID WHERE M.GROUP_ID = ?" +
+                            ")" +
+                        ")"
+                );
+                stmt.setString(1, entry.getKey());
+                stmt.setString(2, entry.getValue());
+                stmt.setInt(3, tenantId);
+                stmt.setInt(4, groupId);
+                resultSet = stmt.executeQuery();
+                device = new Device();
+                while (resultSet.next()) {
+                    device.setId(resultSet.getInt("ID"));
+                    device.setDeviceIdentifier(resultSet.getString("DEVICE_IDENTIFICATION"));
+                    device.setName(resultSet.getString("NAME"));
+                    devicesSet.add(device);
+                }
+            }
+            devices.addAll(devicesSet.stream().collect(Collectors.toList()));
+        } catch (SQLException e) {
+            String msg = "Error occurred while fetching device in group " + groupId + " against criteria : '" + deviceProps;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        } finally {
+            DeviceManagementDAOUtil.cleanupResources(stmt, resultSet);
+        }
+        return devices;
     }
 
     @Override

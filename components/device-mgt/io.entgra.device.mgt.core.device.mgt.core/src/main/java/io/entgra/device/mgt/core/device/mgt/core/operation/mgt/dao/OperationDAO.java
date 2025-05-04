@@ -23,7 +23,6 @@ import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Activity;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.OperationResponse;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.DeviceActivity;
-import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOException;
 import io.entgra.device.mgt.core.device.mgt.core.dto.OperationDTO;
 import io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation;
 import io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.OperationResponseMeta;
@@ -41,6 +40,18 @@ public interface OperationDAO {
     Operation getOperationByDeviceAndId(int enrolmentId, int operationId) throws OperationManagementDAOException;
 
     List<? extends Operation> getOperationsByDeviceAndStatus(int enrolmentId, Operation.Status status)
+            throws OperationManagementDAOException;
+
+    /**
+     * This method provides querying the Operations by enrolmentId operation status and operationCode.
+     * @param enrolmentId
+     * @param status
+     * @param operationCode
+     * @return
+     * @throws OperationManagementDAOException
+     */
+    List<? extends Operation> getDeviceOperationsByOperationCodeAndStatus(int enrolmentId,
+                                                                          Operation.Status status, String operationCode)
             throws OperationManagementDAOException;
 
     List<? extends Operation> getOperationsByDeviceAndStatus(int enrolmentId, PaginationRequest request, Operation.Status status)
