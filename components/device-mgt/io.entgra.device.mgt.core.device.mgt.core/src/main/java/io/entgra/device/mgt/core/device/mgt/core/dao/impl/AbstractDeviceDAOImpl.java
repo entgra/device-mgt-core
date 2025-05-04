@@ -47,14 +47,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.StringJoiner;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
@@ -384,6 +377,64 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             DeviceManagementDAOUtil.cleanupResources(stmt, rs);
         }
         return device;
+    }
+
+    @Override
+    public List<Device> queryDeviceIDsBasedDeviceProperties(Map<String, String> deviceProps, int tenantId, int groupId)
+            throws DeviceManagementDAOException {
+        Connection conn;
+        PreparedStatement stmt = null;
+        ResultSet resultSet = null;
+        List<Device> devices = new ArrayList<>();
+        if (deviceProps.isEmpty()) {
+            return devices;
+        }
+        try {
+            Set<Device> devicesSet = new HashSet<>();
+            Device device;
+            EnrolmentInfo enrolmentInfo;
+            conn = this.getConnection();
+            for (Map.Entry<String, String> entry : deviceProps.entrySet()) {
+                stmt = conn.prepareStatement("SELECT D.ID, E.ID AS ENROLMENT_ID, NAME, DEVICE_IDENTIFICATION " +
+                        "FROM DM_DEVICE D " +
+                        "INNER JOIN DM_ENROLMENT E ON D.ID = E.DEVICE_ID " +
+                        "WHERE D.DEVICE_IDENTIFICATION IN (" +
+                        "    SELECT DP.DEVICE_IDENTIFICATION " +
+                        "    FROM DM_DEVICE_PROPERTIES DP " +
+                        "    WHERE (DP.PROPERTY_NAME, DP.PROPERTY_VALUE) IN ((?, ?)) " +
+                        "      AND DP.TENANT_ID = ? " +
+                        "      AND DP.DEVICE_IDENTIFICATION IN (" +
+                        "          SELECT DE.DEVICE_IDENTIFICATION " +
+                        "          FROM DM_DEVICE DE " +
+                        "          INNER JOIN DM_DEVICE_GROUP_MAP M ON DE.ID = M.DEVICE_ID " +
+                        "          WHERE M.GROUP_ID = ? " +
+                        "      )" +
+                        ")");
+                stmt.setString(1, entry.getKey());
+                stmt.setString(2, entry.getValue());
+                stmt.setInt(3, tenantId);
+                stmt.setInt(4, groupId);
+                resultSet = stmt.executeQuery();
+                device = new Device();
+                while (resultSet.next()) {
+                    device.setId(resultSet.getInt("ID"));
+                    device.setDeviceIdentifier(resultSet.getString("DEVICE_IDENTIFICATION"));
+                    device.setName(resultSet.getString("NAME"));
+                    enrolmentInfo = new EnrolmentInfo();
+                    enrolmentInfo.setId(resultSet.getInt("ENROLMENT_ID"));
+                    device.setEnrolmentInfo(enrolmentInfo);
+                    devicesSet.add(device);
+                }
+            }
+            devices.addAll(new ArrayList<>(devicesSet));
+        } catch (SQLException e) {
+            String msg = "Error occurred while fetching device in group " + groupId + " against criteria : '" + deviceProps;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        } finally {
+            DeviceManagementDAOUtil.cleanupResources(stmt, resultSet);
+        }
+        return devices;
     }
 
     @Override
