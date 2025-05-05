@@ -864,20 +864,20 @@ public final class DeviceManagerUtil {
     @SuppressWarnings("PackageAccessibility")
     private static StringEntity constructApplicationRegistrationPayload() {
         ApplicationRegistration applicationRegistration = new ApplicationRegistration();
-        applicationRegistration.setApplicationName("MyApp");
+        applicationRegistration.setApplicationName(DeviceManagementConstants.INTERNAL_APP_NAME);
         applicationRegistration.setAllowedToAllDomains(false);
         List<String> tags = new ArrayList<>();
-        tags.add("device_management");
+        tags.add(DeviceManagementConstants.INTERNAL_APP_TAGS);
         applicationRegistration.setTags(tags);
         applicationRegistration.setValidityPeriod(3600);
         applicationRegistration.setCallbackUrl(null);
         ArrayList<String> grantTypes = new ArrayList<>();
-        grantTypes.add("refresh_token");
-        grantTypes.add("client_credentials");
-        grantTypes.add("password");
-        grantTypes.add("urn:ietf:params:oauth:grant-type:jwt-bearer");
+        grantTypes.add(DeviceManagementConstants.REFRESH_TOKEN_GRANT_TYPE);
+        grantTypes.add(DeviceManagementConstants.CLIENT_CREDENTIALS_GRANT_TYPE);
+        grantTypes.add(DeviceManagementConstants.PASSWORD_GRANT_TYPE);
+        grantTypes.add(DeviceManagementConstants.JWT_BEARER_GRANT_TYPE);
         applicationRegistration.setSupportedGrantTypes(grantTypes);
-        applicationRegistration.setTokenType("DEFAULT");
+        applicationRegistration.setTokenType(DeviceManagementConstants.DEFAULT_TOKEN_TYPE);
         Gson gson = new Gson();
         String payload = gson.toJson(applicationRegistration);
         return new StringEntity(payload, ContentType.APPLICATION_JSON);

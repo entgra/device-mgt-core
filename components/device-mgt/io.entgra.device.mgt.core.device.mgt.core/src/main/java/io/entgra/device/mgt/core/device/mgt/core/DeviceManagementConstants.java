@@ -33,6 +33,13 @@ public final class DeviceManagementConstants {
     public static final String ACTIVE_STATUS = "ACTIVE";
     public static final String ENROLLMENT_NOTIFICATION_API_ENDPOINT = "/api/device-mgt/enrollment-notification";
     public static final String URL_SEPERATOR = "/";
+    public static final String REFRESH_TOKEN_GRANT_TYPE = "refresh_token";
+    public static final String PASSWORD_GRANT_TYPE = "password";
+    public static final String JWT_BEARER_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
+    public static final String CLIENT_CREDENTIALS_GRANT_TYPE = "client_credentials";
+    public static final String DEFAULT_TOKEN_TYPE = "DEFAULT";
+    public static final String INTERNAL_APP_NAME = "MyApp";
+    public static final String INTERNAL_APP_TAGS = "device_management";
 
     public static final class ConfigurationManagement {
         private ConfigurationManagement(){
