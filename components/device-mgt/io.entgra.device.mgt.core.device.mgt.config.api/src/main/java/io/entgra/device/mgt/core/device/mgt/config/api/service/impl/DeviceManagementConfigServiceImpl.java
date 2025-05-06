@@ -231,9 +231,8 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
                             type.replace(" ", "") + ":" + id);
 
             try {
-                DeviceManagementProviderService deviceManagementProviderService = DeviceMgtAPIUtils.getDeviceManagementService();
                 List<String> mqttEventTopicStructure = new ArrayList<>();
-                DeviceType deviceType = deviceManagementProviderService.getDeviceType(type);
+                DeviceType deviceType = DeviceMgtAPIUtils.getDeviceManagementService().getDeviceType(type);
                 if (deviceType != null && deviceType.getDeviceTypeMetaDefinition() != null) {
                     mqttEventTopicStructure = deviceType.getDeviceTypeMetaDefinition().getMqttEventTopicStructures();
                 }
