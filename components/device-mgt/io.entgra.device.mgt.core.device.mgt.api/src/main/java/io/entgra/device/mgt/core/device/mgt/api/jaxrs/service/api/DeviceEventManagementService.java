@@ -67,8 +67,15 @@ import java.util.List;
 @Scopes(
         scopes = {
                 @Scope(
-                        name = "Add or Update Event Definitions for a device type",
-                        description = "Add or Update Event Definitions for a device type",
+                        name = "Add Event Definitions for a device type",
+                        description = "Add Event Definitions for a device type",
+                        key = "dm:device-type:event:create",
+                        roles = {"Internal/devicemgt-user"},
+                        permissions = {"/device-mgt/device-type/event/create"}
+                ),
+                @Scope(
+                        name = "Update Event Definitions for a device type",
+                        description = "Update Event Definitions for a device type",
                         key = "dm:device-type:event:modify",
                         roles = {"Internal/devicemgt-user"},
                         permissions = {"/device-mgt/device-type/event/modify"}
@@ -106,7 +113,7 @@ public interface DeviceEventManagementService {
             tags = "Device Event Management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:device-type:event:modify")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:device-type:event:create")
                     })
             }
     )

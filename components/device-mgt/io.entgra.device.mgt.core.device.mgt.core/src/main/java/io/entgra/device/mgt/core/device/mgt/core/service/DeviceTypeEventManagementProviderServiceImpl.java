@@ -28,6 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.CarbonContext;
 
+import java.sql.SQLException;
 import java.util.List;
 
 public class DeviceTypeEventManagementProviderServiceImpl implements DeviceTypeEventManagementProviderService {
@@ -42,22 +43,15 @@ public class DeviceTypeEventManagementProviderServiceImpl implements DeviceTypeE
     @Override
     public List<DeviceTypeEvent> getDeviceTypeEventDefinitions(String deviceType) throws DeviceManagementException {
         try {
-            DeviceManagementDAOFactory.beginTransaction();
+            DeviceManagementDAOFactory.openConnection();
             int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
-            List<DeviceTypeEvent> eventDefinitions = deviceTypeEventDAO.getDeviceTypeEventDefinitions(deviceType, tenantId);
-            DeviceManagementDAOFactory.commitTransaction();
-            return eventDefinitions;
-        } catch (TransactionManagementException e) {
-            String msg = "Error occurred while initiating transaction.";
-            log.error(msg, e);
-            throw new DeviceManagementException(msg, e);
+            return deviceTypeEventDAO.getDeviceTypeEventDefinitions(deviceType, tenantId);
         } catch (DeviceManagementDAOException e) {
-            DeviceManagementDAOFactory.rollbackTransaction();
             String msg = "Error occurred while retrieving event definitions.";
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
-        } catch (Exception e) {
-            String msg = "Error occurred in retrieving event definitions.";
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source to retrieve event definitions.";
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
         } finally {
@@ -68,22 +62,15 @@ public class DeviceTypeEventManagementProviderServiceImpl implements DeviceTypeE
     @Override
     public String getDeviceTypeEventDefinitionsAsJson(String deviceType) throws DeviceManagementException {
         try {
-            DeviceManagementDAOFactory.beginTransaction();
+            DeviceManagementDAOFactory.openConnection();
             int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
-            String eventDefinitionsJson = deviceTypeEventDAO.getDeviceTypeEventDefinitionsAsJson(deviceType, tenantId);
-            DeviceManagementDAOFactory.commitTransaction();
-            return eventDefinitionsJson;
-        } catch (TransactionManagementException e) {
-            String msg = "Error occurred while initiating transaction.";
-            log.error(msg, e);
-            throw new DeviceManagementException(msg, e);
+            return deviceTypeEventDAO.getDeviceTypeEventDefinitionsAsJson(deviceType, tenantId);
         } catch (DeviceManagementDAOException e) {
-            DeviceManagementDAOFactory.rollbackTransaction();
             String msg = "Error occurred while retrieving event definitions.";
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
-        } catch (Exception e) {
-            String msg = "Error occurred in retrieving event definitions.";
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source to retrieve event definitions.";
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
         } finally {
@@ -94,22 +81,15 @@ public class DeviceTypeEventManagementProviderServiceImpl implements DeviceTypeE
     @Override
     public boolean isDeviceTypeMetaExist(String deviceType) throws DeviceManagementException {
         try {
-            DeviceManagementDAOFactory.beginTransaction();
+            DeviceManagementDAOFactory.openConnection();
             int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
-            boolean metaExist = deviceTypeEventDAO.isDeviceTypeMetaExist(deviceType, tenantId);
-            DeviceManagementDAOFactory.commitTransaction();
-            return metaExist;
-        } catch (TransactionManagementException e) {
-            String msg = "Error occurred while initiating transaction.";
-            log.error(msg, e);
-            throw new DeviceManagementException(msg, e);
+            return deviceTypeEventDAO.isDeviceTypeMetaExist(deviceType, tenantId);
         } catch (DeviceManagementDAOException e) {
-            DeviceManagementDAOFactory.rollbackTransaction();
-            String msg = "Error occurred while retrieving event definitions.";
+            String msg = "Error occurred while checking for device type meta key.";
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
-        } catch (Exception e) {
-            String msg = "Error occurred in retrieving event definitions.";
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source to check for device type meta key.";
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
         } finally {

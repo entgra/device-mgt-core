@@ -18,10 +18,7 @@
  */
 package io.entgra.device.mgt.core.device.mgt.core.dao.impl;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.DeviceTypeEvent;
@@ -55,23 +52,22 @@ public class DeviceTypeEventDAOImpl implements DeviceTypeEventDAO {
 
     @Override
     public List<DeviceTypeEvent> getDeviceTypeEventDefinitions(String deviceType, int tenantId) throws DeviceManagementDAOException {
-        try {
-            String selectSQL = "SELECT m.META_VALUE " +
-                    "FROM DM_DEVICE_TYPE_META m " +
-                    "JOIN DM_DEVICE_TYPE d " +
-                    "ON m.DEVICE_TYPE_ID = d.ID " +
-                    "WHERE m.TENANT_ID = ? " +
-                    "AND d.PROVIDER_TENANT_ID = ? " +
-                    "AND d.NAME = ? " +
-                    "AND m.META_KEY = ?";
-            Connection conn = this.getConnection();
+        String selectSQL = "SELECT m.META_VALUE " +
+                "FROM DM_DEVICE_TYPE_META m " +
+                "JOIN DM_DEVICE_TYPE d " +
+                "ON m.DEVICE_TYPE_ID = d.ID " +
+                "WHERE m.TENANT_ID = ? " +
+                "AND d.PROVIDER_TENANT_ID = ? " +
+                "AND d.NAME = ? " +
+                "AND m.META_KEY = ?";
+        try (Connection conn = this.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(selectSQL)) {
+            stmt.setInt(1, tenantId);
+            stmt.setInt(2, tenantId);
+            stmt.setString(3, deviceType);
+            stmt.setString(4, EVENT_DEFINITIONS);
             List<DeviceTypeEvent> eventDefinitions = new ArrayList<>();
-            try (PreparedStatement stmt = conn.prepareStatement(selectSQL)) {
-                stmt.setInt(1, tenantId);
-                stmt.setInt(2, tenantId);
-                stmt.setString(3, deviceType);
-                stmt.setString(4, EVENT_DEFINITIONS);
-                ResultSet rs = stmt.executeQuery();
+            try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String eventDefinitionsJson = rs.getString("META_VALUE");
                     if (eventDefinitionsJson != null && !eventDefinitionsJson.isEmpty()) {
@@ -86,21 +82,21 @@ public class DeviceTypeEventDAOImpl implements DeviceTypeEventDAO {
                         return eventDefinitions;
                     }
                 }
-                return eventDefinitions;
             }
+            return eventDefinitions;
         } catch (SQLException e) {
-            log.error("Failed to retrieve EVENT_DEFINITIONS for device type: " + deviceType, e);
-            throw new DeviceManagementDAOException(e);
-        } catch (JsonMappingException e) {
-            throw new DeviceManagementDAOException("Error while retrieving EVENT_DEFINITIONS for device type: " + deviceType, e);
-        } catch (JsonParseException e) {
-            throw new DeviceManagementDAOException("Error while retrieving EVENT_DEFINITIONS for device type: " + deviceType, e);
-        } catch (JsonGenerationException e) {
-            throw new DeviceManagementDAOException("Error while retrieving EVENT_DEFINITIONS for device type: " + deviceType, e);
+            String msg = "SQL error while retrieving EVENT_DEFINITIONS for deviceType: " + deviceType +
+                    ", tenantId: " + tenantId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
         } catch (IOException e) {
-            throw new DeviceManagementDAOException("Error while retrieving EVENT_DEFINITIONS for device type: " + deviceType, e);
+            String msg = "I/O error while processing EVENT_DEFINITIONS JSON for deviceType: " + deviceType +
+                    ", tenantId: " + tenantId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
         }
     }
+
 
     @Override
     public boolean createDeviceTypeMetaWithEvents(String deviceType, int tenantId,
@@ -114,8 +110,10 @@ public class DeviceTypeEventDAOImpl implements DeviceTypeEventDAO {
             String updatedEventDefinitionsJson = objectMapper.writeValueAsString(eventDefinitions);
             return createEventDefinitionsInDB(deviceType, tenantId, updatedEventDefinitionsJson);
         } catch (IOException e) {
-            log.error("Error processing JSON for device type: " + deviceType, e);
-            throw new DeviceManagementDAOException("Error processing JSON for EVENT_DEFINITIONS.", e);
+            String msg = "Failed to process JSON while creating EVENT_DEFINITIONS for device type: " +
+                    deviceType + ", tenantId: " + tenantId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
         }
     }
 
@@ -132,90 +130,95 @@ public class DeviceTypeEventDAOImpl implements DeviceTypeEventDAO {
             // Update the database with the new event definitions
             return updateEventDefinitionsInDB(deviceType, tenantId, updatedEventDefinitionsJson);
         } catch (IOException e) {
-            log.error("Error processing JSON for device type: " + deviceType, e);
-            throw new DeviceManagementDAOException("Error processing JSON for EVENT_DEFINITIONS.", e);
+            String msg = "Failed to process JSON while updating EVENT_DEFINITIONS for device type: " +
+                    deviceType + ", tenantId: " + tenantId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
         }
     }
 
     @Override
     public boolean deleteDeviceTypeEventDefinitions(String deviceType, int tenantId) throws DeviceManagementDAOException {
-        try {
-            String deleteSQL = "DELETE m " +
-                    "FROM DM_DEVICE_TYPE_META m " +
-                    "JOIN DM_DEVICE_TYPE d " +
-                    "ON m.DEVICE_TYPE_ID = d.ID " +
-                    "WHERE m.TENANT_ID = ? " +
-                    "AND d.PROVIDER_TENANT_ID = ? " +
-                    "AND d.NAME = ? " +
-                    "AND m.META_KEY = ?";
-            Connection conn = this.getConnection();
-            try (PreparedStatement stmt = conn.prepareStatement(deleteSQL)) {
-                // Set the parameters
-                stmt.setInt(1, tenantId);
-                stmt.setInt(2, tenantId);
-                stmt.setString(3, deviceType);
-                stmt.setString(4, EVENT_DEFINITIONS);
-                // Execute the update
-                return stmt.executeUpdate() > 0;
-            }
+        String deleteSQL = "DELETE m " +
+                "FROM DM_DEVICE_TYPE_META m " +
+                "JOIN DM_DEVICE_TYPE d " +
+                "ON m.DEVICE_TYPE_ID = d.ID " +
+                "WHERE m.TENANT_ID = ? " +
+                "AND d.PROVIDER_TENANT_ID = ? " +
+                "AND d.NAME = ? " +
+                "AND m.META_KEY = ?";
+        try (Connection conn = this.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(deleteSQL)) {
+            stmt.setInt(1, tenantId);
+            stmt.setInt(2, tenantId);
+            stmt.setString(3, deviceType);
+            stmt.setString(4, EVENT_DEFINITIONS);
+            // Execute the update and return true if at least one row was deleted
+            return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            log.error("Error deleting event definitions for device type: " + deviceType, e);
-            throw new DeviceManagementDAOException("Error deleting event definitions from the database.", e);
+            String msg = "Failed to delete event definitions for device type: " + deviceType + ", tenantId: " + tenantId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
         }
     }
 
+
     @Override
     public String getDeviceTypeEventDefinitionsAsJson(String deviceType, int tenantId) throws DeviceManagementDAOException {
-        try {
-            String selectSQL = "SELECT m.META_VALUE " +
-                    "FROM DM_DEVICE_TYPE_META m " +
-                    "JOIN DM_DEVICE_TYPE d " +
-                    "ON m.DEVICE_TYPE_ID = d.ID " +
-                    "WHERE m.TENANT_ID = ? " +
-                    "AND d.PROVIDER_TENANT_ID = ? " +
-                    "AND d.NAME = ? " +
-                    "AND m.META_KEY = ?";
-            Connection conn = this.getConnection();
-            try (PreparedStatement stmt = conn.prepareStatement(selectSQL)) {
-                stmt.setInt(1, tenantId);
-                stmt.setInt(2, tenantId);
-                stmt.setString(3, deviceType);
-                stmt.setString(4, EVENT_DEFINITIONS);
-                ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
+        String selectSQL = "SELECT m.META_VALUE " +
+                "FROM DM_DEVICE_TYPE_META m " +
+                "JOIN DM_DEVICE_TYPE d " +
+                "ON m.DEVICE_TYPE_ID = d.ID " +
+                "WHERE m.TENANT_ID = ? " +
+                "AND d.PROVIDER_TENANT_ID = ? " +
+                "AND d.NAME = ? " +
+                "AND m.META_KEY = ?";
+        try (Connection conn = this.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(selectSQL)) {
+            stmt.setInt(1, tenantId);
+            stmt.setInt(2, tenantId);
+            stmt.setString(3, deviceType);
+            stmt.setString(4, EVENT_DEFINITIONS);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
                     return rs.getString("META_VALUE");
                 }
             }
         } catch (SQLException e) {
-            log.error("Error retrieving device type event JSON for device type " + deviceType, e);
-            throw new DeviceManagementDAOException("Error retrieving EVENT_DEFINITIONS from the database.", e);
+            String msg = "Failed to retrieve EVENT_DEFINITIONS JSON for device type: " +
+                    deviceType + ", tenantId: " + tenantId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
         }
-        return null;
+        return null;  // Return null if no result is found
     }
+
 
     @Override
     public boolean isDeviceTypeMetaExist(String deviceType, int tenantId) throws DeviceManagementDAOException {
-        try {
-            String selectSQL = "SELECT m.META_VALUE " +
-                    "FROM DM_DEVICE_TYPE_META m " +
-                    "JOIN DM_DEVICE_TYPE d " +
-                    "ON m.DEVICE_TYPE_ID = d.ID " +
-                    "WHERE m.TENANT_ID = ? " +
-                    "AND d.PROVIDER_TENANT_ID = ? " +
-                    "AND d.NAME = ? " +
-                    "AND m.META_KEY = ?";
-            Connection connection = this.getConnection();
-            try (PreparedStatement stmt = connection.prepareStatement(selectSQL)) {
-                stmt.setInt(1, tenantId);
-                stmt.setInt(2, tenantId);
-                stmt.setString(3, deviceType);
-                stmt.setString(4, EVENT_DEFINITIONS);
-                ResultSet rs = stmt.executeQuery();
+        String selectSQL = "SELECT m.META_VALUE " +
+                "FROM DM_DEVICE_TYPE_META m " +
+                "JOIN DM_DEVICE_TYPE d " +
+                "ON m.DEVICE_TYPE_ID = d.ID " +
+                "WHERE m.TENANT_ID = ? " +
+                "AND d.PROVIDER_TENANT_ID = ? " +
+                "AND d.NAME = ? " +
+                "AND m.META_KEY = ?";
+        try (Connection conn = this.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(selectSQL)) {
+            stmt.setInt(1, tenantId);
+            stmt.setInt(2, tenantId);
+            stmt.setString(3, deviceType);
+            stmt.setString(4, EVENT_DEFINITIONS);
+            try (ResultSet rs = stmt.executeQuery()) {
+                // Return true if the ResultSet contains at least one row, otherwise false
                 return rs.next();
             }
         } catch (SQLException e) {
-            log.error("Error validating device type meta for device type " + deviceType, e);
-            throw new DeviceManagementDAOException("Error validating device type meta from the database.", e);
+            String msg = "Failed to validate existence of device type meta for deviceType: " +
+                    deviceType + ", tenantId: " + tenantId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
         }
     }
 
@@ -276,30 +279,29 @@ public class DeviceTypeEventDAOImpl implements DeviceTypeEventDAO {
      */
     private boolean updateEventDefinitionsInDB(String deviceType, int tenantId, String updatedEventDefinitionsJson)
             throws DeviceManagementDAOException {
-        try {
-            String updateSQL = "UPDATE DM_DEVICE_TYPE_META m " +
-                    "JOIN DM_DEVICE_TYPE d " +
-                    "ON m.DEVICE_TYPE_ID = d.ID " +
-                    "SET m.META_VALUE = ?, m.LAST_UPDATED_TIMESTAMP = ? " +
-                    "WHERE m.TENANT_ID = ? " +
-                    "AND d.PROVIDER_TENANT_ID = ? " +
-                    "AND d.NAME = ? " +
-                    "AND m.META_KEY = ?";
-            Connection conn = this.getConnection();
-            try (PreparedStatement stmt = conn.prepareStatement(updateSQL)) {
-                // Set the parameters
-                stmt.setString(1, updatedEventDefinitionsJson);
-                stmt.setLong(2, System.currentTimeMillis()); // Set LAST_UPDATED_TIMESTAMP as Unix time in milliseconds
-                stmt.setInt(3, tenantId);
-                stmt.setInt(4, tenantId);
-                stmt.setString(5, deviceType);
-                stmt.setString(6, EVENT_DEFINITIONS);
-                // Execute the update
-                return stmt.executeUpdate() > 0;
-            }
+        String updateSQL = "UPDATE DM_DEVICE_TYPE_META m " +
+                "JOIN DM_DEVICE_TYPE d " +
+                "ON m.DEVICE_TYPE_ID = d.ID " +
+                "SET m.META_VALUE = ?, m.LAST_UPDATED_TIMESTAMP = ? " +
+                "WHERE m.TENANT_ID = ? " +
+                "AND d.PROVIDER_TENANT_ID = ? " +
+                "AND d.NAME = ? " +
+                "AND m.META_KEY = ?";
+        try (Connection conn = this.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(updateSQL)) {
+            stmt.setString(1, updatedEventDefinitionsJson);
+            stmt.setLong(2, System.currentTimeMillis()); // Set LAST_UPDATED_TIMESTAMP as Unix time in milliseconds
+            stmt.setInt(3, tenantId);
+            stmt.setInt(4, tenantId);
+            stmt.setString(5, deviceType);
+            stmt.setString(6, EVENT_DEFINITIONS);
+            // Execute the update and return whether any rows were updated
+            return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            log.error("Error while updating EVENT_DEFINITIONS for device type: " + deviceType, e);
-            throw new DeviceManagementDAOException("Error updating EVENT_DEFINITIONS in the database.", e);
+            String msg = "Failed to update EVENT_DEFINITIONS for deviceType: " +
+                    deviceType + ", tenantId: " + tenantId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
         }
     }
 
@@ -319,26 +321,25 @@ public class DeviceTypeEventDAOImpl implements DeviceTypeEventDAO {
      */
     private boolean createEventDefinitionsInDB(String deviceType, int tenantId, String updatedEventDefinitionsJson)
             throws DeviceManagementDAOException {
-        try {
-            String insertSQL = "INSERT INTO DM_DEVICE_TYPE_META (META_KEY, META_VALUE, LAST_UPDATED_TIMESTAMP, TENANT_ID, DEVICE_TYPE_ID) " +
-                    "SELECT ?, ?, ?, ?, d.ID " +
-                    "FROM DM_DEVICE_TYPE d " +
-                    "WHERE d.NAME = ? AND d.PROVIDER_TENANT_ID = ?";
-            Connection conn = this.getConnection();
-            try (PreparedStatement stmt = conn.prepareStatement(insertSQL)) {
-                // Set the parameters
-                stmt.setString(1, EVENT_DEFINITIONS);
-                stmt.setString(2, updatedEventDefinitionsJson);
-                stmt.setLong(3, System.currentTimeMillis()); // Set LAST_UPDATED_TIMESTAMP as Unix time in milliseconds
-                stmt.setInt(4, tenantId);
-                stmt.setString(5, deviceType);
-                stmt.setInt(6, tenantId);
-                // Execute the insert
-                return stmt.executeUpdate() > 0;
-            }
+        String insertSQL = "INSERT INTO DM_DEVICE_TYPE_META (META_KEY, META_VALUE, LAST_UPDATED_TIMESTAMP, TENANT_ID, DEVICE_TYPE_ID) " +
+                "SELECT ?, ?, ?, ?, d.ID " +
+                "FROM DM_DEVICE_TYPE d " +
+                "WHERE d.NAME = ? AND d.PROVIDER_TENANT_ID = ?";
+        try (Connection conn = this.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(insertSQL)) {
+            stmt.setString(1, EVENT_DEFINITIONS);
+            stmt.setString(2, updatedEventDefinitionsJson);
+            stmt.setLong(3, System.currentTimeMillis()); // Set LAST_UPDATED_TIMESTAMP as Unix time in milliseconds
+            stmt.setInt(4, tenantId);
+            stmt.setString(5, deviceType);
+            stmt.setInt(6, tenantId);
+            // Execute the insert and return whether any rows were inserted
+            return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            log.error("Error while creating EVENT_DEFINITIONS for device type: " + deviceType, e);
-            throw new DeviceManagementDAOException("Error creating EVENT_DEFINITIONS in the database.", e);
+            String msg = "Failed to create EVENT_DEFINITIONS for deviceType: " +
+                    deviceType + ", tenantId: " + tenantId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
         }
     }
 

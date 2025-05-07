@@ -37,7 +37,6 @@ import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.Attribute;
 import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.DeviceTypeEvent;
 import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.EventAttributeList;
 import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.TransportType;
-import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.client.Stub;
 import org.apache.commons.lang.StringUtils;
@@ -76,7 +75,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 /**
  * This is used for device type integration with DAS, to create streams and receiver dynamically and a common endpoint
  * to retrieve data.
@@ -101,6 +99,19 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
     private static final String DEVICE_TYPE = "${deviceType}";
     private static final String TENANT_DOMAIN = "${tenantDomain}";
 
+    // Constants for Stream and Event Definitions
+    private static final String EVENT_ADAPTER_TYPE_RDBMS = "rdbms";
+    private static final String EVENT_ADAPTER_TYPE_WEBSOCKET = "websocket-local";
+    private static final String MAPPING_TYPE_JSON = "json";
+    private static final String MAPPING_TYPE_MAP = "map";
+    private static final String MAPPING_TYPE_WSO2EVENT = "wso2event";
+    private static final String EVENT_DB_DATASOURCE_NAME = "EVENT_DB";
+    private static final String COMMON_EVENT_TOPIC_SUFFIX = "/+/events";
+    private static final String EXECUTION_MODE_INSERT = "insert";
+    private static final String TABLE_PREFIX = "table_";
+    private static final String RDBMS_PUBLISHER_SUFFIX = "_rdbms_publisher";
+    private static final String WS_PUBLISHER_SUFFIX = "_ws_publisher";
+    private static final String RECEIVER_SUFFIX = "-receiver";
 
 //    private static AnalyticsDataAPI getAnalyticsDataAPI() {
 //        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
@@ -168,7 +179,6 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
     /**
      * Deploy Event Stream, Receiver, Publisher and Store Configuration.
      */
-
     @POST
     @Path("/{type}")
     @Override
@@ -176,7 +186,6 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                                                      @QueryParam("skipPersist") boolean skipPersist,
                                                      @QueryParam("isSharedWithAllTenants") boolean isSharedWithAllTenants,
                                                      @Valid List<DeviceTypeEvent> deviceTypeEvents) {
-
         try {
             // Check if the device type event definitions already exist, If they already exist, return 409 Conflict
             if (DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
@@ -205,12 +214,10 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                                                      @QueryParam("skipPersist") boolean skipPersist,
                                                      @QueryParam("isSharedWithAllTenants") boolean isSharedWithAllTenants,
                                                      @Valid List<DeviceTypeEvent> deviceTypeEvents) {
-
         try {
-            DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
             PaginationRequest request = new PaginationRequest(0, 1);
             request.setDeviceType(deviceType);
-            PaginationResult result = dms.getDevicesByType(request);
+            PaginationResult result = DeviceMgtAPIUtils.getDeviceManagementService().getDevicesByType(request);
             if (result.getRecordsTotal() == 0) {
                 removeDeviceTypeEventFiles(deviceType);
                 if (DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
@@ -259,7 +266,6 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                                                        boolean skipPersist, boolean isSharedWithAllTenants,
                                                        List<DeviceTypeEvent> deviceTypeEvents) {
 
-
         String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         try {
@@ -268,11 +274,11 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                 EventAttributeList eventAttributes = deviceTypeEvent.getEventAttributeList();
                 String eventName = deviceTypeEvent.getEventName();
 
-
                 if (eventAttributes == null || eventAttributes.getList() == null || eventAttributes.getList().isEmpty() ||
                         deviceType == null || transportType == null ||
                         !DeviceMgtAPIUtils.getDeviceManagementService().getAvailableDeviceTypes().contains(deviceType)) {
-                    String errorMessage = "Invalid Payload";
+                    String errorMessage = String.format("Invalid Payload: deviceType=%s, eventName=%s, tenantId=%d",
+                            deviceType, eventName, tenantId);
                     log.error(errorMessage);
                     return Response.status(Response.Status.BAD_REQUEST).build();
                 }
@@ -288,7 +294,14 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                 eventStreamData.setVersion(Constants.DEFAULT_STREAM_VERSION);
                 eventStreamData.setMetaData(new MetaData(DEFAULT_DEVICE_ID_ATTRIBUTE, "STRING"));
                 eventStreamData.setPayloadData(props);
-                artifactsDeployer.deployEventStream(eventStreamData, tenantId);
+                try {
+                    artifactsDeployer.deployEventStream(eventStreamData, tenantId);
+                } catch (EventStreamDeployerException e) {
+                    String msg = String.format("Failed to deploy event stream for deviceType=%s, eventName=%s, tenantId=%d",
+                            deviceType, eventName, tenantId);
+                    log.error(msg, e);
+                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+                }
 
                 // event receiver
                 String receiverName = getReceiverName(deviceType, tenantDomain, transportType, eventName);
@@ -314,64 +327,76 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                         }
                     } else {
                         if (isSharedWithAllTenants) {
-                            topic = "+/" + deviceType + "/+/events";
+                            topic = "+/" + deviceType + COMMON_EVENT_TOPIC_SUFFIX;
                         } else {
-                            topic = tenantDomain + "/" + deviceType + "/+/events";
+                            topic = tenantDomain + "/" + deviceType + COMMON_EVENT_TOPIC_SUFFIX;
                         }
                     }
                     propertyList.add(new Property("topic", topic));
-                    receiverData.setCustomMappingType("json");
+                    receiverData.setCustomMappingType(MAPPING_TYPE_JSON);
 
                 } else {
                     receiverData.setEventAdapterType(THRIFT_ADAPTER_TYPE);
                     propertyList.add(new Property("events.duplicated.in.cluster", "false"));
-                    receiverData.setCustomMappingType("wso2event");
+                    receiverData.setCustomMappingType(MAPPING_TYPE_WSO2EVENT);
                 }
                 receiverData.setPropertyList(propertyList);
-                artifactsDeployer.deployEventReceiver(receiverData, tenantId);
+                try {
+                    artifactsDeployer.deployEventReceiver(receiverData, tenantId);
+                } catch (EventReceiverDeployerException e) {
+                    String msg = String.format("Failed to deploy event receiver for deviceType=%s, eventName=%s, tenantId=%d",
+                            deviceType, eventName, tenantId);
+                    log.error(msg, e);
+                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+                }
 
                 if (!skipPersist) {
                     // rdbms event publisher
-                    String rdbmsPublisherName = getPublisherName(deviceType, tenantDomain, eventName) + "_rdbms_publisher";
+                    String rdbmsPublisherName = getPublisherName(deviceType, tenantDomain, eventName) + RDBMS_PUBLISHER_SUFFIX;
 
                     EventPublisherData eventPublisherData = new EventPublisherData();
                     eventPublisherData.setName(rdbmsPublisherName);
                     eventPublisherData.setStreamName(streamName);
                     eventPublisherData.setStreamVersion(Constants.DEFAULT_STREAM_VERSION);
-                    eventPublisherData.setEventAdaptorType("rdbms");
-                    eventPublisherData.setCustomMappingType("map");
+                    eventPublisherData.setEventAdaptorType(EVENT_ADAPTER_TYPE_RDBMS);
+                    eventPublisherData.setCustomMappingType(MAPPING_TYPE_MAP);
                     List<Property> publisherProps = new ArrayList<>();
-                    publisherProps.add(new Property("datasource.name", "EVENT_DB"));
-                    publisherProps.add(new Property("table.name", "table_" + rdbmsPublisherName.replace(".", "")));
-                    publisherProps.add(new Property("execution.mode", "insert"));
+                    publisherProps.add(new Property("datasource.name", EVENT_DB_DATASOURCE_NAME));
+                    publisherProps.add(new Property("table.name", TABLE_PREFIX + rdbmsPublisherName.replace(".", "")));
+                    publisherProps.add(new Property("execution.mode", EXECUTION_MODE_INSERT));
                     eventPublisherData.setPropertyList(publisherProps);
-                    artifactsDeployer.deployEventPublisher(eventPublisherData, tenantId);
+                    try {
+                        artifactsDeployer.deployEventPublisher(eventPublisherData, tenantId);
+                    } catch (EventPublisherDeployerException e) {
+                        String msg = String.format("Failed to deploy RDBMS event publisher for deviceType=%s, eventName=%s, tenantId=%d",
+                                deviceType, eventName, tenantId);
+                        log.error(msg, e);
+                        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+                    }
                 }
 
                 // web socket event publisher
-                String wsPublisherName = getPublisherName(deviceType, tenantDomain, eventName) + "_ws_publisher";
+                String wsPublisherName = getPublisherName(deviceType, tenantDomain, eventName) + WS_PUBLISHER_SUFFIX;
                 EventPublisherData wsEventPublisherData = new EventPublisherData();
                 wsEventPublisherData.setName(wsPublisherName);
                 wsEventPublisherData.setStreamName(streamName);
                 wsEventPublisherData.setStreamVersion(Constants.DEFAULT_STREAM_VERSION);
-                wsEventPublisherData.setEventAdaptorType("websocket-local");
-                wsEventPublisherData.setCustomMappingType("json");
-                artifactsDeployer.deployEventPublisher(wsEventPublisherData, tenantId);
-
+                wsEventPublisherData.setEventAdaptorType(EVENT_ADAPTER_TYPE_WEBSOCKET);
+                wsEventPublisherData.setCustomMappingType(MAPPING_TYPE_JSON);
+                try {
+                    artifactsDeployer.deployEventPublisher(wsEventPublisherData, tenantId);
+                } catch (EventPublisherDeployerException e) {
+                    String msg = String.format("Failed to deploy WebSocket event publisher for deviceType=%s, eventName=%s, tenantId=%d",
+                            deviceType, eventName, tenantId);
+                    log.error(msg, e);
+                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+                }
             }
             return Response.ok().build();
         } catch (DeviceManagementException e) {
-            log.error("Failed to access device management service, tenantDomain: " + tenantDomain, e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-        } catch (EventStreamDeployerException e) {
-            log.error("Failed while deploying event stream definition, tenantDomain: " + tenantDomain, e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-        } catch (EventPublisherDeployerException e) {
-            log.error("Failed while deploying event publisher, tenantDomain: " + tenantDomain, e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-        } catch (EventReceiverDeployerException e) {
-            log.error("Failed while deploying event receiver, tenantDomain: " + tenantDomain, e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            String msg = String.format("Failed to access device management service for tenantDomain=%s, tenantId=%d", tenantDomain, tenantId);
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
 
@@ -388,10 +413,9 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                 log.error(errorMessage);
                 return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
             }
-            DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
             PaginationRequest request = new PaginationRequest(0, 1);
             request.setDeviceType(deviceType);
-            PaginationResult result = dms.getDevicesByType(request);
+            PaginationResult result = DeviceMgtAPIUtils.getDeviceManagementService().getDevicesByType(request);
             if (result.getRecordsTotal() == 0) {
                 // Remove artifacts from file system
                 removeDeviceTypeEventFiles(deviceType);
@@ -404,8 +428,9 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
             }
             return Response.ok().entity("Device type event definitions deleted successfully").build();
         } catch (DeviceManagementException e) {
-            log.error("Failed to access device management service, tenantDomain: " + tenantDomain, e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Internal server error").build();
+            String errorMessage = "Failed to delete device type event definitions: " + e.getMessage();
+            log.error(errorMessage + ", tenantDomain: " + tenantDomain, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(errorMessage).build();
         }
     }
 
@@ -452,11 +477,11 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
             String streamName = DeviceMgtAPIUtils.getStreamDefinition(deviceType, tenantDomain, eventName);
 
             // Remove event publishers
-            String wsPublisherName = getPublisherName(deviceType, tenantDomain, eventName) + "_ws_publisher";
+            String wsPublisherName = getPublisherName(deviceType, tenantDomain, eventName) + WS_PUBLISHER_SUFFIX;
             artifactsDeployer.undeployEventPublisher(wsPublisherName, tenantId);
             log.info("Removed event publisher: " + wsPublisherName);
 
-            String rdbmsPublisherName = getPublisherName(deviceType, tenantDomain, eventName) + "_rdbms_publisher";
+            String rdbmsPublisherName = getPublisherName(deviceType, tenantDomain, eventName) + RDBMS_PUBLISHER_SUFFIX;
             artifactsDeployer.undeployEventPublisher(rdbmsPublisherName, tenantId);
             log.info("Removed event publisher: " + rdbmsPublisherName);
 
@@ -826,7 +851,7 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
     }
 
     private String getReceiverName(String deviceType, String tenantDomain, TransportType transportType) {
-        return deviceType.replace(" ", "_").trim() + "-" + tenantDomain + "-" + transportType.toString() + "-receiver";
+        return deviceType.replace(" ", "_").trim() + "-" + tenantDomain + "-" + transportType.toString() + RECEIVER_SUFFIX;
     }
 
     private String getReceiverName(String deviceType, String tenantDomain, TransportType transportType, String eventName) {
