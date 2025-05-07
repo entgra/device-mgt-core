@@ -231,6 +231,30 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
         }
     }
 
+    /**
+     * Processes and deploys event stream, receiver, and publisher configurations for a given device type.
+     *
+     * <p>This method performs the following tasks for each provided {@link DeviceTypeEvent}:
+     * <ul>
+     *     <li>Validates event attributes and device type.</li>
+     *     <li>Creates and deploys an event stream using {@link AnalyticsArtifactsDeployer}.</li>
+     *     <li>Creates and deploys an event receiver based on the transport type (MQTT or Thrift).</li>
+     *     <li>If {@code skipPersist} is {@code false}, creates and deploys an RDBMS event publisher.</li>
+     *     <li>Always creates and deploys a WebSocket event publisher.</li>
+     * </ul>
+     *
+     * @param deviceType           The name of the device type.
+     * @param skipPersist          If {@code true}, skips deploying the RDBMS event publisher.
+     * @param isSharedWithAllTenants Indicates whether the event topic is shared across all tenants.
+     * @param deviceTypeEvents     A list of {@link DeviceTypeEvent} objects containing event definitions.
+     * @return A JAX-RS {@link Response} indicating the result of the operation:
+     *         <ul>
+     *             <li>{@code 200 OK} if successful.</li>
+     *             <li>{@code 400 Bad Request} if the input is invalid.</li>
+     *             <li>{@code 500 Internal Server Error} if a deployment step fails.</li>
+     *         </ul>
+     */
+
     private Response processDeviceTypeEventDefinitions(String deviceType,
                                                        boolean skipPersist, boolean isSharedWithAllTenants,
                                                        List<DeviceTypeEvent> deviceTypeEvents) {
@@ -384,6 +408,28 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Internal server error").build();
         }
     }
+
+    /**
+     * Removes all event-related artifacts (event streams, receivers, and publishers) associated with a given device type.
+     *
+     * <p>This includes undeploying:
+     * <ul>
+     *     <li>WebSocket event publishers</li>
+     *     <li>RDBMS event publishers</li>
+     *     <li>Event receivers (based on the transport type)</li>
+     *     <li>Event streams</li>
+     * </ul>
+     *
+     * <p>If no events are defined for the device type, a {@code 404 Not Found} response is returned.</p>
+     *
+     * @param deviceType The device type for which the event artifacts should be removed.
+     * @return A JAX-RS {@link Response} indicating the result of the operation:
+     *         <ul>
+     *             <li>{@code 200 OK} if all artifacts were successfully removed.</li>
+     *             <li>{@code 404 Not Found} if no events are defined for the given device type.</li>
+     *         </ul>
+     * @throws DeviceManagementException If an error occurs while accessing the event definitions or during undeployment.
+     */
 
     private Response removeDeviceTypeEventFiles(String deviceType) throws
             DeviceManagementException {

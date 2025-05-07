@@ -30,7 +30,6 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceTypeEventDAO;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -41,7 +40,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 import static io.entgra.device.mgt.core.device.mgt.common.type.Constants.ATTRIBUTES;
 import static io.entgra.device.mgt.core.device.mgt.common.type.Constants.EVENT_ATTRIBUTES;
 import static io.entgra.device.mgt.core.device.mgt.common.type.Constants.EVENT_DEFINITIONS;
@@ -133,7 +131,6 @@ public class DeviceTypeEventDAOImpl implements DeviceTypeEventDAO {
             String updatedEventDefinitionsJson = objectMapper.writeValueAsString(eventDefinitions);
             // Update the database with the new event definitions
             return updateEventDefinitionsInDB(deviceType, tenantId, updatedEventDefinitionsJson);
-
         } catch (IOException e) {
             log.error("Error processing JSON for device type: " + deviceType, e);
             throw new DeviceManagementDAOException("Error processing JSON for EVENT_DEFINITIONS.", e);
@@ -151,7 +148,6 @@ public class DeviceTypeEventDAOImpl implements DeviceTypeEventDAO {
                     "AND d.PROVIDER_TENANT_ID = ? " +
                     "AND d.NAME = ? " +
                     "AND m.META_KEY = ?";
-
             Connection conn = this.getConnection();
             try (PreparedStatement stmt = conn.prepareStatement(deleteSQL)) {
                 // Set the parameters
@@ -179,7 +175,6 @@ public class DeviceTypeEventDAOImpl implements DeviceTypeEventDAO {
                     "AND d.PROVIDER_TENANT_ID = ? " +
                     "AND d.NAME = ? " +
                     "AND m.META_KEY = ?";
-
             Connection conn = this.getConnection();
             try (PreparedStatement stmt = conn.prepareStatement(selectSQL)) {
                 stmt.setInt(1, tenantId);
@@ -209,7 +204,6 @@ public class DeviceTypeEventDAOImpl implements DeviceTypeEventDAO {
                     "AND d.PROVIDER_TENANT_ID = ? " +
                     "AND d.NAME = ? " +
                     "AND m.META_KEY = ?";
-
             Connection connection = this.getConnection();
             try (PreparedStatement stmt = connection.prepareStatement(selectSQL)) {
                 stmt.setInt(1, tenantId);
@@ -225,6 +219,18 @@ public class DeviceTypeEventDAOImpl implements DeviceTypeEventDAO {
         }
     }
 
+    /**
+     * Converts a list of {@link DeviceTypeEvent} objects into a list of maps, where each map
+     * represents the structure of an event definition in a key-value format.
+     * <p>
+     * This transformation is useful for serializing event definitions into a format
+     * that can be used in configuration files, REST responses, or UI representations.
+     * </p>
+     *
+     * @param deviceTypeEvents The list of {@link DeviceTypeEvent} objects to be transformed.
+     * @return A list of maps where each map contains the properties of an event such as name,
+     *         transport type, attributes, and topic structure.
+     */
     private List<Map<String, Object>> addNewEventDefinitions(List<DeviceTypeEvent> deviceTypeEvents) {
         // Create a new list to avoid modifying the original existingEvents list directly
         List<Map<String, Object>> updatedEvents = new ArrayList<>();
@@ -243,21 +249,31 @@ public class DeviceTypeEventDAOImpl implements DeviceTypeEventDAO {
                         return attributeMap;
                     })
                     .collect(Collectors.toList());
-
             eventAttributes.put(ATTRIBUTES, attributes); // Nested inside eventAttributes
             // Add the eventAttributes map to the eventMap
             eventMap.put(EVENT_ATTRIBUTES, eventAttributes);
             eventMap.put(EVENT_TOPIC_STRUCTURE, event.getEventTopicStructure());
-
             // Add the event to the updated events list
             updatedEvents.add(eventMap);
         }
-
         // Return the updated list of events
         return updatedEvents;
     }
 
-
+    /**
+     * Updates the event definitions metadata in the database for a specific device type and tenant.
+     * <p>
+     * This method executes an SQL update on the {@code DM_DEVICE_TYPE_META} table by joining it with
+     * the {@code DM_DEVICE_TYPE} table using the device type ID. It updates the {@code META_VALUE}
+     * and {@code LAST_UPDATED_TIMESTAMP} fields where the tenant and device type match.
+     * </p>
+     *
+     * @param deviceType                The name of the device type whose event definitions are to be updated.
+     * @param tenantId                  The tenant ID associated with the device type.
+     * @param updatedEventDefinitionsJson The new event definitions in JSON format to be stored in the database.
+     * @return {@code true} if the update was successful (i.e., at least one row was affected), {@code false} otherwise.
+     * @throws DeviceManagementDAOException if an error occurs while executing the SQL update or interacting with the database.
+     */
     private boolean updateEventDefinitionsInDB(String deviceType, int tenantId, String updatedEventDefinitionsJson)
             throws DeviceManagementDAOException {
         try {
@@ -269,7 +285,6 @@ public class DeviceTypeEventDAOImpl implements DeviceTypeEventDAO {
                     "AND d.PROVIDER_TENANT_ID = ? " +
                     "AND d.NAME = ? " +
                     "AND m.META_KEY = ?";
-
             Connection conn = this.getConnection();
             try (PreparedStatement stmt = conn.prepareStatement(updateSQL)) {
                 // Set the parameters
@@ -288,6 +303,20 @@ public class DeviceTypeEventDAOImpl implements DeviceTypeEventDAO {
         }
     }
 
+    /**
+     * Inserts new event definitions metadata into the database for a given device type and tenant.
+     * <p>
+     * This method populates the {@code DM_DEVICE_TYPE_META} table with a new entry corresponding to the
+     * provided device type and tenant. It uses a subquery to obtain the device type ID from the {@code DM_DEVICE_TYPE} table.
+     * The metadata includes a key, value (event definitions in JSON format), and a timestamp.
+     * </p>
+     *
+     * @param deviceType                 The name of the device type for which event definitions are being created.
+     * @param tenantId                   The tenant ID associated with the device type.
+     * @param updatedEventDefinitionsJson The event definitions in JSON format to be stored in the database.
+     * @return {@code true} if the insert was successful (i.e., at least one row was added), {@code false} otherwise.
+     * @throws DeviceManagementDAOException if a database error occurs while inserting the metadata.
+     */
     private boolean createEventDefinitionsInDB(String deviceType, int tenantId, String updatedEventDefinitionsJson)
             throws DeviceManagementDAOException {
         try {
@@ -313,7 +342,12 @@ public class DeviceTypeEventDAOImpl implements DeviceTypeEventDAO {
         }
     }
 
-
+    /**
+     * Retrieves a database connection from the {@link DeviceManagementDAOFactory}.
+     *
+     * @return A {@link Connection} object for interacting with the database.
+     * @throws SQLException If an error occurs while obtaining the connection.
+     */
     private Connection getConnection() throws SQLException {
         return DeviceManagementDAOFactory.getConnection();
     }

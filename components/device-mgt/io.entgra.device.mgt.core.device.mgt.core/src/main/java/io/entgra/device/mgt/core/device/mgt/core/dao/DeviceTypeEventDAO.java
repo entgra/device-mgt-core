@@ -30,18 +30,69 @@ import java.util.List;
  */
 public interface DeviceTypeEventDAO {
 
+    /**
+     * Retrieves a list of event definitions associated with a specific device type and tenant.
+     *
+     * @param deviceType The device type for which events are to be retrieved.
+     * @param tenantId   The tenant ID.
+     * @return A list of {@link DeviceTypeEvent} objects.
+     * @throws DeviceManagementDAOException If an error occurs while accessing the data store.
+     */
     List<DeviceTypeEvent> getDeviceTypeEventDefinitions(String deviceType, int tenantId) throws DeviceManagementDAOException;
 
+    /**
+     * Persists the device type metadata along with associated event definitions.
+     *
+     * @param deviceType       The device type to be saved.
+     * @param tenantId         The tenant ID.
+     * @param deviceTypeEvents The list of event definitions to be associated with the device type.
+     * @return {@code true} if the operation is successful, {@code false} otherwise.
+     * @throws DeviceManagementDAOException If an error occurs while persisting the data.
+     */
     boolean createDeviceTypeMetaWithEvents(String deviceType, int tenantId,
                                            List<DeviceTypeEvent> deviceTypeEvents)
             throws DeviceManagementDAOException;
 
+    /**
+     * Updates the metadata and event definitions of an existing device type.
+     *
+     * @param deviceType       The device type to be updated.
+     * @param tenantId         The tenant ID.
+     * @param deviceTypeEvents The updated list of event definitions.
+     * @return {@code true} if the update is successful, {@code false} otherwise.
+     * @throws DeviceManagementDAOException If an error occurs during the update.
+     */
     boolean updateDeviceTypeMetaWithEvents(String deviceType, int tenantId, List<DeviceTypeEvent> deviceTypeEvents)
             throws DeviceManagementDAOException;
 
+    /**
+     * Deletes all event definitions associated with a given device type.
+     *
+     * @param deviceType The device type whose events should be deleted.
+     * @param tenantId   The tenant ID.
+     * @return {@code true} if the deletion is successful, {@code false} otherwise.
+     * @throws DeviceManagementDAOException If an error occurs during deletion.
+     */
     boolean deleteDeviceTypeEventDefinitions(String deviceType, int tenantId) throws DeviceManagementDAOException;
 
+    /**
+     * Retrieves the event definitions of a device type in JSON format.
+     *
+     * @param deviceType The device type for which event definitions are retrieved.
+     * @param tenantId   The tenant ID.
+     * @return A JSON string representation of the event definitions.
+     * @throws DeviceManagementDAOException If a DAO-level error occurs.
+     * @throws SQLException                 If a database access error occurs.
+     */
     String getDeviceTypeEventDefinitionsAsJson(String deviceType, int tenantId) throws DeviceManagementDAOException, SQLException;
 
+    /**
+     * Checks if metadata for a given device type exists.
+     *
+     * @param deviceType The device type to check.
+     * @param tenantId   The tenant ID.
+     * @return {@code true} if metadata exists, {@code false} otherwise.
+     * @throws DeviceManagementDAOException If an error occurs during the check.
+     */
     boolean isDeviceTypeMetaExist(String deviceType, int tenantId) throws DeviceManagementDAOException;
 }

@@ -35,6 +35,10 @@ import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 
 import java.io.*;
 
+/**
+ * This class is responsible for deploying and undeploying analytics artifacts such as
+ * event streams, event publishers, and event receivers using Apache Velocity templates.
+ */
 public class AnalyticsArtifactsDeployer {
 
     private static final Log log = LogFactory.getLog(AnalyticsArtifactsDeployer.class);
@@ -47,6 +51,13 @@ public class AnalyticsArtifactsDeployer {
     public static final String EVENT_RECEIVER_TEMPLATE = TEMPLATE_LOCATION + File.separator + "event_receiver.xml.template";
     public static final String DEFAULT_STREAM_VERSION = "1.0.0";
 
+    /**
+     * Deploys an event stream configuration file using the Velocity template engine.
+     *
+     * @param eventStreamData Data required to generate the event stream configuration.
+     * @param tenantId        ID of the tenant for whom the event stream is deployed.
+     * @throws EventStreamDeployerException if there is an error during deployment.
+     */
     public void deployEventStream(EventStreamData eventStreamData, int tenantId) throws EventStreamDeployerException {
         try {
             VelocityEngine ve = new VelocityEngine();
@@ -76,6 +87,13 @@ public class AnalyticsArtifactsDeployer {
         }
     }
 
+    /**
+     * Deploys an event publisher configuration file using the Velocity template engine.
+     *
+     * @param eventPublisherData Data required to generate the event publisher configuration.
+     * @param tenantId           ID of the tenant for whom the event publisher is deployed.
+     * @throws EventPublisherDeployerException if there is an error during deployment.
+     */
     public void deployEventPublisher(EventPublisherData eventPublisherData, int tenantId) throws EventPublisherDeployerException {
         try {
             VelocityEngine ve = new VelocityEngine();
@@ -105,6 +123,13 @@ public class AnalyticsArtifactsDeployer {
         }
     }
 
+    /**
+     * Deploys an event receiver configuration file using the Velocity template engine.
+     *
+     * @param eventReceiverData Data required to generate the event receiver configuration.
+     * @param tenantId          ID of the tenant for whom the event receiver is deployed.
+     * @throws EventReceiverDeployerException if there is an error during deployment.
+     */
     public void deployEventReceiver(EventReceiverData eventReceiverData, int tenantId) throws EventReceiverDeployerException {
         try {
             VelocityEngine ve = new VelocityEngine();
@@ -134,6 +159,12 @@ public class AnalyticsArtifactsDeployer {
         }
     }
 
+    /**
+     * Populates the Velocity context for event stream generation.
+     *
+     * @param eventStreamData Event stream data model.
+     * @return A populated VelocityContext instance.
+     */
     private VelocityContext populateContextForEventStreams(EventStreamData eventStreamData) {
         VelocityContext context = new VelocityContext();
         context.put("name", eventStreamData.getName());
@@ -146,6 +177,12 @@ public class AnalyticsArtifactsDeployer {
         return context;
     }
 
+    /**
+     * Populates the Velocity context for event publisher generation.
+     *
+     * @param eventPublisherData Event publisher data model.
+     * @return A populated VelocityContext instance.
+     */
     private VelocityContext populateContextForEventPublisher(EventPublisherData eventPublisherData) {
         VelocityContext context = new VelocityContext();
 
@@ -159,6 +196,12 @@ public class AnalyticsArtifactsDeployer {
         return context;
     }
 
+    /**
+     * Populates the Velocity context for event receiver generation.
+     *
+     * @param eventReceiverData Event receiver data model.
+     * @return A populated VelocityContext instance.
+     */
     private VelocityContext populateContextForEventReceiver(EventReceiverData eventReceiverData) {
         VelocityContext context = new VelocityContext();
 
@@ -172,6 +215,12 @@ public class AnalyticsArtifactsDeployer {
         return context;
     }
 
+    /**
+     * Undeploys an event stream configuration file.
+     *
+     * @param streamName Name of the event stream.
+     * @param tenantId   ID of the tenant from whom the event stream is to be removed.
+     */
     public void undeployEventStream(String streamName, int tenantId) {
         String fileName = streamName + "_" + DEFAULT_STREAM_VERSION + ".json";
         String fileLocation = (MultitenantConstants.SUPER_TENANT_ID == tenantId)
@@ -186,6 +235,12 @@ public class AnalyticsArtifactsDeployer {
         }
     }
 
+    /**
+     * Undeploys an event publisher configuration file.
+     *
+     * @param publisherName Name of the event publisher.
+     * @param tenantId      ID of the tenant from whom the event publisher is to be removed.
+     */
     public void undeployEventPublisher(String publisherName, int tenantId) {
         String fileName = publisherName + ".xml";
         String fileLocation = (MultitenantConstants.SUPER_TENANT_ID == tenantId)
@@ -200,6 +255,12 @@ public class AnalyticsArtifactsDeployer {
         }
     }
 
+    /**
+     * Undeploys an event receiver configuration file.
+     *
+     * @param receiverName Name of the event receiver.
+     * @param tenantId     ID of the tenant from whom the event receiver is to be removed.
+     */
     public void undeployEventReceiver(String receiverName, int tenantId) {
         String fileName = receiverName + ".xml";
         String fileLocation = (MultitenantConstants.SUPER_TENANT_ID == tenantId)
@@ -214,6 +275,13 @@ public class AnalyticsArtifactsDeployer {
         }
     }
 
+    /**
+     * Deletes a file from the file system.
+     *
+     * @param filePath     The full path to the file to be deleted.
+     * @param artifactType The type of artifact (used in logging).
+     * @throws FileNotFoundException if the file does not exist or cannot be deleted.
+     */
     private void deleteFile(String filePath, String artifactType) throws FileNotFoundException {
         File file = new File(filePath);
         if (file.exists()) {
