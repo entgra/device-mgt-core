@@ -392,19 +392,24 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         try {
             Set<Device> devicesSet = new HashSet<>();
             Device device;
+            EnrolmentInfo enrolmentInfo;
             conn = this.getConnection();
             for (Map.Entry<String, String> entry : deviceProps.entrySet()) {
-                stmt = conn.prepareStatement("SELECT ID, NAME, DEVICE_IDENTIFICATION from DM_DEVICE " +
-                        "where DEVICE_IDENTIFICATION IN (" +
-                            "SELECT DEVICE_IDENTIFICATION FROM DM_DEVICE_PROPERTIES " +
-                            "WHERE (PROPERTY_NAME , PROPERTY_VALUE) IN ((?, ?)) " +
-                            "AND TENANT_ID = ? AND DEVICE_IDENTIFICATION IN (" +
-                                "SELECT DEVICE_IDENTIFICATION from DM_DEVICE D " +
-                                "INNER JOIN DM_DEVICE_GROUP_MAP M " +
-                                "ON D.ID = M.DEVICE_ID WHERE M.GROUP_ID = ?" +
-                            ")" +
-                        ")"
-                );
+                stmt = conn.prepareStatement("SELECT D.ID, E.ID AS ENROLMENT_ID, NAME, DEVICE_IDENTIFICATION " +
+                        "FROM DM_DEVICE D " +
+                        "INNER JOIN DM_ENROLMENT E ON D.ID = E.DEVICE_ID " +
+                        "WHERE D.DEVICE_IDENTIFICATION IN (" +
+                        "    SELECT DP.DEVICE_IDENTIFICATION " +
+                        "    FROM DM_DEVICE_PROPERTIES DP " +
+                        "    WHERE (DP.PROPERTY_NAME, DP.PROPERTY_VALUE) IN ((?, ?)) " +
+                        "      AND DP.TENANT_ID = ? " +
+                        "      AND DP.DEVICE_IDENTIFICATION IN (" +
+                        "          SELECT DE.DEVICE_IDENTIFICATION " +
+                        "          FROM DM_DEVICE DE " +
+                        "          INNER JOIN DM_DEVICE_GROUP_MAP M ON DE.ID = M.DEVICE_ID " +
+                        "          WHERE M.GROUP_ID = ? " +
+                        "      )" +
+                        ")");
                 stmt.setString(1, entry.getKey());
                 stmt.setString(2, entry.getValue());
                 stmt.setInt(3, tenantId);
@@ -415,10 +420,13 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                     device.setId(resultSet.getInt("ID"));
                     device.setDeviceIdentifier(resultSet.getString("DEVICE_IDENTIFICATION"));
                     device.setName(resultSet.getString("NAME"));
+                    enrolmentInfo = new EnrolmentInfo();
+                    enrolmentInfo.setId(resultSet.getInt("ENROLMENT_ID"));
+                    device.setEnrolmentInfo(enrolmentInfo);
                     devicesSet.add(device);
                 }
             }
-            devices.addAll(devicesSet.stream().collect(Collectors.toList()));
+            devices.addAll(new ArrayList<>(devicesSet));
         } catch (SQLException e) {
             String msg = "Error occurred while fetching device in group " + groupId + " against criteria : '" + deviceProps;
             log.error(msg, e);
