@@ -1173,9 +1173,9 @@ public interface DeviceManagementProviderService {
 
     /**
      * This method is used to retrieve the list of devices based on the group id and properties map.
-     * @param groupId
-     * @param propertiesMap
-     * @return
+     * @param groupId ID of the group
+     * @param propertiesMap properties map to filter the devices
+     * @return List of devices that are in the group and match the properties
      * @throws DeviceManagementException
      */
     List<Device> getGroupedDevicesBasedOnProperties(int groupId, Map<String, String> propertiesMap)
@@ -1183,10 +1183,10 @@ public interface DeviceManagementProviderService {
 
     /**
      * This method is used to retrieve the list of operations for a given device id and status.
-     * @param deviceId
-     * @param status
-     * @param operationCode
-     * @return
+     * @param deviceId device id
+     * @param status status of the operation
+     * @param operationCode operation code
+     * @return List of operations belongs to the given deviceID and under the queried status and operation code
      */
     List<? extends Operation> getDeviceOperations(DeviceIdentifier deviceId, Operation.Status status, String operationCode)
             throws OperationManagementException;

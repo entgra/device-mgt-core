@@ -178,7 +178,14 @@ public interface DeviceDAO {
     Device getDevice(DeviceIdentifier deviceIdentifier, Date ifModifiedSince, int tenantId) throws
                                                                                             DeviceManagementDAOException;
 
-
+    /**
+     * This method is used to retrieve list of devices filtered based on device properties and group id.
+     * @param deviceProps properties by which devices need to be filtered
+     * @param tenantId tenant id
+     * @param groupId group id
+     * @return list of devices with properties
+     * @throws DeviceManagementDAOException
+     */
     List<Device> queryDeviceIDsBasedDeviceProperties(Map<String, String> deviceProps, int tenantId, int groupId)
             throws DeviceManagementDAOException;
 
