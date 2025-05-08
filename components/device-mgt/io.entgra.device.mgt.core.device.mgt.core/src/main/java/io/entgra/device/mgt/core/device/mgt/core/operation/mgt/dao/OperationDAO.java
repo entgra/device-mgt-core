@@ -44,10 +44,10 @@ public interface OperationDAO {
 
     /**
      * This method provides querying the Operations by enrolmentId operation status and operationCode.
-     * @param enrolmentId
-     * @param status
-     * @param operationCode
-     * @return
+     * @param enrolmentId enrolment ID
+     * @param status operation status
+     * @param operationCode operation code
+     * @return List of operations matching the given parameters
      * @throws OperationManagementDAOException
      */
     List<? extends Operation> getDeviceOperationsByOperationCodeAndStatus(int enrolmentId,
