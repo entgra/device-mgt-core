@@ -18,12 +18,10 @@
 
 package io.entgra.device.mgt.core.device.mgt.core.operation.mgt;
 
-import com.google.gson.Gson;
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManagerServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.extensions.logger.spi.EntgraLogger;
 import io.entgra.device.mgt.core.notification.logger.DeviceConnectivityLogContext;
 import io.entgra.device.mgt.core.notification.logger.impl.EntgraDeviceConnectivityLoggerImpl;
-import io.entgra.device.mgt.core.notification.logger.impl.EntgraPolicyLoggerImpl;
 import org.apache.commons.lang.StringUtils;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
@@ -52,8 +50,6 @@ import io.entgra.device.mgt.core.device.mgt.common.push.notification.Notificatio
 import io.entgra.device.mgt.core.device.mgt.common.push.notification.PushNotificationConfig;
 import io.entgra.device.mgt.core.device.mgt.common.push.notification.PushNotificationExecutionFailedException;
 import io.entgra.device.mgt.core.device.mgt.common.push.notification.PushNotificationProvider;
-import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.*;
-import io.entgra.device.mgt.core.device.mgt.common.push.notification.*;
 import io.entgra.device.mgt.core.device.mgt.common.spi.DeviceManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
 import io.entgra.device.mgt.core.device.mgt.core.cache.impl.DeviceCacheManagerImpl;
@@ -75,12 +71,6 @@ import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProvide
 import io.entgra.device.mgt.core.device.mgt.core.task.DeviceTaskManager;
 import io.entgra.device.mgt.core.device.mgt.core.task.impl.DeviceTaskManagerImpl;
 import io.entgra.device.mgt.core.device.mgt.core.util.DeviceManagerUtil;
-import io.entgra.device.mgt.core.device.mgt.extensions.logger.spi.EntgraLogger;
-import io.entgra.device.mgt.core.notification.logger.DeviceConnectivityLogContext;
-import io.entgra.device.mgt.core.notification.logger.impl.EntgraDeviceConnectivityLoggerImpl;
-import org.apache.commons.lang.StringUtils;
-import org.wso2.carbon.context.CarbonContext;
-import org.wso2.carbon.context.PrivilegedCarbonContext;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -1695,5 +1685,50 @@ public class OperationManagerImpl implements OperationManager {
         } finally {
             OperationManagementDAOFactory.closeConnection();
         }
+    }
+
+    @Override
+    public List<? extends Operation> getOperationsByDeviceOperationCodeAndStatus(
+            DeviceIdentifier deviceId, Operation.Status status,
+            String operationCode) throws OperationManagementException {
+        List<Operation> operations = new ArrayList<>();
+        List<io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation> dtoOperationList = new ArrayList<>();
+
+        if (!isActionAuthorized(deviceId)) {
+            throw new OperationManagementException("User '" + getUser() + "' is not authorized to access the '" +
+                    deviceId.getType() + "' device, which carries the identifier '" +
+                    deviceId.getId() + "'");
+        }
+
+        EnrolmentInfo enrolmentInfo = this.getActiveEnrolmentInfo(deviceId);
+        if (enrolmentInfo == null) {
+            throw new OperationManagementException(
+                    "Device not found for device id:" + deviceId.getId() + " " + "type:" +
+                            deviceId.getType());
+        }
+
+        try {
+            int enrolmentId = enrolmentInfo.getId();
+            OperationManagementDAOFactory.openConnection();
+            io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation.Status dtoOpStatus =
+                    io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation.Status.valueOf(status.toString());
+            dtoOperationList.addAll(operationDAO.getDeviceOperationsByOperationCodeAndStatus(enrolmentId, dtoOpStatus, operationCode));
+            Operation operation;
+            for (io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation dtoOperation : dtoOperationList) {
+                operation = OperationDAOUtil.convertOperation(dtoOperation);
+                operations.add(operation);
+            }
+        } catch (OperationManagementDAOException e) {
+            throw new OperationManagementException("Error occurred while retrieving the list of " +
+                    "operations assigned for '" + deviceId.getType() +
+                    "' device '" +
+                    deviceId.getId() + "' and status:" + status.toString(), e);
+        } catch (SQLException e) {
+            throw new OperationManagementException(
+                    "Error occurred while opening a connection to the data source", e);
+        } finally {
+            OperationManagementDAOFactory.closeConnection();
+        }
+        return operations;
     }
 }
