@@ -38,7 +38,7 @@ public final class DeviceManagementConstants {
     public static final String JWT_BEARER_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
     public static final String CLIENT_CREDENTIALS_GRANT_TYPE = "client_credentials";
     public static final String DEFAULT_TOKEN_TYPE = "DEFAULT";
-    public static final String INTERNAL_APP_NAME = "MyApp";
+    public static final String INTERNAL_APP_NAME = "Custom_token_generator_app";
     public static final String INTERNAL_APP_TAGS = "device_management";
 
     public static final class ConfigurationManagement {
