@@ -17,6 +17,7 @@
  */
 package io.entgra.device.mgt.core.application.mgt.common.dto;
 
+import io.entgra.device.mgt.core.application.mgt.common.FirmwareType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -89,6 +90,11 @@ public class ApplicationReleaseDTO {
             value = "Meta data of the application release",
             required = true)
     private String metaData;
+
+    @ApiModelProperty(name = "firmwareType",
+            value = "Type of the firmware (TEST/PRODUCTION)",
+            required = false)
+    private FirmwareType firmwareType;
 
     @ApiModelProperty(name = "ratedUsers",
             value = "Number of users who has rated the application release")
@@ -194,6 +200,10 @@ public class ApplicationReleaseDTO {
     public String getMetaData() {
         return metaData;
     }
+
+    public FirmwareType getFirmwareType() { return firmwareType; }
+
+    public void setFirmwareType(FirmwareType firmwareType) { this.firmwareType = firmwareType; }
 
     public String getInstallerName() {
         return installerName;

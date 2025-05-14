@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - 2023, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
+ * Copyright (c) 2018 - 2025, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
  *
  * Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -17,11 +17,7 @@
  */
 package io.entgra.device.mgt.core.application.mgt.common;
 
-
-/**
- * States of the Application.
- */
-public enum AppLifecycleState {
-    CREATED, IN_REVIEW, PUBLISHED, APPROVED, RELEASE_READY, BLOCKED, REJECTED, DEPRECATED, RETIRED
+public enum FirmwareType {
+    TEST,
+    PRODUCTION
 }
-

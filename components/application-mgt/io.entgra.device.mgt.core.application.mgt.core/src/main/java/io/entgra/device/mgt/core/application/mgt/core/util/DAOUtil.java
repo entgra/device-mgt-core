@@ -92,7 +92,7 @@ public class DAOUtil {
                 if (application != null && application.getApplicationReleaseDTOs() != null) {
                     ApplicationReleaseDTO releaseDTO = constructAppReleaseDTO(rs);
                     if (releaseDTO != null) {
-                        application.getApplicationReleaseDTOs().add(constructAppReleaseDTO(rs));
+                        application.getApplicationReleaseDTOs().add(releaseDTO);
                     }
                 }
             }

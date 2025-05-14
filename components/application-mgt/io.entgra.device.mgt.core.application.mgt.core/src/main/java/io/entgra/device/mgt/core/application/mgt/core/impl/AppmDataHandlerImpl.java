@@ -18,6 +18,7 @@
 
 package io.entgra.device.mgt.core.application.mgt.core.impl;
 
+import io.entgra.device.mgt.core.application.mgt.common.ApplicationType;
 import io.entgra.device.mgt.core.application.mgt.common.config.LifecycleState;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationStorageManagementException;
@@ -36,12 +37,17 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class AppmDataHandlerImpl implements AppmDataHandler {
 
     private static final Log log = LogFactory.getLog(AppmDataHandlerImpl.class);
-    private LifecycleStateManager lifecycleStateManager;
+    private final LifecycleStateManager lifecycleStateManager;
 
     public AppmDataHandlerImpl() {
         lifecycleStateManager = DataHolder.getInstance().getLifecycleStateManager();
@@ -50,6 +56,118 @@ public class AppmDataHandlerImpl implements AppmDataHandler {
     @Override
     public Map<String, LifecycleState> getLifecycleConfiguration() throws LifecycleManagementException {
         return lifecycleStateManager.getLifecycleConfig();
+    }
+
+    @Override
+    public Map<String, LifecycleState> getLifecycleConfiguration(String applicationType)
+            throws LifecycleManagementException {
+
+        // Validate application type
+        if (applicationType == null || applicationType.trim().isEmpty()) {
+            String msg = "Application type cannot be null or empty";
+            log.error(msg);
+            throw new LifecycleManagementException(msg);
+        }
+
+        try {
+            // Validate if it's a valid application type
+            ApplicationType.valueOf(applicationType.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            String msg = String.format("Invalid application type: %s. Supported types are: %s",
+                    applicationType, Arrays.toString(ApplicationType.values()));
+            log.error(msg);
+            throw new LifecycleManagementException(msg);
+        }
+
+        Map<String, LifecycleState> allStates = lifecycleStateManager.getLifecycleConfig();
+        Map<String, LifecycleState> filteredStates = new HashMap<>();
+
+        // Filter states based on applicableTypes
+        for (Map.Entry<String, LifecycleState> entry : allStates.entrySet()) {
+            LifecycleState state = entry.getValue();
+            if (state.isApplicableFor(applicationType)) {
+                // Filter proceeding states
+                List<String> validProceedingStates = filterProceedingStates(
+                        state.getProceedingStates(),
+                        allStates,
+                        applicationType
+                );
+
+                state.setProceedingStates(validProceedingStates);
+                filteredStates.put(entry.getKey(), state);
+            }
+        }
+
+        validateLifecycleConfiguration(filteredStates, applicationType);
+        return filteredStates;
+    }
+
+    /**
+     *
+     * @param proceedingStates
+     * @param allStates
+     * @param applicationType
+     * @return
+     */
+    private List<String> filterProceedingStates(
+            List<String> proceedingStates,
+            Map<String, LifecycleState> allStates,
+            String applicationType) {
+        if (proceedingStates == null) {
+            return new ArrayList<>();
+        }
+
+        return proceedingStates.stream()
+                .filter(stateName -> {
+                    LifecycleState state = allStates.get(stateName.toUpperCase());
+                    return state != null && state.isApplicableFor(applicationType);
+                })
+                .collect(Collectors.toList());
+    }
+
+
+    private void validateLifecycleConfiguration(
+            Map<String, LifecycleState> states,
+            String applicationType) throws LifecycleManagementException {
+
+        // Ensure we have at least one initial state
+        if (states.values().stream()
+                .noneMatch(LifecycleState::isInitialState)) {
+            String msg = String.format(
+                    "No initial state defined for application type: %s",
+                    applicationType
+            );
+            log.error(msg);
+            throw new LifecycleManagementException(msg);
+        }
+
+        // Ensure we have at least one end state
+        if (states.values().stream()
+                .noneMatch(LifecycleState::isEndState)) {
+            String msg = String.format(
+                    "No end state defined for application type: %s",
+                    applicationType
+            );
+            log.error(msg);
+            throw new LifecycleManagementException(msg);
+        }
+
+        // Validate that all proceeding states are valid
+        for (LifecycleState state : states.values()) {
+            List<String> proceedingStates = state.getProceedingStates();
+            if (proceedingStates != null) {
+                for (String proceedingState : proceedingStates) {
+                    if (!states.containsKey(proceedingState.toUpperCase())) {
+                        String msg = String.format(
+                                "Invalid proceeding state %s for state %s in application type %s",
+                                proceedingState, state.getName(), applicationType
+                        );
+                        log.error(msg);
+                        throw new LifecycleManagementException(msg);
+                    }
+                }
+            }
+        }
     }
 
     @Override

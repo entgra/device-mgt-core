@@ -118,9 +118,9 @@ public class LifecycleStateManager {
     }
 
     private LifecycleState getMatchingState(String currentState) {
-        for (Map.Entry<String, LifecycleState> lifecycyleState : lifecycleStates.entrySet()) {
-            if (lifecycyleState.getKey().equalsIgnoreCase(currentState)) {
-                return lifecycyleState.getValue();
+        for (Map.Entry<String, LifecycleState> lifecycleState : lifecycleStates.entrySet()) {
+            if (lifecycleState.getKey().equalsIgnoreCase(currentState)) {
+                return lifecycleState.getValue();
             }
         }
         return null;
@@ -136,9 +136,9 @@ public class LifecycleStateManager {
     }
 
     private String getPermissionForStateChange(String nextState) {
-        for (Map.Entry<String, LifecycleState> lifecycyleState : lifecycleStates.entrySet()) {
-            if (lifecycyleState.getKey().equalsIgnoreCase(nextState)) {
-                return lifecycyleState.getValue().getPermission();
+        for (Map.Entry<String, LifecycleState> lifecycleState : lifecycleStates.entrySet()) {
+            if (lifecycleState.getKey().equalsIgnoreCase(nextState)) {
+                return lifecycleState.getValue().getPermission();
             }
         }
         return null;
