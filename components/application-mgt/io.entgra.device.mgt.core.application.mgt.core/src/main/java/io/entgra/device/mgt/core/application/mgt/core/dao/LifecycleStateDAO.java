@@ -18,7 +18,6 @@
 package io.entgra.device.mgt.core.application.mgt.core.dao;
 
 import io.entgra.device.mgt.core.application.mgt.common.LifecycleState;
-import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManagementDAOException;
 import io.entgra.device.mgt.core.application.mgt.core.exception.LifeCycleManagementDAOException;
 
 import java.util.List;

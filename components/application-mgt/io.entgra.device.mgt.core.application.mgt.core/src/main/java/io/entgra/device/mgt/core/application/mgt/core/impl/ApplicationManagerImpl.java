@@ -18,23 +18,13 @@
 
 package io.entgra.device.mgt.core.application.mgt.core.impl;
 
-import io.entgra.device.mgt.core.application.mgt.common.ReleaseVersionInfo;
+import io.entgra.device.mgt.core.application.mgt.common.*;
 import io.entgra.device.mgt.core.application.mgt.common.exception.FileDownloaderServiceException;
 import io.entgra.device.mgt.core.application.mgt.core.exception.BadRequestException;
 import io.entgra.device.mgt.core.application.mgt.core.dao.*;
 import io.entgra.device.mgt.core.application.mgt.core.exception.*;
 import io.entgra.device.mgt.core.application.mgt.core.dao.SPApplicationDAO;
 import io.entgra.device.mgt.core.application.mgt.core.util.ApplicationManagementUtil;
-import io.entgra.device.mgt.core.application.mgt.common.ApplicationArtifact;
-import io.entgra.device.mgt.core.application.mgt.common.ApplicationInstaller;
-import io.entgra.device.mgt.core.application.mgt.common.ApplicationList;
-import io.entgra.device.mgt.core.application.mgt.common.ApplicationSubscriptionType;
-import io.entgra.device.mgt.core.application.mgt.common.ApplicationType;
-import io.entgra.device.mgt.core.application.mgt.common.DeviceTypes;
-import io.entgra.device.mgt.core.application.mgt.common.Filter;
-import io.entgra.device.mgt.core.application.mgt.common.LifecycleChanger;
-import io.entgra.device.mgt.core.application.mgt.common.LifecycleState;
-import io.entgra.device.mgt.core.application.mgt.common.Pagination;
 import io.entgra.device.mgt.core.application.mgt.common.config.RatingConfiguration;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
@@ -1147,7 +1137,15 @@ public class ApplicationManagerImpl implements ApplicationManager {
     @Override
     public ApplicationList getApplications(Filter filter) throws ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
-        String userName = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
+
+        //todo get configured roles from Meta and replace empty list
+        List<String> configuredRoleList = new ArrayList<>();
+        boolean isTestRoleAvailable = false;
+        try {
+            isTestRoleAvailable = hasUserRole(configuredRoleList, PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername());
+        } catch (UserStoreException e) {
+            throw new RuntimeException(e);
+        }
         ApplicationList applicationList = new ApplicationList();
         List<Application> applications = new ArrayList<>();
         DeviceType deviceType;
@@ -1179,6 +1177,10 @@ public class ApplicationManagerImpl implements ApplicationManager {
 
                     List<ApplicationReleaseDTO> filteredApplicationReleaseDTOs = new ArrayList<>();
                     for (ApplicationReleaseDTO applicationReleaseDTO : applicationDTO.getApplicationReleaseDTOs()) {
+                        if (ApplicationType.CUSTOM.toString().equals(applicationDTO.getType()) && !isTestRoleAvailable
+                                && FirmwareType.TEST.toString().equals(applicationReleaseDTO.getReleaseType())) {
+                            continue;
+                        }
                         if (StringUtils.isNotEmpty(filter.getVersion()) && !filter.getVersion()
                                 .equals(applicationReleaseDTO.getVersion())) {
                             continue;
@@ -1976,7 +1978,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
      * Get assigned role list of the given user.
      *
      * @param userName Username
-     * @return List of roles
+     * @return {@link String[]} List of roles
      * @throws UserStoreException If it is unable to load {@link UserRealm} from {@link CarbonContext}
      */
     private String[] getRolesOfUser(String userName) throws UserStoreException {
