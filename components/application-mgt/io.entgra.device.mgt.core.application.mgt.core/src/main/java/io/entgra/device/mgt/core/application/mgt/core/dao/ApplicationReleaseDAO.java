@@ -135,4 +135,7 @@ public interface ApplicationReleaseDAO {
      * @throws ApplicationManagementDAOException thrown if an error occurs while deleting data
      */
     void deleteReleasesByTenant(int tenantId) throws ApplicationManagementDAOException;
+
+    List<ApplicationReleaseDTO> getAppReleasesAfterVersion(int appId, String version) throws ApplicationManagementDAOException;
+
 }

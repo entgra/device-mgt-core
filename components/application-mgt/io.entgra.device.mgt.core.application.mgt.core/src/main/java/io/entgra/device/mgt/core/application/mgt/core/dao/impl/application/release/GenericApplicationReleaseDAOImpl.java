@@ -21,6 +21,8 @@ package io.entgra.device.mgt.core.application.mgt.core.dao.impl.application.rele
 import io.entgra.device.mgt.core.application.mgt.common.Rating;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.DBConnectionException;
+import io.entgra.device.mgt.core.application.mgt.common.response.Application;
+import io.entgra.device.mgt.core.application.mgt.common.response.ApplicationRelease;
 import io.entgra.device.mgt.core.application.mgt.core.dao.ApplicationReleaseDAO;
 import io.entgra.device.mgt.core.application.mgt.core.dao.impl.AbstractDAOImpl;
 import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManagementDAOException;
@@ -646,5 +648,21 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
                 log.error(msg, e);
                 throw new ApplicationManagementDAOException(msg, e);
             }
+        }
+
+        @Override
+        public List<ApplicationReleaseDTO> getAppReleasesAfterVersion(int appId, String version) throws ApplicationManagementDAOException {
+                        /*
+            SELECT *
+FROM your_table
+WHERE appId = :appId
+  AND id > (
+      SELECT id
+      FROM your_table
+      WHERE version = :input_version
+        AND appId = :appId
+      LIMIT 1
+  );*/
+        return List.of();
         }
     }

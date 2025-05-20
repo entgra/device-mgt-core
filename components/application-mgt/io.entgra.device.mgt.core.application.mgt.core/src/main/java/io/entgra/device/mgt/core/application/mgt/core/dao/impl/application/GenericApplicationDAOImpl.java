@@ -24,6 +24,7 @@ import io.entgra.device.mgt.core.application.mgt.common.dto.CategoryDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.TagDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.DBConnectionException;
 import io.entgra.device.mgt.core.application.mgt.common.ReleaseVersionInfo;
+import io.entgra.device.mgt.core.application.mgt.common.response.Application;
 import io.entgra.device.mgt.core.application.mgt.core.dao.ApplicationDAO;
 import io.entgra.device.mgt.core.application.mgt.core.dao.impl.AbstractDAOImpl;
 import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManagementDAOException;
@@ -2094,6 +2095,11 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
             throw new ApplicationManagementDAOException(msg, e);
         }
         return releaseVersionInfos;
+    }
+
+    @Override
+    public ApplicationDTO getApplicationForModel(int deviceModelId) throws ApplicationManagementDAOException {
+        return null;
     }
 
 }
