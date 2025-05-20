@@ -20,6 +20,7 @@ package io.entgra.device.mgt.core.application.mgt.core.impl;
 
 import io.entgra.device.mgt.core.application.mgt.common.*;
 import io.entgra.device.mgt.core.application.mgt.common.exception.FileDownloaderServiceException;
+import io.entgra.device.mgt.core.application.mgt.common.response.*;
 import io.entgra.device.mgt.core.application.mgt.core.exception.BadRequestException;
 import io.entgra.device.mgt.core.application.mgt.core.dao.*;
 import io.entgra.device.mgt.core.application.mgt.core.exception.*;
@@ -38,10 +39,6 @@ import io.entgra.device.mgt.core.application.mgt.common.exception.LifecycleManag
 import io.entgra.device.mgt.core.application.mgt.common.exception.RequestValidatingException;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ResourceManagementException;
 import io.entgra.device.mgt.core.application.mgt.common.exception.TransactionManagementException;
-import io.entgra.device.mgt.core.application.mgt.common.response.Application;
-import io.entgra.device.mgt.core.application.mgt.common.response.ApplicationRelease;
-import io.entgra.device.mgt.core.application.mgt.common.response.Category;
-import io.entgra.device.mgt.core.application.mgt.common.response.Tag;
 import io.entgra.device.mgt.core.application.mgt.common.services.ApplicationManager;
 import io.entgra.device.mgt.core.application.mgt.common.services.ApplicationStorageManager;
 import io.entgra.device.mgt.core.application.mgt.common.wrapper.ApplicationUpdateWrapper;
@@ -66,6 +63,7 @@ import io.entgra.device.mgt.core.application.mgt.core.util.APIUtil;
 import io.entgra.device.mgt.core.application.mgt.core.util.ConnectionManagerUtil;
 import io.entgra.device.mgt.core.application.mgt.core.util.Constants;
 import io.entgra.device.mgt.core.device.mgt.common.Base64File;
+import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.MetadataManagementException;
@@ -4523,5 +4521,109 @@ public class ApplicationManagerImpl implements ApplicationManager {
         } finally {
             ConnectionManagerUtil.closeDBConnection();
         }
+    }
+
+    @Override
+    public List<Firmware> getAvailableFirmwaresForDevice(String deviceId, String currentVersion) throws ApplicationManagementException {
+        //todo
+        //get device by using device id
+        //get subtype/device model of the device
+        //get application using subtype/device model
+        //applicationManager.getApplicationReleaseVersions();
+        //Filter Available versions.
+        //if versions are available then -->
+        //load app releases from versions
+        //If test releases are there, check whether user is eligible user, otherwise don't consider those releases.
+        //Get pending app install operations for the device
+             //List<? extends Operation> getDeviceOperations(DeviceIdentifier deviceId, Operation.Status status, String operationCode)
+        //if lower version than installed firmware version is in the pending state move them to relevant state
+        //update subscription details if it exists
+        //if higher versions are in pending state mark them as pending
+        //return list of firmware releases.
+
+        try {
+            // Get device details
+            DeviceManagementProviderService deviceManagementService = DataHolder.getInstance().getDeviceManagementService();
+            Device device = deviceManagementService.getDevice(deviceId, true);
+
+            if (device == null) {
+                throw new ApplicationManagementException("Device not found with id: " + deviceId);
+            }
+
+            // Find the model name from the device properties list
+            String deviceModel = null;
+            for (Device.Property property : device.getProperties()) {
+                if ("model".equals(property.getName())) {
+                    deviceModel = property.getValue();
+                    break;
+                }
+            }
+
+            if (deviceModel == null) {
+                throw new ApplicationManagementException("Device model not found for device: " + deviceId);
+            }
+
+            //todo get Sub type id of the device model
+            int subTypeId = 1;
+
+            // Get all firmware releases for this device model, ordered by version/primary key as needed
+            ApplicationDTO applicationDTO = applicationDAO.getApplicationForModel(subTypeId);
+
+            //if application type is not custom then stop the proceeding
+
+            if (StringUtils.isBlank(currentVersion)) {
+                //get the current version from subscription details
+                //if subscription details are empty then consider this as bad request
+            }
+
+            //todo pass "RELEASE_READY" and "PRODUCTION" app type based on the conditions
+            List<ApplicationReleaseDTO> applicationReleaseDTOS = applicationReleaseDAO.getAppReleasesAfterVersion(applicationDTO.getId(), currentVersion);
+            List<Firmware> availableFirmwares = new ArrayList<>();
+            if (applicationReleaseDTOS == null || applicationReleaseDTOS.isEmpty()) {
+                return availableFirmwares;
+            }
+
+            //Get pending app install operations for the device
+            //if lower version than installed firmware version is in the pending state move them to relevant state
+            //if higher versions are in pending state mark them as pending
+
+            //transfer ApplicationReleaseDTO list to ApplicationRelease list
+            return availableFirmwares;
+        } catch (DeviceManagementException e) {
+            throw new ApplicationManagementException("Error occurred while retrieving device details for id: " + deviceId, e);
+        } catch (ApplicationManagementDAOException e) {
+            throw new ApplicationManagementException("Error occurred while retrieving application related data from the database. Device Id: " + deviceId, e);
+        }
+    }
+
+    @Override
+    public List<Device> getApplicableDevicesOfFirmware(String uuid) throws ApplicationManagementException {
+
+        Application application = getApplicationByUuid(uuid);
+
+        //todo
+        //check whether application type is 'CUSTOM'
+        //get list of device subtypes supported for firmware
+        //get devices which have retrieved device subtypes
+          //List<Device> getDevicesBasedOnProperties(Map deviceProps)
+        //get list of versions after publishing this version
+        //remove devices which has latest firmware versions identified by the previous step <Can introduce issues>
+        //remove devices which has pending operation for same firmware
+        return List.of();
+    }
+
+    @Override
+    public List<Device> getApplicableDevicesInGroupForFirmware(String uuid, String groupId) throws ApplicationManagementException {
+
+        //todo
+        //check whether application type is 'CUSTOM'
+        //get list of device subtypes supported for firmware
+        //get devices in the given group
+        //filter devices which have retrieved device subtypes in the retrieved device list
+             //List<Device> getGroupedDevicesBasedOnProperties(int groupId, Map<String, String> propertiesMap)
+        //get list of versions after publishing this version
+        //remove devices which has latest firmware versions identified by the previous step <Can introduce issues>
+        //remove devices which has pending operation for same firmware
+        return List.of();
     }
 }

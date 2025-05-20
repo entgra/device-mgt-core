@@ -22,12 +22,10 @@ import io.entgra.device.mgt.core.application.mgt.common.ReleaseVersionInfo;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException;
 import io.entgra.device.mgt.core.application.mgt.common.exception.RequestValidatingException;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ResourceManagementException;
-import io.entgra.device.mgt.core.application.mgt.common.response.Application;
-import io.entgra.device.mgt.core.application.mgt.common.response.ApplicationRelease;
-import io.entgra.device.mgt.core.application.mgt.common.response.Category;
-import io.entgra.device.mgt.core.application.mgt.common.response.Tag;
+import io.entgra.device.mgt.core.application.mgt.common.response.*;
 import io.entgra.device.mgt.core.device.mgt.common.Base64File;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationDTO;
+import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import io.entgra.device.mgt.core.application.mgt.common.ApplicationArtifact;
@@ -570,4 +568,11 @@ public interface ApplicationManager {
      * @throws ApplicationManagementException throws when error encountered while retrieving data
      */
     List<ReleaseVersionInfo> getApplicationReleaseVersions(String uuid) throws ApplicationManagementException;
+
+    List<Firmware> getAvailableFirmwaresForDevice(String deviceId, String currentVersion) throws ApplicationManagementException;
+
+    List<Device> getApplicableDevicesOfFirmware(String uuid) throws ApplicationManagementException;
+
+    List<Device> getApplicableDevicesInGroupForFirmware(String uuid, String groupId) throws ApplicationManagementException;
+
 }
