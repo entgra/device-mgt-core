@@ -1034,28 +1034,36 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 (applicationArtifact.getIconName(), Constants.ICON_NAME));
         applicationReleaseDTO.setBannerName(applicationArtifact.getBannerName());
 
-        Map<String, InputStream> screenshots = applicationArtifact.getScreenshots();
-        List<String> screenshotNames = new ArrayList<>(screenshots.keySet());
+        // for custom application screenshots aren't mandatory
+        if (applicationArtifact.getScreenshots() == null || applicationArtifact.getScreenshots().isEmpty()) {
+            applicationReleaseDTO = applicationStorageManager
+                    .uploadImageArtifacts(applicationReleaseDTO, applicationArtifact.getIconStream(),
+                            applicationArtifact.getBannerStream(), null, tenantId);
+        } else {
+            Map<String, InputStream> screenshots = applicationArtifact.getScreenshots();
+            List<String> screenshotNames = new ArrayList<>(screenshots.keySet());
 
-        int counter = 1;
-        for (String scName : screenshotNames) {
-            if (counter == 1) {
-                applicationReleaseDTO.setScreenshotName1(ApplicationManagementUtil.sanitizeName
-                        (scName, Constants.SCREENSHOT_NAME + counter));
-            } else if (counter == 2) {
-                applicationReleaseDTO.setScreenshotName2(ApplicationManagementUtil.sanitizeName
-                        (scName, Constants.SCREENSHOT_NAME + counter));
-            } else if (counter == 3) {
-                applicationReleaseDTO.setScreenshotName3(ApplicationManagementUtil.sanitizeName
-                        (scName, Constants.SCREENSHOT_NAME + counter));
+            int counter = 1;
+            for (String scName : screenshotNames) {
+                if (counter == 1) {
+                    applicationReleaseDTO.setScreenshotName1(ApplicationManagementUtil.sanitizeName
+                            (scName, Constants.SCREENSHOT_NAME + counter));
+                } else if (counter == 2) {
+                    applicationReleaseDTO.setScreenshotName2(ApplicationManagementUtil.sanitizeName
+                            (scName, Constants.SCREENSHOT_NAME + counter));
+                } else if (counter == 3) {
+                    applicationReleaseDTO.setScreenshotName3(ApplicationManagementUtil.sanitizeName
+                            (scName, Constants.SCREENSHOT_NAME + counter));
+                }
+                counter++;
             }
-            counter++;
+
+            // Upload images
+            applicationReleaseDTO = applicationStorageManager
+                    .uploadImageArtifacts(applicationReleaseDTO, applicationArtifact.getIconStream(),
+                            applicationArtifact.getBannerStream(), new ArrayList<>(screenshots.values()), tenantId);
         }
 
-        // Upload images
-        applicationReleaseDTO = applicationStorageManager
-                .uploadImageArtifacts(applicationReleaseDTO, applicationArtifact.getIconStream(),
-                        applicationArtifact.getBannerStream(), new ArrayList<>(screenshots.values()), tenantId);
         return applicationReleaseDTO;
     }
 
