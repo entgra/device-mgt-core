@@ -87,7 +87,7 @@ public class ApplicationStorageManagerImpl implements ApplicationStorageManager 
                 bannerStoredLocation = bannerStoringDir + File.separator + applicationReleaseDTO.getBannerName();
                 saveFile(bannerFileStream, bannerStoredLocation);
             }
-            if (!screenShotStreams.isEmpty()) {
+            if (screenShotStreams != null && !screenShotStreams.isEmpty()) {
                 if (screenShotStreams.size() > screenShotMaxCount) {
                     String msg = "Maximum limit for the screen-shot exceeds. You can't upload more than three "
                             + "screenshot for an application release";
