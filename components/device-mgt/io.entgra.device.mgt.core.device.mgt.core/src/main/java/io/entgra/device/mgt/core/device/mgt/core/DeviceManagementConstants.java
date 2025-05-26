@@ -62,6 +62,10 @@ public final class DeviceManagementConstants {
                 "/api-application-registration/register";
         public static final String AUTHORIZATION_HEADER = "authorization";
         public static final String BASIC_AUTH = "Basic";
+        public static final String TCP_PREFIX = "tcp://";
+        public static final String HTTP_PREFIX = "http://";
+        public static final String HTTPS_PREFIX = "https://";
+        public static final String COLON = ":";
     }
     public static final class Common {
         private Common() {

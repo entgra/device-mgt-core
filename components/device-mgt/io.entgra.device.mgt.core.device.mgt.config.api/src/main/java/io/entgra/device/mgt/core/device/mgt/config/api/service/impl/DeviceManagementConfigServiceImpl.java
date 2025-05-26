@@ -76,6 +76,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -118,15 +119,9 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
                     dms.getDeviceConfiguration(deviceProps);
 
             if (withGateways) {
-                devicesConfiguration.setMqttGateway("tcp://"
-                        + System.getProperty(DeviceManagementConstants.ConfigurationManagement.MQTT_BROKER_HOST)
-                        + ":" + System.getProperty(DeviceManagementConstants.ConfigurationManagement.MQTT_BROKER_HTTPS_PORT));
-                devicesConfiguration.setHttpGateway("http://"
-                        + System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HOST)
-                        + ":" + System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HTTPS_PORT));
-                devicesConfiguration.setHttpsGateway("https://"
-                        + System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HOST)
-                        + ":" + System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HTTPS_PORT));
+                devicesConfiguration.setMqttGateway(buildMqttGatewayUrl());
+                devicesConfiguration.setHttpGateway(buildHttpGatewayUrl());
+                devicesConfiguration.setHttpsGateway(buildHttpsGatewayUrl());
             }
             if (withAccessToken) setAccessTokenToDeviceConfigurations(devicesConfiguration);
                 else setOTPTokenToDeviceConfigurations(devicesConfiguration);
@@ -153,6 +148,25 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
         }
+    }
+
+    private static String buildMqttGatewayUrl() {
+        return DeviceManagementConstants.ConfigurationManagement.TCP_PREFIX
+                + System.getProperty(DeviceManagementConstants.ConfigurationManagement.MQTT_BROKER_HOST)
+                + DeviceManagementConstants.ConfigurationManagement.COLON
+                + System.getProperty(DeviceManagementConstants.ConfigurationManagement.MQTT_BROKER_HTTPS_PORT);
+    }
+    private static String buildHttpGatewayUrl() {
+        return DeviceManagementConstants.ConfigurationManagement.HTTP_PREFIX
+                + System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HOST)
+                + DeviceManagementConstants.ConfigurationManagement.COLON
+                + System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HTTPS_PORT);
+    }
+    private static String buildHttpsGatewayUrl() {
+        return DeviceManagementConstants.ConfigurationManagement.HTTPS_PREFIX
+                + System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HOST)
+                + DeviceManagementConstants.ConfigurationManagement.COLON
+                + System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HTTPS_PORT);
     }
 
     @PUT
@@ -224,44 +238,9 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
                     System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_GATEWAY_HTTPS_PORT),
                     kmConfig.getAdminUsername(),
                     kmConfig.getAdminPassword());
-            String type = devicesConfiguration.getDeviceType();
-            String id = devicesConfiguration.getDeviceId();
-            StringBuilder scopes = new StringBuilder(
-                    DeviceManagementConstants.ConfigurationManagement.SCOPE_DEVICE_PREFIX +
-                            type.replace(" ", "") + ":" + id);
-
-            try {
-                List<String> mqttEventTopicStructure = new ArrayList<>();
-                DeviceType deviceType = DeviceMgtAPIUtils.getDeviceManagementService().getDeviceType(type);
-                if (deviceType != null && deviceType.getDeviceTypeMetaDefinition() != null) {
-                    mqttEventTopicStructure = deviceType.getDeviceTypeMetaDefinition().getMqttEventTopicStructures();
-                }
-                String tenantDomain = CarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-                for (String topic : mqttEventTopicStructure) {
-                    if (topic.contains(DeviceManagementConstants.ConfigurationManagement.TOPIC_ID_PLACEHOLDER)) {
-                        topic = topic.replace(DeviceManagementConstants.ConfigurationManagement.TOPIC_ID_PLACEHOLDER, id);
-                    }
-                    topic = topic.replace("/", ":");
-                    scopes.append(" " + DeviceManagementConstants.ConfigurationManagement.SCOPE_PUB_PREFIX).append(topic);
-                }
-                // Scope for retrieving operations
-                scopes.append(" " + DeviceManagementConstants.ConfigurationManagement.SCOPE_SUB_PREFIX)
-                        .append(tenantDomain).append(":").append(type).append(":")
-                        .append(id).append(DeviceManagementConstants.ConfigurationManagement.SCOPE_OPERATION_SUFFIX);
-                // Scope for updating operations
-                scopes.append(" " + DeviceManagementConstants.ConfigurationManagement.SCOPE_PUB_PREFIX)
-                        .append(tenantDomain).append(":").append(type).append(":")
-                        .append(id).append(DeviceManagementConstants.ConfigurationManagement.SCOPE_UPDATE_OPERATION_SUFFIX);
-                // Append predefined static scopes
-                scopes.append(" " + DeviceManagementConstants.ConfigurationManagement.SCOPES_FOR_TOKEN);
-            }
-            catch (DeviceManagementException e) {
-                String msg = "Error occurred while retrieving device, device id : " +  id + ", device type : " + type;
-                log.error(msg, e);
-                throw new DeviceManagementException(msg, e);
-            }
+            String scopes = buildDeviceScopes(devicesConfiguration);
             AccessTokenInfo accessTokenForAdmin = DeviceManagerUtil.getAccessTokenForDeviceOwner(
-                    scopes.toString(),
+                    scopes,
                     credentials.getClient_id(), credentials.getClient_secret(),
                     devicesConfiguration.getDeviceOwner());
             devicesConfiguration.setAccessToken(accessTokenForAdmin.getAccessToken());
@@ -272,6 +251,46 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
             throw new DeviceManagementException(msg, e);
         } catch (JWTClientException e) {
             String msg = "Error occurred while creating JWT client : " + e.getMessage();
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        }
+    }
+
+    private String buildDeviceScopes(DeviceConfiguration devicesConfiguration) throws DeviceManagementException {
+        String type = devicesConfiguration.getDeviceType();
+        String id = devicesConfiguration.getDeviceId();
+        StringBuilder scopes = new StringBuilder(
+                DeviceManagementConstants.ConfigurationManagement.SCOPE_DEVICE_PREFIX +
+                        type.replace(" ", "") + ":" + id);
+
+        try {
+            List<String> mqttEventTopicStructure = Collections.emptyList();
+            DeviceType deviceType = DeviceMgtAPIUtils.getDeviceManagementService().getDeviceType(type);
+            if (deviceType != null && deviceType.getDeviceTypeMetaDefinition() != null) {
+                mqttEventTopicStructure = deviceType.getDeviceTypeMetaDefinition().getMqttEventTopicStructures();
+            }
+            String tenantDomain = CarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+            for (String topic : mqttEventTopicStructure) {
+                if (topic.contains(DeviceManagementConstants.ConfigurationManagement.TOPIC_ID_PLACEHOLDER)) {
+                    topic = topic.replace(DeviceManagementConstants.ConfigurationManagement.TOPIC_ID_PLACEHOLDER, id);
+                }
+                topic = topic.replace("/", ":");
+                scopes.append(" ").append(DeviceManagementConstants.ConfigurationManagement.SCOPE_PUB_PREFIX).append(topic);
+            }
+            // Scope for retrieving operations
+            scopes.append(" ").append(DeviceManagementConstants.ConfigurationManagement.SCOPE_SUB_PREFIX)
+                    .append(tenantDomain).append(":").append(type).append(":")
+                    .append(id).append(DeviceManagementConstants.ConfigurationManagement.SCOPE_OPERATION_SUFFIX);
+            // Scope for updating operations
+            scopes.append(" ").append(DeviceManagementConstants.ConfigurationManagement.SCOPE_PUB_PREFIX)
+                    .append(tenantDomain).append(":").append(type).append(":")
+                    .append(id).append(DeviceManagementConstants.ConfigurationManagement.SCOPE_UPDATE_OPERATION_SUFFIX);
+            // Append predefined static scopes
+            scopes.append(" ").append(DeviceManagementConstants.ConfigurationManagement.SCOPES_FOR_TOKEN);
+
+            return scopes.toString();
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while retrieving device, device id : " +  id + ", device type : " + type;
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
         }
