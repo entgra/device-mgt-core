@@ -41,12 +41,6 @@ public class JWTConfig {
 	private static final String JKA_PRIVATE_KEY_PASSWORD = "PrivateKeyPassword";
 	private static final String TOKEN_ENDPOINT = "TokenEndpoint";
 	private static final String JWT_GRANT_TYPE_NAME = "GrantType";
-	public static final String IOT_GATEWAY_HOST = "iot.gateway.host";
-	public static final String IOT_GATEWAY_HTTPS_PORT = "iot.gateway.https.port";
-	public static final String IOT_CORE_HOST = "iot.core.host";
-	public static final String IOT_CORE_HTTPS_PORT = "iot.core.https.port";
-	public static final String IOT_APIM_HOST = "iot.gateway.host";
-	public static final String IOT_APIM_HTTPS_PORT = "iot.gateway.https.port";
 	public static final String IOT_KM_HOST = "iot.core.host";
 	public static final String IOT_KM_HTTPS_PORT = "iot.core.https.port";
 
@@ -205,12 +199,6 @@ public class JWTConfig {
 
 	private String resolvePlaceholders(String input) {
 		Map<String, String> placeholders = Map.of(
-				"${iot.gateway.host}", System.getProperty(IOT_GATEWAY_HOST, ""),
-				"${iot.gateway.https.port}", System.getProperty(IOT_GATEWAY_HTTPS_PORT, ""),
-				"${iot.core.host}", System.getProperty(IOT_CORE_HOST, ""),
-				"${iot.core.https.port}", System.getProperty(IOT_CORE_HTTPS_PORT, ""),
-				"${iot.apim.host}", System.getProperty(IOT_APIM_HOST, ""),
-				"${iot.apim.https.port}", System.getProperty(IOT_APIM_HTTPS_PORT, ""),
 				"${iot.keymanager.host}", System.getProperty(IOT_KM_HOST, ""),
 				"${iot.keymanager.https.port}", System.getProperty(IOT_KM_HTTPS_PORT, "")
 		);
