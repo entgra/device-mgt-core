@@ -157,7 +157,7 @@ public interface DeviceManagementConfigService {
                     name = "withGateways",
                     value = "Whether to retrieve gateway properties or not")
             @QueryParam("withGateways")
-                boolean withGateways);
+                    boolean withGateways);
 
 
     @PUT
