@@ -214,8 +214,7 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                                                      @Valid List<DeviceTypeEvent> deviceTypeEvents) {
         try {
             // Check if any devices are enrolled for this device type
-            boolean devicesExist = checkDeviceEnrollment(deviceType);
-            if (devicesExist) {
+            if (checkDeviceEnrollment(deviceType)) {
                 List<DeviceTypeEvent> existingEvents = fetchExistingEvents(deviceType);
                 Map<String, DeviceTypeEvent> existingEventMap = mapByName(existingEvents);
                 Map<String, DeviceTypeEvent> incomingEventMap = mapByName(deviceTypeEvents);
@@ -269,16 +268,41 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
         }
     }
 
+    /**
+     * Checks whether any devices are enrolled for the specified device type.
+     *
+     * This method sends a pagination request (with a limit of 1) to determine if at least
+     * one device exists for the given type. It is optimized to avoid fetching all records.
+     *
+     * @param deviceType the device type to check enrollment for
+     * @return {@code true} if at least one device is enrolled for the given type; {@code false} otherwise
+     * @throws DeviceManagementException if an error occurs while accessing the device management service
+     */
     private boolean checkDeviceEnrollment(String deviceType) throws DeviceManagementException {
         PaginationRequest request = new PaginationRequest(0, 1);
         request.setDeviceType(deviceType);
         return DeviceMgtAPIUtils.getDeviceManagementService().getDevicesByType(request).getRecordsTotal() > 0;
     }
 
+    /**
+     * Fetches the existing event definitions for the given device type from the device type event management service.
+     *
+     * @param deviceType the type of the device whose events need to be fetched
+     * @return a list of existing {@link DeviceTypeEvent} definitions
+     * @throws DeviceManagementException if an error occurs while accessing the event management service
+     */
     private List<DeviceTypeEvent> fetchExistingEvents(String deviceType) throws DeviceManagementException {
         return DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService().getDeviceTypeEventDefinitions(deviceType);
     }
 
+    /**
+     * Persists the given list of event definitions for the specified device type.
+     *
+     * @param deviceType the device type to persist events for
+     * @param events the list of {@link DeviceTypeEvent} definitions to persist
+     * @throws DeviceManagementException if an error occurs while updating metadata
+     * @throws IllegalStateException if the update fails silently (returns false)
+     */
     private void persistEvents(String deviceType, List<DeviceTypeEvent> events) throws DeviceManagementException {
         if (!DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
                 .updateDeviceTypeMetaWithEvents(deviceType, events)) {
@@ -286,20 +310,47 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
         }
     }
 
+    /**
+     * Creates a map of event names to {@link DeviceTypeEvent} objects from a given list.
+     *
+     * @param events the list of {@link DeviceTypeEvent} to map
+     * @return a map where the key is the event name and the value is the event object
+     */
     private Map<String, DeviceTypeEvent> mapByName(List<DeviceTypeEvent> events) {
         return events.stream().collect(Collectors.toMap(DeviceTypeEvent::getEventName, e -> e, (a, b) -> b));
     }
 
+    /**
+     * Returns a HTTP 400 Bad Request response with the given message and logs the error.
+     *
+     * @param msg the error message to return
+     * @param e the exception that caused the error
+     * @return a {@link Response} with HTTP 400 status
+     */
     private Response badRequest(String msg, Exception e) {
         log.error(msg, e);
         return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
     }
 
+    /**
+     * Returns a HTTP 409 Conflict response with the given message and logs the error.
+     *
+     * @param msg the error message to return
+     * @param e the exception that caused the conflict
+     * @return a {@link Response} with HTTP 409 status
+     */
     private Response conflict(String msg, Exception e) {
         log.error(msg, e);
         return Response.status(Response.Status.CONFLICT).entity(msg).build();
     }
 
+    /**
+     * Returns a HTTP 500 Internal Server Error response with the given message and logs the error.
+     *
+     * @param msg the error message to return
+     * @param e the exception that caused the server error
+     * @return a {@link Response} with HTTP 500 status
+     */
     private Response serverError(String msg, Exception e) {
         log.error(msg, e);
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
@@ -464,7 +515,6 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                             tenantDomain, tenantId), e
             );
         }
-
     }
 
     @DELETE
