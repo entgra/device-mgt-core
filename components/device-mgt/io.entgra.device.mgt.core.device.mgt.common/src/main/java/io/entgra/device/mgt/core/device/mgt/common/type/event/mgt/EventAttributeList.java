@@ -44,7 +44,7 @@ public class EventAttributeList {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof EventAttributeList)) return false;
         EventAttributeList that = (EventAttributeList) o;
         return Objects.equals(attributes, that.attributes);
     }
