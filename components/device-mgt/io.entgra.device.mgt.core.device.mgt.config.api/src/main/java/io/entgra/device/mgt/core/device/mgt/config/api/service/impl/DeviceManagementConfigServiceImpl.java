@@ -21,18 +21,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
-import org.apache.commons.logging.Log;
-import io.entgra.device.mgt.core.device.mgt.common.exceptions.OTPManagementException;
-import io.entgra.device.mgt.core.device.mgt.core.operation.change.status.task.OperationConfigurationService;
-import io.entgra.device.mgt.core.device.mgt.core.operation.change.status.task.dto.OperationConfig;
-import io.entgra.device.mgt.core.device.mgt.core.operation.change.status.task.exceptions.OperationConfigAlreadyExistsException;
-import io.entgra.device.mgt.core.device.mgt.core.operation.change.status.task.exceptions.OperationConfigException;
-import io.entgra.device.mgt.core.device.mgt.core.operation.change.status.task.exceptions.OperationConfigNotFoundException;
-import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.base.MultitenantConstants;
-import org.wso2.carbon.context.CarbonContext;
-import org.wso2.carbon.context.PrivilegedCarbonContext;
 import io.entgra.device.mgt.core.device.mgt.common.AppRegistrationCredentials;
 import io.entgra.device.mgt.core.device.mgt.common.ApplicationRegistrationException;
 import io.entgra.device.mgt.core.device.mgt.common.DeviceTransferRequest;
@@ -40,10 +28,11 @@ import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.AmbiguousCo
 import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.DeviceConfiguration;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceNotFoundException;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.OTPManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.general.TenantDetail;
-import io.entgra.device.mgt.core.device.mgt.common.permission.mgt.PermissionManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.otp.mgt.OTPEmailTypes;
 import io.entgra.device.mgt.core.device.mgt.common.otp.mgt.dto.OneTimePinDTO;
+import io.entgra.device.mgt.core.device.mgt.common.permission.mgt.PermissionManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.spi.OTPManagementService;
 import io.entgra.device.mgt.core.device.mgt.config.api.beans.ErrorResponse;
 import io.entgra.device.mgt.core.device.mgt.config.api.service.DeviceManagementConfigService;
@@ -54,21 +43,32 @@ import io.entgra.device.mgt.core.device.mgt.core.config.DeviceManagementConfig;
 import io.entgra.device.mgt.core.device.mgt.core.config.keymanager.KeyManagerConfigurations;
 import io.entgra.device.mgt.core.device.mgt.core.config.ui.UIConfiguration;
 import io.entgra.device.mgt.core.device.mgt.core.config.ui.UIConfigurationManager;
+import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
+import io.entgra.device.mgt.core.device.mgt.core.operation.change.status.task.OperationConfigurationService;
+import io.entgra.device.mgt.core.device.mgt.core.operation.change.status.task.dto.OperationConfig;
+import io.entgra.device.mgt.core.device.mgt.core.operation.change.status.task.exceptions.OperationConfigAlreadyExistsException;
+import io.entgra.device.mgt.core.device.mgt.core.operation.change.status.task.exceptions.OperationConfigException;
+import io.entgra.device.mgt.core.device.mgt.core.operation.change.status.task.exceptions.OperationConfigNotFoundException;
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionUtils;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.util.DeviceManagerUtil;
 import io.entgra.device.mgt.core.identity.jwt.client.extension.dto.AccessTokenInfo;
 import io.entgra.device.mgt.core.identity.jwt.client.extension.exception.JWTClientException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.base.MultitenantConstants;
+import org.wso2.carbon.context.CarbonContext;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.user.api.Tenant;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.core.service.RealmService;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -112,8 +112,8 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
             ObjectMapper mapper = new ObjectMapper();
             properties = parseUriParamsToJSON(properties);
             Map<String, String> deviceProps = mapper.readValue(properties,
-                                                               new TypeReference<Map<String, String>>() {
-                                                               });
+                    new TypeReference<Map<String, String>>() {
+                    });
             deviceProps.put("token", token);
             DeviceConfiguration devicesConfiguration =
                     dms.getDeviceConfiguration(deviceProps);
@@ -124,7 +124,7 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
                 devicesConfiguration.setHttpsGateway(buildHttpsGatewayUrl());
             }
             if (withAccessToken) setAccessTokenToDeviceConfigurations(devicesConfiguration);
-                else setOTPTokenToDeviceConfigurations(devicesConfiguration);
+            else setOTPTokenToDeviceConfigurations(devicesConfiguration);
             return Response.status(Response.Status.OK).entity(devicesConfiguration).build();
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while retrieving configurations";
@@ -150,18 +150,44 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
         }
     }
 
+    /**
+     * Builds the MQTT Gateway URL using system properties and predefined constants.
+     * <p>
+     * The URL is constructed using the TCP prefix, MQTT broker host, and HTTPS port,
+     * all retrieved from system properties defined in the DeviceManagementConstants.
+     *
+     * @return the complete MQTT Gateway URL as a {@link String}
+     */
     private static String buildMqttGatewayUrl() {
         return DeviceManagementConstants.ConfigurationManagement.TCP_PREFIX
                 + System.getProperty(DeviceManagementConstants.ConfigurationManagement.MQTT_BROKER_HOST)
                 + DeviceManagementConstants.ConfigurationManagement.COLON
                 + System.getProperty(DeviceManagementConstants.ConfigurationManagement.MQTT_BROKER_HTTPS_PORT);
     }
+
+    /**
+     * Builds the HTTP Gateway URL using system properties and predefined constants.
+     * <p>
+     * The URL is constructed using the HTTP prefix, IoT core host, and HTTPS port,
+     * all retrieved from system properties defined in the DeviceManagementConstants.
+     *
+     * @return the complete HTTP Gateway URL as a {@link String}
+     */
     private static String buildHttpGatewayUrl() {
         return DeviceManagementConstants.ConfigurationManagement.HTTP_PREFIX
                 + System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HOST)
                 + DeviceManagementConstants.ConfigurationManagement.COLON
                 + System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HTTPS_PORT);
     }
+
+    /**
+     * Builds the HTTPS Gateway URL using system properties and predefined constants.
+     * <p>
+     * The URL is constructed using the HTTPS prefix, IoT core host, and HTTPS port,
+     * all retrieved from system properties defined in the DeviceManagementConstants.
+     *
+     * @return the complete HTTPS Gateway URL as a {@link String}
+     */
     private static String buildHttpsGatewayUrl() {
         return DeviceManagementConstants.ConfigurationManagement.HTTPS_PREFIX
                 + System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HOST)
@@ -256,6 +282,25 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
         }
     }
 
+    /**
+     * Builds a space-separated list of OAuth2 scopes specific to the provided device configuration.
+     *
+     * <p>The generated scopes include:</p>
+     * <ul>
+     *   <li>A device-specific scope prefix (e.g., device:{type}:{id})</li>
+     *   <li>Scopes for publishing to MQTT topics associated with the device type</li>
+     *   <li>A scope for subscribing to retrieve operations for the device</li>
+     *   <li>A scope for publishing to update operations for the device</li>
+     *   <li>Predefined static scopes for the token</li>
+     * </ul>
+     *
+     * <p>This method also performs topic placeholder replacement and handles the conversion of MQTT
+     * topics into scope format by replacing slashes with colons.</p>
+     *
+     * @param devicesConfiguration the device configuration object containing device ID and type
+     * @return a space-separated {@link String} of OAuth2 scopes for the device
+     * @throws DeviceManagementException if an error occurs while retrieving device type information or building scopes
+     */
     private String buildDeviceScopes(DeviceConfiguration devicesConfiguration) throws DeviceManagementException {
         String type = devicesConfiguration.getDeviceType();
         String id = devicesConfiguration.getDeviceId();
@@ -290,7 +335,7 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
 
             return scopes.toString();
         } catch (DeviceManagementException e) {
-            String msg = "Error occurred while retrieving device, device id : " +  id + ", device type : " + type;
+            String msg = "Error occurred while retrieving device, device id : " + id + ", device type : " + type;
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
         }

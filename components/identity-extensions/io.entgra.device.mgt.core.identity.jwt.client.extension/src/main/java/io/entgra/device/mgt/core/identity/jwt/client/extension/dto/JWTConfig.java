@@ -197,18 +197,31 @@ public class JWTConfig {
 		return jwtGrantType;
 	}
 
+	/**
+	 * Resolves known placeholders in the given input string by replacing them with corresponding
+	 * system property values.
+	 *
+	 * <p>Currently supported placeholders:</p>
+	 * <ul>
+	 *   <li><code>${iot.keymanager.host}</code> - replaced with the value of the <code>IOT_KM_HOST</code> system property</li>
+	 *   <li><code>${iot.keymanager.https.port}</code> - replaced with the value of the <code>IOT_KM_HTTPS_PORT</code> system property</li>
+	 * </ul>
+	 *
+	 * <p>If the system property is not defined, an empty string is used as the replacement.</p>
+	 *
+	 * @param input the input string potentially containing placeholders
+	 * @return the input string with placeholders replaced by system property values
+	 */
 	private String resolvePlaceholders(String input) {
 		Map<String, String> placeholders = Map.of(
 				"${iot.keymanager.host}", System.getProperty(IOT_KM_HOST, ""),
 				"${iot.keymanager.https.port}", System.getProperty(IOT_KM_HTTPS_PORT, "")
 		);
-
 		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
 			if (entry.getValue() != null) {
 				input = input.replace(entry.getKey(), entry.getValue());
 			}
 		}
-
 		return input;
 	}
 
