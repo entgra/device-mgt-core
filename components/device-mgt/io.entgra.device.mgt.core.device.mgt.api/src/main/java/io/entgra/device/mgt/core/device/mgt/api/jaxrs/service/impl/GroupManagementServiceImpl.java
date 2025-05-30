@@ -393,29 +393,36 @@ public class GroupManagementServiceImpl implements GroupManagementService {
     @Override
     public Response assignMultipleDevicesToMultipleGroups(DeviceGroupAssignmentRequest deviceGroupAssignmentRequest) {
         try {
+            List<DeviceIdentifier> deviceIdentifiers = deviceGroupAssignmentRequest.getDeviceIdentifiers();
+            List<Integer> groupIdsToAssign = deviceGroupAssignmentRequest.getGroupIds();
+
+            if (deviceIdentifiers == null || deviceIdentifiers.isEmpty() ||
+                    groupIdsToAssign == null || groupIdsToAssign.isEmpty()) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("Device identifiers and group IDs must not be empty.")
+                        .build();
+            }
+
             GroupManagementProviderService groupManagementProviderService = DeviceMgtAPIUtils.getGroupManagementProviderService();
             PolicyManagerService policyManagerService = DeviceMgtAPIUtils.getPolicyManagementService();
             PolicyAdministratorPoint pap = policyManagerService.getPAP();
 
-            List<DeviceIdentifier> deviceIdentifiers = deviceGroupAssignmentRequest.getDeviceIdentifiers();
-            List<Integer> groupIdsToAssign = deviceGroupAssignmentRequest.getGroupIds();
+            List<Integer> existingGroupIds = new ArrayList<>();
+            boolean assignmentsMade = false;
 
-            if (deviceIdentifiers == null || deviceIdentifiers.isEmpty() || groupIdsToAssign == null || groupIdsToAssign.isEmpty()) {
-                return Response.status(Response.Status.BAD_REQUEST).entity("Device identifiers and group IDs must not be empty.").build();
-            }
             for (DeviceIdentifier deviceIdentifier : deviceIdentifiers) {
+                existingGroupIds.clear();
                 List<DeviceGroup> existingGroups = groupManagementProviderService.getGroups(deviceIdentifier, false);
-                List<Integer> existingGroupIds = new ArrayList<>();
                 for (DeviceGroup group : existingGroups) {
                     existingGroupIds.add(group.getGroupId());
                 }
+
                 List<Integer> validNewGroupAssignments = new ArrayList<>();
                 for (Integer groupId : groupIdsToAssign) {
                     if (!existingGroupIds.contains(groupId)) {
                         DeviceGroup incomingGroup = groupManagementProviderService.getGroup(groupId, false);
                         if (incomingGroup == null) {
-                            String msg = "Group ID " + groupId + " does not exist.";
-                            log.warn(msg);
+                            log.warn("Group ID " + groupId + " does not exist.");
                             continue;
                         }
                         if (!CarbonConstants.REGISTRY_SYSTEM_USERNAME.equals(incomingGroup.getOwner())) {
@@ -423,13 +430,19 @@ public class GroupManagementServiceImpl implements GroupManagementService {
                         }
                     }
                 }
+
                 for (Integer groupId : validNewGroupAssignments) {
                     groupManagementProviderService.addDevices(groupId, Collections.singletonList(deviceIdentifier));
                     pap.removePolicyUsed(deviceIdentifier);
                     policyManagerService.getEffectivePolicy(deviceIdentifier);
+                    assignmentsMade = true;
                 }
             }
-            pap.publishChanges();
+
+            if (assignmentsMade) {
+                pap.publishChanges();
+            }
+
             return Response.status(Response.Status.OK).build();
         } catch (GroupManagementException e) {
             String msg = "Error occurred while assigning devices to groups.";
@@ -442,6 +455,7 @@ public class GroupManagementServiceImpl implements GroupManagementService {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
     }
+
 
     @Override
     public Response removeDevicesFromGroup(int groupId, List<DeviceIdentifier> deviceIdentifiers) {
