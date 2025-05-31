@@ -23,6 +23,7 @@ import org.wso2.carbon.core.util.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 public class JWTConfig {
@@ -40,6 +41,8 @@ public class JWTConfig {
 	private static final String JKA_PRIVATE_KEY_PASSWORD = "PrivateKeyPassword";
 	private static final String TOKEN_ENDPOINT = "TokenEndpoint";
 	private static final String JWT_GRANT_TYPE_NAME = "GrantType";
+	public static final String IOT_KM_HOST = "iot.core.host";
+	public static final String IOT_KM_HTTPS_PORT = "iot.core.https.port";
 
 	/**
 	 * issuer of the JWT
@@ -98,7 +101,12 @@ public class JWTConfig {
 	 * @param properties load the config from the properties file.
 	 */
 	public JWTConfig(Properties properties) {
-		issuer = properties.getProperty(JWT_ISSUER, null);
+		String iss = properties.getProperty(JWT_ISSUER, null);
+		if (iss != null) {
+			iss = Utils.replaceSystemProperty(iss);
+			iss = resolvePlaceholders(iss);
+			issuer = getIss(iss);
+		}
 		skew = Integer.parseInt(properties.getProperty(SERVER_TIME_SKEW, "0"));
 		issuedInternal = Integer.parseInt(properties.getProperty(JWT_ISSUED_AT,"0"));
 		expirationTime = Integer.parseInt(properties.getProperty(JWT_EXPIRATION_TIME,"15"));
@@ -106,6 +114,11 @@ public class JWTConfig {
 		jti = properties.getProperty(JWT_TOKEN_ID, null);
 		String audience = properties.getProperty(JWT_AUDIENCE, null);
 		if(audience != null) {
+			//Replace system property
+			audience = Utils.replaceSystemProperty(audience);
+			//Replace custom placeholders with system property values
+			audience = resolvePlaceholders(audience);
+			//Split and clean
 			audiences = getAudience(audience);
 		}
 		//get Keystore params
@@ -124,6 +137,10 @@ public class JWTConfig {
 			audiences.add(audi.trim());
 		}
 		return audiences;
+	}
+
+	public static String getIss(String issuer) {
+		return issuer;
 	}
 
 	public String getIssuer() {
@@ -171,10 +188,41 @@ public class JWTConfig {
 	}
 
 	public String getTokenEndpoint() {
-		return Utils.replaceSystemProperty(tokenEndpoint);
+		String endpoint = Utils.replaceSystemProperty(tokenEndpoint);
+		return resolvePlaceholders(endpoint);
+
 	}
 
 	public String getJwtGrantType() {
 		return jwtGrantType;
 	}
+
+	/**
+	 * Resolves known placeholders in the given input string by replacing them with corresponding
+	 * system property values.
+	 *
+	 * <p>Currently supported placeholders:</p>
+	 * <ul>
+	 *   <li><code>${iot.keymanager.host}</code> - replaced with the value of the <code>IOT_KM_HOST</code> system property</li>
+	 *   <li><code>${iot.keymanager.https.port}</code> - replaced with the value of the <code>IOT_KM_HTTPS_PORT</code> system property</li>
+	 * </ul>
+	 *
+	 * <p>If the system property is not defined, an empty string is used as the replacement.</p>
+	 *
+	 * @param input the input string potentially containing placeholders
+	 * @return the input string with placeholders replaced by system property values
+	 */
+	private String resolvePlaceholders(String input) {
+		Map<String, String> placeholders = Map.of(
+				"${iot.keymanager.host}", System.getProperty(IOT_KM_HOST, ""),
+				"${iot.keymanager.https.port}", System.getProperty(IOT_KM_HTTPS_PORT, "")
+		);
+		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+			if (entry.getValue() != null) {
+				input = input.replace(entry.getKey(), entry.getValue());
+			}
+		}
+		return input;
+	}
+
 }
