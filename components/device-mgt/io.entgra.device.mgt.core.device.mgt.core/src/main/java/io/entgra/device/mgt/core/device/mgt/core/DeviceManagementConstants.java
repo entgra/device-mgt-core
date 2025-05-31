@@ -57,7 +57,9 @@ public final class DeviceManagementConstants {
         public static final String SCOPE_OPERATION_SUFFIX = ":operation";
         public static final String SCOPE_UPDATE_OPERATION_SUFFIX = ":update:operation";
         public static final String SCOPE_DEVICE_PREFIX = "device:";
-        public static final String TOPIC_ID_PLACEHOLDER = "${deviceId}";
+        public static final String DEVICE_ID = "${deviceId}";
+        public static final String DEVICE_TYPE = "${deviceType}";
+        public static final String TENANT_DOMAIN = "${tenantDomain}";
         public static final String APPLICATION_REGISTRATION_API_ENDPOINT =
                 "/api-application-registration/register";
         public static final String AUTHORIZATION_HEADER = "authorization";

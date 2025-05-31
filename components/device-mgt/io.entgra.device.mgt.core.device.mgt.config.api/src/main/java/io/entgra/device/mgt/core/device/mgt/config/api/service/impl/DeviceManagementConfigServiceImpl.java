@@ -316,8 +316,14 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
             }
             String tenantDomain = CarbonContext.getThreadLocalCarbonContext().getTenantDomain();
             for (String topic : mqttEventTopicStructure) {
-                if (topic.contains(DeviceManagementConstants.ConfigurationManagement.TOPIC_ID_PLACEHOLDER)) {
-                    topic = topic.replace(DeviceManagementConstants.ConfigurationManagement.TOPIC_ID_PLACEHOLDER, id);
+                if (topic.contains(DeviceManagementConstants.ConfigurationManagement.DEVICE_ID)) {
+                    topic = topic.replace(DeviceManagementConstants.ConfigurationManagement.DEVICE_ID, id);
+                }
+                if (topic.contains(DeviceManagementConstants.ConfigurationManagement.DEVICE_TYPE)) {
+                    topic = topic.replace(DeviceManagementConstants.ConfigurationManagement.DEVICE_TYPE, type);
+                }
+                if (topic.contains(DeviceManagementConstants.ConfigurationManagement.TENANT_DOMAIN)) {
+                    topic = topic.replace(DeviceManagementConstants.ConfigurationManagement.TENANT_DOMAIN, tenantDomain);
                 }
                 topic = topic.replace("/", ":");
                 scopes.append(" ").append(DeviceManagementConstants.ConfigurationManagement.SCOPE_PUB_PREFIX).append(topic);
