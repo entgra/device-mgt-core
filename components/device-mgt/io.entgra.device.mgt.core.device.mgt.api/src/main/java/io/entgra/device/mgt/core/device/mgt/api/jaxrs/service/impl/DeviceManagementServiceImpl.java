@@ -167,6 +167,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             @QueryParam("status") List<String> status,
             @QueryParam("groupId") int groupId,
             @QueryParam("excludeGroupId") int excludeGroupId,
+            @QueryParam("excludeTagId") int excludeTagId,
             @QueryParam("since") String since,
             @HeaderParam("If-Modified-Since") String ifModifiedSince,
             @QueryParam("requireDeviceInfo") boolean requireDeviceInfo,
@@ -245,6 +246,21 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                 }
 
                 result = dms.getDevicesNotInGroup(request, requireDeviceInfo);
+                devices.setList((List<Device>) result.getData());
+                devices.setCount(result.getRecordsTotal());
+                return Response.status(Response.Status.OK).entity(devices).build();
+            }
+
+            if (excludeTagId != 0) {
+                request.setTagId(excludeTagId);
+
+                if (user != null && !user.isEmpty()) {
+                    request.setOwner(MultitenantUtils.getTenantAwareUsername(user));
+                } else if (userPattern != null && !userPattern.isEmpty()) {
+                    request.setOwnerPattern(userPattern);
+                }
+
+                result = dms.getDevicesNotInTag(request, requireDeviceInfo);
                 devices.setList((List<Device>) result.getData());
                 devices.setCount(result.getRecordsTotal());
                 return Response.status(Response.Status.OK).entity(devices).build();

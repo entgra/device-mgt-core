@@ -171,7 +171,10 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                     + "e.IS_TRANSFERRED, "
                     + "e.DATE_OF_LAST_UPDATE, "
                     + "e.DATE_OF_ENROLMENT, "
-                    + "e.ID AS ENROLMENT_ID "
+                    + "e.ID AS ENROLMENT_ID, "
+                    + "( SELECT GROUP_CONCAT(t.NAME ORDER BY t.NAME SEPARATOR ', ') "
+                    + "FROM DM_DEVICE_TAG_MAPPING dtm JOIN DM_TAG t ON dtm.TAG_ID = t.ID "
+                    + "WHERE dtm.ENROLMENT_ID = e.ID ) AS TAGS "
                     + "FROM DM_ENROLMENT e, "
                     + "(SELECT "
                     + "d.ID, "
@@ -195,7 +198,13 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 sql += "e.OWNERSHIP = ? AND ";
             }
 
-            sql += "TENANT_ID = ? ORDER BY e.DATE_OF_LAST_UPDATE DESC";
+            sql += "e.ID IN (" +
+                    "SELECT e.ID " +
+                    "FROM DM_ENROLMENT e " +
+                    "LEFT JOIN DM_DEVICE_TAG_MAPPING dtm ON e.ID = dtm.ENROLMENT_ID " +
+                    "LEFT JOIN DM_TAG t ON dtm.TAG_ID = t.ID) ";
+
+            sql += "AND TENANT_ID = ? ORDER BY e.DATE_OF_LAST_UPDATE DESC";
 
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 int paramIndx = 1;
@@ -213,7 +222,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 stmt.setInt(paramIndx, tenantId);
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                        device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false);
+                        device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false, true);
                     }
                 }
             }
@@ -257,7 +266,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             stmt.setInt(4, tenantId);
             rs = stmt.executeQuery();
             if (rs.next()) {
-                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false);
+                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false, false);
             }
         } catch (SQLException e) {
             throw new DeviceManagementDAOException("Error occurred while listing devices for type " +
@@ -302,7 +311,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             stmt.setInt(3, tenantId);
             rs = stmt.executeQuery();
             if (rs.next()) {
-                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false);
+                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false, false);
             }
         } catch (SQLException e) {
             throw new DeviceManagementDAOException("Error occurred while listing device " +
@@ -338,7 +347,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             stmt.setString(5, owner);
             rs = stmt.executeQuery();
             if (rs.next()) {
-                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false);
+                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false, false);
             }
         } catch (SQLException e) {
             throw new DeviceManagementDAOException("Error occurred while listing devices for type " +
@@ -375,7 +384,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             stmt.setInt(paramIdx, tenantId);
             rs = stmt.executeQuery();
             if (rs.next()) {
-                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false);
+                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false, false);
             }
         } catch (SQLException e) {
             throw new DeviceManagementDAOException("Error occurred while listing device for type " +
@@ -576,7 +585,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             stmt.setInt(paramIdx, tenantId);
             rs = stmt.executeQuery();
             if (rs.next()) {
-                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false);
+                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false, false);
             }
         } catch (SQLException e) {
             throw new DeviceManagementDAOException("Error occurred while listing device for id " +
@@ -614,7 +623,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             stmt.setString(6, deviceIdentifier.getType());
             rs = stmt.executeQuery();
             if (rs.next()) {
-                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false);
+                device = DeviceManagementDAOUtil.loadMatchingDevice(rs, false, false);
             }
         } catch (SQLException e) {
             throw new DeviceManagementDAOException("Error occurred while listing device for type " +
@@ -3335,6 +3344,120 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             }
         } catch (SQLException e) {
             String msg = "Error occurred while retrieving count of devices not in group: " + groupId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public int getCountOfDevicesNotInTag(PaginationRequest request, int tenantId) throws DeviceManagementDAOException {
+        int deviceCount = 0;
+        int tagId = request.getTagId();
+        String deviceType = request.getDeviceType();
+        boolean isDeviceTypeProvided = false;
+        String deviceName = request.getDeviceName();
+        boolean isDeviceNameProvided = false;
+        String owner = request.getOwner();
+        boolean isOwnerProvided = false;
+        String ownerPattern = request.getOwnerPattern();
+        boolean isOwnerPatternProvided = false;
+        String ownership = request.getOwnership();
+        boolean isOwnershipProvided = false;
+        List<String> statusList = request.getStatusList();
+        boolean isStatusProvided = false;
+        Date since = request.getSince();
+        boolean isSinceProvided = false;
+
+        try {
+            Connection conn = getConnection();
+            String sql = "SELECT COUNT(d1.DEVICE_ID) AS DEVICE_COUNT " +
+                    "FROM DM_ENROLMENT e, " +
+                    "(SELECT d.ID AS DEVICE_ID, " +
+                    "d.DESCRIPTION, " +
+                    "d.NAME, " +
+                    "d.DEVICE_IDENTIFICATION " +
+                    "FROM DM_DEVICE d WHERE d.TENANT_ID = ?) d1 " +
+                    "WHERE e.ID NOT IN ( " +
+                    "SELECT e.ID " +
+                    "FROM DM_ENROLMENT e " +
+                    "LEFT JOIN DM_DEVICE_TAG_MAPPING dtm ON e.ID = dtm.ENROLMENT_ID " +
+                    "LEFT JOIN DM_TAG t ON dtm.TAG_ID = t.ID " +
+                    "WHERE e.TENANT_ID = ? " +
+                    "AND t.ID = ? ) " +
+                    "AND e.TENANT_ID = ?";
+
+            if (deviceName != null && !deviceName.isEmpty()) {
+                sql += " AND d1.NAME LIKE ?";
+                isDeviceNameProvided = true;
+            }
+
+            if (since != null) {
+                sql += " AND d1.LAST_UPDATED_TIMESTAMP > ?";
+                isSinceProvided = true;
+            }
+            sql += " AND d1.DEVICE_ID = e.DEVICE_ID";
+
+            if (deviceType != null && !deviceType.isEmpty()) {
+                sql += " AND e.DEVICE_TYPE = ?";
+                isDeviceTypeProvided = true;
+            }
+
+            if (ownership != null && !ownership.isEmpty()) {
+                sql += " AND e.OWNERSHIP = ?";
+                isOwnershipProvided = true;
+            }
+
+            if (owner != null && !owner.isEmpty()) {
+                sql += " AND e.OWNER = ?";
+                isOwnerProvided = true;
+            } else if (ownerPattern != null && !ownerPattern.isEmpty()) {
+                sql += " AND e.OWNER LIKE ?";
+                isOwnerPatternProvided = true;
+            }
+            if (statusList != null && !statusList.isEmpty()) {
+                sql += buildStatusQuery(statusList);
+                isStatusProvided = true;
+            }
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                int paramIdx = 1;
+                stmt.setInt(paramIdx++, tenantId);
+                stmt.setInt(paramIdx++, tenantId);
+                stmt.setInt(paramIdx++, tagId);
+                stmt.setInt(paramIdx++, tenantId);
+                if (isDeviceNameProvided) {
+                    stmt.setString(paramIdx++, "%" + deviceName + "%");
+                }
+                if (isSinceProvided) {
+                    stmt.setTimestamp(paramIdx++, new Timestamp(since.getTime()));
+                }
+
+                if (isDeviceTypeProvided) {
+                    stmt.setString(paramIdx++, deviceType);
+                }
+                if (isOwnershipProvided) {
+                    stmt.setString(paramIdx++, ownership);
+                }
+                if (isOwnerProvided) {
+                    stmt.setString(paramIdx++, owner);
+                } else if (isOwnerPatternProvided) {
+                    stmt.setString(paramIdx++, ownerPattern + "%");
+                }
+                if (isStatusProvided) {
+                    for (String status : statusList) {
+                        stmt.setString(paramIdx++, status);
+                    }
+                }
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        deviceCount = rs.getInt("DEVICE_COUNT");
+                    }
+                    return deviceCount;
+                }
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while retrieving count of devices not in tag: " + tagId;
             log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }

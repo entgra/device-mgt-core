@@ -893,4 +893,8 @@ public interface DeviceDAO {
      * @throws DeviceManagementException
      */
     List<Integer> getDeviceIdsByStatus(List<String> statuses) throws DeviceManagementException;
+
+    List<Device> searchDevicesNotInTag(PaginationRequest request, int tenantId) throws DeviceManagementDAOException;
+
+    int getCountOfDevicesNotInTag(PaginationRequest request, int tenantId) throws DeviceManagementDAOException;
 }
