@@ -215,7 +215,8 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
         try {
             // Check if any devices are enrolled for this device type
             if (checkDeviceEnrollment(deviceType)) {
-                List<DeviceTypeEvent> existingEvents = fetchExistingEvents(deviceType);
+                List<DeviceTypeEvent> existingEvents = DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService().
+                        getDeviceTypeEventDefinitions(deviceType);
                 Map<String, DeviceTypeEvent> existingEventMap = mapByName(existingEvents);
                 Map<String, DeviceTypeEvent> incomingEventMap = mapByName(deviceTypeEvents);
                 List<DeviceTypeEvent> updatedEvents = new ArrayList<>();
@@ -284,16 +285,6 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
         return DeviceMgtAPIUtils.getDeviceManagementService().getDevicesByType(request).getRecordsTotal() > 0;
     }
 
-    /**
-     * Fetches the existing event definitions for the given device type from the device type event management service.
-     *
-     * @param deviceType the type of the device whose events need to be fetched
-     * @return a list of existing {@link DeviceTypeEvent} definitions
-     * @throws DeviceManagementException if an error occurs while accessing the event management service
-     */
-    private List<DeviceTypeEvent> fetchExistingEvents(String deviceType) throws DeviceManagementException {
-        return DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService().getDeviceTypeEventDefinitions(deviceType);
-    }
 
     /**
      * Persists the given list of event definitions for the specified device type.
