@@ -19,8 +19,12 @@
 package io.entgra.device.mgt.core.identity.jwt.client.extension.dto;
 
 import io.entgra.device.mgt.core.identity.jwt.client.extension.constant.JWTConstants;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.core.util.Utils;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +32,7 @@ import java.util.Properties;
 
 public class JWTConfig {
 
+	private static Log log = LogFactory.getLog(JWTConfig.class);
 	private static final String JWT_ISSUER = "iss";
 	private static final String JWT_EXPIRATION_TIME = "exp";
 	private static final String JWT_AUDIENCE = "aud";
@@ -41,8 +46,8 @@ public class JWTConfig {
 	private static final String JKA_PRIVATE_KEY_PASSWORD = "PrivateKeyPassword";
 	private static final String TOKEN_ENDPOINT = "TokenEndpoint";
 	private static final String JWT_GRANT_TYPE_NAME = "GrantType";
-	public static final String IOT_KM_HOST = "iot.core.host";
-	public static final String IOT_KM_HTTPS_PORT = "iot.core.https.port";
+	public static final String IOT_KM_HOST = "iot.keymanager.host";
+	public static final String IOT_KM_HTTPS_PORT = "iot.keymanager.https.port";
 
 	/**
 	 * issuer of the JWT
@@ -222,7 +227,14 @@ public class JWTConfig {
 				input = input.replace(entry.getKey(), entry.getValue());
 			}
 		}
-		return input;
+		try {
+			new URL(input);
+		} catch (MalformedURLException e) {
+			String msg = "Resolved URL is invalid: " + input ;
+			log.error(msg, e);
+			throw new IllegalArgumentException(msg, e);
+		}
+        return input;
 	}
 
 }

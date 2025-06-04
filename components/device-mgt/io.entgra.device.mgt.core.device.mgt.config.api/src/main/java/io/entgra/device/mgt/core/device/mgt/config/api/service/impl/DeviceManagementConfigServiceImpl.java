@@ -38,6 +38,7 @@ import io.entgra.device.mgt.core.device.mgt.config.api.beans.ErrorResponse;
 import io.entgra.device.mgt.core.device.mgt.config.api.service.DeviceManagementConfigService;
 import io.entgra.device.mgt.core.device.mgt.config.api.util.DeviceMgtAPIUtils;
 import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
+import io.entgra.device.mgt.core.device.mgt.core.common.util.SystemPropertyUtil;
 import io.entgra.device.mgt.core.device.mgt.core.config.DeviceConfigurationManager;
 import io.entgra.device.mgt.core.device.mgt.core.config.DeviceManagementConfig;
 import io.entgra.device.mgt.core.device.mgt.core.config.keymanager.KeyManagerConfigurations;
@@ -160,9 +161,9 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
      */
     private static String buildMqttGatewayUrl() {
         return DeviceManagementConstants.ConfigurationManagement.TCP_PREFIX
-                + System.getProperty(DeviceManagementConstants.ConfigurationManagement.MQTT_BROKER_HOST)
+                + SystemPropertyUtil.getRequiredProperty(DeviceManagementConstants.ConfigurationManagement.MQTT_BROKER_HOST)
                 + DeviceManagementConstants.ConfigurationManagement.COLON
-                + System.getProperty(DeviceManagementConstants.ConfigurationManagement.MQTT_BROKER_HTTPS_PORT);
+                + SystemPropertyUtil.getRequiredProperty(DeviceManagementConstants.ConfigurationManagement.MQTT_BROKER_HTTPS_PORT);
     }
 
     /**
@@ -175,9 +176,9 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
      */
     private static String buildHttpGatewayUrl() {
         return DeviceManagementConstants.ConfigurationManagement.HTTP_PREFIX
-                + System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HOST)
+                + SystemPropertyUtil.getRequiredProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HOST)
                 + DeviceManagementConstants.ConfigurationManagement.COLON
-                + System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HTTPS_PORT);
+                + SystemPropertyUtil.getRequiredProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HTTPS_PORT);
     }
 
     /**
@@ -190,9 +191,9 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
      */
     private static String buildHttpsGatewayUrl() {
         return DeviceManagementConstants.ConfigurationManagement.HTTPS_PREFIX
-                + System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HOST)
+                + SystemPropertyUtil.getRequiredProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HOST)
                 + DeviceManagementConstants.ConfigurationManagement.COLON
-                + System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HTTPS_PORT);
+                + SystemPropertyUtil.getRequiredProperty(DeviceManagementConstants.ConfigurationManagement.IOT_CORE_HTTPS_PORT);
     }
 
     @PUT
@@ -260,8 +261,8 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
             DeviceManagementConfig deviceManagementConfig = DeviceConfigurationManager.getInstance().getDeviceManagementConfig();
             KeyManagerConfigurations kmConfig = deviceManagementConfig.getKeyManagerConfigurations();
             AppRegistrationCredentials credentials = DeviceManagerUtil.getApplicationRegistrationCredentials(
-                    System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_GATEWAY_HOST),
-                    System.getProperty(DeviceManagementConstants.ConfigurationManagement.IOT_GATEWAY_HTTPS_PORT),
+                    SystemPropertyUtil.getRequiredProperty(DeviceManagementConstants.ConfigurationManagement.IOT_GATEWAY_HOST),
+                    SystemPropertyUtil.getRequiredProperty(DeviceManagementConstants.ConfigurationManagement.IOT_GATEWAY_HTTPS_PORT),
                     kmConfig.getAdminUsername(),
                     kmConfig.getAdminPassword());
             String scopes = buildDeviceScopes(devicesConfiguration);
