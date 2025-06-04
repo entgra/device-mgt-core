@@ -265,9 +265,8 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
                     SystemPropertyUtil.getRequiredProperty(DeviceManagementConstants.ConfigurationManagement.IOT_GATEWAY_HTTPS_PORT),
                     kmConfig.getAdminUsername(),
                     kmConfig.getAdminPassword());
-            String scopes = buildDeviceScopes(devicesConfiguration);
             AccessTokenInfo accessTokenForAdmin = DeviceManagerUtil.getAccessTokenForDeviceOwner(
-                    scopes,
+                    buildDeviceScopes(devicesConfiguration),
                     credentials.getClient_id(), credentials.getClient_secret(),
                     devicesConfiguration.getDeviceOwner());
             devicesConfiguration.setAccessToken(accessTokenForAdmin.getAccessToken());
