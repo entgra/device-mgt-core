@@ -34,6 +34,7 @@ import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.Attribute;
 import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.DeviceTypeEvent;
+import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.DeviceTypeEventUpdateResult;
 import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.EventAttributeList;
 import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.TransportType;
 import org.apache.axis2.AxisFault;
@@ -215,30 +216,11 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
         try {
             // Check if any devices are enrolled for this device type
             if (checkDeviceEnrollment(deviceType)) {
-                List<DeviceTypeEvent> existingEvents = DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService().
-                        getDeviceTypeEventDefinitions(deviceType);
-                Map<String, DeviceTypeEvent> existingEventMap = mapByName(existingEvents);
-                Map<String, DeviceTypeEvent> incomingEventMap = mapByName(deviceTypeEvents);
-                List<DeviceTypeEvent> updatedEvents = new ArrayList<>();
-                List<DeviceTypeEvent> unchangedEvents = new ArrayList<>();
-                // Compare incoming events with existing
-                for (DeviceTypeEvent incoming : deviceTypeEvents) {
-                    DeviceTypeEvent existing = existingEventMap.get(incoming.getEventName());
-                    if (existing == null || !incoming.equals(existing)) {
-                        updatedEvents.add(incoming);
-                    }
-                }
-                // Retain events that are unchanged
-                for (DeviceTypeEvent existing : existingEvents) {
-                    DeviceTypeEvent incoming = incomingEventMap.get(existing.getEventName());
-                    if (incoming == null || existing.equals(incoming)) {
-                        unchangedEvents.add(existing);
-                    }
-                }
-                // Merge unchanged and updated events for full metadata persistence
-                List<DeviceTypeEvent> mergedEvents = new ArrayList<>();
-                mergedEvents.addAll(updatedEvents);
-                mergedEvents.addAll(unchangedEvents);
+                DeviceTypeEventUpdateResult result = DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
+                        .computeUpdatedDeviceTypeEvents(deviceType, deviceTypeEvents);
+
+                List<DeviceTypeEvent> updatedEvents = result.getUpdatedEvents();
+                List<DeviceTypeEvent> mergedEvents = result.getMergedEvents();
                 // Proceed only if something changed
                 if (!updatedEvents.isEmpty()) {
                     removeDeviceTypeEventFiles(deviceType, updatedEvents);
@@ -299,16 +281,6 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                 .updateDeviceTypeMetaWithEvents(deviceType, events)) {
             throw new IllegalStateException("Failed to persist device type event definitions.");
         }
-    }
-
-    /**
-     * Creates a map of event names to {@link DeviceTypeEvent} objects from a given list.
-     *
-     * @param events the list of {@link DeviceTypeEvent} to map
-     * @return a map where the key is the event name and the value is the event object
-     */
-    private Map<String, DeviceTypeEvent> mapByName(List<DeviceTypeEvent> events) {
-        return events.stream().collect(Collectors.toMap(DeviceTypeEvent::getEventName, e -> e, (a, b) -> b));
     }
 
     /**
