@@ -3827,6 +3827,62 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         return deviceLocationHistory;
     }
 
+//    @Override
+//    public List<DeviceLocationHistorySnapshot> getAllDeviceLocationInfo(String deviceType,
+//                                                                             long exactTime)
+//            throws DeviceManagementException {
+//        if (log.isDebugEnabled()) {
+//            log.debug("Get all devices' location information related to given time");
+//        }
+//        List<DeviceLocationHistorySnapshot> deviceLocationHistory;
+//        try {
+//            DeviceManagementDAOFactory.openConnection();
+//            deviceLocationHistory = deviceDAO.getAllDeviceLocationInfo(deviceType, exactTime);
+//        } catch (DeviceManagementDAOException e) {
+//            String errMessage = "Error occurred in getAllDeviceLocationInfo";
+//            log.error(errMessage, e);
+//            throw new DeviceManagementException(errMessage, e);
+//        } catch (SQLException e) {
+//            String errMessage = "Error occurred while opening a connection to the data source";
+//            log.error(errMessage, e);
+//            throw new DeviceManagementException(errMessage, e);
+//        } finally {
+//            DeviceManagementDAOFactory.closeConnection();
+//        }
+//
+//        return deviceLocationHistory;
+//    }
+
+    @Override
+    public List<DeviceLocationHistorySnapshot> getAllDeviceLocationInfo(String deviceType, long exactTime, PaginationRequest request)
+            throws DeviceManagementException {
+        if (log.isDebugEnabled()) {
+            log.debug("Get paginated device location information for deviceType: " + request.getDeviceType());
+        }
+        List<DeviceLocationHistorySnapshot> snapshotExactTime;
+        try {
+            DeviceManagerUtil.validateDeviceListPageSize(request);
+            DeviceManagementDAOFactory.openConnection();
+            snapshotExactTime = deviceDAO.getAllDeviceLocationInfo(
+                    deviceType, exactTime, request);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred in getAllDeviceLocationInfo";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while validating pagination parameters";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+     return snapshotExactTime;
+    }
+
     @Override
     public void notifyPullNotificationSubscriber(Device device, Operation operation)
             throws PullNotificationExecutionFailedException {

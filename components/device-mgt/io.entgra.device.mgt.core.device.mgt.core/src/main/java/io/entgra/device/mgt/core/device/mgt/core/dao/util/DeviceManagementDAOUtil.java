@@ -361,6 +361,7 @@ public final class DeviceManagementDAOUtil {
         deviceLocationHistory.setOwner(rs.getString("DEVICE_OWNER"));
         deviceLocationHistory.setUpdatedTime(new Date(rs.getLong("TIMESTAMP")));
         deviceLocationHistory.setGeoHash(rs.getString("GEO_HASH"));
+        deviceLocationHistory.setDeviceId(rs.getInt("DEVICE_ID")); // Add this line
         return deviceLocationHistory;
     }
 

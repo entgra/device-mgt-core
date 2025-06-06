@@ -840,6 +840,17 @@ public interface DeviceManagementProviderService {
             throws DeviceManagementException;
 
     /**
+     * This retrieves the device location histories
+     *
+    * @param deviceType The type of devices (e.g., ios, android, windows)
+     * @param exactTime Specified given timestamp
+     * @throws DeviceManagementException
+     * @return list of device's location histories
+     */
+    List<DeviceLocationHistorySnapshot> getAllDeviceLocationInfo(String deviceType, long exactTime,PaginationRequest request)
+            throws DeviceManagementException;
+
+    /**
      * This retrieves the device pull notification payload and passes to device type pull notification subscriber.
      */
     void notifyPullNotificationSubscriber(Device device, Operation operation)

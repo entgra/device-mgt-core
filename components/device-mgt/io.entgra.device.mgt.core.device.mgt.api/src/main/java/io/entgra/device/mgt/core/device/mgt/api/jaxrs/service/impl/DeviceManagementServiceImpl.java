@@ -745,6 +745,77 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
     }
 
     @GET
+    @Path("/exactTime-location")
+    public Response getAllDeviceLocationHistory(
+            @QueryParam("deviceType") String deviceType,
+            @QueryParam("exactTime") long exactTime,
+            @QueryParam("offset") @DefaultValue("0") int offset,
+            @QueryParam("limit") @DefaultValue("10") int limit){
+        try {
+            RequestValidationUtil.validatePaginationParameters(offset, limit);
+
+            // Validate exactTime parameter - if not provided, it will be 0
+//            if (exactTime == 0) {
+//                String msg = "exactTime parameter is mandatory. Please provide a valid timestamp in milliseconds.";
+//                log.error(msg);
+//                return Response.status(Response.Status.BAD_REQUEST)
+//                        .entity(new ErrorResponse.ErrorResponseBuilder()
+//                                .setMessage(msg)
+//                                .setCode(400L)
+//                                .setMoreInfo("exactTime query parameter must be provided with a valid timestamp value")
+//                                .build()).build();
+//            }
+            if (exactTime == 0) {
+                String msg = "exactTime parameter is mandatory. Please provide a valid timestamp in milliseconds.";
+                log.error(msg);
+                return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+            }
+
+            String authorizedUser = CarbonContext.getThreadLocalCarbonContext().getUsername();
+            if (authorizedUser == null || authorizedUser.isEmpty()) {
+                String msg = "Unauthorized access - user not found";
+                log.error(msg);
+                return Response.status(Response.Status.UNAUTHORIZED).entity(msg).build();
+            }
+
+//            if (authorizedUser == null || authorizedUser.isEmpty()) {
+//                String msg = "Unauthorized access - user not found";
+//                log.error(msg);
+//                return Response.status(Response.Status.UNAUTHORIZED)
+//                        .entity(new ErrorResponse.ErrorResponseBuilder()
+//                                .setMessage(msg).build()).build();
+//            }
+            PaginationRequest request = new PaginationRequest(offset, limit);
+            DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
+            DeviceLocationHistorySnapshotWrapper result = DeviceMgtAPIUtils.getDeviceLocationHistoryPaths(
+                    authorizedUser,deviceType, request, exactTime, dms);
+
+            return Response.status(Response.Status.OK).entity(result).build();
+
+
+        }
+        catch (DeviceManagementException e) {
+            String msg = "Error occurred while retrieving device location history";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse.ErrorResponseBuilder()
+                            .setMessage(msg).build()).build();
+        } catch (DeviceAccessAuthorizationException e) {
+            String msg = "User is not authorized to access device location data";
+            log.error(msg, e);
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(new ErrorResponse.ErrorResponseBuilder()
+                            .setMessage(msg).build()).build();
+        } catch (Exception e) {
+            String msg = "Unexpected error occurred while processing request";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse.ErrorResponseBuilder()
+                            .setMessage(msg).build()).build();
+        }
+    }
+
+    @GET
     @Path("/type/any/id/{id}")
     @Override
     public Response getDeviceByID(
