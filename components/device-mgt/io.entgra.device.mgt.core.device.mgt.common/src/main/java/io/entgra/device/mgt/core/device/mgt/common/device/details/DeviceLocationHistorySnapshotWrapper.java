@@ -24,6 +24,7 @@ public class DeviceLocationHistorySnapshotWrapper {
 
     private DeviceLocationHistory fullSnapshot;
     private List<Object> pathSnapshot;
+    private int count;
 
     public DeviceLocationHistory getFullSnapshot() {
         return fullSnapshot;
@@ -39,5 +40,14 @@ public class DeviceLocationHistorySnapshotWrapper {
 
     public void setPathSnapshot(List<Object> pathSnapshot) {
         this.pathSnapshot = pathSnapshot;
+    }
+
+    // ADD THESE GETTER/SETTER for count
+    public int getCount() {
+        return count;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
     }
 }

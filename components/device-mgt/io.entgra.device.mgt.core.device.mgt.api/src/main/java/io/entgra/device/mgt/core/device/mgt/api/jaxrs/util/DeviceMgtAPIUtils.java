@@ -30,11 +30,7 @@ import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.OperationStatusBean;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.analytics.EventAttributeList;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.InputValidationException;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.RequestValidationUtil;
-import io.entgra.device.mgt.core.device.mgt.common.Device;
-import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
-import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo;
-import io.entgra.device.mgt.core.device.mgt.common.MonitoringOperation;
-import io.entgra.device.mgt.core.device.mgt.common.OperationMonitoringTaskConfig;
+import io.entgra.device.mgt.core.device.mgt.common.*;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationException;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationService;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.GroupAccessAuthorizationService;
@@ -1550,14 +1546,14 @@ public class DeviceMgtAPIUtils {
     // Use the single query DAO solution I provided earlier, then optimize your utility like this:
 
     public static DeviceLocationHistorySnapshotWrapper getDeviceLocationHistoryPaths(
-            String authorizedUser, String deviceType,PaginationRequest request, long exactTime,
+            String authorizedUser, String deviceType, PaginationRequest request, long exactTime,
             DeviceManagementProviderService dms)
             throws DeviceManagementException, DeviceAccessAuthorizationException {
 
         List<Object> pathsArray = new ArrayList<>();
         List<DeviceLocationHistorySnapshot> snapshots = dms.getAllDeviceLocationInfo(deviceType, exactTime, request);
 
-        //ascedinng order
+        //asceding order
         List<Device> allDevices = dms.getAllDevices();
        // allDevices.sort(Comparator.comparingInt(Device::getId));
 
@@ -1581,14 +1577,13 @@ public class DeviceMgtAPIUtils {
                     PermissionManagerServiceImpl.getInstance().getRequiredPermission()
             };
 
-            // Check user authorization for the device
             if (getDeviceAccessAuthorizationService().isUserAuthorized(identifier, authorizedUser, requiredPermissions)) {
 
                 Map<String, Object> pathEntry = new HashMap<>();
                 pathEntry.put("Id", device.getId());
                 pathEntry.put("deviceId", identifier.getId());
                 pathEntry.put("deviceType", identifier.getType());
-                pathEntry.put("owner", device.getEnrolmentInfo());
+                pathEntry.put("owner", device.getEnrolmentInfo().getOwner());
                 pathEntry.put("deviceName", device.getName());
 
                 // Look up snapshot for this device
@@ -1612,8 +1607,10 @@ public class DeviceMgtAPIUtils {
 
         DeviceLocationHistorySnapshotWrapper wrapper = new DeviceLocationHistorySnapshotWrapper();
         wrapper.setPathSnapshot(pathsArray);
+        wrapper.setCount(pathsArray.size());
         return wrapper;
     }
+
 
 //    public static DeviceLocationHistorySnapshotWrapper getDeviceLocationHistoryPaths(
 //            String authorizedUser, String deviceType, PaginationRequest request, long exactTime,
@@ -1622,40 +1619,42 @@ public class DeviceMgtAPIUtils {
 //
 //        List<Object> pathsArray = new ArrayList<>();
 //
-//        // Get location data from SQL - pagination already handled in SQL
-//        //PaginationRequest request = new PaginationRequest(offset, limit);
+//        // Get device location data from SQL - this already has pagination applied
 //        List<DeviceLocationHistorySnapshot> snapshots = dms.getAllDeviceLocationInfo(deviceType, exactTime, request);
 //
-//        // Process each snapshot from SQL results - all device info comes from SQL
 //        for (DeviceLocationHistorySnapshot snapshot : snapshots) {
-//            if (snapshot.getDeviceIdentifier() != null) {
-//                DeviceIdentifier identifier = snapshot.getDeviceIdentifier();
+//            // Create device identifier from snapshot data
+//            DeviceIdentifier identifier = new DeviceIdentifier(snapshot.getDeviceIdentifier().getId(),
+//                    snapshot.getDeviceIdentifier().getType());
 //
-//                // Check user authorization
-//                String[] requiredPermissions = {
-//                        PermissionManagerServiceImpl.getInstance().getRequiredPermission()
-//                };
+//            String[] requiredPermissions = {
+//                    PermissionManagerServiceImpl.getInstance().getRequiredPermission()
+//            };
 //
-//                if (getDeviceAccessAuthorizationService().isUserAuthorized(identifier, authorizedUser, requiredPermissions)) {
+//            // Check user authorization for the device
+//            if (getDeviceAccessAuthorizationService().isUserAuthorized(identifier, authorizedUser, requiredPermissions)) {
 //
-//                    Map<String, Object> pathEntry = new HashMap<>();
+//                Map<String, Object> pathEntry = new HashMap<>();
 //
-//                    // Get device ID from SQL query result (DEVICE_ID column)
-//                    // We need to add a method to get the numeric device ID from snapshot
-//                    // For now, let's see if we can get it from the SQL result
-//                    pathEntry.put("Id", snapshot.getDeviceId()); // This should come from DEVICE_ID column
-//                    pathEntry.put("deviceId", identifier.getId()); // This is DEVICE_ID_NAME
-//                    pathEntry.put("deviceType", identifier.getType()); // This is DEVICE_TYPE_NAME
-//                    pathEntry.put("owner", snapshot.getOwner()); // This is DEVICE_OWNER
-//                   // pathEntry.put("deviceName", device.getName()); // Using DEVICE_ID_NAME as device name
+//                // Use data from SQL snapshot instead of Device object
+//                pathEntry.put("Id", snapshot.getDeviceId()); // You need to add this field to DeviceLocationHistorySnapshot
+//                pathEntry.put("deviceId", identifier.getId());
+//                pathEntry.put("deviceType", identifier.getType());
+//                pathEntry.put("owner", snapshot.getOwner());
+//              //  pathEntry.put("deviceName", snapshot.getDeviceId());
 //
-//                    // Location data from snapshot
+//                // Add location data
+//                if (snapshot.getLatitude() != 0.0 && snapshot.getLongitude() != 0.0) {
 //                    pathEntry.put("latitude", snapshot.getLatitude());
 //                    pathEntry.put("longitude", snapshot.getLongitude());
 //                    pathEntry.put("timestamp", snapshot.getUpdatedTime());
-//
-//                    pathsArray.add(pathEntry);
+//                } else {
+//                    pathEntry.put("latitude", "No data available");
+//                    pathEntry.put("longitude", "No data available");
+//                    pathEntry.put("timestamp", "No data available");
 //                }
+//
+//                pathsArray.add(pathEntry);
 //            }
 //        }
 //

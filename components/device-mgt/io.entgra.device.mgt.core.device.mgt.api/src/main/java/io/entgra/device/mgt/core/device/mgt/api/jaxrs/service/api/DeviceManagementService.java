@@ -743,7 +743,7 @@ public interface DeviceManagementService {
                     name = "exactTime",
                     value = "Define the exact timestamp to get device location in milliseconds. " +
                             "If provided, from/to parameters are ignored.",
-                    required = true) // Changed from false to true
+                    required = true)
             @QueryParam("exactTime")
             long exactTime,
             @ApiParam(

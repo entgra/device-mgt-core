@@ -755,36 +755,36 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             RequestValidationUtil.validatePaginationParameters(offset, limit);
 
             // Validate exactTime parameter - if not provided, it will be 0
-//            if (exactTime == 0) {
-//                String msg = "exactTime parameter is mandatory. Please provide a valid timestamp in milliseconds.";
-//                log.error(msg);
-//                return Response.status(Response.Status.BAD_REQUEST)
-//                        .entity(new ErrorResponse.ErrorResponseBuilder()
-//                                .setMessage(msg)
-//                                .setCode(400L)
-//                                .setMoreInfo("exactTime query parameter must be provided with a valid timestamp value")
-//                                .build()).build();
-//            }
             if (exactTime == 0) {
                 String msg = "exactTime parameter is mandatory. Please provide a valid timestamp in milliseconds.";
                 log.error(msg);
-                return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(new ErrorResponse.ErrorResponseBuilder()
+                                .setMessage(msg)
+                                .setCode(400L)
+                                .setMoreInfo("exactTime query parameter must be provided with a valid timestamp value")
+                                .build()).build();
             }
+//            if (exactTime == 0) {
+//                String msg = "exactTime parameter is mandatory. Please provide a valid timestamp in milliseconds.";
+//                log.error(msg);
+//                return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+//            }
 
             String authorizedUser = CarbonContext.getThreadLocalCarbonContext().getUsername();
-            if (authorizedUser == null || authorizedUser.isEmpty()) {
-                String msg = "Unauthorized access - user not found";
-                log.error(msg);
-                return Response.status(Response.Status.UNAUTHORIZED).entity(msg).build();
-            }
-
 //            if (authorizedUser == null || authorizedUser.isEmpty()) {
 //                String msg = "Unauthorized access - user not found";
 //                log.error(msg);
-//                return Response.status(Response.Status.UNAUTHORIZED)
-//                        .entity(new ErrorResponse.ErrorResponseBuilder()
-//                                .setMessage(msg).build()).build();
+//                return Response.status(Response.Status.UNAUTHORIZED).entity(msg).build();
 //            }
+
+            if (authorizedUser == null || authorizedUser.isEmpty()) {
+                String msg = "Unauthorized access - user not found";
+                log.error(msg);
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity(new ErrorResponse.ErrorResponseBuilder()
+                                .setMessage(msg).build()).build();
+            }
             PaginationRequest request = new PaginationRequest(offset, limit);
             DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
             DeviceLocationHistorySnapshotWrapper result = DeviceMgtAPIUtils.getDeviceLocationHistoryPaths(
