@@ -67,6 +67,7 @@ import io.entgra.device.mgt.core.device.mgt.core.privacy.PrivacyComplianceProvid
 import io.entgra.device.mgt.core.device.mgt.core.search.mgt.SearchManagerService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeEventManagementProviderService;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeMetaDataManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.service.GroupManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.service.TagManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.traccar.api.service.DeviceAPIClientService;
@@ -183,6 +184,8 @@ public class DeviceMgtAPIUtils {
     private static volatile TenantManagerAdminService tenantManagerAdminService;
     private static volatile TagManagementProviderService tagManagementService;
     private static volatile DeviceTypeEventManagementProviderService deviceTypeEventManagementProviderService;
+    private static volatile DeviceTypeMetaDataManagementProviderService deviceTypeMetaDataManagementProviderService;
+
 
     static {
         String keyStorePassword = ServerConfiguration.getInstance().getFirstProperty("Security.KeyStore.Password");
@@ -625,6 +628,29 @@ public class DeviceMgtAPIUtils {
         }
         return deviceTypeEventManagementProviderService;
     }
+
+    /**
+     * Initializing and accessing method for DeviceTypeMetaDataManagementProviderService.
+     *
+     * @return DeviceTypeMetaDataManagementProviderService instance
+     * @throws IllegalStateException if DeviceTypeMetaDataManagementProviderService cannot be initialized
+     */
+    public static DeviceTypeMetaDataManagementProviderService getDeviceTypeMetaDataManagementProviderService() {
+        if (deviceTypeMetaDataManagementProviderService == null) {
+            synchronized (DeviceMgtAPIUtils.class) {
+                if (deviceTypeMetaDataManagementProviderService == null) {
+                    PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+                    deviceTypeMetaDataManagementProviderService = (DeviceTypeMetaDataManagementProviderService)
+                            ctx.getOSGiService(DeviceTypeMetaDataManagementProviderService.class, null);
+                    if (deviceTypeMetaDataManagementProviderService == null) {
+                        throw new IllegalStateException("Device Type Meta Data Management service not initialized.");
+                    }
+                }
+            }
+        }
+        return deviceTypeMetaDataManagementProviderService;
+    }
+
 
     public static PlatformConfigurationManagementService getPlatformConfigurationManagementService() {
         PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();

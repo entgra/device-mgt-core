@@ -28,6 +28,7 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.impl.ApplicationDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.DeviceStatusDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.DeviceTypeDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.DeviceTypeEventDAOImpl;
+import io.entgra.device.mgt.core.device.mgt.core.dao.impl.DeviceTypeMetaDataDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.TagDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.TenantDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.device.GenericDeviceDAOImpl;
@@ -129,6 +130,10 @@ public class DeviceManagementDAOFactory {
 
     public static DeviceTypeEventDAO getDeviceTypeEventDAO() {
         return new DeviceTypeEventDAOImpl();
+    }
+
+    public static DeviceTypeMetaDataDAO getDeviceTypeMetaDataDAO() {
+        return new DeviceTypeMetaDataDAOImpl();
     }
 
     public static EnrollmentDAO getEnrollmentDAO() {
