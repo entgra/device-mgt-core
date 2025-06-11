@@ -42,7 +42,6 @@ public class DeviceLocationHistorySnapshotWrapper {
         this.pathSnapshot = pathSnapshot;
     }
 
-    // ADD THESE GETTER/SETTER for count
     public int getCount() {
         return count;
     }

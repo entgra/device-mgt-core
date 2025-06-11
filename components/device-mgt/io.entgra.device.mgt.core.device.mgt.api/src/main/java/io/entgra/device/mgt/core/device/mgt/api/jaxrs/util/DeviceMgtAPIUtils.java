@@ -1332,219 +1332,6 @@ public class DeviceMgtAPIUtils {
     }
 
 
-    // full and path snapshot
-//public static DeviceLocationHistorySnapshotWrapper getAllDeviceHistorySnapshots(
-//        String authorizedUser, long exactTime, String type,
-//        DeviceManagementProviderService dms)
-//        throws DeviceManagementException, DeviceAccessAuthorizationException {
-//
-//    List<Device> allDevices = dms.getAllDevices();
-//    List<List<DeviceLocationHistorySnapshot>> fullSnapshotList = new ArrayList<>();
-//    List<Object> pathsArray = new ArrayList<>();
-//
-//    for (Device device : allDevices) {
-//        DeviceIdentifier identifier = new DeviceIdentifier(device.getDeviceIdentifier(), device.getType());
-//
-//        String[] requiredPermissions = {
-//                PermissionManagerServiceImpl.getInstance().getRequiredPermission()
-//        };
-//
-//        if (getDeviceAccessAuthorizationService().isUserAuthorized(identifier, authorizedUser, requiredPermissions)) {
-//            List<DeviceLocationHistorySnapshot> snapshots = dms.getAllDeviceLocationInfo(identifier, exactTime);
-//
-//            // Always add snapshots list (even if empty) to maintain device entries
-//            fullSnapshotList.add(snapshots);
-//
-//            // For "path" type, always create an entry even with no data
-//            if ("path".equalsIgnoreCase(type)) {
-//                if (snapshots.isEmpty()) {
-//                    // Create entry with "No data available" when no snapshots exist
-//                    Map<String, Object> pathEntry = new HashMap<>();
-//                    pathEntry.put("Id", device.getId());
-//                    pathEntry.put("deviceId", identifier.getId());
-//                    pathEntry.put("deviceType", identifier.getType());
-//                    pathEntry.put("owner", device.getEnrolmentInfo().getOwner());
-//                    pathEntry.put("deviceName", device.getName());
-//                    pathEntry.put("latitude", "No data available");
-//                    pathEntry.put("longitude", "No data available");
-//                    pathEntry.put("timestamp", "No data available");
-//                    pathsArray.add(pathEntry);
-//                } else {
-//                    // Process existing snapshots with null checking
-//                    for (DeviceLocationHistorySnapshot snapshot : snapshots) {
-//                        Map<String, Object> pathEntry = new HashMap<>();
-//                        pathEntry.put("Id", device.getId());
-//                        pathEntry.put("deviceId", identifier.getId());
-//                        pathEntry.put("deviceType", identifier.getType());
-//                        pathEntry.put("owner", device.getEnrolmentInfo().getOwner());
-//                        pathEntry.put("deviceName", device.getName());
-//                        pathEntry.put("latitude", snapshot.getLatitude());
-//                        pathEntry.put("longitude", snapshot.getLongitude());
-//                        pathEntry.put("timestamp", snapshot.getUpdatedTime());
-//                        pathsArray.add(pathEntry);
-//                    }
-//                }
-//            }
-//        }
-//    }
-//
-//    DeviceLocationHistorySnapshotWrapper wrapper = new DeviceLocationHistorySnapshotWrapper();
-//    DeviceLocationHistory fullSnapshot = new DeviceLocationHistory();
-//    fullSnapshot.setLocationHistorySnapshots(fullSnapshotList);
-//
-//    if ("path".equalsIgnoreCase(type)) {
-//        wrapper.setPathSnapshot(pathsArray);
-//    } else if ("full".equalsIgnoreCase(type) || type == null) {
-//        wrapper.setFullSnapshot(fullSnapshot);
-//    } else {
-//        String msg = "Invalid type, use either 'path' or 'full'";
-//        log.error(msg);
-//        throw new BadRequestException(msg);
-//    }
-//
-//    return wrapper;
-//}
-
-//path error handle and pass identifier
-//public static DeviceLocationHistorySnapshotWrapper getAllDeviceHistorySnapshots(
-//        String authorizedUser, long exactTime, String type,
-//        DeviceManagementProviderService dms)
-//        throws DeviceManagementException, DeviceAccessAuthorizationException {
-//
-//    // Validate type parameter
-//    if (!"path".equalsIgnoreCase(type)) {
-//        String msg = "Invalid type, only 'path' is supported";
-//        log.error(msg);
-//        throw new BadRequestException(msg);
-//    }
-//
-//    List<Object> pathsArray = new ArrayList<>();
-//    List<Device> allDevices = dms.getAllDevices();
-//
-//    for (Device device : allDevices) {
-//        DeviceIdentifier identifier = new DeviceIdentifier(device.getDeviceIdentifier(), device.getType());
-//
-//        String[] requiredPermissions = {
-//                PermissionManagerServiceImpl.getInstance().getRequiredPermission()
-//        };
-//
-//        // Check user authorization for the device
-//        if (getDeviceAccessAuthorizationService().isUserAuthorized(identifier, authorizedUser, requiredPermissions)) {
-//            List<DeviceLocationHistorySnapshot> snapshots = dms.getAllDeviceLocationInfo(identifier, exactTime);
-//
-//
-//            // For "path" type, always create an entry even with no data
-//            if (snapshots.isEmpty()) {
-//                // Create entry with "No data available" when no snapshots exist
-//                Map<String, Object> pathEntry = new HashMap<>();
-//                pathEntry.put("Id", device.getId());
-//                pathEntry.put("deviceId", identifier.getId());
-//                pathEntry.put("deviceType", identifier.getType());
-//                pathEntry.put("owner", device.getEnrolmentInfo().getOwner());
-//                pathEntry.put("deviceName", device.getName());
-//                pathEntry.put("latitude", "No data available");
-//                pathEntry.put("longitude", "No data available");
-//                pathEntry.put("timestamp", "No data available");
-//                pathsArray.add(pathEntry);
-//            } else {
-//                // Process existing snapshots with null checking
-//                for (DeviceLocationHistorySnapshot snapshot : snapshots) {
-//                    Map<String, Object> pathEntry = new HashMap<>();
-//                    pathEntry.put("Id", device.getId());
-//                    pathEntry.put("deviceId", identifier.getId());
-//                    pathEntry.put("deviceType", identifier.getType());
-//                    pathEntry.put("owner", device.getEnrolmentInfo().getOwner());
-//                    pathEntry.put("deviceName", device.getName());
-//                    pathEntry.put("latitude", snapshot.getLatitude());
-//                    pathEntry.put("longitude", snapshot.getLongitude());
-//                    pathEntry.put("timestamp", snapshot.getUpdatedTime());
-//                    pathsArray.add(pathEntry);
-//                }
-//            }
-//        }
-//    }
-//
-//    // Create wrapper and set path snapshot
-//    DeviceLocationHistorySnapshotWrapper wrapper = new DeviceLocationHistorySnapshotWrapper();
-//    wrapper.setPathSnapshot(pathsArray);
-//
-//    return wrapper;
-//}
-
-
-
-    //device id filtering for take one device(complicated)
-//public static DeviceLocationHistorySnapshotWrapper getDeviceLocationHistoryPaths(
-//        String authorizedUser, long exactTime, String deviceType,
-//        DeviceManagementProviderService dms)
-//        throws DeviceManagementException, DeviceAccessAuthorizationException {
-//
-//    List<Object> pathsArray = new ArrayList<>();
-//    List<Device> allDevices = dms.getAllDevices();
-//    // Get all snapshots for the device type
-//    List<DeviceLocationHistorySnapshot> snapshots = dms.getAllDeviceLocationInfo(deviceType, exactTime);
-//
-//    for (Device device : allDevices) {
-//        // Filter by deviceType if provided, otherwise include all devices
-//        if (deviceType != null && !deviceType.trim().isEmpty()
-//                && !deviceType.equalsIgnoreCase(device.getType())) {
-//            continue; // Skip this device if it doesn't match the filter
-//        }
-//
-//        DeviceIdentifier identifier = new DeviceIdentifier(device.getDeviceIdentifier(), device.getType());
-//
-//        String[] requiredPermissions = {
-//                PermissionManagerServiceImpl.getInstance().getRequiredPermission()
-//        };
-//
-//        // Check user authorization for the device
-//        if (getDeviceAccessAuthorizationService().isUserAuthorized(identifier, authorizedUser, requiredPermissions)) {
-//            // Find snapshots for this specific device
-//            List<DeviceLocationHistorySnapshot> deviceSnapshots = snapshots.stream()
-//                    .filter(snapshot -> snapshot.getDeviceIdentifier() != null
-//                            && snapshot.getDeviceIdentifier().getId().equals(identifier.getId()))
-//                    .collect(Collectors.toList());
-//
-//            if (deviceSnapshots.isEmpty()) {
-//                // Create entry with "No data available" when no snapshots exist
-//                Map<String, Object> pathEntry = new HashMap<>();
-//                pathEntry.put("Id", device.getId());
-//                pathEntry.put("deviceId", identifier.getId());
-//                pathEntry.put("deviceType", identifier.getType());
-//                pathEntry.put("owner", device.getEnrolmentInfo() != null ? device.getEnrolmentInfo().getOwner() : null);
-//                pathEntry.put("deviceName", device.getName());
-//                pathEntry.put("latitude", "No data available");
-//                pathEntry.put("longitude", "No data available");
-//                pathEntry.put("timestamp", "No data available");
-//                pathsArray.add(pathEntry);
-//                log.debug("No location data for device: " + identifier.getId());
-//            } else {
-//                // Process existing snapshots for this device (should be at most one due to ROW_NUMBER)
-//                for (DeviceLocationHistorySnapshot snapshot : deviceSnapshots) {
-//                    Map<String, Object> pathEntry = new HashMap<>();
-//                    pathEntry.put("Id", device.getId());
-//                    pathEntry.put("deviceId", identifier.getId());
-//                    pathEntry.put("deviceType", identifier.getType());
-//                    pathEntry.put("owner", device.getEnrolmentInfo() != null ? device.getEnrolmentInfo().getOwner() : null);
-//                    pathEntry.put("deviceName", device.getName());
-//                    pathEntry.put("latitude", snapshot.getLatitude());
-//                    pathEntry.put("longitude", snapshot.getLongitude());
-//                    pathEntry.put("timestamp", snapshot.getUpdatedTime());
-//                    pathsArray.add(pathEntry);
-//                    log.debug("Added snapshot for device: " + identifier.getId() + ", lat: " + snapshot.getLatitude() + ", lon: " + snapshot.getLongitude());
-//                }
-//            }
-//        }
-//    }
-//
-//    // Create and return the wrapper
-//    DeviceLocationHistorySnapshotWrapper wrapper = new DeviceLocationHistorySnapshotWrapper();
-//    wrapper.setPathSnapshot(pathsArray);
-//    log.debug("Total paths in response: " + pathsArray.size());
-//    return wrapper;
-//}
-    // Use the single query DAO solution I provided earlier, then optimize your utility like this:
-
     public static DeviceLocationHistorySnapshotWrapper getDeviceLocationHistoryPaths(
             String authorizedUser, String deviceType, PaginationRequest request, long exactTime,
             DeviceManagementProviderService dms)
@@ -1553,55 +1340,46 @@ public class DeviceMgtAPIUtils {
         List<Object> pathsArray = new ArrayList<>();
         List<DeviceLocationHistorySnapshot> snapshots = dms.getAllDeviceLocationInfo(deviceType, exactTime, request);
 
-        //asceding order
-        List<Device> allDevices = dms.getAllDevices();
-       // allDevices.sort(Comparator.comparingInt(Device::getId));
-
-        // Create a map for quick lookup by deviceId
-        Map<String, DeviceLocationHistorySnapshot> snapshotMap = new HashMap<>();
         for (DeviceLocationHistorySnapshot snapshot : snapshots) {
-            if (snapshot.getDeviceIdentifier() != null) {
-                snapshotMap.put(snapshot.getDeviceIdentifier().getId(), snapshot);
-            }
-        }
+            // Create device identifier from snapshot data
+            DeviceIdentifier identifier = new DeviceIdentifier(snapshot.getDeviceIdentifier().getId(),
+                    snapshot.getDeviceIdentifier().getType());
 
-        for (Device device : allDevices) {
-            // Filter by deviceType if provided, otherwise include all devices
-            if (deviceType != null && !deviceType.trim().isEmpty()
-                    && !deviceType.equalsIgnoreCase(device.getType())) {
-                continue; // Skip this device if it doesn't match the filter
-            }
-
-            DeviceIdentifier identifier = new DeviceIdentifier(device.getDeviceIdentifier(), device.getType());
             String[] requiredPermissions = {
                     PermissionManagerServiceImpl.getInstance().getRequiredPermission()
             };
 
             if (getDeviceAccessAuthorizationService().isUserAuthorized(identifier, authorizedUser, requiredPermissions)) {
 
-                Map<String, Object> pathEntry = new HashMap<>();
-                pathEntry.put("Id", device.getId());
-                pathEntry.put("deviceId", identifier.getId());
-                pathEntry.put("deviceType", identifier.getType());
-                pathEntry.put("owner", device.getEnrolmentInfo().getOwner());
-                pathEntry.put("deviceName", device.getName());
+                try {
+                    // Get device details for this specific device
+                    Device device = dms.getDevice(identifier, false);
 
-                // Look up snapshot for this device
-                DeviceLocationHistorySnapshot snapshot = snapshotMap.get(identifier.getId());
-
-                if (snapshot != null) {
-                    // Found location data (either exact or fallback)
+                    Map<String, Object> pathEntry = new HashMap<>();
+                    // Use device details
+                    pathEntry.put("Id", device.getId());
+                    pathEntry.put("deviceId", identifier.getId());
+                    pathEntry.put("deviceType", identifier.getType());
+                    pathEntry.put("owner", device.getEnrolmentInfo().getOwner());
+                    pathEntry.put("deviceName", device.getName());
+                    // Add location data from snapshot
                     pathEntry.put("latitude", snapshot.getLatitude());
                     pathEntry.put("longitude", snapshot.getLongitude());
                     pathEntry.put("timestamp", snapshot.getUpdatedTime());
-                } else {
-                    // No location data found even with fallback
-                    pathEntry.put("latitude", "No data available");
-                    pathEntry.put("longitude", "No data available");
-                    pathEntry.put("timestamp", "No data available");
-                }
+//                    if (snapshot.getLatitude() != 0.0 && snapshot.getLongitude() != 0.0) {
+//                        pathEntry.put("latitude", snapshot.getLatitude());
+//                        pathEntry.put("longitude", snapshot.getLongitude());
+//                        pathEntry.put("timestamp", snapshot.getUpdatedTime());
+//                    } else {
+//                        pathEntry.put("latitude", "No data available");
+//                        pathEntry.put("longitude", "No data available");
+//                        pathEntry.put("timestamp", "No data available");
+//                    }
+                    pathsArray.add(pathEntry);
 
-                pathsArray.add(pathEntry);
+                } catch (DeviceManagementException e) {
+                    log.warn("Could not retrieve device details for device: " + identifier.getId(), e);
+                }
             }
         }
 
@@ -1612,56 +1390,6 @@ public class DeviceMgtAPIUtils {
     }
 
 
-//    public static DeviceLocationHistorySnapshotWrapper getDeviceLocationHistoryPaths(
-//            String authorizedUser, String deviceType, PaginationRequest request, long exactTime,
-//            DeviceManagementProviderService dms)
-//            throws DeviceManagementException, DeviceAccessAuthorizationException {
-//
-//        List<Object> pathsArray = new ArrayList<>();
-//
-//        // Get device location data from SQL - this already has pagination applied
-//        List<DeviceLocationHistorySnapshot> snapshots = dms.getAllDeviceLocationInfo(deviceType, exactTime, request);
-//
-//        for (DeviceLocationHistorySnapshot snapshot : snapshots) {
-//            // Create device identifier from snapshot data
-//            DeviceIdentifier identifier = new DeviceIdentifier(snapshot.getDeviceIdentifier().getId(),
-//                    snapshot.getDeviceIdentifier().getType());
-//
-//            String[] requiredPermissions = {
-//                    PermissionManagerServiceImpl.getInstance().getRequiredPermission()
-//            };
-//
-//            // Check user authorization for the device
-//            if (getDeviceAccessAuthorizationService().isUserAuthorized(identifier, authorizedUser, requiredPermissions)) {
-//
-//                Map<String, Object> pathEntry = new HashMap<>();
-//
-//                // Use data from SQL snapshot instead of Device object
-//                pathEntry.put("Id", snapshot.getDeviceId()); // You need to add this field to DeviceLocationHistorySnapshot
-//                pathEntry.put("deviceId", identifier.getId());
-//                pathEntry.put("deviceType", identifier.getType());
-//                pathEntry.put("owner", snapshot.getOwner());
-//              //  pathEntry.put("deviceName", snapshot.getDeviceId());
-//
-//                // Add location data
-//                if (snapshot.getLatitude() != 0.0 && snapshot.getLongitude() != 0.0) {
-//                    pathEntry.put("latitude", snapshot.getLatitude());
-//                    pathEntry.put("longitude", snapshot.getLongitude());
-//                    pathEntry.put("timestamp", snapshot.getUpdatedTime());
-//                } else {
-//                    pathEntry.put("latitude", "No data available");
-//                    pathEntry.put("longitude", "No data available");
-//                    pathEntry.put("timestamp", "No data available");
-//                }
-//
-//                pathsArray.add(pathEntry);
-//            }
-//        }
-//
-//        DeviceLocationHistorySnapshotWrapper wrapper = new DeviceLocationHistorySnapshotWrapper();
-//        wrapper.setPathSnapshot(pathsArray);
-//        return wrapper;
-//    }
 
     /**
      * Check user who initiates the request has permission to list devices from given group Id.

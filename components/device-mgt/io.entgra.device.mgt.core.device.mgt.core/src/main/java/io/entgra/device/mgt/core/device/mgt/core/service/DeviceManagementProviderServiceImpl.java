@@ -3827,32 +3827,6 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         return deviceLocationHistory;
     }
 
-//    @Override
-//    public List<DeviceLocationHistorySnapshot> getAllDeviceLocationInfo(String deviceType,
-//                                                                             long exactTime)
-//            throws DeviceManagementException {
-//        if (log.isDebugEnabled()) {
-//            log.debug("Get all devices' location information related to given time");
-//        }
-//        List<DeviceLocationHistorySnapshot> deviceLocationHistory;
-//        try {
-//            DeviceManagementDAOFactory.openConnection();
-//            deviceLocationHistory = deviceDAO.getAllDeviceLocationInfo(deviceType, exactTime);
-//        } catch (DeviceManagementDAOException e) {
-//            String errMessage = "Error occurred in getAllDeviceLocationInfo";
-//            log.error(errMessage, e);
-//            throw new DeviceManagementException(errMessage, e);
-//        } catch (SQLException e) {
-//            String errMessage = "Error occurred while opening a connection to the data source";
-//            log.error(errMessage, e);
-//            throw new DeviceManagementException(errMessage, e);
-//        } finally {
-//            DeviceManagementDAOFactory.closeConnection();
-//        }
-//
-//        return deviceLocationHistory;
-//    }
-
     @Override
     public List<DeviceLocationHistorySnapshot> getAllDeviceLocationInfo(String deviceType, long exactTime, PaginationRequest request)
             throws DeviceManagementException {
