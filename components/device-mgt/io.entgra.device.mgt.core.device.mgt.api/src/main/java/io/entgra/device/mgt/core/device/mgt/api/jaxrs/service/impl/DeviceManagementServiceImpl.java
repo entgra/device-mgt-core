@@ -745,6 +745,53 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
     }
 
     @GET
+    @Path("/exactTime-location")
+    public Response getAllDeviceLocationHistory(
+            @QueryParam("deviceType") String deviceType,
+            @QueryParam("exactTime") long exactTime,
+            @QueryParam("offset") @DefaultValue("0") int offset,
+            @QueryParam("limit") @DefaultValue("10") int limit){
+        try {
+            RequestValidationUtil.validatePaginationParameters(offset, limit);
+
+            if (exactTime == 0) {
+                String msg = "exactTime parameter is mandatory. Please provide a valid timestamp in milliseconds.";
+                log.error(msg);
+                return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+            }
+
+            String authorizedUser = CarbonContext.getThreadLocalCarbonContext().getUsername();
+//            if (authorizedUser == null || authorizedUser.isEmpty()) {
+//                String msg = "Unauthorized access - user not found";
+//                log.error(msg);
+//                return Response.status(Response.Status.UNAUTHORIZED).entity(msg).build();
+//            }
+
+            PaginationRequest request = new PaginationRequest(offset, limit);
+            DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
+            DeviceLocationHistorySnapshotWrapper result = DeviceMgtAPIUtils.getDeviceLocationHistoryPaths(
+                    authorizedUser,deviceType, request, exactTime, dms);
+            return Response.status(Response.Status.OK).entity(result).build();
+        } catch (UnAuthorizedException e) {
+            String msg =  "Unauthorized access - user not found";
+            log.error(msg, e);
+            return Response.status(Response.Status.FORBIDDEN).entity(msg).build();
+        } catch (DeviceAccessAuthorizationException e) {
+            String msg = "Error occurred while checking device access authorization";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while retrieving device location history";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (Exception e) {
+            String msg = "Unexpected error occurred while processing request";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
+    @GET
     @Path("/type/any/id/{id}")
     @Override
     public Response getDeviceByID(

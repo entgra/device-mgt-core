@@ -30,11 +30,7 @@ import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.OperationStatusBean;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.analytics.EventAttributeList;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.InputValidationException;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.RequestValidationUtil;
-import io.entgra.device.mgt.core.device.mgt.common.Device;
-import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
-import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo;
-import io.entgra.device.mgt.core.device.mgt.common.MonitoringOperation;
-import io.entgra.device.mgt.core.device.mgt.common.OperationMonitoringTaskConfig;
+import io.entgra.device.mgt.core.device.mgt.common.*;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationException;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationService;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.GroupAccessAuthorizationService;
@@ -131,10 +127,8 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * MDMAPIUtils class provides utility function used by CDM REST-API classes.
@@ -1336,6 +1330,66 @@ public class DeviceMgtAPIUtils {
         }
         return snapshotWrapper;
     }
+
+
+    public static DeviceLocationHistorySnapshotWrapper getDeviceLocationHistoryPaths(
+            String authorizedUser, String deviceType, PaginationRequest request, long exactTime,
+            DeviceManagementProviderService dms)
+            throws DeviceManagementException, DeviceAccessAuthorizationException {
+
+        List<Object> pathsArray = new ArrayList<>();
+        List<DeviceLocationHistorySnapshot> snapshots = dms.getAllDeviceLocationInfo(deviceType, exactTime, request);
+
+        for (DeviceLocationHistorySnapshot snapshot : snapshots) {
+            // Create device identifier from snapshot data
+            DeviceIdentifier identifier = new DeviceIdentifier(snapshot.getDeviceIdentifier().getId(),
+                    snapshot.getDeviceIdentifier().getType());
+
+            String[] requiredPermissions = {
+                    PermissionManagerServiceImpl.getInstance().getRequiredPermission()
+            };
+
+            if (getDeviceAccessAuthorizationService().isUserAuthorized(identifier, authorizedUser, requiredPermissions)) {
+
+                try {
+                    // Get device details for this specific device
+                    Device device = dms.getDevice(identifier, false);
+
+                    Map<String, Object> pathEntry = new HashMap<>();
+                    // Use device details
+                    pathEntry.put("Id", device.getId());
+                    pathEntry.put("deviceId", identifier.getId());
+                    pathEntry.put("deviceType", identifier.getType());
+                    pathEntry.put("owner", device.getEnrolmentInfo().getOwner());
+                    pathEntry.put("deviceName", device.getName());
+                    // Add location data from snapshot
+                    pathEntry.put("latitude", snapshot.getLatitude());
+                    pathEntry.put("longitude", snapshot.getLongitude());
+                    pathEntry.put("timestamp", snapshot.getUpdatedTime());
+//                    if (snapshot.getLatitude() != 0.0 && snapshot.getLongitude() != 0.0) {
+//                        pathEntry.put("latitude", snapshot.getLatitude());
+//                        pathEntry.put("longitude", snapshot.getLongitude());
+//                        pathEntry.put("timestamp", snapshot.getUpdatedTime());
+//                    } else {
+//                        pathEntry.put("latitude", "No data available");
+//                        pathEntry.put("longitude", "No data available");
+//                        pathEntry.put("timestamp", "No data available");
+//                    }
+                    pathsArray.add(pathEntry);
+
+                } catch (DeviceManagementException e) {
+                    log.warn("Could not retrieve device details for device: " + identifier.getId(), e);
+                }
+            }
+        }
+
+        DeviceLocationHistorySnapshotWrapper wrapper = new DeviceLocationHistorySnapshotWrapper();
+        wrapper.setPathSnapshot(pathsArray);
+        wrapper.setCount(pathsArray.size());
+        return wrapper;
+    }
+
+
 
     /**
      * Check user who initiates the request has permission to list devices from given group Id.
