@@ -5813,6 +5813,11 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
+    public DeviceManagementConfig getDeviceManagementConfig() {
+        return DeviceConfigurationManager.getInstance().getDeviceManagementConfig();
+    }
+
+    @Override
     public List<Device> getGroupedDevicesBasedOnProperties(int groupId, Map<String, String> propertiesMap) throws DeviceManagementException {
         List<Device> devices;
         try {

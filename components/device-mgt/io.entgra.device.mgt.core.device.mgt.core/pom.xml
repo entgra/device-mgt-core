@@ -22,7 +22,7 @@
     <parent>
         <groupId>io.entgra.device.mgt.core</groupId>
         <artifactId>device-mgt</artifactId>
-        <version>7.0.6-SNAPSHOT</version>
+        <version>7.0.7-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -229,6 +229,7 @@
             <artifactId>org.apache.felix.scr.ds-annotations</artifactId>
             <scope>provided</scope>
         </dependency>
+
 		<dependency>
 			<groupId>io.entgra.org.scannotation</groupId>
 			<artifactId>scannotation</artifactId>
