@@ -18,9 +18,11 @@
 
 package io.entgra.device.mgt.core.application.mgt.core.impl;
 
+import com.google.gson.Gson;
 import io.entgra.device.mgt.core.application.mgt.common.*;
 import io.entgra.device.mgt.core.application.mgt.common.exception.FileDownloaderServiceException;
 import io.entgra.device.mgt.core.application.mgt.common.response.*;
+import io.entgra.device.mgt.core.application.mgt.core.config.FirmwareConfiguration;
 import io.entgra.device.mgt.core.application.mgt.core.exception.BadRequestException;
 import io.entgra.device.mgt.core.application.mgt.core.dao.*;
 import io.entgra.device.mgt.core.application.mgt.core.exception.*;
@@ -68,6 +70,7 @@ import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementEx
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.MetadataManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.Metadata;
+import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.common.exception.StorageManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
@@ -97,6 +100,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -399,8 +403,11 @@ public class ApplicationManagerImpl implements ApplicationManager {
             ApplicationDTO applicationDTO = applicationManager.getApplication(appId);
             DeviceType deviceType = APIUtil.getDeviceTypeData(applicationDTO.getDeviceTypeId());
             ApplicationArtifact artifact = ApplicationManagementUtil.constructApplicationArtifact(releaseWrapper.getIconLink(), releaseWrapper.getScreenshotLinks(),
-                    releaseWrapper.getArtifactLink(), releaseWrapper.getBannerLink());
+                    isCustomArtifactsManagedByAppStore() ? releaseWrapper.getArtifactLink() : null, releaseWrapper.getBannerLink());
             ApplicationReleaseDTO releaseDTO = APIUtil.releaseWrapperToReleaseDTO(releaseWrapper);
+            if (!isCustomArtifactsManagedByAppStore()) {
+                releaseDTO.setInstallerName(getFirmwareConfiguration().getDeliveryConfiguration().getCdnUri() + releaseWrapper.getArtifactLink());
+            }
             releaseDTO = uploadCustomAppReleaseArtifacts(releaseDTO, artifact, deviceType.getName());
             try {
                 return createRelease(applicationDTO, releaseDTO, ApplicationType.CUSTOM, isPublished);
@@ -416,6 +423,37 @@ public class ApplicationManagerImpl implements ApplicationManager {
             throw new ApplicationManagementException(msg, e);
         } catch (FileDownloaderServiceException e) {
             String msg = "Error encountered while downloading application release artifacts";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        }
+    }
+
+    private boolean isCustomArtifactsManagedByAppStore() throws ApplicationManagementException {
+        return Objects.equals(getFirmwareConfiguration().getDeliveryConfiguration().getMethod(), "APP_STORE");
+    }
+
+    private FirmwareConfiguration getFirmwareConfiguration() throws ApplicationManagementException {
+        final Gson gson = new Gson();
+        MetadataManagementService metadataManagementService = DataHolder.getInstance().getMetadataManagementService();
+        try {
+            Metadata firmwareMgtMetadata = metadataManagementService.retrieveMetadata(PrivilegedCarbonContext
+                    .getThreadLocalCarbonContext().getTenantDomain() + Constants.FIRMWARE_CONFIGS_PREFIX);
+            if (firmwareMgtMetadata == null) {
+                String msg = "Firmware configuration not found";
+                log.error(msg);
+                throw new IllegalStateException(msg);
+            }
+
+            FirmwareConfiguration firmwareMgtConfigs = gson.fromJson(firmwareMgtMetadata.getMetaValue(), FirmwareConfiguration.class);
+            if (firmwareMgtConfigs == null) {
+                String msg = "Null retrieved for firmware configuration";
+                log.error(msg);
+                throw new IllegalStateException(msg);
+            }
+
+            return firmwareMgtConfigs;
+        } catch (MetadataManagementException e) {
+            String msg = "Failed to load firmware management metadata";
             log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
         }
@@ -711,25 +749,29 @@ public class ApplicationManagerImpl implements ApplicationManager {
             throws ResourceManagementException, ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         ApplicationStorageManager applicationStorageManager = APIUtil.getApplicationStorageManager();
-        try {
-            String md5OfApp = applicationStorageManager.
-                    getMD5(Files.newInputStream(Paths.get(applicationArtifact.getInstallerPath())));
-            validateReleaseBinaryFileHash(md5OfApp);
-            releaseDTO.setUuid(UUID.randomUUID().toString());
-            releaseDTO.setAppHashValue(md5OfApp);
-            releaseDTO.setInstallerName(applicationArtifact.getInstallerName());
+        releaseDTO.setUuid(UUID.randomUUID().toString());
+        if (isCustomArtifactsManagedByAppStore()) {
+            try {
+                String md5OfApp = applicationStorageManager.
+                        getMD5(Files.newInputStream(Paths.get(applicationArtifact.getInstallerPath())));
+                validateReleaseBinaryFileHash(md5OfApp);
+                releaseDTO.setAppHashValue(md5OfApp);
+                releaseDTO.setInstallerName(applicationArtifact.getInstallerName());
 
-            applicationStorageManager.uploadReleaseArtifact(releaseDTO, deviceType,
-                    Files.newInputStream(Paths.get(applicationArtifact.getInstallerPath())), tenantId);
-        } catch (IOException e) {
-            String msg = "Error occurred when uploading release artifact into the server";
-            log.error(msg);
-            throw new ApplicationManagementException(msg, e);
-        } catch (StorageManagementException e) {
-            String msg = "Error occurred while md5sum value retrieving process: application UUID "
-                    + releaseDTO.getUuid();
-            log.error(msg, e);
-            throw new ApplicationManagementException(msg, e);
+                applicationStorageManager.uploadReleaseArtifact(releaseDTO, deviceType,
+                        Files.newInputStream(Paths.get(applicationArtifact.getInstallerPath())), tenantId);
+            } catch (IOException e) {
+                String msg = "Error occurred when uploading release artifact into the server";
+                log.error(msg);
+                throw new ApplicationManagementException(msg, e);
+            } catch (StorageManagementException e) {
+                String msg = "Error occurred while md5sum value retrieving process: application UUID "
+                        + releaseDTO.getUuid();
+                log.error(msg, e);
+                throw new ApplicationManagementException(msg, e);
+            }
+        } else {
+            releaseDTO.setAppHashValue(DigestUtils.md5Hex(releaseDTO.getInstallerName()));
         }
         return addImageArtifacts(releaseDTO, applicationArtifact, tenantId);
     }
@@ -1034,28 +1076,36 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 (applicationArtifact.getIconName(), Constants.ICON_NAME));
         applicationReleaseDTO.setBannerName(applicationArtifact.getBannerName());
 
-        Map<String, InputStream> screenshots = applicationArtifact.getScreenshots();
-        List<String> screenshotNames = new ArrayList<>(screenshots.keySet());
+        // for custom application screenshots aren't mandatory
+        if (applicationArtifact.getScreenshots() == null || applicationArtifact.getScreenshots().isEmpty()) {
+            applicationReleaseDTO = applicationStorageManager
+                    .uploadImageArtifacts(applicationReleaseDTO, applicationArtifact.getIconStream(),
+                            applicationArtifact.getBannerStream(), null, tenantId);
+        } else {
+            Map<String, InputStream> screenshots = applicationArtifact.getScreenshots();
+            List<String> screenshotNames = new ArrayList<>(screenshots.keySet());
 
-        int counter = 1;
-        for (String scName : screenshotNames) {
-            if (counter == 1) {
-                applicationReleaseDTO.setScreenshotName1(ApplicationManagementUtil.sanitizeName
-                        (scName, Constants.SCREENSHOT_NAME + counter));
-            } else if (counter == 2) {
-                applicationReleaseDTO.setScreenshotName2(ApplicationManagementUtil.sanitizeName
-                        (scName, Constants.SCREENSHOT_NAME + counter));
-            } else if (counter == 3) {
-                applicationReleaseDTO.setScreenshotName3(ApplicationManagementUtil.sanitizeName
-                        (scName, Constants.SCREENSHOT_NAME + counter));
+            int counter = 1;
+            for (String scName : screenshotNames) {
+                if (counter == 1) {
+                    applicationReleaseDTO.setScreenshotName1(ApplicationManagementUtil.sanitizeName
+                            (scName, Constants.SCREENSHOT_NAME + counter));
+                } else if (counter == 2) {
+                    applicationReleaseDTO.setScreenshotName2(ApplicationManagementUtil.sanitizeName
+                            (scName, Constants.SCREENSHOT_NAME + counter));
+                } else if (counter == 3) {
+                    applicationReleaseDTO.setScreenshotName3(ApplicationManagementUtil.sanitizeName
+                            (scName, Constants.SCREENSHOT_NAME + counter));
+                }
+                counter++;
             }
-            counter++;
+
+            // Upload images
+            applicationReleaseDTO = applicationStorageManager
+                    .uploadImageArtifacts(applicationReleaseDTO, applicationArtifact.getIconStream(),
+                            applicationArtifact.getBannerStream(), new ArrayList<>(screenshots.values()), tenantId);
         }
 
-        // Upload images
-        applicationReleaseDTO = applicationStorageManager
-                .uploadImageArtifacts(applicationReleaseDTO, applicationArtifact.getIconStream(),
-                        applicationArtifact.getBannerStream(), new ArrayList<>(screenshots.values()), tenantId);
         return applicationReleaseDTO;
     }
 
@@ -1567,7 +1617,8 @@ public class ApplicationManagerImpl implements ApplicationManager {
         try {
             ConnectionManagerUtil.beginDBTransaction();
             String lifeCycleState = lifecycleStateManager.getInitialState();
-            String[] publishStates = {"IN-REVIEW", "APPROVED", "PUBLISHED"};
+            List<String> publishStates = type.equals(ApplicationType.CUSTOM) ? Arrays.asList("IN-REVIEW", "APPROVED", "RELEASE-READY")
+                    : Arrays.asList("IN-REVIEW", "APPROVED", "PUBLISHED");
 
             applicationReleaseDTO.setCurrentState(lifeCycleState);
             LifecycleState lifecycleState = getLifecycleStateInstance(lifeCycleState, lifeCycleState);
