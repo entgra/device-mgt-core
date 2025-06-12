@@ -17,7 +17,7 @@
  */
 package io.entgra.device.mgt.core.application.mgt.common;
 
-public enum FirmwareType {
+public enum AppReleaseType {
     TEST,
     PRODUCTION
 }

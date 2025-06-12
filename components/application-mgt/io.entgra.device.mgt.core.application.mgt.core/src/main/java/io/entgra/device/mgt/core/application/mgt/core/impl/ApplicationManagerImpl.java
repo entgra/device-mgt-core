@@ -62,12 +62,13 @@ import io.entgra.device.mgt.core.application.mgt.core.lifecycle.LifecycleStateMa
 import io.entgra.device.mgt.core.application.mgt.core.util.APIUtil;
 import io.entgra.device.mgt.core.application.mgt.core.util.ConnectionManagerUtil;
 import io.entgra.device.mgt.core.application.mgt.core.util.Constants;
-import io.entgra.device.mgt.core.device.mgt.common.Base64File;
-import io.entgra.device.mgt.core.device.mgt.common.Device;
-import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
+import io.entgra.device.mgt.core.device.mgt.common.*;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.MetadataManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.Metadata;
+import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Operation;
+import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.OperationManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.common.exception.StorageManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
@@ -1176,7 +1177,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     List<ApplicationReleaseDTO> filteredApplicationReleaseDTOs = new ArrayList<>();
                     for (ApplicationReleaseDTO applicationReleaseDTO : applicationDTO.getApplicationReleaseDTOs()) {
                         if (ApplicationType.CUSTOM.toString().equals(applicationDTO.getType()) && !isTestRoleAvailable
-                                && FirmwareType.TEST.toString().equals(applicationReleaseDTO.getReleaseType())) {
+                                && AppReleaseType.TEST.toString().equals(applicationReleaseDTO.getReleaseType())) {
                             continue;
                         }
                         if (StringUtils.isNotEmpty(filter.getVersion()) && !filter.getVersion()
@@ -3343,7 +3344,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             if (!StringUtils.isEmpty(entAppReleaseWrapper.getDescription())) {
                 applicationReleaseDTO.get().setDescription(entAppReleaseWrapper.getDescription());
             }
-            if (!StringUtils.isEmpty(entAppReleaseWrapper.getReleaseType())) {
+            if (!StringUtils.isEmpty(String.valueOf(entAppReleaseWrapper.getReleaseType()))) {
                 applicationReleaseDTO.get().setReleaseType(entAppReleaseWrapper.getReleaseType());
             }
             if (!StringUtils.isEmpty(entAppReleaseWrapper.getMetaData())) {
@@ -3435,7 +3436,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             if (!StringUtils.isEmpty(publicAppReleaseWrapper.getDescription())) {
                 applicationReleaseDTO.get().setDescription(publicAppReleaseWrapper.getDescription());
             }
-            if (!StringUtils.isEmpty(publicAppReleaseWrapper.getReleaseType())) {
+            if (!StringUtils.isEmpty(String.valueOf(publicAppReleaseWrapper.getReleaseType()))) {
                 applicationReleaseDTO.get().setReleaseType(publicAppReleaseWrapper.getReleaseType());
             }
             if (!StringUtils.isEmpty(publicAppReleaseWrapper.getMetaData())) {
@@ -3509,7 +3510,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             if (!StringUtils.isEmpty(webAppReleaseWrapper.getDescription())) {
                 applicationReleaseDTO.get().setDescription(webAppReleaseWrapper.getDescription());
             }
-            if (!StringUtils.isEmpty(webAppReleaseWrapper.getReleaseType())) {
+            if (!StringUtils.isEmpty(String.valueOf(webAppReleaseWrapper.getReleaseType()))) {
                 applicationReleaseDTO.get().setReleaseType(webAppReleaseWrapper.getReleaseType());
             }
             if (!StringUtils.isEmpty(webAppReleaseWrapper.getMetaData())) {
@@ -3583,7 +3584,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             if (!StringUtils.isEmpty(customAppReleaseWrapper.getDescription())) {
                 applicationReleaseDTO.get().setDescription(customAppReleaseWrapper.getDescription());
             }
-            if (!StringUtils.isEmpty(customAppReleaseWrapper.getReleaseType())) {
+            if (!StringUtils.isEmpty(String.valueOf(customAppReleaseWrapper.getReleaseType()))) {
                 applicationReleaseDTO.get().setReleaseType(customAppReleaseWrapper.getReleaseType());
             }
             if (!StringUtils.isEmpty(customAppReleaseWrapper.getMetaData())) {
@@ -4547,7 +4548,9 @@ public class ApplicationManagerImpl implements ApplicationManager {
             Device device = deviceManagementService.getDevice(deviceId, true);
 
             if (device == null) {
-                throw new ApplicationManagementException("Device not found with id: " + deviceId);
+                String msg = "Device is not found with id: " + deviceId;
+                log.error(msg);
+                throw new BadRequestException(msg);
             }
 
             // Find the model name from the device properties list
@@ -4560,16 +4563,32 @@ public class ApplicationManagerImpl implements ApplicationManager {
             }
 
             if (deviceModel == null) {
-                throw new ApplicationManagementException("Device model not found for device: " + deviceId);
+                String msg = "Device model is not found with id: " + deviceId;
+                log.error(msg);
+                throw new ApplicationManagementException(msg);
             }
 
-            //todo get Sub type id of the device model
+            //get Subtype data (sub type id) using device model.
+            //todo OTA
             int subTypeId = 1;
 
             // Get all firmware releases for this device model, ordered by version/primary key as needed
             ApplicationDTO applicationDTO = applicationDAO.getApplicationForModel(subTypeId);
 
-            //if application type is not custom then stop the proceeding
+            if (applicationDTO == null) {
+                String msg = "Firmware Variant is not found with device sub type id: " + subTypeId;
+                log.error(msg);
+                throw new ApplicationManagementException(msg);
+            }
+
+            if (!"CUSTOM".equals(applicationDTO.getType())) {
+                String msg = "Only 'CUSTOM' applications can be associated with a device subtype. " + "Application Id: "
+                        + applicationDTO.getId() + "Application Type: " + applicationDTO.getType();
+                log.error(msg);
+                throw new ApplicationManagementException(msg);
+            }
+
+
 
             if (StringUtils.isBlank(currentVersion)) {
                 //get the current version from subscription details
@@ -4583,6 +4602,9 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 return availableFirmwares;
             }
 
+            List<? extends Operation> appInstallOperations = deviceManagementService.getDeviceOperations(new DeviceIdentifier(device.getDeviceIdentifier(), device.getType()), Operation.Status.PENDING, MDMAppConstants.AndroidConstants.OPCODE_INSTALL_APPLICATION);
+
+
             //Get pending app install operations for the device
             //if lower version than installed firmware version is in the pending state move them to relevant state
             //if higher versions are in pending state mark them as pending
@@ -4590,9 +4612,19 @@ public class ApplicationManagerImpl implements ApplicationManager {
             //transfer ApplicationReleaseDTO list to ApplicationRelease list
             return availableFirmwares;
         } catch (DeviceManagementException e) {
-            throw new ApplicationManagementException("Error occurred while retrieving device details for id: " + deviceId, e);
+            String msg = "Error occurred while retrieving device details for id: " + deviceId;
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
         } catch (ApplicationManagementDAOException e) {
-            throw new ApplicationManagementException("Error occurred while retrieving application related data from the database. Device Id: " + deviceId, e);
+            String msg = "Error occurred while retrieving application related data from the database. Device Id:"
+                    + deviceId;
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } catch (OperationManagementException e) {
+            String msg = "An error occurred while searching for operations related to the device with deviceId: "
+                    + deviceId;
+            log.error(msg, e);
+            throw new RuntimeException(msg, e);
         }
     }
 

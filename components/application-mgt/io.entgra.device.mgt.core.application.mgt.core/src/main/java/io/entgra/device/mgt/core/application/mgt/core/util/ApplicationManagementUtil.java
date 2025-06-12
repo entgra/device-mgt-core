@@ -21,10 +21,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import io.entgra.device.mgt.core.application.mgt.common.ApplicationArtifact;
-import io.entgra.device.mgt.core.application.mgt.common.FileDataHolder;
-import io.entgra.device.mgt.core.application.mgt.common.FileDescriptor;
-import io.entgra.device.mgt.core.application.mgt.common.LifecycleChanger;
+import io.entgra.device.mgt.core.application.mgt.common.*;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ItuneAppDTO;
@@ -395,7 +392,7 @@ public class ApplicationManagementUtil {
                     }
 
                     publicAppReleaseWrapper.setDescription(product.getDescription());
-                    publicAppReleaseWrapper.setReleaseType("ga");
+                    publicAppReleaseWrapper.setReleaseType(AppReleaseType.PRODUCTION);
                     publicAppReleaseWrapper.setVersion(product.getVersion());
                     publicAppReleaseWrapper.setSupportedOsVersions("4.0-12.3");
                     applicationManager.updatePubAppRelease(app.getApplicationReleases().get(0).getUuid(),
@@ -429,7 +426,7 @@ public class ApplicationManagementUtil {
     private static PublicAppReleaseWrapper generatePublicAppReleaseWrapper(ItuneAppDTO product) {
         PublicAppReleaseWrapper publicAppReleaseWrapper = new PublicAppReleaseWrapper();
         publicAppReleaseWrapper.setDescription(product.getDescription());
-        publicAppReleaseWrapper.setReleaseType("ga");
+        publicAppReleaseWrapper.setReleaseType(AppReleaseType.PRODUCTION);
         publicAppReleaseWrapper.setVersion(product.getVersion());
         publicAppReleaseWrapper.setPackageName(product.getPackageName());
         publicAppReleaseWrapper.setSupportedOsVersions("4.0-12.3");

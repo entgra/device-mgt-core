@@ -22,7 +22,6 @@ import io.entgra.device.mgt.core.application.mgt.common.ReleaseVersionInfo;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.CategoryDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.TagDTO;
-import io.entgra.device.mgt.core.application.mgt.common.response.Application;
 import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManagementDAOException;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 

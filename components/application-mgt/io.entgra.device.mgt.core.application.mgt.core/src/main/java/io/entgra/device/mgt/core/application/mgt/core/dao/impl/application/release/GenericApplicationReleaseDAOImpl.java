@@ -292,7 +292,7 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
                 statement.setString(1, applicationReleaseDTO.getDescription());
                 statement.setString(2, applicationReleaseDTO.getVersion());
                 statement.setString(3, applicationReleaseDTO.getUuid());
-                statement.setString(4, applicationReleaseDTO.getReleaseType());
+                statement.setString(4, String.valueOf(applicationReleaseDTO.getReleaseType()));
                 statement.setString(5, applicationReleaseDTO.getPackageName());
                 statement.setDouble(6, applicationReleaseDTO.getPrice());
                 statement.setString(7, applicationReleaseDTO.getInstallerName());
