@@ -34,6 +34,7 @@
 
     <modules>
         <module>io.entgra.device.mgt.core.subtype.mgt.feature</module>
+        <module>io.entgra.device.mgt.core.subtype.mgt.api.feature</module>
     </modules>
 
 </project>

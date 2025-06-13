@@ -474,6 +474,9 @@
         <Scope>am:admin:lc:app:block</Scope>
         <Scope>am:admin:lc:app:deprecate</Scope>
         <Scope>am:admin:lc:app:retire</Scope>
+        <Scope>dm:subtypes:view</Scope>
+        <Scope>dm:subtypes:update</Scope>
+        <Scope>dm:subtypes:create</Scope>
     </Scopes>
     <SSOConfiguration>
         <Issuer>device-mgt</Issuer>
