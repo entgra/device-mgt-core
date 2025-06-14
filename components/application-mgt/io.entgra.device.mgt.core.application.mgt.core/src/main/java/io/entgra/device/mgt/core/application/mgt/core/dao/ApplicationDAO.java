@@ -22,7 +22,6 @@ import io.entgra.device.mgt.core.application.mgt.common.ReleaseVersionInfo;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.CategoryDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.TagDTO;
-import io.entgra.device.mgt.core.application.mgt.common.response.Application;
 import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManagementDAOException;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 
@@ -291,6 +290,6 @@ public interface ApplicationDAO {
 
     List<ReleaseVersionInfo> getApplicationReleaseVersions(String uuid, int tenantId) throws ApplicationManagementDAOException;
 
-    ApplicationDTO getApplicationForModel(int deviceModelId) throws ApplicationManagementDAOException;
+    ApplicationDTO getApplicationForModel(int deviceModelId, int tenantId) throws ApplicationManagementDAOException;
 
 }

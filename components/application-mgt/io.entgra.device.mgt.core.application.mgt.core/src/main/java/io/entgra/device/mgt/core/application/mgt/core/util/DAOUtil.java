@@ -19,6 +19,7 @@ package io.entgra.device.mgt.core.application.mgt.core.util;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import io.entgra.device.mgt.core.application.mgt.common.AppReleaseType;
 import io.entgra.device.mgt.core.application.mgt.common.dto.*;
 import io.entgra.device.mgt.core.application.mgt.core.exception.UnexpectedServerErrorException;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Activity;
@@ -147,7 +148,7 @@ public class DAOUtil {
             appRelease.setId(rs.getInt("RELEASE_ID"));
             appRelease.setDescription(rs.getString("RELEASE_DESCRIPTION"));
             appRelease.setUuid(rs.getString("RELEASE_UUID"));
-            appRelease.setReleaseType(rs.getString("RELEASE_TYPE"));
+            appRelease.setReleaseType(AppReleaseType.valueOf(rs.getString("RELEASE_TYPE")));
             appRelease.setVersion(rs.getString("RELEASE_VERSION"));
             appRelease.setInstallerName(rs.getString("AP_RELEASE_STORED_LOC"));
             appRelease.setIconName(rs.getString("AP_RELEASE_ICON_LOC"));
@@ -271,7 +272,7 @@ public class DAOUtil {
         applicationRelease.setId(resultSet.getInt("RELEASE_ID"));
         applicationRelease.setVersion(resultSet.getString("RELEASE_VERSION"));
         applicationRelease.setUuid(resultSet.getString("UUID"));
-        applicationRelease.setReleaseType(resultSet.getString("RELEASE_TYPE"));
+        applicationRelease.setReleaseType(AppReleaseType.valueOf(resultSet.getString("RELEASE_TYPE")));
         applicationRelease.setPackageName(resultSet.getString("PACKAGE_NAME"));
         applicationRelease.setPrice(resultSet.getDouble("APP_PRICE"));
         applicationRelease.setInstallerName(resultSet.getString("STORED_LOCATION"));

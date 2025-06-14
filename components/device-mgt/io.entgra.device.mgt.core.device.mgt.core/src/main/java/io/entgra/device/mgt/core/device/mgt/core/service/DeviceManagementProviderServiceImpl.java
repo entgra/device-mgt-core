@@ -1581,10 +1581,9 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             DeviceManagementDAOFactory.openConnection();
             device = deviceDAO.getDevice(deviceId, tenantId);
             if (device == null) {
-                String message = "No device is found upon the id '" +
-                        deviceId + "'";
                 if (log.isDebugEnabled()) {
-                    log.debug(message);
+                    log.debug("No device is found upon the id '" +
+                            deviceId + "'");
                 }
                 return null;
             }
@@ -5811,6 +5810,11 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         } finally {
             DeviceManagementDAOFactory.closeConnection();
         }
+    }
+
+    @Override
+    public DeviceManagementConfig getDeviceManagementConfig() {
+        return DeviceConfigurationManager.getInstance().getDeviceManagementConfig();
     }
 
     @Override

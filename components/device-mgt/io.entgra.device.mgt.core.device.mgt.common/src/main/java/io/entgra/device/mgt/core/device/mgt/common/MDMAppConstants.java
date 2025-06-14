@@ -47,6 +47,7 @@ public class MDMAppConstants {
 		}
 		public static final String IS_BLOCK_UNINSTALL = "isBlockUninstall";
 		public static final String OPCODE_INSTALL_APPLICATION = "INSTALL_APPLICATION";
+		public static final String OPCODE_INSTALL_FIRMWARE = "INSTALL_FIRMWARE";
 		public static final String OPCODE_UNINSTALL_APPLICATION = "UNINSTALL_APPLICATION";
 		public static final String UNMANAGED_APP_UNINSTALL= "UNMANAGED_APP_UNINSTALL";
 	}

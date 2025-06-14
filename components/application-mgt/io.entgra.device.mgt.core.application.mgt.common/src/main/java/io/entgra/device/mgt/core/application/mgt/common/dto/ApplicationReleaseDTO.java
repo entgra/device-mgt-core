@@ -17,7 +17,7 @@
  */
 package io.entgra.device.mgt.core.application.mgt.common.dto;
 
-import io.entgra.device.mgt.core.application.mgt.common.FirmwareType;
+import io.entgra.device.mgt.core.application.mgt.common.AppReleaseType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -67,10 +67,10 @@ public class ApplicationReleaseDTO {
     private String screenshotName3;
 
     @ApiModelProperty(name = "releaseType",
-            value = "Release type of the application release",
+            value = "Type of the firmware (TEST/PRODUCTION etc.)",
             required = true,
-            example = "alpha, beta etc")
-    private String releaseType;
+            example = "TEST, PRODUCTION")
+    private AppReleaseType releaseType;
 
     @ApiModelProperty(name = "price",
             value = "Price of the application release",
@@ -90,11 +90,6 @@ public class ApplicationReleaseDTO {
             value = "Meta data of the application release",
             required = true)
     private String metaData;
-
-    @ApiModelProperty(name = "firmwareType",
-            value = "Type of the firmware (TEST/PRODUCTION)",
-            required = false)
-    private FirmwareType firmwareType;
 
     @ApiModelProperty(name = "ratedUsers",
             value = "Number of users who has rated the application release")
@@ -120,8 +115,7 @@ public class ApplicationReleaseDTO {
             value = "ApplicationDTO bundle identifier")
     private String packageName;
 
-    public ApplicationReleaseDTO() {
-    }
+    public ApplicationReleaseDTO() {}
 
     public int getRatedUsers() {
         return ratedUsers;
@@ -155,11 +149,9 @@ public class ApplicationReleaseDTO {
         this.uuid = uuid;
     }
 
-    public String getReleaseType() {
-        return releaseType;
-    }
+    public AppReleaseType getReleaseType() { return releaseType; }
 
-    public void setReleaseType(String releaseType) {
+    public void setReleaseType(AppReleaseType releaseType) {
         this.releaseType = releaseType;
     }
 
@@ -168,8 +160,7 @@ public class ApplicationReleaseDTO {
     }
 
     public void setIsSharedWithAllTenants(boolean isSharedWithAllTenants) {
-        this.isSharedWithAllTenants = isSharedWithAllTenants;
-    }
+        this.isSharedWithAllTenants = isSharedWithAllTenants; }
 
     public void setMetaData(String metaData) {
         this.metaData = metaData;
@@ -197,77 +188,39 @@ public class ApplicationReleaseDTO {
 
     public boolean getIsSharedWithAllTenants() { return isSharedWithAllTenants; }
 
-    public String getMetaData() {
-        return metaData;
-    }
+    public String getMetaData() { return metaData; }
 
-    public FirmwareType getFirmwareType() { return firmwareType; }
+    public String getInstallerName() { return installerName; }
 
-    public void setFirmwareType(FirmwareType firmwareType) { this.firmwareType = firmwareType; }
+    public void setInstallerName(String installerName) { this.installerName = installerName; }
 
-    public String getInstallerName() {
-        return installerName;
-    }
+    public String getBannerName() { return bannerName; }
 
-    public void setInstallerName(String installerName) {
-        this.installerName = installerName;
-    }
+    public void setBannerName(String bannerName) { this.bannerName = bannerName; }
 
-    public String getBannerName() {
-        return bannerName;
-    }
+    public String getScreenshotName1() { return screenshotName1; }
 
-    public void setBannerName(String bannerName) {
-        this.bannerName = bannerName;
-    }
+    public void setScreenshotName1(String screenshotName1) { this.screenshotName1 = screenshotName1; }
 
-    public String getScreenshotName1() {
-        return screenshotName1;
-    }
+    public String getScreenshotName2() { return screenshotName2; }
 
-    public void setScreenshotName1(String screenshotName1) {
-        this.screenshotName1 = screenshotName1;
-    }
+    public void setScreenshotName2(String screenshotName2) { this.screenshotName2 = screenshotName2; }
 
-    public String getScreenshotName2() {
-        return screenshotName2;
-    }
+    public String getScreenshotName3() { return screenshotName3; }
 
-    public void setScreenshotName2(String screenshotName2) {
-        this.screenshotName2 = screenshotName2;
-    }
+    public void setScreenshotName3(String screenshotName3) { this.screenshotName3 = screenshotName3; }
 
-    public String getScreenshotName3() {
-        return screenshotName3;
-    }
+    public String getIconName() { return iconName; }
 
-    public void setScreenshotName3(String screenshotName3) {
-        this.screenshotName3 = screenshotName3;
-    }
+    public void setIconName(String iconName) { this.iconName = iconName; }
 
-    public String getIconName() {
-        return iconName;
-    }
+    public String getUrl() { return url; }
 
-    public void setIconName(String iconName) {
-        this.iconName = iconName;
-    }
+    public void setUrl(String url) { this.url = url; }
 
-    public String getUrl() {
-        return url;
-    }
+    public void setPackageName(String packageName) { this.packageName = packageName; }
 
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public void setPackageName(String packageName) {
-        this.packageName = packageName;
-    }
-
-    public String getPackageName() {
-        return packageName;
-    }
+    public String getPackageName() { return packageName; }
 
     public String getDescription() { return description; }
 

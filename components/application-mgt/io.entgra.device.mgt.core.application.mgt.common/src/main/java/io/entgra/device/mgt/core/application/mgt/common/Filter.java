@@ -123,7 +123,7 @@ public class Filter {
      */
     private boolean withWebApps;
 
-    private FirmwareType firmwareType;
+    private AppReleaseType firmwareType;
 
     public int getLimit() {
         return limit;
@@ -237,7 +237,7 @@ public class Filter {
         this.withWebApps = withWebApps;
     }
 
-    public FirmwareType getFirmwareType() { return firmwareType; }
+    public AppReleaseType getFirmwareType() { return firmwareType; }
 
-    public void setFirmwareType(FirmwareType firmwareType) { this.firmwareType = firmwareType; }
+    public void setFirmwareType(AppReleaseType appReleaseType) { this.firmwareType = appReleaseType; }
 }
