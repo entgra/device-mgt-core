@@ -19,6 +19,7 @@
 package io.entgra.device.mgt.core.device.mgt.core.service;
 
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.Application;
+import io.entgra.device.mgt.core.device.mgt.common.app.mgt.DeviceFirmwareModel;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ConflictException;
 import io.entgra.device.mgt.core.device.mgt.core.cache.DeviceCacheKey;
 import io.entgra.device.mgt.core.device.mgt.core.config.DeviceManagementConfig;
@@ -1215,4 +1216,13 @@ public interface DeviceManagementProviderService {
      */
     List<? extends Operation> getDeviceOperations(DeviceIdentifier deviceId, Operation.Status status, String operationCode)
             throws OperationManagementException;
+
+    /**
+     * This method is used to retrieve the device firmware model of a given device
+     * @param deviceId id of the device
+     * @param tenantId id of the tenant
+     * @return {@link DeviceFirmwareModel} which contains the firmware model details of the device
+     * @throws DeviceManagementException
+     */
+    DeviceFirmwareModel getDeviceFirmwareModel(int deviceId, int tenantId) throws DeviceManagementException;
 }
