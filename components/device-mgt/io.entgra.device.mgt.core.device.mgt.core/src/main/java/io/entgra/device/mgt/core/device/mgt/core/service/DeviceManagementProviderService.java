@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - 2023, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
+ * Copyright (c) 2018 - 2025, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
  *
  * Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -19,6 +19,7 @@
 package io.entgra.device.mgt.core.device.mgt.core.service;
 
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.Application;
+import io.entgra.device.mgt.core.device.mgt.common.app.mgt.DeviceFirmwareModel;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ConflictException;
 import io.entgra.device.mgt.core.device.mgt.core.cache.DeviceCacheKey;
 import io.entgra.device.mgt.core.device.mgt.core.config.DeviceManagementConfig;
@@ -49,6 +50,7 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOExceptio
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceTypeVersion;
 
+import javax.validation.constraints.NotNull;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
@@ -671,6 +673,16 @@ public interface DeviceManagementProviderService {
 
     boolean enrollDevice(Device device) throws DeviceManagementException;
 
+    /**
+     * Adds a firmware model contains by a device.
+     * @param device {@link NotNull} {@link Device} object which contains the device information.
+     * @param firmwareModel
+     * @param tenantId
+     * @return
+     * @throws DeviceManagementException
+     */
+    DeviceFirmwareModel addDeviceFirmwareModel(Device device, String firmwareModel, int tenantId) throws DeviceManagementException;
+
     boolean saveConfiguration(PlatformConfiguration configuration) throws DeviceManagementException;
 
     boolean disenrollDevice(DeviceIdentifier deviceId) throws DeviceManagementException;
@@ -1215,4 +1227,13 @@ public interface DeviceManagementProviderService {
      */
     List<? extends Operation> getDeviceOperations(DeviceIdentifier deviceId, Operation.Status status, String operationCode)
             throws OperationManagementException;
+
+    /**
+     * This method is used to retrieve the device firmware model of a given device
+     * @param deviceId id of the device
+     * @param tenantId id of the tenant
+     * @return {@link DeviceFirmwareModel} which contains the firmware model details of the device
+     * @throws DeviceManagementException
+     */
+    DeviceFirmwareModel getDeviceFirmwareModel(int deviceId, int tenantId) throws DeviceManagementException;
 }
