@@ -20,6 +20,7 @@ package io.entgra.device.mgt.core.device.mgt.core.service;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import io.entgra.device.mgt.core.device.mgt.common.app.mgt.DeviceFirmwareModel;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ConflictException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceDAO;
@@ -5850,5 +5851,10 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             throws OperationManagementException {
         return pluginRepository.getOperationManager(deviceId.getType(), this.getTenantId())
                 .getOperationsByDeviceOperationCodeAndStatus(deviceId, status, operationCode);
+    }
+
+    @Override
+    public DeviceFirmwareModel getDeviceFirmwareModel(int deviceId, int tenantId) throws DeviceManagementException {
+        return null;
     }
 }
