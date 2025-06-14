@@ -478,6 +478,10 @@
         <Scope>am:admin:lc:app:retire</Scope>
         <Scope>dm:admin:device-type:conf:view</Scope>
         <Scope>dm:device:modify</Scope>
+        <Scope>dm:device-type:metadata:create</Scope>
+        <Scope>dm:device-type:metadata:update</Scope>
+        <Scope>dm:device-type:metadata:view</Scope>
+        <Scope>dm:device-type:metadata:delete</Scope>
     </Scopes>
     <SSOConfiguration>
         <Issuer>device-mgt</Issuer>

@@ -79,6 +79,8 @@ import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProvide
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeEventManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeEventManagementProviderServiceImpl;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeMetaDataManagementProviderService;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeMetaDataManagementProviderServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.service.GroupManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.service.GroupManagementProviderServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.service.TagManagementProviderService;
@@ -323,6 +325,12 @@ public class DeviceManagementServiceComponent {
         /* Registering Event Management Service */
         DeviceTypeEventManagementProviderService deviceTypeEventManagementProviderService = new DeviceTypeEventManagementProviderServiceImpl();
         bundleContext.registerService(DeviceTypeEventManagementProviderService.class.getName(), deviceTypeEventManagementProviderService, null);
+
+        /* Registering Device Type Meta Data Management Service */
+        DeviceTypeMetaDataManagementProviderService deviceTypeMetaDataManagementProviderService =
+                new DeviceTypeMetaDataManagementProviderServiceImpl();
+        bundleContext.registerService(DeviceTypeMetaDataManagementProviderService.class.getName(),
+                deviceTypeMetaDataManagementProviderService, null);
 
         /* Registering DeviceAccessAuthorization Service */
         DeviceAccessAuthorizationService deviceAccessAuthorizationService = new DeviceAccessAuthorizationServiceImpl();

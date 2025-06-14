@@ -28,6 +28,8 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.impl.ApplicationDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.DeviceStatusDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.DeviceTypeDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.DeviceTypeEventDAOImpl;
+import io.entgra.device.mgt.core.device.mgt.core.dao.impl.GenericDeviceTypeMetaDataDAOImpl;
+import io.entgra.device.mgt.core.device.mgt.core.dao.impl.DeviceTypeMetaDataDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.TagDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.TenantDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.device.GenericDeviceDAOImpl;
@@ -129,6 +131,30 @@ public class DeviceManagementDAOFactory {
 
     public static DeviceTypeEventDAO getDeviceTypeEventDAO() {
         return new DeviceTypeEventDAOImpl();
+    }
+
+    /**
+     * Returns the appropriate {@link DeviceTypeMetaDataDAO} implementation based on the configured database engine.
+     *
+     * @return an instance of {@link DeviceTypeMetaDataDAO} specific to the database type.
+     * @throws UnsupportedDatabaseEngineException if the configured database engine is not supported.
+     * @throws IllegalStateException if the database engine is not initialized.
+     */
+    public static DeviceTypeMetaDataDAO getDeviceTypeMetaDataDAO() {
+        if (databaseEngine != null) {
+            switch (databaseEngine) {
+                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_MSSQL:
+                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_POSTGRESQL:
+                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_ORACLE:
+                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_H2:
+                    return new GenericDeviceTypeMetaDataDAOImpl();
+                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_MYSQL:
+                    return new DeviceTypeMetaDataDAOImpl();
+                default:
+                    throw new UnsupportedDatabaseEngineException("Unsupported database engine : " + databaseEngine);
+            }
+        }
+        throw new IllegalStateException("Database engine has not initialized properly.");
     }
 
     public static EnrollmentDAO getEnrollmentDAO() {
