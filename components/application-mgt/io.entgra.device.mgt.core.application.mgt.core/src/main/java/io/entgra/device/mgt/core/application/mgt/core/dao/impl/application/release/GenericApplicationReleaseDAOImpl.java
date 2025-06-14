@@ -161,7 +161,19 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
         }
     }
 
-    @Override
+        @Override
+        public List<ApplicationReleaseDTO> getReleasesByUUIDs(List<String> uuids, int tenantId) throws ApplicationManagementDAOException {
+            //todo OTA
+            return List.of();
+        }
+
+        @Override
+        public ApplicationReleaseDTO getReleaseByVersion(String version, int tenantId) throws ApplicationManagementDAOException {
+            //todo OTA
+            return null;
+        }
+
+        @Override
     public void updateRatingValue(String uuid, double rating, int ratedUsers) throws ApplicationManagementDAOException {
         String sql = "UPDATE "
                 + "AP_APP_RELEASE "
@@ -651,7 +663,7 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
         }
 
         @Override
-        public List<ApplicationReleaseDTO> getAppReleasesAfterVersion(int appId, String version) throws ApplicationManagementDAOException {
+        public List<ApplicationReleaseDTO> getAppReleasesAfterVersion(int appId, String version, String status, int tenantId) throws ApplicationManagementDAOException {
                         /*
             SELECT *
 FROM your_table
@@ -663,6 +675,19 @@ WHERE appId = :appId
         AND appId = :appId
       LIMIT 1
   );*/
+
+            //todo OTA consider status as well
         return List.of();
+        }
+
+        @Override
+        public String getInstalledReleaseVersionByApp(int appId, int tenantId) throws ApplicationManagementDAOException {
+        //todo join with app table using app id and join with device sub table and sort using sub timestamp and filter sub status as completed
+        return "";
+        }
+
+        @Override
+        public List<ApplicationReleaseDTO> getReleasesByAppAndStatus(int appId, String status, int tenantId) throws ApplicationManagementDAOException {
+            return List.of();
         }
     }

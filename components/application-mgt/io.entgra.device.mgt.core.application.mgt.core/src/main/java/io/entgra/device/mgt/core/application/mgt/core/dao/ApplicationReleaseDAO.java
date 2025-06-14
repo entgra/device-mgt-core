@@ -81,6 +81,10 @@ public interface ApplicationReleaseDAO {
 
     ApplicationReleaseDTO getReleaseByUUID(String uuid, int tenantId) throws ApplicationManagementDAOException;
 
+    List<ApplicationReleaseDTO> getReleasesByUUIDs(List<String> uuids, int tenantId) throws ApplicationManagementDAOException;
+
+    ApplicationReleaseDTO getReleaseByVersion(String version, int tenantId) throws ApplicationManagementDAOException;
+
     /**
      * To verify whether application release exist or not for the given app release version.
      *
@@ -136,6 +140,10 @@ public interface ApplicationReleaseDAO {
      */
     void deleteReleasesByTenant(int tenantId) throws ApplicationManagementDAOException;
 
-    List<ApplicationReleaseDTO> getAppReleasesAfterVersion(int appId, String version) throws ApplicationManagementDAOException;
+    List<ApplicationReleaseDTO> getAppReleasesAfterVersion(int appId, String version, String status, int tenantId) throws ApplicationManagementDAOException;
+
+    String getInstalledReleaseVersionByApp(int appId, int tenantId) throws ApplicationManagementDAOException;
+
+    List<ApplicationReleaseDTO> getReleasesByAppAndStatus(int appId, String status, int tenantId) throws ApplicationManagementDAOException;
 
 }

@@ -290,6 +290,6 @@ public interface ApplicationDAO {
 
     List<ReleaseVersionInfo> getApplicationReleaseVersions(String uuid, int tenantId) throws ApplicationManagementDAOException;
 
-    ApplicationDTO getApplicationForModel(int deviceModelId) throws ApplicationManagementDAOException;
+    ApplicationDTO getApplicationForModel(int deviceModelId, int tenantId) throws ApplicationManagementDAOException;
 
 }
