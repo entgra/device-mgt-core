@@ -5854,7 +5854,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public DeviceFirmwareModel getDeviceFirmwareModel(int deviceId, int tenantId) throws DeviceManagementException {
+    public DeviceFirmwareModel getDeviceFirmwareModel(int deviceId) throws DeviceManagementException {
         return null;
     }
 }
