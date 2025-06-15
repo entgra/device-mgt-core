@@ -67,6 +67,7 @@ import io.entgra.device.mgt.core.application.mgt.core.util.Constants;
 import io.entgra.device.mgt.core.device.mgt.common.*;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.App;
+import io.entgra.device.mgt.core.device.mgt.common.app.mgt.DeviceFirmwareModel;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.MetadataManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.Metadata;
@@ -4595,26 +4596,14 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 throw new BadRequestException(msg);
             }
 
-            // Find the model name from the device properties list
-            //todo modify this and get the firmware model by calling a device-mgt service call
-            String deviceModel = null;
-            for (Device.Property property : device.getProperties()) {
-                if ("model".equals(property.getName())) {
-                    deviceModel = property.getValue();
-                    break;
-                }
-            }
-
-            if (deviceModel == null) {
-                String msg = "Device model is not found with id: " + deviceId;
+            DeviceFirmwareModel deviceFirmwareModel = deviceManagementService.getDeviceFirmwareModel(device.getId());
+            if (deviceFirmwareModel == null) {
+                String msg = "Device firmware model is not found with id: " + deviceId;
                 log.error(msg);
                 throw new ApplicationManagementException(msg);
             }
 
-            //get Subtype data (sub type id) using device model.
-            //todo OTA
-            int firmwareModelId = 1;
-
+            int firmwareModelId = deviceFirmwareModel.getFirmwareId();
             int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
 
             // Get all firmware releases for this device model, ordered by version/primary key as needed
