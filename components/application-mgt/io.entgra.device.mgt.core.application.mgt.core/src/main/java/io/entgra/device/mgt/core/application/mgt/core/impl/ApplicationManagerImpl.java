@@ -18,7 +18,10 @@
 
 package io.entgra.device.mgt.core.application.mgt.core.impl;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import io.entgra.device.mgt.core.application.mgt.common.*;
 import io.entgra.device.mgt.core.application.mgt.common.exception.FileDownloaderServiceException;
 import io.entgra.device.mgt.core.application.mgt.common.response.*;
