@@ -140,10 +140,10 @@ public interface ApplicationReleaseDAO {
      */
     void deleteReleasesByTenant(int tenantId) throws ApplicationManagementDAOException;
 
-    List<ApplicationReleaseDTO> getAppReleasesAfterVersion(int appId, String version, String status, int tenantId) throws ApplicationManagementDAOException;
+    List<ApplicationReleaseDTO> getAppReleasesAfterVersion(int appId, String version, String status, String appReleaseType, int tenantId) throws ApplicationManagementDAOException;
 
     String getInstalledReleaseVersionByApp(int appId, int tenantId) throws ApplicationManagementDAOException;
 
-    List<ApplicationReleaseDTO> getReleasesByAppAndStatus(int appId, String status, int tenantId) throws ApplicationManagementDAOException;
+    List<ApplicationReleaseDTO> getReleasesByAppAndStatus(int appId, String status, String appReleaseType, int tenantId) throws ApplicationManagementDAOException;
 
 }

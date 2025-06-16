@@ -663,7 +663,7 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
         }
 
         @Override
-        public List<ApplicationReleaseDTO> getAppReleasesAfterVersion(int appId, String version, String status, int tenantId) throws ApplicationManagementDAOException {
+        public List<ApplicationReleaseDTO> getAppReleasesAfterVersion(int appId, String version, String status, String appReleaseType, int tenantId) throws ApplicationManagementDAOException {
                         /*
             SELECT *
 FROM your_table
@@ -687,7 +687,7 @@ WHERE appId = :appId
         }
 
         @Override
-        public List<ApplicationReleaseDTO> getReleasesByAppAndStatus(int appId, String status, int tenantId) throws ApplicationManagementDAOException {
+        public List<ApplicationReleaseDTO> getReleasesByAppAndStatus(int appId, String status, String appReleaseType, int tenantId) throws ApplicationManagementDAOException {
             return List.of();
         }
     }
