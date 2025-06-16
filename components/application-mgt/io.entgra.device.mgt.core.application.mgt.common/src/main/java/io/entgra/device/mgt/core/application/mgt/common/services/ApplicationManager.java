@@ -575,4 +575,11 @@ public interface ApplicationManager {
 
     List<Device> getApplicableDevicesInGroupForFirmware(String uuid, String groupId) throws ApplicationManagementException;
 
+    /**
+     * Move the Custom(Firmware) release to PRODUCTION
+     * @param releaseUUID Release UUID of the firmware release.
+     * @throws ApplicationManagementException Throws when error encountered while moving release to PRODUCTION.
+     */
+    void moveReleaseToProduction(String releaseUUID) throws ApplicationManagementException;
+
 }
