@@ -2098,7 +2098,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
     }
 
     @Override
-    public ApplicationDTO getApplicationForModel(int deviceModelId, int tenantId) throws ApplicationManagementDAOException {
+    public ApplicationDTO getApplicationForModel(int firmwareModelId, int tenantId) throws ApplicationManagementDAOException {
         //todo OTA
         return null;
     }

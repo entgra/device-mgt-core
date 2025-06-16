@@ -569,6 +569,26 @@ public interface ApplicationManager {
      */
     List<ReleaseVersionInfo> getApplicationReleaseVersions(String uuid) throws ApplicationManagementException;
 
+    /**
+     * Retrieves a list of available firmware releases applicable to the given device,
+     * excluding any versions that are equal to or lower than the device's current firmware version.
+     * <p>
+     * The method performs the following:
+     * <ul>
+     *     <li>Retrieves device details using the given device ID.</li>
+     *     <li>Determines the associated firmware model and application data.</li>
+     *     <li>Filters firmware releases that are strictly newer than the currently installed version.</li>
+     *     <li>If pending firmware installation operations exist for the device, these are attached to the relevant firmware entries,
+     *         provided that the target version is newer than the current version.</li>
+     *     <li>Any pending operations pointing to the same or a lower version are marked as {@code COMPLETED} or {@code CONFIRMED}
+     *         and removed from the result.</li>
+     * </ul>
+     *
+     * @param deviceId        the unique identifier of the device
+     * @param currentVersion  the version currently installed on the device (optional; if null, will be looked up)
+     * @return a list of {@link Firmware} objects representing firmware versions that are newer and available for installation
+     * @throws ApplicationManagementException if an error occurs during device lookup, application resolution, or firmware retrieval
+     */
     List<Firmware> getAvailableFirmwaresForDevice(String deviceId, String currentVersion) throws ApplicationManagementException;
 
     List<Device> getApplicableDevicesOfFirmware(String uuid) throws ApplicationManagementException;
