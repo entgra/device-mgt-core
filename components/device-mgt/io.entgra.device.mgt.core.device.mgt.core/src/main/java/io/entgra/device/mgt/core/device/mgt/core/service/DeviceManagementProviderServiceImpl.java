@@ -28,6 +28,7 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceTypeDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.EnrollmentDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.ApplicationDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceStatusDAO;
+import io.entgra.device.mgt.core.device.mgt.core.dao.FirmwareDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOException;
 import io.entgra.device.mgt.core.device.mgt.core.dao.TenantDAO;
@@ -5908,9 +5909,10 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public DeviceFirmwareModel getDeviceFirmwareModel(int deviceId, int tenantId) throws DeviceManagementException {
+    public DeviceFirmwareModel getDeviceFirmwareModel(int deviceId) throws DeviceManagementException {
         DeviceFirmwareModel firmwareModel;
         try {
+            int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
             DeviceManagementDAOFactory.openConnection();
             firmwareModel = this.firmwareDAO.getDeviceFirmwareModel(deviceId, tenantId);
         } catch (DeviceManagementDAOException e) {

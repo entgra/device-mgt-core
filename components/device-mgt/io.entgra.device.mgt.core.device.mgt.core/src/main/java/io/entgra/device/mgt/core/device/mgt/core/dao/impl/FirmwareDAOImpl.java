@@ -46,7 +46,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
                 "FROM DM_DEVICE_FIRMWARE_MODEL M " +
                 "INNER JOIN DM_DEVICE_FIRMWARE_MODEL_MAPPING D " +
                 "ON D.FIRMWARE_MODEL_ID = M.ID " +
-                "WHERE D.DM_DEVICE_ID = ? AND M.TENANT_ID = ?";  //todo tenantId is not required for filtering
+                "WHERE D.DM_DEVICE_ID = ? AND D.TENANT_ID = ?";
         try {
             conn = this.getConnection();
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {

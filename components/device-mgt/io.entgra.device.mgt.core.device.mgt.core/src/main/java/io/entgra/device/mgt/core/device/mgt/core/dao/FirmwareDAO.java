@@ -27,7 +27,6 @@ public interface FirmwareDAO {
     /**
      * Retrieves the firmware model associated with a specific device.
      * @param deviceId the ID of the device for which the firmware model is to be retrieved.
-     * @param tenantId the ID of the tenant to which the device belongs.
      * @return {@link DeviceFirmwareModel} containing the firmware model details for the specified device.
      * @throws DeviceManagementDAOException if an error occurs while accessing the database.
      */

@@ -1227,14 +1227,6 @@ public interface DeviceManagementProviderService {
     List<? extends Operation> getDeviceOperations(DeviceIdentifier deviceId, Operation.Status status, String operationCode)
             throws OperationManagementException;
 
-    /**
-     * This method is used to retrieve the device firmware model of a given device
-     * @param deviceId id of the device
-     * @param tenantId id of the tenant
-     * @return {@link DeviceFirmwareModel} which contains the firmware model details of the device
-     * @throws DeviceManagementException
-     */
-    DeviceFirmwareModel getDeviceFirmwareModel(int deviceId, int tenantId) throws DeviceManagementException;
 
     /**
      * This method is used to retrieve the device firmware model of a given device
