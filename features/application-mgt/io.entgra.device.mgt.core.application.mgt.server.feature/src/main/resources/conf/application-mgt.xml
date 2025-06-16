@@ -108,6 +108,7 @@
             <ProceedingStates>
                 <State>In-Review</State>
                 <State>Published</State>
+                <State>Release-Ready</State>
             </ProceedingStates>
             <MappedScopeDetails>
                 <Name>Approve Applications</Name>
@@ -126,7 +127,7 @@
                 <Type>CUSTOM</Type>
             </ApplicableTypes>
             <MappedScopeDetails>
-                <n>Release Firmware</n>
+                <Name>Release Firmware</Name>
                 <Key>am:admin:lc:firmware:release</Key>
                 <DefaultRoles>admin, Internal/devicemgt-user</DefaultRoles>
             </MappedScopeDetails>

@@ -594,5 +594,4 @@ public interface ApplicationManager {
     List<Device> getApplicableDevicesOfFirmware(String uuid) throws ApplicationManagementException;
 
     List<Device> getApplicableDevicesInGroupForFirmware(String uuid, String groupId) throws ApplicationManagementException;
-
 }
