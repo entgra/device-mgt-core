@@ -18,7 +18,11 @@
 
 package io.entgra.device.mgt.core.application.mgt.core.impl;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import io.entgra.device.mgt.core.application.mgt.common.*;
 import io.entgra.device.mgt.core.application.mgt.common.exception.FileDownloaderServiceException;
 import io.entgra.device.mgt.core.application.mgt.common.response.*;
@@ -1603,7 +1607,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             throw new BadRequestException(msg);
         }
 
-        if (!type.equals(ApplicationType.ENTERPRISE)) {
+        if (!(type.equals(ApplicationType.ENTERPRISE) || type.equals(ApplicationType.CUSTOM))) {
             int applicationReleaseCount = applicationDTO.getApplicationReleaseDTOs().size();
             if (applicationReleaseCount > 0) {
                 String msg = "Application type of " + applicationDTO.getType() + " can only have one release";
@@ -4829,5 +4833,66 @@ public class ApplicationManagerImpl implements ApplicationManager {
         //remove devices which has latest firmware versions identified by the previous step <Can introduce issues>
         //remove devices which has pending operation for same firmware
         return List.of();
+    }
+
+
+    /**
+     * Move the Custom(Firmware) release to PRODUCTION
+     * @param releaseUUID Release UUID of the firmware release.
+     * @throws ApplicationManagementException Throws when error encountered while moving release to PRODUCTION.
+     */
+    @Override
+    public void moveReleaseToProduction(String releaseUUID) throws ApplicationManagementException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        try {
+            ConnectionManagerUtil.openDBConnection();
+            ApplicationReleaseDTO applicationReleaseDTO = applicationReleaseDAO
+                    .getReleaseByUUID(releaseUUID, tenantId);
+            if (applicationReleaseDTO == null) {
+                throw new NotFoundException("Can't find a release associate with release UUID: " + releaseUUID);
+            }
+
+            String metadata = applicationReleaseDTO.getMetaData();
+            if (metadata == null) {
+                throw new ApplicationManagementException("Metadata not found for application release UUID: " + releaseUUID);
+            }
+
+            final Gson gson = new Gson();
+            JsonElement metadataJsonElement = gson.fromJson(applicationReleaseDTO.getMetaData(), JsonElement.class);
+            if (!metadataJsonElement.isJsonArray()) {
+                throw new ApplicationManagementException("Invalid metadata configuration found for release UUID: " + releaseUUID);
+            }
+
+            JsonArray metadataJsonArray = metadataJsonElement.getAsJsonArray();
+            boolean releaseChannelConfigExists = false;
+            for (JsonElement keyValuePairElement : metadataJsonArray) {
+                if (!keyValuePairElement.isJsonObject()) {
+                    throw new ApplicationManagementException("Invalid metadata configuration found for release UUID: " + releaseUUID);
+                }
+
+                // JsonObject contains a shallow copy bind with the JsonArray, hence manipulate it directly
+                JsonObject metadataJsonObject = keyValuePairElement.getAsJsonObject();
+                if (Objects.equals(metadataJsonObject.get("key").getAsString(), "releaseChannel")) {
+                    releaseChannelConfigExists = true;
+                    metadataJsonObject.addProperty("releaseChannel", "PRODUCTION");
+                    if (log.isDebugEnabled()) {
+                        log.debug("Firmware release " + releaseUUID + " is moved to [PRODUCTION].");
+                    }
+                    break;
+                }
+            }
+
+            if (!releaseChannelConfigExists) {
+                throw new ApplicationManagementException("Failed to find release channel configuration for release: " + releaseUUID);
+            }
+            applicationReleaseDTO.setMetaData(metadataJsonArray.getAsString());
+            applicationReleaseDAO.updateRelease(applicationReleaseDTO, tenantId);
+        } catch (ApplicationManagementDAOException e) {
+            String msg = "Error encountered while moving release [ " + releaseUUID + " ] to [PRODUCTION]";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
     }
 }
