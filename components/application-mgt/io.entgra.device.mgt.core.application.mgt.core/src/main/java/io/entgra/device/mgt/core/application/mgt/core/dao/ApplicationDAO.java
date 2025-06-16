@@ -290,6 +290,14 @@ public interface ApplicationDAO {
 
     List<ReleaseVersionInfo> getApplicationReleaseVersions(String uuid, int tenantId) throws ApplicationManagementDAOException;
 
-    ApplicationDTO getApplicationForModel(int deviceModelId, int tenantId) throws ApplicationManagementDAOException;
+    /**
+     * Retrieves the application associated with the given firmware model ID for the specified tenant.
+     *
+     * @param firmwareModelId the ID of the firmware model
+     * @param tenantId the tenant ID
+     * @return the {@link ApplicationDTO} associated with the firmware model
+     * @throws ApplicationManagementDAOException if an error occurs while retrieving the application from the database
+     */
+    ApplicationDTO getApplicationForModel(int firmwareModelId, int tenantId) throws ApplicationManagementDAOException;
 
 }

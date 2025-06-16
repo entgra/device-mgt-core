@@ -4666,9 +4666,14 @@ public class ApplicationManagerImpl implements ApplicationManager {
     }
 
     /**
+     * Converts an {@link ApplicationReleaseDTO} object to a {@link Firmware} domain object.
+     * <p>
+     * This method maps application release data such as UUID, version, description, release channel,
+     * current state, download URL, package name, device models, build number, file size, and icon path
+     * into a fully populated {@link Firmware} object.
      *
-     * @param dto
-     * @return
+     * @param dto the application release DTO containing metadata about the firmware
+     * @return a {@link Firmware} object constructed from the given DTO
      */
     private Firmware toFirmware(ApplicationReleaseDTO dto) {
         Firmware fw = new Firmware();
@@ -4687,10 +4692,16 @@ public class ApplicationManagerImpl implements ApplicationManager {
         // firmware.setIconPath("");
         return fw;
     }
+
     /**
+     * Attaches pending operation statuses to the provided list of firmware objects.
+     * <p>
+     * For each firmware in the list, this method checks whether a corresponding operation exists
+     * in the given map using the firmware's release UUID. If found, it creates an {@link OperationStatusBean}
+     * with the operation ID and status, and assigns it to the firmware.
      *
-     * @param firmwares
-     * @param operationMap
+     * @param firmwares     the list of firmware objects to which operation status should be attached
+     * @param operationMap  a map of firmware UUIDs to pending {@link Operation} instances
      */
     private void attachPendingOperationStatuses(List<Firmware> firmwares, Map<String, Operation> operationMap) {
         for (Firmware firmware : firmwares) {
@@ -4746,7 +4757,9 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 pendingAppReleaseDTOs = applicationReleaseDAO.getReleasesByUUIDs(pendingFirmwareUuids, tenantId);
                 installedAppReleaseDTO = applicationReleaseDAO.getReleaseByVersion(currentVersion, tenantId);
             } catch (ApplicationManagementDAOException e) {
-                throw new ApplicationManagementException("", e);
+                String msg = "Error occurred while getting application releases that having pending app installation for given devices.";
+                log.error(msg ,e);
+                throw new ApplicationManagementException(msg, e);
             } finally {
                 ConnectionManagerUtil.closeDBConnection();
             }
