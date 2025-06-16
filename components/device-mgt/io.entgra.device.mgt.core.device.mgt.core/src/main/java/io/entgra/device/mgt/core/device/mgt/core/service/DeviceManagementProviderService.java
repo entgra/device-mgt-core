@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - 2025, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
+ * Copyright (c) 2018 - 2023, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
  *
  * Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -50,7 +50,6 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOExceptio
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceTypeVersion;
 
-import javax.validation.constraints.NotNull;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
@@ -1236,4 +1235,12 @@ public interface DeviceManagementProviderService {
      * @throws DeviceManagementException
      */
     DeviceFirmwareModel getDeviceFirmwareModel(int deviceId, int tenantId) throws DeviceManagementException;
+
+    /**
+     * This method is used to retrieve the device firmware model of a given device
+     * @param deviceId id of the device
+     * @return {@link DeviceFirmwareModel} which contains the firmware model details of the device
+     * @throws DeviceManagementException
+     */
+    DeviceFirmwareModel getDeviceFirmwareModel(int deviceId) throws DeviceManagementException;
 }

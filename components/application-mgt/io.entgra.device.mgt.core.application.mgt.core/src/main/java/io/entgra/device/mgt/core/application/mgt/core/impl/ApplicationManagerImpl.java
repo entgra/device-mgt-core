@@ -67,6 +67,7 @@ import io.entgra.device.mgt.core.application.mgt.core.util.Constants;
 import io.entgra.device.mgt.core.device.mgt.common.*;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.App;
+import io.entgra.device.mgt.core.device.mgt.common.app.mgt.DeviceFirmwareModel;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.MetadataManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.Metadata;
@@ -84,6 +85,8 @@ import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
@@ -4585,7 +4588,6 @@ public class ApplicationManagerImpl implements ApplicationManager {
         //return list of firmware releases.
 
         try {
-            // Get device details
             DeviceManagementProviderService deviceManagementService = DataHolder.getInstance().getDeviceManagementService();
             Device device = deviceManagementService.getDevice(deviceId, false);
 
@@ -4595,26 +4597,14 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 throw new BadRequestException(msg);
             }
 
-            // Find the model name from the device properties list
-            //todo modify this and get the firmware model by calling a device-mgt service call
-            String deviceModel = null;
-            for (Device.Property property : device.getProperties()) {
-                if ("model".equals(property.getName())) {
-                    deviceModel = property.getValue();
-                    break;
-                }
-            }
-
-            if (deviceModel == null) {
-                String msg = "Device model is not found with id: " + deviceId;
+            DeviceFirmwareModel deviceFirmwareModel = deviceManagementService.getDeviceFirmwareModel(device.getId());
+            if (deviceFirmwareModel == null) {
+                String msg = "Device firmware model is not found with id: " + deviceId;
                 log.error(msg);
                 throw new ApplicationManagementException(msg);
             }
 
-            //get Subtype data (sub type id) using device model.
-            //todo OTA
-            int firmwareModelId = 1;
-
+            int firmwareModelId = deviceFirmwareModel.getFirmwareId();
             int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
 
             // Get all firmware releases for this device model, ordered by version/primary key as needed
@@ -4637,8 +4627,6 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 currentVersion = applicationReleaseDAO.getInstalledReleaseVersionByApp(applicationDTO.getId(), tenantId);
             }
 
-            //todo pass "RELEASE_READY" and "PRODUCTION" app type based on the conditions
-            //todo get test roles from meta mgt and check whether it is available for user
             //todo release ready state shouldn't be hardcoded
             List<ApplicationReleaseDTO> applicationReleaseDTOS;
             Map<String, Operation> pendingFirmwareInstallOperationMap = null;
@@ -4654,13 +4642,30 @@ public class ApplicationManagerImpl implements ApplicationManager {
             }
 
             //todo filter TEST releases based on role
+            //todo PRODUCTION and TEST filtering can be done via query as well, currently it has handled via functional level
+            filterReleasesBasedOnChannelConfig(applicationReleaseDTOS);
 
             //transfer ApplicationReleaseDTO list to Firmware list
-            for (ApplicationReleaseDTO applicationReleaseDTO : applicationReleaseDTOS) {
+            for (ApplicationReleaseDTO dto : applicationReleaseDTOS) {
                 Firmware firmware = new Firmware();
-                //todo set values
+                firmware.setFirmwareReleaseId(dto.getUuid());
+                firmware.setFirmwareVersion(dto.getVersion());
+                firmware.setDescription(dto.getDescription());
+                firmware.setReleaseChannel(String.valueOf(dto.getReleaseType()));
+                firmware.setCurrentStatus(dto.getCurrentState());
+                firmware.setVersionId(dto.getId());
+                firmware.setDownloadUrl(dto.getUrl());
+                firmware.setPackageName(dto.getPackageName());
+
+                // TODO: Set values based on actual data availability
+                // firmware.setDeviceModels(new ArrayList<>());
+                // firmware.setBuildNumber("");
+                // firmware.setFileSize(0);
+                // firmware.setIconPath("");
+
                 availableFirmwares.add(firmware);
             }
+
 
             if (pendingFirmwareInstallOperationMap != null && !pendingFirmwareInstallOperationMap.isEmpty()) {
                 for(Firmware firmware : availableFirmwares) {
@@ -4683,11 +4688,6 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     + deviceId;
             log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
-        } catch (OperationManagementException e) {
-            String msg = "An error occurred while searching for operations related to the device with deviceId: "
-                    + deviceId;
-            log.error(msg, e);
-            throw new RuntimeException(msg, e);
         }
     }
 
@@ -4698,13 +4698,20 @@ public class ApplicationManagerImpl implements ApplicationManager {
      * @param currentVersion
      * @param tenantId Tenant Id
      * @return {@link Map<>} contains key as 'UUID' of the application release and the value as {@link Operation}
-     * @throws OperationManagementException
+     * @throws ApplicationManagementException
      */
-    private Map<String, Operation> getFilteredPendingFirmwareInstallOperations(DeviceManagementProviderService deviceManagementService, Device device, String currentVersion, int tenantId) throws OperationManagementException, ApplicationManagementException {
-        //todo OTA correct throwing exception
-        List<? extends Operation> operations = deviceManagementService.getDeviceOperations
-                (new DeviceIdentifier(device.getDeviceIdentifier(), device.getType()),
-                        Operation.Status.PENDING, MDMAppConstants.AndroidConstants.OPCODE_INSTALL_FIRMWARE);
+    private Map<String, Operation> getFilteredPendingFirmwareInstallOperations(DeviceManagementProviderService deviceManagementService, Device device, String currentVersion, int tenantId) throws ApplicationManagementException {
+        List<? extends Operation> operations;
+        try {
+            operations = deviceManagementService.getDeviceOperations
+                    (new DeviceIdentifier(device.getDeviceIdentifier(), device.getType()),
+                            Operation.Status.PENDING, MDMAppConstants.AndroidConstants.OPCODE_INSTALL_FIRMWARE);
+        } catch (OperationManagementException e) {
+            String msg = "Error occurred while searching for PENDING firmware operations related to the device with " +
+                    "deviceId: " + device.getId();
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        }
 
         Map<String, Operation> pendingMap = new HashMap<>();
         for (Operation op : operations) {
@@ -4733,16 +4740,64 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 if (pendingAppReleaseDTO.getId() == installedAppReleaseDTO.getId()) {
                     pendingMap.remove(pendingAppReleaseDTO.getUuid());
                     //todo move operation into completed state
-                    //pendingFirmwareInstallOperationMap contains higher versions payloads
+                    //update subscription data also
+                    //pendingFirmwareInstallOperationMap contains same version already installed in the device
                 }
                 else if (pendingAppReleaseDTO.getId() <= installedAppReleaseDTO.getId()) {
                     pendingMap.remove(pendingAppReleaseDTO.getUuid());
                     //todo move operation into suitable state
+                    //update subscription data also
                     //pendingFirmwareInstallOperationMap contains higher versions payloads
                 }
             }
         }
         return pendingMap;
+    }
+
+    /**
+     *
+     * @param applicationReleaseDTOS {@link List<ApplicationReleaseDTO>}
+     * @throws ApplicationManagementException
+     */
+    private void filterReleasesBasedOnChannelConfig(List<ApplicationReleaseDTO> applicationReleaseDTOS) throws ApplicationManagementException {
+        MetadataManagementService metadataManagementService = DataHolder.getInstance().getMetadataManagementService();
+        String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+        String metadataKey = tenantDomain + "_FIRMWARE_CONFIGS";
+
+        try {
+            Metadata metadata = metadataManagementService.retrieveMetadata(metadataKey);
+            if (metadata != null) {
+                String metaValue = metadata.getMetaValue();
+                try {
+                    JSONObject jsonObject = new JSONObject(metaValue);
+                    JSONArray channelsArray = jsonObject.optJSONArray("channels");
+
+                    if (channelsArray != null && channelsArray.length() > 0) {
+                        List<String> channels = new ArrayList<>();
+                        for (int i = 0; i < channelsArray.length(); i++) {
+                            channels.add(channelsArray.optString(i));
+                        }
+                        String username = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
+                        if (!hasUserRole(channels, username)) {
+                            applicationReleaseDTOS.removeIf(dto ->
+                                    AppReleaseType.TEST.equals(dto.getReleaseType()));
+                        }
+                    }
+                } catch (JSONException e) {
+                    String msg = "Error occurred when parsing firmware config. Invalid JSON in metadata: " + metaValue;
+                    log.error(msg, e);
+                    throw new ApplicationManagementException(msg, e);
+                } catch (UserStoreException e) {
+                    String msg = "Error occurred when checking channel config with user roles.";
+                    log.error(msg, e);
+                    throw new ApplicationManagementException(msg, e);
+                }
+            }
+        } catch (MetadataManagementException e) {
+            String msg = "Error occurred when loading meta data for meta key: " + metadataKey;
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        }
     }
 
     @Override
