@@ -171,6 +171,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             @HeaderParam("If-Modified-Since") String ifModifiedSince,
             @QueryParam("requireDeviceInfo") boolean requireDeviceInfo,
             @QueryParam("tag") List<String> tags,
+            @QueryParam("firmwareModel") String firmwareModel,
             @QueryParam("offset") int offset,
             @QueryParam("limit") int limit) {
         try {
@@ -297,6 +298,10 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
                 } else {
                     request.setOwner(authorizedUser);
                 }
+            }
+
+            if (StringUtils.isNotBlank(firmwareModel)) {
+                request.setFirmwareModel(firmwareModel);
             }
 
             if (ifModifiedSince != null && !ifModifiedSince.isEmpty()) {

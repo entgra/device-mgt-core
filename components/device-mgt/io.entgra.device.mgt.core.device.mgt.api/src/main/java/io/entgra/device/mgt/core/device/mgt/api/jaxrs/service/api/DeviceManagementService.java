@@ -340,6 +340,12 @@ public interface DeviceManagementService {
             @QueryParam("tag")
                     List<String> tags,
             @ApiParam(
+                    name = "firmwareModel",
+                    value = "Describes the tags associated with the enrolment",
+                    required = false)
+            @QueryParam("firmwareModel")
+            String firmwareModel,
+            @ApiParam(
                     name = "offset",
                     value = "The starting pagination index for the complete list of qualified items.",
                     required = false,

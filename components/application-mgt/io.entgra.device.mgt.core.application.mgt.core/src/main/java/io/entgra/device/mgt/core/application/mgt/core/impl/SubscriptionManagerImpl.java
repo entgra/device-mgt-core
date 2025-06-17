@@ -1176,6 +1176,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                     operation.setType(Operation.Type.PROFILE);
                     CustomApplication customApplication = new CustomApplication();
                     customApplication.setType(application.getType());
+                    customApplication.setAppIdentifier(application.getApplicationReleases().get(0).getUuid());
                     customApplication.setUrl(application.getApplicationReleases().get(0).getInstallerPath());
                     operation.setPayLoad(customApplication.toJSON());
                     return operation;
