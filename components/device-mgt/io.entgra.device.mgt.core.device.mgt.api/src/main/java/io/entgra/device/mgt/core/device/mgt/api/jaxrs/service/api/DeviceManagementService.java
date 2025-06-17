@@ -687,12 +687,12 @@ public interface DeviceManagementService {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/exactTime-location")
+    @Path("/locations/at-time")
     @ApiOperation(
             produces = "application/json",
             httpMethod = "GET",
-            value = "Getting the Location Details of a Device",
-            notes = "Get the location details of a device during a define time period.",
+            value = "Getting the Location Details of Devices",
+            notes = "Get the location details of devices for a given time.",
             response = Response.class,
             tags = "Device Management",
             extensions = {
@@ -741,8 +741,7 @@ public interface DeviceManagementService {
             String deviceType,
             @ApiParam(
                     name = "exactTime",
-                    value = "Define the exact timestamp to get device location in milliseconds. " +
-                            "If provided, from/to parameters are ignored.",
+                    value = "Define the exact timestamp to get device location in milliseconds. ",
                     required = true)
             @QueryParam("exactTime")
             long exactTime,

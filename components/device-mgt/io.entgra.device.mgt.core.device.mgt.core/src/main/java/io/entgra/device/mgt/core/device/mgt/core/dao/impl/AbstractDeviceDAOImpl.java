@@ -2222,7 +2222,6 @@ public List<DeviceLocationHistorySnapshot> getAllDeviceLocationInfo(String devic
             stmt.setLong(3, exactTime);
             stmt.setLong(4, exactTime);
 
-            // Set deviceType parameter twice for the OR condition
             if (deviceType == null || deviceType.trim().isEmpty()) {
                 stmt.setNull(5, java.sql.Types.VARCHAR);
                 stmt.setNull(6, java.sql.Types.VARCHAR);

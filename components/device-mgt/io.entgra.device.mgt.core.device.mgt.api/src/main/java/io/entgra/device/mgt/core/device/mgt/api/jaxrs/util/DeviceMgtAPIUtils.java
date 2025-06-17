@@ -37,6 +37,7 @@ import io.entgra.device.mgt.core.device.mgt.common.authorization.GroupAccessAuth
 import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.ConfigurationEntry;
 import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.PlatformConfiguration;
 import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.PlatformConfigurationManagementService;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationForExactTimeSnapshotWrapper;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationHistory;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationHistorySnapshot;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationHistorySnapshotWrapper;
@@ -1332,7 +1333,7 @@ public class DeviceMgtAPIUtils {
     }
 
 
-    public static DeviceLocationHistorySnapshotWrapper getDeviceLocationHistoryPaths(
+    public static DeviceLocationForExactTimeSnapshotWrapper getDeviceLocationHistoryPaths(
             String authorizedUser, String deviceType, PaginationRequest request, long exactTime,
             DeviceManagementProviderService dms)
             throws DeviceManagementException, DeviceAccessAuthorizationException {
@@ -1366,15 +1367,6 @@ public class DeviceMgtAPIUtils {
                     pathEntry.put("latitude", snapshot.getLatitude());
                     pathEntry.put("longitude", snapshot.getLongitude());
                     pathEntry.put("timestamp", snapshot.getUpdatedTime());
-//                    if (snapshot.getLatitude() != 0.0 && snapshot.getLongitude() != 0.0) {
-//                        pathEntry.put("latitude", snapshot.getLatitude());
-//                        pathEntry.put("longitude", snapshot.getLongitude());
-//                        pathEntry.put("timestamp", snapshot.getUpdatedTime());
-//                    } else {
-//                        pathEntry.put("latitude", "No data available");
-//                        pathEntry.put("longitude", "No data available");
-//                        pathEntry.put("timestamp", "No data available");
-//                    }
                     pathsArray.add(pathEntry);
 
                 } catch (DeviceManagementException e) {
@@ -1383,9 +1375,8 @@ public class DeviceMgtAPIUtils {
             }
         }
 
-        DeviceLocationHistorySnapshotWrapper wrapper = new DeviceLocationHistorySnapshotWrapper();
-        wrapper.setPathSnapshot(pathsArray);
-        wrapper.setCount(pathsArray.size());
+        DeviceLocationForExactTimeSnapshotWrapper wrapper = new DeviceLocationForExactTimeSnapshotWrapper();
+        wrapper.setExactTimeSnapshot(pathsArray);
         return wrapper;
     }
 

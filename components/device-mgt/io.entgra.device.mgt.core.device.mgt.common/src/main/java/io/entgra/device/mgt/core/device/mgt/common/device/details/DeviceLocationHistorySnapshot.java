@@ -33,8 +33,6 @@ public class DeviceLocationHistorySnapshot extends DeviceLocation implements Ser
     private int tenantId;
     @ApiModelProperty(name = "owner", value = "Owner.", required = true)
     private String owner;
-    @ApiModelProperty(name = "deviceId", value = "Device ID.", required = true)
-    private Integer deviceId;
 
     public DeviceLocationHistorySnapshot() {
     }
@@ -63,11 +61,4 @@ public class DeviceLocationHistorySnapshot extends DeviceLocation implements Ser
         this.owner = owner;
     }
 
-    public int getDeviceId() {
-        return deviceId;
-    }
-
-    public void setDeviceId(int deviceId) {
-        this.deviceId = deviceId;
-    }
 }

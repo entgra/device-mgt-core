@@ -45,6 +45,7 @@ import io.entgra.device.mgt.core.device.mgt.common.MDMAppConstants;
 import io.entgra.device.mgt.core.device.mgt.common.OperationLogFilters;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.*;
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManagerServiceImpl;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang.StringUtils;
@@ -55,10 +56,6 @@ import io.entgra.device.mgt.core.device.mgt.common.app.mgt.ApplicationManagement
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.MobileAppTypes;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationException;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationService;
-import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceData;
-import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceInfo;
-import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocation;
-import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationHistorySnapshotWrapper;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.BadRequestException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.*;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupManagementException;
@@ -745,7 +742,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
     }
 
     @GET
-    @Path("/exactTime-location")
+    @Path("/locations/at-time")
     public Response getAllDeviceLocationHistory(
             @QueryParam("deviceType") String deviceType,
             @QueryParam("exactTime") long exactTime,
@@ -761,15 +758,10 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             }
 
             String authorizedUser = CarbonContext.getThreadLocalCarbonContext().getUsername();
-//            if (authorizedUser == null || authorizedUser.isEmpty()) {
-//                String msg = "Unauthorized access - user not found";
-//                log.error(msg);
-//                return Response.status(Response.Status.UNAUTHORIZED).entity(msg).build();
-//            }
 
             PaginationRequest request = new PaginationRequest(offset, limit);
             DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
-            DeviceLocationHistorySnapshotWrapper result = DeviceMgtAPIUtils.getDeviceLocationHistoryPaths(
+            DeviceLocationForExactTimeSnapshotWrapper result = DeviceMgtAPIUtils.getDeviceLocationHistoryPaths(
                     authorizedUser,deviceType, request, exactTime, dms);
             return Response.status(Response.Status.OK).entity(result).build();
         } catch (UnAuthorizedException e) {
