@@ -672,6 +672,16 @@ public interface DeviceManagementProviderService {
 
     boolean enrollDevice(Device device) throws DeviceManagementException;
 
+    /**
+     * Adds a firmware model contains by a device.
+     * @param device {@link NotNull} {@link Device} object which contains the device information.
+     * @param firmwareModel
+     * @param tenantId
+     * @return
+     * @throws DeviceManagementException
+     */
+    DeviceFirmwareModel addDeviceFirmwareModel(Device device, String firmwareModel, int tenantId) throws DeviceManagementException;
+
     boolean saveConfiguration(PlatformConfiguration configuration) throws DeviceManagementException;
 
     boolean disenrollDevice(DeviceIdentifier deviceId) throws DeviceManagementException;
@@ -1216,6 +1226,7 @@ public interface DeviceManagementProviderService {
      */
     List<? extends Operation> getDeviceOperations(DeviceIdentifier deviceId, Operation.Status status, String operationCode)
             throws OperationManagementException;
+
 
     /**
      * This method is used to retrieve the device firmware model of a given device

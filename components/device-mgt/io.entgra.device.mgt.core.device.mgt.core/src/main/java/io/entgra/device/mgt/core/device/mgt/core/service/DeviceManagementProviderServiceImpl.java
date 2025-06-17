@@ -28,6 +28,7 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceTypeDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.EnrollmentDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.ApplicationDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceStatusDAO;
+import io.entgra.device.mgt.core.device.mgt.core.dao.FirmwareDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOException;
 import io.entgra.device.mgt.core.device.mgt.core.dao.TenantDAO;
@@ -199,6 +200,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     private MetadataDAO metadataDAO;
     private final DeviceStatusDAO deviceStatusDAO;
     private final TenantDAO tenantDao;
+    private final FirmwareDAO firmwareDAO;
     private final TagDAO tagDAO;
     int count = 0;
 
@@ -213,6 +215,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         this.deviceStatusDAO = DeviceManagementDAOFactory.getDeviceStatusDAO();
         this.tenantDao = DeviceManagementDAOFactory.getTenantDAO();
         this.tagDAO = DeviceManagementDAOFactory.getTagDAO();
+        this.firmwareDAO = DeviceManagementDAOFactory.getFirmwareDAO();
 
         /* Registering a listener to retrieve events when some device management service plugin is installed after
          * the component is done getting initialized */
@@ -480,7 +483,59 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             String msg = "Error occurred while adding device info";
             log.warn(msg, e);
         }
+
+        if (status && StringUtils.isNotBlank(DeviceManagerUtil.getPropertyString(device.getProperties(),
+                DeviceManagementConstants.Common.FIRMWARE_MODEL))) {
+            String firmwareModel = DeviceManagerUtil.getPropertyString(device.getProperties(),
+                    DeviceManagementConstants.Common.FIRMWARE_MODEL);
+            if (StringUtils.isNotBlank(firmwareModel)) {
+                this.addDeviceFirmwareModel(device, firmwareModel, tenantId);
+            }
+        }
         return status;
+    }
+
+    @Override
+    public DeviceFirmwareModel addDeviceFirmwareModel(Device device, String firmwareModel, int tenantId)
+            throws DeviceManagementException {
+        if (log.isDebugEnabled()) {
+            log.debug("Adding firmware model '" + firmwareModel + "' for device: " + device.getId());
+        }
+
+        if (device == null || device.getId() == 0) {
+            String msg = "Invalid or empty device object provided for adding firmware model";
+            log.error(msg);
+            throw new DeviceManagementException(msg);
+        }
+        DeviceFirmwareModel deviceFirmware;
+
+        try {
+            DeviceManagementDAOFactory.beginTransaction();
+            deviceFirmware = firmwareDAO.getExistingFirmwareModel(firmwareModel, tenantId);
+            if (deviceFirmware != null) {
+                firmwareDAO.addDeviceFirmwareMapping(device.getId(), deviceFirmware.getFirmwareId(), tenantId);
+            } else {
+                deviceFirmware = firmwareDAO.addFirmwareModel(new DeviceFirmwareModel(firmwareModel, null), tenantId);
+                if (deviceFirmware.getFirmwareId() > -1) {
+                    firmwareDAO.addDeviceFirmwareMapping(device.getId(), deviceFirmware.getFirmwareId(), tenantId);
+                }
+            }
+            DeviceManagementDAOFactory.commitTransaction();
+            log.info("Adding firmware model '" + firmwareModel + "' for device: " + device.getId() + " is successful");
+        } catch (DeviceManagementDAOException e) {
+            DeviceManagementDAOFactory.rollbackTransaction();
+            String msg = "Error occurred while adding firmware model of device: " + device.getId();
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (TransactionManagementException e) {
+            String msg = "Error occurred while initiating transaction to add firmware model of device: " + device.getId();
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+
+        return deviceFirmware;
     }
 
     @Override
@@ -5855,6 +5910,22 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
 
     @Override
     public DeviceFirmwareModel getDeviceFirmwareModel(int deviceId) throws DeviceManagementException {
-        return null;
+        DeviceFirmwareModel firmwareModel;
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            firmwareModel = this.firmwareDAO.getDeviceFirmwareModel(deviceId, tenantId);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Failed while obtaining database connection for retrieving firmware model of device ID: " + deviceId;
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Failed while retrieving firmware model of device ID: " + deviceId;
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+        return firmwareModel;
     }
 }
