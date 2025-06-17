@@ -492,12 +492,12 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                 this.addDeviceFirmwareModel(device, firmwareModel, tenantId);
             }
         }
-        log.info("No firmware model propery has found");
         return status;
     }
 
     @Override
-    public DeviceFirmwareModel addDeviceFirmwareModel(Device device, String firmwareModel, int tenantId) throws DeviceManagementException {
+    public DeviceFirmwareModel addDeviceFirmwareModel(Device device, String firmwareModel, int tenantId)
+            throws DeviceManagementException {
         if (log.isDebugEnabled()) {
             log.debug("Adding firmware model '" + firmwareModel + "' for device: " + device.getId());
         }
@@ -507,7 +507,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             log.error(msg);
             throw new DeviceManagementException(msg);
         }
-        DeviceFirmwareModel deviceFirmware = null;
+        DeviceFirmwareModel deviceFirmware;
 
         try {
             DeviceManagementDAOFactory.beginTransaction();
@@ -5911,8 +5911,8 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     @Override
     public DeviceFirmwareModel getDeviceFirmwareModel(int deviceId) throws DeviceManagementException {
         DeviceFirmwareModel firmwareModel;
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         try {
-            int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
             DeviceManagementDAOFactory.openConnection();
             firmwareModel = this.firmwareDAO.getDeviceFirmwareModel(deviceId, tenantId);
         } catch (DeviceManagementDAOException e) {

@@ -70,7 +70,8 @@ public class FirmwareDAOImpl implements FirmwareDAO {
     }
 
     @Override
-    public DeviceFirmwareModel addFirmwareModel(DeviceFirmwareModel deviceFirmwareModel, int tenantId) throws DeviceManagementDAOException {
+    public DeviceFirmwareModel addFirmwareModel(DeviceFirmwareModel deviceFirmwareModel, int tenantId)
+            throws DeviceManagementDAOException {
         Connection conn;
         int firmwareId = -1;
         String sql = "INSERT INTO DM_DEVICE_FIRMWARE_MODEL (FIRMWARE_MODEL, DESCRIPTION, TENANT_ID) " +
@@ -99,7 +100,8 @@ public class FirmwareDAOImpl implements FirmwareDAO {
     }
 
     @Override
-    public DeviceFirmwareModel getExistingFirmwareModel(String firmwareModel, int tenantId) throws DeviceManagementDAOException {
+    public DeviceFirmwareModel getExistingFirmwareModel(String firmwareModel, int tenantId)
+            throws DeviceManagementDAOException {
         Connection conn;
         DeviceFirmwareModel deviceFirmwareModel = null;
         String sql = "SELECT ID, FIRMWARE_MODEL, DESCRIPTION " +
@@ -128,7 +130,8 @@ public class FirmwareDAOImpl implements FirmwareDAO {
     }
 
     @Override
-    public boolean addDeviceFirmwareMapping(int deviceId, int firmwareId, int tenantId) throws DeviceManagementDAOException {
+    public boolean addDeviceFirmwareMapping(int deviceId, int firmwareId, int tenantId)
+            throws DeviceManagementDAOException {
         Connection conn;
         boolean isAdded = false;
         String sql = "INSERT INTO DM_DEVICE_FIRMWARE_MODEL_MAPPING (DM_DEVICE_ID, FIRMWARE_MODEL_ID, TENANT_ID) " +

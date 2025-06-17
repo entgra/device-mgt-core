@@ -39,7 +39,8 @@ public interface FirmwareDAO {
      * @return the ID of the newly created firmware model
      * @throws DeviceManagementDAOException if an error occurs while accessing the database
      */
-    DeviceFirmwareModel addFirmwareModel(DeviceFirmwareModel deviceFirmwareModel, int tenantId) throws DeviceManagementDAOException;
+    DeviceFirmwareModel addFirmwareModel(DeviceFirmwareModel deviceFirmwareModel, int tenantId)
+            throws DeviceManagementDAOException;
 
     /**
      * Gets an existing firmware model by its name and tenant ID.
@@ -48,7 +49,8 @@ public interface FirmwareDAO {
      * @return {@link DeviceFirmwareModel} containing the details of the existing firmware model
      * @throws DeviceManagementDAOException if an error occurs while accessing the database
      */
-    DeviceFirmwareModel getExistingFirmwareModel(String firmwareModel, int tenantId) throws DeviceManagementDAOException;
+    DeviceFirmwareModel getExistingFirmwareModel(String firmwareModel, int tenantId)
+            throws DeviceManagementDAOException;
 
     /**
      * Saves the mapping between a device and a firmware model.
