@@ -139,10 +139,27 @@
             <ProceedingStates>
                 <State>In-Review</State>
                 <State>Published</State>
+                <State>Release-Ready</State>
             </ProceedingStates>
             <MappedScopeDetails>
                 <Name>Approve Applications</Name>
                 <Key>am:admin:lc:app:approve</Key>
+                <DefaultRoles>admin, Internal/devicemgt-user</DefaultRoles>
+            </MappedScopeDetails>
+        </LifecycleState>
+        <LifecycleState name="Release-Ready">
+            <IsAppInstallable>true</IsAppInstallable>
+            <Permission>/app-mgt/life-cycle/firmware/release</Permission>
+            <ProceedingStates>
+                <State>Blocked</State>
+                <State>Deprecated</State>
+            </ProceedingStates>
+            <ApplicableTypes>
+                <Type>CUSTOM</Type>
+            </ApplicableTypes>
+            <MappedScopeDetails>
+                <Name>Release Firmware</Name>
+                <Key>am:admin:lc:firmware:release</Key>
                 <DefaultRoles>admin, Internal/devicemgt-user</DefaultRoles>
             </MappedScopeDetails>
         </LifecycleState>
@@ -165,6 +182,11 @@
                 <State>Blocked</State>
                 <State>Deprecated</State>
             </ProceedingStates>
+            <ApplicableTypes>
+                <Type>ENTERPRISE</Type>
+                <Type>WEBCLIP</Type>
+                <Type>PUBLIC</Type>
+            </ApplicableTypes>
             <MappedScopeDetails>
                 <Name>Publish Applications</Name>
                 <Key>am:admin:lc:app:publish</Key>
