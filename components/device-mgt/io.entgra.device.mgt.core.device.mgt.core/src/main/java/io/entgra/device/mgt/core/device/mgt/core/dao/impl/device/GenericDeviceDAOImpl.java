@@ -212,10 +212,10 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                 if (isDeviceNameProvided) {
                     stmt.setString(paramIdx++, "%" + deviceName + "%");
                 }
-                stmt.setInt(paramIdx++, tenantId);
                 if (isFirmwareModelProvided) {
                     stmt.setString(paramIdx++, "%" + firmwareModel + "%");
                 }
+                stmt.setInt(paramIdx++, tenantId);
                 if (isDeviceTypeProvided) {
                     stmt.setString(paramIdx++, deviceType);
                 }
