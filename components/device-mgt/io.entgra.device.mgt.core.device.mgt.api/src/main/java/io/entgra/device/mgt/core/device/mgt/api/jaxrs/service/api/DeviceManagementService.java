@@ -341,7 +341,7 @@ public interface DeviceManagementService {
                     List<String> tags,
             @ApiParam(
                     name = "firmwareModel",
-                    value = "Describes the tags associated with the enrolment",
+                    value = "Firmware model associated with the device",
                     required = false)
             @QueryParam("firmwareModel")
             String firmwareModel,
