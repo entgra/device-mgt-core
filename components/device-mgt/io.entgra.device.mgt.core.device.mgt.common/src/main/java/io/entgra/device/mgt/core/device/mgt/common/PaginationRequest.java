@@ -45,6 +45,7 @@ public class PaginationRequest {
     private String actionStatus;
     private String actionType;
     private String actionTriggeredBy;
+    private String firmwareModel;
     private Map<String, String> customProperty = new HashMap<>();
     private Map<String, Object> property = new HashMap<>();
     private List<String> statusList = new ArrayList<>();
@@ -305,5 +306,13 @@ public class PaginationRequest {
 
     public void setDeviceTypeId(int deviceTypeId) {
         this.deviceTypeId = deviceTypeId;
+    }
+
+    public String getFirmwareModel() {
+        return firmwareModel;
+    }
+
+    public void setFirmwareModel(String firmwareModel) {
+        this.firmwareModel = firmwareModel;
     }
 }
