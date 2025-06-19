@@ -1468,8 +1468,16 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 if (log.isDebugEnabled()) {
                     log.debug("New ApplicationDTO entry added to AP_APP table. App Id:" + appId);
                 }
-                //add application categories
 
+                // add device firmware model mapping
+                if (Objects.equals(applicationDTO.getType(), "CUSTOM")) {
+                    if (applicationDTO.getFirmwareModelId() < 0) {
+                        throw new ApplicationManagementDAOException("Firmware model id is required.");
+                    }
+                    this.applicationDAO.addDeviceFirmwareModelMapping(appId, applicationDTO.getFirmwareModelId());
+                }
+
+                //add application categories
                 List<Integer> categoryIds = applicationDAO.getCategoryIdsForCategoryNames(applicationDTO.getAppCategories(), tenantId);
                 this.applicationDAO.addCategoryMapping(categoryIds, appId, tenantId);
 
@@ -4628,20 +4636,20 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     log.error(msg);
                     throw new ApplicationManagementException(msg);
                 }
-
+                // todo: test the DAOs
                 if (StringUtils.isBlank(currentVersion)) {
-                    currentVersion = applicationReleaseDAO.getInstalledReleaseVersionByApp(applicationDTO.getId(), tenantId);
+                    currentVersion = applicationReleaseDAO.getInstalledReleaseVersionByApp(device.getId(), applicationDTO.getId(), tenantId);
                 }
 
                 //todo release ready state shouldn't be hardcoded
                 String filteringAppReleaseType = hasTestRolesAssigned() ? AppReleaseType.TEST.name() : null;
-
                 if (currentVersion != null) {
                     applicationReleaseDTOS = applicationReleaseDAO.getAppReleasesAfterVersion(applicationDTO.getId(), currentVersion, "RELEASE_READY", filteringAppReleaseType, tenantId);
                     pendingFirmwareInstallOperationMap = getFilteredPendingFirmwareInstallOperations(deviceManagementService, device, currentVersion, tenantId);
                 } else {
                     applicationReleaseDTOS = applicationReleaseDAO.getReleasesByAppAndStatus(applicationDTO.getId(), "RELEASE_READY", filteringAppReleaseType, tenantId);
                 }
+
             } catch (ApplicationManagementDAOException e) {
                 String msg = "Error occurred while retrieving application related data from the database. Device Id:"
                         + deviceId;

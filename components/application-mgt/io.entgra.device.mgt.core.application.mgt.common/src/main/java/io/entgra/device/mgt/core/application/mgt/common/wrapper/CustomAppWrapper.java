@@ -82,6 +82,10 @@ public class CustomAppWrapper {
     @NotNull
     private List<CustomAppReleaseWrapper> customAppReleaseWrappers = new ArrayList<>();
 
+    @ApiModelProperty(name = "firmwareModelId",
+            value = "ID of the firmware model")
+    private int firmwareModelId;
+
     public String getName() {
         return name;
     }
@@ -122,4 +126,12 @@ public class CustomAppWrapper {
     public String getDescription() { return description; }
 
     public void setDescription(String description) { this.description = description; }
+
+    public int getFirmwareModelId() {
+        return firmwareModelId;
+    }
+
+    public void setFirmwareModelId(int firmwareModelId) {
+        this.firmwareModelId = firmwareModelId;
+    }
 }
