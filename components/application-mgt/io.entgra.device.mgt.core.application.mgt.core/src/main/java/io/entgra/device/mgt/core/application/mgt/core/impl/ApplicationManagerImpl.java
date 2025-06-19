@@ -1605,7 +1605,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             throw new BadRequestException(msg);
         }
 
-        if (!type.equals(ApplicationType.ENTERPRISE)) {
+        if (!(type.equals(ApplicationType.ENTERPRISE) || type.equals(ApplicationType.CUSTOM))) {
             int applicationReleaseCount = applicationDTO.getApplicationReleaseDTOs().size();
             if (applicationReleaseCount > 0) {
                 String msg = "Application type of " + applicationDTO.getType() + " can only have one release";
@@ -3619,9 +3619,11 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     applicationDTO.getApplicationReleaseDTOs().get(0));
             validateAppReleaseUpdating(customAppReleaseWrapper, applicationDTO, applicationArtifact,
                     ApplicationType.CUSTOM.toString());
-            applicationReleaseDTO.get().setPrice(customAppReleaseWrapper.getPrice());
             applicationReleaseDTO.get()
                     .setIsSharedWithAllTenants(applicationReleaseDTO.get().getIsSharedWithAllTenants());
+            if (customAppReleaseWrapper.getPrice() != null) {
+                applicationReleaseDTO.get().setPrice(customAppReleaseWrapper.getPrice());
+            }
             if (!StringUtils.isEmpty(customAppReleaseWrapper.getPackageName())) {
                 applicationReleaseDTO.get().setVersion(customAppReleaseWrapper.getVersion());
             }
