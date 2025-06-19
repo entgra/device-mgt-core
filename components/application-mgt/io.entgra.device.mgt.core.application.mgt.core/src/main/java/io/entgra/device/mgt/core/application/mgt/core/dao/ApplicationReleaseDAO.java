@@ -178,7 +178,7 @@ public interface ApplicationReleaseDAO {
      * @return the version of the installed application release
      * @throws ApplicationManagementDAOException if an error occurs while retrieving the release version
      */
-    String getInstalledReleaseVersionByApp(int appId, int tenantId) throws ApplicationManagementDAOException;
+    String getInstalledReleaseVersionByApp(int deviceId, int appId, int tenantId) throws ApplicationManagementDAOException;
 
     /**
      * Retrieves a list of application releases for a given application ID filtered by release status and release type
