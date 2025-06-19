@@ -1235,4 +1235,18 @@ public interface DeviceManagementProviderService {
      * @throws DeviceManagementException
      */
     DeviceFirmwareModel getDeviceFirmwareModel(int deviceId) throws DeviceManagementException;
+
+    /**
+     * This method is used to retrieve the list of devices filtered by firmware version.
+     * Both the devices containing and not containing devices can be filtered by providing requireMatchingDevices property
+     *
+     * @param firmwareVersion Firmware version to filter the devices
+     * @param tenantId Tenant ID to filter the devices
+     * @param requireMatchingDevices provide true for obtain devices that match the firmware version,
+     *                               and false for devices not containing the firmware version
+     * @return List of devices filtered by firmware version
+     * @throws DeviceManagementException if an error occurs while fetching the device list
+     */
+    List<Device> getFilteredDeviceListByFirmwareVersion(String firmwareVersion, int tenantId, boolean requireMatchingDevices)
+            throws DeviceManagementException;
 }
