@@ -54,27 +54,27 @@
         <DeviceInfoItem>
             <DefinedValue>owner</DefinedValue>
             <DisplayValue>label_owner</DisplayValue>
-            <Type>default</Type>
+            <Type>enrolmentInfo</Type>
         </DeviceInfoItem>
         <DeviceInfoItem>
             <DefinedValue>serial</DefinedValue>
             <DisplayValue>label_serialNumber</DisplayValue>
-            <Type>default</Type>
+            <Type>deviceDetailsMap</Type>
         </DeviceInfoItem>
         <DeviceInfoItem>
             <DefinedValue>ownership</DefinedValue>
             <DisplayValue>label_ownership</DisplayValue>
-            <Type>default</Type>
+            <Type>enrolmentInfo</Type>
         </DeviceInfoItem>
         <DeviceInfoItem>
             <DefinedValue>status</DefinedValue>
             <DisplayValue>label_status</DisplayValue>
-            <Type>default</Type>
+            <Type>enrolmentInfo</Type>
         </DeviceInfoItem>
         <DeviceInfoItem>
             <DefinedValue>dateOfLastUpdate</DefinedValue>
             <DisplayValue>label_last_updated</DisplayValue>
-            <Type>default</Type>
+            <Type>enrolmentInfo</Type>
         </DeviceInfoItem>
         <DeviceInfoItem>
             <DefinedValue>actions</DefinedValue>
@@ -83,8 +83,8 @@
         </DeviceInfoItem>
         <DeviceInfoItem>
             <DefinedValue>batteryLevel</DefinedValue>
-            <DisplayValue>label_battery_leve</DisplayValue>
-            <Type>deviceInfo</Type>
+            <DisplayValue>label_battery_level</DisplayValue>
+            <Type>deviceDetailsMap</Type>
         </DeviceInfoItem>
         <DeviceInfoItem>
             <DefinedValue>deviceModel</DefinedValue>
@@ -160,6 +160,21 @@
             <DefinedValue>updatedTime</DefinedValue>
             <DisplayValue>label_updated_time</DisplayValue>
             <Type>deviceInfo</Type>
+        </DeviceInfoItem>
+        <DeviceInfoItem>
+            <DefinedValue>FIRMWARE_VERSION</DefinedValue>
+            <DisplayValue>label_firmware_version</DisplayValue>
+            <Type>deviceDetailsMap</Type>
+        </DeviceInfoItem>
+        <DeviceInfoItem>
+            <DefinedValue>FIRMWARE_SYSTEM_VERSION</DefinedValue>
+            <DisplayValue>label_firmware_system_version</DisplayValue>
+            <Type>deviceDetailsMap</Type>
+        </DeviceInfoItem>
+        <DeviceInfoItem>
+            <DefinedValue>FIRMWARE_APP_VERSION</DefinedValue>
+            <DisplayValue>label_firmware_app_version</DisplayValue>
+            <Type>deviceDetailsMap</Type>
         </DeviceInfoItem>
     </DeviceInfoConfigurations>
     <DeviceStatusConfigurations>
