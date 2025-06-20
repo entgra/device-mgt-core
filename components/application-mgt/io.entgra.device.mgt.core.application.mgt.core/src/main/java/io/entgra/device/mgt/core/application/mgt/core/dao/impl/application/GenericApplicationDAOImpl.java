@@ -2168,4 +2168,9 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
         }
     }
 
+    @Override
+    public List<Integer> getFirmwareModelIdsForApp(int applicationId, int tenantId) throws ApplicationManagementDAOException {
+        return List.of();
+    }
+
 }

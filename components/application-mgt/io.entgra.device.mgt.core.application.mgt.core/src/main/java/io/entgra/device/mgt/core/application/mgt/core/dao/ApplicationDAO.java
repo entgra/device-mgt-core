@@ -300,6 +300,7 @@ public interface ApplicationDAO {
      */
     ApplicationDTO getApplicationForModel(int firmwareModelId, int tenantId) throws ApplicationManagementDAOException;
 
+    List<Integer> getFirmwareModelIdsForApp(int applicationId, int tenantId) throws ApplicationManagementDAOException;
     /**
      * Add device firmware model mapping entry for the application
      *

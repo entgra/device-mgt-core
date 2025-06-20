@@ -733,6 +733,11 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
         }
 
         @Override
+        public List<ApplicationReleaseDTO> getAppReleasesBeforeVersion(int appId, String version, String status, String appReleaseType, int tenantId) throws ApplicationManagementDAOException {
+            return List.of();
+        }
+
+        @Override
         public String getInstalledReleaseVersionByApp(int deviceId, int appId, int tenantId) throws ApplicationManagementDAOException {
             String sql = "SELECT " +
                     "r.VERSION FROM AP_APP_RELEASE r " +
