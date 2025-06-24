@@ -93,13 +93,28 @@ public class AppmDataHandlerImpl implements AppmDataHandler {
                         applicationType
                 );
 
-                state.setProceedingStates(validProceedingStates);
-                filteredStates.put(entry.getKey(), state);
+                filteredStates.put(entry.getKey(), getFilteredState(state, validProceedingStates));
             }
         }
 
         validateLifecycleConfiguration(filteredStates, applicationType);
         return filteredStates;
+    }
+
+    // Getting a defensive copy with valid proceeding states
+    private static LifecycleState getFilteredState(LifecycleState state, List<String> proceedingStates) {
+        LifecycleState clone = new LifecycleState();
+        clone.setProceedingStates(proceedingStates);
+        clone.setEndState(state.isEndState());
+        clone.setDeletableState(state.isDeletableState());
+        clone.setInitialState(state.isInitialState());
+        clone.setScopeMapping(state.getScopeMapping());
+        clone.setApplicableTypes(state.getApplicableTypes());
+        clone.setName(state.getName());
+        clone.setAppUpdatable(state.isAppUpdatable());
+        clone.setAppInstallable(state.isAppInstallable());
+        clone.setPermission(state.getPermission());
+        return clone;
     }
 
     /**

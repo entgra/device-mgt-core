@@ -49,6 +49,7 @@ import io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.Subs
 import io.entgra.device.mgt.core.application.mgt.core.util.subscription.mgt.service.SubscriptionManagementHelperService;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
+import io.entgra.device.mgt.core.device.mgt.common.app.mgt.DeviceFirmwareModel;
 import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
 import io.entgra.device.mgt.core.application.mgt.core.exception.UnexpectedServerErrorException;
 import io.entgra.device.mgt.core.device.mgt.core.dto.OperationDTO;
@@ -133,6 +134,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -565,7 +567,18 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                         errorDeviceIdentifiers.add(deviceIdentifier);
                         continue;
                     }
-                    devices.add(deviceManagementProviderService.getDevice(deviceIdentifier, false));
+                    if (ApplicationType.CUSTOM.toString().equals(applicationDTO.getType())) {
+                        Device device = deviceManagementProviderService.getDevice(deviceIdentifier, false);
+                        DeviceFirmwareModel deviceFirmwareModel = deviceManagementProviderService.getDeviceFirmwareModel(device.getId());
+                        if (Objects.equals(deviceFirmwareModel.getFirmwareId(), applicationDTO.getFirmwareModelId())) {
+                            devices.add(device);
+                        } else {
+                            log.warn("Found a device identifier which is not matched with the supported firmware " +
+                                    "model of the device.");
+                        }
+                    } else {
+                        devices.add(deviceManagementProviderService.getDevice(deviceIdentifier, false));
+                    }
                 }
             } else {
                 if (SubscriptionType.USER.toString().equalsIgnoreCase(subType)) {
@@ -1172,7 +1185,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             if (ApplicationType.CUSTOM.toString().equalsIgnoreCase(application.getType())) {
                 ProfileOperation operation = new ProfileOperation();
                 if (SubAction.INSTALL.toString().equalsIgnoreCase(action)) {
-                    operation.setCode(MDMAppConstants.AndroidConstants.OPCODE_INSTALL_APPLICATION);
+                    operation.setCode(MDMAppConstants.AndroidConstants.OPCODE_INSTALL_FIRMWARE);
                     operation.setType(Operation.Type.PROFILE);
                     CustomApplication customApplication = new CustomApplication();
                     customApplication.setType(application.getType());
@@ -1181,20 +1194,26 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                     operation.setPayLoad(customApplication.toJSON());
                     return operation;
                 } else {
-                    if (SubAction.UNINSTALL.toString().equalsIgnoreCase(action)) {
-                        operation.setCode(MDMAppConstants.AndroidConstants.OPCODE_UNINSTALL_APPLICATION);
-                        operation.setType(Operation.Type.PROFILE);
-                        CustomApplication customApplication = new CustomApplication();
-                        customApplication.setType(application.getType());
-                        customApplication.setAppIdentifier(application.getPackageName());
-                        operation.setPayLoad(customApplication.toJSON());
-                        return operation;
-                    } else {
-                        String msg = "Invalid Action is found. Action: " + action;
-                        log.error(msg);
-                        throw new ApplicationManagementException(msg);
-                    }
+                    // Do not consider any other action than INSTALL_FIRMWARE
+                    String msg = "Invalid Action is found. Action: " + action;
+                    log.error(msg);
+                    throw new ApplicationManagementException(msg);
                 }
+//                else {
+//                    if (SubAction.UNINSTALL.toString().equalsIgnoreCase(action)) {
+//                        operation.setCode(MDMAppConstants.AndroidConstants.OPCODE_UNINSTALL_APPLICATION);
+//                        operation.setType(Operation.Type.PROFILE);
+//                        CustomApplication customApplication = new CustomApplication();
+//                        customApplication.setType(application.getType());
+//                        customApplication.setAppIdentifier(application.getPackageName());
+//                        operation.setPayLoad(customApplication.toJSON());
+//                        return operation;
+//                    } else {
+//                        String msg = "Invalid Action is found. Action: " + action;
+//                        log.error(msg);
+//                        throw new ApplicationManagementException(msg);
+//                    }
+//                }
             } else {
                 App app = new App();
                 MobileAppTypes mobileAppType = MobileAppTypes.valueOf(application.getType());
