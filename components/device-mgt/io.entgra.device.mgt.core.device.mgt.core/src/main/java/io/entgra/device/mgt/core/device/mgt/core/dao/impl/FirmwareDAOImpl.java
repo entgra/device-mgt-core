@@ -168,34 +168,6 @@ public class FirmwareDAOImpl implements FirmwareDAO {
     }
 
     @Override
-    public boolean isFirmwareVersionAvailable(int deviceId, int firmwareModelId, int tenantId)
-            throws DeviceManagementDAOException {
-        Connection conn;
-        boolean isAvailable = false;
-        String sql = "SELECT FIRMWARE_VERSION FROM DM_DEVICE_FIRMWARE_MODEL_MAPPING " +
-                "WHERE DM_DEVICE_ID = ? AND FIRMWARE_MODEL_ID = ? AND TENANT_ID = ?";
-        try {
-            conn = this.getConnection();
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setInt(1, deviceId);
-                stmt.setInt(2, firmwareModelId);
-                stmt.setInt(3, tenantId);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        isAvailable = rs.getString("FIRMWARE_VERSION") != null
-                                && !rs.getString("FIRMWARE_VERSION").isEmpty();
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            String msg = "Error occurred while checking firmware version availability for device ID: " + deviceId;
-            log.error(msg, e);
-            throw new DeviceManagementDAOException(msg, e);
-        }
-        return isAvailable;
-    }
-
-    @Override
     public boolean saveFirmwareVersionOfDevice(int deviceId, String firmwareVersion, int firmwareModelId, int tenantId)
             throws DeviceManagementDAOException {
         Connection conn;

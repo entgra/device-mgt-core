@@ -104,17 +104,6 @@ public interface FirmwareDAO {
             throws DeviceManagementDAOException;
 
     /**
-     * Checks if a firmware version is available for a specific device and firmware model.
-     *
-     * @param deviceId the ID of the device to check
-     * @param firmwareModelId the ID of the firmware model to check
-     * @param tenantId the ID of the tenant to which the device belongs
-     * @return true if the firmware version is available for the device, false otherwise
-     * @throws DeviceManagementDAOException if an error occurs while accessing the database
-     */
-    boolean isFirmwareVersionAvailable(int deviceId, int firmwareModelId, int tenantId) throws DeviceManagementDAOException;
-
-    /**
      * Saves the firmware version of a device.
      *
      * @param deviceId the ID of the device for which the firmware version is to be saved
