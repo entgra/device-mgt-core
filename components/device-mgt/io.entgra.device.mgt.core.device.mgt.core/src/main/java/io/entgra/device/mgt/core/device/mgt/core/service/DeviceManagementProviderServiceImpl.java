@@ -21,6 +21,8 @@ package io.entgra.device.mgt.core.device.mgt.core.service;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.DeviceFirmwareModel;
+import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareResult;
+import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareModelSearchFilter;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ConflictException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceDAO;
@@ -5930,8 +5932,37 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public List<Device> getFilteredDeviceListByFirmwareVersion(List<Integer> firmwareModelIds, List<String> firmwareVersions, int tenantId, boolean requireMatchingDevices) throws DeviceManagementException {
-        return Collections.emptyList();
+    public DeviceFirmwareResult getFilteredDeviceListByFirmwareVersion(DeviceFirmwareModelSearchFilter searchFilter,
+                                                                       int tenantId, boolean requireMatchingDevices)
+            throws DeviceManagementException {
+
+        if (log.isDebugEnabled()) {
+            log.debug("Retrieving filtered device list by firmware version with search filter: " + searchFilter +
+                    ", tenant ID: " + tenantId + ", requireMatchingDevices: " + requireMatchingDevices);
+        }
+
+        if(searchFilter.getOffset() < 0 || searchFilter.getLimit() <= 0) {
+            String msg = "Invalid pagination parameters in DeviceFirmwareModelSearchFilter: " + searchFilter;
+            log.error(msg);
+            throw new IllegalStateException(msg);
+        }
+
+        DeviceFirmwareResult deviceFirmwareResult;
+        try {
+            List<Device> devicesFIltered = firmwareDAO.getFilteredDevicesByFirmwareVersion(searchFilter,
+                    tenantId, requireMatchingDevices);
+            devicesFIltered = this.populateAllDeviceInfo(devicesFIltered);
+            deviceFirmwareResult = new DeviceFirmwareResult();
+            deviceFirmwareResult.setRecordsFiltered(devicesFIltered.size());
+            deviceFirmwareResult.setRecordsTotal(firmwareDAO
+                    .getCountOfFilteredDevicesByFirmwareVersion(searchFilter, tenantId, requireMatchingDevices));
+            deviceFirmwareResult.setData(devicesFIltered);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred while retrieving filtered device list using device firmware model search filters";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        }
+        return deviceFirmwareResult;
     }
 
 }

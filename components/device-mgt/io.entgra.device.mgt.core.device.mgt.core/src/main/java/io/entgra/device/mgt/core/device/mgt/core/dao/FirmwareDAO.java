@@ -18,7 +18,11 @@
  */
 package io.entgra.device.mgt.core.device.mgt.core.dao;
 
+import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.DeviceFirmwareModel;
+import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareModelSearchFilter;
+
+import java.util.List;
 
 /**
  * Data Access Object interface for managing device firmware models.
@@ -61,4 +65,30 @@ public interface FirmwareDAO {
      * @throws DeviceManagementDAOException if an error occurs while accessing the database
      */
     boolean addDeviceFirmwareMapping(int deviceId, int firmwareId, int tenantId) throws DeviceManagementDAOException;
+
+    /**
+     * Retrieves a list of firmware models based on the provided search filter.
+     *
+     * @param searchFilter the filter criteria for searching firmware models
+     * @param tenantId the ID of the tenant to which the firmware models belong
+     * @param requireMatchingDevices indicates whether to filter devices that match the firmware model
+     * @return a list of {@link Device} objects that match the search criteria
+     * @throws DeviceManagementDAOException if an error occurs while accessing the database
+     */
+    List<Device> getFilteredDevicesByFirmwareVersion(DeviceFirmwareModelSearchFilter searchFilter,
+                                                             int tenantId, boolean requireMatchingDevices)
+            throws DeviceManagementDAOException;
+
+    /**
+     * Gets the count of devices that match the given firmware version search filter.
+     *
+     * @param searchFilter the filter criteria for searching firmware versions
+     * @param tenantId the ID of the tenant to which the devices belong
+     * @param requireMatchingDevices indicates whether to count only devices that match the firmware model
+     * @return the count of devices that match the search criteria
+     * @throws DeviceManagementDAOException if an error occurs while accessing the database
+     */
+    int getCountOfFilteredDevicesByFirmwareVersion(DeviceFirmwareModelSearchFilter searchFilter,
+                                                   int tenantId, boolean requireMatchingDevices)
+            throws DeviceManagementDAOException;
 }

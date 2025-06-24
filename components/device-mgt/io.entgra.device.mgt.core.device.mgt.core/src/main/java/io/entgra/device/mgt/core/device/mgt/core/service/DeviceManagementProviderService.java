@@ -20,6 +20,8 @@ package io.entgra.device.mgt.core.device.mgt.core.service;
 
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.Application;
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.DeviceFirmwareModel;
+import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareResult;
+import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareModelSearchFilter;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ConflictException;
 import io.entgra.device.mgt.core.device.mgt.core.cache.DeviceCacheKey;
 import io.entgra.device.mgt.core.device.mgt.core.config.DeviceManagementConfig;
@@ -1244,14 +1246,14 @@ public interface DeviceManagementProviderService {
      *     <li>Devices that do not match the specified firmware versions or model IDs (if {@code false})</li>
      * </ul>
      *
-     * @param firmwareModelIds List of firmware model IDs to filter devices
-     * @param firmwareVersions List of firmware versions to filter devices
+     * @param searchFilter Filter criteria containing firmware model IDs and versions
      * @param tenantId Tenant ID used to scope the device search
      * @param requireMatchingDevices If {@code true}, returns devices matching the given firmware versions and model IDs;
      *                               if {@code false}, returns devices that do not match them
-     * @return List of filtered devices based on firmware model and version criteria
+     * @return {@link DeviceFirmwareResult} filled with filtered devices based on the given criteria
      * @throws DeviceManagementException if an error occurs while fetching the device list
      */
-    List<Device> getFilteredDeviceListByFirmwareVersion(List<Integer> firmwareModelIds, List<String> firmwareVersions, int tenantId, boolean requireMatchingDevices)
+    DeviceFirmwareResult getFilteredDeviceListByFirmwareVersion(DeviceFirmwareModelSearchFilter searchFilter, int tenantId,
+                                                                boolean requireMatchingDevices)
             throws DeviceManagementException;
 }
