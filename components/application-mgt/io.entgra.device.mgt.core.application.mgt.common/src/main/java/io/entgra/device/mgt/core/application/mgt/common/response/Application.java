@@ -114,6 +114,10 @@ public class Application {
             example = "true or false")
     private boolean isExternalAppStoreApp;
 
+    @ApiModelProperty(name = "firmwareModelId",
+            value = "ID of the firmware model")
+    private int firmwareModelId;
+
     public String getPackageName() {
         return packageName;
     }
@@ -207,5 +211,13 @@ public class Application {
 
     public void setExternalAppStoreApp(boolean externalAppStoreApp) {
         isExternalAppStoreApp = externalAppStoreApp;
+    }
+
+    public int getFirmwareModelId() {
+        return firmwareModelId;
+    }
+
+    public void setFirmwareModelId(int firmwareModelId) {
+        this.firmwareModelId = firmwareModelId;
     }
 }

@@ -1468,8 +1468,16 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 if (log.isDebugEnabled()) {
                     log.debug("New ApplicationDTO entry added to AP_APP table. App Id:" + appId);
                 }
-                //add application categories
 
+                // add device firmware model mapping
+                if (Objects.equals(applicationDTO.getType(), "CUSTOM")) {
+                    if (applicationDTO.getFirmwareModelId() < 0) {
+                        throw new ApplicationManagementDAOException("Firmware model id is required.");
+                    }
+                    this.applicationDAO.addDeviceFirmwareModelMapping(appId, applicationDTO.getFirmwareModelId());
+                }
+
+                //add application categories
                 List<Integer> categoryIds = applicationDAO.getCategoryIdsForCategoryNames(applicationDTO.getAppCategories(), tenantId);
                 this.applicationDAO.addCategoryMapping(categoryIds, appId, tenantId);
 
@@ -4628,20 +4636,20 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     log.error(msg);
                     throw new ApplicationManagementException(msg);
                 }
-
+                // todo: test the DAOs
                 if (StringUtils.isBlank(currentVersion)) {
-                    currentVersion = applicationReleaseDAO.getInstalledReleaseVersionByApp(applicationDTO.getId(), tenantId);
+                    currentVersion = applicationReleaseDAO.getInstalledReleaseVersionByApp(device.getId(), applicationDTO.getId(), tenantId);
                 }
 
                 //todo release ready state shouldn't be hardcoded
                 String filteringAppReleaseType = hasTestRolesAssigned() ? AppReleaseType.TEST.name() : null;
-
                 if (currentVersion != null) {
                     applicationReleaseDTOS = applicationReleaseDAO.getAppReleasesAfterVersion(applicationDTO.getId(), currentVersion, "RELEASE_READY", filteringAppReleaseType, tenantId);
                     pendingFirmwareInstallOperationMap = getFilteredPendingFirmwareInstallOperations(deviceManagementService, device, currentVersion, tenantId);
                 } else {
                     applicationReleaseDTOS = applicationReleaseDAO.getReleasesByAppAndStatus(applicationDTO.getId(), "RELEASE_READY", filteringAppReleaseType, tenantId);
                 }
+
             } catch (ApplicationManagementDAOException e) {
                 String msg = "Error occurred while retrieving application related data from the database. Device Id:"
                         + deviceId;
@@ -4838,19 +4846,82 @@ public class ApplicationManagerImpl implements ApplicationManager {
     }
 
     @Override
-    public List<Device> getApplicableDevicesOfFirmware(String uuid) throws ApplicationManagementException {
-
+    public List<Device> getDevicesMatchingFirmware(String uuid, FirmwareMatchType matchType) throws ApplicationManagementException {
         Application application = getApplicationByUuid(uuid);
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        String currentReleaseVersion = application.getApplicationReleases()
+                .stream()
+                .findFirst()
+                .map(ApplicationRelease::getVersion)
+                .orElse(null);
 
-        //todo
-        //check whether application type is 'CUSTOM'
-        //get list of device subtypes supported for firmware
-        //get devices which have retrieved device subtypes
-          //List<Device> getDevicesBasedOnProperties(Map deviceProps)
-        //get list of versions after publishing this version
-        //remove devices which has latest firmware versions identified by the previous step <Can introduce issues>
-        //remove devices which has pending operation for same firmware
-        return List.of();
+        if (currentReleaseVersion == null) {
+            String msg = "No release version found for application: " + uuid;
+            log.error(msg);
+            throw new ApplicationManagementException(msg);
+        }
+
+        String filteringAppReleaseType = hasTestRolesAssigned() ? AppReleaseType.TEST.name() : null;
+
+        List<String> versions;
+        List<Integer> firmwareModelIds;
+
+        try {
+            ConnectionManagerUtil.openDBConnection();
+            switch (matchType) {
+                case APPLICABLE:
+                    List<ApplicationReleaseDTO> older = applicationReleaseDAO.getAppReleasesBeforeVersion(
+                            application.getId(), currentReleaseVersion, "RELEASE_READY", filteringAppReleaseType, tenantId);
+                    versions = older.stream()
+                            .map(ApplicationReleaseDTO::getVersion)
+                            .collect(Collectors.toList());
+                    break;
+
+                case NON_APPLICABLE:
+                    List<ApplicationReleaseDTO> newer = applicationReleaseDAO.getAppReleasesAfterVersion(
+                            application.getId(), currentReleaseVersion, "RELEASE_READY", filteringAppReleaseType, tenantId);
+                    versions = newer.stream()
+                            .map(ApplicationReleaseDTO::getVersion)
+                            .collect(Collectors.toList());
+                    versions.add(currentReleaseVersion);
+                    break;
+
+                case UNMANAGED:
+                    List<ApplicationReleaseDTO> olderManaged = applicationReleaseDAO.getAppReleasesBeforeVersion(
+                            application.getId(), currentReleaseVersion, "RELEASE_READY", filteringAppReleaseType, tenantId);
+                    List<ApplicationReleaseDTO> newerManaged = applicationReleaseDAO.getAppReleasesAfterVersion(
+                            application.getId(), currentReleaseVersion, "RELEASE_READY", filteringAppReleaseType, tenantId);
+                    versions = Stream.concat(
+                            Stream.concat(
+                                    newerManaged.stream().map(ApplicationReleaseDTO::getVersion),
+                                    olderManaged.stream().map(ApplicationReleaseDTO::getVersion)
+                            ),
+                            Stream.of(currentReleaseVersion)
+                    ).collect(Collectors.toList());
+                    break;
+                default:
+                    String msg = "Unknown firmware match type.: " + matchType;
+                    log.error(msg);
+                    throw new ApplicationManagementException(msg);
+            }
+            firmwareModelIds = applicationDAO.getFirmwareModelIdsForApp(application.getId(), tenantId);
+        } catch (ApplicationManagementDAOException e) {
+            String msg = "Error retrieving application release data.";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+
+        DeviceManagementProviderService dms = DataHolder.getInstance().getDeviceManagementService();
+        boolean requireMatching = matchType != FirmwareMatchType.UNMANAGED;
+        try {
+            return dms.getFilteredDeviceListByFirmwareVersion(firmwareModelIds, versions, tenantId, requireMatching);
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while getting device data.";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        }
     }
 
     @Override

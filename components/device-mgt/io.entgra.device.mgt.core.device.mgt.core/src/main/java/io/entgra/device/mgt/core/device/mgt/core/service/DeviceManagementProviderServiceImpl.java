@@ -5930,7 +5930,8 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public List<Device> getFilteredDeviceListByFirmwareVersion(String firmwareVersion, int tenantId, boolean requireMatchingDevices) throws DeviceManagementException {
+    public List<Device> getFilteredDeviceListByFirmwareVersion(List<Integer> firmwareModelIds, List<String> firmwareVersions, int tenantId, boolean requireMatchingDevices) throws DeviceManagementException {
         return Collections.emptyList();
     }
+
 }

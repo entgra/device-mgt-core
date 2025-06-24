@@ -364,6 +364,7 @@ public class APIUtil {
             applicationReleaseEntities = customAppWrapper.getCustomAppReleaseWrappers()
                     .stream().map(APIUtil::releaseWrapperToReleaseDTO).collect(Collectors.toList());
             applicationDTO.setApplicationReleaseDTOs(applicationReleaseEntities);
+            applicationDTO.setFirmwareModelId(customAppWrapper.getFirmwareModelId());
         }
         return applicationDTO;
     }

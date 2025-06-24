@@ -17,8 +17,7 @@
  */
 package io.entgra.device.mgt.core.application.mgt.common.services;
 
-import io.entgra.device.mgt.core.application.mgt.common.ApplicationType;
-import io.entgra.device.mgt.core.application.mgt.common.ReleaseVersionInfo;
+import io.entgra.device.mgt.core.application.mgt.common.*;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException;
 import io.entgra.device.mgt.core.application.mgt.common.exception.RequestValidatingException;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ResourceManagementException;
@@ -28,12 +27,7 @@ import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationDTO;
 import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
-import io.entgra.device.mgt.core.application.mgt.common.ApplicationArtifact;
-import io.entgra.device.mgt.core.application.mgt.common.LifecycleChanger;
-import io.entgra.device.mgt.core.application.mgt.common.ApplicationList;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
-import io.entgra.device.mgt.core.application.mgt.common.Filter;
-import io.entgra.device.mgt.core.application.mgt.common.LifecycleState;
 import io.entgra.device.mgt.core.application.mgt.common.wrapper.CustomAppReleaseWrapper;
 import io.entgra.device.mgt.core.application.mgt.common.wrapper.EntAppReleaseWrapper;
 import io.entgra.device.mgt.core.application.mgt.common.wrapper.ApplicationUpdateWrapper;
@@ -591,7 +585,20 @@ public interface ApplicationManager {
      */
     List<Firmware> getAvailableFirmwaresForDevice(String deviceId, String currentVersion) throws ApplicationManagementException;
 
-    List<Device> getApplicableDevicesOfFirmware(String uuid) throws ApplicationManagementException;
+    /**
+     * Retrieves a list of devices that match the specified firmware criteria for the given application release UUID.
+     *
+     * @param uuid      The UUID of the application release used to determine the firmware version.
+     * @param matchType The firmware match type that determines which devices to retrieve:
+     *                  <ul>
+     *                      <li>{@code APPLICABLE} - Devices with firmware versions lower than the specified release.</li>
+     *                      <li>{@code NON_APPLICABLE} - Devices with firmware versions higher than or equal to the specified release.</li>
+     *                      <li>{@code UNMANAGED} - Devices with any firmware version that is either lower, higher, or equal to the specified release.</li>
+     *                  </ul>
+     * @return A list of {@link Device} objects that match the firmware criteria.
+     * @throws ApplicationManagementException If an error occurs while retrieving the devices or application release data.
+     */
+    List<Device> getDevicesMatchingFirmware(String uuid, FirmwareMatchType matchType) throws ApplicationManagementException;
 
     List<Device> getApplicableDevicesInGroupForFirmware(String uuid, String groupId) throws ApplicationManagementException;
 }
