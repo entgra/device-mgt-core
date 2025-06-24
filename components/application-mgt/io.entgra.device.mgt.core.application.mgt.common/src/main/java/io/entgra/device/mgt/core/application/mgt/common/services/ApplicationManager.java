@@ -26,6 +26,7 @@ import io.entgra.device.mgt.core.device.mgt.common.Base64File;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationDTO;
 import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
+import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareResult;
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
 import io.entgra.device.mgt.core.application.mgt.common.wrapper.CustomAppReleaseWrapper;
@@ -590,6 +591,8 @@ public interface ApplicationManager {
      *
      * @param uuid      The UUID of the application release used to determine the firmware version.
      * @param matchType The firmware match type that determines which devices to retrieve:
+     * @param groupId   The group ID to filter devices. Provide the group ID to filter devices within that group.
+     *                  To retrieve devices from the entire device fleet without group filtering, use -1.
      *                  <ul>
      *                      <li>{@code APPLICABLE} - Devices with firmware versions lower than the specified release.</li>
      *                      <li>{@code NON_APPLICABLE} - Devices with firmware versions higher than or equal to the specified release.</li>
@@ -598,7 +601,6 @@ public interface ApplicationManager {
      * @return A list of {@link Device} objects that match the firmware criteria.
      * @throws ApplicationManagementException If an error occurs while retrieving the devices or application release data.
      */
-    List<Device> getDevicesMatchingFirmware(String uuid, FirmwareMatchType matchType) throws ApplicationManagementException;
+    DeviceFirmwareResult getDevicesByFirmwareMatchType(String uuid, FirmwareMatchType matchType, int groupId) throws ApplicationManagementException;
 
-    List<Device> getApplicableDevicesInGroupForFirmware(String uuid, String groupId) throws ApplicationManagementException;
 }
