@@ -167,6 +167,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
         return isAdded;
     }
 
+    @Override
     public boolean isFirmwareVersionAvailable(int deviceId, int firmwareModelId, int tenantId)
             throws DeviceManagementDAOException {
         Connection conn;
@@ -194,6 +195,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
         return isAvailable;
     }
 
+    @Override
     public boolean saveFirmwareVersionOfDevice(int deviceId, String firmwareVersion, int firmwareModelId, int tenantId)
             throws DeviceManagementDAOException {
         Connection conn;
@@ -219,6 +221,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
         return isSaved;
     }
 
+    @Override
     public List<DeviceFirmwareModel> getAllFirmwareModelsByDeviceType(int deviceTypeId, int tenantId)
             throws DeviceManagementDAOException {
         List<DeviceFirmwareModel> firmwareModels = new ArrayList<>();

@@ -102,4 +102,28 @@ public interface FirmwareDAO {
      */
     List<DeviceFirmwareModel> getAllFirmwareModelsByDeviceType(int deviceTypeId, int tenantId)
             throws DeviceManagementDAOException;
+
+    /**
+     * Checks if a firmware version is available for a specific device and firmware model.
+     *
+     * @param deviceId the ID of the device to check
+     * @param firmwareModelId the ID of the firmware model to check
+     * @param tenantId the ID of the tenant to which the device belongs
+     * @return true if the firmware version is available for the device, false otherwise
+     * @throws DeviceManagementDAOException if an error occurs while accessing the database
+     */
+    boolean isFirmwareVersionAvailable(int deviceId, int firmwareModelId, int tenantId) throws DeviceManagementDAOException;
+
+    /**
+     * Saves the firmware version of a device.
+     *
+     * @param deviceId the ID of the device for which the firmware version is to be saved
+     * @param firmwareVersion the firmware version to be saved
+     * @param firmwareModelId the ID of the firmware model associated with the device
+     * @param tenantId the ID of the tenant to which the device belongs
+     * @return true if the firmware version was successfully saved, false otherwise
+     * @throws DeviceManagementDAOException if an error occurs while accessing the database
+     */
+    boolean saveFirmwareVersionOfDevice(int deviceId, String firmwareVersion, int firmwareModelId, int tenantId)
+            throws DeviceManagementDAOException;
 }
