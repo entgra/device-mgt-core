@@ -70,6 +70,8 @@ import io.entgra.device.mgt.core.application.mgt.core.util.Constants;
 import io.entgra.device.mgt.core.device.mgt.common.*;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.DeviceFirmwareModel;
+import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareModelSearchFilter;
+import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareResult;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.MetadataManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.Metadata;
@@ -4846,7 +4848,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
     }
 
     @Override
-    public List<Device> getDevicesMatchingFirmware(String uuid, FirmwareMatchType matchType) throws ApplicationManagementException {
+    public DeviceFirmwareResult getDevicesByFirmwareMatchType(String uuid, FirmwareMatchType matchType, int groupId) throws ApplicationManagementException {
         Application application = getApplicationByUuid(uuid);
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         String currentReleaseVersion = application.getApplicationReleases()
@@ -4876,7 +4878,6 @@ public class ApplicationManagerImpl implements ApplicationManager {
                             .map(ApplicationReleaseDTO::getVersion)
                             .collect(Collectors.toList());
                     break;
-
                 case NON_APPLICABLE:
                     List<ApplicationReleaseDTO> newer = applicationReleaseDAO.getAppReleasesAfterVersion(
                             application.getId(), currentReleaseVersion, "RELEASE_READY", filteringAppReleaseType, tenantId);
@@ -4885,7 +4886,6 @@ public class ApplicationManagerImpl implements ApplicationManager {
                             .collect(Collectors.toList());
                     versions.add(currentReleaseVersion);
                     break;
-
                 case UNMANAGED:
                     List<ApplicationReleaseDTO> olderManaged = applicationReleaseDAO.getAppReleasesBeforeVersion(
                             application.getId(), currentReleaseVersion, "RELEASE_READY", filteringAppReleaseType, tenantId);
@@ -4916,26 +4916,17 @@ public class ApplicationManagerImpl implements ApplicationManager {
         DeviceManagementProviderService dms = DataHolder.getInstance().getDeviceManagementService();
         boolean requireMatching = matchType != FirmwareMatchType.UNMANAGED;
         try {
-            return dms.getFilteredDeviceListByFirmwareVersion(firmwareModelIds, versions, tenantId, requireMatching);
+            DeviceFirmwareModelSearchFilter deviceFirmwareModelSearchFilter = new DeviceFirmwareModelSearchFilter();
+            deviceFirmwareModelSearchFilter.setFirmwareModelIds(firmwareModelIds);
+            deviceFirmwareModelSearchFilter.setFirmwareVersions(versions);
+            if (groupId!= -1) {
+                deviceFirmwareModelSearchFilter.setGroupId(groupId);
+            }
+            return dms.getFilteredDeviceListByFirmwareVersion(deviceFirmwareModelSearchFilter, tenantId, requireMatching);
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while getting device data.";
             log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
         }
-    }
-
-    @Override
-    public List<Device> getApplicableDevicesInGroupForFirmware(String uuid, String groupId) throws ApplicationManagementException {
-
-        //todo
-        //check whether application type is 'CUSTOM'
-        //get list of device subtypes supported for firmware
-        //get devices in the given group
-        //filter devices which have retrieved device subtypes in the retrieved device list
-             //List<Device> getGroupedDevicesBasedOnProperties(int groupId, Map<String, String> propertiesMap)
-        //get list of versions after publishing this version
-        //remove devices which has latest firmware versions identified by the previous step <Can introduce issues>
-        //remove devices which has pending operation for same firmware
-        return List.of();
     }
 }
