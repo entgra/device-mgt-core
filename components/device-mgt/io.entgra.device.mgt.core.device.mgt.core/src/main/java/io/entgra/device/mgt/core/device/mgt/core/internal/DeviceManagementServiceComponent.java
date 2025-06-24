@@ -21,6 +21,7 @@ import io.entgra.device.mgt.core.device.mgt.common.app.mgt.ApplicationManagement
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationService;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.GroupAccessAuthorizationService;
 import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.PlatformConfigurationManagementService;
+import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareModelManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.event.config.EventConfigurationProviderService;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.MetadataManagementException;
@@ -55,6 +56,7 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.GroupManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dao.TrackerManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.device.details.mgt.DeviceInformationManager;
 import io.entgra.device.mgt.core.device.mgt.core.device.details.mgt.impl.DeviceInformationManagerImpl;
+import io.entgra.device.mgt.core.device.mgt.core.device.firmware.model.mgt.DeviceFirmwareModelManagementServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.event.config.EventConfigurationProviderServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.geo.service.GeoLocationProviderServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.DeviceStatusManagementServiceImpl;
@@ -393,6 +395,11 @@ public class DeviceManagementServiceComponent {
         DeviceInformationManager deviceInformationManager = new DeviceInformationManagerImpl();
         bundleContext.registerService(DeviceInformationManager.class, deviceInformationManager, null);
         DeviceManagementDataHolder.getInstance().setDeviceInformationManager(deviceInformationManager);
+
+        DeviceFirmwareModelManagementService deviceFirmwareModelManagementService = new DeviceFirmwareModelManagementServiceImpl();
+        bundleContext.registerService(DeviceFirmwareModelManagementService.class.getName(),
+                deviceFirmwareModelManagementService, null);
+        DeviceManagementDataHolder.getInstance().setDeviceFirmwareModelManagementService(deviceFirmwareModelManagementService);
 
         bundleContext.registerService(SearchManagerService.class, new SearchManagerServiceImpl(), null);
 
