@@ -34,7 +34,7 @@ public class DeviceFirmwareModelManagementServiceImpl implements DeviceFirmwareM
 
         try {
             DeviceManagementDAOFactory.getConnection();
-            return firmwareDAO.addFirmwareModel(deviceFirmwareModel, PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId());
+            return firmwareDAO.addFirmwareModel(deviceFirmwareModel, PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(), );
         } catch (SQLException e) {
             String msg = "SQL exception encountered while creating device firmware model [" + deviceFirmwareModel.getFirmwareModelName() + "]";
             logger.error(msg, e);
