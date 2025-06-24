@@ -73,8 +73,6 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
         boolean isSerialProvided = false;
         List<String> tagList = request.getTags();
         boolean isTagsProvided = false;
-        String firmwareModel = request.getFirmwareModel();
-        boolean isFirmwareModelProvided = false;
 
         try {
             Connection conn = getConnection();
@@ -104,10 +102,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
             //Filter by serial number or any Custom Property in DM_DEVICE_INFO
             if ((serial != null) || (request.getCustomProperty() != null && !request.getCustomProperty().isEmpty())) {
                 sql = sql +
-                        "FROM DM_DEVICE d " +
-                        "LEFT JOIN DM_DEVICE_FIRMWARE_MODEL_MAPPING dfmm ON d.ID = dfmm.DM_DEVICE_ID " +
-                        "LEFT JOIN DM_DEVICE_FIRMWARE_MODEL dfm ON dfmm.FIRMWARE_MODEL_ID = dfm.ID " +
-                        "WHERE ";
+                        "FROM DM_DEVICE d WHERE ";
                 if (serial != null) {
                     sql += "EXISTS (" +
                             "SELECT VALUE_FIELD " +
@@ -137,10 +132,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                 }
                 sql += "AND d.TENANT_ID = ? ";
             } else {
-                sql = sql + "FROM DM_DEVICE d " +
-                        "LEFT JOIN DM_DEVICE_FIRMWARE_MODEL_MAPPING dfmm ON d.ID = dfmm.DM_DEVICE_ID " +
-                        "LEFT JOIN DM_DEVICE_FIRMWARE_MODEL dfm ON dfmm.FIRMWARE_MODEL_ID = dfm.ID " +
-                        "WHERE d.TENANT_ID = ? ";
+                sql = sql + "FROM DM_DEVICE d WHERE d.TENANT_ID = ? ";
             }
             //Add query for last updated timestamp
             if (since != null) {
@@ -152,11 +144,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                 sql = sql + " AND d.NAME LIKE ?";
                 isDeviceNameProvided = true;
             }
-            //Add qury for device firmware model
-            if (firmwareModel != null && !firmwareModel.isEmpty()) {
-                sql = sql + " AND (dfm.FIRMWARE_MODEL LIKE ?)";
-                isFirmwareModelProvided = true;
-            }
+
             sql = sql + ") d1 WHERE d1.ID = e.DEVICE_ID AND TENANT_ID = ?";
             //Add the query for device-type
             if (deviceType != null && !deviceType.isEmpty()) {
@@ -211,9 +199,6 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                 }
                 if (isDeviceNameProvided) {
                     stmt.setString(paramIdx++, "%" + deviceName + "%");
-                }
-                if (isFirmwareModelProvided) {
-                    stmt.setString(paramIdx++, "%" + firmwareModel + "%");
                 }
                 stmt.setInt(paramIdx++, tenantId);
                 if (isDeviceTypeProvided) {
