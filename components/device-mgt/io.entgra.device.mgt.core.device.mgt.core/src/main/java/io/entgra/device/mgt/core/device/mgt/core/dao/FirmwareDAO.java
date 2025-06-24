@@ -43,7 +43,7 @@ public interface FirmwareDAO {
      * @return the ID of the newly created firmware model
      * @throws DeviceManagementDAOException if an error occurs while accessing the database
      */
-    DeviceFirmwareModel addFirmwareModel(DeviceFirmwareModel deviceFirmwareModel, int tenantId)
+    DeviceFirmwareModel addFirmwareModel(DeviceFirmwareModel deviceFirmwareModel, int tenantId, int deviceTypeId)
             throws DeviceManagementDAOException;
 
     /**
@@ -90,5 +90,16 @@ public interface FirmwareDAO {
      */
     int getCountOfFilteredDevicesByFirmwareVersion(DeviceFirmwareModelSearchFilter searchFilter,
                                                    int tenantId, boolean requireMatchingDevices)
+            throws DeviceManagementDAOException;
+
+    /**
+     * Retrieves all firmware models associated with a specific device type.
+     *
+     * @param deviceTypeId the ID of the device type for which firmware models are to be retrieved.
+     * @param tenantId the ID of the tenant to which the device type belongs
+     * @return a list of {@link DeviceFirmwareModel} objects representing the firmware models for the specified device type.
+     * @throws DeviceManagementDAOException if an error occurs while accessing the database.
+     */
+    List<DeviceFirmwareModel> getAllFirmwareModelsByDeviceType(int deviceTypeId, int tenantId)
             throws DeviceManagementDAOException;
 }

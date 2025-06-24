@@ -21,6 +21,7 @@ public class DeviceFirmwareModel {
     private int firmwareId;
     private String firmwareModelName;
     private String description;
+    private int deviceTypeId;
     private String deviceType;
 
     public DeviceFirmwareModel(String firmwareModelName, String description) {
@@ -52,6 +53,14 @@ public class DeviceFirmwareModel {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public int getDeviceTypeId() {
+        return deviceTypeId;
+    }
+
+    public void setDeviceTypeId(int deviceTypeId) {
+        this.deviceTypeId = deviceTypeId;
     }
 
     public String getDeviceType() {
