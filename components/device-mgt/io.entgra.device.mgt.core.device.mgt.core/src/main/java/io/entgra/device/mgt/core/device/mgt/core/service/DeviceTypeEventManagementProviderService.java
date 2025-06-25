@@ -40,28 +40,10 @@ public interface DeviceTypeEventManagementProviderService {
     List<DeviceTypeEvent> getDeviceTypeEventDefinitions(String deviceType) throws DeviceManagementException;
 
     /**
-     * Retrieves the event definitions for a device type in JSON string format.
-     *
-     * @param deviceType The name of the device type.
-     * @return A JSON string representing the event definitions.
-     * @throws DeviceManagementException If an error occurs while generating or retrieving the JSON.
-     */
-    String getDeviceTypeEventDefinitionsAsJson(String deviceType) throws DeviceManagementException;
-
-    /**
-     * Checks whether metadata for the given device type already exists.
-     *
-     * @param deviceType The name of the device type.
-     * @return {@code true} if metadata exists, {@code false} otherwise.
-     * @throws DeviceManagementException If an error occurs during the check.
-     */
-    boolean isDeviceTypeMetaExist(String deviceType) throws DeviceManagementException;
-
-    /**
      * Persists metadata and event definitions for the specified device type.
      *
-     * @param deviceType        The name of the device type.
-     * @param deviceTypeEvents  A list of event definitions to be associated with the device type.
+     * @param deviceType       The name of the device type.
+     * @param deviceTypeEvents A list of event definitions to be associated with the device type.
      * @return {@code true} if the operation is successful, {@code false} otherwise.
      * @throws DeviceManagementException If an error occurs during the creation process.
      */
@@ -70,8 +52,8 @@ public interface DeviceTypeEventManagementProviderService {
     /**
      * Updates metadata and event definitions for the specified device type.
      *
-     * @param deviceType        The name of the device type.
-     * @param deviceTypeEvents  A list of updated event definitions to be associated with the device type.
+     * @param deviceType       The name of the device type.
+     * @param deviceTypeEvents A list of updated event definitions to be associated with the device type.
      * @return {@code true} if the update is successful, {@code false} otherwise.
      * @throws DeviceManagementException If an error occurs during the update process.
      */
@@ -99,8 +81,8 @@ public interface DeviceTypeEventManagementProviderService {
      * This is typically used to determine whether an update operation is needed and to construct the
      * final event definition set to be persisted.
      *
-     * @param deviceType      the name of the device type whose events are being updated
-     * @param incomingEvents  the list of incoming event definitions from the request
+     * @param deviceType     the name of the device type whose events are being updated
+     * @param incomingEvents the list of incoming event definitions from the request
      * @return a {@link DeviceTypeEventUpdateResult} containing lists of updated and merged events
      * @throws DeviceManagementException if there is an error retrieving existing event definitions
      */

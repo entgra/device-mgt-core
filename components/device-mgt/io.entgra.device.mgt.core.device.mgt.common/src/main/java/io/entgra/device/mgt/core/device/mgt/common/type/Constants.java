@@ -24,9 +24,6 @@ public final class Constants {
     private Constants() {
         throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }
-
-    // Constants for Meta Keys
-    public static final String EVENT_DEFINITIONS = "EVENT_DEFINITIONS";
     public static final String EVENT_NAME = "eventName";
     public static final String TRANSPORT = "transport";
     public static final String NAME = "name";
@@ -34,6 +31,7 @@ public final class Constants {
     public static final String ATTRIBUTES = "attributes";
     public static final String EVENT_ATTRIBUTES = "eventAttributes";
     public static final String EVENT_TOPIC_STRUCTURE = "eventTopicStructure";
+    public static final String DEVICE_EVENT_META_KEY_PATTERN = "dm:%s:event:definition";
 
 }
 
