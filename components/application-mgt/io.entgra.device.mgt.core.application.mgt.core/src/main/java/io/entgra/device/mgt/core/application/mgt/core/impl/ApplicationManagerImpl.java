@@ -3296,7 +3296,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             throw new BadRequestException(msg);
         }
 
-        List<String> appTypes = filter.getAppType();
+        List<String> appTypes = filter.getAppTypes();
 
         if (appTypes != null && !appTypes.isEmpty()) {
             Set<String> validAppTypes = Arrays.stream(ApplicationType.values())

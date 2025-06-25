@@ -22,7 +22,6 @@ import io.entgra.device.mgt.core.application.mgt.common.Filter;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.DBConnectionException;
 import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManagementDAOException;
-import io.entgra.device.mgt.core.application.mgt.core.util.Constants;
 import io.entgra.device.mgt.core.application.mgt.core.util.DAOUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -97,8 +96,8 @@ public class SQLServerApplicationDAOImpl extends GenericApplicationDAOImpl {
             sql += "LEFT JOIN AP_APP_RELEASE ON AP_APP.ID = AP_APP_RELEASE.AP_APP_ID ";
         }
         sql += "WHERE AP_APP.TENANT_ID = ? ";
-        if (filter.getAppType() != null && !filter.getAppType().isEmpty()) {
-            String placeholders = filter.getAppType().stream().map(type -> "?").collect(Collectors.joining(", "));
+        if (filter.getAppTypes() != null && !filter.getAppTypes().isEmpty()) {
+            String placeholders = filter.getAppTypes().stream().map(type -> "?").collect(Collectors.joining(", "));
             sql += "AND AP_APP.TYPE IN (" + placeholders + ") ";
         }
         if (StringUtils.isNotEmpty(filter.getAppName())) {
@@ -150,8 +149,8 @@ public class SQLServerApplicationDAOImpl extends GenericApplicationDAOImpl {
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 int paramIndex = 1;
                 stmt.setInt(paramIndex++, tenantId);
-                if (filter.getAppType() != null && !filter.getAppType().isEmpty()) {
-                    for (String type : filter.getAppType()) {
+                if (filter.getAppTypes() != null && !filter.getAppTypes().isEmpty()) {
+                    for (String type : filter.getAppTypes()) {
                         stmt.setString(paramIndex++, type);
                     }
                 }
