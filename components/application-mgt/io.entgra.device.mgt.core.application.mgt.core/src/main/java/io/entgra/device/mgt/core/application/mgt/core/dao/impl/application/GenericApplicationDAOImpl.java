@@ -2174,8 +2174,35 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
     }
 
     @Override
-    public List<Integer> getFirmwareModelIdsForApp(int applicationId, int tenantId) throws ApplicationManagementDAOException {
-        return List.of();
+    public List<Integer> getFirmwareModelIdsForApp(int applicationId) throws ApplicationManagementDAOException {
+        List<Integer> firmwareModelIds = new ArrayList<>();
+        String sql = "SELECT "
+                + "FIRMWARE_DEVICE_MODEL_ID "
+                + "FROM AP_APP_DEVICE_MODEL "
+                + "WHERE APP_ID = ? ";
+        try {
+            Connection conn = this.getDBConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, applicationId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while(rs.next()) {
+                        firmwareModelIds.add(rs.getInt("FIRMWARE_DEVICE_MODEL_ID"));
+                    }
+                }
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection to get firmware model IDs for application ID: "
+                    + applicationId;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred to getting firmware model ID associate with application ID " + applicationId
+                    + " while executing query. Query: " + sql;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+
+        return firmwareModelIds;
     }
 
 }

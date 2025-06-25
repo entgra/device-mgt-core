@@ -4914,7 +4914,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     log.error(msg);
                     throw new ApplicationManagementException(msg);
             }
-            firmwareModelIds = applicationDAO.getFirmwareModelIdsForApp(application.getId(), tenantId);
+            firmwareModelIds = applicationDAO.getFirmwareModelIdsForApp(application.getId());
         } catch (ApplicationManagementDAOException e) {
             String msg = "Error retrieving application release data.";
             log.error(msg, e);
