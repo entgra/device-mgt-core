@@ -40,7 +40,7 @@ public class Filter {
      * Type of the application.
      * e.g :- ENTERPRISE, PUBLIC
      */
-    private String appType;
+    private List<String> appTypes;
 
     /***
      * Subscription type of the application.
@@ -165,12 +165,10 @@ public class Filter {
         isFullMatch = fullMatch;
     }
 
-    public String getAppType() {
-        return appType;
-    }
+    public List<String> getAppTypes() { return appTypes; }
 
-    public void setAppType(String appType) {
-        this.appType = appType;
+    public void setAppTypes(List<String> appTypes) {
+        this.appTypes = appTypes;
     }
 
     public List<String> getCategories() {
