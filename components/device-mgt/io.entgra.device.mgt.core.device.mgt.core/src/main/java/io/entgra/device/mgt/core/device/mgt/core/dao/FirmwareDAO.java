@@ -43,7 +43,7 @@ public interface FirmwareDAO {
      * @return the ID of the newly created firmware model
      * @throws DeviceManagementDAOException if an error occurs while accessing the database
      */
-    DeviceFirmwareModel addFirmwareModel(DeviceFirmwareModel deviceFirmwareModel, int tenantId)
+    DeviceFirmwareModel addFirmwareModel(DeviceFirmwareModel deviceFirmwareModel, int tenantId, int deviceTypeId)
             throws DeviceManagementDAOException;
 
     /**
@@ -90,5 +90,29 @@ public interface FirmwareDAO {
      */
     int getCountOfFilteredDevicesByFirmwareVersion(DeviceFirmwareModelSearchFilter searchFilter,
                                                    int tenantId, boolean requireMatchingDevices)
+            throws DeviceManagementDAOException;
+
+    /**
+     * Retrieves all firmware models associated with a specific device type.
+     *
+     * @param deviceTypeId the ID of the device type for which firmware models are to be retrieved.
+     * @param tenantId the ID of the tenant to which the device type belongs
+     * @return a list of {@link DeviceFirmwareModel} objects representing the firmware models for the specified device type.
+     * @throws DeviceManagementDAOException if an error occurs while accessing the database.
+     */
+    List<DeviceFirmwareModel> getAllFirmwareModelsByDeviceType(int deviceTypeId, int tenantId)
+            throws DeviceManagementDAOException;
+
+    /**
+     * Saves the firmware version of a device.
+     *
+     * @param deviceId the ID of the device for which the firmware version is to be saved
+     * @param firmwareVersion the firmware version to be saved
+     * @param firmwareModelId the ID of the firmware model associated with the device
+     * @param tenantId the ID of the tenant to which the device belongs
+     * @return true if the firmware version was successfully saved, false otherwise
+     * @throws DeviceManagementDAOException if an error occurs while accessing the database
+     */
+    boolean saveFirmwareVersionOfDevice(int deviceId, String firmwareVersion, int firmwareModelId, int tenantId)
             throws DeviceManagementDAOException;
 }

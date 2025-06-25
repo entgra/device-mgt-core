@@ -510,14 +510,15 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             throw new DeviceManagementException(msg);
         }
         DeviceFirmwareModel deviceFirmware;
-
+        DeviceType deviceType = this.getDeviceType(device.getType());
         try {
             DeviceManagementDAOFactory.beginTransaction();
             deviceFirmware = firmwareDAO.getExistingFirmwareModel(firmwareModel, tenantId);
             if (deviceFirmware != null) {
                 firmwareDAO.addDeviceFirmwareMapping(device.getId(), deviceFirmware.getFirmwareId(), tenantId);
             } else {
-                deviceFirmware = firmwareDAO.addFirmwareModel(new DeviceFirmwareModel(firmwareModel, null), tenantId);
+                deviceFirmware = firmwareDAO.addFirmwareModel(new DeviceFirmwareModel(firmwareModel, null),
+                        tenantId, deviceType.getId());
                 if (deviceFirmware.getFirmwareId() > -1) {
                     firmwareDAO.addDeviceFirmwareMapping(device.getId(), deviceFirmware.getFirmwareId(), tenantId);
                 }
@@ -5944,11 +5945,12 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         if(searchFilter.getOffset() < 0 || searchFilter.getLimit() <= 0) {
             String msg = "Invalid pagination parameters in DeviceFirmwareModelSearchFilter: " + searchFilter;
             log.error(msg);
-            throw new IllegalStateException(msg);
+            throw new IllegalArgumentException(msg);
         }
 
         DeviceFirmwareResult deviceFirmwareResult;
         try {
+            DeviceManagementDAOFactory.openConnection();
             List<Device> devicesFIltered = firmwareDAO.getFilteredDevicesByFirmwareVersion(searchFilter,
                     tenantId, requireMatchingDevices);
             devicesFIltered = this.populateAllDeviceInfo(devicesFIltered);
@@ -5961,6 +5963,12 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             String msg = "Error occurred while retrieving filtered device list using device firmware model search filters";
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
         }
         return deviceFirmwareResult;
     }

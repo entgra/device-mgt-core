@@ -52,7 +52,8 @@ public class FirmwareDAOImpl implements FirmwareDAO {
         DeviceFirmwareModel deviceFirmwareModel = null;
         String sql = "SELECT ID, " +
                 "FIRMWARE_MODEL, " +
-                "DESCRIPTION " +
+                "DESCRIPTION, " +
+                "DEVICE_TYPE_ID " +
                 "FROM DM_DEVICE_FIRMWARE_MODEL M " +
                 "INNER JOIN DM_DEVICE_FIRMWARE_MODEL_MAPPING D " +
                 "ON D.FIRMWARE_MODEL_ID = M.ID " +
@@ -68,6 +69,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
                         deviceFirmwareModel.setFirmwareId(rs.getInt("ID"));
                         deviceFirmwareModel.setFirmwareModelName(rs.getString("FIRMWARE_MODEL"));
                         deviceFirmwareModel.setDescription(rs.getString("DESCRIPTION"));
+                        deviceFirmwareModel.setDeviceTypeId(rs.getInt("DEVICE_TYPE_ID"));
                     }
                 }
             }
@@ -80,11 +82,11 @@ public class FirmwareDAOImpl implements FirmwareDAO {
     }
 
     @Override
-    public DeviceFirmwareModel addFirmwareModel(DeviceFirmwareModel deviceFirmwareModel, int tenantId)
+    public DeviceFirmwareModel addFirmwareModel(DeviceFirmwareModel deviceFirmwareModel, int tenantId, int deviceTypeId)
             throws DeviceManagementDAOException {
         Connection conn;
         int firmwareId = -1;
-        String sql = "INSERT INTO DM_DEVICE_FIRMWARE_MODEL (FIRMWARE_MODEL, DESCRIPTION, TENANT_ID) " +
+        String sql = "INSERT INTO DM_DEVICE_FIRMWARE_MODEL (FIRMWARE_MODEL, DESCRIPTION, DEVICE_TYPE_ID, TENANT_ID) " +
                 "VALUES (?, ?, ?)";
 
         try {
@@ -92,7 +94,8 @@ public class FirmwareDAOImpl implements FirmwareDAO {
             try (PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, deviceFirmwareModel.getFirmwareModelName());
                 stmt.setString(2, deviceFirmwareModel.getDescription());
-                stmt.setInt(3, tenantId);
+                stmt.setInt(3, deviceTypeId);
+                stmt.setInt(4, tenantId);
                 stmt.executeUpdate();
                 try (ResultSet rs = stmt.getGeneratedKeys()) {
                     if (rs.next()) {
@@ -114,7 +117,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
             throws DeviceManagementDAOException {
         Connection conn;
         DeviceFirmwareModel deviceFirmwareModel = null;
-        String sql = "SELECT ID, FIRMWARE_MODEL, DESCRIPTION " +
+        String sql = "SELECT ID, FIRMWARE_MODEL, DESCRIPTION, DEVICE_TYPE_ID " +
                 "FROM DM_DEVICE_FIRMWARE_MODEL " +
                 "WHERE FIRMWARE_MODEL = ? AND TENANT_ID = ?";
         try {
@@ -128,6 +131,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
                         deviceFirmwareModel.setFirmwareId(rs.getInt("ID"));
                         deviceFirmwareModel.setFirmwareModelName(rs.getString("FIRMWARE_MODEL"));
                         deviceFirmwareModel.setDescription(rs.getString("DESCRIPTION"));
+                        deviceFirmwareModel.setDeviceTypeId(rs.getInt("DEVICE_TYPE_ID"));
                     }
                 }
             }
@@ -161,6 +165,61 @@ public class FirmwareDAOImpl implements FirmwareDAO {
             throw new DeviceManagementDAOException(msg, e);
         }
         return isAdded;
+    }
+
+    @Override
+    public boolean saveFirmwareVersionOfDevice(int deviceId, String firmwareVersion, int firmwareModelId, int tenantId)
+            throws DeviceManagementDAOException {
+        Connection conn;
+        boolean isSaved = false;
+        String sql = "UPDATE DM_DEVICE_FIRMWARE_MODEL_MAPPING " +
+                "SET FIRMWARE_VERSION = ? " +
+                "WHERE DM_DEVICE_ID = ? AND FIRMWARE_MODEL_ID = ? AND TENANT_ID = ?";
+        try {
+            conn = this.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, firmwareVersion);
+                stmt.setInt(2, deviceId);
+                stmt.setInt(3, firmwareModelId);
+                stmt.setInt(4, tenantId);
+                int rowsAffected = stmt.executeUpdate();
+                isSaved = rowsAffected > 0;
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while saving firmware version for device ID: " + deviceId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        }
+        return isSaved;
+    }
+
+    @Override
+    public List<DeviceFirmwareModel> getAllFirmwareModelsByDeviceType(int deviceTypeId, int tenantId)
+            throws DeviceManagementDAOException {
+        List<DeviceFirmwareModel> firmwareModels = new ArrayList<>();
+        DeviceFirmwareModel firmwareModel;
+        String sql = "SELECT ID, FIRMWARE_MODEL, DESCRIPTION " +
+                "FROM DM_DEVICE_FIRMWARE_MODEL " +
+                "WHERE DEVICE_TYPE_ID = ? AND TENANT_ID = ?";
+        try (Connection conn = this.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, deviceTypeId);
+            stmt.setInt(2, tenantId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    firmwareModel = new DeviceFirmwareModel();
+                    firmwareModel.setFirmwareId(rs.getInt("ID"));
+                    firmwareModel.setFirmwareModelName(rs.getString("FIRMWARE_MODEL"));
+                    firmwareModel.setDescription(rs.getString("DESCRIPTION"));
+                    firmwareModels.add(firmwareModel);
+                }
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while retrieving firmware models for device type ID: " + deviceTypeId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        }
+        return firmwareModels;
     }
 
     @Override
