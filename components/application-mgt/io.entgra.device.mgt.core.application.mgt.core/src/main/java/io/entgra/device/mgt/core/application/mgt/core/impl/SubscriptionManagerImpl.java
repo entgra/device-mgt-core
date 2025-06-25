@@ -950,13 +950,13 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                 log.error(msg);
                 throw new NotFoundException(msg);
             }
-            if (!lifecycleStateManager.getInstallableState()
-                    .equals(applicationDTO.getApplicationReleaseDTOs().get(0).getCurrentState())) {
+            String installableState = lifecycleStateManager.getInstallableState(applicationDTO.getType());
+            if (!installableState.equals(applicationDTO.getApplicationReleaseDTOs().get(0).getCurrentState())) {
                 String msg = "You are trying to install an application which is not in the installable state of "
                         + "its Life-Cycle. hence you are not permitted to install this application. If you "
                         + "required to install this particular application, please change the state of "
                         + "application release from : " + applicationDTO.getApplicationReleaseDTOs().get(0)
-                        .getCurrentState() + " to " + lifecycleStateManager.getInstallableState();
+                        .getCurrentState() + " to " + installableState;
                 log.error(msg);
                 throw new ForbiddenException(msg);
             }

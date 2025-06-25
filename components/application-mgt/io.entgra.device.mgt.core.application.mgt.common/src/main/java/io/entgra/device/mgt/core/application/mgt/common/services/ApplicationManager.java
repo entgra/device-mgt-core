@@ -326,16 +326,18 @@ public interface ApplicationManager {
      */
     ApplicationRelease changeLifecycleState(String releaseUuid, LifecycleChanger lifecycleChanger)
             throws ApplicationManagementException;
-    
+
     /**
-     * To get all the releases of a particular ApplicationDTO.
+     * Changes the lifecycle state of a given application release.
      *
-     * @param applicationReleaseDTO  of the ApplicationDTO Release.
-     * @param lifecycleChanger Lifecycle changer that contains the action and the reason for the change.
-     * @throws ApplicationManagementException ApplicationDTO Management Exception.
-     * @return
+     * @param applicationReleaseDTO The application release for which the lifecycle state needs to be changed.
+     * @param lifecycleChanger      The lifecycle changer object containing the desired action and the reason for the
+     *                              change.
+     * @param applicationType       The type of the application (e.g., ENTERPRISE, PUBLIC etc).
+     * @return The updated {@link ApplicationRelease} after the lifecycle state change.
+     * @throws ApplicationManagementException If an error occurs while performing the lifecycle state change.
      */
-    ApplicationRelease changeLifecycleState(ApplicationReleaseDTO applicationReleaseDTO, LifecycleChanger lifecycleChanger)
+    ApplicationRelease changeLifecycleState(ApplicationReleaseDTO applicationReleaseDTO, LifecycleChanger lifecycleChanger, String applicationType)
             throws ApplicationManagementException;
     
     /**
@@ -497,7 +499,7 @@ public interface ApplicationManager {
 
     void updateCategory(String oldCategoryName, String newCategoryName) throws ApplicationManagementException;
 
-    String getInstallableLifecycleState() throws ApplicationManagementException;
+    String getInstallableLifecycleState(String applicationType) throws ApplicationManagementException;
 
     /**
      * Check if there are subscription devices for operations
