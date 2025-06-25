@@ -40,7 +40,8 @@ public class Filter {
      * Type of the application.
      * e.g :- ENTERPRISE, PUBLIC
      */
-    private String appType;
+    //todo OTA add list instead of single type
+    private List<String> appType;
 
     /***
      * Subscription type of the application.
@@ -165,11 +166,11 @@ public class Filter {
         isFullMatch = fullMatch;
     }
 
-    public String getAppType() {
+    public List<String> getAppType() {
         return appType;
     }
 
-    public void setAppType(String appType) {
+    public void setAppType(List<String> appType) {
         this.appType = appType;
     }
 

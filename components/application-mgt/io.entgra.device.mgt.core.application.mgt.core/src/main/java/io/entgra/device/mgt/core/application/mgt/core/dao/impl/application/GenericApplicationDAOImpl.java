@@ -40,6 +40,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 /**
  * This handles Application related operations.
@@ -149,8 +150,9 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
         }
         sql += "WHERE AP_APP.TENANT_ID = ? ";
 
-        if (StringUtils.isNotEmpty(filter.getAppType()) && !Constants.ALL.equalsIgnoreCase(filter.getAppType())) {
-            sql += "AND AP_APP.TYPE = ? ";
+        if (filter.getAppType() != null && !filter.getAppType().isEmpty()) {
+            String placeholders = filter.getAppType().stream().map(type -> "?").collect(Collectors.joining(", "));
+            sql += "AND AP_APP.TYPE IN (" + placeholders + ") ";
         }
         if (StringUtils.isNotEmpty(filter.getAppName())) {
             sql += "AND LOWER (AP_APP.NAME) ";
@@ -211,8 +213,10 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 int paramIndex = 1;
                 stmt.setInt(paramIndex++, tenantId);
-                if (StringUtils.isNotEmpty(filter.getAppType()) && !Constants.ALL.equalsIgnoreCase(filter.getAppType())) {
-                    stmt.setString(paramIndex++, filter.getAppType());
+                if (filter.getAppType() != null && !filter.getAppType().isEmpty()) {
+                    for (String type : filter.getAppType()) {
+                        stmt.setString(paramIndex++, type);
+                    }
                 }
                 if (StringUtils.isNotEmpty(filter.getAppName())) {
                     if (filter.isFullMatch()) {
@@ -284,8 +288,9 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
             throw new ApplicationManagementDAOException("Filter need to be instantiated");
         }
 
-        if (!StringUtils.isEmpty(filter.getAppType())) {
-            sql += " AND AP_APP.TYPE = ?";
+        if (filter.getAppType() != null && !filter.getAppType().isEmpty()) {
+            String placeholders = filter.getAppType().stream().map(type -> "?").collect(Collectors.joining(", "));
+            sql += "AND AP_APP.TYPE IN (" + placeholders + ") ";
         }
         if (!StringUtils.isEmpty(filter.getAppName())) {
             sql += " AND LOWER (AP_APP.NAME) ";
@@ -327,7 +332,9 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
             stmt.setInt(paramIndex++, tenantId);
 
             if (filter.getAppType() != null && !filter.getAppType().isEmpty()) {
-                stmt.setString(paramIndex++, filter.getAppType());
+                for (String type : filter.getAppType()) {
+                    stmt.setString(paramIndex++, type);
+                }
             }
             if (filter.getAppName() != null && !filter.getAppName().isEmpty()) {
                 if (filter.isFullMatch()) {

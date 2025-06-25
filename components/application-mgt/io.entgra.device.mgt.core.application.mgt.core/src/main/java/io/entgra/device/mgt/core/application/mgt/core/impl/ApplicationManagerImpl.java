@@ -1188,14 +1188,8 @@ public class ApplicationManagerImpl implements ApplicationManager {
     public ApplicationList getApplications(Filter filter) throws ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
 
-        //todo get configured roles from Meta and replace empty list
-        List<String> configuredRoleList = new ArrayList<>();
-        boolean isTestRoleAvailable = false;
-        try {
-            isTestRoleAvailable = hasUserRole(configuredRoleList, PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername());
-        } catch (UserStoreException e) {
-            throw new RuntimeException(e);
-        }
+        boolean isTestRoleAvailable = hasTestRolesAssigned();
+
         ApplicationList applicationList = new ApplicationList();
         List<Application> applications = new ArrayList<>();
         DeviceType deviceType;
@@ -1228,7 +1222,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     List<ApplicationReleaseDTO> filteredApplicationReleaseDTOs = new ArrayList<>();
                     for (ApplicationReleaseDTO applicationReleaseDTO : applicationDTO.getApplicationReleaseDTOs()) {
                         if (ApplicationType.CUSTOM.toString().equals(applicationDTO.getType()) && !isTestRoleAvailable
-                                && AppReleaseType.TEST.toString().equals(applicationReleaseDTO.getReleaseType())) {
+                                && AppReleaseType.TEST.equals(applicationReleaseDTO.getReleaseType())) {
                             continue;
                         }
                         if (StringUtils.isNotEmpty(filter.getVersion()) && !filter.getVersion()
@@ -3301,20 +3295,23 @@ public class ApplicationManagerImpl implements ApplicationManager {
             log.error(msg);
             throw new BadRequestException(msg);
         }
-        String appType = filter.getAppType();
 
-        if (!StringUtils.isEmpty(appType)) {
-            boolean isValidAppType = false;
-            for (ApplicationType applicationType : ApplicationType.values()) {
-                if (applicationType.toString().equalsIgnoreCase(appType) || Constants.ALL.equalsIgnoreCase(appType)) {
-                    isValidAppType = true;
-                    break;
-                }
-            }
-            if (!isValidAppType) {
-                String msg =
-                        "Filter validation is failed, Invalid application type is found in filter. Application Type: "
-                                + appType + " Please verify the request payload";
+        List<String> appTypes = filter.getAppType();
+
+        if (appTypes != null && !appTypes.isEmpty()) {
+            Set<String> validAppTypes = Arrays.stream(ApplicationType.values())
+                    .map(Enum::name)
+                    .collect(Collectors.toSet());
+
+            List<String> invalidTypes = appTypes.stream()
+                    .filter(type -> !validAppTypes.contains(type))
+                    .collect(Collectors.toList());
+
+            if (!invalidTypes.isEmpty()) {
+                String msg = String.format(
+                        "Filter validation failed. Invalid application type(s) found: %s. Valid types are: %s.",
+                        invalidTypes, validAppTypes
+                );
                 log.error(msg);
                 throw new BadRequestException(msg);
             }
@@ -4919,9 +4916,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             DeviceFirmwareModelSearchFilter deviceFirmwareModelSearchFilter = new DeviceFirmwareModelSearchFilter();
             deviceFirmwareModelSearchFilter.setFirmwareModelIds(firmwareModelIds);
             deviceFirmwareModelSearchFilter.setFirmwareVersions(versions);
-            if (groupId!= -1) {
-                deviceFirmwareModelSearchFilter.setGroupId(groupId);
-            }
+            deviceFirmwareModelSearchFilter.setGroupId(groupId);
             return dms.getFilteredDeviceListByFirmwareVersion(deviceFirmwareModelSearchFilter, tenantId, requireMatching);
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while getting device data.";

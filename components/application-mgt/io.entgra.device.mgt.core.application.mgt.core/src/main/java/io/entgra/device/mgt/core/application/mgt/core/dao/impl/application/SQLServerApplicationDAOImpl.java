@@ -33,6 +33,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * This handles Application operations which are specific to MSSQL.
@@ -96,8 +97,9 @@ public class SQLServerApplicationDAOImpl extends GenericApplicationDAOImpl {
             sql += "LEFT JOIN AP_APP_RELEASE ON AP_APP.ID = AP_APP_RELEASE.AP_APP_ID ";
         }
         sql += "WHERE AP_APP.TENANT_ID = ? ";
-        if (StringUtils.isNotEmpty(filter.getAppType()) && !Constants.ALL.equalsIgnoreCase(filter.getAppType())) {
-            sql += "AND AP_APP.TYPE = ? ";
+        if (filter.getAppType() != null && !filter.getAppType().isEmpty()) {
+            String placeholders = filter.getAppType().stream().map(type -> "?").collect(Collectors.joining(", "));
+            sql += "AND AP_APP.TYPE IN (" + placeholders + ") ";
         }
         if (StringUtils.isNotEmpty(filter.getAppName())) {
             sql += " AND LOWER (AP_APP.NAME) ";
@@ -148,8 +150,10 @@ public class SQLServerApplicationDAOImpl extends GenericApplicationDAOImpl {
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 int paramIndex = 1;
                 stmt.setInt(paramIndex++, tenantId);
-                if (StringUtils.isNotEmpty(filter.getAppType()) && !Constants.ALL.equalsIgnoreCase(filter.getAppType())) {
-                    stmt.setString(paramIndex++, filter.getAppType());
+                if (filter.getAppType() != null && !filter.getAppType().isEmpty()) {
+                    for (String type : filter.getAppType()) {
+                        stmt.setString(paramIndex++, type);
+                    }
                 }
                 if (StringUtils.isNotEmpty(filter.getAppName())) {
                     if (filter.isFullMatch()) {

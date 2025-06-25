@@ -230,6 +230,7 @@ public class LifecycleStateManager {
         return endState;
     }
 
+    //todo OTA pass the application type e.g CUSTOM
     public String getInstallableState() throws LifecycleManagementException {
         String installableState = null;
         for (Map.Entry<String, LifecycleState> stringStateEntry : lifecycleStates.entrySet()) {

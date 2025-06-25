@@ -33,6 +33,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * This handles Application operations which are specific to Oracle.
@@ -95,8 +96,9 @@ public class OracleApplicationDAOImpl extends GenericApplicationDAOImpl {
                 || StringUtils.isNotEmpty(filter.getAppReleaseType())) {
             sql += "LEFT JOIN AP_APP_RELEASE ON AP_APP.ID = AP_APP_RELEASE.AP_APP_ID ";
         }
-        if (StringUtils.isNotEmpty(filter.getAppType()) && !Constants.ALL.equalsIgnoreCase(filter.getAppType())) {
-            sql += "AND AP_APP.TYPE = ? ";
+        if (filter.getAppType() != null && !filter.getAppType().isEmpty()) {
+            String placeholders = filter.getAppType().stream().map(type -> "?").collect(Collectors.joining(", "));
+            sql += "AND AP_APP.TYPE IN (" + placeholders + ") ";
         }
         if (StringUtils.isNotEmpty(filter.getAppName())) {
             sql += " AND LOWER (AP_APP.NAME) ";
@@ -146,8 +148,9 @@ public class OracleApplicationDAOImpl extends GenericApplicationDAOImpl {
             Connection conn = this.getDBConnection();
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 int paramIndex = 1;
-                if (StringUtils.isNotEmpty(filter.getAppType()) && !Constants.ALL.equalsIgnoreCase(filter.getAppType())) {
-                    stmt.setString(paramIndex++, filter.getAppType());
+                if (filter.getAppType() != null && !filter.getAppType().isEmpty()) {
+                    String placeholders = filter.getAppType().stream().map(type -> "?").collect(Collectors.joining(", "));
+                    sql += "AND AP_APP.TYPE IN (" + placeholders + ") ";
                 }
                 if (StringUtils.isNotEmpty(filter.getAppName())) {
                     if (filter.isFullMatch()) {
