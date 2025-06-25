@@ -27,7 +27,6 @@ import io.entgra.device.mgt.core.device.mgt.core.config.datasource.JNDILookupDef
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.ApplicationDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.DeviceStatusDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.DeviceTypeDAOImpl;
-import io.entgra.device.mgt.core.device.mgt.core.dao.impl.DeviceTypeEventDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.TagDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.TenantDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.device.GenericDeviceDAOImpl;
@@ -125,10 +124,6 @@ public class DeviceManagementDAOFactory {
 
     public static DeviceTypeDAO getDeviceTypeDAO() {
         return new DeviceTypeDAOImpl();
-    }
-
-    public static DeviceTypeEventDAO getDeviceTypeEventDAO() {
-        return new DeviceTypeEventDAOImpl();
     }
 
     public static EnrollmentDAO getEnrollmentDAO() {

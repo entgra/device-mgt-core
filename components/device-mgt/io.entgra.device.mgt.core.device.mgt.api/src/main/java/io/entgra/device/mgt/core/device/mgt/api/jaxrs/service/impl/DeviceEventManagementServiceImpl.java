@@ -75,7 +75,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * This is used for device type integration with DAS, to create streams and receiver dynamically and a common endpoint
@@ -169,11 +168,12 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                 log.error(errorMessage);
                 return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
             }
-            List<DeviceTypeEvent> eventDefinitions = DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService().getDeviceTypeEventDefinitions(deviceType);
+            List<DeviceTypeEvent> eventDefinitions = DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
+                    .getDeviceTypeEventDefinitions(deviceType);
             return Response.status(Response.Status.OK).entity(eventDefinitions).build();
         } catch (DeviceManagementException e) {
-            return serverError("Error occurred at server side while fetching device type event definitions for type: "
-                    + deviceType, e);
+            return serverError("Error occurred at server side while" +
+                    " fetching device type event definitions for type: " + deviceType, e);
         }
     }
 
@@ -185,24 +185,20 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
     @Override
     public Response deployDeviceTypeEventDefinitions(@PathParam("type") String deviceType,
                                                      @QueryParam("skipPersist") boolean skipPersist,
-                                                     @QueryParam("isSharedWithAllTenants") boolean isSharedWithAllTenants,
+                                                     @QueryParam("isSharedWithAllTenants")
+                                                     boolean isSharedWithAllTenants,
                                                      @Valid List<DeviceTypeEvent> deviceTypeEvents) {
         try {
-            // Check if the device type event definitions already exist, If they already exist, return 409 Conflict
-            if (DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
-                    .isDeviceTypeMetaExist(deviceType)) {
-                return Response.status(Response.Status.CONFLICT)
-                        .entity("Device type event definitions already exist for device type: " + deviceType)
-                        .build();
-            }
             if (DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
                     .createDeviceTypeMetaWithEvents(deviceType, deviceTypeEvents)) {
                 log.info("Device type event definitions updated and metadata created successfully in the database.");
                 processDeviceTypeEventDefinitions(deviceType, skipPersist, isSharedWithAllTenants, deviceTypeEvents);
             }
-            return Response.ok().entity("Device type event definitions updated and metadata created successfully.").build();
+            return Response.ok().entity("Device type event definitions updated" +
+                    " and metadata created successfully.").build();
         } catch (DeviceManagementException e) {
-            return serverError("Error while updating device type metadata with events for device type: " + deviceType, e);
+            return serverError("Error while updating device type metadata " +
+                    "with events for device type: " + deviceType, e);
         }
     }
 
@@ -214,8 +210,9 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                                                      @QueryParam("isSharedWithAllTenants") boolean isSharedWithAllTenants,
                                                      @Valid List<DeviceTypeEvent> deviceTypeEvents) {
         try {
-            // Check if any devices are enrolled for this device type
-            if (DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService().isDeviceTypeMetaExist(deviceType)) {
+            if (DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
+                    .getDeviceTypeEventDefinitions(deviceType) != null) {
+                // Check if any devices are enrolled for this device type
                 if (checkDeviceEnrollment(deviceType)) {
                     DeviceTypeEventUpdateResult result = DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
                             .computeUpdatedDeviceTypeEvents(deviceType, deviceTypeEvents);
@@ -225,7 +222,10 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                     // Proceed only if something changed
                     if (!updatedEvents.isEmpty()) {
                         removeDeviceTypeEventFiles(deviceType, updatedEvents);
-                        persistEvents(deviceType, mergedEvents);
+                        if (!DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
+                                .updateDeviceTypeMetaWithEvents(deviceType, mergedEvents)) {
+                            throw new IllegalStateException("Failed to persist device type event definitions.");
+                        }
                     } else {
                         log.info("No new or updated event definitions found. Skipping update.");
                     }
@@ -241,7 +241,8 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
             } else {
                 deployDeviceTypeEventDefinitions(deviceType, skipPersist, isSharedWithAllTenants, deviceTypeEvents);
             }
-            return Response.ok().entity("Device type event definitions updated and metadata updated successfully.").build();
+            return Response.ok().entity("Device type event definitions updated" +
+                    " and metadata updated successfully.").build();
         } catch (ConstraintViolationException e) {
             return badRequest("Validation failed for device type event definitions: " + deviceType, e);
         } catch (IllegalArgumentException e) {
@@ -257,7 +258,7 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
 
     /**
      * Checks whether any devices are enrolled for the specified device type.
-     *
+     * <p>
      * This method sends a pagination request (with a limit of 1) to determine if at least
      * one device exists for the given type. It is optimized to avoid fetching all records.
      *
@@ -271,27 +272,11 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
         return DeviceMgtAPIUtils.getDeviceManagementService().getDevicesByType(request).getRecordsTotal() > 0;
     }
 
-
-    /**
-     * Persists the given list of event definitions for the specified device type.
-     *
-     * @param deviceType the device type to persist events for
-     * @param events the list of {@link DeviceTypeEvent} definitions to persist
-     * @throws DeviceManagementException if an error occurs while updating metadata
-     * @throws IllegalStateException if the update fails silently (returns false)
-     */
-    private void persistEvents(String deviceType, List<DeviceTypeEvent> events) throws DeviceManagementException {
-        if (!DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
-                .updateDeviceTypeMetaWithEvents(deviceType, events)) {
-            throw new IllegalStateException("Failed to persist device type event definitions.");
-        }
-    }
-
     /**
      * Returns a HTTP 400 Bad Request response with the given message and logs the error.
      *
      * @param msg the error message to return
-     * @param e the exception that caused the error
+     * @param e   the exception that caused the error
      * @return a {@link Response} with HTTP 400 status
      */
     private Response badRequest(String msg, Exception e) {
@@ -303,7 +288,7 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
      * Returns a HTTP 409 Conflict response with the given message and logs the error.
      *
      * @param msg the error message to return
-     * @param e the exception that caused the conflict
+     * @param e   the exception that caused the conflict
      * @return a {@link Response} with HTTP 409 status
      */
     private Response conflict(String msg, Exception e) {
@@ -315,7 +300,7 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
      * Returns a HTTP 500 Internal Server Error response with the given message and logs the error.
      *
      * @param msg the error message to return
-     * @param e the exception that caused the server error
+     * @param e   the exception that caused the server error
      * @return a {@link Response} with HTTP 500 status
      */
     private Response serverError(String msg, Exception e) {
@@ -383,7 +368,7 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                     artifactsDeployer.deployEventStream(eventStreamData, tenantId);
                 } catch (EventStreamDeployerException e) {
                     return serverError(String.format("Failed to deploy event stream for deviceType=%s, eventName=%s, tenantId=%d",
-                                    deviceType, eventName, tenantId), e);
+                            deviceType, eventName, tenantId), e);
                 }
 
                 // event receiver
@@ -428,8 +413,8 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                     artifactsDeployer.deployEventReceiver(receiverData, tenantId);
                 } catch (EventReceiverDeployerException e) {
                     return serverError(String.format(
-                                    "Failed to deploy event receiver for deviceType=%s, eventName=%s, tenantId=%d",
-                                    deviceType, eventName, tenantId), e
+                            "Failed to deploy event receiver for deviceType=%s, eventName=%s, tenantId=%d",
+                            deviceType, eventName, tenantId), e
                     );
                 }
 
@@ -452,8 +437,8 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                         artifactsDeployer.deployEventPublisher(eventPublisherData, tenantId);
                     } catch (EventPublisherDeployerException e) {
                         return serverError(String.format(
-                                        "Failed to deploy RDBMS event publisher for deviceType=%s, eventName=%s, tenantId=%d",
-                                        deviceType, eventName, tenantId), e
+                                "Failed to deploy RDBMS event publisher for deviceType=%s, eventName=%s, tenantId=%d",
+                                deviceType, eventName, tenantId), e
                         );
                     }
                 }
@@ -470,16 +455,16 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                     artifactsDeployer.deployEventPublisher(wsEventPublisherData, tenantId);
                 } catch (EventPublisherDeployerException e) {
                     return serverError(String.format(
-                                    "Failed to deploy WebSocket event publisher for deviceType=%s, eventName=%s, tenantId=%d",
-                                    deviceType, eventName, tenantId), e
+                            "Failed to deploy WebSocket event publisher for deviceType=%s, eventName=%s, tenantId=%d",
+                            deviceType, eventName, tenantId), e
                     );
                 }
             }
             return Response.ok().build();
         } catch (DeviceManagementException e) {
             return serverError(String.format(
-                            "Failed to access device management service for tenantDomain=%s, tenantId=%d",
-                            tenantDomain, tenantId), e
+                    "Failed to access device management service for tenantDomain=%s, tenantId=%d",
+                    tenantDomain, tenantId), e
             );
         }
     }
@@ -503,7 +488,8 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                 // Remove artifacts from file system
                 removeDeviceTypeEventFiles(deviceType);
                 // Remove metadata from the database
-                DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService().deleteDeviceTypeEventDefinitions(deviceType);
+                DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
+                        .deleteDeviceTypeEventDefinitions(deviceType);
             } else {
                 return Response.status(Response.Status.CONFLICT)
                         .entity("Device type event definitions are not deleted due to devices that are already enrolled.")

@@ -320,9 +320,6 @@ public class DeviceManagementServiceComponent {
         TagManagementProviderService tagManagementProviderService = new TagManagementProviderServiceImpl();
         bundleContext.registerService(TagManagementProviderService.class.getName(), tagManagementProviderService, null);
 
-        /* Registering Event Management Service */
-        DeviceTypeEventManagementProviderService deviceTypeEventManagementProviderService = new DeviceTypeEventManagementProviderServiceImpl();
-        bundleContext.registerService(DeviceTypeEventManagementProviderService.class.getName(), deviceTypeEventManagementProviderService, null);
 
         /* Registering DeviceAccessAuthorization Service */
         DeviceAccessAuthorizationService deviceAccessAuthorizationService = new DeviceAccessAuthorizationServiceImpl();
@@ -345,6 +342,12 @@ public class DeviceManagementServiceComponent {
         MetadataManagementService metadataManagementService = new MetadataManagementServiceImpl();
         DeviceManagementDataHolder.getInstance().setMetadataManagementService(metadataManagementService);
         bundleContext.registerService(MetadataManagementService.class.getName(), metadataManagementService, null);
+
+        /* Registering Event Management Service */
+        DeviceTypeEventManagementProviderService deviceTypeEventManagementProviderService =
+                new DeviceTypeEventManagementProviderServiceImpl(metadataManagementService);
+        bundleContext.registerService(DeviceTypeEventManagementProviderService.class.getName(),
+                deviceTypeEventManagementProviderService, null);
 
         /* Registering Whitelabel Service */
         try {
