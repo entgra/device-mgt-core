@@ -47,7 +47,7 @@ public class DeviceFirmwareModelManagementServiceImpl implements DeviceFirmwareM
         }
 
         try {
-            DeviceManagementDAOFactory.getConnection();
+            DeviceManagementDAOFactory.openConnection();
             return firmwareDAO.addFirmwareModel(deviceFirmwareModel, PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(), deviceType.getId());
         } catch (SQLException e) {
             String msg = "SQL exception encountered while creating device firmware model [" + deviceFirmwareModel.getFirmwareModelName() + "]";
@@ -65,7 +65,7 @@ public class DeviceFirmwareModelManagementServiceImpl implements DeviceFirmwareM
     @Override
     public DeviceFirmwareModel getDeviceFirmwareModelByFirmwareModelName(String firmwareModelName) throws DeviceFirmwareModelManagementException {
         try {
-            DeviceManagementDAOFactory.getConnection();
+            DeviceManagementDAOFactory.openConnection();
             return firmwareDAO.getExistingFirmwareModel(firmwareModelName, PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId());
         } catch (SQLException e) {
             String msg = "SQL exception encountered while getting device firmware model [" + firmwareModelName + "]";
