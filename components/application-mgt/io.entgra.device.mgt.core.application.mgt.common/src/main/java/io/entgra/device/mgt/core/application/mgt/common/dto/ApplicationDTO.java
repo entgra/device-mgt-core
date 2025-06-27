@@ -101,9 +101,9 @@ public class ApplicationDTO {
             value = "if the app is favoured by the user")
     private boolean isFavourite;
 
-    @ApiModelProperty(name = "firmwareModelId",
-            value = "ID of the firmware model")
-    private int firmwareModelId;
+    @ApiModelProperty(name = "firmwareModelIds",
+            value = "IDs of the firmware models")
+    private List<Integer> firmwareModelIds;
 
     public String getPackageName() {
         return packageName;
@@ -207,11 +207,11 @@ public class ApplicationDTO {
         isFavourite = favourite;
     }
 
-    public int getFirmwareModelId() {
-        return firmwareModelId;
+    public List<Integer> getFirmwareModelIds() {
+        return firmwareModelIds;
     }
 
-    public void setFirmwareModelId(int firmwareModelId) {
-        this.firmwareModelId = firmwareModelId;
+    public void setFirmwareModelIds(List<Integer> firmwareModelIds) {
+        this.firmwareModelIds = firmwareModelIds;
     }
 }

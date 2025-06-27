@@ -570,7 +570,12 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                     if (ApplicationType.CUSTOM.toString().equals(applicationDTO.getType())) {
                         Device device = deviceManagementProviderService.getDevice(deviceIdentifier, false);
                         DeviceFirmwareModel deviceFirmwareModel = deviceManagementProviderService.getDeviceFirmwareModel(device.getId());
-                        if (Objects.equals(deviceFirmwareModel.getFirmwareId(), applicationDTO.getFirmwareModelId())) {
+                        if (deviceFirmwareModel == null) {
+                            String msg = " No device firmware model found for device identifier " + deviceIdentifier;
+                            log.error(msg);
+                            throw new ApplicationManagementException(msg);
+                        }
+                        if (applicationDTO.getFirmwareModelIds().contains(deviceFirmwareModel.getFirmwareId())) {
                             devices.add(device);
                         } else {
                             log.warn("Found a device identifier which is not matched with the supported firmware " +

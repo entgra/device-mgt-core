@@ -1467,10 +1467,10 @@ public class ApplicationManagerImpl implements ApplicationManager {
 
                 // add device firmware model mapping
                 if (Objects.equals(applicationDTO.getType(), "CUSTOM")) {
-                    if (applicationDTO.getFirmwareModelId() < 0) {
-                        throw new ApplicationManagementDAOException("Firmware model id is required.");
+                    if (applicationDTO.getFirmwareModelIds() == null || applicationDTO.getFirmwareModelIds().isEmpty()) {
+                        throw new ApplicationManagementDAOException("Firmware model ids are required.");
                     }
-                    this.applicationDAO.addDeviceFirmwareModelMapping(appId, applicationDTO.getFirmwareModelId());
+                    this.applicationDAO.addDeviceFirmwareModelMapping(appId, applicationDTO.getFirmwareModelIds());
                 }
 
                 //add application categories

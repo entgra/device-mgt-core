@@ -95,5 +95,5 @@ public interface DeviceFirmwareModelManagementService {
                     name = "deviceType",
                     value = "Device type of the firmware model",
                     required = true)
-            @PathParam("deviceType") DeviceTypes deviceType);
+            @PathParam("deviceType") String deviceType);
 }

@@ -2146,7 +2146,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
     }
 
     @Override
-    public void addDeviceFirmwareModelMapping(int appId, int firmwareModelId) throws ApplicationManagementDAOException {
+    public void addDeviceFirmwareModelMapping(int appId, List<Integer> firmwareModelIds) throws ApplicationManagementDAOException {
         String sql = "INSERT INTO " +
                 "AP_APP_DEVICE_MODEL (" +
                 "APP_ID, " +
@@ -2156,18 +2156,21 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
         try {
             Connection connection = this.getDBConnection();
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setInt(1, appId);
-                preparedStatement.setInt(2, firmwareModelId);
-                preparedStatement.execute();
+                for (Integer firmwareModelId : firmwareModelIds) {
+                    preparedStatement.setInt(1, appId);
+                    preparedStatement.setInt(2, firmwareModelId);
+                    preparedStatement.addBatch();
+                }
+                preparedStatement.executeBatch();
             }
         } catch (SQLException e) {
             String msg = "SQL error encountered while adding device firmware model mapping for firmware " +
-                    "model ID: " + firmwareModelId;
+                    "model IDs: [" + firmwareModelIds.toString() + "]";
             log.error(msg, e);
             throw new ApplicationManagementDAOException(msg, e);
         } catch (DBConnectionException e) {
             String msg = "Error occurred while adding device firmware model mapping for firmware " +
-                    "model ID: " + firmwareModelId + ". Executed query: " + sql;
+                    "model IDs: [" + firmwareModelIds.toString() + "]. Executed query: " + sql;
             log.error(msg, e);
             throw new ApplicationManagementDAOException(msg, e);
         }

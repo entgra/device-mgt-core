@@ -14,17 +14,17 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.Locale;
 
 public class DeviceFirmwareManagementServiceImpl implements DeviceFirmwareModelManagementService {
     private static final Log logger = LogFactory.getLog(DeviceFirmwareManagementServiceImpl.class);
     @GET
     @Path("/device-types/{deviceType}")
     @Override
-    public Response getDeviceFirmwareModelsByDeviceType(@PathParam("deviceType") DeviceTypes deviceType) {
-        // todo: add validation
+    public Response getDeviceFirmwareModelsByDeviceType(@PathParam("deviceType") String deviceType) {
         try {
             List<DeviceFirmwareModel> deviceFirmwareModels = DeviceMgtAPIUtils.getDeviceFirmwareModelManagementService()
-                    .getFirmwareModelsByDeviceType(deviceType.toString());
+                    .getFirmwareModelsByDeviceType(deviceType);
             return Response.ok(deviceFirmwareModels).build();
         } catch (DeviceFirmwareModelManagementException e) {
             String message = "Error encountered while retrieving device firmware models for device type [" + deviceType + "]";
