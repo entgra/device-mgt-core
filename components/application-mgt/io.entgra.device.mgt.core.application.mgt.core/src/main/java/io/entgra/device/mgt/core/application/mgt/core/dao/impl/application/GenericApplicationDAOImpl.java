@@ -288,7 +288,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
 
         if (filter.getAppTypes() != null && !filter.getAppTypes().isEmpty()) {
             String placeholders = filter.getAppTypes().stream().map(type -> "?").collect(Collectors.joining(", "));
-            sql += "AND AP_APP.TYPE IN (" + placeholders + ") ";
+            sql += " AND AP_APP.TYPE IN (" + placeholders + ") ";
         }
         if (!StringUtils.isEmpty(filter.getAppName())) {
             sql += " AND LOWER (AP_APP.NAME) ";
