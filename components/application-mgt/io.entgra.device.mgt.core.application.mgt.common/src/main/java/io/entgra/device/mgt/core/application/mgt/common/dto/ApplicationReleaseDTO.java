@@ -82,7 +82,7 @@ public class ApplicationReleaseDTO {
     private String appHashValue;
 
     @ApiModelProperty(name = "isSharedWithAllTenants",
-            value = "If application release is shared with all tenants it is eqal to 1 otherwise 0",
+            value = "If application release is shared with all tenants it is equal to 1 otherwise 0",
             required = true)
     private boolean isSharedWithAllTenants;
 

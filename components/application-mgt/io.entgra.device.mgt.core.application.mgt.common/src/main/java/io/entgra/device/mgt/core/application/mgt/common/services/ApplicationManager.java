@@ -35,6 +35,7 @@ import io.entgra.device.mgt.core.application.mgt.common.wrapper.ApplicationUpdat
 import io.entgra.device.mgt.core.application.mgt.common.wrapper.PublicAppReleaseWrapper;
 import io.entgra.device.mgt.core.application.mgt.common.wrapper.WebAppReleaseWrapper;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This interface manages the application creation, deletion and editing of the application.
@@ -326,16 +327,18 @@ public interface ApplicationManager {
      */
     ApplicationRelease changeLifecycleState(String releaseUuid, LifecycleChanger lifecycleChanger)
             throws ApplicationManagementException;
-    
+
     /**
-     * To get all the releases of a particular ApplicationDTO.
+     * Changes the lifecycle state of a given application release.
      *
-     * @param applicationReleaseDTO  of the ApplicationDTO Release.
-     * @param lifecycleChanger Lifecycle changer that contains the action and the reason for the change.
-     * @throws ApplicationManagementException ApplicationDTO Management Exception.
-     * @return
+     * @param applicationReleaseDTO The application release for which the lifecycle state needs to be changed.
+     * @param lifecycleChanger      The lifecycle changer object containing the desired action and the reason for the
+     *                              change.
+     * @param applicationType       The type of the application (e.g., ENTERPRISE, PUBLIC etc).
+     * @return The updated {@link ApplicationRelease} after the lifecycle state change.
+     * @throws ApplicationManagementException If an error occurs while performing the lifecycle state change.
      */
-    ApplicationRelease changeLifecycleState(ApplicationReleaseDTO applicationReleaseDTO, LifecycleChanger lifecycleChanger)
+    ApplicationRelease changeLifecycleState(ApplicationReleaseDTO applicationReleaseDTO, LifecycleChanger lifecycleChanger, String applicationType)
             throws ApplicationManagementException;
     
     /**
@@ -497,7 +500,35 @@ public interface ApplicationManager {
 
     void updateCategory(String oldCategoryName, String newCategoryName) throws ApplicationManagementException;
 
-    String getInstallableLifecycleState() throws ApplicationManagementException;
+    /**
+     * Retrieves the installable lifecycle state for a given application type.
+     *
+     * <p>This method validates whether the provided application type is supported and then
+     * returns the corresponding lifecycle state marked as installable for that type.
+     * If no such state exists or multiple installable states are found, an exception is thrown.
+     *
+     * @param applicationType the type of the application (e.g., ENTERPRISE, CUSTOM, etc.)
+     * @return the name of the installable lifecycle state for the specified application type
+     * @throws ApplicationManagementException if the application type is invalid,
+     *                                        or no or multiple installable states are configured
+     */
+    String getInstallableLifecycleState(String applicationType) throws ApplicationManagementException;
+
+    /**
+     * Retrieves installable lifecycle states for different application categories, such as apps and firmware.
+     *
+     * <p>This method loads all lifecycle states configured as installable and validates them against
+     * defined application type groups (e.g., device apps and firmware). It ensures that:
+     * <ul>
+     *     <li>Exactly one installable state is configured for each supported category.</li>
+     *     <li>Misconfigurations like overlapping or missing types are detected and reported.</li>
+     * </ul>
+     *
+     * @return a map with category keys (e.g., "apps", "firmware") mapped to their corresponding installable lifecycle state names
+     * @throws ApplicationManagementException if the configuration is invalid, ambiguous, or incomplete
+     */
+    Map<String, String> getInstallableLifecycleStates() throws ApplicationManagementException;
+
 
     /**
      * Check if there are subscription devices for operations
