@@ -34,11 +34,7 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.api.UserStoreException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -281,6 +277,85 @@ public class LifecycleStateManager {
             throw new LifecycleManagementException(msg);
         }
         return installableStates.get(0);
+    }
+
+    /**
+     * Retrieves the installable lifecycle states for different application categories (apps and firmware)
+     * as defined in the lifecycle configuration (typically from `app-manager.xml`).
+     *
+     * <p>This method performs the following validations:
+     * <ul>
+     *     <li>Ensures that only one installable state is defined for device apps (i.e., applications of type
+     *         ENTERPRISE, WEB_APP, WEB_CLIP, PUBLIC) and one for firmware (i.e., CUSTOM).</li>
+     *     <li>Validates that device app types must be fully matched as a set. Partial matches are considered invalid.</li>
+     *     <li>Throws exceptions if no installable state is found, multiple installable states exist for the same category,
+     *         or the applicable types are misconfigured.</li>
+     * </ul>
+     *
+     * @return a map containing installable states with keys "apps" and/or "firmware" mapped to the respective state names
+     * @throws LifecycleManagementException if no installable state is found, multiple installable states exist for the same category,
+     *                                      or the configuration is invalid or ambiguous
+     */
+    public Map<String, String> getInstallableStates() throws LifecycleManagementException {
+        Map<String, String> installableStates = new HashMap<>();
+
+        Set<String> expectedDeviceAppTypes = Set.of(
+                ApplicationType.ENTERPRISE.name(),
+                ApplicationType.WEB_APP.name(),
+                ApplicationType.WEB_CLIP.name(),
+                ApplicationType.PUBLIC.name()
+        );
+        String expectedFirmwareType = ApplicationType.CUSTOM.name();
+
+        boolean appsStateSet = false;
+        boolean firmwareStateSet = false;
+
+        for (Map.Entry<String, LifecycleState> entry : lifecycleStates.entrySet()) {
+            LifecycleState state = entry.getValue();
+
+            if (!state.isAppInstallable()) {
+                continue;
+            }
+
+            List<String> applicableTypes = state.getApplicableTypes();
+            Set<String> applicableTypeSet = new HashSet<>(applicableTypes);
+
+            // Full match with expected device app types
+            if (applicableTypeSet.equals(expectedDeviceAppTypes)) {
+                if (appsStateSet) {
+                    String msg = "Multiple installable states defined for apps in app-manager.xml. Only one is allowed.";
+                    log.error(msg);
+                    throw new LifecycleManagementException(msg);
+                }
+                installableStates.put("apps", state.getName());
+                appsStateSet = true;
+
+                // Exact single match with firmware
+            } else if (applicableTypeSet.size() == 1 && applicableTypeSet.contains(expectedFirmwareType)) {
+                if (firmwareStateSet) {
+                    String msg =  "Multiple installable states defined for firmware in app-manager.xml. Only one is allowed.";
+                    log.error(msg);
+                    throw new LifecycleManagementException(msg);
+                }
+                installableStates.put("firmware", state.getName());
+                firmwareStateSet = true;
+
+                // Partial or invalid configuration
+            } else {
+                String msg = "Invalid applicableTypes in installable state '" + state.getName() +
+                        "'. Must match either all of: " + expectedDeviceAppTypes +
+                        " or exactly: " + expectedFirmwareType;
+                log.error(msg);
+                throw new LifecycleManagementException(msg);
+            }
+        }
+
+        if (!appsStateSet && !firmwareStateSet) {
+            String msg = "No valid installable states defined in app-manager.xml for either apps or firmware.";
+            log.error(msg);
+            throw new LifecycleManagementException(msg);
+        }
+        return installableStates;
     }
 
     public boolean isStateExist(String currentState) {

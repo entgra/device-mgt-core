@@ -3286,6 +3286,16 @@ public class ApplicationManagerImpl implements ApplicationManager {
         return lifecycleStateManager.getInstallableState(applicationType);
     }
 
+    @Override
+    public Map<String, String> getInstallableLifecycleStates() throws ApplicationManagementException {
+        if (lifecycleStateManager == null) {
+            String msg = "Application lifecycle manager is not initialed. Please contact the administrator.";
+            log.error(msg);
+            throw new ApplicationManagementException(msg);
+        }
+        return lifecycleStateManager.getInstallableStates();
+    }
+
     /**
      * This method can be used to validate {@link Filter} object.
      *
