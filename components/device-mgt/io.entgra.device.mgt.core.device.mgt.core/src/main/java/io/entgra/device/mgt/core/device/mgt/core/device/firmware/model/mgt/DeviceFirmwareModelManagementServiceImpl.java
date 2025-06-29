@@ -113,4 +113,31 @@ public class DeviceFirmwareModelManagementServiceImpl implements DeviceFirmwareM
             DeviceManagementDAOFactory.closeConnection();
         }
     }
+
+    public boolean addDeviceFirmwareVersion(int deviceId, String firmwareVersion) throws DeviceFirmwareModelManagementException {
+        if (deviceId <= 0 || firmwareVersion == null || firmwareVersion.isEmpty()) {
+            throw new IllegalArgumentException("Invalid device ID or firmware version");
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Adding firmware version [" + firmwareVersion + "] for device ID [" + deviceId + "]");
+        }
+
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        try {
+            DeviceManagementDAOFactory.getConnection();
+            DeviceFirmwareModel deviceFirmwareModel = firmwareDAO.getDeviceFirmwareModel(deviceId, tenantId);
+            return firmwareDAO.saveFirmwareVersionOfDevice(deviceId, firmwareVersion, deviceFirmwareModel.getFirmwareId() ,tenantId);
+        } catch (SQLException e) {
+            String msg = "SQL exception encountered while adding firmware version for device ID [" + deviceId + "]";
+            logger.error(msg, e);
+            throw new DeviceFirmwareModelManagementException(msg, e);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error encountered while adding firmware version for device ID [" + deviceId + "]";
+            logger.error(msg, e);
+            throw new DeviceFirmwareModelManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
 }

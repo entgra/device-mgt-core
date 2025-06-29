@@ -28,4 +28,6 @@ public interface DeviceFirmwareModelManagementService {
     DeviceFirmwareModel createDeviceFirmwareModel(DeviceFirmwareModel deviceFirmwareModel) throws DeviceFirmwareModelManagementException;
     DeviceFirmwareModel getDeviceFirmwareModelByFirmwareModelName(String firmwareModelName) throws DeviceFirmwareModelManagementException;
     List<DeviceFirmwareModel> getFirmwareModelsByDeviceType(String deviceType) throws DeviceFirmwareModelManagementException;
+
+    boolean addDeviceFirmwareVersion(int deviceId, String firmwareVersion) throws DeviceFirmwareModelManagementException;
 }
