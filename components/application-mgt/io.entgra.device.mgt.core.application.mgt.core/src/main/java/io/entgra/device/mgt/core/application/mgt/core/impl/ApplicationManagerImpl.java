@@ -1188,14 +1188,8 @@ public class ApplicationManagerImpl implements ApplicationManager {
     public ApplicationList getApplications(Filter filter) throws ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
 
-        //todo get configured roles from Meta and replace empty list
-        List<String> configuredRoleList = new ArrayList<>();
-        boolean isTestRoleAvailable = false;
-        try {
-            isTestRoleAvailable = hasUserRole(configuredRoleList, PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername());
-        } catch (UserStoreException e) {
-            throw new RuntimeException(e);
-        }
+        boolean isTestRoleAvailable = hasTestRolesAssigned();
+
         ApplicationList applicationList = new ApplicationList();
         List<Application> applications = new ArrayList<>();
         DeviceType deviceType;
@@ -1228,7 +1222,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     List<ApplicationReleaseDTO> filteredApplicationReleaseDTOs = new ArrayList<>();
                     for (ApplicationReleaseDTO applicationReleaseDTO : applicationDTO.getApplicationReleaseDTOs()) {
                         if (ApplicationType.CUSTOM.toString().equals(applicationDTO.getType()) && !isTestRoleAvailable
-                                && AppReleaseType.TEST.toString().equals(applicationReleaseDTO.getReleaseType())) {
+                                && AppReleaseType.TEST.equals(applicationReleaseDTO.getReleaseType())) {
                             continue;
                         }
                         if (StringUtils.isNotEmpty(filter.getVersion()) && !filter.getVersion()
@@ -1456,7 +1450,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             ApplicationManagementException  {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         ApplicationReleaseDTO applicationReleaseDTO = null;
-        if (applicationDTO.getApplicationReleaseDTOs().size() > 0) {
+        if (!applicationDTO.getApplicationReleaseDTOs().isEmpty()) {
             applicationReleaseDTO = applicationDTO.getApplicationReleaseDTOs().get(0);
         }
         try {
@@ -1538,7 +1532,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                             LifecycleChanger lifecycleChanger = new LifecycleChanger();
                             lifecycleChanger.setAction(state);
                             lifecycleChanger.setReason("Updated to " + state);
-                            this.changeLifecycleState(applicationReleaseDTO, lifecycleChanger);
+                            this.changeLifecycleState(applicationReleaseDTO, lifecycleChanger, applicationDTO.getType());
                         }
                     }
                     if (Constants.ENTERPRISE_APP_TYPE.equals(applicationDTO.getType()) || Constants.PUBLIC_APP_TYPE.equals(applicationDTO.getType())) {
@@ -1627,6 +1621,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
         try {
             ConnectionManagerUtil.beginDBTransaction();
             String lifeCycleState = lifecycleStateManager.getInitialState();
+            //todo Need to fix this publishStates retrieving logic by reading the lifecycle config
             List<String> publishStates = type.equals(ApplicationType.CUSTOM) ? Arrays.asList("IN-REVIEW", "APPROVED", "RELEASE-READY")
                     : Arrays.asList("IN-REVIEW", "APPROVED", "PUBLISHED");
 
@@ -1641,7 +1636,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     LifecycleChanger lifecycleChanger = new LifecycleChanger();
                     lifecycleChanger.setAction(state);
                     lifecycleChanger.setReason("Updated to " + state);
-                    this.changeLifecycleState(applicationReleaseDTO, lifecycleChanger);
+                    this.changeLifecycleState(applicationReleaseDTO, lifecycleChanger, applicationDTO.getType());
                 }
             }
             ApplicationRelease applicationRelease = APIUtil.releaseDtoToRelease(applicationReleaseDTO);
@@ -2463,20 +2458,22 @@ public class ApplicationManagerImpl implements ApplicationManager {
 
         try {
             ConnectionManagerUtil.beginDBTransaction();
-            ApplicationReleaseDTO applicationReleaseDTO = this.applicationReleaseDAO
-                    .getReleaseByUUID(releaseUuid, tenantId);
+            ApplicationDTO applicationDTO = this.applicationDAO.getApplication(releaseUuid, tenantId);
 
-            if (applicationReleaseDTO == null) {
-                String msg = "Couldn't found an application release for the UUID: " + releaseUuid;
+            if (applicationDTO == null || applicationDTO.getApplicationReleaseDTOs() == null || applicationDTO.getApplicationReleaseDTOs().isEmpty()) {
+                String msg = "Couldn't find an Application for application release UUID: " + releaseUuid +" . Please verify the request.";
                 log.error(msg);
                 throw new NotFoundException(msg);
             }
+
+            ApplicationReleaseDTO applicationReleaseDTO = applicationDTO.getApplicationReleaseDTOs().get(0);
+
             if (lifecycleStateManager
                     .isValidStateChange(applicationReleaseDTO.getCurrentState(), lifecycleChanger.getAction(), userName,
                             tenantId)) {
                 if (lifecycleStateManager.isInstallableState(lifecycleChanger.getAction()) && applicationReleaseDAO
                         .hasExistInstallableAppRelease(applicationReleaseDTO.getUuid(),
-                                lifecycleStateManager.getInstallableState(), tenantId)) {
+                                lifecycleStateManager.getInstallableState(applicationDTO.getType()), tenantId)) {
                     String msg = "Installable application release is already registered for the application. "
                             + "Therefore it is not permitted to change the lifecycle state from "
                             + applicationReleaseDTO.getCurrentState() + " to " + lifecycleChanger.getAction();
@@ -2529,7 +2526,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
         }
     }
 
-    public ApplicationRelease changeLifecycleState(ApplicationReleaseDTO applicationReleaseDTO, LifecycleChanger lifecycleChanger) throws ApplicationManagementException {
+    public ApplicationRelease changeLifecycleState(ApplicationReleaseDTO applicationReleaseDTO, LifecycleChanger lifecycleChanger, String applicationType) throws ApplicationManagementException {
 
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         String userName = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
@@ -2545,7 +2542,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                             tenantId)) {
                 if (lifecycleStateManager.isInstallableState(lifecycleChanger.getAction()) && applicationReleaseDAO
                         .hasExistInstallableAppRelease(applicationReleaseDTO.getUuid(),
-                                lifecycleStateManager.getInstallableState(), tenantId)) {
+                                lifecycleStateManager.getInstallableState(applicationType), tenantId)) {
                     String msg = "Installable application release is already registered for the application. "
                             + "Therefore it is not permitted to change the lifecycle state from "
                             + applicationReleaseDTO.getCurrentState() + " to " + lifecycleChanger.getAction();
@@ -2559,7 +2556,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 lifecycleState.setReasonForChange(lifecycleChanger.getReason());
                 applicationReleaseDTO.setCurrentState(lifecycleChanger.getAction());
                 if (this.applicationReleaseDAO.updateRelease(applicationReleaseDTO, tenantId) == null) {
-                    String msg = "Application release updating is failed/.";
+                    String msg = "Application release updating is failed.";
                     log.error(msg);
                     throw new ApplicationManagementException(msg);
                 }
@@ -3280,13 +3277,23 @@ public class ApplicationManagerImpl implements ApplicationManager {
     }
 
     @Override
-    public String getInstallableLifecycleState() throws ApplicationManagementException {
+    public String getInstallableLifecycleState(String applicationType) throws ApplicationManagementException {
         if (lifecycleStateManager == null) {
             String msg = "Application lifecycle manager is not initialed. Please contact the administrator.";
             log.error(msg);
             throw new ApplicationManagementException(msg);
         }
-        return lifecycleStateManager.getInstallableState();
+        return lifecycleStateManager.getInstallableState(applicationType);
+    }
+
+    @Override
+    public Map<String, String> getInstallableLifecycleStates() throws ApplicationManagementException {
+        if (lifecycleStateManager == null) {
+            String msg = "Application lifecycle manager is not initialed. Please contact the administrator.";
+            log.error(msg);
+            throw new ApplicationManagementException(msg);
+        }
+        return lifecycleStateManager.getInstallableStates();
     }
 
     /**
@@ -3301,20 +3308,23 @@ public class ApplicationManagerImpl implements ApplicationManager {
             log.error(msg);
             throw new BadRequestException(msg);
         }
-        String appType = filter.getAppType();
 
-        if (!StringUtils.isEmpty(appType)) {
-            boolean isValidAppType = false;
-            for (ApplicationType applicationType : ApplicationType.values()) {
-                if (applicationType.toString().equalsIgnoreCase(appType) || Constants.ALL.equalsIgnoreCase(appType)) {
-                    isValidAppType = true;
-                    break;
-                }
-            }
-            if (!isValidAppType) {
-                String msg =
-                        "Filter validation is failed, Invalid application type is found in filter. Application Type: "
-                                + appType + " Please verify the request payload";
+        List<String> appTypes = filter.getAppTypes();
+
+        if (appTypes != null && !appTypes.isEmpty()) {
+            Set<String> validAppTypes = Arrays.stream(ApplicationType.values())
+                    .map(Enum::name)
+                    .collect(Collectors.toSet());
+
+            List<String> invalidTypes = appTypes.stream()
+                    .filter(type -> !validAppTypes.contains(type))
+                    .collect(Collectors.toList());
+
+            if (!invalidTypes.isEmpty()) {
+                String msg = String.format(
+                        "Filter validation failed. Invalid application type(s) found: %s. Valid types are: %s.",
+                        invalidTypes, validAppTypes
+                );
                 log.error(msg);
                 throw new BadRequestException(msg);
             }
@@ -4919,9 +4929,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             DeviceFirmwareModelSearchFilter deviceFirmwareModelSearchFilter = new DeviceFirmwareModelSearchFilter();
             deviceFirmwareModelSearchFilter.setFirmwareModelIds(firmwareModelIds);
             deviceFirmwareModelSearchFilter.setFirmwareVersions(versions);
-            if (groupId!= -1) {
-                deviceFirmwareModelSearchFilter.setGroupId(groupId);
-            }
+            deviceFirmwareModelSearchFilter.setGroupId(groupId);
             return dms.getFilteredDeviceListByFirmwareVersion(deviceFirmwareModelSearchFilter, tenantId, requireMatching);
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while getting device data.";

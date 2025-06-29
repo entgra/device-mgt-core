@@ -22,7 +22,6 @@ import io.entgra.device.mgt.core.application.mgt.common.Filter;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.DBConnectionException;
 import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManagementDAOException;
-import io.entgra.device.mgt.core.application.mgt.core.util.Constants;
 import io.entgra.device.mgt.core.application.mgt.core.util.DAOUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -33,6 +32,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * This handles Application operations which are specific to Oracle.
@@ -95,8 +95,9 @@ public class OracleApplicationDAOImpl extends GenericApplicationDAOImpl {
                 || StringUtils.isNotEmpty(filter.getAppReleaseType())) {
             sql += "LEFT JOIN AP_APP_RELEASE ON AP_APP.ID = AP_APP_RELEASE.AP_APP_ID ";
         }
-        if (StringUtils.isNotEmpty(filter.getAppType()) && !Constants.ALL.equalsIgnoreCase(filter.getAppType())) {
-            sql += "AND AP_APP.TYPE = ? ";
+        if (filter.getAppTypes() != null && !filter.getAppTypes().isEmpty()) {
+            String placeholders = filter.getAppTypes().stream().map(type -> "?").collect(Collectors.joining(", "));
+            sql += "AND AP_APP.TYPE IN (" + placeholders + ") ";
         }
         if (StringUtils.isNotEmpty(filter.getAppName())) {
             sql += " AND LOWER (AP_APP.NAME) ";
@@ -146,8 +147,9 @@ public class OracleApplicationDAOImpl extends GenericApplicationDAOImpl {
             Connection conn = this.getDBConnection();
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 int paramIndex = 1;
-                if (StringUtils.isNotEmpty(filter.getAppType()) && !Constants.ALL.equalsIgnoreCase(filter.getAppType())) {
-                    stmt.setString(paramIndex++, filter.getAppType());
+                if (filter.getAppTypes() != null && !filter.getAppTypes().isEmpty()) {
+                    String placeholders = filter.getAppTypes().stream().map(type -> "?").collect(Collectors.joining(", "));
+                    sql += "AND AP_APP.TYPE IN (" + placeholders + ") ";
                 }
                 if (StringUtils.isNotEmpty(filter.getAppName())) {
                     if (filter.isFullMatch()) {
