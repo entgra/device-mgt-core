@@ -24,7 +24,7 @@ public class DeviceFirmwareManagementServiceImpl implements DeviceFirmwareModelM
         // todo: add validation
         try {
             List<DeviceFirmwareModel> deviceFirmwareModels = DeviceMgtAPIUtils.getDeviceFirmwareModelManagementService()
-                    .getFirmwareModelsByDeviceType(deviceType.toString());
+                    .getFirmwareModelsByDeviceType(deviceType.toString().toLowerCase());
             return Response.ok(deviceFirmwareModels).build();
         } catch (DeviceFirmwareModelManagementException e) {
             String message = "Error encountered while retrieving device firmware models for device type [" + deviceType + "]";

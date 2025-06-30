@@ -39,7 +39,7 @@ public class DeviceFirmwareModelManagementServiceImpl implements DeviceFirmwareM
         DeviceType deviceType;
         try {
             DeviceManagementProviderService deviceManagementProvider = DeviceManagementDataHolder.getInstance().getDeviceManagementProvider();
-            deviceType = deviceManagementProvider.getDeviceType(deviceFirmwareModel.getDeviceType());
+            deviceType = deviceManagementProvider.getDeviceType(deviceFirmwareModel.getDeviceType().toLowerCase());
         } catch (DeviceManagementException e) {
             String msg = "Error while retrieving device type for firmware model [" + deviceFirmwareModel.getFirmwareModelName() + "]";
             logger.error(msg, e);
