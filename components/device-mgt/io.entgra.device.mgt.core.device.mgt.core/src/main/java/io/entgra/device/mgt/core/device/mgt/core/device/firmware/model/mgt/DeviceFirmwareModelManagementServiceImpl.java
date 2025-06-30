@@ -18,6 +18,7 @@ import org.wso2.carbon.context.PrivilegedCarbonContext;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 public class DeviceFirmwareModelManagementServiceImpl implements DeviceFirmwareModelManagementService {
     private static final Log logger = LogFactory.getLog(DeviceFirmwareModelManagementServiceImpl.class);
@@ -30,7 +31,9 @@ public class DeviceFirmwareModelManagementServiceImpl implements DeviceFirmwareM
     @Override
     public DeviceFirmwareModel createDeviceFirmwareModel(DeviceFirmwareModel deviceFirmwareModel) throws DeviceFirmwareModelManagementException {
         if (deviceFirmwareModel == null) {
-            throw new IllegalArgumentException("Device firmware model cannot be null");
+            String msg = "DeviceFirmwareModel cannot be null";
+            logger.error(msg);
+            throw new IllegalArgumentException(msg);
         }
 
         if (logger.isDebugEnabled()) {
@@ -40,15 +43,21 @@ public class DeviceFirmwareModelManagementServiceImpl implements DeviceFirmwareM
         DeviceType deviceType;
         try {
             DeviceManagementProviderService deviceManagementProvider = DeviceManagementDataHolder.getInstance().getDeviceManagementProvider();
-            deviceType = deviceManagementProvider.getDeviceType(deviceFirmwareModel.getDeviceType());
+            deviceType = deviceManagementProvider.getDeviceType(deviceFirmwareModel.getDeviceType().toLowerCase(Locale.ROOT));
         } catch (DeviceManagementException e) {
             String msg = "Error while retrieving device type for firmware model [" + deviceFirmwareModel.getFirmwareModelName() + "]";
             logger.error(msg, e);
             throw new DeviceFirmwareModelManagementException(msg, e);
         }
 
+        if (deviceType == null) {
+            String msg = "Can not find a device type with name [" + deviceFirmwareModel.getDeviceType() + "]";
+            logger.error(msg);
+            throw new IllegalArgumentException(msg);
+        }
+
         try {
-            DeviceManagementDAOFactory.getConnection();
+            DeviceManagementDAOFactory.openConnection();
             return firmwareDAO.addFirmwareModel(deviceFirmwareModel, PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(), deviceType.getId());
         } catch (SQLException e) {
             String msg = "SQL exception encountered while creating device firmware model [" + deviceFirmwareModel.getFirmwareModelName() + "]";
@@ -66,7 +75,7 @@ public class DeviceFirmwareModelManagementServiceImpl implements DeviceFirmwareM
     @Override
     public DeviceFirmwareModel getDeviceFirmwareModelByFirmwareModelName(String firmwareModelName) throws DeviceFirmwareModelManagementException {
         try {
-            DeviceManagementDAOFactory.getConnection();
+            DeviceManagementDAOFactory.openConnection();
             return firmwareDAO.getExistingFirmwareModel(firmwareModelName, PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId());
         } catch (SQLException e) {
             String msg = "SQL exception encountered while getting device firmware model [" + firmwareModelName + "]";
@@ -86,7 +95,7 @@ public class DeviceFirmwareModelManagementServiceImpl implements DeviceFirmwareM
         DeviceType type;
         try {
             DeviceManagementProviderService deviceManagementProvider = DeviceManagementDataHolder.getInstance().getDeviceManagementProvider();
-            type = deviceManagementProvider.getDeviceType(deviceType);
+            type = deviceManagementProvider.getDeviceType(deviceType.toLowerCase(Locale.ROOT));
         } catch (DeviceManagementException e) {
             String msg = "Error while retrieving device type for device type name [" + deviceType + "]";
             logger.error(msg, e);
