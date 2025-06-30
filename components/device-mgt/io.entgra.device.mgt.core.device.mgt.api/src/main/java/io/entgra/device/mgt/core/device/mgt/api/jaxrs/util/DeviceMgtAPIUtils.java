@@ -44,7 +44,6 @@ import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.PlatformCon
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationHistory;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationHistorySnapshot;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationHistorySnapshotWrapper;
-import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareModelManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.BadRequestException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.UnAuthorizedException;
@@ -184,7 +183,6 @@ public class DeviceMgtAPIUtils {
     private static volatile TenantManagerAdminService tenantManagerAdminService;
     private static volatile TagManagementProviderService tagManagementService;
     private static volatile DeviceTypeEventManagementProviderService deviceTypeEventManagementProviderService;
-    private static volatile DeviceFirmwareModelManagementService deviceFirmwareModelManagementService;
 
     static {
         String keyStorePassword = ServerConfiguration.getInstance().getFirstProperty("Security.KeyStore.Password");
@@ -1391,22 +1389,5 @@ public class DeviceMgtAPIUtils {
             }
         }
         return tenantManagerAdminService;
-    }
-
-    public static DeviceFirmwareModelManagementService getDeviceFirmwareModelManagementService(){
-        if(deviceFirmwareModelManagementService == null) {
-            synchronized (DeviceMgtAPIUtils.class) {
-                if (deviceFirmwareModelManagementService == null) {
-                    deviceFirmwareModelManagementService = (DeviceFirmwareModelManagementService) PrivilegedCarbonContext
-                            .getThreadLocalCarbonContext().getOSGiService(DeviceFirmwareModelManagementService.class, null);
-                    if (deviceFirmwareModelManagementService == null) {
-                        String msg = "Device Firmware Model Management Service is null";
-                        log.error(msg);
-                        throw new IllegalStateException(msg);
-                    }
-                }
-            }
-        }
-        return deviceFirmwareModelManagementService;
     }
 }

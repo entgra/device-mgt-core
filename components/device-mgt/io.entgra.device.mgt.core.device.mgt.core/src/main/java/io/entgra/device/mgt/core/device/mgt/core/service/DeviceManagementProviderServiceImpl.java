@@ -20,9 +20,6 @@ package io.entgra.device.mgt.core.device.mgt.core.service;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
-import io.entgra.device.mgt.core.device.mgt.common.app.mgt.DeviceFirmwareModel;
-import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareResult;
-import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareModelSearchFilter;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ConflictException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceDAO;
@@ -30,7 +27,6 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceTypeDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.EnrollmentDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.ApplicationDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceStatusDAO;
-import io.entgra.device.mgt.core.device.mgt.core.dao.FirmwareDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOException;
 import io.entgra.device.mgt.core.device.mgt.core.dao.TenantDAO;
@@ -202,7 +198,6 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     private MetadataDAO metadataDAO;
     private final DeviceStatusDAO deviceStatusDAO;
     private final TenantDAO tenantDao;
-    private final FirmwareDAO firmwareDAO;
     private final TagDAO tagDAO;
     int count = 0;
 
@@ -217,7 +212,6 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         this.deviceStatusDAO = DeviceManagementDAOFactory.getDeviceStatusDAO();
         this.tenantDao = DeviceManagementDAOFactory.getTenantDAO();
         this.tagDAO = DeviceManagementDAOFactory.getTagDAO();
-        this.firmwareDAO = DeviceManagementDAOFactory.getFirmwareDAO();
 
         /* Registering a listener to retrieve events when some device management service plugin is installed after
          * the component is done getting initialized */
@@ -485,60 +479,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             String msg = "Error occurred while adding device info";
             log.warn(msg, e);
         }
-
-        if (status && StringUtils.isNotBlank(DeviceManagerUtil.getPropertyString(device.getProperties(),
-                DeviceManagementConstants.Common.FIRMWARE_MODEL))) {
-            String firmwareModel = DeviceManagerUtil.getPropertyString(device.getProperties(),
-                    DeviceManagementConstants.Common.FIRMWARE_MODEL);
-            if (StringUtils.isNotBlank(firmwareModel)) {
-                this.addDeviceFirmwareModel(device, firmwareModel, tenantId);
-            }
-        }
         return status;
-    }
-
-    @Override
-    public DeviceFirmwareModel addDeviceFirmwareModel(Device device, String firmwareModel, int tenantId)
-            throws DeviceManagementException {
-        if (log.isDebugEnabled()) {
-            log.debug("Adding firmware model '" + firmwareModel + "' for device: " + device.getId());
-        }
-
-        if (device == null || device.getId() == 0) {
-            String msg = "Invalid or empty device object provided for adding firmware model";
-            log.error(msg);
-            throw new DeviceManagementException(msg);
-        }
-        DeviceFirmwareModel deviceFirmware;
-        DeviceType deviceType = this.getDeviceType(device.getType());
-        try {
-            DeviceManagementDAOFactory.beginTransaction();
-            deviceFirmware = firmwareDAO.getExistingFirmwareModel(firmwareModel, tenantId);
-            if (deviceFirmware != null) {
-                firmwareDAO.addDeviceFirmwareMapping(device.getId(), deviceFirmware.getFirmwareId(), tenantId);
-            } else {
-                deviceFirmware = firmwareDAO.addFirmwareModel(new DeviceFirmwareModel(firmwareModel, null),
-                        tenantId, deviceType.getId());
-                if (deviceFirmware.getFirmwareId() > -1) {
-                    firmwareDAO.addDeviceFirmwareMapping(device.getId(), deviceFirmware.getFirmwareId(), tenantId);
-                }
-            }
-            DeviceManagementDAOFactory.commitTransaction();
-            log.info("Adding firmware model '" + firmwareModel + "' for device: " + device.getId() + " is successful");
-        } catch (DeviceManagementDAOException e) {
-            DeviceManagementDAOFactory.rollbackTransaction();
-            String msg = "Error occurred while adding firmware model of device: " + device.getId();
-            log.error(msg, e);
-            throw new DeviceManagementException(msg, e);
-        } catch (TransactionManagementException e) {
-            String msg = "Error occurred while initiating transaction to add firmware model of device: " + device.getId();
-            log.error(msg, e);
-            throw new DeviceManagementException(msg, e);
-        } finally {
-            DeviceManagementDAOFactory.closeConnection();
-        }
-
-        return deviceFirmware;
     }
 
     @Override
@@ -1640,9 +1581,10 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             DeviceManagementDAOFactory.openConnection();
             device = deviceDAO.getDevice(deviceId, tenantId);
             if (device == null) {
+                String message = "No device is found upon the id '" +
+                        deviceId + "'";
                 if (log.isDebugEnabled()) {
-                    log.debug("No device is found upon the id '" +
-                            deviceId + "'");
+                    log.debug(message);
                 }
                 return null;
             }
@@ -5875,102 +5817,4 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     public DeviceManagementConfig getDeviceManagementConfig() {
         return DeviceConfigurationManager.getInstance().getDeviceManagementConfig();
     }
-
-    @Override
-    public List<Device> getGroupedDevicesBasedOnProperties(int groupId, Map<String, String> propertiesMap) throws DeviceManagementException {
-        List<Device> devices;
-        try {
-            int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
-            DeviceManagementDAOFactory.openConnection();
-            devices = deviceDAO.queryDeviceIDsBasedDeviceProperties(propertiesMap, tenantId, groupId);
-            if (devices == null) {
-                if (log.isDebugEnabled()) {
-                    log.debug("No device is found against criteria : " + propertiesMap + ", tenantId "
-                            + tenantId + " and groupId " + groupId);
-                }
-                return null;
-            }
-        } catch (DeviceManagementDAOException e) {
-            String msg = "Error occurred while obtaining devices in group " + groupId + " based on criteria : "
-                    + propertiesMap;
-            log.error(msg, e);
-            throw new DeviceManagementException(msg, e);
-        } catch (SQLException e) {
-            String msg = "Error occurred while opening a connection to the data source";
-            log.error(msg, e);
-            throw new DeviceManagementException(msg, e);
-        }  finally {
-            DeviceManagementDAOFactory.closeConnection();
-        }
-        return devices;
-    }
-
-    public List<? extends Operation> getDeviceOperations(DeviceIdentifier deviceId, Operation.Status status, String operationCode)
-            throws OperationManagementException {
-        return pluginRepository.getOperationManager(deviceId.getType(), this.getTenantId())
-                .getOperationsByDeviceOperationCodeAndStatus(deviceId, status, operationCode);
-    }
-
-    @Override
-    public DeviceFirmwareModel getDeviceFirmwareModel(int deviceId) throws DeviceManagementException {
-        DeviceFirmwareModel firmwareModel;
-        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
-        try {
-            DeviceManagementDAOFactory.openConnection();
-            firmwareModel = this.firmwareDAO.getDeviceFirmwareModel(deviceId, tenantId);
-        } catch (DeviceManagementDAOException e) {
-            String msg = "Failed while obtaining database connection for retrieving firmware model of device ID: " + deviceId;
-            log.error(msg, e);
-            throw new DeviceManagementException(msg, e);
-        } catch (SQLException e) {
-            String msg = "Failed while retrieving firmware model of device ID: " + deviceId;
-            log.error(msg, e);
-            throw new DeviceManagementException(msg, e);
-        } finally {
-            DeviceManagementDAOFactory.closeConnection();
-        }
-        return firmwareModel;
-    }
-
-    @Override
-    public DeviceFirmwareResult getFilteredDeviceListByFirmwareVersion(DeviceFirmwareModelSearchFilter searchFilter,
-                                                                       int tenantId, boolean requireMatchingDevices)
-            throws DeviceManagementException {
-
-        if (log.isDebugEnabled()) {
-            log.debug("Retrieving filtered device list by firmware version with search filter: " + searchFilter +
-                    ", tenant ID: " + tenantId + ", requireMatchingDevices: " + requireMatchingDevices);
-        }
-
-        if(searchFilter.getOffset() < 0 || searchFilter.getLimit() <= 0) {
-            String msg = "Invalid pagination parameters in DeviceFirmwareModelSearchFilter: " + searchFilter;
-            log.error(msg);
-            throw new IllegalArgumentException(msg);
-        }
-
-        DeviceFirmwareResult deviceFirmwareResult;
-        try {
-            DeviceManagementDAOFactory.openConnection();
-            List<Device> devicesFIltered = firmwareDAO.getFilteredDevicesByFirmwareVersion(searchFilter,
-                    tenantId, requireMatchingDevices);
-            devicesFIltered = this.populateAllDeviceInfo(devicesFIltered);
-            deviceFirmwareResult = new DeviceFirmwareResult();
-            deviceFirmwareResult.setRecordsFiltered(devicesFIltered.size());
-            deviceFirmwareResult.setRecordsTotal(firmwareDAO
-                    .getCountOfFilteredDevicesByFirmwareVersion(searchFilter, tenantId, requireMatchingDevices));
-            deviceFirmwareResult.setData(devicesFIltered);
-        } catch (DeviceManagementDAOException e) {
-            String msg = "Error occurred while retrieving filtered device list using device firmware model search filters";
-            log.error(msg, e);
-            throw new DeviceManagementException(msg, e);
-        } catch (SQLException e) {
-            String msg = "Error occurred while opening a connection to the data source";
-            log.error(msg, e);
-            throw new DeviceManagementException(msg, e);
-        } finally {
-            DeviceManagementDAOFactory.closeConnection();
-        }
-        return deviceFirmwareResult;
-    }
-
 }
