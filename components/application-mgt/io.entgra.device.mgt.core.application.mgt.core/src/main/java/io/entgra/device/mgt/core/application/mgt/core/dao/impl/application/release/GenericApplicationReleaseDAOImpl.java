@@ -734,7 +734,71 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
 
         @Override
         public List<ApplicationReleaseDTO> getAppReleasesBeforeVersion(int appId, String version, String status, String appReleaseType, int tenantId) throws ApplicationManagementDAOException {
-            return List.of();
+            String sql = "SELECT " +
+                    "A.ID AS RELEASE_ID, " +
+                    "A.DESCRIPTION AS RELEASE_DESCRIPTION, " +
+                    "A.VERSION AS RELEASE_VERSION, " +
+                    "A.UUID AS RELEASE_UUID, " +
+                    "A.RELEASE_TYPE AS RELEASE_TYPE, " +
+                    "A.INSTALLER_LOCATION AS AP_RELEASE_STORED_LOC, " +
+                    "A.ICON_LOCATION AS AP_RELEASE_ICON_LOC, " +
+                    "AR.BANNER_LOCATION AS AP_RELEASE_BANNER_LOC, " +
+                    "AR.SC_1_LOCATION AS AP_RELEASE_SC1, " +
+                    "AR.SC_2_LOCATION AS AP_RELEASE_SC2, " +
+                    "AR.SC_3_LOCATION AS AP_RELEASE_SC3, " +
+                    "A.APP_HASH_VALUE AS RELEASE_HASH_VALUE, " +
+                    "A.APP_PRICE AS RELEASE_PRICE, " +
+                    "A.APP_META_INFO AS RELEASE_META_INFO, " +
+                    "A.PACKAGE_NAME AS PACKAGE_NAME, " +
+                    "A.SUPPORTED_OS_VERSIONS AS RELEASE_SUP_OS_VERSIONS, " +
+                    "A.RATING AS RELEASE_RATING, " +
+                    "A.CURRENT_STATE AS RELEASE_CURRENT_STATE, " +
+                    "A.RATED_USERS AS RATED_USER_COUNT, " +
+                    "A.AP_APP_ID AS APP_ID " +
+                    "FROM AP_APP_RELEASE AS A " +
+                    "WHERE A.AP_APP_ID = ? " +
+                    "AND A.CURRENT_STATE = ? " +
+                    "AND A.RELEASE_TYPE = ? " +
+                    "AND A.TENANT_ID = ? " +
+                    "AND A.ID < (" +
+                    "SELECT B.ID " +
+                    "FROM AP_APP_RELEASE AS B " +
+                    "WHERE B.AP_APP_ID = ? " +
+                    "AND B.VERSION = ? " +
+                    "AND B.TENANT_ID = ? " +
+                    "LIMIT 1" +
+                    ")";
+
+            List<ApplicationReleaseDTO> applicationReleaseDTOS = new ArrayList<>();
+            try {
+                Connection connection = this.getDBConnection();
+                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                    preparedStatement.setInt(1, appId);
+                    preparedStatement.setString(2, status);
+                    preparedStatement.setString(3, appReleaseType);
+                    preparedStatement.setInt(4, tenantId);
+                    preparedStatement.setInt(5, appId);
+                    preparedStatement.setString(6, version);
+                    preparedStatement.setInt(7, tenantId);
+                    try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                        while (resultSet.next()) {
+                            applicationReleaseDTOS.add(DAOUtil.constructAppReleaseDTO(resultSet));
+                        }
+                    }
+                }
+            } catch (DBConnectionException e) {
+                String msg = "Database connection error occurred while trying to get application release details which has "
+                        + "application ID : " + appId + " and version : " + version + " and status : " + status;
+                log.error(msg, e);
+                throw new ApplicationManagementDAOException(msg, e);
+            } catch (SQLException e) {
+                String msg =
+                        "Error while getting application release details which has application ID " + appId + " and version "
+                                + version + " and status " + status + ". Execute SQL query: " + sql;
+                log.error(msg, e);
+                throw new ApplicationManagementDAOException(msg, e);
+            }
+            return applicationReleaseDTOS;
         }
 
         @Override

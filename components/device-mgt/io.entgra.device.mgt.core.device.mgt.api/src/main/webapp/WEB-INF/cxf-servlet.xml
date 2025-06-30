@@ -52,6 +52,7 @@
             <ref bean="deviceStatusFilterService"/>
             <ref bean="tagManagementService"/>
             <ref bean="deviceFirmwareModelManagementService"/>
+            <ref bean="deviceFirmwareModelManagementAdminService"/>
         </jaxrs:serviceBeans>
         <jaxrs:providers>
             <ref bean="jsonProvider"/>
@@ -105,6 +106,8 @@
     <bean id="deviceStatusFilterService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.DeviceStatusFilterServiceImpl"/>
     <bean id="tagManagementService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.TagManagementServiceImpl"/>
     <bean id="deviceFirmwareModelManagementService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.DeviceFirmwareManagementServiceImpl"/>
+    <bean id="deviceFirmwareModelManagementAdminService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.admin.DeviceFirmwareModelManagementAdminServiceImpl"/>
+
     <!--<bean id="errorHandler" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.common.ErrorHandler"/>-->
     <cxf:bus>
         <cxf:inInterceptors>
