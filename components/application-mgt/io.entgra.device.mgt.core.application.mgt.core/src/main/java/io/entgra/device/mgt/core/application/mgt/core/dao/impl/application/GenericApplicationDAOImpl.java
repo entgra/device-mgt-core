@@ -288,7 +288,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
 
         if (filter.getAppTypes() != null && !filter.getAppTypes().isEmpty()) {
             String placeholders = filter.getAppTypes().stream().map(type -> "?").collect(Collectors.joining(", "));
-            sql += "AND AP_APP.TYPE IN (" + placeholders + ") ";
+            sql += " AND AP_APP.TYPE IN (" + placeholders + ") ";
         }
         if (!StringUtils.isEmpty(filter.getAppName())) {
             sql += " AND LOWER (AP_APP.NAME) ";
@@ -2146,7 +2146,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
     }
 
     @Override
-    public void addDeviceFirmwareModelMapping(int appId, int firmwareModelId) throws ApplicationManagementDAOException {
+    public void addDeviceFirmwareModelMapping(int appId, List<Integer> firmwareModelIds) throws ApplicationManagementDAOException {
         String sql = "INSERT INTO " +
                 "AP_APP_DEVICE_MODEL (" +
                 "APP_ID, " +
@@ -2156,26 +2156,56 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
         try {
             Connection connection = this.getDBConnection();
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setInt(1, appId);
-                preparedStatement.setInt(2, firmwareModelId);
-                preparedStatement.execute();
+                for (Integer firmwareModelId : firmwareModelIds) {
+                    preparedStatement.setInt(1, appId);
+                    preparedStatement.setInt(2, firmwareModelId);
+                    preparedStatement.addBatch();
+                }
+                preparedStatement.executeBatch();
             }
         } catch (SQLException e) {
             String msg = "SQL error encountered while adding device firmware model mapping for firmware " +
-                    "model ID: " + firmwareModelId;
+                    "model IDs: [" + firmwareModelIds.toString() + "]";
             log.error(msg, e);
             throw new ApplicationManagementDAOException(msg, e);
         } catch (DBConnectionException e) {
             String msg = "Error occurred while adding device firmware model mapping for firmware " +
-                    "model ID: " + firmwareModelId + ". Executed query: " + sql;
+                    "model IDs: [" + firmwareModelIds.toString() + "]. Executed query: " + sql;
             log.error(msg, e);
             throw new ApplicationManagementDAOException(msg, e);
         }
     }
 
     @Override
-    public List<Integer> getFirmwareModelIdsForApp(int applicationId, int tenantId) throws ApplicationManagementDAOException {
-        return List.of();
+    public List<Integer> getFirmwareModelIdsForApp(int applicationId) throws ApplicationManagementDAOException {
+        List<Integer> firmwareModelIds = new ArrayList<>();
+        String sql = "SELECT "
+                + "FIRMWARE_DEVICE_MODEL_ID "
+                + "FROM AP_APP_DEVICE_MODEL "
+                + "WHERE APP_ID = ? ";
+        try {
+            Connection conn = this.getDBConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, applicationId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while(rs.next()) {
+                        firmwareModelIds.add(rs.getInt("FIRMWARE_DEVICE_MODEL_ID"));
+                    }
+                }
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection to get firmware model IDs for application ID: "
+                    + applicationId;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred to getting firmware model ID associate with application ID " + applicationId
+                    + " while executing query. Query: " + sql;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+
+        return firmwareModelIds;
     }
 
 }

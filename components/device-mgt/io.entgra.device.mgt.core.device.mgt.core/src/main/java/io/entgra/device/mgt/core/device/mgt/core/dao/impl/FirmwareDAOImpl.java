@@ -87,7 +87,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
         Connection conn;
         int firmwareId = -1;
         String sql = "INSERT INTO DM_DEVICE_FIRMWARE_MODEL (FIRMWARE_MODEL, DESCRIPTION, DEVICE_TYPE_ID, TENANT_ID) " +
-                "VALUES (?, ?, ?)";
+                "VALUES (?, ?, ?, ?)";
 
         try {
             conn = this.getConnection();
