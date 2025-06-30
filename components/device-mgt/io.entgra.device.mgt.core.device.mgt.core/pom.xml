@@ -22,7 +22,7 @@
     <parent>
         <groupId>io.entgra.device.mgt.core</groupId>
         <artifactId>device-mgt</artifactId>
-        <version>7.0.3-SNAPSHOT</version>
+        <version>7.0.7-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -229,6 +229,7 @@
             <artifactId>org.apache.felix.scr.ds-annotations</artifactId>
             <scope>provided</scope>
         </dependency>
+
 		<dependency>
 			<groupId>io.entgra.org.scannotation</groupId>
 			<artifactId>scannotation</artifactId>
@@ -334,10 +335,8 @@
             <groupId>org.wso2.carbon.commons</groupId>
             <artifactId>org.wso2.carbon.ntask.core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
+
+
         <dependency>
             <groupId>commons-collections.wso2</groupId>
             <artifactId>commons-collections</artifactId>
@@ -454,6 +453,10 @@
         <dependency>
             <groupId>io.entgra.device.mgt.core</groupId>
             <artifactId>io.entgra.device.mgt.core.apimgt.extension.rest.api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.entgra.device.mgt.core</groupId>
+            <artifactId>io.entgra.device.mgt.core.notification.mgt.common</artifactId>
         </dependency>
     </dependencies>
 </project>

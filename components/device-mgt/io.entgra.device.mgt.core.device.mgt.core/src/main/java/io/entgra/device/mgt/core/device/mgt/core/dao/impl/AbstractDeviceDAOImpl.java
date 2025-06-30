@@ -1052,6 +1052,24 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                     "WHERE  dgm.GROUP_ID = ?) dgm1 " +
                     "WHERE d.ID = dgm1.DEVICE_ID " +
                     "AND d.TENANT_ID = ?";
+
+            if (request.getCustomProperty() != null && !request.getCustomProperty().isEmpty()) {
+                sql = sql + " AND ";
+                boolean firstCondition = true;
+                for (Map.Entry<String, String> entry : request.getCustomProperty().entrySet()) {
+                    if (!firstCondition) {
+                        sql += "AND ";
+                    }
+                    sql += "EXISTS (" +
+                            "SELECT VALUE_FIELD " +
+                            "FROM DM_DEVICE_INFO di " +
+                            "WHERE di.DEVICE_ID = d.ID " +
+                            "AND di.KEY_FIELD = '" + entry.getKey() + "' " +
+                            "AND di.VALUE_FIELD LIKE ? ) ";
+                    firstCondition = false;
+                }
+            }
+
             //Add the query for device-name
             if (deviceName != null && !deviceName.isEmpty()) {
                 sql = sql + " AND d.NAME LIKE ?";
@@ -1076,7 +1094,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             }
             //Add the query for owner
             if (owner != null && !owner.isEmpty()) {
-                sql = sql + " AND e.OWNER = ?";
+                sql = sql + " AND e.OWNER LIKE ?";
                 isOwnerProvided = true;
             } else if (ownerPattern != null && !ownerPattern.isEmpty()) {
                 sql = sql + " AND e.OWNER LIKE ?";
@@ -1100,6 +1118,11 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 int paramIdx = 1;
                 stmt.setInt(paramIdx++, groupId);
                 stmt.setInt(paramIdx++, tenantId);
+                if (request.getCustomProperty() != null && !request.getCustomProperty().isEmpty()) {
+                    for (Map.Entry<String, String> entry : request.getCustomProperty().entrySet()) {
+                        stmt.setString(paramIdx++, "%" + entry.getValue() + "%");
+                    }
+                }
                 if (isDeviceNameProvided) {
                     stmt.setString(paramIdx++, "%" + deviceName + "%");
                 }
@@ -1114,7 +1137,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                     stmt.setString(paramIdx++, ownership);
                 }
                 if (isOwnerProvided) {
-                    stmt.setString(paramIdx++, owner);
+                    stmt.setString(paramIdx++, "%" + owner + "%");
                 } else if (isOwnerPatternProvided) {
                     stmt.setString(paramIdx++, ownerPattern + "%");
                 }
@@ -1331,6 +1354,27 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                     "FROM " +
                     "DM_DEVICE d " +
                     "WHERE 1=1 ";
+
+            if (request.getCustomProperty() != null && !request.getCustomProperty().isEmpty()) {
+                sql = sql + "AND ";
+                boolean firstCondition = true;
+                for (Map.Entry<String, String> entry : request.getCustomProperty().entrySet()) {
+                    if (!firstCondition) {
+                        sql += "AND ";
+                    }
+                    sql += "EXISTS (" +
+                            "SELECT VALUE_FIELD " +
+                            "FROM DM_DEVICE_INFO di " +
+                            "WHERE di.DEVICE_ID = d.ID " +
+                            "AND di.KEY_FIELD = '" + entry.getKey() + "' " +
+                            "AND di.VALUE_FIELD LIKE ? ) ";
+                    firstCondition = false;
+                }
+                sql += "AND d.TENANT_ID = ? ";
+            } else {
+                sql = sql + "AND d.TENANT_ID = ? ";
+            }
+
             //Add query for last updated timestamp
             if (since != null) {
                 sql = sql + " AND d.LAST_UPDATED_TIMESTAMP > ?";
@@ -1373,6 +1417,12 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
 
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 int paramIdx = 1;
+                if (request.getCustomProperty() != null && !request.getCustomProperty().isEmpty()) {
+                    for (Map.Entry<String, String> entry : request.getCustomProperty().entrySet()) {
+                        stmt.setString(paramIdx++, "%" + entry.getValue() + "%");
+                    }
+                }
+                stmt.setInt(paramIdx++, tenantId);
                 if (isSinceProvided) {
                     stmt.setTimestamp(paramIdx++, new Timestamp(since.getTime()));
                 }

@@ -17,9 +17,11 @@
  */
 package io.entgra.device.mgt.core.tenant.mgt.core.internal;
 
+import io.entgra.device.mgt.core.apimgt.extension.rest.api.PublisherRESTAPIServices;
 import io.entgra.device.mgt.core.application.mgt.common.services.ApplicationManager;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.WhiteLabelManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
+import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationConfigService;
 import io.entgra.device.mgt.core.tenant.mgt.common.spi.TenantManagerAdminService;
 import io.entgra.device.mgt.core.tenant.mgt.common.spi.TenantManagerService;
 import io.entgra.device.mgt.core.tenant.mgt.core.TenantManager;
@@ -40,7 +42,7 @@ import org.wso2.carbon.user.core.service.RealmService;
 @SuppressWarnings("unused")
 public class TenantMgtServiceComponent {
 
-    private static final Log log = LogFactory.getLog(TenantManagerService.class);
+    private static final Log log = LogFactory.getLog(TenantMgtServiceComponent.class);
 
     @SuppressWarnings("unused")
     @Activate
@@ -116,6 +118,27 @@ public class TenantMgtServiceComponent {
     }
 
     @Reference(
+            name = "publisher.restapi.services",
+            service = io.entgra.device.mgt.core.apimgt.extension.rest.api.PublisherRESTAPIServices.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetPublisherRESTAPIServices"
+    )
+    protected void setPublisherRESTAPIServices(PublisherRESTAPIServices publisherRESTAPIServices) {
+        if (log.isDebugEnabled()) {
+            log.info("Publisher REST API Services is binding");
+        }
+        TenantMgtDataHolder.getInstance().setPublisherRESTAPIServices(publisherRESTAPIServices);
+    }
+
+    protected void unsetPublisherRESTAPIServices(PublisherRESTAPIServices publisherRESTAPIServices) {
+        if (log.isDebugEnabled()) {
+            log.info("Publisher REST API Services is unbinding");
+        }
+        TenantMgtDataHolder.getInstance().setPublisherRESTAPIServices(null);
+    }
+
+    @Reference(
             name = "application.mgr",
             service = io.entgra.device.mgt.core.application.mgt.common.services.ApplicationManager.class,
             cardinality = ReferenceCardinality.MANDATORY,
@@ -153,5 +176,25 @@ public class TenantMgtServiceComponent {
             log.info("Realm Service service is unbinding");
         }
         TenantMgtDataHolder.getInstance().setRealmService(null);
+    }
+
+    @Reference(
+            name = "notificationConfigService.service",
+            service = io.entgra.device.mgt.core.notification.mgt.common.service.NotificationConfigService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetNotificationConfigService")
+    protected void setNotificationConfigService(NotificationConfigService notificationConfigService) {
+        if(log.isDebugEnabled()) {
+            log.info("Notification Config Service service is binding");
+        }
+        TenantMgtDataHolder.getInstance().setNotificationConfigService(notificationConfigService);
+    }
+
+    protected void unsetNotificationConfigService(NotificationConfigService notificationConfigService) {
+        if(log.isDebugEnabled()) {
+            log.info("Notification Config Service service is unbinding");
+        }
+        TenantMgtDataHolder.getInstance().setNotificationConfigService(null);
     }
 }

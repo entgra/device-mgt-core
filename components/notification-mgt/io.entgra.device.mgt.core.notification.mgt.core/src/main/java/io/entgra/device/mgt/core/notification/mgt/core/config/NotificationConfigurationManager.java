@@ -58,7 +58,8 @@ public class NotificationConfigurationManager {
                 .getNotificationManagementRepository();
     }
 
-    public NotificationManagementRepository getNotificationManagementRepository() throws NotificationConfigurationException {
+    public NotificationManagementRepository getNotificationManagementRepository()
+            throws NotificationConfigurationException {
         try {
             if (notificationManagementRepository == null) {
                 initDatasourceConfig();

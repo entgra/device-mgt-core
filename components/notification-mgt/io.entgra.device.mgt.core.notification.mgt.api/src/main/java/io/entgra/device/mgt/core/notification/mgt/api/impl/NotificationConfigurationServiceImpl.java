@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - 2023, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
+ * Copyright (c) 2018 - 2025, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
  *
  * Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -30,6 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -41,6 +42,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Path("/notification-configuration")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -50,42 +52,58 @@ public class NotificationConfigurationServiceImpl implements NotificationConfigu
     private static final Log log = LogFactory.getLog(NotificationConfigurationServiceImpl.class);
 
     private boolean configurationsAreEmpty(NotificationConfigurationList configurations) {
-        return configurations == null || configurations.isEmpty();
+        return configurations == null || configurations.getNotificationConfigurations() == null
+                || configurations.getNotificationConfigurations().isEmpty();
     }
+
     private boolean configurationIsEmpty(NotificationConfig configuration) {
         return configuration == null;
     }
+
     private boolean configurationIsValid(NotificationConfig config) {
         return config.getRecipients() != null &&
                 config.getCode() != null &&
                 !config.getCode().isEmpty() &&
-                config.getConfiguredBy() != null &&
-                config.getPriority() > 0;
+                config.getConfiguredBy() != null;
     }
+
     private boolean configIDIsInvalid(NotificationConfig config) {
-        return  config.getId() <= 0;
+        return config.getId() <= 0;
     }
 
     @GET
     @Override
     public Response getNotificationConfigurations(
-        @QueryParam("offset") int offset, @QueryParam("limit") int limit) {
-            try {
-
-                NotificationConfigService notificationConfigService = NotificationConfigurationApiUtil.getNotificationConfigurationService();
-                // Retrieve configurations from the service layer
-                NotificationConfigurationList configurations = notificationConfigService.getNotificationConfigurations();
-                if (configurations.isEmpty()) {
-                    String msg = "No notification configurations found for tenant ID: ";
-                    log.warn(msg);
-                    return Response.status(HttpStatus.SC_NOT_FOUND).entity(msg).build();
-                }
-                return Response.status(HttpStatus.SC_OK).entity(configurations).build();
-            } catch (NotificationConfigurationServiceException e) {
-                String msg = "Unexpected error occurred while retrieving notification configurations.";
-                log.error(msg, e);
-                return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(msg).build();
-            }
+            @QueryParam("offset") int offset,
+            @QueryParam("limit") int limit,
+            @QueryParam("name") String name,
+            @QueryParam("type") String type,
+            @QueryParam("code") String code) {
+        try {
+            NotificationConfigService notificationConfigService =
+                    NotificationConfigurationApiUtil.getNotificationConfigurationService();
+            NotificationConfigurationList allConfigurations =
+                    notificationConfigService.getNotificationConfigurations();
+            List<NotificationConfig> filteredConfigs = allConfigurations.getNotificationConfigurations().stream()
+                    .filter(config -> {
+                        boolean matchesName = (name == null || config.getName().toLowerCase()
+                                .contains(name.toLowerCase()));
+                        boolean matchesType = (type == null || config.getType().equalsIgnoreCase(type));
+                        boolean matchesCode = (code == null || config.getCode().toLowerCase()
+                                .contains(code.toLowerCase()));
+                        return matchesName && matchesType && matchesCode;
+                    })
+                    .collect(Collectors.toList());
+            int fromIndex = Math.max(0, Math.min(offset, filteredConfigs.size()));
+            int toIndex = Math.max(0, Math.min(offset + limit, filteredConfigs.size()));
+            List<NotificationConfig> pagedConfigs = filteredConfigs.subList(fromIndex, toIndex);
+            allConfigurations.setNotificationConfigurations(pagedConfigs);
+            return Response.status(HttpStatus.SC_OK).entity(allConfigurations).build();
+        } catch (NotificationConfigurationServiceException e) {
+            String msg = "Unexpected error occurred while retrieving notification configurations.";
+            log.error(msg, e);
+            return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
     }
 
     @POST
@@ -97,40 +115,29 @@ public class NotificationConfigurationServiceImpl implements NotificationConfigu
                 log.error(msg);
                 return Response.status(HttpStatus.SC_BAD_REQUEST).entity(msg).build();
             }
-
-            // Validate configurations and track invalid ones
             NotificationConfigurationList validConfigurations = new NotificationConfigurationList();
             List<String> invalidConfigs = new ArrayList<>();
-
-            for (NotificationConfig config : configurations.getList()) {
+            for (NotificationConfig config : configurations.getNotificationConfigurations()) {
                 if (!configurationIsValid(config)) {
                     invalidConfigs.add("Config ID " + config.getId() + ": missing required fields");
                     continue;
                 }
                 validConfigurations.add(config);
             }
-
             if (validConfigurations.isEmpty()) {
                 String msg = "No valid configurations provided";
                 log.error(msg);
                 return Response.status(HttpStatus.SC_BAD_REQUEST).entity(msg).build();
             }
-
-            // Save valid configurations
             NotificationConfigService notificationConfigService =
                     NotificationConfigurationApiUtil.getNotificationConfigurationService();
             notificationConfigService.addNotificationConfigContext(validConfigurations);
-
-            // Prepare response
             Response.ResponseBuilder response = Response.status(HttpStatus.SC_CREATED)
                     .entity(validConfigurations);
-
-            // Add warning if some configs were invalid
             if (!invalidConfigs.isEmpty()) {
                 response.header("Warning", "Some configurations were invalid: " +
                         String.join(", ", invalidConfigs));
             }
-
             return response.build();
         } catch (NotificationConfigurationServiceException e) {
             String msg = "Error creating notification configurations: " + e.getMessage();
@@ -143,61 +150,53 @@ public class NotificationConfigurationServiceImpl implements NotificationConfigu
     @Path("/{configId}")
     @Override
     public Response updateNotificationConfigById(@PathParam("configId") int configId,
-                                             NotificationConfig config) {
+                                                 NotificationConfig config) {
         try {
             if (configurationIsEmpty(config)) {
                 String msg = "Configuration cannot be null";
                 log.error(msg);
                 return Response.status(HttpStatus.SC_BAD_REQUEST).entity(msg).build();
             }
-
-            // Ensure path ID matches body ID
             if (configId != config.getId()) {
                 String msg = "Path ID " + configId + " does not match configuration ID " + config.getId();
                 log.error(msg);
                 return Response.status(HttpStatus.SC_BAD_REQUEST).entity(msg).build();
             }
-
             if (configIDIsInvalid(config)) {
                 String msg = "Invalid configuration ID";
                 log.error(msg);
                 return Response.status(HttpStatus.SC_BAD_REQUEST).entity(msg).build();
             }
-
             if (!configurationIsValid(config)) {
                 String msg = "Invalid configuration: missing required fields";
                 log.error(msg);
                 return Response.status(HttpStatus.SC_BAD_REQUEST).entity(msg).build();
             }
-
-            // Retrieve service
             NotificationConfigService notificationConfigService =
                     NotificationConfigurationApiUtil.getNotificationConfigurationService();
-
             NotificationConfig existingConfig = notificationConfigService.getNotificationConfigByID(configId);
             if (existingConfig == null) {
                 String msg = "Configuration with ID " + configId + " not found";
                 log.error(msg);
                 return Response.status(HttpStatus.SC_NOT_FOUND).entity(msg).build();
             }
-
-            // Update the configuration
             notificationConfigService.updateNotificationConfigContext(config);
-
             return Response.status(HttpStatus.SC_OK).entity(config).build();
         } catch (NotificationConfigurationServiceException e) {
             if (e.getMessage().contains("not found")) {
                 return Response.status(HttpStatus.SC_NOT_FOUND).entity(e.getMessage()).build();
             }
-
             String msg = "Error updating notification configuration: " + e.getMessage();
             log.error(msg, e);
             return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
 
-    @Override
+    @DELETE
     @Path("/{configId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Override
     public Response deleteNotificationConfig(@PathParam("configId") int configId) {
         try {
             NotificationConfigService notificationConfigService =
@@ -208,16 +207,16 @@ public class NotificationConfigurationServiceImpl implements NotificationConfigu
                 return Response.status(HttpStatus.SC_BAD_REQUEST).entity(msg).build();
             }
             notificationConfigService.deleteNotificationConfigContext(configId);
-            return Response.status(HttpStatus.SC_NO_CONTENT).build();
+            return Response.status(HttpStatus.SC_OK).entity("Notification configuration deleted successfully.").build();
         } catch (NotificationConfigurationServiceException e) {
-            String msg = "Error occurred while deleting notification configuration(s).";
+            String msg = "Error occurred while deleting notification configuration with ID: " + configId;
             log.error(msg, e);
             return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
 
     @Override
-    public Response deleteNotificationConfigurations()  {
+    public Response deleteNotificationConfigurations() {
         try {
             NotificationConfigService notificationConfigService =
                     NotificationConfigurationApiUtil.getNotificationConfigurationService();
@@ -230,18 +229,21 @@ public class NotificationConfigurationServiceImpl implements NotificationConfigu
         }
     }
 
-    public Response getNotificationConfig(int configID)  {
+    @GET
+    @Path("/{configId}")
+    @Override
+    public Response getNotificationConfig(@PathParam("configId") int configId) {
         try {
-            if (configID <= 0) {
-                String msg = "Invalid configuration ID: " + configID;
+            if (configId <= 0) {
+                String msg = "Invalid configuration ID: " + configId;
                 log.error(msg);
                 return Response.status(HttpStatus.SC_BAD_REQUEST).entity(msg).build();
             }
             NotificationConfigService notificationConfigService =
                     NotificationConfigurationApiUtil.getNotificationConfigurationService();
-            NotificationConfig config = notificationConfigService.getNotificationConfigByID(configID);
+            NotificationConfig config = notificationConfigService.getNotificationConfigByID(configId);
             if (config == null) {
-                String msg = "Notification configuration with ID '" + configID + "' not found.";
+                String msg = "Notification configuration with ID '" + configId + "' not found.";
                 log.error(msg);
                 return Response.status(HttpStatus.SC_NOT_FOUND).entity(msg).build();
             }
@@ -253,4 +255,29 @@ public class NotificationConfigurationServiceImpl implements NotificationConfigu
         }
     }
 
+    @PUT
+    @Path("/defaults")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Override
+    public Response updateDefaultArchiveSettings(NotificationConfigurationList configList) {
+        String defaultType = configList.getDefaultArchiveType();
+        String defaultAfter = configList.getDefaultArchiveAfter();
+        if (defaultType == null || defaultAfter == null ||
+                defaultType.isEmpty() || defaultAfter.isEmpty()) {
+            String msg = "Default archive type and period must not be empty.";
+            log.error(msg);
+            return Response.status(HttpStatus.SC_BAD_REQUEST).entity(msg).build();
+        }
+        try {
+            NotificationConfigService notificationConfigService =
+                    NotificationConfigurationApiUtil.getNotificationConfigurationService();
+            notificationConfigService.setDefaultNotificationArchiveMetadata(defaultType, defaultAfter);
+            return Response.status(HttpStatus.SC_OK).entity(configList).build();
+        } catch (NotificationConfigurationServiceException e) {
+            String msg = "Error updating default archival settings: " + e.getMessage();
+            log.error(msg, e);
+            return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
 }

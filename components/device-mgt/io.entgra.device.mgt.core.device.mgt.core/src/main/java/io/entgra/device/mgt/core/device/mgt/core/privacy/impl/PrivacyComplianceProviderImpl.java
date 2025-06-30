@@ -24,6 +24,7 @@ import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.PrivacyComplianceException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.TransactionManagementException;
+import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementDataHolder;
 import io.entgra.device.mgt.core.device.mgt.core.privacy.PrivacyComplianceProvider;
@@ -86,6 +87,10 @@ public class PrivacyComplianceProviderImpl implements PrivacyComplianceProvider 
                     complianceDAO.deleteDeviceEnrollments(deviceId, tenantId);
                 }
                 complianceDAO.deleteDevice(deviceId, tenantId);
+                String message = String.format("Task Delete Device executed for user %s, and device %d was deleted.",
+                        username, deviceId);
+                DeviceManagementDataHolder.getInstance().getNotificationManagementService()
+                        .handleTaskNotificationIfApplicable("DELETE_DEVICE", tenantId, message);
             }
             DeviceManagementDAOFactory.commitTransaction();
         } catch (PrivacyComplianceDAOException e) {
@@ -98,6 +103,9 @@ public class PrivacyComplianceProviderImpl implements PrivacyComplianceProvider 
             String msg = "Database error occurred while deleting the devices and details of the given user";
             log.error(msg, e);
             throw new PrivacyComplianceException(msg, e);
+        } catch (NotificationManagementException e) {
+            String msg = "An Error occurred while updating handleTaskNotificationIfApplicable";
+            log.error(msg, e);
         } finally {
             DeviceManagementDAOFactory.closeConnection();
         }
@@ -122,6 +130,9 @@ public class PrivacyComplianceProviderImpl implements PrivacyComplianceProvider 
             complianceDAO.deleteDeviceLocation(device.getId(), device.getEnrolmentInfo().getId());
             complianceDAO.deleteDeviceEnrollments(device.getId(), tenantId);
             complianceDAO.deleteDevice(device.getId(), tenantId);
+            String message = String.format("Task Delete Device executed for device %d.", device.getId());
+            DeviceManagementDataHolder.getInstance().getNotificationManagementService()
+                    .handleTaskNotificationIfApplicable("DELETE_DEVICE", tenantId, message);
             DeviceManagementDAOFactory.commitTransaction();
         } catch (TransactionManagementException e) {
             DeviceManagementDAOFactory.rollbackTransaction();
@@ -133,6 +144,9 @@ public class PrivacyComplianceProviderImpl implements PrivacyComplianceProvider 
             String msg = "Error occurred while deleting the device details.";
             log.error(msg, e);
             throw new PrivacyComplianceException(msg, e);
+        } catch (NotificationManagementException e) {
+            String msg = "An Error occurred while updating handleTaskNotificationIfApplicable";
+            log.error(msg, e);
         } finally {
             DeviceManagementDAOFactory.closeConnection();
         }
