@@ -21,6 +21,7 @@ package io.entgra.device.mgt.core.device.mgt.core.service;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.DeviceFirmwareModel;
+import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.PropertyValidationInfo;
 import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareResult;
 import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareModelSearchFilter;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ConflictException;
@@ -4719,8 +4720,60 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         return true;
     }
 
+    @Override
+    public List<DevicePropertyInfo> getDeviceBasedOnProperties(Map<String, String> deviceProps) throws DeviceManagementException, DeviceNotFoundException {
+        if (log.isDebugEnabled()) {
+            log.debug("Attempting to get device configurations based on properties.");
+        }
+
+        List<DevicePropertyInfo> devicePropertyList;
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            devicePropertyList = deviceDAO.getDeviceBasedOnDeviceProperties(deviceProps);
+            if (devicePropertyList == null || devicePropertyList.isEmpty()) {
+                String msg = "Cannot find device for specified properties";
+                log.info(msg);
+                throw new DeviceNotFoundException(msg);
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Devices configuration retrieval criteria cannot be null or empty.";
+            log.error(msg);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+        return devicePropertyList;
+    }
 
     @Override
+    public DeviceConfiguration getDeviceConfiguration(DevicePropertyInfo deviceProperties)
+            throws DeviceManagementException, UnauthorizedDeviceAccessException,
+            AmbiguousConfigurationException {
+
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+            ctx.setTenantId(Integer.parseInt(deviceProperties.getTenantId()), true);
+            Device device = this.getDevice(new DeviceIdentifier(deviceProperties.getDeviceIdentifier(),
+                    deviceProperties.getDeviceTypeName()), false);
+            String owner = device.getEnrolmentInfo().getOwner();
+            PlatformConfiguration configuration = this.getConfiguration(device.getType());
+            List<ConfigurationEntry> configurationEntries = new ArrayList<>();
+            if (configuration != null) {
+                configurationEntries = configuration.getConfiguration();
+            }
+            return wrapConfigurations(device, ctx.getTenantDomain(), configurationEntries, owner);
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+    }
+
+    @Override
+    @Deprecated
     public DeviceConfiguration getDeviceConfiguration(Map<String, String> deviceProps)
             throws DeviceManagementException, DeviceNotFoundException, UnauthorizedDeviceAccessException,
             AmbiguousConfigurationException {
@@ -5971,6 +6024,88 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             DeviceManagementDAOFactory.closeConnection();
         }
         return deviceFirmwareResult;
+    }
+
+    @Override
+    public List<PropertyValidationInfo> validateDeviceProperties(DeviceIdentifier deviceIdentifier,
+                                         Map<String, String> validationProps, int tenantId)
+            throws DeviceNotFoundException, DeviceManagementException {
+
+        List<PropertyValidationInfo> validatedPropertyList = new ArrayList<>();
+        List<PropertyValidationInfo> validationFailedPropertyList = new ArrayList<>();
+
+        try{
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(tenantId, true);
+
+            Device device = this.getDevice(deviceIdentifier, true);
+
+            PropertyValidationInfo evaluatingProperty;
+            if (device == null) {
+                String msg = "Device with identifier '" + deviceIdentifier.getId() +
+                        "' and type '" + deviceIdentifier.getType() + "' does not exist";
+                log.error(msg);
+                throw new DeviceNotFoundException(msg);
+            }
+
+            for (Map.Entry<String, String> entry : validationProps.entrySet()) {
+                if (entry.getValue() == null || entry.getValue().isEmpty()) {
+                    String msg = "Property '" + entry.getKey() + "' is null or empty, hence ignoring";
+                    log.warn(msg);
+                    continue;
+                }
+                evaluatingProperty = new PropertyValidationInfo();
+                evaluatingProperty.setPropertyName(entry.getKey());
+                evaluatingProperty.setPropertyValue(entry.getValue());
+                for (Device.Property property : device.getProperties()) {
+                    if (entry.getKey().equals(property.getName())) {
+                        if (entry.getValue().equals(property.getValue())) {
+                            evaluatingProperty.setMatch(true);
+                            validatedPropertyList.add(evaluatingProperty);
+                            break;
+                        }
+                    }
+                }
+                evaluatingProperty.setMatch(false);
+                validationFailedPropertyList.add(evaluatingProperty);
+            }
+
+            validatedPropertyList.addAll(validationFailedPropertyList);
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while validating device properties for device: " + deviceIdentifier.getId() +
+                    " of type: " + deviceIdentifier.getType();
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+        return validatedPropertyList;
+    }
+
+    @Override
+    public boolean isDevicePropertyValueExists(String propertyName, String propertyValue) throws DeviceManagementException {
+        if (StringUtils.isBlank(propertyName) || StringUtils.isBlank(propertyValue)) {
+            String msg = "Property name or value cannot be null or empty";
+            log.error(msg);
+            throw new IllegalArgumentException(msg);
+        }
+
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            return deviceDAO.isDevicePropertyValueExists(propertyName, propertyValue, tenantId);
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while checking if device property value exists for property: " + propertyName +
+                    " and value: " + propertyValue;
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
     }
 
 }

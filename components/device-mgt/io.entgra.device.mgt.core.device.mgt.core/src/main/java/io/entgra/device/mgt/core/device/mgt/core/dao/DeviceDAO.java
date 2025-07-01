@@ -904,4 +904,6 @@ public interface DeviceDAO {
      * @throws DeviceManagementException
      */
     List<Integer> getDeviceIdsByStatus(List<String> statuses) throws DeviceManagementException;
+
+    boolean isDevicePropertyValueExists(String propertyName, String propertyValue, int tenantId) throws DeviceManagementException;
 }

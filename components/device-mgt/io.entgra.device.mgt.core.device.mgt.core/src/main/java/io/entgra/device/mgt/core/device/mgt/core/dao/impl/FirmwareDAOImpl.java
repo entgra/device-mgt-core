@@ -357,7 +357,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
                     "SELECT FIRMWARE_MODEL " +
                     "FROM DM_DEVICE_FIRMWARE_MODEL dfm " +
                     "WHERE dfm.ID = dfmm.FIRMWARE_MODEL_ID " +
-                    "AND dfm.FIRMWARE_MODEL LIKE ? )");
+                    "AND dfm.FIRMWARE_MODEL LIKE ? ) AND ");
             isFirmwareNameFilterProvided = true;
         }
         if (searchFilter.getDeviceIdentifier() != null && !searchFilter.getDeviceIdentifier().isEmpty()) {
@@ -374,7 +374,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
                     "SELECT 1 " +
                     "FROM DM_DEVICE_GROUP_MAP dgm " +
                     "WHERE dgm.DEVICE_ID = d.ID " +
-                    "AND dgm.GROUP_ID = ? )");
+                    "AND dgm.GROUP_ID = ? ) AND ");
         }
         if (searchFilter.getCustomProperty() != null && !searchFilter.getCustomProperty().isEmpty()) {
             isCustomPropertyProvided = true;
@@ -390,6 +390,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
                         "AND di.KEY_FIELD = '").append(entry.getKey()).append("' AND di.VALUE_FIELD LIKE ? )");
                 firstCondition = false;
             }
+            sb.append(" AND ");
         }
         sb.append("fmm.TENANT_ID = ? OFFSET ? LIMIT ?");
 

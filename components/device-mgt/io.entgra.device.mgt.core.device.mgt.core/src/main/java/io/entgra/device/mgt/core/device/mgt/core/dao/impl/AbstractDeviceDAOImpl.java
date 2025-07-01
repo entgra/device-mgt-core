@@ -3610,4 +3610,33 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             throw new DeviceManagementException(msg, e);
         }
     }
+
+    @Override
+    public boolean isDevicePropertyValueExists(String propertyName, String propertyValue, int tenantId) throws DeviceManagementException {
+        try {
+            boolean isProperyExists = false;
+            Connection conn = getConnection();
+            String sql = "select COUNT(*) AS RECORDS_COUNT " +
+                    "FROM DM_DEVICE_PROPERTIES " +
+                    "WHERE PROPERTY_KEY = ? AND PROPERTY_VALUE = ? AND TENANT_ID = ?";
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, propertyName);
+                ps.setString(2, propertyValue);
+                ps.setInt(3, tenantId);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        isProperyExists = rs.getInt("RECORDS_COUNT") > 0;
+                    }
+
+                }
+            }
+            return isProperyExists;
+        } catch (SQLException e) {
+            String msg = "Error occurred while running SQL to get device IDs by status.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        }
+    }
 }

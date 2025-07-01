@@ -921,6 +921,7 @@ public interface DeviceManagementProviderService {
      * @throws AmbiguousConfigurationException if configuration is ambiguous
      * the property payload
      */
+    @Deprecated
     DeviceConfiguration getDeviceConfiguration(Map<String, String> propertyMap)
             throws DeviceManagementException, DeviceNotFoundException, UnauthorizedDeviceAccessException,
                    AmbiguousConfigurationException;
@@ -1256,4 +1257,47 @@ public interface DeviceManagementProviderService {
     DeviceFirmwareResult getFilteredDeviceListByFirmwareVersion(DeviceFirmwareModelSearchFilter searchFilter, int tenantId,
                                                                 boolean requireMatchingDevices)
             throws DeviceManagementException;
+
+    /**
+     * This method is used to retrieve a list of devices based on the given properties.
+     * @param deviceProps Map of device properties to filter the devices
+     * @return {@link List} of {@link DevicePropertyInfo} that match the given properties
+     * @throws DeviceManagementException if an error occurs while fetching the device list
+     * @throws DeviceNotFoundException if no devices are found matching the given properties
+     */
+    List<DevicePropertyInfo> getDeviceBasedOnProperties(Map<String, String> deviceProps)
+            throws DeviceManagementException, DeviceNotFoundException;
+
+    /**
+     * This method retrieves the device configuration based on the provided device property information.
+     * @param devicePropertyInfo DevicePropertyInfo object containing the properties of the device
+     * @return {@link DeviceConfiguration} containing the configuration details of the device
+     * @throws DeviceManagementException if an error occurs while fetching the device configuration
+     * @throws UnauthorizedDeviceAccessException if the required token property is not found on
+     * @throws AmbiguousConfigurationException if the configuration is ambiguous
+     */
+    DeviceConfiguration getDeviceConfiguration(DevicePropertyInfo devicePropertyInfo)
+            throws DeviceManagementException, UnauthorizedDeviceAccessException, AmbiguousConfigurationException;
+
+    /**
+     * This method is used to validate device properties.
+     * @param deviceIdentifier DeviceIdentifier object containing the device information
+     * @param validationProps Map of properties to validate against the device
+     * @param tenantId Tenant ID for scoping the validation
+     * @return List of PropertyValidationInfo objects containing validation results
+     * @throws DeviceNotFoundException if the device is not found
+     * @throws DeviceManagementException if an error occurs during validation
+     */
+    List<PropertyValidationInfo> validateDeviceProperties(DeviceIdentifier deviceIdentifier,
+                                                          Map<String, String> validationProps, int tenantId)
+            throws DeviceNotFoundException, DeviceManagementException;
+
+    /**
+     * This method checks if a device property value exists in the system.
+     * @param propertyName Name of the device property to check
+     * @param propertyValue Value of the device property to check
+     * @return true if the property value exists, false otherwise
+     * @throws DeviceManagementException if an error occurs while checking the property value
+     */
+    boolean isDevicePropertyValueExists(String propertyName, String propertyValue) throws DeviceManagementException;
 }
