@@ -4,6 +4,7 @@ import io.entgra.device.mgt.core.device.mgt.common.app.mgt.DeviceFirmwareModel;
 import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareModelManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceFirmwareModelManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.TransactionManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOException;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dao.FirmwareDAO;
@@ -117,6 +118,35 @@ public class DeviceFirmwareModelManagementServiceImpl implements DeviceFirmwareM
         } catch (SQLException e) {
             String msg = "SQL exception encountered while retrieving firmware models for device type [" + deviceType + "]";
             logger.error(msg, e);
+            throw new DeviceFirmwareModelManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
+
+    public boolean addDeviceFirmwareVersion(int deviceId, String firmwareVersion) throws DeviceFirmwareModelManagementException {
+        if (deviceId <= 0 || firmwareVersion == null || firmwareVersion.isEmpty()) {
+            throw new IllegalArgumentException("Invalid device ID or firmware version");
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Adding firmware version [" + firmwareVersion + "] for device ID [" + deviceId + "]");
+        }
+
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        try {
+            DeviceManagementDAOFactory.beginTransaction();
+            DeviceFirmwareModel deviceFirmwareModel = firmwareDAO.getDeviceFirmwareModel(deviceId, tenantId);
+            return firmwareDAO.saveFirmwareVersionOfDevice(deviceId, firmwareVersion, deviceFirmwareModel.getFirmwareId() ,tenantId);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error encountered while adding firmware version for device ID [" + deviceId + "]";
+            logger.error(msg, e);
+            DeviceManagementDAOFactory.rollbackTransaction();
+            throw new DeviceFirmwareModelManagementException(msg, e);
+        } catch (TransactionManagementException e) {
+            String msg = "Transaction management error while adding firmware version for device ID [" + deviceId + "]";
+            logger.error(msg, e);
+            DeviceManagementDAOFactory.rollbackTransaction();
             throw new DeviceFirmwareModelManagementException(msg, e);
         } finally {
             DeviceManagementDAOFactory.closeConnection();
