@@ -37,4 +37,12 @@ public interface DeviceFirmwareModelManagementService {
      * @throws DeviceFirmwareModelManagementException if an error occurs while adding the firmware version
      */
     boolean addDeviceFirmwareVersion(int deviceId, String firmwareVersion) throws DeviceFirmwareModelManagementException;
+
+    /**
+     * Retrieves a device firmware model by its ID.
+     * @param firmwareModelId the ID of the firmware model to retrieve
+     * @return the {@link DeviceFirmwareModel} object representing the firmware model
+     * @throws DeviceFirmwareModelManagementException if an error occurs while retrieving the firmware model
+     */
+    DeviceFirmwareModel getDeviceFirmwareModel(int firmwareModelId) throws DeviceFirmwareModelManagementException;
 }
