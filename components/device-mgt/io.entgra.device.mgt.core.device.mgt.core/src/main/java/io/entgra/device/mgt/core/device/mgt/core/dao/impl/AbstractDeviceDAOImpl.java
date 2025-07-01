@@ -3616,20 +3616,21 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         try {
             boolean isProperyExists = false;
             Connection conn = getConnection();
-            String sql = "select COUNT(*) AS RECORDS_COUNT " +
-                    "FROM DM_DEVICE_PROPERTIES " +
-                    "WHERE PROPERTY_KEY = ? AND PROPERTY_VALUE = ? AND TENANT_ID = ?";
+            String sql = "SELECT CASE WHEN EXISTS " +
+                    "(SELECT 1 FROM DM_DEVICE_PROPERTIES " +
+                    "WHERE PROPERTY_KEY = ? " +
+                    "AND PROPERTY_VALUE = ? " +
+                    "AND TENANT_ID = ?) " +
+                    "THEN 1 ELSE 0 END AS EXISTS_FLAG";
 
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, propertyName);
                 ps.setString(2, propertyValue);
                 ps.setInt(3, tenantId);
-
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
-                        isProperyExists = rs.getInt("RECORDS_COUNT") > 0;
+                        isProperyExists = rs.getInt("EXISTS_FLAG") > 0;
                     }
-
                 }
             }
             return isProperyExists;
