@@ -92,7 +92,7 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
     @Produces(MediaType.APPLICATION_JSON)
     public Response getConfiguration(@HeaderParam("token") String token,
                                      @QueryParam("properties") String properties,
-                                     @QueryParam("withAccessToken") boolean withAccessToken,
+                                     @QueryParam("requireOtpToken") boolean requireOtpToken,
                                      @QueryParam("withGateways") boolean withGateways) {
         DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
         try {
@@ -124,8 +124,12 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
                 devicesConfiguration.setHttpGateway(buildHttpGatewayUrl());
                 devicesConfiguration.setHttpsGateway(buildHttpsGatewayUrl());
             }
-            if (withAccessToken) setAccessTokenToDeviceConfigurations(devicesConfiguration);
-            else setOTPTokenToDeviceConfigurations(devicesConfiguration);
+
+            if (!requireOtpToken) {
+                setAccessTokenToDeviceConfigurations(devicesConfiguration);
+                return Response.status(Response.Status.OK).entity(devicesConfiguration).build();
+            }
+            setOTPTokenToDeviceConfigurations(devicesConfiguration);
             return Response.status(Response.Status.OK).entity(devicesConfiguration).build();
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while retrieving configurations";
