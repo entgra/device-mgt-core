@@ -905,5 +905,14 @@ public interface DeviceDAO {
      */
     List<Integer> getDeviceIdsByStatus(List<String> statuses) throws DeviceManagementException;
 
+    /**
+     * This method is used to check whether a device property value exists in the system.
+     *
+     * @param propertyName name of the device property.
+     * @param propertyValue value of the device property.
+     * @param tenantId tenant id.
+     * @return true if the property value exists, false otherwise.
+     * @throws DeviceManagementException if an error occurs while checking the property value.
+     */
     boolean isDevicePropertyValueExists(String propertyName, String propertyValue, int tenantId) throws DeviceManagementException;
 }

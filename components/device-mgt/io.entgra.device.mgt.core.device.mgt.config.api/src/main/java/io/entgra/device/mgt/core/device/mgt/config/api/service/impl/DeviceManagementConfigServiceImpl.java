@@ -154,6 +154,13 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
         }
     }
 
+    /**
+     * Validates the properties of a device against the server-side definitions of the provided config values
+     *
+     * @param devicePropertyInfo the device property information containing device identifier, type, and tenant ID
+     * @param validationProps the property map to validate against the server
+     * @return a list of PropertyValidationInfo objects containing validation results
+     */
     private List<PropertyValidationInfo> validateProperties(DevicePropertyInfo devicePropertyInfo, Map<String, String> validationProps) {
         DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
         try {

@@ -508,9 +508,9 @@ public interface DeviceManagementConfigService {
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
-            value = "Getting General device Configurations",
-            notes = "This API is responsible for send device configuration data to an IOT device when the " +
-                    "device starts provisioning",
+            value = "Getting General device Configurations with additional validations over properties",
+            notes = "This API is responsible for send device configuration data and validate the configurations over specific" +
+                    "device type",
             tags = "Device Management Configuration"
     )
     @ApiResponses(
