@@ -502,4 +502,75 @@ public interface DeviceManagementConfigService {
             }
     )
     Response deleteOperationConfiguration();
+
+    @GET
+    @Path("/{deviceType}/configuration")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Getting General device Configurations with additional validations over properties",
+            notes = "This API is responsible for send device configuration data and validate the configurations over specific" +
+                    "device type",
+            tags = "Device Management Configuration"
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully fetched the device configurations.",
+                            response = DeviceConfiguration.class,
+                            responseContainer = "List",
+                            responseHeaders = {
+                                    @ResponseHeader(
+                                            name = "Content-Type",
+                                            description = "The content type of the body"),
+                                    @ResponseHeader(
+                                            name = "ETag",
+                                            description = "Entity Tag of the response resource.\n" +
+                                                    "Used by caches, or in conditional requests."),
+                                    @ResponseHeader(
+                                            name = "Last-Modified",
+                                            description = "Date and time the resource has been modified " +
+                                                    "the last time.Used by caches, or in " +
+                                                    "conditional requests."),
+                            }
+                    ),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad request.\n The request contains invalid parameters"),
+                    @ApiResponse(
+                            code = 401,
+                            message = "Unauthorized.\n The requested is not authorized"),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n Server error occurred while " +
+                                    "fetching device configurations.",
+                            response = ErrorResponse.class)
+            })
+    @Produces(MediaType.APPLICATION_JSON)
+    Response getDeviceConfiguration(
+            @ApiParam(
+                    name = "type",
+                    value = "Device type for which the properties are validated",
+                    required = true)
+            @PathParam("deviceType")
+            String deviceType,
+            @ApiParam(
+                    name = "token",
+                    value = "value for identify an already enrolled and authorized device",
+                    required = true)
+            @HeaderParam("token")
+            String token,
+            @ApiParam(
+                    name = "properties",
+                    value = "The properties list using for query a device",
+                    required = true)
+            @QueryParam("properties")
+            String properties,
+            @ApiParam(
+                    name = "properties",
+                    value = "The properties list using for query a device",
+                    required = true)
+            @QueryParam("validationProperties")
+            String validationProperties);
 }

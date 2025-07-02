@@ -152,4 +152,30 @@ public class DeviceFirmwareModelManagementServiceImpl implements DeviceFirmwareM
             DeviceManagementDAOFactory.closeConnection();
         }
     }
+
+    public DeviceFirmwareModel getDeviceFirmwareModel(int firmwareModelId) throws DeviceFirmwareModelManagementException {
+        if (firmwareModelId <= 0) {
+            throw new IllegalArgumentException("Invalid firmware model ID");
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Retrieving device firmware model with ID [" + firmwareModelId + "]");
+        }
+
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            return firmwareDAO.getDeviceFirmwareModelByModelId(firmwareModelId, tenantId);
+        } catch (SQLException e) {
+            String msg = "SQL exception encountered while retrieving device firmware model with ID [" + firmwareModelId + "]";
+            logger.error(msg, e);
+            throw new DeviceFirmwareModelManagementException(msg, e);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error encountered while retrieving device firmware model with ID [" + firmwareModelId + "]";
+            logger.error(msg, e);
+            throw new DeviceFirmwareModelManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
 }

@@ -198,7 +198,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
             throws DeviceManagementDAOException {
         List<DeviceFirmwareModel> firmwareModels = new ArrayList<>();
         DeviceFirmwareModel firmwareModel;
-        String sql = "SELECT ID, FIRMWARE_MODEL, DESCRIPTION " +
+        String sql = "SELECT ID, FIRMWARE_MODEL, DESCRIPTION, DEVICE_TYPE_ID " +
                 "FROM DM_DEVICE_FIRMWARE_MODEL " +
                 "WHERE DEVICE_TYPE_ID = ? AND TENANT_ID = ?";
         try (Connection conn = this.getConnection();
@@ -211,6 +211,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
                     firmwareModel.setFirmwareId(rs.getInt("ID"));
                     firmwareModel.setFirmwareModelName(rs.getString("FIRMWARE_MODEL"));
                     firmwareModel.setDescription(rs.getString("DESCRIPTION"));
+                    firmwareModel.setDeviceTypeId(rs.getInt("DEVICE_TYPE_ID"));
                     firmwareModels.add(firmwareModel);
                 }
             }
@@ -276,6 +277,36 @@ public class FirmwareDAOImpl implements FirmwareDAO {
         return recordsTotal;
     }
 
+    @Override
+    public DeviceFirmwareModel getDeviceFirmwareModelByModelId(int firmwareModelId, int tenantId) throws DeviceManagementDAOException {
+        Connection conn;
+        DeviceFirmwareModel deviceFirmwareModel = null;
+        String sql = "SELECT ID, FIRMWARE_MODEL, DESCRIPTION, DEVICE_TYPE_ID " +
+                "FROM DM_DEVICE_FIRMWARE_MODEL " +
+                "WHERE ID = ? AND TENANT_ID = ?";
+        try {
+            conn = this.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, firmwareModelId);
+                stmt.setInt(2, tenantId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        deviceFirmwareModel = new DeviceFirmwareModel();
+                        deviceFirmwareModel.setFirmwareId(rs.getInt("ID"));
+                        deviceFirmwareModel.setFirmwareModelName(rs.getString("FIRMWARE_MODEL"));
+                        deviceFirmwareModel.setDescription(rs.getString("DESCRIPTION"));
+                        deviceFirmwareModel.setDeviceTypeId(rs.getInt("DEVICE_TYPE_ID"));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while retrieving current firmware model by id: " + firmwareModelId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        }
+        return deviceFirmwareModel;
+    }
+
     private PreparedStatement buildFilteredQuery(String sql, DeviceFirmwareModelSearchFilter searchFilter,
                                                  int tenantId, boolean requireMatchingDevices) throws SQLException {
         Connection conn;
@@ -326,7 +357,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
                     "SELECT FIRMWARE_MODEL " +
                     "FROM DM_DEVICE_FIRMWARE_MODEL dfm " +
                     "WHERE dfm.ID = dfmm.FIRMWARE_MODEL_ID " +
-                    "AND dfm.FIRMWARE_MODEL LIKE ? )");
+                    "AND dfm.FIRMWARE_MODEL LIKE ? ) AND ");
             isFirmwareNameFilterProvided = true;
         }
         if (searchFilter.getDeviceIdentifier() != null && !searchFilter.getDeviceIdentifier().isEmpty()) {
@@ -343,7 +374,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
                     "SELECT 1 " +
                     "FROM DM_DEVICE_GROUP_MAP dgm " +
                     "WHERE dgm.DEVICE_ID = d.ID " +
-                    "AND dgm.GROUP_ID = ? )");
+                    "AND dgm.GROUP_ID = ? ) AND ");
         }
         if (searchFilter.getCustomProperty() != null && !searchFilter.getCustomProperty().isEmpty()) {
             isCustomPropertyProvided = true;
@@ -359,6 +390,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
                         "AND di.KEY_FIELD = '").append(entry.getKey()).append("' AND di.VALUE_FIELD LIKE ? )");
                 firstCondition = false;
             }
+            sb.append(" AND ");
         }
         sb.append("fmm.TENANT_ID = ? OFFSET ? LIMIT ?");
 

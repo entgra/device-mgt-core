@@ -115,4 +115,13 @@ public interface FirmwareDAO {
      */
     boolean saveFirmwareVersionOfDevice(int deviceId, String firmwareVersion, int firmwareModelId, int tenantId)
             throws DeviceManagementDAOException;
+
+    /**
+     * Retrieves a specific device firmware model by its ID.
+     *
+     * @param firmwareModelId the ID of the firmware model to be retrieved
+     * @return {@link DeviceFirmwareModel} containing the details of the specified firmware model
+     * @throws DeviceManagementDAOException if an error occurs while accessing the database
+     */
+    DeviceFirmwareModel getDeviceFirmwareModelByModelId(int firmwareModelId, int tenantId) throws DeviceManagementDAOException;
 }

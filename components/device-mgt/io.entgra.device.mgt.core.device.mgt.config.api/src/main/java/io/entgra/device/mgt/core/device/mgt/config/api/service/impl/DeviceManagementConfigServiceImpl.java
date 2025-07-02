@@ -23,9 +23,12 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.entgra.device.mgt.core.device.mgt.common.AppRegistrationCredentials;
 import io.entgra.device.mgt.core.device.mgt.common.ApplicationRegistrationException;
+import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
 import io.entgra.device.mgt.core.device.mgt.common.DeviceTransferRequest;
 import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.AmbiguousConfigurationException;
 import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.DeviceConfiguration;
+import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.DevicePropertyInfo;
+import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.PropertyValidationInfo;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceNotFoundException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.OTPManagementException;
@@ -148,6 +151,31 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
             log.error(msg.concat(" ").concat(properties), e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        }
+    }
+
+    /**
+     * Validates the properties of a device against the server-side definitions of the provided config values
+     *
+     * @param devicePropertyInfo the device property information containing device identifier, type, and tenant ID
+     * @param validationProps the property map to validate against the server
+     * @return a list of PropertyValidationInfo objects containing validation results
+     */
+    private List<PropertyValidationInfo> validateProperties(DevicePropertyInfo devicePropertyInfo, Map<String, String> validationProps) {
+        DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
+        try {
+            return dms.validateDeviceProperties(new DeviceIdentifier(devicePropertyInfo.getDeviceIdentifier(),
+                    devicePropertyInfo.getDeviceTypeName()), validationProps, Integer.parseInt(devicePropertyInfo.getTenantId()));
+        } catch (DeviceNotFoundException e) {
+            String msg = "Device not found for the given device identifier: " + devicePropertyInfo.getDeviceIdentifier() +
+                    " and device type: " + devicePropertyInfo.getDeviceTypeName();
+            log.error(msg, e);
+            throw new RuntimeException(msg, e);
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while validating properties for device identifier: " +
+                    devicePropertyInfo.getDeviceIdentifier() + " and device type: " + devicePropertyInfo.getDeviceTypeName();
+            log.error(msg, e);
+            throw new RuntimeException(msg, e);
         }
     }
 
@@ -524,5 +552,88 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
         msg = "Operation configuration deleted successfully";
         log.info(msg);
         return Response.status(Response.Status.OK).entity(msg).build();
+    }
+
+    @Override
+    public Response getDeviceConfiguration(String deviceType, String token, String properties, String validationProperties) {
+        DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
+        try {
+            if (token == null || token.isEmpty()) {
+                String msg = "No valid token property found";
+                log.error(msg);
+                return Response.status(Response.Status.UNAUTHORIZED).entity(
+                        new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()
+                ).build();
+            }
+
+            if (properties == null || properties.isEmpty()) {
+                String msg = "Devices configuration retrieval criteria cannot be null or empty.";
+                log.error(msg);
+                return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+            }
+
+            //todo add device type based validation properties using platform config before proceeds
+
+            ObjectMapper mapper = new ObjectMapper();
+            properties = parseUriParamsToJSON(properties);
+            Map<String, String> deviceProps = mapper.readValue(properties,
+                    new TypeReference<Map<String, String>>() {
+                    });
+            deviceProps.put("token", token);
+            List<DevicePropertyInfo> devicePropertyInfoList = dms.getDeviceBasedOnProperties(deviceProps);
+            if (devicePropertyInfoList.isEmpty()) {
+                String msg = "No devices found for the given properties: " + properties;
+                log.warn(msg);
+                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+            }
+
+            //In this service, there should be only one device for the specified property values
+            //If multiple values retrieved, It'll be marked as ambiguous.
+            if (devicePropertyInfoList.size() > 1) {
+                String msg = "Configuration criteria is ambiguous. The provided criteria returned more than one devices.";
+                log.error(msg);
+                return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+            }
+            //Get the only existing value of the list
+            DevicePropertyInfo devicePropertyInfo = devicePropertyInfoList.get(0);
+            DeviceConfiguration devicesConfiguration = dms.getDeviceConfiguration(devicePropertyInfo);
+
+            /*if (withAccessToken) setAccessTokenToDeviceConfigurations(devicesConfiguration);
+            else setOTPTokenToDeviceConfigurations(devicesConfiguration);*/
+            setOTPTokenToDeviceConfigurations(devicesConfiguration);
+            if (validationProperties != null && !validationProperties.isEmpty()) {
+                validationProperties = parseUriParamsToJSON(validationProperties);
+                ObjectMapper validationMapper = new ObjectMapper();
+                Map<String, String> validationProps = validationMapper.readValue(validationProperties,
+                        new TypeReference<Map<String, String>>() {});
+                List<PropertyValidationInfo> validateProperyList = this.validateProperties(devicePropertyInfo, validationProps);
+                devicesConfiguration.setPropertyValidationResult(validateProperyList);
+                return Response.status(Response.Status.OK).entity(devicesConfiguration).build();
+            }
+
+            return Response.status(Response.Status.OK).entity(devicesConfiguration).build();
+
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while retrieving configurations";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        } catch (DeviceNotFoundException e) {
+            log.warn(e.getMessage());
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (AmbiguousConfigurationException e) {
+            String msg = "Configurations are ambiguous. " + e.getMessage();
+            log.warn(msg);
+            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+        } catch (JsonParseException | JsonMappingException e) {
+            String msg = "Malformed device property structure";
+            log.error(msg.concat(" ").concat(properties), e);
+            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+        } catch (IOException e) {
+            String msg = "Error occurred while parsing query param JSON data.";
+            log.error(msg.concat(" ").concat(properties), e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
+        }
     }
 }
