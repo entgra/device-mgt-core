@@ -45,6 +45,7 @@ import io.entgra.device.mgt.core.device.mgt.common.MDMAppConstants;
 import io.entgra.device.mgt.core.device.mgt.common.OperationLogFilters;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.*;
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManagerServiceImpl;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang.StringUtils;
@@ -55,10 +56,6 @@ import io.entgra.device.mgt.core.device.mgt.common.app.mgt.ApplicationManagement
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.MobileAppTypes;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationException;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationService;
-import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceData;
-import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceInfo;
-import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocation;
-import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationHistorySnapshotWrapper;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.BadRequestException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.*;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupManagementException;
@@ -739,6 +736,48 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
         } catch (DeviceAccessAuthorizationException e) {
             String msg = "Error occurred while checking device access authorization";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
+    @GET
+    @Path("/locations/at-time")
+    public Response getAllDeviceLocationHistory(
+            @QueryParam("deviceType") String deviceType,
+            @QueryParam("exactTime") long exactTime,
+            @QueryParam("offset") @DefaultValue("0") int offset,
+            @QueryParam("limit") @DefaultValue("10") int limit){
+        try {
+            RequestValidationUtil.validatePaginationParameters(offset, limit);
+
+            if (exactTime == 0) {
+                String msg = "exactTime parameter is mandatory. Please provide a valid timestamp in milliseconds.";
+                log.error(msg);
+                return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+            }
+
+            String authorizedUser = CarbonContext.getThreadLocalCarbonContext().getUsername();
+
+            PaginationRequest request = new PaginationRequest(offset, limit);
+            DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
+            DeviceLocationForExactTimeSnapshotWrapper result = DeviceMgtAPIUtils.getDeviceLocationHistoryPaths(
+                    authorizedUser,deviceType, request, exactTime, dms);
+            return Response.status(Response.Status.OK).entity(result).build();
+        } catch (UnAuthorizedException e) {
+            String msg =  "Unauthorized access - user not found";
+            log.error(msg, e);
+            return Response.status(Response.Status.FORBIDDEN).entity(msg).build();
+        } catch (DeviceAccessAuthorizationException e) {
+            String msg = "Error occurred while checking device access authorization";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while retrieving device location history";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (Exception e) {
+            String msg = "Unexpected error occurred while processing request";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
