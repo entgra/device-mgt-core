@@ -673,10 +673,10 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
                     "A.RELEASE_TYPE AS RELEASE_TYPE, " +
                     "A.INSTALLER_LOCATION AS AP_RELEASE_STORED_LOC, " +
                     "A.ICON_LOCATION AS AP_RELEASE_ICON_LOC, " +
-                    "AR.BANNER_LOCATION AS AP_RELEASE_BANNER_LOC, " +
-                    "AR.SC_1_LOCATION AS AP_RELEASE_SC1, " +
-                    "AR.SC_2_LOCATION AS AP_RELEASE_SC2, " +
-                    "AR.SC_3_LOCATION AS AP_RELEASE_SC3, " +
+                    "A.BANNER_LOCATION AS AP_RELEASE_BANNER_LOC, " +
+                    "A.SC_1_LOCATION AS AP_RELEASE_SC1, " +
+                    "A.SC_2_LOCATION AS AP_RELEASE_SC2, " +
+                    "A.SC_3_LOCATION AS AP_RELEASE_SC3, " +
                     "A.APP_HASH_VALUE AS RELEASE_HASH_VALUE, " +
                     "A.APP_PRICE AS RELEASE_PRICE, " +
                     "A.APP_META_INFO AS RELEASE_META_INFO, " +
@@ -742,10 +742,10 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
                     "A.RELEASE_TYPE AS RELEASE_TYPE, " +
                     "A.INSTALLER_LOCATION AS AP_RELEASE_STORED_LOC, " +
                     "A.ICON_LOCATION AS AP_RELEASE_ICON_LOC, " +
-                    "AR.BANNER_LOCATION AS AP_RELEASE_BANNER_LOC, " +
-                    "AR.SC_1_LOCATION AS AP_RELEASE_SC1, " +
-                    "AR.SC_2_LOCATION AS AP_RELEASE_SC2, " +
-                    "AR.SC_3_LOCATION AS AP_RELEASE_SC3, " +
+                    "A.BANNER_LOCATION AS AP_RELEASE_BANNER_LOC, " +
+                    "A.SC_1_LOCATION AS AP_RELEASE_SC1, " +
+                    "A.SC_2_LOCATION AS AP_RELEASE_SC2, " +
+                    "A.SC_3_LOCATION AS AP_RELEASE_SC3, " +
                     "A.APP_HASH_VALUE AS RELEASE_HASH_VALUE, " +
                     "A.APP_PRICE AS RELEASE_PRICE, " +
                     "A.APP_META_INFO AS RELEASE_META_INFO, " +
@@ -854,10 +854,10 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
                     "A.RELEASE_TYPE AS RELEASE_TYPE, " +
                     "A.INSTALLER_LOCATION AS AP_RELEASE_STORED_LOC, " +
                     "A.ICON_LOCATION AS AP_RELEASE_ICON_LOC, " +
-                    "AR.BANNER_LOCATION AS AP_RELEASE_BANNER_LOC, " +
-                    "AR.SC_1_LOCATION AS AP_RELEASE_SC1, " +
-                    "AR.SC_2_LOCATION AS AP_RELEASE_SC2, " +
-                    "AR.SC_3_LOCATION AS AP_RELEASE_SC3, " +
+                    "A.BANNER_LOCATION AS AP_RELEASE_BANNER_LOC, " +
+                    "A.SC_1_LOCATION AS AP_RELEASE_SC1, " +
+                    "A.SC_2_LOCATION AS AP_RELEASE_SC2, " +
+                    "A.SC_3_LOCATION AS AP_RELEASE_SC3, " +
                     "A.APP_HASH_VALUE AS RELEASE_HASH_VALUE, " +
                     "A.APP_PRICE AS RELEASE_PRICE, " +
                     "A.APP_META_INFO AS RELEASE_META_INFO, " +

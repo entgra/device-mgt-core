@@ -2125,7 +2125,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                 stmt.setInt(1, firmwareModelId);
                 stmt.setInt(2, tenantId);
                 try (ResultSet rs = stmt.executeQuery()) {
-                    return DAOUtil.loadApplication(rs);
+                    return DAOUtil.loadApplicationWithoutReleases(rs);
                 }
             }
         } catch (DBConnectionException e) {
