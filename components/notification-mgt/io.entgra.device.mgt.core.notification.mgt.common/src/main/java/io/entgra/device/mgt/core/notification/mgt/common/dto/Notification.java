@@ -26,8 +26,12 @@ public class Notification {
     private int notificationConfigId;
     private int tenantId;
     private String description;
+    private String type;
     private int priority;
     private Timestamp createdTimestamp;
+
+    public Notification() {
+    }
 
     public int getNotificationId() {
         return notificationId;
@@ -75,6 +79,14 @@ public class Notification {
 
     public void setCreatedTimestamp(Timestamp createdTimestamp) {
         this.createdTimestamp = createdTimestamp;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }
 

@@ -24,14 +24,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "DeviceMgtConfiguration")
 public class NotificationDeviceMgtConfiguration {
-    private NotificationManagementRepository ceaPolicyManagementRepository;
+    private NotificationManagementRepository notificationManagementRepository;
 
     public NotificationManagementRepository getNotificationManagementRepository() {
-        return ceaPolicyManagementRepository;
+        return notificationManagementRepository;
     }
 
     @XmlElement(name = "ManagementRepository", nillable = false)
-    public void setNotificationManagementRepository(NotificationManagementRepository ceaPolicyManagementRepository) {
-        this.ceaPolicyManagementRepository = ceaPolicyManagementRepository;
+    public void setNotificationManagementRepository(NotificationManagementRepository notificationManagementRepository) {
+        this.notificationManagementRepository = notificationManagementRepository;
     }
 }

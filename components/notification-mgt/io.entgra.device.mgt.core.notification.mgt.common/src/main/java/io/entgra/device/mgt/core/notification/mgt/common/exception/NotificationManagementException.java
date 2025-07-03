@@ -27,5 +27,8 @@ public class NotificationManagementException extends Exception {
     public NotificationManagementException(String message, Throwable cause) {
         super(message, cause);
     }
+
+    public NotificationManagementException() {
+    }
 }
 

@@ -34,6 +34,7 @@ import io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementDataHo
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -100,5 +101,26 @@ public class DeviceFeatureOperationsImpl implements DeviceFeatureOperations {
             DeviceFeatureOperationsDAOFactory.closeConnection();
         }
         return featureList;
+    }
+
+    @Override
+    public List<DeviceFeatureInfo> getOperationDetails(String code, String name, String type)
+            throws DeviceFeatureOperationException {
+        List<DeviceFeatureInfo> operationList;
+        try {
+            DeviceFeatureOperationsDAOFactory.openConnection();
+            operationList = deviceFeatureOperationDAO.getOperationDetails(code, name, type);
+        } catch (SQLException e) {
+            String msg = "Error retrieving operation details from DB table.";
+            log.error(msg, e);
+            throw new DeviceFeatureOperationException(msg, e);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error retrieving operation details.";
+            log.error(msg, e);
+            throw new DeviceFeatureOperationException(msg, e);
+        } finally {
+            DeviceFeatureOperationsDAOFactory.closeConnection();
+        }
+        return operationList;
     }
 }
