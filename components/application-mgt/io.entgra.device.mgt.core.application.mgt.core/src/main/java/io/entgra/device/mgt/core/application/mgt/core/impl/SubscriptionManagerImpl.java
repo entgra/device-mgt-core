@@ -965,6 +965,9 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                 log.error(msg);
                 throw new ForbiddenException(msg);
             }
+            if (ApplicationType.CUSTOM.toString().equalsIgnoreCase(applicationDTO.getType())) {
+                applicationDTO.setFirmwareModelIds(this.applicationDAO.getFirmwareModelIdsForApp(applicationDTO.getId()));
+            }
             applicationDTO.setTags(this.applicationDAO.getAppTags(applicationDTO.getId(), tenantId));
             applicationDTO.setAppCategories(this.applicationDAO.getAppCategories(applicationDTO.getId(), tenantId));
             return applicationDTO;

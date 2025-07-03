@@ -408,7 +408,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     isCustomArtifactsManagedByAppStore() ? releaseWrapper.getArtifactLink() : null, releaseWrapper.getBannerLink());
             ApplicationReleaseDTO releaseDTO = APIUtil.releaseWrapperToReleaseDTO(releaseWrapper);
             if (!isCustomArtifactsManagedByAppStore()) {
-                releaseDTO.setInstallerName(getFirmwareConfiguration().getDeliveryConfiguration().getCdnUri() + releaseWrapper.getArtifactLink());
+                releaseDTO.setInstallerName(releaseWrapper.getArtifactLink());
             }
             releaseDTO = uploadCustomAppReleaseArtifacts(releaseDTO, artifact, deviceType.getName());
             try {
@@ -2466,20 +2466,31 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 throw new NotFoundException(msg);
             }
 
-            ApplicationReleaseDTO applicationReleaseDTO = applicationDTO.getApplicationReleaseDTOs().get(0);
+            ApplicationReleaseDTO applicationReleaseDTO = applicationDTO.getApplicationReleaseDTOs().stream()
+                    .filter(release -> Objects.equals(release.getUuid(), releaseUuid))
+                    .findFirst()
+                    .orElse(null);
 
+            if (applicationReleaseDTO == null) {
+                String msg = "Couldn't find an release associated with release UUID: " + releaseUuid +" . Please verify the request.";
+                log.error(msg);
+                throw new NotFoundException(msg);
+            }
             if (lifecycleStateManager
                     .isValidStateChange(applicationReleaseDTO.getCurrentState(), lifecycleChanger.getAction(), userName,
                             tenantId)) {
-                if (lifecycleStateManager.isInstallableState(lifecycleChanger.getAction()) && applicationReleaseDAO
-                        .hasExistInstallableAppRelease(applicationReleaseDTO.getUuid(),
-                                lifecycleStateManager.getInstallableState(applicationDTO.getType()), tenantId)) {
-                    String msg = "Installable application release is already registered for the application. "
-                            + "Therefore it is not permitted to change the lifecycle state from "
-                            + applicationReleaseDTO.getCurrentState() + " to " + lifecycleChanger.getAction();
-                    log.error(msg);
-                    throw new ForbiddenException(msg);
+                if (!ApplicationType.CUSTOM.toString().equalsIgnoreCase(applicationDTO.getType())) {
+                    if (lifecycleStateManager.isInstallableState(lifecycleChanger.getAction()) && applicationReleaseDAO
+                            .hasExistInstallableAppRelease(applicationReleaseDTO.getUuid(),
+                                    lifecycleStateManager.getInstallableState(applicationDTO.getType()), tenantId)) {
+                        String msg = "Installable application release is already registered for the application. "
+                                + "Therefore it is not permitted to change the lifecycle state from "
+                                + applicationReleaseDTO.getCurrentState() + " to " + lifecycleChanger.getAction();
+                        log.error(msg);
+                        throw new ForbiddenException(msg);
+                    }
                 }
+
                 LifecycleState lifecycleState = new LifecycleState();
                 lifecycleState.setCurrentState(lifecycleChanger.getAction());
                 lifecycleState.setPreviousState(applicationReleaseDTO.getCurrentState());
@@ -2540,15 +2551,18 @@ public class ApplicationManagerImpl implements ApplicationManager {
             if (lifecycleStateManager
                     .isValidStateChange(applicationReleaseDTO.getCurrentState(), lifecycleChanger.getAction(), userName,
                             tenantId)) {
-                if (lifecycleStateManager.isInstallableState(lifecycleChanger.getAction()) && applicationReleaseDAO
-                        .hasExistInstallableAppRelease(applicationReleaseDTO.getUuid(),
-                                lifecycleStateManager.getInstallableState(applicationType), tenantId)) {
-                    String msg = "Installable application release is already registered for the application. "
-                            + "Therefore it is not permitted to change the lifecycle state from "
-                            + applicationReleaseDTO.getCurrentState() + " to " + lifecycleChanger.getAction();
-                    log.error(msg);
-                    throw new ForbiddenException(msg);
+                if (!ApplicationType.CUSTOM.toString().equalsIgnoreCase(applicationType)) {
+                    if (lifecycleStateManager.isInstallableState(lifecycleChanger.getAction()) && applicationReleaseDAO
+                            .hasExistInstallableAppRelease(applicationReleaseDTO.getUuid(),
+                                    lifecycleStateManager.getInstallableState(applicationType), tenantId)) {
+                        String msg = "Installable application release is already registered for the application. "
+                                + "Therefore it is not permitted to change the lifecycle state from "
+                                + applicationReleaseDTO.getCurrentState() + " to " + lifecycleChanger.getAction();
+                        log.error(msg);
+                        throw new ForbiddenException(msg);
+                    }
                 }
+
                 LifecycleState lifecycleState = new LifecycleState();
                 lifecycleState.setCurrentState(lifecycleChanger.getAction());
                 lifecycleState.setPreviousState(applicationReleaseDTO.getCurrentState());
@@ -4654,12 +4668,12 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 }
 
                 //todo release ready state shouldn't be hardcoded
-                String filteringAppReleaseType = hasTestRolesAssigned() ? AppReleaseType.TEST.name() : null;
+                String filteringAppReleaseType = hasTestRolesAssigned() ? AppReleaseType.TEST.name() : AppReleaseType.PRODUCTION.name();
                 if (currentVersion != null) {
-                    applicationReleaseDTOS = applicationReleaseDAO.getAppReleasesAfterVersion(applicationDTO.getId(), currentVersion, "RELEASE_READY", filteringAppReleaseType, tenantId);
+                    applicationReleaseDTOS = applicationReleaseDAO.getAppReleasesAfterVersion(applicationDTO.getId(), currentVersion, "RELEASE-READY", filteringAppReleaseType, tenantId);
                     pendingFirmwareInstallOperationMap = getFilteredPendingFirmwareInstallOperations(deviceManagementService, device, currentVersion, tenantId);
                 } else {
-                    applicationReleaseDTOS = applicationReleaseDAO.getReleasesByAppAndStatus(applicationDTO.getId(), "RELEASE_READY", filteringAppReleaseType, tenantId);
+                    applicationReleaseDTOS = applicationReleaseDAO.getReleasesByAppAndStatus(applicationDTO.getId(), "RELEASE-READY", filteringAppReleaseType, tenantId);
                 }
 
             } catch (ApplicationManagementDAOException e) {
@@ -4701,21 +4715,23 @@ public class ApplicationManagerImpl implements ApplicationManager {
      * @return a {@link Firmware} object constructed from the given DTO
      */
     private Firmware toFirmware(ApplicationReleaseDTO dto) {
-        Firmware fw = new Firmware();
-        fw.setFirmwareReleaseId(dto.getUuid());
-        fw.setFirmwareVersion(dto.getVersion());
-        fw.setDescription(dto.getDescription());
-        fw.setReleaseChannel(String.valueOf(dto.getReleaseType()));
-        fw.setCurrentStatus(dto.getCurrentState());
-        fw.setVersionId(dto.getId());
-        fw.setDownloadUrl(dto.getUrl());
-        fw.setPackageName(dto.getPackageName());
-        // TODO: Set values based on actual data availability
-        // firmware.setDeviceModels(new ArrayList<>());
-        // firmware.setBuildNumber("");
-        // firmware.setFileSize(0);
-        // firmware.setIconPath("");
-        return fw;
+        try {
+            Firmware firmware = new Firmware();
+            firmware.setFirmwareReleaseId(dto.getUuid());
+            firmware.setFirmwareVersion(dto.getVersion());
+            firmware.setDescription(dto.getDescription());
+            firmware.setReleaseChannel(String.valueOf(dto.getReleaseType()));
+            firmware.setCurrentStatus(dto.getCurrentState());
+            firmware.setVersionId(dto.getId());
+            firmware.setDownloadUrl(isCustomArtifactsManagedByAppStore() ? dto.getInstallerName()
+                    : getFirmwareConfiguration().getDeliveryConfiguration().getCdnUri() + dto.getInstallerName());
+            firmware.setPackageName(dto.getPackageName());
+            return firmware;
+        } catch (ApplicationManagementException e) {
+            String msg = "Error encountered while generating firmware delivery URL";
+            log.error(msg, e);
+            throw new IllegalStateException(msg, e);
+        }
     }
 
     /**
@@ -4883,14 +4899,14 @@ public class ApplicationManagerImpl implements ApplicationManager {
             switch (matchType) {
                 case APPLICABLE:
                     List<ApplicationReleaseDTO> older = applicationReleaseDAO.getAppReleasesBeforeVersion(
-                            application.getId(), currentReleaseVersion, "RELEASE_READY", filteringAppReleaseType, tenantId);
+                            application.getId(), currentReleaseVersion, "RELEASE-READY", filteringAppReleaseType, tenantId);
                     versions = older.stream()
                             .map(ApplicationReleaseDTO::getVersion)
                             .collect(Collectors.toList());
                     break;
                 case NON_APPLICABLE:
                     List<ApplicationReleaseDTO> newer = applicationReleaseDAO.getAppReleasesAfterVersion(
-                            application.getId(), currentReleaseVersion, "RELEASE_READY", filteringAppReleaseType, tenantId);
+                            application.getId(), currentReleaseVersion, "RELEASE-READY", filteringAppReleaseType, tenantId);
                     versions = newer.stream()
                             .map(ApplicationReleaseDTO::getVersion)
                             .collect(Collectors.toList());
@@ -4898,9 +4914,9 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     break;
                 case UNMANAGED:
                     List<ApplicationReleaseDTO> olderManaged = applicationReleaseDAO.getAppReleasesBeforeVersion(
-                            application.getId(), currentReleaseVersion, "RELEASE_READY", filteringAppReleaseType, tenantId);
+                            application.getId(), currentReleaseVersion, "RELEASE-READY", filteringAppReleaseType, tenantId);
                     List<ApplicationReleaseDTO> newerManaged = applicationReleaseDAO.getAppReleasesAfterVersion(
-                            application.getId(), currentReleaseVersion, "RELEASE_READY", filteringAppReleaseType, tenantId);
+                            application.getId(), currentReleaseVersion, "RELEASE-READY", filteringAppReleaseType, tenantId);
                     versions = Stream.concat(
                             Stream.concat(
                                     newerManaged.stream().map(ApplicationReleaseDTO::getVersion),
