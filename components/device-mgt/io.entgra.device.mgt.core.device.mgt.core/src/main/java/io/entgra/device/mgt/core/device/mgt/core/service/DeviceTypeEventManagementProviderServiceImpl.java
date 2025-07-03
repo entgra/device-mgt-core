@@ -23,19 +23,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.MetadataManagementException;
-import io.entgra.device.mgt.core.device.mgt.common.exceptions.TransactionManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.Metadata;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.DeviceTypeEvent;
 import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.DeviceTypeEventUpdateResult;
-import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOException;
-import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.CarbonContext;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -73,7 +69,6 @@ public class DeviceTypeEventManagementProviderServiceImpl implements DeviceTypeE
     @Override
     public List<DeviceTypeEvent> getDeviceTypeEventDefinitions(String deviceType) throws DeviceManagementException {
         try {
-            DeviceManagementDAOFactory.openConnection();
             int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
             Metadata metadata = metadataManagementService
                     .retrieveMetadata(String.format(DEVICE_EVENT_META_KEY_PATTERN, deviceType));
@@ -97,16 +92,10 @@ public class DeviceTypeEventManagementProviderServiceImpl implements DeviceTypeE
                 throw new DeviceManagementException(msg, e);
             }
             return Collections.emptyList();
-        } catch (SQLException e) {
-            String msg = "Error occurred while opening a connection to the data source to retrieve event definitions.";
-            log.error(msg, e);
-            throw new DeviceManagementException(msg, e);
         } catch (MetadataManagementException e) {
             String msg = "Error occurred while retrieving metadata";
             log.error(msg, e);
             throw new DeviceManagementException(e);
-        } finally {
-            DeviceManagementDAOFactory.closeConnection();
         }
     }
 
@@ -114,7 +103,6 @@ public class DeviceTypeEventManagementProviderServiceImpl implements DeviceTypeE
     public boolean createDeviceTypeMetaWithEvents(String deviceType, List<DeviceTypeEvent> deviceTypeEvents)
             throws DeviceManagementException {
         try {
-            DeviceManagementDAOFactory.beginTransaction();
             int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
             // Initialize ObjectMapper for Jackson processing
             String updatedEventDefinitions;
@@ -127,30 +115,16 @@ public class DeviceTypeEventManagementProviderServiceImpl implements DeviceTypeE
                 String msg = "Failed to process JSON while creating EVENT_DEFINITIONS for device type: " +
                         deviceType + ", tenantId: " + tenantId;
                 log.error(msg, e);
-                throw new DeviceManagementDAOException(msg, e);
+                throw new DeviceManagementException(msg, e);
             }
             Metadata metadata = new Metadata();
             metadata.setMetaKey(String.format(DEVICE_EVENT_META_KEY_PATTERN, deviceType));
             metadata.setMetaValue(updatedEventDefinitions);
-            Metadata createdMetadata = metadataManagementService.createMetadata(metadata);
-            boolean isCreated = createdMetadata != null;
-            DeviceManagementDAOFactory.commitTransaction();
-            return isCreated;
-        } catch (TransactionManagementException e) {
-            String msg = "Error occurred while initiating transaction.";
-            log.error(msg, e);
-            throw new DeviceManagementException(msg, e);
-        } catch (DeviceManagementDAOException e) {
-            DeviceManagementDAOFactory.rollbackTransaction();
-            String msg = "Error occurred while updating event definitions.";
-            log.error(msg, e);
-            throw new DeviceManagementException(msg, e);
-        } catch (Exception e) {
+            return metadataManagementService.createMetadata(metadata) != null;
+        } catch (MetadataManagementException e) {
             String msg = "Error occurred in updating event definitions.";
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
-        } finally {
-            DeviceManagementDAOFactory.closeConnection();
         }
     }
 
@@ -199,7 +173,6 @@ public class DeviceTypeEventManagementProviderServiceImpl implements DeviceTypeE
     public boolean updateDeviceTypeMetaWithEvents(String deviceType, List<DeviceTypeEvent> deviceTypeEvents)
             throws DeviceManagementException {
         try {
-            DeviceManagementDAOFactory.beginTransaction();
             int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
             String updatedEventDefinitions;
             try {
@@ -213,51 +186,28 @@ public class DeviceTypeEventManagementProviderServiceImpl implements DeviceTypeE
                 String msg = "Failed to process JSON while updating EVENT_DEFINITIONS for device type: " +
                         deviceType + ", tenantId: " + tenantId;
                 log.error(msg, e);
-                throw new DeviceManagementDAOException(msg, e);
+                throw new DeviceManagementException(msg, e);
             }
             Metadata metadata = new Metadata();
             metadata.setMetaKey(String.format(DEVICE_EVENT_META_KEY_PATTERN, deviceType));
             metadata.setMetaValue(updatedEventDefinitions);
-            Metadata updatedMetadata = metadataManagementService.updateMetadata(metadata);
-            boolean isUpdated = updatedMetadata != null;
-            DeviceManagementDAOFactory.commitTransaction();
-            return isUpdated;
-        } catch (TransactionManagementException e) {
-            String msg = "Error occurred while initiating transaction.";
-            log.error(msg, e);
-            throw new DeviceManagementException(msg, e);
-        } catch (DeviceManagementDAOException e) {
-            DeviceManagementDAOFactory.rollbackTransaction();
-            String msg = "Error occurred while updating event definitions.";
-            log.error(msg, e);
-            throw new DeviceManagementException(msg, e);
-        } catch (Exception e) {
+            return metadataManagementService.updateMetadata(metadata) != null;
+        } catch (MetadataManagementException e) {
             String msg = "Error occurred in updating event definitions.";
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
-        } finally {
-            DeviceManagementDAOFactory.closeConnection();
         }
     }
 
     @Override
     public boolean deleteDeviceTypeEventDefinitions(String deviceType) throws DeviceManagementException {
         try {
-            DeviceManagementDAOFactory.beginTransaction();
-            boolean isDeleted = metadataManagementService
+            return metadataManagementService
                     .deleteMetadata(String.format(DEVICE_EVENT_META_KEY_PATTERN, deviceType));
-            DeviceManagementDAOFactory.commitTransaction();
-            return isDeleted;
-        } catch (TransactionManagementException e) {
-            String msg = "Error occurred while initiating transaction.";
-            log.error(msg, e);
-            throw new DeviceManagementException(msg, e);
-        } catch (Exception e) {
+        } catch (MetadataManagementException e) {
             String msg = "Error occurred in updating event definitions.";
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
-        } finally {
-            DeviceManagementDAOFactory.closeConnection();
         }
     }
 
