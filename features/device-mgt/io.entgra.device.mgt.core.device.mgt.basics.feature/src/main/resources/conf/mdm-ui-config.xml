@@ -480,6 +480,7 @@
         <Scope>dm:device:modify</Scope>
         <Scope>dm:admin:device-firmware-models:create</Scope>
         <Scope>dm:device-firmware-models:view</Scope>
+        <Scope>am:pub:device-firmware-models:view</Scope>
     </Scopes>
     <SSOConfiguration>
         <Issuer>device-mgt</Issuer>
