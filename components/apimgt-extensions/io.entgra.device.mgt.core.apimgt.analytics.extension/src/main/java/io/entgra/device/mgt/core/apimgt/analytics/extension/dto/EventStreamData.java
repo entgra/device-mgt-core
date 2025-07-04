@@ -22,7 +22,7 @@ import java.util.List;
 public class EventStreamData {
     private String name;
     private String version;
-    private MetaData metaData;
+    private List<MetaData> metaDataList;
     private List<Property> payloadData;
 
     public String getName() {
@@ -41,12 +41,12 @@ public class EventStreamData {
         this.version = version;
     }
 
-    public MetaData getMetaData() {
-        return metaData;
+    public List<MetaData> getMetaDataList() {
+        return metaDataList;
     }
 
-    public void setMetaData(MetaData metaData) {
-        this.metaData = metaData;
+    public void setMetaDataList(List<MetaData> metaDataList) {
+        this.metaDataList = metaDataList;
     }
 
     public List<Property> getPayloadData() {

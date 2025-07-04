@@ -90,6 +90,9 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
     private static final String OAUTH_MQTT_ADAPTER_TYPE = "oauth-mqtt";
     private static final String THRIFT_ADAPTER_TYPE = "iot-event";
     private static final String DEFAULT_DEVICE_ID_ATTRIBUTE = "deviceId";
+    private static final String DEFAULT_TIMESTAMP_ATTRIBUTE = "ts";
+    private static final String STRING = "STRING";
+    private static final String LONG = "LONG";
     private static final String DEFAULT_META_DEVICE_ID_ATTRIBUTE = "meta_deviceId";
     private static final String MQTT_CONTENT_TRANSFORMER = "device-meta-transformer";
     private static final String MQTT_CONTENT_TRANSFORMER_TYPE = "contentTransformer";
@@ -362,7 +365,10 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                 EventStreamData eventStreamData = new EventStreamData();
                 eventStreamData.setName(streamName);
                 eventStreamData.setVersion(Constants.DEFAULT_STREAM_VERSION);
-                eventStreamData.setMetaData(new MetaData(DEFAULT_DEVICE_ID_ATTRIBUTE, "STRING"));
+                List<MetaData> metaDataList = new ArrayList<>();
+                metaDataList.add(new MetaData(DEFAULT_DEVICE_ID_ATTRIBUTE, STRING));
+                metaDataList.add(new MetaData(DEFAULT_TIMESTAMP_ATTRIBUTE, LONG));
+                eventStreamData.setMetaDataList(metaDataList);
                 eventStreamData.setPayloadData(props);
                 try {
                     artifactsDeployer.deployEventStream(eventStreamData, tenantId);
