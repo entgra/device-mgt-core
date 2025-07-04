@@ -240,6 +240,36 @@ public class DAOUtil {
         return applicationDTOs.get(0);
     }
 
+    public static ApplicationDTO loadApplicationWithoutReleases(ResultSet rs) throws SQLException, UnexpectedServerErrorException {
+        List<ApplicationDTO> applicationDTOS = new ArrayList<>();
+        ApplicationDTO applicationDTO;
+        while (rs.next()) {
+            applicationDTO = new ApplicationDTO();
+            applicationDTO.setId( rs.getInt("APP_ID"));
+            applicationDTO.setName(rs.getString("APP_NAME"));
+            applicationDTO.setDescription(rs.getString("APP_DESCRIPTION"));
+            applicationDTO.setType(rs.getString("APP_TYPE"));
+            applicationDTO.setSubType(rs.getString("APP_SUB_TYPE"));
+            applicationDTO.setPaymentCurrency(rs.getString("APP_CURRENCY"));
+            applicationDTO.setStatus(rs.getString("APP_STATUS"));
+            applicationDTO.setAppRating(rs.getDouble("APP_RATING"));
+            applicationDTO.setDeviceTypeId(rs.getInt("APP_DEVICE_TYPE_ID"));
+            applicationDTOS.add(applicationDTO);
+        }
+
+        if (applicationDTOS.isEmpty()) {
+            return null;
+        }
+
+        if (applicationDTOS.size() > 1) {
+            String msg = "Internal server error. Found more than one application for requested application ID";
+            log.error(msg);
+            throw new UnexpectedServerErrorException(msg);
+        }
+
+        return applicationDTOS.get(0);
+    }
+
     public static ApplicationDTO loadDeviceApp(ResultSet rs) throws SQLException {
         ApplicationDTO application = new ApplicationDTO();
         application.setId( rs.getInt("APP_ID"));
