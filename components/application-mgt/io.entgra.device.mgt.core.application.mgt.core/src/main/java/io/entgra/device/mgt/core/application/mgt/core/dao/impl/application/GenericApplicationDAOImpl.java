@@ -2146,19 +2146,21 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
     }
 
     @Override
-    public void addDeviceFirmwareModelMapping(int appId, List<Integer> firmwareModelIds) throws ApplicationManagementDAOException {
+    public void addDeviceFirmwareModelMapping(int appId, List<Integer> firmwareModelIds, int tenantId) throws ApplicationManagementDAOException {
         String sql = "INSERT INTO " +
                 "AP_APP_DEVICE_MODEL (" +
                 "APP_ID, " +
-                "FIRMWARE_DEVICE_MODEL_ID" +
+                "FIRMWARE_DEVICE_MODEL_ID, " +
+                "TENANT_ID " +
                 ") " +
-                "VALUES (?, ?)";
+                "VALUES (?, ?, ?)";
         try {
             Connection connection = this.getDBConnection();
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 for (Integer firmwareModelId : firmwareModelIds) {
                     preparedStatement.setInt(1, appId);
                     preparedStatement.setInt(2, firmwareModelId);
+                    preparedStatement.setInt(3, tenantId);
                     preparedStatement.addBatch();
                 }
                 preparedStatement.executeBatch();
@@ -2174,6 +2176,38 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
             log.error(msg, e);
             throw new ApplicationManagementDAOException(msg, e);
         }
+    }
+
+    @Override
+    public List<Integer> getAllDeviceFirmwareModelIds(int tenantId) throws ApplicationManagementDAOException {
+        List<Integer> firmwareModelIds = new ArrayList<>();
+        String sql = "SELECT "
+                + "FIRMWARE_DEVICE_MODEL_ID "
+                + "FROM AP_APP_DEVICE_MODEL "
+                + "WHERE TENANT_ID = ? ";
+        try {
+            Connection conn = this.getDBConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, tenantId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while(rs.next()) {
+                        firmwareModelIds.add(rs.getInt("FIRMWARE_DEVICE_MODEL_ID"));
+                    }
+                }
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection to get firmware model IDs for tenant ID: "
+                    + tenantId;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred to getting firmware model ID associate with tenant ID " + tenantId
+                    + " while executing query. Query: " + sql;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+
+        return firmwareModelIds;
     }
 
     @Override

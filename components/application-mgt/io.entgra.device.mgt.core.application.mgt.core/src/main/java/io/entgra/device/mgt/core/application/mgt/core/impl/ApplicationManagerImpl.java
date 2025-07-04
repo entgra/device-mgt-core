@@ -70,8 +70,10 @@ import io.entgra.device.mgt.core.application.mgt.core.util.Constants;
 import io.entgra.device.mgt.core.device.mgt.common.*;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.DeviceFirmwareModel;
+import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareModelManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareModelSearchFilter;
 import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareResult;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceFirmwareModelManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.MetadataManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.Metadata;
@@ -1470,7 +1472,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     if (applicationDTO.getFirmwareModelIds() == null || applicationDTO.getFirmwareModelIds().isEmpty()) {
                         throw new ApplicationManagementDAOException("Firmware model ids are required.");
                     }
-                    this.applicationDAO.addDeviceFirmwareModelMapping(appId, applicationDTO.getFirmwareModelIds());
+                    this.applicationDAO.addDeviceFirmwareModelMapping(appId, applicationDTO.getFirmwareModelIds(), tenantId);
                 }
 
                 //add application categories
@@ -4951,6 +4953,57 @@ public class ApplicationManagerImpl implements ApplicationManager {
             String msg = "Error occurred while getting device data.";
             log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
+        }
+    }
+
+    @Override
+    public List<DeviceFirmwareModel> getAvailableDeviceFirmwareModels(String deviceType) throws ApplicationManagementException {
+
+        DeviceFirmwareModelManagementService deviceFirmwareModelManagementService = DataHolder.getInstance()
+                .getDeviceFirmwareModelManagementService();
+        List<DeviceFirmwareModel> deviceFirmwareModels;
+        try {
+            deviceFirmwareModels = deviceFirmwareModelManagementService.getFirmwareModelsByDeviceType(deviceType);
+            if (deviceFirmwareModels == null || deviceFirmwareModels.isEmpty()) {
+                if (log.isDebugEnabled()) {
+                    log.debug("No device firmware models found for device type: " + deviceType);
+                }
+                return deviceFirmwareModels;
+            }
+        } catch (DeviceFirmwareModelManagementException e) {
+            String msg = "Error encountered while getting device firmware models for device type: " + deviceType;
+            log.error(msg);
+            throw new ApplicationManagementException(msg, e);
+        }
+
+        try {
+            ConnectionManagerUtil.openDBConnection();
+            List<DeviceFirmwareModel> mappingAvailableModels = this.applicationDAO
+                    .getAllDeviceFirmwareModelIds(PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId())
+                    .stream()
+                    .map(DeviceFirmwareModel::new)
+                    .collect(Collectors.toList());
+            if (mappingAvailableModels.isEmpty()) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Didn't found any firmware model IDs associated with firmwares.");
+                }
+                return deviceFirmwareModels;
+            }
+
+            List<DeviceFirmwareModel> availableFirmwareModels = new ArrayList<>();
+            for (DeviceFirmwareModel deviceFirmwareModel : deviceFirmwareModels) {
+                if (!mappingAvailableModels.contains(deviceFirmwareModel)) {
+                    availableFirmwareModels.add(deviceFirmwareModel);
+                }
+            }
+
+            return availableFirmwareModels;
+        } catch (ApplicationManagementDAOException e) {
+            String msg = "Error encountered while getting device firmware models for device type: " + deviceType;
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
         }
     }
 }
