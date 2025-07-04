@@ -6060,11 +6060,11 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                     if (entry.getKey().equals(property.getName())) {
                         if (entry.getValue().equals(property.getValue())) {
                             evaluatingProperty.setMatch(true);
-                            validatedPropertyList.add(evaluatingProperty);
                             break;
                         }
                     }
                 }
+                validatedPropertyList.add(evaluatingProperty);
             }
 
         } catch (DeviceManagementException e) {
