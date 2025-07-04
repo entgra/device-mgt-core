@@ -6032,7 +6032,6 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             throws DeviceNotFoundException, DeviceManagementException {
 
         List<PropertyValidationInfo> validatedPropertyList = new ArrayList<>();
-        List<PropertyValidationInfo> validationFailedPropertyList = new ArrayList<>();
 
         try{
             PrivilegedCarbonContext.startTenantFlow();
@@ -6061,16 +6060,13 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                     if (entry.getKey().equals(property.getName())) {
                         if (entry.getValue().equals(property.getValue())) {
                             evaluatingProperty.setMatch(true);
-                            validatedPropertyList.add(evaluatingProperty);
                             break;
                         }
                     }
                 }
-                evaluatingProperty.setMatch(false);
-                validationFailedPropertyList.add(evaluatingProperty);
+                validatedPropertyList.add(evaluatingProperty);
             }
 
-            validatedPropertyList.addAll(validationFailedPropertyList);
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while validating device properties for device: " + deviceIdentifier.getId() +
                     " of type: " + deviceIdentifier.getType();

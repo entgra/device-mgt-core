@@ -504,7 +504,7 @@ public interface DeviceManagementConfigService {
     Response deleteOperationConfiguration();
 
     @GET
-    @Path("/{deviceType}/configuration")
+    @Path("/validate-properties")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "GET",
