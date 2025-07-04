@@ -557,6 +557,7 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
     @Override
     public Response getDeviceConfiguration(String deviceType, String token, String properties, String validationProperties) {
         DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
+        List<PropertyValidationInfo> validateProperyList = new ArrayList<>();
         try {
             if (token == null || token.isEmpty()) {
                 String msg = "No valid token property found";
@@ -596,22 +597,15 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
             }
             //Get the only existing value of the list
             DevicePropertyInfo devicePropertyInfo = devicePropertyInfoList.get(0);
-            DeviceConfiguration devicesConfiguration = dms.getDeviceConfiguration(devicePropertyInfo);
-
-            /*if (withAccessToken) setAccessTokenToDeviceConfigurations(devicesConfiguration);
-            else setOTPTokenToDeviceConfigurations(devicesConfiguration);*/
-            setOTPTokenToDeviceConfigurations(devicesConfiguration);
             if (validationProperties != null && !validationProperties.isEmpty()) {
                 validationProperties = parseUriParamsToJSON(validationProperties);
                 ObjectMapper validationMapper = new ObjectMapper();
                 Map<String, String> validationProps = validationMapper.readValue(validationProperties,
                         new TypeReference<Map<String, String>>() {});
-                List<PropertyValidationInfo> validateProperyList = this.validateProperties(devicePropertyInfo, validationProps);
-                devicesConfiguration.setPropertyValidationResult(validateProperyList);
-                return Response.status(Response.Status.OK).entity(devicesConfiguration).build();
+                validateProperyList.addAll(this.validateProperties(devicePropertyInfo, validationProps));
             }
 
-            return Response.status(Response.Status.OK).entity(devicesConfiguration).build();
+            return Response.status(Response.Status.OK).entity(validateProperyList).build();
 
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while retrieving configurations";
@@ -621,10 +615,6 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
         } catch (DeviceNotFoundException e) {
             log.warn(e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        } catch (AmbiguousConfigurationException e) {
-            String msg = "Configurations are ambiguous. " + e.getMessage();
-            log.warn(msg);
-            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
         } catch (JsonParseException | JsonMappingException e) {
             String msg = "Malformed device property structure";
             log.error(msg.concat(" ").concat(properties), e);
