@@ -226,6 +226,7 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                                 .updateDeviceTypeMetaWithEvents(deviceType, mergedEvents)) {
                             throw new IllegalStateException("Failed to persist device type event definitions.");
                         }
+                        processDeviceTypeEventDefinitions(deviceType, skipPersist, isSharedWithAllTenants, deviceTypeEvents);
                     } else {
                         log.info("No new or updated event definitions found. Skipping update.");
                     }
