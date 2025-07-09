@@ -89,14 +89,30 @@ public class OracleApplicationDAOImpl extends GenericApplicationDAOImpl {
                     + "AP_APP.ID = AP_APP_FAVOURITES.AP_APP_ID ";
         }
         sql += "LEFT JOIN AP_APP_RELEASE ON "
-        + "AP_APP.ID = AP_APP_RELEASE.AP_APP_ID "
-        + "INNER JOIN (SELECT AP_APP.ID FROM AP_APP ";
-        if (StringUtils.isNotEmpty(filter.getVersion()) || StringUtils.isNotEmpty(filter.getAppReleaseState())
+                + "AP_APP.ID = AP_APP_RELEASE.AP_APP_ID "
+                + "LEFT JOIN AP_APP_CATEGORY_MAPPING ON "
+                + "AP_APP.ID = AP_APP_CATEGORY_MAPPING.AP_APP_ID "
+                + "LEFT JOIN AP_APP_CATEGORY ON "
+                + "AP_APP_CATEGORY_MAPPING.AP_APP_CATEGORY_ID = AP_APP_CATEGORY.ID "
+                + "INNER JOIN (SELECT AP_APP.ID FROM AP_APP ";
+        if (StringUtils.isNotEmpty(filter.getVersion())
+                || StringUtils.isNotEmpty(filter.getAppReleaseState())
                 || StringUtils.isNotEmpty(filter.getAppReleaseType())) {
             sql += "LEFT JOIN AP_APP_RELEASE ON AP_APP.ID = AP_APP_RELEASE.AP_APP_ID ";
         }
+        sql += "WHERE AP_APP.TENANT_ID = ? ";
+        if (filter.getCategories() != null && !filter.getCategories().isEmpty()) {
+            String placeholders = filter.getCategories()
+                    .stream()
+                    .map(c -> "?")
+                    .collect(Collectors.joining(", "));
+            sql += "AND AP_APP_CATEGORY.CATEGORY IN (" + placeholders + ") ";
+        }
         if (filter.getAppTypes() != null && !filter.getAppTypes().isEmpty()) {
-            String placeholders = filter.getAppTypes().stream().map(type -> "?").collect(Collectors.joining(", "));
+            String placeholders = filter.getAppTypes()
+                    .stream()
+                    .map(type -> "?")
+                    .collect(Collectors.joining(", "));
             sql += "AND AP_APP.TYPE IN (" + placeholders + ") ";
         }
         if (StringUtils.isNotEmpty(filter.getAppName())) {
@@ -125,6 +141,9 @@ public class OracleApplicationDAOImpl extends GenericApplicationDAOImpl {
         if (deviceTypeId != -1) {
             sql += "AND AP_APP.DEVICE_TYPE_ID = ? ";
         }
+        if (filter.isNotRetired()) {
+            sql += "AND AP_APP.STATUS != 'RETIRED' ";
+        }
         sql += "GROUP BY AP_APP.ID ORDER BY AP_APP.ID ";
         if (StringUtils.isNotEmpty(filter.getSortBy())) {
             sql += filter.getSortBy() +" ";
@@ -142,14 +161,20 @@ public class OracleApplicationDAOImpl extends GenericApplicationDAOImpl {
                 + "ON AP_APP_RELEASE.ID = NEW_AP_APP_LIFECYCLE_STATE.AP_APP_RELEASE_ID "
                 + "WHERE AP_APP.TENANT_ID = ? "
                 + "ORDER BY AP_APP.ID, LATEST_UPDATE DESC";
-
         try {
             Connection conn = this.getDBConnection();
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 int paramIndex = 1;
+                stmt.setInt(paramIndex++, tenantId);
+                if (filter.getCategories() != null && !filter.getCategories().isEmpty()) {
+                    for (String category : filter.getCategories()) {
+                        stmt.setString(paramIndex++, category);
+                    }
+                }
                 if (filter.getAppTypes() != null && !filter.getAppTypes().isEmpty()) {
-                    String placeholders = filter.getAppTypes().stream().map(type -> "?").collect(Collectors.joining(", "));
-                    sql += "AND AP_APP.TYPE IN (" + placeholders + ") ";
+                    for (String type : filter.getAppTypes()) {
+                        stmt.setString(paramIndex++, type);
+                    }
                 }
                 if (StringUtils.isNotEmpty(filter.getAppName())) {
                     if (filter.isFullMatch()) {
@@ -180,7 +205,7 @@ public class OracleApplicationDAOImpl extends GenericApplicationDAOImpl {
                     stmt.setInt(paramIndex++, filter.getOffset());
                     stmt.setInt(paramIndex++, filter.getLimit());
                 }
-                stmt.setInt(paramIndex, tenantId);
+                stmt.setInt(paramIndex++, tenantId);
                 try (ResultSet rs = stmt.executeQuery()) {
                     return DAOUtil.loadApplications(rs);
                 }

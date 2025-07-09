@@ -140,8 +140,16 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                     + "AP_APP.ID = AP_APP_FAVOURITES.AP_APP_ID ";
         }
         sql += "LEFT JOIN AP_APP_RELEASE ON "
-        + "AP_APP.ID = AP_APP_RELEASE.AP_APP_ID "
-        + "INNER JOIN (SELECT AP_APP.ID FROM AP_APP ";
+                + "AP_APP.ID = AP_APP_RELEASE.AP_APP_ID ";
+        sql += "LEFT JOIN AP_APP_CATEGORY_MAPPING ON "
+                + "AP_APP.ID = AP_APP_CATEGORY_MAPPING.AP_APP_ID "
+                + "LEFT JOIN AP_APP_CATEGORY ON "
+                + "AP_APP_CATEGORY_MAPPING.AP_APP_CATEGORY_ID = AP_APP_CATEGORY.ID ";
+        sql += "INNER JOIN (SELECT AP_APP.ID FROM AP_APP "
+                + "LEFT JOIN AP_APP_CATEGORY_MAPPING ON "
+                + "AP_APP.ID = AP_APP_CATEGORY_MAPPING.AP_APP_ID "
+                + "LEFT JOIN AP_APP_CATEGORY ON "
+                + "AP_APP_CATEGORY_MAPPING.AP_APP_CATEGORY_ID = AP_APP_CATEGORY.ID ";
         if (StringUtils.isNotEmpty(filter.getVersion()) || StringUtils.isNotEmpty(filter.getAppReleaseState())
                 || StringUtils.isNotEmpty(filter.getAppReleaseType())) {
             sql += "LEFT JOIN AP_APP_RELEASE ON AP_APP.ID = AP_APP_RELEASE.AP_APP_ID ";
@@ -184,6 +192,11 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
         }
         if (filter.isNotRetired()) {
             sql +=  "AND AP_APP.STATUS != 'RETIRED' ";
+        }
+        if (filter.getCategories() != null && !filter.getCategories().isEmpty()) {
+            String placeholders = filter.getCategories().stream().map(c -> "?")
+                    .collect(Collectors.joining(", "));
+            sql += "AND AP_APP_CATEGORY.CATEGORY IN (" + placeholders + ") ";
         }
         sql += "GROUP BY AP_APP.ID ORDER BY AP_APP.ID ";
         if (StringUtils.isNotEmpty(filter.getSortBy())) {
@@ -241,6 +254,11 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                 if (deviceTypeId > 0) {
                     stmt.setInt(paramIndex++, deviceTypeId);
                 }
+                if (filter.getCategories() != null && !filter.getCategories().isEmpty()) {
+                    for (String category : filter.getCategories()) {
+                        stmt.setString(paramIndex++, category);
+                    }
+                }
                 if (filter.getLimit() != -1) {
                     stmt.setInt(paramIndex++, filter.getLimit());
                     stmt.setInt(paramIndex++, filter.getOffset());
@@ -279,6 +297,10 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                 + "FROM AP_APP "
                 + "LEFT JOIN AP_APP_RELEASE ON "
                 + "AP_APP.ID = AP_APP_RELEASE.AP_APP_ID "
+                + "LEFT JOIN AP_APP_CATEGORY_MAPPING ON "
+                + "AP_APP.ID = AP_APP_CATEGORY_MAPPING.AP_APP_ID "
+                + "LEFT JOIN AP_APP_CATEGORY ON "
+                + "AP_APP_CATEGORY_MAPPING.AP_APP_CATEGORY_ID = AP_APP_CATEGORY.ID "
                 + "INNER JOIN (SELECT ID FROM AP_APP) AS app_data ON app_data.ID = AP_APP.ID "
                 + "WHERE AP_APP.TENANT_ID = ?";
 
@@ -323,6 +345,11 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
         if (filter.isNotRetired()) {
             sql +=  " AND AP_APP.STATUS != 'RETIRED'";
         }
+        if (filter.getCategories() != null && !filter.getCategories().isEmpty()) {
+            String placeholders = filter.getCategories().stream().map(c -> "?")
+                    .collect(Collectors.joining(", "));
+            sql += " AND AP_APP_CATEGORY.CATEGORY IN (" + placeholders + ") ";
+        }
 
         try {
             conn = this.getDBConnection();
@@ -357,7 +384,12 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                 stmt.setString(paramIndex++, filter.getAppReleaseState());
             }
             if (deviceTypeId > 0 ) {
-                stmt.setInt(paramIndex, deviceTypeId);
+                stmt.setInt(paramIndex++, deviceTypeId);
+            }
+            if (filter.getCategories() != null && !filter.getCategories().isEmpty()) {
+                for (String category : filter.getCategories()) {
+                    stmt.setString(paramIndex++, category);
+                }
             }
             rs = stmt.executeQuery();
             if (rs.next()) {
