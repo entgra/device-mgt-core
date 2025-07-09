@@ -20,6 +20,7 @@ package io.entgra.device.mgt.core.device.mgt.core.service;
 
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
+import io.entgra.device.mgt.core.device.mgt.common.type.MetadataResult;
 import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.DeviceTypeEvent;
 import io.entgra.device.mgt.core.device.mgt.core.TestUtils;
 import io.entgra.device.mgt.core.device.mgt.core.common.BaseDeviceManagementTest;
@@ -32,6 +33,7 @@ import java.util.List;
 
 import static org.mockito.Mockito.mock;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 public class DeviceTypeEventProviderServiceTests extends BaseDeviceManagementTest {
 
@@ -75,11 +77,16 @@ public class DeviceTypeEventProviderServiceTests extends BaseDeviceManagementTes
     public void getDeviceTypeEventDefinitionsTest() throws Exception {
         String deviceType = "air_quality";
         try {
-            List<DeviceTypeEvent> response = deviceTypeEventManagementProviderService.getDeviceTypeEventDefinitions(deviceType);
+            MetadataResult<DeviceTypeEvent> result =
+                    deviceTypeEventManagementProviderService.getDeviceTypeEventDefinitions(deviceType);
+
             // Assert
-            assertNotNull(response, "Response should not be null");
+            assertNotNull(result, "MetadataResult should not be null");
+            assertTrue(result.isExists(), "Metadata should exist");
+            assertNotNull(result.getDefinitions(), "Definitions list should not be null");
+
         } catch (DeviceManagementException e) {
-            throw new DeviceManagementException("Error occurred while retrieving the event definitions for a device type" + e);
+            throw new DeviceManagementException("Error occurred while retrieving the event definitions for device type: " + deviceType, e);
         }
     }
 

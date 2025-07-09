@@ -493,6 +493,10 @@
         <Scope>am:admin:lc:app:retire</Scope>
         <Scope>dm:admin:device-type:conf:view</Scope>
         <Scope>dm:device:modify</Scope>
+        <Scope>dm:device-type:statistic:create</Scope>
+        <Scope>dm:device-type:statistic:modify</Scope>
+        <Scope>dm:device-type:statistic:view</Scope>
+        <Scope>dm:device-type:statistic:delete</Scope>
     </Scopes>
     <SSOConfiguration>
         <Issuer>device-mgt</Issuer>

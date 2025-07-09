@@ -79,6 +79,8 @@ import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProvide
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeEventManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeEventManagementProviderServiceImpl;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeStatisticManagementProviderService;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeStatisticManagementProviderServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.service.GroupManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.service.GroupManagementProviderServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.service.TagManagementProviderService;
@@ -348,6 +350,12 @@ public class DeviceManagementServiceComponent {
                 new DeviceTypeEventManagementProviderServiceImpl(metadataManagementService);
         bundleContext.registerService(DeviceTypeEventManagementProviderService.class.getName(),
                 deviceTypeEventManagementProviderService, null);
+
+        /* Registering Device type Statistic Management Service */
+        DeviceTypeStatisticManagementProviderService deviceTypeStatisticManagementProviderService =
+                new DeviceTypeStatisticManagementProviderServiceImpl(metadataManagementService);
+        bundleContext.registerService(DeviceTypeStatisticManagementProviderService.class.getName(),
+                deviceTypeStatisticManagementProviderService, null);
 
         /* Registering Whitelabel Service */
         try {

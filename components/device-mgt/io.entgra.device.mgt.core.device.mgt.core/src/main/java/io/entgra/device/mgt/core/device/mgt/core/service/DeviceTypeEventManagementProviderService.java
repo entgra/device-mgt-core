@@ -21,6 +21,7 @@ package io.entgra.device.mgt.core.device.mgt.core.service;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.DeviceTypeEvent;
 import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.DeviceTypeEventUpdateResult;
+import io.entgra.device.mgt.core.device.mgt.common.type.MetadataResult;
 
 import java.util.List;
 
@@ -31,13 +32,14 @@ import java.util.List;
 public interface DeviceTypeEventManagementProviderService {
 
     /**
-     * Retrieves a list of event definitions associated with a given device type.
+     * Retrieves metadata result including a list of event definitions and existence status
+     * associated with a given device type.
      *
      * @param deviceType The name of the device type.
-     * @return A list of {@link DeviceTypeEvent} instances representing event definitions.
+     * @return A {@link MetadataResult} containing a list of {@link DeviceTypeEvent} instances and a flag indicating metadata existence.
      * @throws DeviceManagementException If an error occurs while fetching the definitions.
      */
-    List<DeviceTypeEvent> getDeviceTypeEventDefinitions(String deviceType) throws DeviceManagementException;
+    MetadataResult<DeviceTypeEvent> getDeviceTypeEventDefinitions(String deviceType) throws DeviceManagementException;
 
     /**
      * Persists metadata and event definitions for the specified device type.

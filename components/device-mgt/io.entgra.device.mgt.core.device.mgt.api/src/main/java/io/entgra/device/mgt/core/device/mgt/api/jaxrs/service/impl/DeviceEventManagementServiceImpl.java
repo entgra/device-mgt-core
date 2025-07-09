@@ -75,6 +75,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import io.entgra.device.mgt.core.device.mgt.common.type.MetadataResult;
 
 /**
  * This is used for device type integration with DAS, to create streams and receiver dynamically and a common endpoint
@@ -171,9 +172,11 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                 log.error(errorMessage);
                 return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
             }
-            List<DeviceTypeEvent> eventDefinitions = DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
+            MetadataResult<DeviceTypeEvent> result = DeviceMgtAPIUtils
+                    .getDeviceTypeEventManagementProviderService()
                     .getDeviceTypeEventDefinitions(deviceType);
-            return Response.status(Response.Status.OK).entity(eventDefinitions).build();
+
+            return Response.status(Response.Status.OK).entity(result).build();
         } catch (DeviceManagementException e) {
             return serverError("Error occurred at server side while" +
                     " fetching device type event definitions for type: " + deviceType, e);
@@ -197,7 +200,7 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                 log.info("Device type event definitions updated and metadata created successfully in the database.");
                 processDeviceTypeEventDefinitions(deviceType, skipPersist, isSharedWithAllTenants, deviceTypeEvents);
             }
-            return Response.ok().entity("Device type event definitions updated" +
+            return Response.status(Response.Status.CREATED).entity("Device type event definitions updated" +
                     " and metadata created successfully.").build();
         } catch (DeviceManagementException e) {
             return serverError("Error while updating device type metadata " +
@@ -214,7 +217,7 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
                                                      @Valid List<DeviceTypeEvent> deviceTypeEvents) {
         try {
             if (DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
-                    .getDeviceTypeEventDefinitions(deviceType) != null) {
+                    .getDeviceTypeEventDefinitions(deviceType).getDefinitions() != null) {
                 // Check if any devices are enrolled for this device type
                 if (checkDeviceEnrollment(deviceType)) {
                     DeviceTypeEventUpdateResult result = DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
@@ -535,7 +538,7 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
      */
     private void removeDeviceTypeEventFiles(String deviceType) throws DeviceManagementException {
         List<DeviceTypeEvent> allEvents = DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
-                .getDeviceTypeEventDefinitions(deviceType);
+                .getDeviceTypeEventDefinitions(deviceType).getDefinitions();
         if (allEvents.isEmpty()) {
             log.info("No events found for device type: " + deviceType + ". Skipping artifact removal.");
             return;
