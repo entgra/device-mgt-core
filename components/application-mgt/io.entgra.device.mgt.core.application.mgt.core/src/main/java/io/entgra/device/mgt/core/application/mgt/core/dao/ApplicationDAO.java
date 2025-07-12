@@ -315,6 +315,8 @@ public interface ApplicationDAO {
      * @param firmwareModelIds Firmware model IDs
      * @throws ApplicationManagementDAOException Throws when error encountered while adding device firmware model mapping
      */
-    void addDeviceFirmwareModelMapping(int appId, List<Integer> firmwareModelIds) throws ApplicationManagementDAOException;
+    void addDeviceFirmwareModelMapping(int appId, List<Integer> firmwareModelIds, int tenantId) throws ApplicationManagementDAOException;
+
+    List<Integer> getAllDeviceFirmwareModelIds(int tenantId) throws ApplicationManagementDAOException;
 
 }

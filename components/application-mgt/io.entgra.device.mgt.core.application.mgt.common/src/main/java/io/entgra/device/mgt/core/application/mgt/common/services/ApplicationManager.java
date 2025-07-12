@@ -26,6 +26,7 @@ import io.entgra.device.mgt.core.device.mgt.common.Base64File;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationDTO;
 import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
+import io.entgra.device.mgt.core.device.mgt.common.app.mgt.DeviceFirmwareModel;
 import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareResult;
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
@@ -634,4 +635,20 @@ public interface ApplicationManager {
      */
     DeviceFirmwareResult getDevicesByFirmwareMatchType(String uuid, FirmwareMatchType matchType, int groupId) throws ApplicationManagementException;
 
+    /**
+     * Retrieve available device firmware models, which can be used to create new firmware variant.
+     * @param deviceType Device type
+     * @return List of {@link DeviceFirmwareModel}
+     * @throws ApplicationManagementException Throws when error encountered while getting available device firmware models.
+     */
+    List<DeviceFirmwareModel> getAvailableDeviceFirmwareModels(String deviceType) throws ApplicationManagementException;
+
+    /**
+     * Search applications releases based on the release search filter criteria.
+     *
+     * @param releaseSearchFilter {@link ReleaseSearchFilter}
+     * @return List of application releases
+     * @throws ApplicationManagementException Throws when error encountered while searching application releases.
+     */
+    ReleaseList getApplicationReleases(ReleaseSearchFilter releaseSearchFilter) throws ApplicationManagementException;
 }
