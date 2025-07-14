@@ -6002,16 +6002,12 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         }
 
         DeviceFirmwareResult deviceFirmwareResult;
+        List<Device> filteredDevices;
+        int totalRecords;
         try {
             DeviceManagementDAOFactory.openConnection();
-            List<Device> devicesFIltered = firmwareDAO.getFilteredDevicesByFirmwareVersion(searchFilter,
-                    tenantId, requireMatchingDevices);
-            devicesFIltered = this.populateAllDeviceInfo(devicesFIltered);
-            deviceFirmwareResult = new DeviceFirmwareResult();
-            deviceFirmwareResult.setRecordsFiltered(devicesFIltered.size());
-            deviceFirmwareResult.setRecordsTotal(firmwareDAO
-                    .getCountOfFilteredDevicesByFirmwareVersion(searchFilter, tenantId, requireMatchingDevices));
-            deviceFirmwareResult.setData(devicesFIltered);
+            filteredDevices = firmwareDAO.getFilteredDevicesByFirmwareVersion(searchFilter, tenantId, requireMatchingDevices);
+            totalRecords = firmwareDAO.getCountOfFilteredDevicesByFirmwareVersion(searchFilter, tenantId, requireMatchingDevices);
         } catch (DeviceManagementDAOException e) {
             String msg = "Error occurred while retrieving filtered device list using device firmware model search filters";
             log.error(msg, e);
@@ -6023,6 +6019,12 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         } finally {
             DeviceManagementDAOFactory.closeConnection();
         }
+
+        filteredDevices = this.populateAllDeviceInfo(filteredDevices);
+        deviceFirmwareResult = new DeviceFirmwareResult();
+        deviceFirmwareResult.setRecordsFiltered(filteredDevices.size());
+        deviceFirmwareResult.setRecordsTotal(totalRecords);
+        deviceFirmwareResult.setData(filteredDevices);
         return deviceFirmwareResult;
     }
 
