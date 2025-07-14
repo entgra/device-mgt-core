@@ -4636,6 +4636,16 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 throw new BadRequestException(msg);
             }
 
+            try {
+                DataHolder.getInstance().getDeviceFirmwareModelManagementService().addDeviceFirmwareVersion(device.getId()
+                        , currentVersion);
+            } catch (DeviceFirmwareModelManagementException e) {
+                String msg = "Failed to update current firmware version of the device associated with device " +
+                        "identifier [" + device.getDeviceIdentifier() + "]";
+                log.error(msg);
+                throw new ApplicationManagementException(msg, e);
+            }
+
             DeviceFirmwareModel deviceFirmwareModel = deviceManagementService.getDeviceFirmwareModel(device.getId());
             if (deviceFirmwareModel == null) {
                 String msg = "Device firmware model is not found with id: " + deviceId;
@@ -4881,7 +4891,9 @@ public class ApplicationManagerImpl implements ApplicationManager {
     }
 
     @Override
-    public DeviceFirmwareResult getDevicesByFirmwareMatchType(String uuid, FirmwareMatchType matchType, int groupId) throws ApplicationManagementException {
+    public DeviceFirmwareResult getDevicesByFirmwareMatchType(String uuid, FirmwareMatchType matchType, int groupId
+            , io.entgra.device.mgt.core.application.mgt.common.PaginationRequest paginationRequest)
+            throws ApplicationManagementException {
         Application application = getApplicationByUuid(uuid);
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         String currentReleaseVersion = application.getApplicationReleases()
@@ -4896,7 +4908,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             throw new ApplicationManagementException(msg);
         }
 
-        String filteringAppReleaseType = hasTestRolesAssigned() ? AppReleaseType.TEST.name() : null;
+    String filteringAppReleaseType = hasTestRolesAssigned() ? AppReleaseType.TEST.name() :  AppReleaseType.PRODUCTION.name();
 
         List<String> versions;
         List<Integer> firmwareModelIds;
@@ -4954,6 +4966,8 @@ public class ApplicationManagerImpl implements ApplicationManager {
             deviceFirmwareModelSearchFilter.setFirmwareModelIds(firmwareModelIds);
             deviceFirmwareModelSearchFilter.setFirmwareVersions(versions);
             deviceFirmwareModelSearchFilter.setGroupId(groupId);
+            deviceFirmwareModelSearchFilter.setLimit(paginationRequest.getLimit());
+            deviceFirmwareModelSearchFilter.setOffset(paginationRequest.getOffSet());
             return dms.getFilteredDeviceListByFirmwareVersion(deviceFirmwareModelSearchFilter, tenantId, requireMatching);
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while getting device data.";

@@ -633,7 +633,9 @@ public interface ApplicationManager {
      * @return A list of {@link Device} objects that match the firmware criteria.
      * @throws ApplicationManagementException If an error occurs while retrieving the devices or application release data.
      */
-    DeviceFirmwareResult getDevicesByFirmwareMatchType(String uuid, FirmwareMatchType matchType, int groupId) throws ApplicationManagementException;
+    DeviceFirmwareResult getDevicesByFirmwareMatchType(String uuid, FirmwareMatchType matchType, int groupId
+            , io.entgra.device.mgt.core.application.mgt.common.PaginationRequest paginationRequest)
+            throws ApplicationManagementException;
 
     /**
      * Retrieve available device firmware models, which can be used to create new firmware variant.
