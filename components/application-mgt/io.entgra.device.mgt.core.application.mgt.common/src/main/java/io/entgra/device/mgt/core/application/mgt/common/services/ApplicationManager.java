@@ -630,6 +630,7 @@ public interface ApplicationManager {
      *                      <li>{@code NON_APPLICABLE} - Devices with firmware versions higher than or equal to the specified release.</li>
      *                      <li>{@code UNMANAGED} - Devices with any firmware version that is either lower, higher, or equal to the specified release.</li>
      *                  </ul>
+     * @param paginationRequest Pagination request
      * @return A list of {@link Device} objects that match the firmware criteria.
      * @throws ApplicationManagementException If an error occurs while retrieving the devices or application release data.
      */
