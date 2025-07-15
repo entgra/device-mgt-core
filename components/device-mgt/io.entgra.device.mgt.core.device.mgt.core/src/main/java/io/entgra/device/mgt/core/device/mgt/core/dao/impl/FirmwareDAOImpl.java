@@ -225,7 +225,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
 
     @Override
     public List<Device> getFilteredDevicesByFirmwareVersion(DeviceFirmwareModelSearchFilter searchFilter,
-                                                                    int tenantId, boolean requireMatchingDevices)
+                                                            int tenantId, boolean requireMatchingDevices)
             throws DeviceManagementDAOException {
 
         List<Device> devices = new ArrayList<>();
@@ -265,7 +265,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
         int recordsTotal = 0;
         String sql = getBaseQuery(QueryType.COUNT);
         try(PreparedStatement stmt = buildFilteredQuery(sql, searchFilter, tenantId, requireMatchingDevices);
-             ResultSet rs = stmt.executeQuery()) {
+            ResultSet rs = stmt.executeQuery()) {
             if (rs.next()) {
                 recordsTotal = rs.getInt("RECORDS_TOTAL");
             }
@@ -392,7 +392,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
             }
             sb.append(" AND ");
         }
-        sb.append("fmm.TENANT_ID = ? OFFSET ? LIMIT ?");
+        sb.append("dfmm.TENANT_ID = ? LIMIT ? OFFSET ?");
 
         conn = this.getConnection();
         int index = 1;
@@ -425,8 +425,8 @@ public class FirmwareDAOImpl implements FirmwareDAO {
             }
         }
         stmt.setInt(index++, tenantId);
-        stmt.setInt(index++, searchFilter.getOffset());
-        stmt.setInt(index, searchFilter.getLimit());
+        stmt.setInt(index++, searchFilter.getLimit());
+        stmt.setInt(index, searchFilter.getOffset());
         return stmt;
     }
 
@@ -441,12 +441,12 @@ public class FirmwareDAOImpl implements FirmwareDAO {
                     "de.OWNER, " +
                     "de.OWNERSHIP, " +
                     "de.STATUS, " +
-                    "de.DATE_OF_LAST_UPDATE " +
+                    "de.DATE_OF_LAST_UPDATE, " +
                     "de.DEVICE_TYPE ";
         } else if (queryType.equals(QueryType.COUNT)) {
             query += "SELECT COUNT(*) AS RECORDS_TOTAL ";
         }
-        query += "FROM DM_DEVICE_FIRMWARE_MODEL_MAPPING dfmm" +
+        query += "FROM DM_DEVICE_FIRMWARE_MODEL_MAPPING dfmm " +
                 "INNER JOIN DM_DEVICE d ON dfmm.DM_DEVICE_ID = d.ID " +
                 "INNER JOIN DM_ENROLMENT de ON d.ID = de.DEVICE_ID ";
         return query;

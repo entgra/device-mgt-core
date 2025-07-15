@@ -17,6 +17,8 @@
  */
 package io.entgra.device.mgt.core.device.mgt.common.app.mgt;
 
+import java.util.Objects;
+
 public class DeviceFirmwareModel {
     private int firmwareId;
     private String firmwareModelName;
@@ -27,6 +29,10 @@ public class DeviceFirmwareModel {
     public DeviceFirmwareModel(String firmwareModelName, String description) {
         this.firmwareModelName = firmwareModelName;
         this.description = description;
+    }
+
+    public DeviceFirmwareModel(int firmwareId) {
+        this.firmwareId = firmwareId;
     }
 
     public DeviceFirmwareModel() {}
@@ -69,5 +75,17 @@ public class DeviceFirmwareModel {
 
     public void setDeviceType(String deviceType) {
         this.deviceType = deviceType;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof DeviceFirmwareModel)) return false;
+        DeviceFirmwareModel that = (DeviceFirmwareModel) o;
+        return firmwareId == that.firmwareId;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(firmwareId);
     }
 }

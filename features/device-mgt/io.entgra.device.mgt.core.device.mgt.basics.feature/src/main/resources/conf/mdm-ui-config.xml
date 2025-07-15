@@ -161,6 +161,16 @@
             <DisplayValue>label_updated_time</DisplayValue>
             <Type>deviceInfo</Type>
         </DeviceInfoItem>
+        <DeviceInfoItem>
+            <DefinedValue>SDK_VERSION</DefinedValue>
+            <DisplayValue>label_sdk_version</DisplayValue>
+            <Type>deviceDetailsMap</Type>
+        </DeviceInfoItem>
+        <DeviceInfoItem>
+            <DefinedValue>FIRMWARE_MODEL</DefinedValue>
+            <DisplayValue>label_firmware_model</DisplayValue>
+            <Type>deviceDetailsMap</Type>
+        </DeviceInfoItem>
     </DeviceInfoConfigurations>
     <DeviceStatusConfigurations>
         <EnableDeviceStatusCheck>false</EnableDeviceStatusCheck>
@@ -480,6 +490,8 @@
         <Scope>dm:device:modify</Scope>
         <Scope>dm:admin:device-firmware-models:create</Scope>
         <Scope>dm:device-firmware-models:view</Scope>
+        <Scope>am:pub:device-firmware-models:view</Scope>
+        <Scope>am:store:firmware:view</Scope>
     </Scopes>
     <SSOConfiguration>
         <Issuer>device-mgt</Issuer>

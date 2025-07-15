@@ -18,6 +18,7 @@
 package io.entgra.device.mgt.core.application.mgt.core.dao;
 
 import io.entgra.device.mgt.core.application.mgt.common.Rating;
+import io.entgra.device.mgt.core.application.mgt.common.ReleaseSearchFilter;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
 import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManagementDAOException;
 
@@ -99,7 +100,7 @@ public interface ApplicationReleaseDAO {
      * @return the {@link ApplicationReleaseDTO} corresponding to the given version, or {@code null} if not found
      * @throws ApplicationManagementDAOException if an error occurs while accessing the database
      */
-    ApplicationReleaseDTO getReleaseByVersion(String version, int tenantId) throws ApplicationManagementDAOException;
+    ApplicationReleaseDTO getReleaseByVersion(int applicationId, String version, int tenantId) throws ApplicationManagementDAOException;
 
     /**
      * To verify whether application release exist or not for the given app release version.
@@ -194,5 +195,25 @@ public interface ApplicationReleaseDAO {
      * @throws ApplicationManagementDAOException if an error occurs while accessing the database
      */
     List<ApplicationReleaseDTO> getReleasesByAppAndStatus(int appId, String status, String appReleaseType, int tenantId) throws ApplicationManagementDAOException;
+
+    /**
+     * Get application releases based on {@link ReleaseSearchFilter}
+     *
+     * @param releaseSearchFilter {@link ReleaseSearchFilter}
+     * @param tenantId            Tenant ID
+     * @return List of {@link ApplicationReleaseDTO}
+     * @throws ApplicationManagementDAOException Throws when error encountered while fetching releases.
+     */
+    List<ApplicationReleaseDTO> getReleases(ReleaseSearchFilter releaseSearchFilter, int tenantId) throws ApplicationManagementDAOException;
+
+    /**
+     * Get application releases matching count based on {@link ReleaseSearchFilter}
+     *
+     * @param releaseSearchFilter {@link ReleaseSearchFilter}
+     * @param tenantId            Tenant ID
+     * @return Full matching count of releases.
+     * @throws ApplicationManagementDAOException Throws when error encountered while fetching releases.
+     */
+    int getReleasesCount(ReleaseSearchFilter releaseSearchFilter, int tenantId) throws ApplicationManagementDAOException;
 
 }
