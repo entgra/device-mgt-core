@@ -1232,7 +1232,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                             continue;
                         }
                         if (StringUtils.isNotEmpty(filter.getAppReleaseState()) && !filter.getAppReleaseState()
-                                .equals(applicationReleaseDTO.getCurrentState())) {
+                                .equalsIgnoreCase(applicationReleaseDTO.getCurrentState())) {
                             continue;
                         }
                         if (StringUtils.isNotEmpty(filter.getAppReleaseType()) && !filter.getAppReleaseType()
