@@ -76,7 +76,7 @@ public interface FirmwareDAO {
      * @throws DeviceManagementDAOException if an error occurs while accessing the database
      */
     List<Device> getFilteredDevicesByFirmwareVersion(DeviceFirmwareModelSearchFilter searchFilter,
-                                                             int tenantId, boolean requireMatchingDevices)
+                                                             int tenantId, boolean requireMatchingDevices, String username)
             throws DeviceManagementDAOException;
 
     /**
@@ -89,7 +89,7 @@ public interface FirmwareDAO {
      * @throws DeviceManagementDAOException if an error occurs while accessing the database
      */
     int getCountOfFilteredDevicesByFirmwareVersion(DeviceFirmwareModelSearchFilter searchFilter,
-                                                   int tenantId, boolean requireMatchingDevices)
+                                                   int tenantId, boolean requireMatchingDevices, String username)
             throws DeviceManagementDAOException;
 
     /**

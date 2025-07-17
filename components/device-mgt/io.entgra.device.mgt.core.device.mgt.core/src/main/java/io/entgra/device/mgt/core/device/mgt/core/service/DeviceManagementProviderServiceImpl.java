@@ -5994,6 +5994,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             log.debug("Retrieving filtered device list by firmware version with search filter: " + searchFilter +
                     ", tenant ID: " + tenantId + ", requireMatchingDevices: " + requireMatchingDevices);
         }
+        String userName = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
 
         if(searchFilter.getOffset() < 0 || searchFilter.getLimit() <= 0) {
             String msg = "Invalid pagination parameters in DeviceFirmwareModelSearchFilter: " + searchFilter;
@@ -6006,8 +6007,8 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         int totalRecords;
         try {
             DeviceManagementDAOFactory.openConnection();
-            filteredDevices = firmwareDAO.getFilteredDevicesByFirmwareVersion(searchFilter, tenantId, requireMatchingDevices);
-            totalRecords = firmwareDAO.getCountOfFilteredDevicesByFirmwareVersion(searchFilter, tenantId, requireMatchingDevices);
+            filteredDevices = firmwareDAO.getFilteredDevicesByFirmwareVersion(searchFilter, tenantId, requireMatchingDevices, userName);
+            totalRecords = firmwareDAO.getCountOfFilteredDevicesByFirmwareVersion(searchFilter, tenantId, requireMatchingDevices, userName);
         } catch (DeviceManagementDAOException e) {
             String msg = "Error occurred while retrieving filtered device list using device firmware model search filters";
             log.error(msg, e);
