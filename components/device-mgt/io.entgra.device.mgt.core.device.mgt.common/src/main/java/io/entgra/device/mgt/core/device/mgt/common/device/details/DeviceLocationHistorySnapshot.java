@@ -60,4 +60,5 @@ public class DeviceLocationHistorySnapshot extends DeviceLocation implements Ser
     public void setOwner(String owner) {
         this.owner = owner;
     }
+
 }
