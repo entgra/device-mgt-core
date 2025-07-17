@@ -160,6 +160,7 @@ import io.entgra.device.mgt.core.transport.mgt.email.sender.core.service.EmailSe
 import org.wso2.carbon.stratos.common.beans.TenantInfoBean;
 import org.wso2.carbon.tenant.mgt.services.TenantMgtAdminService;
 import org.wso2.carbon.user.api.UserStoreException;
+import org.wso2.carbon.user.api.UserStoreManager;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 
 import javax.xml.bind.JAXBContext;
@@ -499,10 +500,10 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public DeviceFirmwareModel addDeviceFirmwareModel(Device device, String firmwareModel, int tenantId)
+    public DeviceFirmwareModel addDeviceFirmwareModel(Device device, String firmwareModelName, int tenantId)
             throws DeviceManagementException {
         if (log.isDebugEnabled()) {
-            log.debug("Adding firmware model '" + firmwareModel + "' for device: " + device.getId());
+            log.debug("Adding firmware model '" + firmwareModelName + "' for device: " + device.getId());
         }
 
         if (device == null || device.getId() == 0) {
@@ -510,18 +511,24 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             log.error(msg);
             throw new DeviceManagementException(msg);
         }
-        DeviceFirmwareModel deviceFirmware;
+        DeviceFirmwareModel firmwareModel;
         DeviceType deviceType = this.getDeviceType(device.getType());
         try {
             DeviceManagementDAOFactory.beginTransaction();
-            deviceFirmware = firmwareDAO.getExistingFirmwareModel(firmwareModel, tenantId);
-            if (deviceFirmware != null) {
-                firmwareDAO.addDeviceFirmwareMapping(device.getId(), deviceFirmware.getFirmwareId(), tenantId);
+            DeviceFirmwareModel deviceFirmwareModel = firmwareDAO.getDeviceFirmwareModel(device.getId(), tenantId);
+            if (deviceFirmwareModel != null) {
+                log.warn("Firmware model '" + firmwareModelName + "' already exists for device: " + device.getId());
+                return deviceFirmwareModel;
+            }
+
+            firmwareModel = firmwareDAO.getExistingFirmwareModel(firmwareModelName, tenantId);
+            if (firmwareModel != null) {
+                firmwareDAO.addDeviceFirmwareMapping(device.getId(), firmwareModel.getFirmwareId(), tenantId);
             } else {
-                deviceFirmware = firmwareDAO.addFirmwareModel(new DeviceFirmwareModel(firmwareModel, null),
+                firmwareModel = firmwareDAO.addFirmwareModel(new DeviceFirmwareModel(firmwareModelName, null),
                         tenantId, deviceType.getId());
-                if (deviceFirmware.getFirmwareId() > -1) {
-                    firmwareDAO.addDeviceFirmwareMapping(device.getId(), deviceFirmware.getFirmwareId(), tenantId);
+                if (firmwareModel.getFirmwareId() > -1) {
+                    firmwareDAO.addDeviceFirmwareMapping(device.getId(), firmwareModel.getFirmwareId(), tenantId);
                 }
             }
             DeviceManagementDAOFactory.commitTransaction();
@@ -539,7 +546,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             DeviceManagementDAOFactory.closeConnection();
         }
 
-        return deviceFirmware;
+        return firmwareModel;
     }
 
     @Override
@@ -5995,6 +6002,22 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                     ", tenant ID: " + tenantId + ", requireMatchingDevices: " + requireMatchingDevices);
         }
 
+        String userName = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
+        List<String> usersList = new ArrayList<>();
+        try {
+            UserStoreManager userStoreManager = DeviceManagementDataHolder.getInstance().getRealmService().getTenantUserRealm(tenantId)
+                    .getUserStoreManager();
+            String[] roleListOfUser = userStoreManager.getRoleListOfUser(userName);
+            for (String role : roleListOfUser) {
+                String[] userListOfRole = userStoreManager.getUserListOfRole(role);
+                usersList.addAll(Arrays.asList(userListOfRole));
+            }
+        } catch (UserStoreException e) {
+            String msg = "Error occurred while retrieving user roles for user: " + userName;
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        }
+
         if(searchFilter.getOffset() < 0 || searchFilter.getLimit() <= 0) {
             String msg = "Invalid pagination parameters in DeviceFirmwareModelSearchFilter: " + searchFilter;
             log.error(msg);
@@ -6006,8 +6029,8 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         int totalRecords;
         try {
             DeviceManagementDAOFactory.openConnection();
-            filteredDevices = firmwareDAO.getFilteredDevicesByFirmwareVersion(searchFilter, tenantId, requireMatchingDevices);
-            totalRecords = firmwareDAO.getCountOfFilteredDevicesByFirmwareVersion(searchFilter, tenantId, requireMatchingDevices);
+            filteredDevices = firmwareDAO.getFilteredDevicesByFirmwareVersion(searchFilter, tenantId, requireMatchingDevices, usersList);
+            totalRecords = firmwareDAO.getCountOfFilteredDevicesByFirmwareVersion(searchFilter, tenantId, requireMatchingDevices, usersList);
         } catch (DeviceManagementDAOException e) {
             String msg = "Error occurred while retrieving filtered device list using device firmware model search filters";
             log.error(msg, e);
