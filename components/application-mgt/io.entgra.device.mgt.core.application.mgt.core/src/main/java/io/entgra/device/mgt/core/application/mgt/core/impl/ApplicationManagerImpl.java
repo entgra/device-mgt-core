@@ -19,6 +19,7 @@
 package io.entgra.device.mgt.core.application.mgt.core.impl;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -83,6 +84,9 @@ import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManageme
 import io.entgra.device.mgt.core.device.mgt.core.common.exception.StorageManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringEscapeUtils;
@@ -103,6 +107,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -126,6 +131,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
     private SPApplicationDAO spApplicationDAO;
     private VppApplicationDAO vppApplicationDAO;
     private ReviewDAO reviewDAO;
+    private static final OkHttpClient httpClient = new OkHttpClient();
 
     public ApplicationManagerImpl() {
         initDataAccessObjects();
@@ -411,6 +417,8 @@ public class ApplicationManagerImpl implements ApplicationManager {
             ApplicationReleaseDTO releaseDTO = APIUtil.releaseWrapperToReleaseDTO(releaseWrapper);
             if (!isCustomArtifactsManagedByAppStore()) {
                 releaseDTO.setInstallerName(releaseWrapper.getArtifactLink());
+                populateMetadataFromResourceHeaders(releaseDTO, getFirmwareConfiguration().getDeliveryConfiguration().getCdnUri()
+                        + releaseWrapper.getArtifactLink());
             }
             releaseDTO = uploadCustomAppReleaseArtifacts(releaseDTO, artifact, deviceType.getName());
             try {
@@ -430,6 +438,67 @@ public class ApplicationManagerImpl implements ApplicationManager {
             log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
         }
+    }
+
+    /**
+     * Populate metadata from resource headers
+     *
+     * @param releaseDTO  {@link ApplicationReleaseDTO}
+     * @param resourceUrl Resource URL
+     * @throws ApplicationManagementException Throws when error encountered when populating metadata.
+     */
+    private void populateMetadataFromResourceHeaders(ApplicationReleaseDTO releaseDTO, String resourceUrl)
+            throws ApplicationManagementException {
+        Request request = new Request.Builder().url(resourceUrl).head().build();
+
+        try (Response response = httpClient.newCall(request).execute()) {
+            Properties properties = new Properties();
+            if (response.isSuccessful()) {
+                properties.setProperty("contentType", response.header("Content-Type"));
+                properties.setProperty("contentLength", response.header("Content-Length"));
+                releaseDTO.setMetaData(getUpdatedMetadataString(releaseDTO.getMetaData(), properties));
+            } else {
+                String msg = "Error occurred while executing HEAD request to get application release metadata. " +
+                        "Response code: " + response.code();
+                log.error(msg);
+                throw new ApplicationManagementException(msg);
+            }
+        } catch (IOException e) {
+            String msg = "Error occurred while retrieving application release metadata";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        }
+    }
+
+    /**
+     * Get updated metadata string value
+     *
+     * @param existingMetadata Existing metadata string
+     * @param newMetadata      New metadata values
+     * @return Updated metadata string
+     */
+    private String getUpdatedMetadataString(String existingMetadata, Properties newMetadata) {
+        JsonArray parsedMetadata;
+        if (StringUtils.isBlank(existingMetadata)) {
+            parsedMetadata = new JsonArray();
+        } else {
+            JsonElement existingMetadataJson = new JsonParser().parse(existingMetadata);
+            if (!existingMetadataJson.isJsonArray()) {
+                String msg = "Metadata contains invalid JSON format";
+                log.error(msg);
+                throw new IllegalArgumentException(msg);
+            }
+            parsedMetadata = existingMetadataJson.getAsJsonArray();
+        }
+
+        JsonObject newMetadataJson;
+        for (String key : newMetadata.stringPropertyNames()) {
+            newMetadataJson = new JsonObject();
+            newMetadataJson.addProperty(key, newMetadata.getProperty(key));
+            parsedMetadata.add(newMetadataJson);
+        }
+
+        return parsedMetadata.toString();
     }
 
     private boolean isCustomArtifactsManagedByAppStore() throws ApplicationManagementException {
@@ -4609,21 +4678,6 @@ public class ApplicationManagerImpl implements ApplicationManager {
         }
     }
 
-    //todo
-    //get device by using device id
-    //get subtype/device model of the device
-    //get application using subtype/device model
-    //applicationManager.getApplicationReleaseVersions();
-    //Filter Available versions.
-    //if versions are available then -->
-    //load app releases from versions
-    //If test releases are there, check whether user is eligible user, otherwise don't consider those releases.
-    //Get pending app install operations for the device
-    //List<? extends Operation> getDeviceOperations(DeviceIdentifier deviceId, Operation.Status status, String operationCode)
-    //if lower version than installed firmware version is in the pending state move them to relevant state
-    //update subscription details if it exists
-    //if higher versions are in pending state mark them as pending
-    //return list of firmware releases.
     @Override
     public List<Firmware> getAvailableFirmwaresForDevice(String deviceId, String currentVersion) throws ApplicationManagementException {
         try {
@@ -4739,14 +4793,39 @@ public class ApplicationManagerImpl implements ApplicationManager {
             firmware.setReleaseChannel(String.valueOf(dto.getReleaseType()));
             firmware.setCurrentStatus(dto.getCurrentState());
             firmware.setVersionId(dto.getId());
-            firmware.setDownloadUrl(isCustomArtifactsManagedByAppStore() ? dto.getInstallerName()
-                    : getFirmwareConfiguration().getDeliveryConfiguration().getCdnUri() + dto.getInstallerName());
+            firmware.setDownloadUrl(getDownloadableFirmwareUrl(dto.getInstallerName()).toString());
             firmware.setPackageName(dto.getPackageName());
             return firmware;
         } catch (ApplicationManagementException e) {
             String msg = "Error encountered while generating firmware delivery URL";
             log.error(msg, e);
             throw new IllegalStateException(msg, e);
+        }
+    }
+
+    /**
+     * Get the downloadable firmware URL
+     *
+     * @param firmwareURI Firmware URI
+     * @return Downloadable URL
+     * @throws ApplicationManagementException Throws when error encountered while generating downloadable URL
+     */
+    private URL getDownloadableFirmwareUrl(String firmwareURI) throws ApplicationManagementException {
+        try {
+            if (isCustomArtifactsManagedByAppStore()) {
+                return new URL(firmwareURI);
+            }
+
+            String CDNUri = getFirmwareConfiguration().getDeliveryConfiguration().getCdnUri();
+            if (firmwareURI.startsWith(CDNUri)) {
+                return new URL(firmwareURI);
+            }
+
+            return new URL(CDNUri + firmwareURI);
+        } catch (MalformedURLException e) {
+            String msg = "Malformed URL encountered when generating the downloadable URL for the firmware";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
         }
     }
 
@@ -4908,8 +4987,6 @@ public class ApplicationManagerImpl implements ApplicationManager {
             throw new ApplicationManagementException(msg);
         }
 
-    String filteringAppReleaseType = hasTestRolesAssigned() ? AppReleaseType.TEST.name() :  AppReleaseType.PRODUCTION.name();
-
         List<String> versions;
         List<Integer> firmwareModelIds;
         String firmwareInstallableState = lifecycleStateManager.getInstallableState(ApplicationType.CUSTOM.toString());
@@ -4919,14 +4996,14 @@ public class ApplicationManagerImpl implements ApplicationManager {
             switch (matchType) {
                 case APPLICABLE:
                     List<ApplicationReleaseDTO> older = applicationReleaseDAO.getAppReleasesBeforeVersion(
-                            application.getId(), currentReleaseVersion, firmwareInstallableState, filteringAppReleaseType, tenantId);
+                            application.getId(), currentReleaseVersion, firmwareInstallableState, tenantId);
                     versions = older.stream()
                             .map(ApplicationReleaseDTO::getVersion)
                             .collect(Collectors.toList());
                     break;
                 case NON_APPLICABLE:
                     List<ApplicationReleaseDTO> newer = applicationReleaseDAO.getAppReleasesAfterVersion(
-                            application.getId(), currentReleaseVersion, firmwareInstallableState, filteringAppReleaseType, tenantId);
+                            application.getId(), currentReleaseVersion, firmwareInstallableState, null, tenantId);
                     versions = newer.stream()
                             .map(ApplicationReleaseDTO::getVersion)
                             .collect(Collectors.toList());
@@ -4934,9 +5011,9 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     break;
                 case UNMANAGED:
                     List<ApplicationReleaseDTO> olderManaged = applicationReleaseDAO.getAppReleasesBeforeVersion(
-                            application.getId(), currentReleaseVersion, firmwareInstallableState, filteringAppReleaseType, tenantId);
+                            application.getId(), currentReleaseVersion, firmwareInstallableState, tenantId);
                     List<ApplicationReleaseDTO> newerManaged = applicationReleaseDAO.getAppReleasesAfterVersion(
-                            application.getId(), currentReleaseVersion, firmwareInstallableState, filteringAppReleaseType, tenantId);
+                            application.getId(), currentReleaseVersion, firmwareInstallableState, null, tenantId);
                     versions = Stream.concat(
                             Stream.concat(
                                     newerManaged.stream().map(ApplicationReleaseDTO::getVersion),
@@ -4949,6 +5026,13 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     String msg = "Unknown firmware match type.: " + matchType;
                     log.error(msg);
                     throw new ApplicationManagementException(msg);
+            }
+            if (versions.isEmpty()) {
+                DeviceFirmwareResult deviceFirmwareResult = new DeviceFirmwareResult();
+                deviceFirmwareResult.setRecordsFiltered(0);
+                deviceFirmwareResult.setRecordsTotal(0);
+                deviceFirmwareResult.setData(new ArrayList<>());
+                return deviceFirmwareResult;
             }
             firmwareModelIds = applicationDAO.getFirmwareModelIdsForApp(application.getId());
         } catch (ApplicationManagementDAOException e) {

@@ -791,9 +791,13 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
                     "A.AP_APP_ID AS APP_ID " +
                     "FROM AP_APP_RELEASE AS A " +
                     "WHERE A.AP_APP_ID = ? " +
-                    "AND A.CURRENT_STATE = ? " +
-                    "AND A.RELEASE_TYPE = ? " +
-                    "AND A.TENANT_ID = ? " +
+                    "AND A.CURRENT_STATE = ? ";
+
+            if (StringUtils.isNotBlank(appReleaseType)) {
+                sql += " AND A.RELEASE_TYPE = ? ";
+            }
+
+            sql += "AND A.TENANT_ID = ? " +
                     "AND A.ID > (" +
                     "SELECT B.ID " +
                     "FROM AP_APP_RELEASE AS B " +
@@ -807,13 +811,17 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
             try {
                 Connection connection = this.getDBConnection();
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setInt(1, appId);
-                    preparedStatement.setString(2, status);
-                    preparedStatement.setString(3, appReleaseType);
-                    preparedStatement.setInt(4, tenantId);
-                    preparedStatement.setInt(5, appId);
-                    preparedStatement.setString(6, version);
-                    preparedStatement.setInt(7, tenantId);
+                    int queryIdx = 0;
+                    preparedStatement.setInt(++queryIdx, appId);
+                    preparedStatement.setString(++queryIdx, status);
+                    if (StringUtils.isNotBlank(appReleaseType)) {
+                        preparedStatement.setString(++queryIdx, appReleaseType);
+                    }
+
+                    preparedStatement.setInt(++queryIdx, tenantId);
+                    preparedStatement.setInt(++queryIdx, appId);
+                    preparedStatement.setString(++queryIdx, version);
+                    preparedStatement.setInt(++queryIdx, tenantId);
                     try (ResultSet resultSet = preparedStatement.executeQuery()) {
                         while (resultSet.next()) {
                             applicationReleaseDTOS.add(DAOUtil.constructAppReleaseDTO(resultSet));
@@ -836,7 +844,7 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
         }
 
         @Override
-        public List<ApplicationReleaseDTO> getAppReleasesBeforeVersion(int appId, String version, String status, String appReleaseType, int tenantId) throws ApplicationManagementDAOException {
+        public List<ApplicationReleaseDTO> getAppReleasesBeforeVersion(int appId, String version, String status, int tenantId) throws ApplicationManagementDAOException {
             String sql = "SELECT " +
                     "A.ID AS RELEASE_ID, " +
                     "A.DESCRIPTION AS RELEASE_DESCRIPTION, " +
@@ -861,7 +869,6 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
                     "FROM AP_APP_RELEASE AS A " +
                     "WHERE A.AP_APP_ID = ? " +
                     "AND A.CURRENT_STATE = ? " +
-                    "AND A.RELEASE_TYPE = ? " +
                     "AND A.TENANT_ID = ? " +
                     "AND A.ID < (" +
                     "SELECT B.ID " +
@@ -878,11 +885,10 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setInt(1, appId);
                     preparedStatement.setString(2, status);
-                    preparedStatement.setString(3, appReleaseType);
-                    preparedStatement.setInt(4, tenantId);
-                    preparedStatement.setInt(5, appId);
-                    preparedStatement.setString(6, version);
-                    preparedStatement.setInt(7, tenantId);
+                    preparedStatement.setInt(3, tenantId);
+                    preparedStatement.setInt(4, appId);
+                    preparedStatement.setString(5, version);
+                    preparedStatement.setInt(6, tenantId);
                     try (ResultSet resultSet = preparedStatement.executeQuery()) {
                         while (resultSet.next()) {
                             applicationReleaseDTOS.add(DAOUtil.constructAppReleaseDTO(resultSet));

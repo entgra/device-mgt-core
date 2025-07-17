@@ -2113,7 +2113,7 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                 + "AP.SUB_TYPE AS APP_SUB_TYPE, "
                 + "AP.CURRENCY AS APP_CURRENCY, "
                 + "AP.RATING AS APP_RATING, "
-                + "AP.DEVICE_TYPE_ID AS APP_DEVICE_TYPE_ID, "
+                + "AP.DEVICE_TYPE_ID AS APP_DEVICE_TYPE_ID "
                 + "FROM AP_APP AP "
                 + "INNER JOIN AP_APP_DEVICE_MODEL AD "
                 + "ON AP.ID = AD.APP_ID "
