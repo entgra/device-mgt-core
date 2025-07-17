@@ -344,12 +344,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
             sb.append(" AND ");
         }
         if (isFirmwareModelIdsProvided) {
-            if (requireMatchingDevices) {
-                sb.append("dfmm.FIRMWARE_MODEL_ID IN(").append(firmwareModelPlaceholders).append(")");
-            } else {
-                sb.append("dfmm.FIRMWARE_MODEL_ID NOT IN(").append(firmwareModelPlaceholders).append(")");
-            }
-            sb.append(" AND ");
+            sb.append("dfmm.FIRMWARE_MODEL_ID IN(").append(firmwareModelPlaceholders).append(")").append(" AND ");
         }
 
         if (searchFilter.getFirmwareModelName() != null && !searchFilter.getFirmwareModelName().isEmpty()) {

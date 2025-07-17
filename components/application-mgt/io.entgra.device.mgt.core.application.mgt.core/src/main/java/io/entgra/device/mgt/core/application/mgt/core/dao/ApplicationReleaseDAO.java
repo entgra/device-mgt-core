@@ -171,7 +171,7 @@ public interface ApplicationReleaseDAO {
      */
     List<ApplicationReleaseDTO> getAppReleasesAfterVersion(int appId, String version, String status, String appReleaseType, int tenantId) throws ApplicationManagementDAOException;
 
-    List<ApplicationReleaseDTO> getAppReleasesBeforeVersion(int appId, String version, String status, String appReleaseType, int tenantId) throws ApplicationManagementDAOException;
+    List<ApplicationReleaseDTO> getAppReleasesBeforeVersion(int appId, String version, String status, int tenantId) throws ApplicationManagementDAOException;
 
     /**
      * Retrieves the version of the latest installed application release for the given application ID and tenant.
