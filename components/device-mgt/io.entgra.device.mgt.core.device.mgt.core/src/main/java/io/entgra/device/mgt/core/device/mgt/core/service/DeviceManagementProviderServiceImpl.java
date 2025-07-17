@@ -500,10 +500,10 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public DeviceFirmwareModel addDeviceFirmwareModel(Device device, String firmwareModel, int tenantId)
+    public DeviceFirmwareModel addDeviceFirmwareModel(Device device, String firmwareModelName, int tenantId)
             throws DeviceManagementException {
         if (log.isDebugEnabled()) {
-            log.debug("Adding firmware model '" + firmwareModel + "' for device: " + device.getId());
+            log.debug("Adding firmware model '" + firmwareModelName + "' for device: " + device.getId());
         }
 
         if (device == null || device.getId() == 0) {
@@ -511,18 +511,24 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             log.error(msg);
             throw new DeviceManagementException(msg);
         }
-        DeviceFirmwareModel deviceFirmware;
+        DeviceFirmwareModel firmwareModel;
         DeviceType deviceType = this.getDeviceType(device.getType());
         try {
             DeviceManagementDAOFactory.beginTransaction();
-            deviceFirmware = firmwareDAO.getExistingFirmwareModel(firmwareModel, tenantId);
-            if (deviceFirmware != null) {
-                firmwareDAO.addDeviceFirmwareMapping(device.getId(), deviceFirmware.getFirmwareId(), tenantId);
+            DeviceFirmwareModel deviceFirmwareModel = firmwareDAO.getDeviceFirmwareModel(device.getId(), tenantId);
+            if (deviceFirmwareModel != null) {
+                log.warn("Firmware model '" + firmwareModelName + "' already exists for device: " + device.getId());
+                return deviceFirmwareModel;
+            }
+
+            firmwareModel = firmwareDAO.getExistingFirmwareModel(firmwareModelName, tenantId);
+            if (firmwareModel != null) {
+                firmwareDAO.addDeviceFirmwareMapping(device.getId(), firmwareModel.getFirmwareId(), tenantId);
             } else {
-                deviceFirmware = firmwareDAO.addFirmwareModel(new DeviceFirmwareModel(firmwareModel, null),
+                firmwareModel = firmwareDAO.addFirmwareModel(new DeviceFirmwareModel(firmwareModelName, null),
                         tenantId, deviceType.getId());
-                if (deviceFirmware.getFirmwareId() > -1) {
-                    firmwareDAO.addDeviceFirmwareMapping(device.getId(), deviceFirmware.getFirmwareId(), tenantId);
+                if (firmwareModel.getFirmwareId() > -1) {
+                    firmwareDAO.addDeviceFirmwareMapping(device.getId(), firmwareModel.getFirmwareId(), tenantId);
                 }
             }
             DeviceManagementDAOFactory.commitTransaction();
@@ -540,7 +546,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             DeviceManagementDAOFactory.closeConnection();
         }
 
-        return deviceFirmware;
+        return firmwareModel;
     }
 
     @Override
