@@ -225,14 +225,14 @@ public class FirmwareDAOImpl implements FirmwareDAO {
 
     @Override
     public List<Device> getFilteredDevicesByFirmwareVersion(DeviceFirmwareModelSearchFilter searchFilter,
-                                                            int tenantId, boolean requireMatchingDevices, String username)
+                                                            int tenantId, boolean requireMatchingDevices, List<String> usersList)
             throws DeviceManagementDAOException {
 
         List<Device> devices = new ArrayList<>();
         Device device;
         EnrolmentInfo enrolmentInfo;
         String sql = this.getBaseQuery(QueryType.SELECT);
-        try (PreparedStatement stmt = this.buildFilteredQuery(sql, searchFilter, tenantId, requireMatchingDevices, username);
+        try (PreparedStatement stmt = this.buildFilteredQuery(sql, searchFilter, tenantId, requireMatchingDevices, usersList);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 device = new Device();
@@ -259,12 +259,12 @@ public class FirmwareDAOImpl implements FirmwareDAO {
 
     @Override
     public int getCountOfFilteredDevicesByFirmwareVersion(DeviceFirmwareModelSearchFilter searchFilter,
-                                                          int tenantId, boolean requireMatchingDevices, String username)
+                                                          int tenantId, boolean requireMatchingDevices, List<String> usersList)
             throws DeviceManagementDAOException {
 
         int recordsTotal = 0;
         String sql = getBaseQuery(QueryType.COUNT);
-        try(PreparedStatement stmt = buildFilteredQuery(sql, searchFilter, tenantId, requireMatchingDevices, username);
+        try(PreparedStatement stmt = buildFilteredQuery(sql, searchFilter, tenantId, requireMatchingDevices, usersList);
             ResultSet rs = stmt.executeQuery()) {
             if (rs.next()) {
                 recordsTotal = rs.getInt("RECORDS_TOTAL");
@@ -308,7 +308,7 @@ public class FirmwareDAOImpl implements FirmwareDAO {
     }
 
     private PreparedStatement buildFilteredQuery(String sql, DeviceFirmwareModelSearchFilter searchFilter,
-                                                 int tenantId, boolean requireMatchingDevices, String username) throws SQLException {
+                                                 int tenantId, boolean requireMatchingDevices, List<String> usersList) throws SQLException {
         Connection conn;
         boolean isFirmwareVersionsProvided = false;
         boolean isFirmwareModelIdsProvided = false;
@@ -392,7 +392,13 @@ public class FirmwareDAOImpl implements FirmwareDAO {
             }
             sb.append(" AND ");
         }
-        sb.append("de.STATUS IN('ACTIVE', 'INACTIVE', 'UNREACHABLE') AND de.OWNER = ? AND dfmm.TENANT_ID = ? LIMIT ? OFFSET ?");
+        sb.append("de.OWNER IN(");
+        String usersPlaceholders = null;
+        if(usersList != null && !usersList.isEmpty()) {
+            usersPlaceholders = String.join(", ", Collections.nCopies(usersList.size(), "?"));
+        }
+        sb.append(usersPlaceholders).append(") AND ");
+        sb.append("de.STATUS IN('ACTIVE', 'INACTIVE', 'UNREACHABLE') AND dfmm.TENANT_ID = ? LIMIT ? OFFSET ?");
 
         conn = this.getConnection();
         int index = 1;
@@ -424,7 +430,9 @@ public class FirmwareDAOImpl implements FirmwareDAO {
                 stmt.setString(index++, "%" + entry.getValue() + "%");
             }
         }
-        stmt.setString(index++, username);
+        for (String username : usersList) {
+            stmt.setString(index++, username);
+        }
         stmt.setInt(index++, tenantId);
         stmt.setInt(index++, searchFilter.getLimit());
         stmt.setInt(index, searchFilter.getOffset());

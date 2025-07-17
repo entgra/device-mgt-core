@@ -160,6 +160,7 @@ import io.entgra.device.mgt.core.transport.mgt.email.sender.core.service.EmailSe
 import org.wso2.carbon.stratos.common.beans.TenantInfoBean;
 import org.wso2.carbon.tenant.mgt.services.TenantMgtAdminService;
 import org.wso2.carbon.user.api.UserStoreException;
+import org.wso2.carbon.user.api.UserStoreManager;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 
 import javax.xml.bind.JAXBContext;
@@ -5994,7 +5995,22 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             log.debug("Retrieving filtered device list by firmware version with search filter: " + searchFilter +
                     ", tenant ID: " + tenantId + ", requireMatchingDevices: " + requireMatchingDevices);
         }
+
         String userName = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
+        List<String> usersList = new ArrayList<>();
+        try {
+            UserStoreManager userStoreManager = DeviceManagementDataHolder.getInstance().getRealmService().getTenantUserRealm(tenantId)
+                    .getUserStoreManager();
+            String[] roleListOfUser = userStoreManager.getRoleListOfUser(userName);
+            for (String role : roleListOfUser) {
+                String[] userListOfRole = userStoreManager.getUserListOfRole(role);
+                usersList.addAll(Arrays.asList(userListOfRole));
+            }
+        } catch (UserStoreException e) {
+            String msg = "Error occurred while retrieving user roles for user: " + userName;
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        }
 
         if(searchFilter.getOffset() < 0 || searchFilter.getLimit() <= 0) {
             String msg = "Invalid pagination parameters in DeviceFirmwareModelSearchFilter: " + searchFilter;
@@ -6007,8 +6023,8 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         int totalRecords;
         try {
             DeviceManagementDAOFactory.openConnection();
-            filteredDevices = firmwareDAO.getFilteredDevicesByFirmwareVersion(searchFilter, tenantId, requireMatchingDevices, userName);
-            totalRecords = firmwareDAO.getCountOfFilteredDevicesByFirmwareVersion(searchFilter, tenantId, requireMatchingDevices, userName);
+            filteredDevices = firmwareDAO.getFilteredDevicesByFirmwareVersion(searchFilter, tenantId, requireMatchingDevices, usersList);
+            totalRecords = firmwareDAO.getCountOfFilteredDevicesByFirmwareVersion(searchFilter, tenantId, requireMatchingDevices, usersList);
         } catch (DeviceManagementDAOException e) {
             String msg = "Error occurred while retrieving filtered device list using device firmware model search filters";
             log.error(msg, e);
