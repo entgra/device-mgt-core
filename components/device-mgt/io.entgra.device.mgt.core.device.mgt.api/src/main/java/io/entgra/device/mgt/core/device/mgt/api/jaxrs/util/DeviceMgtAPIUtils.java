@@ -18,10 +18,10 @@
 
 package io.entgra.device.mgt.core.device.mgt.api.jaxrs.util;
 
-import io.entgra.device.mgt.core.apimgt.webapp.publisher.APIPublisherService;
 import io.entgra.device.mgt.core.apimgt.application.extension.APIManagementProviderService;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.APIApplicationServices;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.ConsumerRESTAPIServices;
+import io.entgra.device.mgt.core.apimgt.webapp.publisher.APIPublisherService;
 import io.entgra.device.mgt.core.application.mgt.common.services.ApplicationManager;
 import io.entgra.device.mgt.core.application.mgt.common.services.SubscriptionManager;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceTypeVersionWrapper;
@@ -30,9 +30,15 @@ import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.OperationStatusBean;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.analytics.EventAttributeList;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.InputValidationException;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.RequestValidationUtil;
+import io.entgra.device.mgt.core.device.mgt.common.Device;
+import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
+import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo;
+import io.entgra.device.mgt.core.device.mgt.common.MonitoringOperation;
+import io.entgra.device.mgt.core.device.mgt.common.OperationMonitoringTaskConfig;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.GroupAccessAuthorizationService;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManagerServiceImpl;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceFeatureOperations;
 import io.entgra.device.mgt.core.device.mgt.core.service.TagManagementProviderService;
 import io.entgra.device.mgt.core.tenant.mgt.common.spi.TenantManagerAdminService;
 import org.apache.axis2.AxisFault;
@@ -52,7 +58,6 @@ import org.wso2.carbon.base.ServerConfiguration;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.core.util.Utils;
-import io.entgra.device.mgt.core.device.mgt.common.*;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationException;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationService;
 import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.ConfigurationEntry;
@@ -81,6 +86,8 @@ import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionUtils;
 import io.entgra.device.mgt.core.device.mgt.core.privacy.PrivacyComplianceProvider;
 import io.entgra.device.mgt.core.device.mgt.core.search.mgt.SearchManagerService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeEventManagementProviderService;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeStatisticManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.service.GroupManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.traccar.api.service.DeviceAPIClientService;
 import io.entgra.device.mgt.core.identity.jwt.client.extension.JWTClient;
@@ -103,7 +110,11 @@ import org.wso2.carbon.identity.user.store.count.exception.UserStoreCounterExcep
 import org.wso2.carbon.identity.user.store.count.jdbc.JDBCCountRetrieverFactory;
 import org.wso2.carbon.identity.user.store.count.jdbc.internal.InternalCountRetrieverFactory;
 import org.wso2.carbon.registry.core.service.RegistryService;
-import org.wso2.carbon.user.api.*;
+import org.wso2.carbon.user.api.AuthorizationManager;
+import org.wso2.carbon.user.api.RealmConfiguration;
+import org.wso2.carbon.user.api.UserRealm;
+import org.wso2.carbon.user.api.UserStoreException;
+import org.wso2.carbon.user.api.UserStoreManager;
 import org.wso2.carbon.user.core.jdbc.JDBCUserStoreManager;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.user.mgt.common.UIPermissionNode;
@@ -116,7 +127,11 @@ import javax.net.ssl.TrustManagerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.*;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -169,6 +184,10 @@ public class DeviceMgtAPIUtils {
     private static volatile APIPublisherService apiPublisher;
     private static volatile TenantManagerAdminService tenantManagerAdminService;
     private static volatile TagManagementProviderService tagManagementService;
+    private static volatile DeviceTypeEventManagementProviderService deviceTypeEventManagementProviderService;
+    private static volatile DeviceTypeStatisticManagementProviderService deviceTypeStatisticManagementProviderService;
+    private static volatile DeviceFeatureOperations deviceFeatureOperations;
+
     static {
         String keyStorePassword = ServerConfiguration.getInstance().getFirstProperty("Security.KeyStore.Password");
         String trustStorePassword = ServerConfiguration.getInstance().getFirstProperty(
@@ -185,7 +204,7 @@ public class DeviceMgtAPIUtils {
             //Create the SSL context with the loaded TrustStore/keystore.
             initSSLConnection();
         } catch (KeyStoreException | IOException | CertificateException | NoSuchAlgorithmException
-                | UnrecoverableKeyException | KeyManagementException e) {
+                 | UnrecoverableKeyException | KeyManagementException e) {
             log.error("publishing dynamic event receiver is failed due to  " + e.getMessage(), e);
         }
     }
@@ -319,7 +338,7 @@ public class DeviceMgtAPIUtils {
         RealmService realmService = (RealmService) ctx.getOSGiService(RealmService.class, null);
         RealmConfiguration realmConfiguration = realmService.getBootstrapRealmConfiguration();
         String userStoreType;
-        if(DeviceMgtAPIUtils.getUserStoreManager() instanceof JDBCUserStoreManager) {
+        if (DeviceMgtAPIUtils.getUserStoreManager() instanceof JDBCUserStoreManager) {
             userStoreType = JDBCCountRetrieverFactory.JDBC;
         } else {
             userStoreType = InternalCountRetrieverFactory.INTERNAL;
@@ -360,6 +379,7 @@ public class DeviceMgtAPIUtils {
         }
         return groupAccessAuthorizationService;
     }
+
     public static GroupManagementProviderService getGroupManagementProviderService() {
         PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
         GroupManagementProviderService groupManagementProviderService =
@@ -587,6 +607,51 @@ public class DeviceMgtAPIUtils {
         return tagManagementService;
     }
 
+
+    /**
+     * Initializing and accessing method for DeviceTypeEventManagementProviderService.
+     *
+     * @return DeviceTypeEventManagementProviderService instance
+     * @throws IllegalStateException if DeviceTypeEventManagementProviderService cannot be initialized
+     */
+    public static DeviceTypeEventManagementProviderService getDeviceTypeEventManagementProviderService() {
+        if (deviceTypeEventManagementProviderService == null) {
+            synchronized (DeviceMgtAPIUtils.class) {
+                if (deviceTypeEventManagementProviderService == null) {
+                    PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+                    deviceTypeEventManagementProviderService = (DeviceTypeEventManagementProviderService) ctx.getOSGiService(
+                            DeviceTypeEventManagementProviderService.class, null);
+                    if (deviceTypeEventManagementProviderService == null) {
+                        throw new IllegalStateException("Device Type Event Management service not initialized.");
+                    }
+                }
+            }
+        }
+        return deviceTypeEventManagementProviderService;
+    }
+
+    /**
+     * Initializing and accessing method for DeviceTypeStatisticManagementProviderService.
+     *
+     * @return DeviceTypeStatisticManagementProviderService instance
+     * @throws IllegalStateException if DeviceTypeStatisticManagementProviderService cannot be initialized
+     */
+    public static DeviceTypeStatisticManagementProviderService getDeviceTypeStatisticManagementProviderService() {
+        if (deviceTypeStatisticManagementProviderService == null) {
+            synchronized (DeviceMgtAPIUtils.class) {
+                if (deviceTypeStatisticManagementProviderService == null) {
+                    PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+                    deviceTypeStatisticManagementProviderService = (DeviceTypeStatisticManagementProviderService) ctx.getOSGiService(
+                            DeviceTypeStatisticManagementProviderService.class, null);
+                    if (deviceTypeStatisticManagementProviderService == null) {
+                        throw new IllegalStateException("Device Type Event Management service not initialized.");
+                    }
+                }
+            }
+        }
+        return deviceTypeStatisticManagementProviderService;
+    }
+
     public static PlatformConfigurationManagementService getPlatformConfigurationManagementService() {
         PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
         PlatformConfigurationManagementService tenantConfigurationManagementService =
@@ -677,6 +742,7 @@ public class DeviceMgtAPIUtils {
 
     /**
      * Method for initializing ReportManagementService
+     *
      * @return ReportManagementServie Instance
      */
     public static ReportManagementService getReportManagementService() {
@@ -821,6 +887,7 @@ public class DeviceMgtAPIUtils {
     public static String getStreamDefinition(String deviceType, String tenantDomain) {
         return STREAM_DEFINITION_PREFIX + tenantDomain + "." + deviceType.replace(" ", ".");
     }
+
     public static EventStreamAdminServiceStub getEventStreamAdminServiceStub()
             throws AxisFault, UserStoreException, JWTClientException {
         EventStreamAdminServiceStub eventStreamAdminServiceStub = new EventStreamAdminServiceStub(
@@ -959,7 +1026,7 @@ public class DeviceMgtAPIUtils {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
         String username = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUserRealm()
-                                  .getRealmConfiguration().getAdminUserName() + "@" + tenantDomain;
+                .getRealmConfiguration().getAdminUserName() + "@" + tenantDomain;
         // Create the SSL context with the loaded TrustStore/keystore.
         JWTClient jwtClient = getJWTClientManagerService().getJWTClient();
 
@@ -1062,8 +1129,8 @@ public class DeviceMgtAPIUtils {
         String adminRoleName = realmService.getRealmConfiguration().getAdminRoleName();
         String userName = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
         String[] roles = realmService.getUserStoreManager().getRoleListOfUser(userName);
-        for (String role: roles){
-            if (role != null && role.equals(adminRoleName)){
+        for (String role : roles) {
+            if (role != null && role.equals(adminRoleName)) {
                 return true;
             }
         }
@@ -1092,7 +1159,7 @@ public class DeviceMgtAPIUtils {
     }
 
     public static DeviceTypeVersion convertDeviceTypeVersionWrapper(String deviceTypeName, int deviceTypeId,
-            DeviceTypeVersionWrapper deviceTypeVersion) {
+                                                                    DeviceTypeVersionWrapper deviceTypeVersion) {
         DeviceTypeVersion typeVersion = new DeviceTypeVersion();
         typeVersion.setDeviceTypeId(deviceTypeId);
         typeVersion.setDeviceTypeName(deviceTypeName);
@@ -1103,8 +1170,9 @@ public class DeviceMgtAPIUtils {
 
     /**
      * Extract permissions from a UiPermissionNode using recursions
+     *
      * @param uiPermissionNode an UiPermissionNode Object to extract permissions
-     * @param list provided list to add permissions
+     * @param list             provided list to add permissions
      */
     public static void iteratePermissions(UIPermissionNode uiPermissionNode, List<String> list) {
         // To prevent NullPointer exceptions
@@ -1113,7 +1181,7 @@ public class DeviceMgtAPIUtils {
         }
         for (UIPermissionNode permissionNode : uiPermissionNode.getNodeList()) {
             if (permissionNode != null) {
-                if(permissionNode.isSelected()){
+                if (permissionNode.isSelected()) {
                     list.add(permissionNode.getResourcePath());
                 }
                 if (permissionNode.getNodeList() != null
@@ -1177,7 +1245,7 @@ public class DeviceMgtAPIUtils {
     /**
      * This method is used to set property name and value to ClaimPropertyDTO
      *
-     * @param propertyName Name of the property
+     * @param propertyName  Name of the property
      * @param propertyValue Value of the property
      * @return {@link ClaimPropertyDTO}
      */
@@ -1191,17 +1259,16 @@ public class DeviceMgtAPIUtils {
     /**
      * Getting Device History Snapshots for given Device Type and Identifier.
      *
-     * @param deviceType Device type of the device
-     * @param identifier Device identifier of the device
+     * @param deviceType     Device type of the device
+     * @param identifier     Device identifier of the device
      * @param authorizedUser user who initiates the request
-     * @param from time to start getting DeviceLocationHistorySnapshotWrapper in milliseconds
-     * @param to time to end getting DeviceLocationHistorySnapshotWrapper in milliseconds
-     * @param type output type should be for DeviceLocationHistorySnapshotWrapper
-     * @param dms DeviceManagementService instance
-     *
+     * @param from           time to start getting DeviceLocationHistorySnapshotWrapper in milliseconds
+     * @param to             time to end getting DeviceLocationHistorySnapshotWrapper in milliseconds
+     * @param type           output type should be for DeviceLocationHistorySnapshotWrapper
+     * @param dms            DeviceManagementService instance
      * @return DeviceLocationHistorySnapshotWrapper instance
-     * @throws DeviceManagementException if device information cannot be fetched
-     * @throws DeviceAccessAuthorizationException  if device authorization get failed
+     * @throws DeviceManagementException          if device information cannot be fetched
+     * @throws DeviceAccessAuthorizationException if device authorization get failed
      */
     public static DeviceLocationHistorySnapshotWrapper getDeviceHistorySnapshots(String deviceType,
                                                                                  String identifier,
@@ -1211,103 +1278,102 @@ public class DeviceMgtAPIUtils {
                                                                                  String type,
                                                                                  DeviceManagementProviderService dms)
             throws DeviceManagementException, DeviceAccessAuthorizationException {
-            RequestValidationUtil.validateDeviceIdentifier(deviceType, identifier);
-            DeviceIdentifier deviceIdentifier = new DeviceIdentifier(identifier, deviceType);
+        RequestValidationUtil.validateDeviceIdentifier(deviceType, identifier);
+        DeviceIdentifier deviceIdentifier = new DeviceIdentifier(identifier, deviceType);
 
-            String requiredPermission = PermissionManagerServiceImpl.getInstance().getRequiredPermission();
-            String[] requiredPermissions = new String[] {requiredPermission};
-            if (!getDeviceAccessAuthorizationService().isUserAuthorized(deviceIdentifier, authorizedUser, requiredPermissions)) {
-                String msg = "User '" + authorizedUser + "' is not authorized to retrieve the given device id '" +
-                        identifier + "'";
-                log.error(msg);
-                throw new UnAuthorizedException(msg);
+        String requiredPermission = PermissionManagerServiceImpl.getInstance().getRequiredPermission();
+        String[] requiredPermissions = new String[]{requiredPermission};
+        if (!getDeviceAccessAuthorizationService().isUserAuthorized(deviceIdentifier, authorizedUser, requiredPermissions)) {
+            String msg = "User '" + authorizedUser + "' is not authorized to retrieve the given device id '" +
+                    identifier + "'";
+            log.error(msg);
+            throw new UnAuthorizedException(msg);
+        }
+
+        // Get the location history snapshots for the given period
+        List<DeviceLocationHistorySnapshot> deviceLocationHistorySnapshots = dms.getDeviceLocationInfo(deviceIdentifier, from, to);
+
+        OperationMonitoringTaskConfig operationMonitoringTaskConfig = dms.getDeviceMonitoringConfig(deviceType);
+        int taskFrequency = operationMonitoringTaskConfig.getFrequency();
+        int operationRecurrentTimes = 0;
+
+        List<MonitoringOperation> monitoringOperations = operationMonitoringTaskConfig.getMonitoringOperation();
+        for (MonitoringOperation monitoringOperation : monitoringOperations) {
+            if (monitoringOperation.getTaskName().equals("DEVICE_LOCATION")) {
+                operationRecurrentTimes = monitoringOperation.getRecurrentTimes();
+                break;
             }
+        }
 
-            // Get the location history snapshots for the given period
-            List<DeviceLocationHistorySnapshot> deviceLocationHistorySnapshots = dms.getDeviceLocationInfo(deviceIdentifier, from, to);
+        // Device Location operation frequency in milliseconds. Adding 100000 ms as an error
+        long operationFrequency = taskFrequency * operationRecurrentTimes + 100000;
+        Queue<DeviceLocationHistorySnapshot> deviceLocationHistorySnapshotsQueue = new LinkedList<>(
+                deviceLocationHistorySnapshots);
+        List<List<DeviceLocationHistorySnapshot>> locationHistorySnapshotList = new ArrayList<>();
 
-            OperationMonitoringTaskConfig operationMonitoringTaskConfig = dms.getDeviceMonitoringConfig(deviceType);
-            int taskFrequency = operationMonitoringTaskConfig.getFrequency();
-            int operationRecurrentTimes = 0;
+        List<Object> pathsArray = new ArrayList<>();
+        DeviceLocationHistorySnapshotWrapper snapshotWrapper = new DeviceLocationHistorySnapshotWrapper();
+        while (!deviceLocationHistorySnapshotsQueue.isEmpty()) {
+            List<DeviceLocationHistorySnapshot> snapshots = new ArrayList<>();
+            // Make a copy of remaining snapshots
+            List<DeviceLocationHistorySnapshot> cachedSnapshots = new ArrayList<>(
+                    deviceLocationHistorySnapshotsQueue);
 
-            List<MonitoringOperation> monitoringOperations = operationMonitoringTaskConfig.getMonitoringOperation();
-            for (MonitoringOperation monitoringOperation : monitoringOperations) {
-                if (monitoringOperation.getTaskName().equals("DEVICE_LOCATION")) {
-                    operationRecurrentTimes = monitoringOperation.getRecurrentTimes();
-                    break;
+            List<Object> locationPoint = new ArrayList<>();
+            for (int i = 0; i < cachedSnapshots.size(); i++) {
+                DeviceLocationHistorySnapshot currentSnapshot = deviceLocationHistorySnapshotsQueue.poll();
+                snapshots.add(currentSnapshot);
+                if (currentSnapshot != null) {
+                    locationPoint.add(currentSnapshot.getLatitude());
+                    locationPoint.add(currentSnapshot.getLongitude());
+                    locationPoint.add(currentSnapshot.getUpdatedTime());
+                    pathsArray.add(new ArrayList<>(locationPoint));
+                    locationPoint.clear();
                 }
-            }
-
-            // Device Location operation frequency in milliseconds. Adding 100000 ms as an error
-            long operationFrequency = taskFrequency * operationRecurrentTimes + 100000;
-            Queue<DeviceLocationHistorySnapshot> deviceLocationHistorySnapshotsQueue = new LinkedList<>(
-                    deviceLocationHistorySnapshots);
-            List<List<DeviceLocationHistorySnapshot>> locationHistorySnapshotList = new ArrayList<>();
-
-            List<Object> pathsArray = new ArrayList<>();
-            DeviceLocationHistorySnapshotWrapper snapshotWrapper = new DeviceLocationHistorySnapshotWrapper();
-            while (!deviceLocationHistorySnapshotsQueue.isEmpty()) {
-                List<DeviceLocationHistorySnapshot> snapshots = new ArrayList<>();
-                // Make a copy of remaining snapshots
-                List<DeviceLocationHistorySnapshot> cachedSnapshots = new ArrayList<>(
-                        deviceLocationHistorySnapshotsQueue);
-
-                List<Object> locationPoint = new ArrayList<>();
-                for (int i = 0; i < cachedSnapshots.size(); i++) {
-                    DeviceLocationHistorySnapshot currentSnapshot = deviceLocationHistorySnapshotsQueue.poll();
-                    snapshots.add(currentSnapshot);
-                    if (currentSnapshot != null) {
-                        locationPoint.add(currentSnapshot.getLatitude());
-                        locationPoint.add(currentSnapshot.getLongitude());
-                        locationPoint.add(currentSnapshot.getUpdatedTime());
-                        pathsArray.add(new ArrayList<>(locationPoint));
-                        locationPoint.clear();
+                if (!deviceLocationHistorySnapshotsQueue.isEmpty()) {
+                    DeviceLocationHistorySnapshot nextSnapshot = deviceLocationHistorySnapshotsQueue.peek();
+                    locationPoint.add(nextSnapshot.getLatitude());
+                    locationPoint.add(nextSnapshot.getLongitude());
+                    locationPoint.add(nextSnapshot.getUpdatedTime());
+                    pathsArray.add(new ArrayList<>(locationPoint));
+                    locationPoint.clear();
+                    if (nextSnapshot.getUpdatedTime().getTime() - currentSnapshot.getUpdatedTime().getTime()
+                            > operationFrequency) {
+                        break;
                     }
-                    if (!deviceLocationHistorySnapshotsQueue.isEmpty()) {
-                        DeviceLocationHistorySnapshot nextSnapshot = deviceLocationHistorySnapshotsQueue.peek();
-                        locationPoint.add(nextSnapshot.getLatitude());
-                        locationPoint.add(nextSnapshot.getLongitude());
-                        locationPoint.add(nextSnapshot.getUpdatedTime());
-                        pathsArray.add(new ArrayList<>(locationPoint));
-                        locationPoint.clear();
-                        if (nextSnapshot.getUpdatedTime().getTime() - currentSnapshot.getUpdatedTime().getTime()
-                                > operationFrequency) {
-                            break;
-                        }
-                    }
                 }
-                locationHistorySnapshotList.add(snapshots);
             }
-            DeviceLocationHistory deviceLocationHistory = new DeviceLocationHistory();
-            deviceLocationHistory.setLocationHistorySnapshots(locationHistorySnapshotList);
-            if (type != null) {
-                if (type.equals("path")) {
-                    snapshotWrapper.setPathSnapshot(pathsArray);
-                } else if (type.equals("full")) {
-                    snapshotWrapper.setFullSnapshot(deviceLocationHistory);
-                } else {
-                    String msg = "Invalid type, use either 'path' or 'full'";
-                    log.error(msg);
-                    throw new BadRequestException(msg);
-                }
-            } else {
+            locationHistorySnapshotList.add(snapshots);
+        }
+        DeviceLocationHistory deviceLocationHistory = new DeviceLocationHistory();
+        deviceLocationHistory.setLocationHistorySnapshots(locationHistorySnapshotList);
+        if (type != null) {
+            if (type.equals("path")) {
+                snapshotWrapper.setPathSnapshot(pathsArray);
+            } else if (type.equals("full")) {
                 snapshotWrapper.setFullSnapshot(deviceLocationHistory);
+            } else {
+                String msg = "Invalid type, use either 'path' or 'full'";
+                log.error(msg);
+                throw new BadRequestException(msg);
             }
-            return snapshotWrapper;
+        } else {
+            snapshotWrapper.setFullSnapshot(deviceLocationHistory);
+        }
+        return snapshotWrapper;
     }
 
     /**
      * Check user who initiates the request has permission to list devices from given group Id.
      *
-     * @param groupId Group ID of the group
+     * @param groupId        Group ID of the group
      * @param authorizedUser user who initiates the request
-     *
      * @return boolean instance
-     * @throws UserStoreException if roles list of authorizedUser cannot be fetched
+     * @throws UserStoreException                 if roles list of authorizedUser cannot be fetched
      * @throws DeviceAccessAuthorizationException if device authorization get failed.
-     * @throws GroupManagementException if group or roles cannot be fetched using groupId
+     * @throws GroupManagementException           if group or roles cannot be fetched using groupId
      */
-    public static boolean checkPermission(int groupId, String authorizedUser) throws UserStoreException, DeviceAccessAuthorizationException, GroupManagementException  {
+    public static boolean checkPermission(int groupId, String authorizedUser) throws UserStoreException, DeviceAccessAuthorizationException, GroupManagementException {
         int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
         UserStoreManager userStoreManager = DeviceMgtAPIUtils.getRealmService()
                 .getTenantUserRealm(tenantId).getUserStoreManager();
@@ -1334,8 +1400,8 @@ public class DeviceMgtAPIUtils {
         return isPermitted;
     }
 
-    public static TenantManagerAdminService getTenantManagerAdminService(){
-        if(tenantManagerAdminService == null) {
+    public static TenantManagerAdminService getTenantManagerAdminService() {
+        if (tenantManagerAdminService == null) {
             synchronized (DeviceMgtAPIUtils.class) {
                 if (tenantManagerAdminService == null) {
                     tenantManagerAdminService = (TenantManagerAdminService) PrivilegedCarbonContext.getThreadLocalCarbonContext().
@@ -1349,5 +1415,27 @@ public class DeviceMgtAPIUtils {
             }
         }
         return tenantManagerAdminService;
+    }
+
+    /**
+     * Initializing and accessing method for DeviceFeatureOperations.
+     *
+     * @return DeviceFeatureOperations instance
+     * @throws IllegalStateException if DeviceFeatureOperations cannot be initialized
+     */
+    public static DeviceFeatureOperations getDeviceFeatureOperations() {
+        if (deviceFeatureOperations == null) {
+            synchronized (DeviceMgtAPIUtils.class) {
+                if (deviceFeatureOperations == null) {
+                    PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+                    deviceFeatureOperations = (DeviceFeatureOperations) ctx.getOSGiService(
+                            DeviceFeatureOperations.class, null);
+                    if (deviceFeatureOperations == null) {
+                        throw new IllegalStateException("DeviceStatusManagementService Management service not initialized.");
+                    }
+                }
+            }
+        }
+        return deviceFeatureOperations;
     }
 }

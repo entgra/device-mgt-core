@@ -20,6 +20,7 @@ package io.entgra.device.mgt.core.device.mgt.core.internal;
 
 import io.entgra.device.mgt.core.device.mgt.common.DeviceStatusTaskPluginConfig;
 import io.entgra.device.mgt.core.device.mgt.common.OperationMonitoringTaskConfig;
+import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.config.DeviceConfigurationManager;
 import io.entgra.device.mgt.core.device.mgt.core.config.DeviceManagementConfig;
 import io.entgra.device.mgt.core.device.mgt.core.config.datasource.DataSourceConfig;
@@ -224,5 +225,25 @@ public class DeviceTaskManagerServiceComponent {
             log.debug("Removing the task service.");
         }
         DeviceManagementDataHolder.getInstance().setTaskService(null);
+    }
+
+    @Reference(
+            name = "notification.management.service",
+            service = NotificationManagementService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetNotificationManagementService")
+    protected void setNotificationManagementService(NotificationManagementService notificationManagementService) {
+        if (log.isDebugEnabled()) {
+            log.debug("Setting the NotificationManagementService.");
+        }
+        DeviceManagementDataHolder.getInstance().setNotificationManagementService(notificationManagementService);
+    }
+
+    protected void unsetNotificationManagementService(NotificationManagementService notificationManagementService) {
+        if (log.isDebugEnabled()) {
+            log.debug("Unsetting the NotificationManagementService.");
+        }
+        DeviceManagementDataHolder.getInstance().setNotificationManagementService(null);
     }
 }

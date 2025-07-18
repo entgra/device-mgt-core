@@ -58,4 +58,33 @@ public interface TenantManager {
      */
     void deleteTenantDeviceData(int tenantId) throws TenantMgtException;
 
+    /**
+     * Publishes scopes to the specified tenant.
+     *
+     * @param tenantDomain The domain of the tenant to which the scopes should be published.
+     * @throws TenantMgtException If an error occurs while publishing the scopes.
+     */
+    void publishScopesToTenant(String tenantDomain) throws TenantMgtException;
+
+    /**
+     * Retrieves the tenant domain associated with the given tenant ID.
+     *
+     * @param tenantId The ID of the tenant.
+     * @return The domain name of the tenant.
+     * @throws TenantMgtException If there is an issue retrieving the tenant domain.
+     */
+    String getTenantDomain(int tenantId) throws TenantMgtException;
+
+    /**
+     * Adds the default notification archival configuration metadata for the newly created tenant.
+     * <p>
+     * This sets the default archival type (e.g., "DB") and archival period (e.g., "12 months")
+     * into the metadata storage under the notification configuration meta key. This ensures
+     * that each tenant starts with a sensible default if no specific configurations are present.
+     * </p>
+     *
+     * @param tenantInfoBean The tenant information object containing the new tenant's ID and domain.
+     * @throws TenantMgtException If an error occurs while initializing the metadata for the tenant.
+     */
+    void addDefaultNotificationArchivalMetadata(TenantInfoBean tenantInfoBean) throws TenantMgtException;
 }

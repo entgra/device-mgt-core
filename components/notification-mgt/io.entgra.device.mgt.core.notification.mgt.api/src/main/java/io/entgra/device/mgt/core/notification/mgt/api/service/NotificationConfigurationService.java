@@ -17,12 +17,12 @@
  */
 
 package io.entgra.device.mgt.core.notification.mgt.api.service;
+
 import io.entgra.device.mgt.core.apimgt.annotations.Scopes;
 import io.entgra.device.mgt.core.apimgt.annotations.Scope;
 import io.entgra.device.mgt.core.notification.mgt.api.beans.ErrorResponse;
 import io.entgra.device.mgt.core.notification.mgt.common.beans.NotificationConfig;
 import io.entgra.device.mgt.core.notification.mgt.common.beans.NotificationConfigurationList;
-import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationConfigurationServiceException;
 import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.ExtensionProperty;
@@ -34,9 +34,19 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.ResponseHeader;
-import javax.ws.rs.*;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 /**
  * Notification configurations related REST-API.
  */
@@ -47,7 +57,8 @@ import javax.ws.rs.core.Response;
                 extensions = {
                         @Extension(properties = {
                                 @ExtensionProperty(name = "name", value = "NotificationConfigurationManagement"),
-                                @ExtensionProperty(name = "context", value = "/api/notification-mgt/v1.0/notification-configuration")
+                                @ExtensionProperty(name = "context",
+                                        value = "/api/notification-mgt/v1.0/notification-configuration")
                         })
                 }
         ),
@@ -59,40 +70,42 @@ import javax.ws.rs.core.Response;
         scopes = {
                 @Scope(
                         name = "View Notification Configurations",
-                        description = "Create new notification configurations",
+                        description = "View notification configurations",
                         key = "dm:notificationConfig:view",
                         roles = {"Internal/devicemgt-user"},
-                        permissions = {"/device-mgt/notification-configurations/view"} //check
+                        permissions = {"/device-mgt/notifications/notification-configurations/view"}
                 ),
                 @Scope(
                         name = "Update Notification Configuration",
-                        description = "Update new notification configurations",
+                        description = "Update a notification configuration",
                         key = "dm:notificationConfig:update",
                         roles = {"Internal/devicemgt-user"},
-                        permissions = {"/device-mgt/notification-configurations/update"} //check
+                        permissions = {"/device-mgt/notifications/notification-configurations/update"}
                 ),
                 @Scope(
                         name = "Create Notification Configuration",
                         description = "Create new notification configurations",
                         key = "dm:notificationConfig:create",
                         roles = {"Internal/devicemgt-user"},
-                        permissions = {"/device-mgt/notification-configurations/create"} //check
+                        permissions = {"/device-mgt/notifications/notification-configurations/create"}
                 ),
                 @Scope(
                         name = "Delete Notification Configuration",
                         description = "Delete new notification configurations",
                         key = "dm:notificationConfig:delete",
                         roles = {"Internal/devicemgt-user"},
-                        permissions = {"/device-mgt/notification-configurations/delete"} //check
+                        permissions = {"/device-mgt/notifications/notification-configurations/delete"}
                 )
         }
 )
-@Api(value = "Notification Configuration Management",description = "Notification Configuration Management related operations can be found here.")
 @Path("/notification-configuration")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Api(value = "Notification Configuration Management",
+        description = "Notification Configuration Management related operations can be found here.")
 public interface NotificationConfigurationService {
     String SCOPE = "scope";
+
     @GET
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
@@ -103,7 +116,8 @@ public interface NotificationConfigurationService {
             extensions = {
                     @Extension(properties = {
                             @ExtensionProperty(name = SCOPE, value = "dm:notificationConfig:view"),
-                            @ExtensionProperty(name = "context", value = "/api/notification-mgt/v1.0/notification-configuration") //check
+                            @ExtensionProperty(name = "context",
+                                    value = "/api/notification-mgt/v1.0/notification-configuration")
                     })
             }
     )
@@ -112,8 +126,12 @@ public interface NotificationConfigurationService {
                     @ApiResponse(
                             code = 200,
                             message = "OK. \n Successfully retrieved notification configurations.",
-                            response = Response.class //check
+                            response = Response.class
                     ),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. \n Invalid request or validation error.",
+                            response = ErrorResponse.class),
                     @ApiResponse(
                             code = 404,
                             message = "Not Found. \n No configurations found for the tenant.",
@@ -136,15 +154,28 @@ public interface NotificationConfigurationService {
                     value = "The starting pagination index for the complete list of qualified items.",
                     required = false,
                     defaultValue = "0")
-            @QueryParam("offset")
-            int offset,
+            @QueryParam("offset") int offset,
             @ApiParam(
                     name = "limit",
                     value = "Provide how many notification configurations you require from the starting pagination index/offset.",
                     required = false,
                     defaultValue = "5")
-            @QueryParam("limit")
-            int limit);
+            @QueryParam("limit") int limit,
+            @ApiParam(
+                    name = "code",
+                    value = "Search notification configurations by code.",
+                    required = false)
+            @QueryParam("name") String code,
+            @ApiParam(
+                    name = "name",
+                    value = "Search notification configurations by name.",
+                    required = false)
+            @QueryParam("name") String name,
+            @ApiParam(
+                    name = "type",
+                    value = "Filter notification configurations by type.",
+                    required = false)
+            @QueryParam("type") String type);
 
 
     @POST
@@ -158,7 +189,8 @@ public interface NotificationConfigurationService {
             extensions = {
                     @Extension(properties = {
                             @ExtensionProperty(name = SCOPE, value = "dm:notificationConfig:create"),
-                            @ExtensionProperty(name = "context", value = "/api/device-mgt/v1.0/notification-configuration")
+                            @ExtensionProperty(name = "context",
+                                    value = "/api/notification-mgt/v1.0/notification-configuration")
                     })
             }
     )
@@ -174,13 +206,19 @@ public interface NotificationConfigurationService {
                                     ),
                                     @ResponseHeader(
                                             name = "Last-Modified",
-                                            description = "Date and time the resource was last modified.\nUsed by caches, or in conditional requests."
+                                            description = "Date and time the resource was last modified.\nUsed by caches," +
+                                                    " or in conditional requests."
                                     )
                             }
                     ),
                     @ApiResponse(
                             code = 400,
                             message = "Bad Request. \n Invalid configuration data received.",
+                            response = ErrorResponse.class
+                    ),
+                    @ApiResponse(
+                            code = 409,
+                            message = "Conflict. \n A configuration with the same parameters already exists.",
                             response = ErrorResponse.class
                     ),
                     @ApiResponse(
@@ -193,7 +231,8 @@ public interface NotificationConfigurationService {
     Response createNotificationConfig(
             @ApiParam(
                     name = "configurations",
-                    value = "A list of configuration objects representing the notification settings. This includes the type of notification, recipients, and other related metadata.",
+                    value = "A list of configuration objects representing the notification settings. " +
+                            "This includes the type of notification, recipients, and other related metadata.",
                     required = true
             )
             NotificationConfigurationList configurations
@@ -211,7 +250,8 @@ public interface NotificationConfigurationService {
             extensions = {
                     @Extension(properties = {
                             @ExtensionProperty(name = SCOPE, value = "dm:notificationConfig:update"),
-                            @ExtensionProperty(name = "context", value = "/api/device-mgt/v1.0/notification-configuration")
+                            @ExtensionProperty(name = "context",
+                                    value = "/api/notification-mgt/v1.0/notification-configuration")
                     })
             }
     )
@@ -228,7 +268,8 @@ public interface NotificationConfigurationService {
                                     ),
                                     @ResponseHeader(
                                             name = "Last-Modified",
-                                            description = "Date and time the resource was last modified.\nUsed by caches, or in conditional requests."
+                                            description = "Date and time the resource was last modified.\nUsed by caches," +
+                                                    " or in conditional requests."
                                     )
                             }
                     ),
@@ -237,6 +278,9 @@ public interface NotificationConfigurationService {
                             message = "Bad Request. \n Invalid configuration data received.",
                             response = ErrorResponse.class
                     ),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. \n The resource to be updated does not exist."),
                     @ApiResponse(
                             code = 500,
                             message = "Internal Server Error. \n Server error occurred while creating the configuration.",
@@ -248,7 +292,8 @@ public interface NotificationConfigurationService {
             @PathParam("configId") int configId,
             @ApiParam(
                     name = "configurations",
-                    value = "A list of configuration objects representing the notification settings. This includes the type of notification, recipients, and other related metadata.",
+                    value = "A list of configuration objects representing the notification settings. " +
+                            "This includes the type of notification, recipients, and other related metadata.",
                     required = true
             )
             NotificationConfig configuration
@@ -265,7 +310,8 @@ public interface NotificationConfigurationService {
             extensions = {
                     @Extension(properties = {
                             @ExtensionProperty(name = SCOPE, value = "dm:notificationConfig:view"),
-                            @ExtensionProperty(name = "context", value = "/api/notification-mgt/v1.0/notification-configuration/{id}")
+                            @ExtensionProperty(name = "context",
+                                    value = "/api/notification-mgt/v1.0/notification-configuration/{configId}")
                     })
             }
     )
@@ -282,7 +328,7 @@ public interface NotificationConfigurationService {
                     code = 500,
                     message = "Internal Server Error. \n Server error occurred while retrieving the configuration.",
                     response = ErrorResponse.class
-            ),  @ApiResponse(
+            ), @ApiResponse(
                     code = 400,
                     message = "Bad Request. \n Invalid configuration data received.",
                     response = ErrorResponse.class
@@ -290,25 +336,26 @@ public interface NotificationConfigurationService {
     )
     Response getNotificationConfig(
             @ApiParam(
-                    name = "id",
+                    name = "configId",
                     value = "config ID of the notification configuration to be retrieved.",
                     required = true
             )
             @PathParam("configId") int configId
-    ) ;
+    );
 
     @DELETE
     @Path("/{configId}")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "DELETE",
-            value = "delete Notification Configuration",
-            notes = "delete a notification configuration based on configuration ID ",
+            value = "Delete Notification Configuration",
+            notes = "Delete a notification configuration based on configuration ID ",
             tags = "Notification Configuration Management",
             extensions = {
                     @Extension(properties = {
                             @ExtensionProperty(name = SCOPE, value = "dm:notificationConfig:delete"),
-                            @ExtensionProperty(name = "context", value = "/api/notification-mgt/v1.0/notification-configuration")
+                            @ExtensionProperty(name = "context",
+                                    value = "/api/notification-mgt/v1.0/notification-configuration")
                     })
             }
     )
@@ -324,7 +371,8 @@ public interface NotificationConfigurationService {
                                     ),
                                     @ResponseHeader(
                                             name = "Last-Modified",
-                                            description = "Date and time the resource was last modified.\nUsed by caches, or in conditional requests."
+                                            description = "Date and time the resource was last modified.\nUsed by caches," +
+                                                    " or in conditional requests."
                                     )
                             }
                     ),
@@ -333,6 +381,9 @@ public interface NotificationConfigurationService {
                             message = "Bad Request. \n Invalid configuration data received.",
                             response = ErrorResponse.class
                     ),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. \n The resource to be deleted does not exist."),
                     @ApiResponse(
                             code = 500,
                             message = "Internal Server Error. \n Server error occurred while creating the configuration.",
@@ -347,7 +398,8 @@ public interface NotificationConfigurationService {
                     required = true
             )
             @PathParam("configId") int configId
-    ) ;
+    );
+
     @DELETE
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
@@ -358,11 +410,11 @@ public interface NotificationConfigurationService {
             extensions = {
                     @Extension(properties = {
                             @ExtensionProperty(name = SCOPE, value = "dm:notificationConfig:delete"),
-                            @ExtensionProperty(name = "context", value = "/api/notification-mgt/v1.0/notification-configuration")
+                            @ExtensionProperty(name = "context",
+                                    value = "/api/notification-mgt/v1.0/notification-configuration")
                     })
             }
     )
-
     @ApiResponses(
             value = {
                     @ApiResponse(
@@ -375,7 +427,8 @@ public interface NotificationConfigurationService {
                                     ),
                                     @ResponseHeader(
                                             name = "Last-Modified",
-                                            description = "Date and time the resource was last modified.\nUsed by caches, or in conditional requests."
+                                            description = "Date and time the resource was last modified.\nUsed by caches, " +
+                                                    "or in conditional requests."
                                     )
                             }
                     ),
@@ -385,6 +438,9 @@ public interface NotificationConfigurationService {
                             response = ErrorResponse.class
                     ),
                     @ApiResponse(
+                            code = 404,
+                            message = "Not Found. \n The resource to be deleted does not exist."),
+                    @ApiResponse(
                             code = 500,
                             message = "Internal Server Error. \n Server error occurred while creating the configuration.",
                             response = ErrorResponse.class
@@ -392,4 +448,63 @@ public interface NotificationConfigurationService {
             }
     )
     Response deleteNotificationConfigurations();
+
+    @PUT
+    @Path("/defaults")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "PUT",
+            value = "Update Default Archival Settings",
+            notes = "Sets the default archive type and duration for notifications that do not have" +
+                    " specific configurations.",
+            tags = "Notification Configuration Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = SCOPE, value = "dm:notificationConfig:update"),
+                            @ExtensionProperty(name = "context",
+                                    value = "/api/notification-mgt/v1.0/notification-configuration")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \nSuccessfully updated the default archival settings.",
+                            response = NotificationConfigurationList.class,
+                            responseHeaders = {
+                                    @ResponseHeader(
+                                            name = "Content-Type",
+                                            description = "The content type of the body"
+                                    ),
+                                    @ResponseHeader(
+                                            name = "Last-Modified",
+                                            description = "Date and time the resource was last modified. " +
+                                                    "Used by caches, or in conditional requests."
+                                    )
+                            }
+                    ),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. Invalid or missing archival settings provided.",
+                            response = ErrorResponse.class
+                    ),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. Failed to update the default archival " +
+                                    "settings due to a server error.",
+                            response = ErrorResponse.class
+                    )
+            }
+    )
+    Response updateDefaultArchiveSettings(
+            @ApiParam(
+                    name = "archiveDefaults",
+                    value = "DTO containing the default archive type and archive period (e.g., '6 days', '3 months').",
+                    required = true
+            )
+            NotificationConfigurationList archiveDefaults
+    );
 }

@@ -22,7 +22,7 @@
     <parent>
         <groupId>io.entgra.device.mgt.core</groupId>
         <artifactId>device-mgt</artifactId>
-        <version>7.0.3-SNAPSHOT</version>
+        <version>7.0.8-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -73,7 +73,8 @@
                         <Bundle-Description>Device Management Core Bundle</Bundle-Description>
                         <Private-Package>io.entgra.device.mgt.core.device.mgt.core.internal</Private-Package>
                         <Import-Package>
-                            com.fasterxml.jackson.databind;version="[2.14,3)",
+                            com.fasterxml.jackson.databind;version="${fasterxml.jackson.databind.version}",
+                            org.wso2.orbit.com.fasterxml.jackson.core.annotation;version="${jackson-annotations.version}"
                             com.google.common.collect;version="[32.1,33)";resolution:=optional,
                             com.google.common.reflect;version="[32.1,33)";resolution:=optional,
                             com.google.gson;version="[2.9,3)",
@@ -229,6 +230,7 @@
             <artifactId>org.apache.felix.scr.ds-annotations</artifactId>
             <scope>provided</scope>
         </dependency>
+
 		<dependency>
 			<groupId>io.entgra.org.scannotation</groupId>
 			<artifactId>scannotation</artifactId>
@@ -334,10 +336,8 @@
             <groupId>org.wso2.carbon.commons</groupId>
             <artifactId>org.wso2.carbon.ntask.core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
+
+
         <dependency>
             <groupId>commons-collections.wso2</groupId>
             <artifactId>commons-collections</artifactId>
@@ -454,6 +454,26 @@
         <dependency>
             <groupId>io.entgra.device.mgt.core</groupId>
             <artifactId>io.entgra.device.mgt.core.apimgt.extension.rest.api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.orbit.com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${jackson-annotations.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${fasterxml.jackson.databind.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-annotations</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.entgra.device.mgt.core</groupId>
+            <artifactId>io.entgra.device.mgt.core.notification.mgt.common</artifactId>
         </dependency>
     </dependencies>
 </project>

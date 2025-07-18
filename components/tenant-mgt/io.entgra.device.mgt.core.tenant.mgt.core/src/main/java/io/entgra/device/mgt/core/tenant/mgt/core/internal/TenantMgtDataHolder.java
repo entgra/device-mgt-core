@@ -17,8 +17,11 @@
  */
 package io.entgra.device.mgt.core.tenant.mgt.core.internal;
 
+import io.entgra.device.mgt.core.apimgt.extension.rest.api.APIApplicationServices;
+import io.entgra.device.mgt.core.apimgt.extension.rest.api.PublisherRESTAPIServices;
 import io.entgra.device.mgt.core.application.mgt.common.services.ApplicationManager;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
+import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationConfigService;
 import io.entgra.device.mgt.core.tenant.mgt.core.TenantManager;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.WhiteLabelManagementService;
 import org.wso2.carbon.user.core.service.RealmService;
@@ -35,7 +38,16 @@ public class TenantMgtDataHolder {
 
     private DeviceStatusManagementService deviceStatusManagementService;
 
+    private APIApplicationServices apiApplicationServices;
+
+    private PublisherRESTAPIServices publisherRESTAPIServices;
+
+    private NotificationConfigService notificationConfigService;
+
     public RealmService getRealmService() {
+        if (realmService == null) {
+            throw new IllegalStateException("RealmService is not initialized.");
+        }
         return realmService;
     }
 
@@ -77,5 +89,35 @@ public class TenantMgtDataHolder {
 
     public void setDeviceStatusManagementService(DeviceStatusManagementService deviceStatusManagementService) {
         this.deviceStatusManagementService = deviceStatusManagementService;
+    }
+
+    /**
+     * Retrieves the API Manager Publisher REST API Service instance from OSGI service context.
+     * @return {@link PublisherRESTAPIServices} API Manager Publisher REST API Service
+     */
+    public PublisherRESTAPIServices getPublisherRESTAPIServices() {
+        if (publisherRESTAPIServices == null) {
+            throw new IllegalStateException("API Manager Publisher REST API Service was not initialized.");
+        }
+        return publisherRESTAPIServices;
+    }
+
+    public void setPublisherRESTAPIServices(PublisherRESTAPIServices publisherRESTAPIServices) {
+        this.publisherRESTAPIServices = publisherRESTAPIServices;
+    }
+
+    /**
+     * Retrieves the API Manager Publisher REST API Service instance from OSGI service context.
+     * @return {@link PublisherRESTAPIServices} API Manager Publisher REST API Service
+     */
+    public NotificationConfigService getNotificationConfigService() {
+        if (notificationConfigService == null) {
+            throw new IllegalStateException("API Manager Publisher REST API Service was not initialized.");
+        }
+        return notificationConfigService;
+    }
+
+    public void setNotificationConfigService(NotificationConfigService notificationConfigService) {
+        this.notificationConfigService = notificationConfigService;
     }
 }

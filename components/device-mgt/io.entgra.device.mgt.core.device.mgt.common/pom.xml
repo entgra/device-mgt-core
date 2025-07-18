@@ -21,7 +21,7 @@
     <parent>
         <artifactId>device-mgt</artifactId>
         <groupId>io.entgra.device.mgt.core</groupId>
-        <version>7.0.3-SNAPSHOT</version>
+        <version>7.0.8-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -103,38 +103,6 @@
             <groupId>org.wso2.orbit.javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-            <version>4.3.24.RELEASE</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-            <version>4.3.24.RELEASE</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>javax.ws.rs-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.hk2.external</groupId>
-            <artifactId>javax.inject</artifactId>
-            <version>2.2.0-b21</version>
-            <scope>compile</scope>
-        </dependency>
-
-
     </dependencies>
 
 </project>

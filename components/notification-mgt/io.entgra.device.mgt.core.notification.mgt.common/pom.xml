@@ -21,7 +21,7 @@
     <parent>
         <groupId>io.entgra.device.mgt.core</groupId>
         <artifactId>notification-mgt</artifactId>
-        <version>7.0.3-SNAPSHOT</version>
+        <version>7.0.8-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -85,13 +85,19 @@
             <artifactId>swagger-annotations</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.entgra.device.mgt.core</groupId>
-            <artifactId>io.entgra.device.mgt.core.device.mgt.core</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.wso2.orbit.com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>2.3.3</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon</groupId>
+            <artifactId>org.wso2.carbon.user.api</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

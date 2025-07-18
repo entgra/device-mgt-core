@@ -1,93 +1,77 @@
+/*
+ * Copyright (c) 2018 - 2025, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
+ *
+ * Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package io.entgra.device.mgt.core.notification.mgt.common.beans;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 
 @ApiModel(value = "NotificationConfig", description = "Notification Configurations")
 public class NotificationConfig {
 
-//    private static int idCounter = 1;
-//
-//    public NotificationConfig() {
-//        this.configId = idCounter++; // Assign unique ID when object is created
-//    }
+    @ApiModelProperty(name = "configId", value = "The unique ID of the notification configuration.",
+            required = true)
+    private int id;
 
-    @ApiModelProperty(name = "id", value = "The ID of the notification configuration.", required = true)
-    private int configId;
+    @ApiModelProperty(name = "configName", value = "The name of the notification configuration.",
+            required = true)
+    private String name;
 
-    @ApiModelProperty(name = "name", value = "The name of the notification configuration.", required = true)
-    private String configName;
-
-
-    @ApiModelProperty(name = "description", value = "The description of the notification configuration.", required = true)
+    @ApiModelProperty(name = "description", value = "The description of the notification configuration.",
+            required = true)
     private String description;
 
+    @ApiModelProperty(name = "type", value = "The category of the notification (operation or task).",
+            required = true)
+    private String type;
 
-    public enum archiveType{
-        DLB,ELK
-    }
-
-    @ApiModelProperty(name = "opcode", value = "The operation or task code associated with the notification.", required = true)
+    @ApiModelProperty(name = "code", value = "The operation or task code associated with the notification.",
+            required = true)
     private String code;
 
-    @ApiModelProperty(name = "priority", value = "The priority of the notification configuration.", required = true)
-    private int priority = 1;
-
-    @ApiModelProperty(name = "archiveAfter", value = "The duration after which notifications are archived.", required = true)
-    private long archiveAfter;
-
-    @ApiModelProperty(name = "recipients", value = "The recipients of the notification.", required = true)
+    @ApiModelProperty(name = "recipients", value = "Details of the recipients of the notification.",
+            required = true)
     private NotificationConfigRecipients recipients;
 
-    @ApiModelProperty(name = "configuredBy", value = "Information about the person who configured the notification.", required = true)
+    @ApiModelProperty(name = "configuredBy", value = "Information about who configured the notification.",
+            required = true)
     private ConfiguredBy configuredBy;
 
-    @ApiModelProperty(name = "notificationSettings", value = "The notification settings.", required = true)
-    private NotificationConfigurationSettings notificationConfigSettings;
-
-    @ApiModelProperty(name = "Critical criteria", value = "The critical criteria for notification configurations", required = false)
-    private NotificationConfigCriticalCriteria criticalCriteria;
-
-    public enum configType {
-        OPERATION_RELATED,
-        TASK_RELATED
-    }
-
-    public NotificationConfigCriticalCriteria getCriticalCriteria() {
-        return criticalCriteria;
-    }
-
-    public void setCriticalCriteria(NotificationConfigCriticalCriteria criticalCriteria) {
-        this.criticalCriteria = criticalCriteria;
-    }
-
-//    @ApiModelProperty(name = "meta data", value = "Meta data in notification configurations.", required = false)
-//    private Metadata metaData;
-
-    // Getters and Setters
-
-    public static class ConfiguredBy {
-        @JsonProperty("user")
-        private String user;
-
-        @JsonProperty("lastModifiedAt")
-        private LocalDateTime lastModifiedAt;
-    }
+    @ApiModelProperty(name = "notificationSettings", value = "Settings for how notifications are sent.",
+            required = true)
+    private NotificationConfigurationSettings notificationSettings;
 
     public int getId() {
-        return configId;
+        return id;
     }
 
     public void setId(int id) {
-        this.configId = id;
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public void setName(String name) {
-        this.configName = name;
+        this.name = name;
     }
 
     public String getDescription() {
@@ -98,12 +82,12 @@ public class NotificationConfig {
         this.description = description;
     }
 
-    public NotificationConfigRecipients getRecipients() {
-        return recipients;
+    public String getType() {
+        return type;
     }
 
-    public void setRecipients(NotificationConfigRecipients recipients) {
-        this.recipients = recipients;
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getCode() {
@@ -114,20 +98,12 @@ public class NotificationConfig {
         this.code = code;
     }
 
-    public int getPriority() {
-        return priority;
+    public NotificationConfigRecipients getRecipients() {
+        return recipients;
     }
 
-    public void setPriority(int priority) {
-        this.priority = priority;
-    }
-
-    public Duration getArchiveAfter() {
-        return Duration.ofSeconds(archiveAfter);
-    }
-
-    public void setArchiveAfter(Duration archiveAfter) {
-        this.archiveAfter = archiveAfter.getSeconds();
+    public void setRecipients(NotificationConfigRecipients recipients) {
+        this.recipients = recipients;
     }
 
     public ConfiguredBy getConfiguredBy() {
@@ -138,4 +114,35 @@ public class NotificationConfig {
         this.configuredBy = configuredBy;
     }
 
+    public NotificationConfigurationSettings getNotificationSettings() {
+        return notificationSettings;
+    }
+
+    public void setNotificationSettings(NotificationConfigurationSettings notificationSettings) {
+        this.notificationSettings = notificationSettings;
+    }
+
+    public static class ConfiguredBy {
+        @JsonProperty("user")
+        private String user;
+
+        @JsonProperty("lastModifiedAt")
+        private LocalDateTime lastModifiedAt;
+
+        public String getUser() {
+            return user;
+        }
+
+        public void setUser(String user) {
+            this.user = user;
+        }
+
+        public LocalDateTime getLastModifiedAt() {
+            return lastModifiedAt;
+        }
+
+        public void setLastModifiedAt(LocalDateTime lastModifiedAt) {
+            this.lastModifiedAt = lastModifiedAt;
+        }
+    }
 }

@@ -34,7 +34,6 @@ import io.entgra.device.mgt.core.device.mgt.core.notification.mgt.dao.Notificati
 import io.entgra.device.mgt.core.device.mgt.core.notification.mgt.dao.util.NotificationDAOUtil;
 import io.entgra.device.mgt.core.device.mgt.core.util.DeviceManagerUtil;
 import io.entgra.device.mgt.core.device.mgt.extensions.logger.spi.EntgraLogger;
-import io.entgra.device.mgt.core.notification.logger.DeviceLogContext;
 import io.entgra.device.mgt.core.notification.logger.impl.EntgraDeviceLoggerImpl;
 
 import java.sql.SQLException;
@@ -47,7 +46,6 @@ import java.util.List;
 public class NotificationManagementServiceImpl implements NotificationManagementService {
 
     private static final EntgraLogger log = new EntgraDeviceLoggerImpl(NotificationManagementServiceImpl.class);
-    DeviceLogContext.Builder deviceLogContexBuilder = new DeviceLogContext.Builder();
     private NotificationDAO notificationDAO;
 
     public NotificationManagementServiceImpl() {
@@ -82,19 +80,19 @@ public class NotificationManagementServiceImpl implements NotificationManagement
         int notificationId;
         int tenantId = NotificationDAOUtil.getTenantId();
 
-        try {
-            NotificationManagementDAOFactory.beginTransaction();
-            notificationId = notificationDAO.addNotification(device.getId(), tenantId, notification);
-            NotificationManagementDAOFactory.commitTransaction();
-        } catch (TransactionManagementException e) {
-            NotificationManagementDAOFactory.rollbackTransaction();
-            throw new NotificationManagementException("Error occurred while adding notification", e);
-        } finally {
-            NotificationManagementDAOFactory.closeConnection();
-        }
-        if (log.isDebugEnabled()) {
-            log.debug("Notification id : " + notificationId + " was added to the table.");
-        }
+//        try {
+//            NotificationManagementDAOFactory.beginTransaction();
+//            notificationId = notificationDAO.addNotification(device.getId(), tenantId, notification);
+//            NotificationManagementDAOFactory.commitTransaction();
+//        } catch (TransactionManagementException e) {
+//            NotificationManagementDAOFactory.rollbackTransaction();
+//            throw new NotificationManagementException("Error occurred while adding notification", e);
+//        } finally {
+//            NotificationManagementDAOFactory.closeConnection();
+//        }
+//        if (log.isDebugEnabled()) {
+//            log.debug("Notification id : " + notificationId + " was added to the table.");
+//        }
         return true;
     }
 
@@ -103,16 +101,16 @@ public class NotificationManagementServiceImpl implements NotificationManagement
         if (log.isDebugEnabled()) {
             log.debug("Updating Notification : [" + notification.toString() + "]");
         }
-        try {
-            NotificationManagementDAOFactory.beginTransaction();
-            notificationDAO.updateNotification(notification);
-            NotificationManagementDAOFactory.commitTransaction();
-        } catch (TransactionManagementException e) {
-            NotificationManagementDAOFactory.rollbackTransaction();
-            throw new NotificationManagementException("Error occurred while updating notification ", e);
-        } finally {
-            NotificationManagementDAOFactory.closeConnection();
-        }
+//        try {
+//            NotificationManagementDAOFactory.beginTransaction();
+//            notificationDAO.updateNotification(notification);
+//            NotificationManagementDAOFactory.commitTransaction();
+//        } catch (TransactionManagementException e) {
+//            NotificationManagementDAOFactory.rollbackTransaction();
+//            throw new NotificationManagementException("Error occurred while updating notification ", e);
+//        } finally {
+//            NotificationManagementDAOFactory.closeConnection();
+//        }
         if (log.isDebugEnabled()) {
             log.debug("Notification id : " + notification.getNotificationId() +
                     " has updated successfully.");
@@ -126,16 +124,16 @@ public class NotificationManagementServiceImpl implements NotificationManagement
         if (log.isDebugEnabled()) {
             log.debug("Updating Notification id : " + notificationId);
         }
-        try {
-            NotificationManagementDAOFactory.beginTransaction();
-            notificationDAO.updateNotificationStatus(notificationId, status);
-            NotificationManagementDAOFactory.commitTransaction();
-        } catch (TransactionManagementException e) {
-            NotificationManagementDAOFactory.rollbackTransaction();
-            throw new NotificationManagementException("Error occurred while updating notification", e);
-        } finally {
-            NotificationManagementDAOFactory.closeConnection();
-        }
+//        try {
+//            NotificationManagementDAOFactory.beginTransaction();
+//            notificationDAO.updateNotificationStatus(notificationId, status);
+//            NotificationManagementDAOFactory.commitTransaction();
+//        } catch (TransactionManagementException e) {
+//            NotificationManagementDAOFactory.rollbackTransaction();
+//            throw new NotificationManagementException("Error occurred while updating notification", e);
+//        } finally {
+//            NotificationManagementDAOFactory.closeConnection();
+//        }
         if (log.isDebugEnabled()) {
             log.debug("Notification id : " + notificationId + " has updated successfully.");
         }
@@ -148,16 +146,16 @@ public class NotificationManagementServiceImpl implements NotificationManagement
         if (log.isDebugEnabled()) {
             log.debug("Attempting to clear all notifications");
         }
-        try {
-            NotificationManagementDAOFactory.beginTransaction();
-            notificationDAO.updateAllNotifications(status, tenantID);
-            NotificationManagementDAOFactory.commitTransaction();
-        } catch (TransactionManagementException e) {
-            NotificationManagementDAOFactory.rollbackTransaction();
-            throw new NotificationManagementException("Error occurred while updating notification", e);
-        } finally {
-            NotificationManagementDAOFactory.closeConnection();
-        }
+//        try {
+//            NotificationManagementDAOFactory.beginTransaction();
+//            notificationDAO.updateAllNotifications(status, tenantID);
+//            NotificationManagementDAOFactory.commitTransaction();
+//        } catch (TransactionManagementException e) {
+//            NotificationManagementDAOFactory.rollbackTransaction();
+//            throw new NotificationManagementException("Error occurred while updating notification", e);
+//        } finally {
+//            NotificationManagementDAOFactory.closeConnection();
+//        }
         if (log.isDebugEnabled()) {
             log.debug("All notifications updated successfully.");
         }
@@ -248,5 +246,4 @@ public class NotificationManagementServiceImpl implements NotificationManagement
             NotificationManagementDAOFactory.closeConnection();
         }
     }
-
 }

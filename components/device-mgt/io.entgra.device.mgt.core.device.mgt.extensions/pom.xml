@@ -22,7 +22,7 @@
     <parent>
         <artifactId>device-mgt</artifactId>
         <groupId>io.entgra.device.mgt.core</groupId>
-        <version>7.0.3-SNAPSHOT</version>
+        <version>7.0.8-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -192,7 +192,6 @@
                             io.entgra.device.mgt.core.device.mgt.common.spi;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.device.mgt.common.type.mgt;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.device.mgt.core.service;version="${io.entgra.device.mgt.core.version.range}",
-                            io.entgra.device.mgt.core.device.mgt.core.dao;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.device.mgt.extensions.device.type.template,
                             io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.config,
                             io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.dao,

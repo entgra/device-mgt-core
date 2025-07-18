@@ -21,7 +21,7 @@
     <parent>
         <artifactId>ui-request-interceptor</artifactId>
         <groupId>io.entgra.device.mgt.core</groupId>
-        <version>7.0.3-SNAPSHOT</version>
+        <version>7.0.8-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -336,6 +336,16 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.entgra.device.mgt.core</groupId>
+            <artifactId>io.entgra.device.mgt.core.notification.mgt.common</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.entgra.device.mgt.core</groupId>
+            <artifactId>io.entgra.device.mgt.core.notification.mgt.core</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
