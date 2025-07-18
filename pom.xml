@@ -23,7 +23,7 @@
     <groupId>io.entgra.device.mgt.core</groupId>
     <artifactId>device-mgt-core</artifactId>
     <packaging>pom</packaging>
-    <version>7.0.3-SNAPSHOT</version>
+    <version>7.0.8-SNAPSHOT</version>
     <name>Entgra Device Management - Parent</name>
     <url>https://entgra.io</url>
     <description>Entgra Device Management Core Components Parent</description>
@@ -53,6 +53,7 @@
         <module>components/tenant-mgt</module>
         <module>components/operation-template-mgt</module>
         <module>components/cea-mgt</module>
+        <module>components/dynamic-task-mgt</module>
         <module>components/notification-mgt</module>
         <module>features/device-mgt</module>
         <module>features/apimgt-extensions</module>
@@ -72,6 +73,7 @@
         <module>features/tenant-mgt</module>
         <module>features/operation-template-mgt-plugin-feature</module>
         <module>features/cea-mgt-feature</module>
+        <module>features/dynamic-task-mgt-feature</module>
         <module>features/notification-mgt-feature</module>
     </modules>
 
@@ -1648,6 +1650,16 @@
                 <version>${io.entgra.device.mgt.core.version}</version>
             </dependency>
             <dependency>
+                <groupId>io.entgra.device.mgt.core</groupId>
+                <artifactId>io.entgra.device.mgt.core.dynamic.task.mgt.common</artifactId>
+                <version>${io.entgra.device.mgt.core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.entgra.device.mgt.core</groupId>
+                <artifactId>io.entgra.device.mgt.core.dynamic.task.mgt.core</artifactId>
+                <version>${io.entgra.device.mgt.core.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.wso2.orbit.com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
                 <version>${jackson-annotations.version}</version>
@@ -2124,7 +2136,7 @@
         <axiom.wso2.version>1.2.11-wso2v25</axiom.wso2.version>
 
         <!-- Carbon Device Management -->
-        <io.entgra.device.mgt.core.version>7.0.3-SNAPSHOT</io.entgra.device.mgt.core.version>
+        <io.entgra.device.mgt.core.version>7.0.8-SNAPSHOT</io.entgra.device.mgt.core.version>
         <io.entgra.device.mgt.core.version.range>[7.0.0, 8.0.0)</io.entgra.device.mgt.core.version.range>
 
         <!-- Carbon Commons -->
