@@ -30,9 +30,12 @@ import io.entgra.device.mgt.core.device.mgt.common.exceptions.TransactionManagem
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOException;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dao.TenantDAO;
+import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationConfigurationServiceException;
+import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationConfigService;
 import io.entgra.device.mgt.core.tenant.mgt.core.TenantManager;
 import io.entgra.device.mgt.core.tenant.mgt.common.exception.TenantMgtException;
 import io.entgra.device.mgt.core.tenant.mgt.core.internal.TenantMgtDataHolder;
+import io.entgra.device.mgt.core.tenant.mgt.core.util.TenantConstants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
@@ -476,6 +479,26 @@ public class TenantManagerImpl implements TenantManager {
             String msg = "User store not initialized";
             log.error(msg);
             throw new TenantMgtException(msg, e);
+        }
+    }
+
+    @Override
+    public void addDefaultNotificationArchivalMetadata(TenantInfoBean tenantInfoBean)
+            throws TenantMgtException {
+        initTenantFlow(tenantInfoBean);
+        try {
+            NotificationConfigService notificationConfigService =
+                    TenantMgtDataHolder.getInstance().getNotificationConfigService();
+            notificationConfigService.setDefaultNotificationArchiveMetadata(
+                    TenantConstants.DEFAULT_NOTIFICATION_ARCHIVE_TYPE,
+                    TenantConstants.DEFAULT_NOTIFICATION_ARCHIVE_PERIOD);
+        } catch (NotificationConfigurationServiceException e) {
+            String msg = "Error occurred while setting default notification archival metadata for tenant " +
+                    tenantInfoBean.getTenantId();
+            log.error(msg, e);
+            throw new TenantMgtException(msg, e);
+        } finally {
+            endTenantFlow();
         }
     }
 }

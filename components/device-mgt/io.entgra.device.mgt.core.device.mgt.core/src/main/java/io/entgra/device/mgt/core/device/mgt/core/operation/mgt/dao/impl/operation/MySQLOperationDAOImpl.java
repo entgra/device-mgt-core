@@ -23,6 +23,9 @@ import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Activity;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.ActivityHolder;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.ActivityStatus;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.OperationResponse;
+import io.entgra.device.mgt.core.device.mgt.core.dao.util.DeviceManagementDAOUtil;
+import io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.DeviceOperationDetails;
+import io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation;
 import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.dao.OperationManagementDAOException;
 import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.dao.OperationManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.dao.OperationManagementDAOUtil;
@@ -36,6 +39,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -316,4 +320,87 @@ public class MySQLOperationDAOImpl extends GenericOperationDAOImpl {
             throw new OperationManagementDAOException(msg, e);
         }
     }
+
+//    @Override
+//    public boolean updateOperationStatus(int enrolmentId, int operationId, Operation.Status status)
+//            throws OperationManagementDAOException {
+//        String query =
+//                "UPDATE DM_ENROLMENT_OP_MAPPING " +
+//                        "SET STATUS=?, " +
+//                        "UPDATED_TIMESTAMP=? " +
+//                "WHERE ENROLMENT_ID=? " +
+//                        "AND OPERATION_ID=?";
+//        try (Connection connection = OperationManagementDAOFactory.getConnection();
+//             PreparedStatement stmt = connection.prepareStatement(query)) {
+//            long time = DeviceManagementDAOUtil.getCurrentUTCTime();
+//            stmt.setString(1, status.toString());
+//            stmt.setTimestamp(2, new Timestamp(time));
+//            stmt.setInt(3, enrolmentId);
+//            stmt.setInt(4, operationId);
+//            return stmt.executeUpdate() > 0;
+//        } catch (SQLException e) {
+//            throw new OperationManagementDAOException("Error updating operation status in MySQL.", e);
+//        }
+//    }
+//
+//    @Override
+//    public DeviceOperationDetails getDeviceOperationDetails(int enrolmentId, int operationId)
+//            throws OperationManagementDAOException {
+//        DeviceOperationDetails deviceOperationDetails = null;
+//        String query =
+//                "SELECT " +
+//                        "DEVICE_ID, " +
+//                        "OPERATION_CODE, " +
+//                        "DEVICE_TYPE " +
+//                        "FROM DM_ENROLMENT_OP_MAPPING " +
+//                "WHERE ENROLMENT_ID = ? " +
+//                        "AND OPERATION_ID = ?";
+//        try (Connection connection = OperationManagementDAOFactory.getConnection();
+//             PreparedStatement stmt = connection.prepareStatement(query)) {
+//            stmt.setInt(1, enrolmentId);
+//            stmt.setInt(2, operationId);
+//            try (ResultSet resultSet = stmt.executeQuery()) {
+//                if (resultSet.next()) {
+//                    deviceOperationDetails = new DeviceOperationDetails(
+//                            resultSet.getInt("DEVICE_ID"),
+//                            resultSet.getString("OPERATION_CODE"),
+//                            resultSet.getString("DEVICE_TYPE")
+//                    );
+//                }
+//            }
+//        } catch (SQLException e) {
+//            throw new OperationManagementDAOException("Error fetching operation details from MySQL.", e);
+//        }
+//        return deviceOperationDetails;
+//    }
+//
+//    @Override
+//    public List<DeviceOperationDetails> getUpdatedOperationsByDeviceTypeAndStatus(
+//            String deviceType, String requiredStatus) throws OperationManagementDAOException {
+//        List<DeviceOperationDetails> operationDetailsList = new ArrayList<>();
+//        String query =
+//                "SELECT " +
+//                        "DEVICE_ID, " +
+//                        "OPERATION_ID, " +
+//                        "OPERATION_CODE " +
+//                        "FROM DM_ENROLMENT_OP_MAPPING " +
+//                        "WHERE DEVICE_TYPE = ? " +
+//                        "AND STATUS = ?";
+//        try (Connection connection = OperationManagementDAOFactory.getConnection();
+//             PreparedStatement stmt = connection.prepareStatement(query)) {
+//            stmt.setString(1, deviceType);
+//            stmt.setString(2, requiredStatus);
+//            try (ResultSet resultSet = stmt.executeQuery()) {
+//                while (resultSet.next()) {
+//                    int deviceId = resultSet.getInt("DEVICE_ID");
+//                    String operationCode = resultSet.getString("OPERATION_CODE");
+//                    operationDetailsList.add(new DeviceOperationDetails(deviceId, operationCode, deviceType));
+//                }
+//            }
+//        } catch (SQLException e) {
+//            throw new OperationManagementDAOException("Error fetching updated operation details for device type: "
+//                    + deviceType + " with status: " + requiredStatus, e);
+//        }
+//        return operationDetailsList;
+//    }
 }
