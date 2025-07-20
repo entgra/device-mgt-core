@@ -23,6 +23,8 @@ import com.google.gson.Gson;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.MetadataManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.Metadata;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
+import io.entgra.device.mgt.core.notification.mgt.common.beans.ArchivePeriod;
+import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationConfigurationServiceException;
 import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementException;
 import io.entgra.device.mgt.core.notification.mgt.common.beans.NotificationConfig;
 import io.entgra.device.mgt.core.notification.mgt.common.beans.NotificationConfigRecipients;
@@ -30,24 +32,20 @@ import io.entgra.device.mgt.core.notification.mgt.common.beans.NotificationConfi
 import io.entgra.device.mgt.core.notification.mgt.core.internal.NotificationManagementDataHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.api.UserStoreManager;
 
 import java.lang.reflect.Type;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NotificationHelper {
     private static final Log log = LogFactory.getLog(NotificationHelper.class);
-    public static final String NOTIFICATION_CONFIG_META_KEY = "notification-config" ;
     private static final Gson gson = new Gson();
+    private static final int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
 
     /**
      * Extracts all usernames from the given recipients object including users and roles.
@@ -96,7 +94,7 @@ public class NotificationHelper {
                 log.error("MetaDataManagementService is null");
                 throw new NotificationManagementException("MetaDataManagementService is not available");
             }
-            Metadata existingMetadata = metaDataService.retrieveMetadata(NOTIFICATION_CONFIG_META_KEY);
+            Metadata existingMetadata = metaDataService.retrieveMetadata(Constants.NOTIFICATION_CONFIG_META_KEY);
             if (existingMetadata == null) {
                 if (log.isDebugEnabled()) {
                     log.debug("No notification configurations found for tenant");
@@ -135,7 +133,8 @@ public class NotificationHelper {
                 log.warn(message);
                 throw new NotificationManagementException(message, e);
             } else {
-                String message = "Unexpected error occurred while retrieving notification configurations for tenant ID.";
+                String message = "Unexpected error occurred while retrieving notification configurations for " +
+                        "tenant ID.";
                 log.error(message, e);
                 throw new NotificationManagementException(message, e);
             }
@@ -145,39 +144,34 @@ public class NotificationHelper {
     /**
      * Resolves a timestamp in the past based on a duration string like "6 days", "2 weeks", etc.
      *
-     * @param duration Duration string (e.g., "7 days", "2 months").
+     * @param period Duration ArchivePeriod (e.g., "7 days", "2 months") an object of a int and a string.
      * @return Timestamp object representing the cutoff time.
      * @throws IllegalArgumentException if the format is invalid.
      */
-    public static Timestamp resolveCutoffTimestamp(String duration) {
-        if (duration == null || duration.isEmpty()) {
+    public static Timestamp resolveCutoffTimestamp(ArchivePeriod period) {
+        if (period == null) {
             return null;
         }
-        Pattern pattern = Pattern.compile("(\\d+)\\s*(day|week|month|year)s?", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(duration.trim());
-        if (matcher.matches()) {
-            int amount = Integer.parseInt(matcher.group(1));
-            String unit = matcher.group(2).toLowerCase();
-            Calendar cal = Calendar.getInstance();
-            switch (unit) {
-                case "day":
-                    cal.add(Calendar.DAY_OF_MONTH, -amount);
-                    break;
-                case "week":
-                    cal.add(Calendar.WEEK_OF_YEAR, -amount);
-                    break;
-                case "month":
-                    cal.add(Calendar.MONTH, -amount);
-                    break;
-                case "year":
-                    cal.add(Calendar.YEAR, -amount);
-                    break;
-                default:
-                    throw new IllegalArgumentException("Invalid time unit: " + unit);
-            }
-            return new Timestamp(cal.getTimeInMillis());
+        int amount = period.getValue();
+        String unit = period.getUnit();
+        Calendar cal = Calendar.getInstance();
+        switch (unit) {
+            case "days":
+                cal.add(Calendar.DAY_OF_MONTH, -amount);
+                break;
+            case "weeks":
+                cal.add(Calendar.WEEK_OF_YEAR, -amount);
+                break;
+            case "months":
+                cal.add(Calendar.MONTH, -amount);
+                break;
+            case "years":
+                cal.add(Calendar.YEAR, -amount);
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported time unit: " + unit);
         }
-        throw new IllegalArgumentException("Invalid archive duration format: " + duration);
+        return new Timestamp(cal.getTimeInMillis());
     }
 
     /**
@@ -193,10 +187,10 @@ public class NotificationHelper {
                 .getInstance().getMetaDataManagementService();
         try {
             if (metaDataService == null) {
-                log.error("MetaDataManagementService is null");
-                throw new NotificationManagementException("MetaDataManagementService is not available");
+                log.error("MetaDataManagementService is null. Skipping notification configuration loading.");
+                return null;
             }
-            Metadata existingMetadata = metaDataService.retrieveMetadata(NOTIFICATION_CONFIG_META_KEY);
+            Metadata existingMetadata = metaDataService.retrieveMetadata(Constants.NOTIFICATION_CONFIG_META_KEY);
             if (existingMetadata == null) {
                 log.warn("No notification configuration metadata found.");
                 return null;
@@ -204,7 +198,7 @@ public class NotificationHelper {
             String metaValue = existingMetadata.getMetaValue();
             Type listType = new TypeToken<NotificationConfigurationList>() {}.getType();
             return new Gson().fromJson(metaValue, listType);
-        }catch (MetadataManagementException e) {
+        } catch (MetadataManagementException e) {
             String message = "Unexpected error occurred while retrieving notification configurations for tenant ID.";
             log.error(message, e);
             throw new NotificationManagementException(message, e);
@@ -218,13 +212,85 @@ public class NotificationHelper {
      * @param configurations The configuration list to update with default values.
      */
     public static void setDefaultArchivalValuesIfAbsent(NotificationConfigurationList configurations) {
-        if (configurations.getDefaultArchiveAfter() == null
-                || configurations.getDefaultArchiveAfter().isEmpty()) {
+        if (configurations.getDefaultArchiveAfter() == null) {
             configurations.setDefaultArchiveAfter(Constants.DEFAULT_ARCHIVE_PERIOD);
         }
-        if (configurations.getDefaultArchiveType() == null
-                || configurations.getDefaultArchiveType().isEmpty()) {
+        if (configurations.getDefaultArchiveType() == null || configurations.getDefaultArchiveType().isEmpty()) {
             configurations.setDefaultArchiveType(Constants.DEFAULT_ARCHIVE_TYPE);
+        }
+    }
+
+    /**
+     * Validates that a user exists in the system.
+     * Checks if the provided username is not null or empty and exists in the user store.
+     *
+     * @param username the username to validate
+     */
+    public static void validateUserExists(String username) throws NotificationManagementException {
+        if (username == null || username.trim().isEmpty()) {
+            String msg = "Username must not be null or empty.";
+            log.warn(msg);
+            throw new NotificationManagementException(msg);
+        }
+        try {
+            UserStoreManager userStoreManager = NotificationManagementDataHolder.getInstance()
+                    .getRealmService().getTenantUserRealm(tenantId).getUserStoreManager();
+            if (!userStoreManager.isExistingUser(username)) {
+                String msg = "User by username: " + username + " does not exist.";
+                throw new NotificationManagementException(msg);
+            }
+        } catch (UserStoreException e) {
+            String msg = "Error while retrieving the user.";
+            log.error(msg, e);
+            throw new NotificationManagementException(msg, e);
+        }
+    }
+
+    /**
+     * Validates that all users and roles in the recipients exist in the system.
+     * Checks if the recipients object is not null.
+     * Returns an appropriate Response if any user or role does not exist or if there is an error.
+     *
+     * @param recipients the NotificationConfigRecipients object containing users and roles
+     * @return a Response with error status if any user or role is invalid or does not exist, otherwise null
+     */
+    /**
+     * Validates that all users and roles in the recipients exist in the system.
+     * Throws NotificationConfigurationServiceException if any user or role is invalid or does not exist.
+     *
+     * @param recipients the NotificationConfigRecipients object containing users and roles
+     * @throws NotificationConfigurationServiceException if recipients is null or any user/role does not exist
+     */
+    public static void validateRecipients(NotificationConfigRecipients recipients)
+            throws NotificationConfigurationServiceException {
+        if (recipients == null) {
+            String msg = "Recipients must not be null.";
+            log.warn(msg);
+            throw new NotificationConfigurationServiceException(msg);
+        }
+        try {
+            UserStoreManager userStoreManager = NotificationManagementDataHolder.getInstance()
+                    .getRealmService().getTenantUserRealm(tenantId).getUserStoreManager();
+            // validate roles
+            for (String role : recipients.getRoles()) {
+                if (!userStoreManager.isExistingRole(role)) {
+                    String msg = "No role exists with the name: " + role;
+                    log.warn(msg);
+                    throw new NotificationConfigurationServiceException(msg);
+                }
+            }
+            // validate users
+            for (String user : recipients.getUsers()) {
+                if (!userStoreManager.isExistingUser(user)) {
+                    String msg = "User by username: " + user + " does not exist.";
+                    log.warn(msg);
+                    throw new NotificationConfigurationServiceException(msg);
+                }
+            }
+        } catch (UserStoreException e) {
+            String msg = "Error while validating recipients.";
+            log.error(msg, e);
+            throw new NotificationConfigurationServiceException(msg, e);
         }
     }
 }

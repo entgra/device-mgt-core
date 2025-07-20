@@ -27,7 +27,6 @@ public class Notification {
     private int tenantId;
     private String description;
     private String type;
-    private int priority;
     private Timestamp createdTimestamp;
 
     public int getNotificationId() {
@@ -60,14 +59,6 @@ public class Notification {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public int getPriority() {
-        return priority;
-    }
-
-    public void setPriority(int priority) {
-        this.priority = priority;
     }
 
     public Timestamp getCreatedTimestamp() {

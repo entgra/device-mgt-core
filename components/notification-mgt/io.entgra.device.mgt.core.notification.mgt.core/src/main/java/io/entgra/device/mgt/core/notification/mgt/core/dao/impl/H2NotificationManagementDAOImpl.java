@@ -20,9 +20,11 @@
 package io.entgra.device.mgt.core.notification.mgt.core.dao.impl;
 
 import io.entgra.device.mgt.core.notification.mgt.common.dto.Notification;
+import io.entgra.device.mgt.core.notification.mgt.common.dto.PaginatedUserNotificationResponse;
 import io.entgra.device.mgt.core.notification.mgt.common.dto.UserNotificationAction;
-import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementException;
-import io.entgra.device.mgt.core.notification.mgt.core.dao.NotificationManagementDAO;
+import io.entgra.device.mgt.core.notification.mgt.common.dto.UserNotificationPayload;
+import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementDAOException;
+import io.entgra.device.mgt.core.notification.mgt.core.dao.AbstractNotificationManagementDAOImpl;
 import io.entgra.device.mgt.core.notification.mgt.core.dao.factory.NotificationManagementDAOFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,16 +34,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class H2NotificationManagementDAOImpl implements NotificationManagementDAO {
+public class H2NotificationManagementDAOImpl extends AbstractNotificationManagementDAOImpl  {
     private static final Log log = LogFactory.getLog(H2NotificationManagementDAOImpl.class);
 
     @Override
-    public List<Notification> getLatestNotifications(int offset, int limit) throws NotificationManagementException {
+    public List<Notification> getLatestNotifications(int offset, int limit) throws NotificationManagementDAOException {
         List<Notification> notifications = new ArrayList<>();
         String query =
                 "SELECT * FROM DM_NOTIFICATION " +
@@ -59,7 +59,6 @@ public class H2NotificationManagementDAOImpl implements NotificationManagementDA
                         notification.setNotificationConfigId(resultSet.getInt("NOTIFICATION_CONFIG_ID"));
                         notification.setTenantId(resultSet.getInt("TENANT_ID"));
                         notification.setDescription(resultSet.getString("DESCRIPTION"));
-                        notification.setPriority(resultSet.getInt("PRIORITY"));
                         notification.setCreatedTimestamp(resultSet.getTimestamp("CREATED_TIMESTAMP"));
                         notifications.add(notification);
                     }
@@ -68,14 +67,14 @@ public class H2NotificationManagementDAOImpl implements NotificationManagementDA
         } catch (SQLException e) {
             String msg = "Error occurred while retrieving notifications from DB";
             log.error(msg, e);
-            throw new NotificationManagementException(msg, e);
+            throw new NotificationManagementDAOException(msg, e);
         }
         return notifications;
     }
 
     @Override
     public List<Notification> getNotificationsByIds(List<Integer> notificationIds)
-            throws NotificationManagementException {
+            throws NotificationManagementDAOException {
         List<Notification> notifications = new ArrayList<>();
         if (notificationIds == null || notificationIds.isEmpty()) {
             return notifications;
@@ -118,14 +117,14 @@ public class H2NotificationManagementDAOImpl implements NotificationManagementDA
         } catch (SQLException e) {
             String msg = "Error occurred while retrieving notifications by IDs from DB";
             log.error(msg, e);
-            throw new NotificationManagementException(msg, e);
+            throw new NotificationManagementDAOException(msg, e);
         }
         return notifications;
     }
 
     @Override
     public List<UserNotificationAction> getNotificationActionsByUser(
-            String username, int limit, int offset, Boolean isRead) throws NotificationManagementException {
+            String username, int limit, int offset, Boolean isRead) throws NotificationManagementDAOException {
         List<UserNotificationAction> userNotificationActions = new ArrayList<>();
         StringBuilder queryBuilder = new StringBuilder(
                 "SELECT NOTIFICATION_ID, ACTION_ID, IS_READ " +
@@ -168,53 +167,13 @@ public class H2NotificationManagementDAOImpl implements NotificationManagementDA
         } catch (SQLException e) {
             String msg = "Error occurred while retrieving notification actions for user: " + username;
             log.error(msg, e);
-            throw new NotificationManagementException(msg, e);
+            throw new NotificationManagementDAOException(msg, e);
         }
         return userNotificationActions;
     }
 
     @Override
-    public void updateNotificationAction(List<Integer> notificationIds, String username, String actionType)
-            throws NotificationManagementException {
-        if (notificationIds == null || notificationIds.isEmpty()) {
-            return;
-        }
-        boolean isRead;
-        if ("READ".equalsIgnoreCase(actionType)) {
-            isRead = true;
-        } else if ("UNREAD".equalsIgnoreCase(actionType)) {
-            isRead = false;
-        } else {
-            throw new NotificationManagementException("Invalid action type: " + actionType);
-        }
-        String placeholders = notificationIds.stream()
-                .map(id -> "?")
-                .collect(Collectors.joining(", "));
-        String query =
-                "UPDATE DM_NOTIFICATION_USER_ACTION " +
-                        "SET IS_READ = ? " +
-                        "WHERE USERNAME = ? " +
-                        "AND NOTIFICATION_ID " +
-                        "IN (" + placeholders + ")";
-        try {
-            Connection connection = NotificationManagementDAOFactory.getConnection();
-            try (PreparedStatement ps = connection.prepareStatement(query)) {
-                ps.setBoolean(1, isRead);
-                ps.setString(2, username);
-                for (int i = 0; i < notificationIds.size(); i++) {
-                    ps.setInt(i + 3, notificationIds.get(i));
-                }
-                ps.executeUpdate();
-            }
-        } catch (SQLException e) {
-            String msg = "Error occurred while updating notification actions for user: " + username;
-            log.error(msg, e);
-            throw new NotificationManagementException(msg, e);
-        }
-    }
-
-    @Override
-    public List<UserNotificationAction> getAllNotificationUserActions() throws NotificationManagementException {
+    public List<UserNotificationAction> getAllNotificationUserActions() throws NotificationManagementDAOException {
         List<UserNotificationAction> userNotificationActions = new ArrayList<>();
         String query =
                 "SELECT NOTIFICATION_ID, " +
@@ -243,176 +202,80 @@ public class H2NotificationManagementDAOImpl implements NotificationManagementDA
         } catch (SQLException e) {
             String msg = "Error occurred while retrieving all notification user actions.";
             log.error(msg, e);
-            throw new NotificationManagementException(msg, e);
+            throw new NotificationManagementDAOException(msg, e);
         }
         return userNotificationActions;
     }
 
     @Override
-    public int getNotificationActionsCountByUser(String username, Boolean isRead)
-            throws NotificationManagementException {
-        StringBuilder query = new StringBuilder(
-                "SELECT COUNT(*) " +
-                        "FROM DM_NOTIFICATION_USER_ACTION " +
-                        "WHERE USERNAME = ?");
-        if (isRead != null) {
-            query.append(" AND IS_READ = ?");
-        }
-        try {
-            Connection connection = NotificationManagementDAOFactory.getConnection();
-            try (PreparedStatement ps = connection.prepareStatement(query.toString())) {
-                int paramIndex = 1;
-                ps.setString(paramIndex++, username);
-                if (isRead != null) {
-                    ps.setBoolean(paramIndex++, isRead);
-                }
+    public PaginatedUserNotificationResponse getUserNotificationsWithStatus(
+            String username, int limit, int offset, Boolean isRead) throws NotificationManagementDAOException {
+        List<UserNotificationPayload> result = new ArrayList<>();
+        int totalCount = 0;
+        try (Connection connection = NotificationManagementDAOFactory.getConnection()) {
+            StringBuilder countQuery = new StringBuilder(
+                    "SELECT COUNT(*) " +
+                            "FROM DM_NOTIFICATION_USER_ACTION ua " +
+                            "JOIN DM_NOTIFICATION n " +
+                            "ON ua.NOTIFICATION_ID = n.NOTIFICATION_ID " +
+                            "WHERE ua.USERNAME = ? " +
+                            "AND n.TENANT_ID = ? "
+            );
+            if (isRead != null) {
+                countQuery.append("AND ua.IS_READ = ? ");
+            }
+            try (PreparedStatement ps = connection.prepareStatement(countQuery.toString())) {
+                int idx = 1;
+                ps.setString(idx++, username);
+                ps.setInt(idx++, PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId());
+                if (isRead != null) ps.setBoolean(idx++, isRead);
                 try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        return rs.getInt(1);
+                    if (rs.next()) totalCount = rs.getInt(1);
+                }
+            }
+            StringBuilder query = new StringBuilder(
+                    "SELECT " +
+                            "ua.NOTIFICATION_ID, " +
+                            "ua.IS_READ, " +
+                            "ua.ACTION_TIMESTAMP, " +
+                            "n.DESCRIPTION, " +
+                            "n.TYPE, " +
+                            "n.CREATED_TIMESTAMP " +
+                            "FROM DM_NOTIFICATION_USER_ACTION ua " +
+                            "JOIN DM_NOTIFICATION n " +
+                            "ON ua.NOTIFICATION_ID = n.NOTIFICATION_ID " +
+                            "WHERE ua.USERNAME = ? " +
+                            "AND n.TENANT_ID = ? "
+            );
+            if (isRead != null) query.append("AND ua.IS_READ = ? ");
+            query.append("ORDER BY ua.ACTION_TIMESTAMP DESC ");
+            if (limit > 0) query.append("LIMIT ? ");
+            if (offset > 0) query.append("OFFSET ? ");
+            try (PreparedStatement ps = connection.prepareStatement(query.toString())) {
+                int idx = 1;
+                ps.setString(idx++, username);
+                ps.setInt(idx++, PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId());
+                if (isRead != null) ps.setBoolean(idx++, isRead);
+                if (limit > 0) ps.setInt(idx++, limit);
+                if (offset > 0) ps.setInt(idx++, offset);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        boolean readStatus = rs.getBoolean("IS_READ");
+                        result.add(new UserNotificationPayload(
+                                rs.getInt("NOTIFICATION_ID"),
+                                rs.getString("DESCRIPTION"),
+                                rs.getString("TYPE"),
+                                readStatus ? "READ" : "UNREAD",
+                                username,
+                                rs.getTimestamp("CREATED_TIMESTAMP")
+                        ));
                     }
                 }
             }
         } catch (SQLException e) {
-            String msg = "Error counting user notifications";
-            log.error(msg, e);
-            throw new NotificationManagementException(msg, e);
+            throw new NotificationManagementDAOException("Error in H2 getUserNotificationsWithStatus", e);
         }
-        return 0;
-    }
-
-    @Override
-    public int getUnreadNotificationCountForUser(String username) throws NotificationManagementException {
-        int count = 0;
-        String sql =
-                "SELECT COUNT(*) " +
-                        "AS UNREAD_COUNT " +
-                        "FROM DM_NOTIFICATION_USER_ACTION " +
-                        "WHERE USERNAME = ? " +
-                        "AND IS_READ = false";
-        try {
-            Connection conn = NotificationManagementDAOFactory.getConnection();
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, username);
-                ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    count = rs.getInt("UNREAD_COUNT");
-                }
-            }
-        } catch (SQLException e) {
-            String msg = "Error retrieving unread notification count for user: " + username;
-            log.error(msg, e);
-            throw new NotificationManagementException(msg, e);
-        }
-        return count;
-    }
-
-    @Override
-    public int insertNotification(int tenantId, int notificationConfigId, String type, String description)
-            throws NotificationManagementException {
-        String sql =
-                "INSERT INTO DM_NOTIFICATION " +
-                        "(NOTIFICATION_CONFIG_ID, " +
-                        "TENANT_ID, " +
-                        "DESCRIPTION, " +
-                        "TYPE) " +
-                        "VALUES (?, ?, ?, ?)";
-        int notificationId = -1;
-        try {
-            Connection conn = NotificationManagementDAOFactory.getConnection();
-            try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-                stmt.setInt(1, notificationConfigId);
-                stmt.setInt(2, tenantId);
-                stmt.setString(3, description);
-                stmt.setString(4, type);
-                stmt.executeUpdate();
-                ResultSet rs = stmt.getGeneratedKeys();
-                if (rs.next()) {
-                    notificationId = rs.getInt(1);
-                }
-            }
-        } catch (SQLException e) {
-            String msg = "Error inserting notification";
-            log.error(msg, e);
-            throw new NotificationManagementException(msg, e);
-        }
-        return notificationId;
-    }
-
-    @Override
-    public void insertNotificationUserActions(int notificationId, List<String> usernames)
-            throws NotificationManagementException {
-        String sql =
-                "INSERT INTO DM_NOTIFICATION_USER_ACTION " +
-                        "(NOTIFICATION_ID, " +
-                        "USERNAME, " +
-                        "IS_READ) " +
-                        "VALUES (?, ?, ?)";
-        try {
-            Connection conn = NotificationManagementDAOFactory.getConnection();
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                for (String username : usernames) {
-                    stmt.setInt(1, notificationId);
-                    stmt.setString(2, username);
-                    stmt.setBoolean(3, false);
-                    stmt.addBatch();
-                }
-                stmt.executeBatch();
-            }
-        } catch (SQLException e) {
-            String msg = "Error inserting notification user actions";
-            log.error(msg, e);
-            throw new NotificationManagementException(msg, e);
-        }
-    }
-
-    @Override
-    public void deleteUserNotifications(List<Integer> notificationIds, String username)
-            throws NotificationManagementException {
-        if (notificationIds == null || notificationIds.isEmpty()) {
-            return;
-        }
-        String placeholders = notificationIds.stream()
-                .map(id -> "?")
-                .collect(Collectors.joining(", "));
-        String query =
-                "DELETE " +
-                        "FROM DM_NOTIFICATION_USER_ACTION " +
-                        "WHERE USERNAME = ? " +
-                        "AND NOTIFICATION_ID " +
-                        "IN (" + placeholders + ")";
-        try {
-            Connection connection = NotificationManagementDAOFactory.getConnection();
-            try (PreparedStatement stmt = connection.prepareStatement(query)) {
-                stmt.setString(1, username);
-                for (int i = 0; i < notificationIds.size(); i++) {
-                    stmt.setInt(i + 2, notificationIds.get(i));
-                }
-                stmt.executeUpdate();
-            }
-        } catch (SQLException e) {
-            String msg = "Error occurred while deleting notifications for user: " + username;
-            log.error(msg, e);
-            throw new NotificationManagementException(msg, e);
-        }
-    }
-
-    @Override
-    public void deleteAllUserNotifications(String username) throws NotificationManagementException {
-        String query =
-                "DELETE " +
-                        "FROM DM_NOTIFICATION_USER_ACTION " +
-                        "WHERE USERNAME = ?";
-        try {
-            Connection connection = NotificationManagementDAOFactory.getConnection();
-            try (PreparedStatement stmt = connection.prepareStatement(query)) {
-                stmt.setString(1, username);
-                stmt.executeUpdate();
-            }
-        } catch (SQLException e) {
-            String msg = "Error occurred while deleting all notifications for user: " + username;
-            log.error(msg, e);
-            throw new NotificationManagementException(msg, e);
-        }
+        return new PaginatedUserNotificationResponse(result, totalCount);
     }
 }
 

@@ -67,7 +67,12 @@ import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManage
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionUtils;
 import io.entgra.device.mgt.core.device.mgt.core.privacy.PrivacyComplianceProvider;
 import io.entgra.device.mgt.core.device.mgt.core.search.mgt.SearchManagerService;
-import io.entgra.device.mgt.core.device.mgt.core.service.*;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceFeatureOperations;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeEventManagementProviderService;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeStatisticManagementProviderService;
+import io.entgra.device.mgt.core.device.mgt.core.service.GroupManagementProviderService;
+import io.entgra.device.mgt.core.device.mgt.core.service.TagManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.traccar.api.service.DeviceAPIClientService;
 import io.entgra.device.mgt.core.identity.jwt.client.extension.JWTClient;
 import io.entgra.device.mgt.core.identity.jwt.client.extension.exception.JWTClientException;

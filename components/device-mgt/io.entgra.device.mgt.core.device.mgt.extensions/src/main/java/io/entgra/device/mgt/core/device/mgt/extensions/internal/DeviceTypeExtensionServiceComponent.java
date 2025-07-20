@@ -19,8 +19,6 @@
 package io.entgra.device.mgt.core.device.mgt.extensions.internal;
 
 import io.entgra.device.mgt.core.device.mgt.common.spi.DeviceTypeGeneratorService;
-import io.entgra.device.mgt.core.device.mgt.core.service.DeviceFeatureOperations;
-import io.entgra.device.mgt.core.device.mgt.core.service.DeviceFeatureOperationsImpl;
 import io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.DeviceTypeGeneratorServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.DeviceTypePluginExtensionServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.extensions.spi.DeviceTypePluginExtensionService;

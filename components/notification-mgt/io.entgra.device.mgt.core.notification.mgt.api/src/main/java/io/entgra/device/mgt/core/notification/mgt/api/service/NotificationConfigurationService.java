@@ -175,7 +175,12 @@ public interface NotificationConfigurationService {
                     name = "type",
                     value = "Filter notification configurations by type.",
                     required = false)
-            @QueryParam("type") String type);
+            @QueryParam("type") String type,
+            @ApiParam(
+                    name = "deviceType",
+                    value = "Filter notification configurations by deviceType.",
+                    required = false)
+            @QueryParam("deviceType") String deviceType);
 
 
     @POST
@@ -218,8 +223,8 @@ public interface NotificationConfigurationService {
                     ),
                     @ApiResponse(
                             code = 409,
-                            message = "Conflict. \n A configuration with the same parameters already exists.",
-                            response = ErrorResponse.class
+                            message = "Conflict. A notification configuration already exists for the given device type and code.",
+                            response = Response.class
                     ),
                     @ApiResponse(
                             code = 500,
@@ -239,13 +244,12 @@ public interface NotificationConfigurationService {
     );
 
     @PUT
-    @Path("/{configId}")
     @Consumes(MediaType.APPLICATION_JSON)
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "PUT",
             value = "Update Notification Configuration",
-            notes = "Update notification configurations based on the input received from the UI.",
+            notes = "Update a notification configuration based on the input received from the UI.",
             tags = "Notification Configuration Management",
             extensions = {
                     @Extension(properties = {
@@ -259,8 +263,8 @@ public interface NotificationConfigurationService {
             value = {
                     @ApiResponse(
                             code = 200,
-                            message = "OK. \n Successfully updated the new notification configurations.",
-                            response = NotificationConfigurationList.class,
+                            message = "OK. Successfully updated the notification configuration.",
+                            response = NotificationConfig.class,
                             responseHeaders = {
                                     @ResponseHeader(
                                             name = "Content-Type",
@@ -268,34 +272,32 @@ public interface NotificationConfigurationService {
                                     ),
                                     @ResponseHeader(
                                             name = "Last-Modified",
-                                            description = "Date and time the resource was last modified.\nUsed by caches," +
-                                                    " or in conditional requests."
+                                            description = "Date and time the resource was last modified."
                                     )
                             }
                     ),
                     @ApiResponse(
                             code = 400,
-                            message = "Bad Request. \n Invalid configuration data received.",
+                            message = "Bad Request. Invalid configuration data received.",
                             response = ErrorResponse.class
                     ),
                     @ApiResponse(
                             code = 404,
-                            message = "Not Found. \n The resource to be updated does not exist."),
+                            message = "Not Found. The resource to be updated does not exist."
+                    ),
+                    @ApiResponse(
+                            code = 409,
+                            message = "Conflict. A notification configuration already exists for the given device type and code.",
+                            response = Response.class
+                    ),
                     @ApiResponse(
                             code = 500,
-                            message = "Internal Server Error. \n Server error occurred while creating the configuration.",
+                            message = "Internal Server Error. Server error occurred while updating the configuration.",
                             response = ErrorResponse.class
                     )
             }
     )
-    Response updateNotificationConfigById(
-            @PathParam("configId") int configId,
-            @ApiParam(
-                    name = "configurations",
-                    value = "A list of configuration objects representing the notification settings. " +
-                            "This includes the type of notification, recipients, and other related metadata.",
-                    required = true
-            )
+    Response updateNotificationConfig(
             NotificationConfig configuration
     );
 
@@ -383,7 +385,8 @@ public interface NotificationConfigurationService {
                     ),
                     @ApiResponse(
                             code = 404,
-                            message = "Not Found. \n The resource to be deleted does not exist."),
+                            message = "Not Found. \n The resource to be deleted does not exist."
+                    ),
                     @ApiResponse(
                             code = 500,
                             message = "Internal Server Error. \n Server error occurred while creating the configuration.",
@@ -439,7 +442,8 @@ public interface NotificationConfigurationService {
                     ),
                     @ApiResponse(
                             code = 404,
-                            message = "Not Found. \n The resource to be deleted does not exist."),
+                            message = "Not Found. \n The resource to be deleted does not exist."
+                    ),
                     @ApiResponse(
                             code = 500,
                             message = "Internal Server Error. \n Server error occurred while creating the configuration.",
@@ -506,5 +510,58 @@ public interface NotificationConfigurationService {
                     required = true
             )
             NotificationConfigurationList archiveDefaults
+    );
+
+    @Path("/check")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Check if a Notification Configuration exists",
+            notes = "Checks whether a notification configuration already exists for the given device type and code.",
+            tags = "Notification Configuration Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(
+                                    name = SCOPE,
+                                    value = "dm:notificationConfig:view"),
+                            @ExtensionProperty(
+                                    name = "context",
+                                    value = "/api/notification-mgt/v1.0/notification-configuration/check")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. No conflicting notification configuration found.",
+                            response = Response.class),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. No configuration found for the tenant.",
+                            response = Response.class),
+                    @ApiResponse(
+                            code = 409,
+                            message = "Conflict. A notification configuration already exists for the given device type and code.",
+                            response = Response.class),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. Error occurred while checking configurations.",
+                            response = Response.class)
+            }
+    )
+    Response checkNotificationConfig(
+            @ApiParam(
+                    name = "deviceType",
+                    value = "Device type of the notification configuration.",
+                    required = true)
+            @QueryParam("deviceType")
+            String deviceType,
+            @ApiParam(
+                    name = "code",
+                    value = "The operation or task code associated with the notification.",
+                    required = true)
+            @QueryParam("code")
+            String code
     );
 }

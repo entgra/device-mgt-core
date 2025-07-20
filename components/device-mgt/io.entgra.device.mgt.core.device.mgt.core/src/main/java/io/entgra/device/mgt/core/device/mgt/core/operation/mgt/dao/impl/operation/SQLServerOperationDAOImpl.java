@@ -412,17 +412,20 @@ public class SQLServerOperationDAOImpl extends GenericOperationDAOImpl {
                         "UPDATED_TIMESTAMP=? " +
                 "WHERE ENROLMENT_ID=? " +
                         "AND OPERATION_ID=?";
-        try (Connection connection = OperationManagementDAOFactory.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(query)) {
-            long time = DeviceManagementDAOUtil.getCurrentUTCTime();
-            stmt.setString(1, status.toString());
-            stmt.setTimestamp(2, new Timestamp(time));
-            stmt.setInt(3, enrolmentId);
-            stmt.setInt(4, operationId);
-
-            return stmt.executeUpdate() > 0;
+        try {
+            Connection connection = OperationManagementDAOFactory.getConnection();
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                long time = DeviceManagementDAOUtil.getCurrentUTCTime();
+                stmt.setString(1, status.toString());
+                stmt.setLong(2, time);
+                stmt.setInt(3, enrolmentId);
+                stmt.setInt(4, operationId);
+                return stmt.executeUpdate() > 0;
+            }
         } catch (SQLException e) {
-            throw new OperationManagementDAOException("Error updating operation status in SQL Server.", e);
+            String msg = "Error updating operation status in SQL Server.";
+            log.error(msg, e);
+            throw new OperationManagementDAOException(msg, e);
         }
     }
 
@@ -438,21 +441,25 @@ public class SQLServerOperationDAOImpl extends GenericOperationDAOImpl {
                         "FROM DM_ENROLMENT_OP_MAPPING " +
                 "WHERE ENROLMENT_ID = ? " +
                         "AND OPERATION_ID = ?";
-        try (Connection connection = OperationManagementDAOFactory.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setInt(1, enrolmentId);
-            stmt.setInt(2, operationId);
-            try (ResultSet resultSet = stmt.executeQuery()) {
-                if (resultSet.next()) {
-                    deviceOperationDetails = new DeviceOperationDetails(
-                            resultSet.getInt("DEVICE_ID"),
-                            resultSet.getString("OPERATION_CODE"),
-                            resultSet.getString("DEVICE_TYPE")
-                    );
+        try {
+            Connection connection = OperationManagementDAOFactory.getConnection();
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setInt(1, enrolmentId);
+                stmt.setInt(2, operationId);
+                try (ResultSet resultSet = stmt.executeQuery()) {
+                    if (resultSet.next()) {
+                        deviceOperationDetails = new DeviceOperationDetails(
+                                resultSet.getInt("DEVICE_ID"),
+                                resultSet.getString("OPERATION_CODE"),
+                                resultSet.getString("DEVICE_TYPE")
+                        );
+                    }
                 }
             }
         } catch (SQLException e) {
-            throw new OperationManagementDAOException("Error fetching operation details from SQL Server.", e);
+            String msg = "Error fetching operation details from SQL Server.";
+            log.error(msg, e);
+            throw new OperationManagementDAOException(msg, e);
         }
         return deviceOperationDetails;
     }
@@ -469,21 +476,24 @@ public class SQLServerOperationDAOImpl extends GenericOperationDAOImpl {
                         "FROM DM_ENROLMENT_OP_MAPPING " +
                         "WHERE DEVICE_TYPE = ? " +
                         "AND STATUS = ?";
-        try (Connection connection = OperationManagementDAOFactory.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, deviceType);
-            stmt.setString(2, requiredStatus);
-
-            try (ResultSet resultSet = stmt.executeQuery()) {
-                while (resultSet.next()) {
-                    int deviceId = resultSet.getInt("DEVICE_ID");
-                    String operationCode = resultSet.getString("OPERATION_CODE");
-                    operationDetailsList.add(new DeviceOperationDetails(deviceId, operationCode, deviceType));
+        try {
+            Connection connection = OperationManagementDAOFactory.getConnection();
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setString(1, deviceType);
+                stmt.setString(2, requiredStatus);
+                try (ResultSet resultSet = stmt.executeQuery()) {
+                    while (resultSet.next()) {
+                        int deviceId = resultSet.getInt("DEVICE_ID");
+                        String operationCode = resultSet.getString("OPERATION_CODE");
+                        operationDetailsList.add(new DeviceOperationDetails(deviceId, operationCode, deviceType));
+                    }
                 }
             }
         } catch (SQLException e) {
-            throw new OperationManagementDAOException("Error fetching updated operation details for device type: "
-                    + deviceType + " with status: " + requiredStatus, e);
+            String msg = "Error fetching updated operation details for device type: "
+                    + deviceType + " with status: " + requiredStatus;
+            log.error(msg, e);
+            throw new OperationManagementDAOException(msg, e);
         }
         return operationDetailsList;
     }

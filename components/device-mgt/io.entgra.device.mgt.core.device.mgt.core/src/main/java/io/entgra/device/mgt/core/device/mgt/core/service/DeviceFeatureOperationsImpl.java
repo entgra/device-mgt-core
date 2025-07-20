@@ -27,7 +27,7 @@ import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementEx
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceTypeNotFoundException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.TransactionManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceFeatureOperationsDAOFactory;
-import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOException;
+import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceFeatureOperationsDAOException;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceFeatureOperationDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
 import io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementDataHolder;
@@ -37,6 +37,7 @@ import org.apache.commons.logging.LogFactory;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class DeviceFeatureOperationsImpl implements DeviceFeatureOperations {
 
@@ -81,20 +82,22 @@ public class DeviceFeatureOperationsImpl implements DeviceFeatureOperations {
                     log.error("Feature manager not found for device type: " + deviceTypeName, e);
                 }
             }
-            DeviceFeatureOperationsDAOFactory.beginTransaction();
-            deviceFeatureOperationDAO.updateDeviceFeatureDetails(featureList);
-            DeviceFeatureOperationsDAOFactory.commitTransaction();
-        } catch (DeviceManagementDAOException e) {
+            try {
+                DeviceFeatureOperationsDAOFactory.beginTransaction();
+                deviceFeatureOperationDAO.updateDeviceFeatureDetails(featureList);
+                DeviceFeatureOperationsDAOFactory.commitTransaction();
+            } catch (TransactionManagementException e) {
+                String msg = "Error occurred while initiating transaction";
+                log.error(msg, e);
+                throw new DeviceFeatureOperationException(msg, e);
+            }
+        } catch (DeviceFeatureOperationsDAOException e) {
             DeviceFeatureOperationsDAOFactory.rollbackTransaction();
             String msg = "An error occurred while retrieving device types.";
             log.error(msg, e);
             throw new DeviceFeatureOperationException(msg, e);
         } catch (DeviceManagementException e) {
             String msg = "An error occurred while retrieving device management services.";
-            log.error(msg, e);
-            throw new DeviceFeatureOperationException(msg, e);
-        } catch (TransactionManagementException e) {
-            String msg = "Error occurred while initiating transaction";
             log.error(msg, e);
             throw new DeviceFeatureOperationException(msg, e);
         } finally {
@@ -104,17 +107,18 @@ public class DeviceFeatureOperationsImpl implements DeviceFeatureOperations {
     }
 
     @Override
-    public List<DeviceFeatureInfo> getOperationDetails(String code, String name, String type)
+    public List<DeviceFeatureInfo> getOperationDetails(String code, String name, String type,
+                                                       boolean removeDeduplicateCode)
             throws DeviceFeatureOperationException {
         List<DeviceFeatureInfo> operationList;
         try {
             DeviceFeatureOperationsDAOFactory.openConnection();
-            operationList = deviceFeatureOperationDAO.getOperationDetails(code, name, type);
+            operationList = deviceFeatureOperationDAO.getOperationDetails(code, name, type, removeDeduplicateCode);
         } catch (SQLException e) {
             String msg = "Error retrieving operation details from DB table.";
             log.error(msg, e);
             throw new DeviceFeatureOperationException(msg, e);
-        } catch (DeviceManagementDAOException e) {
+        } catch (DeviceFeatureOperationsDAOException e) {
             String msg = "Error retrieving operation details.";
             log.error(msg, e);
             throw new DeviceFeatureOperationException(msg, e);
@@ -122,5 +126,24 @@ public class DeviceFeatureOperationsImpl implements DeviceFeatureOperations {
             DeviceFeatureOperationsDAOFactory.closeConnection();
         }
         return operationList;
+    }
+
+    @Override
+    public Map<String, Boolean> validateOperationCodes(List<String> codes)
+            throws DeviceFeatureOperationException {
+        try {
+            DeviceFeatureOperationsDAOFactory.openConnection();
+            return deviceFeatureOperationDAO.operationCodesExist(codes);
+        } catch (DeviceFeatureOperationsDAOException e) {
+            String msg = "Error validating operation codes: " + codes;
+            log.error(msg, e);
+            throw new DeviceFeatureOperationException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error retrieving operation details from DB table.";
+            log.error(msg, e);
+            throw new DeviceFeatureOperationException(msg, e);
+        } finally {
+            DeviceFeatureOperationsDAOFactory.closeConnection();
+        }
     }
 }

@@ -36,6 +36,7 @@ import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.annotations.Tag;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -52,7 +53,7 @@ import javax.ws.rs.core.Response;
                 extensions = {
                         @Extension(properties = {
                                 @ExtensionProperty(name = "name", value = "DeviceFeatureManagement"),
-                                @ExtensionProperty(name = "context", value = "/api/device-mgt/v1.0/deviceOperations"),
+                                @ExtensionProperty(name = "context", value = "/api/device-mgt/v1.0/device-operations"),
                         })
                 }
         ),
@@ -71,7 +72,7 @@ import javax.ws.rs.core.Response;
                 ),
         }
 )
-@Path("/deviceOperations")
+@Path("/device-operations")
 @Api(value = "Device Management", description = "This API carries all device operation-related endpoints.")
 public interface DeviceFeatureOperationService {
     @GET
@@ -104,7 +105,7 @@ public interface DeviceFeatureOperationService {
                     ),
                     @ApiResponse(
                             code = 404,
-                            message = "Not Found. \n The specified operation can not be found.",
+                            message = "Not Found. The specified operation can not be found.",
                             response = ErrorResponse.class),
                     @ApiResponse(
                             code = 500,
@@ -119,17 +120,22 @@ public interface DeviceFeatureOperationService {
                     value = "The operation code to search for (supports partial match). Cannot be used with 'name'.",
                     required = false)
             @QueryParam("code") String code,
-
             @ApiParam(
                     name = "name",
                     value = "The operation name to search for (supports partial match). Cannot be used with 'code'.",
                     required = false)
             @QueryParam("name") String name,
-
             @ApiParam(
                     name = "type",
-                    value = "The device type to filter by (e.g., android, ios).",
+                    value = "The device type to filter by (e.g., android, ios, windows).",
                     required = false)
-            @QueryParam("type") String type
+            @QueryParam("type") String type,
+            @ApiParam(
+                    name = "removeDeduplicateCode",
+                    value = "If true, removes duplicate operations by code when 'type' is not specified.",
+                    required = false)
+            @DefaultValue("false")
+            @QueryParam("removeDeduplicateCode") boolean deduplicate
+
     );
 }

@@ -19,6 +19,7 @@
 package io.entgra.device.mgt.core.notification.mgt.core.internal;
 
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceFeatureOperations;
 import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationConfigurationServiceException;
 import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationConfigService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
@@ -220,4 +221,35 @@ public class NotificationManagementServiceComponent {
             log.debug("Task service is unset successfully");
         }
     }
+
+    /**
+     * Sets DeviceFeatureOperations service.
+     *
+     * @param deviceFeatureOperations An instance of DeviceFeatureOperations
+     */
+    @Reference(
+            name = "device.feature.operations.service",
+            service = io.entgra.device.mgt.core.device.mgt.core.service.DeviceFeatureOperations.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetDeviceFeatureOperations")
+    protected void setDeviceFeatureOperations(DeviceFeatureOperations deviceFeatureOperations) {
+        NotificationManagementDataHolder.getInstance().setDeviceFeatureOperations(deviceFeatureOperations);
+        if (log.isDebugEnabled()) {
+            log.debug("DeviceFeatureOperations service is set successfully");
+        }
+    }
+
+    /**
+     * Unsets DeviceFeatureOperations service.
+     *
+     * @param deviceFeatureOperations An instance of DeviceFeatureOperations
+     */
+    protected void unsetDeviceFeatureOperations(DeviceFeatureOperations deviceFeatureOperations) {
+        NotificationManagementDataHolder.getInstance().setDeviceFeatureOperations(null);
+        if (log.isDebugEnabled()) {
+            log.debug("DeviceFeatureOperations service is unset successfully");
+        }
+    }
+
 }

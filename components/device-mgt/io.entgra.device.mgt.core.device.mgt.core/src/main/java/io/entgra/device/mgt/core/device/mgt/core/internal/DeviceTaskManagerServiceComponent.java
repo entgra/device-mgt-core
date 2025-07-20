@@ -75,20 +75,13 @@ public class DeviceTaskManagerServiceComponent {
             if (deviceManagementConfig != null && deviceManagementConfig.getOperationTimeoutConfiguration() != null) {
                 startOperationTimeoutTask(componentContext.getBundleContext());
             }
-            //Register the DeviceFeatureOperations service to retrieve device type operation details.
-            DeviceConfigurationManager.getInstance().initConfig();
-            UIConfigurationManager.getInstance().initConfig();
-            DeviceManagementConfig config =
-                    DeviceConfigurationManager.getInstance().getDeviceManagementConfig();
-            DataSourceConfig dsConfig = config.getDeviceManagementConfigRepository().getDataSourceConfig();
-            DeviceFeatureOperationsDAOFactory.init(dsConfig);
-            DeviceConfigurationManager deviceConfigManager = DeviceConfigurationManager.getInstance();
-            DeviceFeatureOperationsDAOFactory.init(deviceConfigManager.getDeviceManagementConfig()
-                    .getDeviceManagementConfigRepository().getDataSourceConfig());
-            DeviceFeatureOperations deviceFeatureOperations = new DeviceFeatureOperationsImpl();
-            componentContext.getBundleContext().registerService(DeviceFeatureOperations.class.getName(),
-                    deviceFeatureOperations, null);
-            deviceFeatureOperations.getDeviceFeatureOperations();
+            //Retrieve device type operations and insert them into the DM_OPERATION_DETAILS table.
+            DeviceFeatureOperations ops = DeviceManagementDataHolder.getInstance().getDeviceFeatureOperations();
+            if (ops != null) {
+                ops.getDeviceFeatureOperations();
+            } else {
+                log.warn("DeviceFeatureOperations service is not available yet. Skipping operation initialization.");
+            }
         } catch (Throwable e) {
             log.error("Error occurred while initializing device task manager service.", e);
         }

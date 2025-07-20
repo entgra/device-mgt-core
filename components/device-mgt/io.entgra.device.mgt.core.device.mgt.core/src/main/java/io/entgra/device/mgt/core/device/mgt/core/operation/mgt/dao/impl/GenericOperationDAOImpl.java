@@ -132,32 +132,34 @@ public class GenericOperationDAOImpl implements OperationDAO {
     @Override
     public DeviceOperationDetails getDeviceOperationDetails(int enrolmentId, int operationId)
             throws OperationManagementDAOException {
-        PreparedStatement stmt = null;
-        ResultSet resultSet = null;
         DeviceOperationDetails deviceOperationDetails = null;
+        String query =
+                "SELECT " +
+                        "DEVICE_ID, " +
+                        "OPERATION_CODE, " +
+                        "DEVICE_TYPE " +
+                        "FROM DM_ENROLMENT_OP_MAPPING " +
+                        "WHERE ENROLMENT_ID = ? " +
+                        "AND OPERATION_ID = ?";
         try {
             Connection connection = OperationManagementDAOFactory.getConnection();
-            String query =
-                    "SELECT DEVICE_ID, " +
-                            "OPERATION_CODE, " +
-                            "DEVICE_TYPE " +
-                            "FROM DM_ENROLMENT_OP_MAPPING " +
-                    "WHERE ENROLMENT_ID = ?" +
-                            " AND OPERATION_ID = ?";
-            stmt = connection.prepareStatement(query);
-            stmt.setInt(1, enrolmentId);
-            stmt.setInt(2, operationId);
-            resultSet = stmt.executeQuery();
-            if (resultSet.next()) {
-                int deviceId = resultSet.getInt("DEVICE_ID");
-                String operationCode = resultSet.getString("OPERATION_CODE");
-                String deviceType = resultSet.getString("DEVICE_TYPE");
-                deviceOperationDetails = new DeviceOperationDetails(deviceId, operationCode, deviceType);
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setInt(1, enrolmentId);
+                stmt.setInt(2, operationId);
+                try (ResultSet resultSet = stmt.executeQuery()) {
+                    if (resultSet.next()) {
+                        deviceOperationDetails = new DeviceOperationDetails(
+                                resultSet.getInt("DEVICE_ID"),
+                                resultSet.getString("OPERATION_CODE"),
+                                resultSet.getString("DEVICE_TYPE")
+                        );
+                    }
+                }
             }
         } catch (SQLException e) {
-            throw new OperationManagementDAOException("Error occurred while fetching device operation details.", e);
-        } finally {
-            OperationManagementDAOUtil.cleanupResources(stmt, resultSet);
+            String msg = "Error occurred while fetching device operation details.";
+            log.error(msg, e);
+            throw new OperationManagementDAOException(msg, e);
         }
         return deviceOperationDetails;
     }
@@ -206,20 +208,24 @@ public class GenericOperationDAOImpl implements OperationDAO {
                         "FROM DM_ENROLMENT_OP_MAPPING " +
                 "WHERE DEVICE_TYPE = ? " +
                         "AND STATUS = ?";
-        try (Connection connection = OperationManagementDAOFactory.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, deviceType);
-            stmt.setString(2, requiredStatus);
-            try (ResultSet resultSet = stmt.executeQuery()) {
-                while (resultSet.next()) {
-                    int deviceId = resultSet.getInt("DEVICE_ID");
-                    String operationCode = resultSet.getString("OPERATION_CODE");
-                    operationDetailsList.add(new DeviceOperationDetails(deviceId, operationCode, deviceType));
+        try {
+            Connection connection = OperationManagementDAOFactory.getConnection();
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setString(1, deviceType);
+                stmt.setString(2, requiredStatus);
+                try (ResultSet resultSet = stmt.executeQuery()) {
+                    while (resultSet.next()) {
+                        int deviceId = resultSet.getInt("DEVICE_ID");
+                        String operationCode = resultSet.getString("OPERATION_CODE");
+                        operationDetailsList.add(new DeviceOperationDetails(deviceId, operationCode, deviceType));
+                    }
                 }
             }
         } catch (SQLException e) {
-            throw new OperationManagementDAOException("Error fetching updated operation details for device type: "
-                    + deviceType + " with status: " + requiredStatus, e);
+            String msg = "Error fetching updated operation details for device type: "
+                    + deviceType + " with status: " + requiredStatus;
+            log.error(msg, e);
+            throw new OperationManagementDAOException(msg, e);
         }
         return operationDetailsList;
     }

@@ -34,11 +34,15 @@ public class NotificationConfigurationList {
 
     @ApiModelProperty(value = "Default Archive period for notifications")
     @JsonProperty("defaultArchiveAfter")
-    private String defaultArchiveAfter;
+    private ArchivePeriod defaultArchiveAfter;
 
     @ApiModelProperty(value = "Default Archive type for notifications")
     @JsonProperty("defaultArchiveType")
     private String defaultArchiveType;
+
+    @ApiModelProperty(value = "Total number of matching configurations")
+    @JsonProperty("totalCount")
+    private int totalCount;
 
     public List<NotificationConfig> getNotificationConfigurations() {
         return notificationConfigurations;
@@ -48,11 +52,11 @@ public class NotificationConfigurationList {
         this.notificationConfigurations = notificationConfigurations;
     }
 
-    public String getDefaultArchiveAfter() {
+    public ArchivePeriod getDefaultArchiveAfter() {
         return defaultArchiveAfter;
     }
 
-    public void setDefaultArchiveAfter(String defaultArchiveAfter) {
+    public void setDefaultArchiveAfter(ArchivePeriod defaultArchiveAfter) {
         this.defaultArchiveAfter = defaultArchiveAfter;
     }
     
@@ -95,5 +99,13 @@ public class NotificationConfigurationList {
 
     public int getCount() {
         return this.notificationConfigurations.size();
+    }
+
+    public int getTotalCount() {
+        return totalCount;
+    }
+
+    public void setTotalCount(int totalCount) {
+        this.totalCount = totalCount;
     }
 }

@@ -90,7 +90,7 @@ public class PrivacyComplianceProviderImpl implements PrivacyComplianceProvider 
                 String message = String.format("Task Delete Device executed for user %s, and device %d was deleted.",
                         username, deviceId);
                 DeviceManagementDataHolder.getInstance().getNotificationManagementService()
-                        .handleTaskNotificationIfApplicable("DELETE_DEVICE", tenantId, message);
+                        .handleTaskNotificationIfApplicable(tenantId, message);
             }
             DeviceManagementDAOFactory.commitTransaction();
         } catch (PrivacyComplianceDAOException e) {
@@ -132,7 +132,7 @@ public class PrivacyComplianceProviderImpl implements PrivacyComplianceProvider 
             complianceDAO.deleteDevice(device.getId(), tenantId);
             String message = String.format("Task Delete Device executed for device %d.", device.getId());
             DeviceManagementDataHolder.getInstance().getNotificationManagementService()
-                    .handleTaskNotificationIfApplicable("DELETE_DEVICE", tenantId, message);
+                    .handleTaskNotificationIfApplicable(tenantId, message);
             DeviceManagementDAOFactory.commitTransaction();
         } catch (TransactionManagementException e) {
             DeviceManagementDAOFactory.rollbackTransaction();

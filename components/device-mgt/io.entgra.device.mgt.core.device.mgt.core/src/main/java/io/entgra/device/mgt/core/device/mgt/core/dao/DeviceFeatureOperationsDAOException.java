@@ -17,16 +17,15 @@
  *
  */
 
-package io.entgra.device.mgt.core.notification.mgt.core.exception;
+package io.entgra.device.mgt.core.device.mgt.core.dao;
 
-public class NotificationManagementDAOException extends Exception {
+public class DeviceFeatureOperationsDAOException extends Exception {
 
-    public NotificationManagementDAOException(String message) {
+    public DeviceFeatureOperationsDAOException(String message) {
         super(message);
     }
 
-    public NotificationManagementDAOException(String message, Throwable cause) {
+    public DeviceFeatureOperationsDAOException(String message, Throwable cause) {
         super(message, cause);
     }
 }
-

@@ -18,9 +18,9 @@
 
 package io.entgra.device.mgt.core.ui.request.interceptor;
 
+import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementDAOException;
 import io.entgra.device.mgt.core.notification.mgt.core.util.NotificationEventBroker;
 import io.entgra.device.mgt.core.notification.mgt.core.util.NotificationListener;
-import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementException;
 import io.entgra.device.mgt.core.notification.mgt.core.dao.NotificationManagementDAO;
 import io.entgra.device.mgt.core.notification.mgt.core.dao.factory.NotificationManagementDAOFactory;
 import org.apache.commons.logging.Log;
@@ -118,7 +118,7 @@ public class SSEHandler extends HttpServlet implements NotificationListener {
                     String initialPayload = String.format
                             ("{\"message\":\"Connected to notification service.\",\"unreadCount\":%d}", count);
                     out.write("data: " + initialPayload + "\n\n");
-                } catch (NotificationManagementException e) {
+                } catch (NotificationManagementDAOException e) {
                     String msg = "Error fetching unread notification count for user: " + username;
                     log.error(msg, e);
                     throw new RuntimeException(msg, e);

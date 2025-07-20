@@ -21,11 +21,9 @@ import io.entgra.device.mgt.core.device.mgt.common.authorization.GroupAccessAuth
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.MetadataManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.authorization.GroupAccessAuthorizationServiceImpl;
-import io.entgra.device.mgt.core.device.mgt.core.dao.TrackerManagementDAOFactory;
-import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
-import io.entgra.device.mgt.core.device.mgt.core.dao.EventManagementDAOFactory;
-import io.entgra.device.mgt.core.device.mgt.core.dao.GroupManagementDAOFactory;
+import io.entgra.device.mgt.core.device.mgt.core.dao.*;
 import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.DeviceStatusManagementServiceImpl;
+import io.entgra.device.mgt.core.device.mgt.core.service.*;
 import io.entgra.device.mgt.core.server.bootup.heartbeat.beacon.service.HeartBeatManagementService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -82,16 +80,6 @@ import io.entgra.device.mgt.core.device.mgt.core.push.notification.mgt.task.Push
 import io.entgra.device.mgt.core.device.mgt.core.report.mgt.ReportManagementServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.search.mgt.SearchManagerService;
 import io.entgra.device.mgt.core.device.mgt.core.search.mgt.impl.SearchManagerServiceImpl;
-import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
-import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderServiceImpl;
-import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeEventManagementProviderService;
-import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeEventManagementProviderServiceImpl;
-import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeStatisticManagementProviderService;
-import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeStatisticManagementProviderServiceImpl;
-import io.entgra.device.mgt.core.device.mgt.core.service.GroupManagementProviderService;
-import io.entgra.device.mgt.core.device.mgt.core.service.GroupManagementProviderServiceImpl;
-import io.entgra.device.mgt.core.device.mgt.core.service.TagManagementProviderService;
-import io.entgra.device.mgt.core.device.mgt.core.service.TagManagementProviderServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.task.DeviceTaskManagerService;
 import io.entgra.device.mgt.core.device.mgt.core.traccar.api.service.DeviceAPIClientService;
 import io.entgra.device.mgt.core.device.mgt.core.traccar.api.service.impl.DeviceAPIClientServiceImpl;
@@ -199,6 +187,13 @@ public class DeviceManagementServiceComponent {
 
             /* Initialize Operation Manager */
             this.initOperationsManager();
+
+            //Register the DeviceFeatureOperations service to retrieve device type operation details.
+            DeviceFeatureOperationsDAOFactory.init(dsConfig);
+            DeviceFeatureOperations deviceFeatureOperations = new DeviceFeatureOperationsImpl();
+            componentContext.getBundleContext().registerService(DeviceFeatureOperations.class.getName(),
+                    deviceFeatureOperations, null);
+            DeviceManagementDataHolder.getInstance().setDeviceFeatureOperations(deviceFeatureOperations);
 
             /* This is a workaround to initialize all Device Management Service Providers after the initialization
              * of Device Management Service component in order to avoid bundle start up order related complications */

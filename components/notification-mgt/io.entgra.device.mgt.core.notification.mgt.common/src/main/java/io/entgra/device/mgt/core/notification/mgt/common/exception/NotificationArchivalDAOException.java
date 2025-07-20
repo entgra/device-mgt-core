@@ -16,16 +16,15 @@
  * under the License.
  */
 
-package io.entgra.device.mgt.core.tenant.mgt.core.util;
+package io.entgra.device.mgt.core.notification.mgt.common.exception;
 
-import io.entgra.device.mgt.core.notification.mgt.common.beans.ArchivePeriod;
+public class NotificationArchivalDAOException extends RuntimeException {
 
-public class TenantConstants {
-
-private TenantConstants() {
+    public NotificationArchivalDAOException(String message) {
+        super(message);
     }
 
-    public static final ArchivePeriod DEFAULT_NOTIFICATION_ARCHIVE_PERIOD = new ArchivePeriod(12, "months");;
-    public static final String DEFAULT_NOTIFICATION_ARCHIVE_TYPE = "DB";
+    public NotificationArchivalDAOException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }
-

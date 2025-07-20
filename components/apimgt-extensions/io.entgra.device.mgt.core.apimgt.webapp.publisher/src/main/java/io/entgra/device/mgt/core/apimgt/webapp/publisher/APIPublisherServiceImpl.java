@@ -681,6 +681,14 @@ public class APIPublisherServiceImpl implements APIPublisherService {
         }
     }
 
+    /**
+     * Updates the given role with the specified UI permissions.
+     * This method clears all existing authorizations for the role and adds(updates) new permissions.
+     * If any error occurs during the process, a failure notification is triggered.
+     *
+     * @param roleName    the name of the role to update
+     * @param permissions the list of UI permissions to assign to the role
+     */
     private void updatePermissions(String roleName, List<String> permissions) {
         NotificationManagementService notificationManagementService =
                 APIPublisherDataHolder.getInstance().getNotificationManagementService();
@@ -703,7 +711,6 @@ public class APIPublisherServiceImpl implements APIPublisherService {
             String message = String.format("Role Permission updation was failed for the role %s", roleName);
             try {
                 notificationManagementService.handleTaskNotificationIfApplicable(
-                        "ROLE_PERMISSION_UPDATE",
                         tenantId,
                         message
                 );

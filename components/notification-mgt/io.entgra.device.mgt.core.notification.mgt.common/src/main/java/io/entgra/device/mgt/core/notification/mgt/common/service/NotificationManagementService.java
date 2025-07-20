@@ -21,13 +21,14 @@ package io.entgra.device.mgt.core.notification.mgt.common.service;
 
 import io.entgra.device.mgt.core.notification.mgt.common.beans.NotificationConfig;
 import io.entgra.device.mgt.core.notification.mgt.common.dto.Notification;
-import io.entgra.device.mgt.core.notification.mgt.common.dto.UserNotificationPayload;
+import io.entgra.device.mgt.core.notification.mgt.common.dto.PaginatedUserNotificationResponse;
 import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationArchivalException;
 import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementException;
 import io.entgra.device.mgt.core.notification.mgt.common.exception.TransactionManagementException;
 import org.wso2.carbon.user.api.UserStoreException;
 
 import java.util.List;
+import java.util.Map;
 
 public interface NotificationManagementService {
     /**
@@ -36,22 +37,18 @@ public interface NotificationManagementService {
      * @return {@link List<Notification>}
      * @throws NotificationManagementException Throws when error occurred while retrieving notifications.
      */
-    List<Notification> getLatestNotifications(int offset, int limit) throws NotificationManagementException;
+    List<Notification> getAllNotifications(int offset, int limit) throws NotificationManagementException;
 
     /**
-     * Retrieves a list of notifications for a given user along with their read/unread status.
-     * This method performs the following steps:
-     *   Fetches the user's notification actions (e.g., READ, UNREAD) with pagination support.
-     *   Retrieves the corresponding notification details (ID, description, type) using the notification IDs.
-     *   Combines both into a list of {@link UserNotificationPayload} objects.
+     * Retrieves a paginated list of notifications for a given user along with their read/unread status.
      * @param username The username of the user whose notifications are to be retrieved.
      * @param limit    The maximum number of notifications to return.
      * @param offset   The offset from which to start retrieving notifications (for pagination).
-     * @param isRead notification read status of the given user.
-     * @return A list of {@link UserNotificationPayload} objects containing notification and action status.
+     * @param isRead   The read/unread status to filter the notifications.
+     * @return A {@link PaginatedUserNotificationResponse} containing the list of notifications and the total count.
      * @throws NotificationManagementException If an error occurs while accessing the data store.
      */
-    List<UserNotificationPayload> getUserNotificationsWithStatus(String username, int limit, int offset, Boolean isRead)
+    PaginatedUserNotificationResponse getUserNotificationsWithStatus(String username, int limit, int offset, Boolean isRead)
             throws NotificationManagementException;
 
     /**
@@ -60,10 +57,10 @@ public interface NotificationManagementService {
      *
      * @param notificationIds List of notification IDs to update.
      * @param username        Username for whom the action is to be updated.
-     * @param actionType      Action type to set (e.g., "READ", "UNREAD").
+     * @param isRead      Action type to set (e.g., "READ", "UNREAD").
      * @throws NotificationManagementException If an error occurs while processing the update.
      */
-    void updateNotificationActionForUser(List<Integer> notificationIds, String username, String actionType)
+    void updateNotificationActionForUser(List<Integer> notificationIds, String username, boolean isRead)
             throws NotificationManagementException;
 
     /**
@@ -79,23 +76,29 @@ public interface NotificationManagementService {
     int getUserNotificationCount(String username, Boolean isRead) throws NotificationManagementException;
 
     /**
-     * Deletes one or more notifications for a given user.
+     * Deletes the notifications for a given user.
      *
-     * @param notificationIds A list of notification IDs to be deleted.
-     * @param username        The username associated with the notifications.
-     * @throws NotificationManagementException If an error occurs while deleting the notifications.
+     * @param notificationIds List of notification IDs to delete.
+     * @param username        The username of the user whose notifications are to be deleted.
+     * @return A map containing two entries:
+     *         "deleted" - list of notification IDs that were successfully deleted,
+     *         "invalid" - list of notification IDs that did not exist for the user.
+     * @throws NotificationManagementException if an error occurs while deleting notifications at the service level.
      */
-    void deleteUserNotifications(List<Integer> notificationIds, String username)
+    Map<String, List<Integer>> deleteUserNotifications(List<Integer> notificationIds, String username)
             throws NotificationManagementException;
 
     /**
-     * Archive one or more notifications for a given user.
+     * Archives the given notifications for the user.
      *
-     * @param notificationIds A list of notification IDs to be deleted.
-     * @param username        The username associated with the notifications.
-     * @throws NotificationArchivalException If an error occurs while deleting the notifications.
+     * @param notificationIds List of notification IDs to archive.
+     * @param username        Username of the user.
+     * @return A map with two entries:
+     *         "archived" - list of notifications successfully archived,
+     *         "invalid"  - list of notification IDs that were not found.
+     * @throws NotificationArchivalException if an error occurs while archiving notifications.
      */
-    void archiveUserNotifications(List<Integer> notificationIds, String username)
+    Map<String, List<Integer>> archiveUserNotifications(List<Integer> notificationIds, String username)
             throws NotificationArchivalException;
 
     /**
@@ -162,11 +165,10 @@ public interface NotificationManagementService {
      * Handles task-based notifications if a notification configuration exists for the given task code.
      * If no configuration is found, the method simply exits without performing any notification actions.
      *
-     * @param taskCode The unique identifier for the task being executed.
      * @param tenantId The tenant ID under which the task is being executed.
      * @param message The message to be sent with the notification, which can be task-specific.
      * @throws NotificationManagementException If an error occurs while handling the notification.
      */
-    void handleTaskNotificationIfApplicable(String taskCode, int tenantId, String message)
+    void handleTaskNotificationIfApplicable(int tenantId, String message)
             throws NotificationManagementException;
 }

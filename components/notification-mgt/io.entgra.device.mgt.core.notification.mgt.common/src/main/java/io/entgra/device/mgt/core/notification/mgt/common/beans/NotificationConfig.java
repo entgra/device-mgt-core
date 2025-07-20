@@ -21,14 +21,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-import java.time.LocalDateTime;
-
 @ApiModel(value = "NotificationConfig", description = "Notification Configurations")
 public class NotificationConfig {
 
     @ApiModelProperty(name = "configId", value = "The unique ID of the notification configuration.",
             required = true)
     private int id;
+
+    @ApiModelProperty(name = "deviceType", value = "Device type of the notification configuration.",
+            required = true)
+    private String deviceType;
 
     @ApiModelProperty(name = "configName", value = "The name of the notification configuration.",
             required = true)
@@ -45,6 +47,10 @@ public class NotificationConfig {
     @ApiModelProperty(name = "code", value = "The operation or task code associated with the notification.",
             required = true)
     private String code;
+
+    @ApiModelProperty(name = "enabled", value = "Indicates whether this notification configuration is enabled.",
+            required = true)
+    private boolean enabled = true;
 
     @ApiModelProperty(name = "recipients", value = "Details of the recipients of the notification.",
             required = true)
@@ -122,12 +128,28 @@ public class NotificationConfig {
         this.notificationSettings = notificationSettings;
     }
 
+    public String getDeviceType() {
+        return deviceType;
+    }
+
+    public void setDeviceType(String deviceType) {
+        this.deviceType = deviceType;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
     public static class ConfiguredBy {
         @JsonProperty("user")
         private String user;
 
         @JsonProperty("lastModifiedAt")
-        private LocalDateTime lastModifiedAt;
+        private String lastModifiedAt;
 
         public String getUser() {
             return user;
@@ -137,11 +159,11 @@ public class NotificationConfig {
             this.user = user;
         }
 
-        public LocalDateTime getLastModifiedAt() {
+        public String getLastModifiedAt() {
             return lastModifiedAt;
         }
 
-        public void setLastModifiedAt(LocalDateTime lastModifiedAt) {
+        public void setLastModifiedAt(String lastModifiedAt) {
             this.lastModifiedAt = lastModifiedAt;
         }
     }

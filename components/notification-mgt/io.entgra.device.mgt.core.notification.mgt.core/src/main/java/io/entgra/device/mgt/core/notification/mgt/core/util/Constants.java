@@ -19,15 +19,20 @@
 
 package io.entgra.device.mgt.core.notification.mgt.core.util;
 
+import io.entgra.device.mgt.core.notification.mgt.common.beans.ArchivePeriod;
+
 public class Constants {
     public static final String CDM_CONFIG_FILE_NAME = "cdm-config.xml";
     public static final String TENANT_ID_KEY = "TENANT_ID";
     public static final String NOTIFICATION_ARCHIVAL_TASK_NAME = "NOTIFICATION_ARCHIVAL_TASK";
     public static final String NOTIFICATION_ARCHIVAL_TASK_TYPE = "NOTIFICATION_ARCHIVAL_TASK_TYPE";
     public static final String CRON_EXPRESSION = "0 0 2 * * ?";
-    public static final String DEFAULT_ARCHIVE_PERIOD = "12 months";
-    public static final String DEFAULT_ARCHIVE_DELETE_PERIOD = "5 years";
     public static final String DEFAULT_ARCHIVE_TYPE = "DB";
     public static final String PENDING = "PENDING";
     public static final String NOTIFICATION_CONFIG_META_KEY = "notification-config" ;
+    public static final String ADMIN = "admin" ;
+    public static final String OPERATION = "operation" ;
+
+    public static final ArchivePeriod DEFAULT_ARCHIVE_PERIOD = new ArchivePeriod(12, "months");
+    public static final ArchivePeriod DEFAULT_ARCHIVE_DELETE_PERIOD = new ArchivePeriod(5, "years");
 }

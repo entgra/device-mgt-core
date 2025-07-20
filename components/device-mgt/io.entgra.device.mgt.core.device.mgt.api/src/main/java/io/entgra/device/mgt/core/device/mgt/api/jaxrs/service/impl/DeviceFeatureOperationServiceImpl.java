@@ -28,6 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -35,7 +36,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 
-@Path("/deviceOperations")
+@Path("/device-operations")
 public class DeviceFeatureOperationServiceImpl implements DeviceFeatureOperationService {
     private static final Log log = LogFactory.getLog(DeviceFeatureOperationServiceImpl.class);
     @GET
@@ -43,15 +44,12 @@ public class DeviceFeatureOperationServiceImpl implements DeviceFeatureOperation
     public Response getOperationDetails(
             @QueryParam("code") String code,
             @QueryParam("name") String name,
-            @QueryParam("type") String type) {
-        if (code != null && name != null) {
-            String msg = "Only one of 'code' or 'name' should be provided.";
-            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
-        }
+            @QueryParam("type") String type,
+            @QueryParam("removeDeduplicateCode") @DefaultValue("false") boolean deduplicate) {
         try {
             List<DeviceFeatureInfo> operationList =
-                    DeviceMgtAPIUtils.getDeviceFeatureOperations().getOperationDetails(code, name, type);
-            return Response.status(Response.Status.OK).entity(operationList).build();
+                    DeviceMgtAPIUtils.getDeviceFeatureOperations().getOperationDetails(code, name, type, deduplicate);
+            return Response.ok(operationList).build();
         } catch (DeviceFeatureOperationException e) {
             String msg = "Error occurred while retrieving operation details.";
             log.error(msg, e);

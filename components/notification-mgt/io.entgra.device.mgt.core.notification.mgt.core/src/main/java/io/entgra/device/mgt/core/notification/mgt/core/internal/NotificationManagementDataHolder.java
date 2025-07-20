@@ -17,6 +17,7 @@
  */
 package io.entgra.device.mgt.core.notification.mgt.core.internal;
 
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceFeatureOperations;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
 
@@ -34,6 +35,7 @@ public class NotificationManagementDataHolder {
     private MetadataManagementService metaDataManagementService;
     private RealmService realmService;
     private TaskService taskService;
+    private DeviceFeatureOperations deviceFeatureOperations;
 
     private static NotificationManagementDataHolder thisInstance = new NotificationManagementDataHolder();
 
@@ -87,5 +89,14 @@ public class NotificationManagementDataHolder {
 
     public void setTaskService(TaskService taskService) {
         this.taskService = taskService;
+    }
+
+
+    public DeviceFeatureOperations getDeviceFeatureOperations() {
+        return deviceFeatureOperations;
+    }
+
+    public void setDeviceFeatureOperations(DeviceFeatureOperations deviceFeatureOperations) {
+        this.deviceFeatureOperations = deviceFeatureOperations;
     }
 }
