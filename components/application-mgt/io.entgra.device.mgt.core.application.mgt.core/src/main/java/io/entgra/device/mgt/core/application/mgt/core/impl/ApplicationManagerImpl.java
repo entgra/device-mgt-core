@@ -417,8 +417,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             ApplicationReleaseDTO releaseDTO = APIUtil.releaseWrapperToReleaseDTO(releaseWrapper);
             if (!isCustomArtifactsManagedByAppStore()) {
                 releaseDTO.setInstallerName(releaseWrapper.getArtifactLink());
-                populateMetadataFromResourceHeaders(releaseDTO, getFirmwareConfiguration().getDeliveryConfiguration().getCdnUri()
-                        + releaseWrapper.getArtifactLink());
+                populateMetadataFromResourceHeaders(releaseDTO, getDownloadableFirmwareUrl(releaseWrapper.getArtifactLink()).toString());
             }
             releaseDTO = uploadCustomAppReleaseArtifacts(releaseDTO, artifact, deviceType.getName());
             try {
