@@ -148,7 +148,7 @@ public class SsoLoginHandler extends HttpServlet {
                     .encodeToString((adminUsername + HandlerConstants.COLON + adminPassword).getBytes());
             ClassicHttpRequest apiRegEndpoint = ClassicRequestBuilder.post(gatewayUrl + HandlerConstants.APP_REG_ENDPOINT)
                     .setEntity(HandlerUtil.constructAppRegPayload(tags, applicationName, adminUsername, adminPassword,
-                            callbackUrl, constructAppGrantTypeUpdateArray()))
+                            callbackUrl, constructAppGrantTypeUpdateArray(), false))
                     .setHeader(org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE,
                             org.apache.hc.core5.http.ContentType.APPLICATION_JSON.toString())
                     .setHeader(org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION, HandlerConstants.BASIC +
