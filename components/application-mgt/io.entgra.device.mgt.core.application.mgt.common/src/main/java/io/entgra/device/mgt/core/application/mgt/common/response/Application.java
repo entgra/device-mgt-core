@@ -118,6 +118,10 @@ public class Application {
             value = "IDs of the firmware models")
     private List<Integer> firmwareModelIds;
 
+    @ApiModelProperty(name = "firmwareModelIds",
+            value = "IDs of the firmware models")
+    private List<String> firmwareModels;
+
     public String getPackageName() {
         return packageName;
     }
@@ -219,5 +223,13 @@ public class Application {
 
     public void setFirmwareModelIds(List<Integer> firmwareModelIds) {
         this.firmwareModelIds = firmwareModelIds;
+    }
+
+    public List<String> getFirmwareModels() {
+        return firmwareModels;
+    }
+
+    public void setFirmwareModels(List<String> firmwareModels) {
+        this.firmwareModels = firmwareModels;
     }
 }

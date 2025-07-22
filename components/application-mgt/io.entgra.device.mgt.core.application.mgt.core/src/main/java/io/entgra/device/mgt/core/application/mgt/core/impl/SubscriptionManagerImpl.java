@@ -19,6 +19,7 @@
 package io.entgra.device.mgt.core.application.mgt.core.impl;
 
 import com.google.gson.Gson;
+import io.entgra.device.mgt.core.application.mgt.common.AppOperation;
 import io.entgra.device.mgt.core.application.mgt.common.ApplicationInstallResponse;
 import io.entgra.device.mgt.core.application.mgt.common.ApplicationSubscriptionInfo;
 import io.entgra.device.mgt.core.application.mgt.common.ApplicationType;
@@ -178,17 +179,64 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
         }
 
         validateRequest(params, subType, action);
-        //todo validate users, groups and roles
         ApplicationDTO applicationDTO = getApplicationDTO(applicationUUID);
+
         ApplicationSubscriptionInfo applicationSubscriptionInfo = getAppSubscriptionInfo(applicationDTO, subType,
                 params);
+
+        // Check for the pending activities associated with the device identifiers for the release UUID
+        List<Activity> pendingActivities = new ArrayList<>();
+        if (ApplicationType.CUSTOM.toString().equalsIgnoreCase(applicationDTO.getType()) && SubAction.INSTALL.toString()
+                .equalsIgnoreCase(action)) {
+            List<DeviceOperationDTO> existingOperations;
+            for (Device device : applicationSubscriptionInfo.getDevices()) {
+                existingOperations = getSubscriptionOperationsByUUIDAndDeviceID(device.getId(), applicationUUID);
+                if (existingOperations != null && !existingOperations.isEmpty()) {
+                    for (DeviceOperationDTO existingOperation : existingOperations) {
+                        if (MDMAppConstants.AndroidConstants.OPCODE_INSTALL_FIRMWARE
+                                .equalsIgnoreCase(existingOperation.getOperationCode()) && AppOperation.InstallState
+                                .PENDING.toString().equalsIgnoreCase(existingOperation.getStatus())) {
+                            Activity existingActivity = getActivity(existingOperation, device);
+                            if (pendingActivities.contains(existingActivity)) {
+                                pendingActivities.get(pendingActivities.indexOf(existingActivity)).getActivityStatus()
+                                        .addAll(existingActivity.getActivityStatus());
+                            } else {
+                                pendingActivities.add(existingActivity);
+                            }
+                        }
+                    }
+                }
+            }
+        }
         performExternalStoreSubscription(applicationDTO, applicationSubscriptionInfo);
         ApplicationInstallResponse applicationInstallResponse = performActionOnDevices(
                 applicationSubscriptionInfo.getAppSupportingDeviceTypeName(), applicationSubscriptionInfo.getDevices(),
                 applicationDTO, subType, applicationSubscriptionInfo.getSubscribers(), action, properties, isOperationReExecutingDisabled);
 
         applicationInstallResponse.setErrorDeviceIdentifiers(applicationSubscriptionInfo.getErrorDeviceIdentifiers());
+        if (applicationInstallResponse.getActivities() == null) {
+            applicationInstallResponse.setActivities(pendingActivities);
+        } else {
+            applicationInstallResponse.getActivities().addAll(pendingActivities);
+        }
         return applicationInstallResponse;
+    }
+
+    private Activity getActivity(DeviceOperationDTO operation, Device device) {
+        Activity activity = new Activity();
+        activity.setActivityId(DeviceManagementConstants.OperationAttributes.ACTIVITY + operation.getOperationId());
+        activity.setOperationId(operation.getOperationId());
+        activity.setCreatedTimeStamp(operation.getActionTriggeredAt().toString());
+        activity.setCode(operation.getOperationCode());
+        DeviceIdentifier deviceIdentifier = new DeviceIdentifier(device.getDeviceIdentifier(), device.getType());
+        List<ActivityStatus> activityStatusList = new ArrayList<>();
+        ActivityStatus activityStatus = new ActivityStatus();
+        activityStatus.setStatus(ActivityStatus.Status.PENDING);
+        activityStatus.setDeviceIdentifier(deviceIdentifier);
+        activityStatusList.add(activityStatus);
+        activity.setActivityStatus(activityStatusList);
+        activity.setType(Activity.Type.PROFILE);
+        return activity;
     }
 
     private void performExternalStoreSubscription(ApplicationDTO applicationDTO,
@@ -1166,7 +1214,16 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
         try {
             Application application = APIUtil.appDtoToAppResponse(applicationDTO);
             Operation operation = generateOperationPayloadByDeviceType(deviceType, application, action, properties);
-            return deviceManagementProviderService.addOperation(deviceType, operation, deviceIdentifierList);
+            Activity activity = deviceManagementProviderService.addOperation(deviceType, operation, deviceIdentifierList);
+            if (ApplicationType.CUSTOM.toString().equalsIgnoreCase(application.getType())) {
+                operation.setId(activity.getOperationId());
+                operation.setStatus(Operation.Status.PENDING);
+                for (DeviceIdentifier deviceId : deviceIdentifierList) {
+                    deviceManagementProviderService.updateOperation(deviceManagementProviderService
+                            .getDevice(deviceId, false), operation);
+                }
+            }
+            return activity;
         } catch (OperationManagementException e) {
             String msg = "Error occurred while adding the application install operation to devices";
             log.error(msg, e);
@@ -1174,6 +1231,10 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
         } catch (InvalidDeviceException e) {
             //This exception should not occur because the validation has already been done.
             throw new ApplicationManagementException("The list of device identifiers are invalid");
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while recording the application install operation responses";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
         }
     }
 
@@ -1199,6 +1260,10 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                     customApplication.setType(application.getType());
                     customApplication.setAppIdentifier(application.getApplicationReleases().get(0).getUuid());
                     customApplication.setUrl(application.getApplicationReleases().get(0).getInstallerPath());
+                    customApplication.setVersion(application.getApplicationReleases().get(0).getVersion());
+                    customApplication.setFirmwarePackageName(application.getApplicationReleases().get(0).getPackageName());
+                    customApplication.setFirmwareVariant(application.getName());
+                    operation.setOperationResponse(customApplication.toJSON());
                     operation.setPayLoad(customApplication.toJSON());
                     return operation;
                 } else {

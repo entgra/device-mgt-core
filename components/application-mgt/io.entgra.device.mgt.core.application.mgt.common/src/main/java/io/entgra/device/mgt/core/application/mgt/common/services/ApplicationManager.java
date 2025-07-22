@@ -649,9 +649,10 @@ public interface ApplicationManager {
     /**
      * Search applications releases based on the release search filter criteria.
      *
+     * @param appId               Application ID
      * @param releaseSearchFilter {@link ReleaseSearchFilter}
      * @return List of application releases
      * @throws ApplicationManagementException Throws when error encountered while searching application releases.
      */
-    ReleaseList getApplicationReleases(ReleaseSearchFilter releaseSearchFilter) throws ApplicationManagementException;
+    ReleaseList getApplicationReleases(int appId, ReleaseSearchFilter releaseSearchFilter) throws ApplicationManagementException;
 }

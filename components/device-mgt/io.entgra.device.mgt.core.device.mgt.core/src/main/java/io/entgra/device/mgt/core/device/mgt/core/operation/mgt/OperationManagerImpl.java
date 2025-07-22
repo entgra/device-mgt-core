@@ -238,6 +238,7 @@ public class OperationManagerImpl implements OperationManager {
                         Activity activity = new Activity();
                         activity.setActivityId(DeviceManagementConstants.OperationAttributes.ACTIVITY +
                                 operation.getId());
+                        activity.setOperationId(operation.getId());
                         activity.setActivityStatus(
                                 this.getActivityStatus(deviceValidationResult, deviceAuthorizationResult));
                         return activity;
@@ -251,6 +252,7 @@ public class OperationManagerImpl implements OperationManager {
                 activity.setCode(operationCode);
                 activity.setCreatedTimeStamp(new Date().toString());
                 activity.setType(Activity.Type.valueOf(operationDto.getType().toString()));
+                activity.setOperationId(operation.getId());
                 //For now set the operation statuses only for admin triggered operations
                 if (!isScheduledOperation) {
                     activity.setActivityStatus(

@@ -28,6 +28,7 @@ public class ReleaseSearchFilter {
     private int limit = 20;
     private int offset = 0;
     private boolean isLimitAndOffsetDisable = false;
+    private String installableState;
 
     public String getPackageName() {
         return packageName;
@@ -95,5 +96,13 @@ public class ReleaseSearchFilter {
 
     public boolean isLimitAndOffsetDisable() {
         return isLimitAndOffsetDisable;
+    }
+
+    public String getInstallableState() {
+        return installableState;
+    }
+
+    public void setInstallableState(String installableState) {
+        this.installableState = installableState;
     }
 }

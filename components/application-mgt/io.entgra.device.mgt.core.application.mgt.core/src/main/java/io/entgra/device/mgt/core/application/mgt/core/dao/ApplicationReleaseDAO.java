@@ -19,6 +19,7 @@ package io.entgra.device.mgt.core.application.mgt.core.dao;
 
 import io.entgra.device.mgt.core.application.mgt.common.Rating;
 import io.entgra.device.mgt.core.application.mgt.common.ReleaseSearchFilter;
+import io.entgra.device.mgt.core.application.mgt.common.ReleaseSearchFilterWrapper;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
 import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManagementDAOException;
 
@@ -163,7 +164,7 @@ public interface ApplicationReleaseDAO {
      *
      * @param appId the ID of the application
      * @param version the base version to compare against; only releases with a higher version will be returned
-     * @param status the status to filter application releases (e.g., "RELEASE_READY")
+     * @param status the status to filter application releases (e.g., "RELEASED")
      * @param appReleaseType the type of the release (e.g., "TEST", "PRODUCTION"); can be {@code null} to fetch all types
      * @param tenantId the tenant ID
      * @return a list of {@link ApplicationReleaseDTO} objects representing the filtered application releases
@@ -172,6 +173,18 @@ public interface ApplicationReleaseDAO {
     List<ApplicationReleaseDTO> getAppReleasesAfterVersion(int appId, String version, String status, String appReleaseType, int tenantId) throws ApplicationManagementDAOException;
 
     List<ApplicationReleaseDTO> getAppReleasesBeforeVersion(int appId, String version, String status, int tenantId) throws ApplicationManagementDAOException;
+
+    /**
+     * Get latest application release associated with the given application ID.
+     *
+     * @param appId          the ID of the application
+     * @param status         the status to filter application releases (e.g., "RELEASED")
+     * @param appReleaseType the type of the release (e.g., "TEST", "PRODUCTION"); can be {@code null} to fetch all types
+     * @param tenantId       the tenant ID
+     * @return {@link ApplicationReleaseDTO}
+     * @throws ApplicationManagementDAOException if an error occurs while retrieving data from the database
+     */
+    ApplicationReleaseDTO getLatestAppRelease(int appId, String status, String appReleaseType, int tenantId) throws ApplicationManagementDAOException;
 
     /**
      * Retrieves the version of the latest installed application release for the given application ID and tenant.
@@ -197,23 +210,35 @@ public interface ApplicationReleaseDAO {
     List<ApplicationReleaseDTO> getReleasesByAppAndStatus(int appId, String status, String appReleaseType, int tenantId) throws ApplicationManagementDAOException;
 
     /**
-     * Get application releases based on {@link ReleaseSearchFilter}
+     * Get application releases based on {@link ReleaseSearchFilterWrapper}
      *
-     * @param releaseSearchFilter {@link ReleaseSearchFilter}
+     * @param releaseSearchFilterWrapper {@link ReleaseSearchFilterWrapper}
+     * @param appId               Application ID
      * @param tenantId            Tenant ID
      * @return List of {@link ApplicationReleaseDTO}
      * @throws ApplicationManagementDAOException Throws when error encountered while fetching releases.
      */
-    List<ApplicationReleaseDTO> getReleases(ReleaseSearchFilter releaseSearchFilter, int tenantId) throws ApplicationManagementDAOException;
+    List<ApplicationReleaseDTO> getReleases(int appId, ReleaseSearchFilterWrapper releaseSearchFilterWrapper, int tenantId) throws ApplicationManagementDAOException;
 
     /**
-     * Get application releases matching count based on {@link ReleaseSearchFilter}
+     * Get application releases matching count based on {@link ReleaseSearchFilterWrapper}
      *
-     * @param releaseSearchFilter {@link ReleaseSearchFilter}
+     * @param releaseSearchFilterWrapper {@link ReleaseSearchFilterWrapper}
+     * @param appId               Application ID
      * @param tenantId            Tenant ID
      * @return Full matching count of releases.
      * @throws ApplicationManagementDAOException Throws when error encountered while fetching releases.
      */
-    int getReleasesCount(ReleaseSearchFilter releaseSearchFilter, int tenantId) throws ApplicationManagementDAOException;
+    int getReleasesCount(int appId, ReleaseSearchFilterWrapper releaseSearchFilterWrapper, int tenantId) throws ApplicationManagementDAOException;
 
+    /**
+     * Get releases by application ID and application release version
+     *
+     * @param appId    Application ID
+     * @param version  Application release version
+     * @param tenantId Tenant ID
+     * @return List of {@link ApplicationReleaseDTO}
+     * @throws ApplicationManagementDAOException Throws when error encountered while getting application releases.
+     */
+    List<ApplicationReleaseDTO> getReleasesByAppAndVersion(int appId, String version, int tenantId) throws ApplicationManagementDAOException;
 }

@@ -305,8 +305,7 @@ public class APIUtil {
         if (param instanceof ApplicationWrapper){
             ApplicationWrapper applicationWrapper = (ApplicationWrapper) param;
             DeviceType deviceType = getDeviceTypeData(applicationWrapper.getDeviceType());
-            applicationDTO.setName(ApplicationManagementUtil.sanitizeName(applicationWrapper.getName(),
-                    Constants.ApplicationProperties.NAME));
+            applicationDTO.setName(applicationWrapper.getName().trim());
             applicationDTO.setDescription(applicationWrapper.getDescription());
             applicationDTO.setAppCategories(applicationWrapper.getCategories());
             applicationDTO.setType(ApplicationType.ENTERPRISE.toString());
@@ -320,8 +319,7 @@ public class APIUtil {
             applicationDTO.setApplicationReleaseDTOs(applicationReleaseEntities);
         } else if (param instanceof WebAppWrapper){
             WebAppWrapper webAppWrapper = (WebAppWrapper) param;
-            applicationDTO.setName(ApplicationManagementUtil.sanitizeName(webAppWrapper.getName(),
-                    Constants.ApplicationProperties.NAME));
+            applicationDTO.setName(webAppWrapper.getName().trim());
             applicationDTO.setDescription(webAppWrapper.getDescription());
             applicationDTO.setAppCategories(webAppWrapper.getCategories());
             applicationDTO.setSubType(webAppWrapper.getSubMethod());
@@ -335,8 +333,7 @@ public class APIUtil {
         } else if (param instanceof PublicAppWrapper) {
             PublicAppWrapper publicAppWrapper = (PublicAppWrapper) param;
             DeviceType deviceType = getDeviceTypeData(publicAppWrapper.getDeviceType());
-            applicationDTO.setName(ApplicationManagementUtil.sanitizeName(publicAppWrapper.getName(),
-                    Constants.ApplicationProperties.NAME));
+            applicationDTO.setName(publicAppWrapper.getName().trim());
             applicationDTO.setDescription(publicAppWrapper.getDescription());
             applicationDTO.setAppCategories(publicAppWrapper.getCategories());
             applicationDTO.setType(ApplicationType.PUBLIC.toString());
@@ -351,8 +348,7 @@ public class APIUtil {
         } else if (param instanceof CustomAppWrapper){
             CustomAppWrapper customAppWrapper = (CustomAppWrapper) param;
             DeviceType deviceType = getDeviceTypeData(customAppWrapper.getDeviceType());
-            applicationDTO.setName(ApplicationManagementUtil.sanitizeName(customAppWrapper.getName(),
-                    Constants.ApplicationProperties.NAME));
+            applicationDTO.setName(customAppWrapper.getName().trim());
             applicationDTO.setDescription(customAppWrapper.getDescription());
             applicationDTO.setAppCategories(customAppWrapper.getCategories());
             applicationDTO.setType(ApplicationType.CUSTOM.toString());
