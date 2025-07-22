@@ -417,8 +417,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             ApplicationReleaseDTO releaseDTO = APIUtil.releaseWrapperToReleaseDTO(releaseWrapper);
             if (!isCustomArtifactsManagedByAppStore()) {
                 releaseDTO.setInstallerName(releaseWrapper.getArtifactLink());
-                populateMetadataFromResourceHeaders(releaseDTO, getFirmwareConfiguration().getDeliveryConfiguration().getCdnUri()
-                        + releaseWrapper.getArtifactLink());
+                populateMetadataFromResourceHeaders(releaseDTO, getDownloadableFirmwareUrl(releaseWrapper.getArtifactLink()).toString());
             }
             releaseDTO = uploadCustomAppReleaseArtifacts(releaseDTO, artifact, deviceType.getName());
             try {
@@ -2168,6 +2167,10 @@ public class ApplicationManagerImpl implements ApplicationManager {
             this.applicationDAO.deleteAppCategories(applicationDTO.getId(), tenantId);
             this.visibilityDAO.deleteAppUnrestrictedRoles(applicationDTO.getId(), tenantId);
             this.spApplicationDAO.deleteApplicationFromServiceProviders(applicationDTO.getId(), tenantId);
+            // Delete existing firmware model mappings from Firmware(CUSTOM) applications
+            if (ApplicationType.CUSTOM.toString().equalsIgnoreCase(applicationDTO.getType())) {
+                this.applicationDAO.deleteDeviceFirmwareModelMapping(applicationDTO.getId(), tenantId);
+            }
             this.applicationDAO.deleteApplication(applicationDTO.getId(), tenantId);
             APIUtil.getApplicationStorageManager().deleteAllApplicationReleaseArtifacts(deletingAppHashVals, tenantId);
             ConnectionManagerUtil.commitDBTransaction();

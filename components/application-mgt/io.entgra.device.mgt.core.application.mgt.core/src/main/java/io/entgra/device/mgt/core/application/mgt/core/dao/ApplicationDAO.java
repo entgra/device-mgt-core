@@ -308,15 +308,31 @@ public interface ApplicationDAO {
      * @throws ApplicationManagementDAOException Throws when error encountered while retrieving firmware models.
      */
     List<Integer> getFirmwareModelIdsForApp(int applicationId) throws ApplicationManagementDAOException;
+
     /**
-     * Add device firmware model mapping entry for the application
+     * Add device firmware model mapping entry for the application.
      *
-     * @param appId           Application ID
+     * @param appId            Application ID
      * @param firmwareModelIds Firmware model IDs
-     * @throws ApplicationManagementDAOException Throws when error encountered while adding device firmware model mapping
+     * @throws ApplicationManagementDAOException Throws when error encountered while adding device firmware model mapping.
      */
     void addDeviceFirmwareModelMapping(int appId, List<Integer> firmwareModelIds, int tenantId) throws ApplicationManagementDAOException;
 
+    /**
+     * Retrieve all device firmware model IDs which are having mapping with application in given tenant.
+     *
+     * @param tenantId Tenant ID
+     * @return List of firmware IDs
+     * @throws ApplicationManagementDAOException Throws when error encountered while getting firmware model IDs.
+     */
     List<Integer> getAllDeviceFirmwareModelIds(int tenantId) throws ApplicationManagementDAOException;
 
+    /**
+     * Delete exiting application mapping with device firmware models.
+     *
+     * @param appId            Application ID
+     * @param tenantId         Tenant ID
+     * @throws ApplicationManagementDAOException Throws when error encountered while deleting device firmware model mapping.
+     */
+    void deleteDeviceFirmwareModelMapping(int appId, int tenantId) throws ApplicationManagementDAOException;
 }

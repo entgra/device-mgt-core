@@ -2274,4 +2274,34 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
         return firmwareModelIds;
     }
 
+    @Override
+    public void deleteDeviceFirmwareModelMapping(int appId, int tenantId) throws ApplicationManagementDAOException {
+        if (log.isDebugEnabled()) {
+            log.debug("Deleting firmware model ID mappings for firmware ID " + appId + " and tenant ID " + tenantId);
+        }
+
+        String sql = "DELETE " +
+                "FROM AP_APP_DEVICE_MODEL " +
+                "WHERE APP_ID = ? " +
+                "AND TENANT_ID = ?";
+
+        try {
+            Connection connection = this.getDBConnection();
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1, appId);
+                preparedStatement.setInt(2, tenantId);
+                preparedStatement.execute();
+            }
+        } catch (SQLException e) {
+            String msg = "SQL error encountered while delete device firmware model mapping for firmware ID: " + appId;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while delete device firmware model mapping for firmware " +
+                    "app ID: " + appId + ". Executed query: " + sql;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+    }
+
 }
