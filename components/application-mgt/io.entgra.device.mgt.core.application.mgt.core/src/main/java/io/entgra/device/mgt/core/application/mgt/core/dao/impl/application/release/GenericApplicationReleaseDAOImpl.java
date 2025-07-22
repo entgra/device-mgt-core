@@ -18,8 +18,10 @@
 
 package io.entgra.device.mgt.core.application.mgt.core.dao.impl.application.release;
 
+import io.entgra.device.mgt.core.application.mgt.common.AppReleaseType;
 import io.entgra.device.mgt.core.application.mgt.common.Rating;
 import io.entgra.device.mgt.core.application.mgt.common.ReleaseSearchFilter;
+import io.entgra.device.mgt.core.application.mgt.common.ReleaseSearchFilterWrapper;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.DBConnectionException;
 import io.entgra.device.mgt.core.application.mgt.core.dao.ApplicationReleaseDAO;
@@ -35,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * GenericApplicationReleaseDAOImpl holds the implementation of ApplicationRelease related DAO operations.
@@ -910,7 +913,74 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
             return applicationReleaseDTOS;
         }
 
-        @Override
+    @Override
+    public ApplicationReleaseDTO getLatestAppRelease(int appId, String status, String appReleaseType, int tenantId) throws ApplicationManagementDAOException {
+        String sql = "SELECT " +
+                "A.ID AS RELEASE_ID, " +
+                "A.DESCRIPTION AS RELEASE_DESCRIPTION, " +
+                "A.VERSION AS RELEASE_VERSION, " +
+                "A.UUID AS RELEASE_UUID, " +
+                "A.RELEASE_TYPE AS RELEASE_TYPE, " +
+                "A.INSTALLER_LOCATION AS AP_RELEASE_STORED_LOC, " +
+                "A.ICON_LOCATION AS AP_RELEASE_ICON_LOC, " +
+                "A.BANNER_LOCATION AS AP_RELEASE_BANNER_LOC, " +
+                "A.SC_1_LOCATION AS AP_RELEASE_SC1, " +
+                "A.SC_2_LOCATION AS AP_RELEASE_SC2, " +
+                "A.SC_3_LOCATION AS AP_RELEASE_SC3, " +
+                "A.APP_HASH_VALUE AS RELEASE_HASH_VALUE, " +
+                "A.APP_PRICE AS RELEASE_PRICE, " +
+                "A.APP_META_INFO AS RELEASE_META_INFO, " +
+                "A.PACKAGE_NAME AS PACKAGE_NAME, " +
+                "A.SUPPORTED_OS_VERSIONS AS RELEASE_SUP_OS_VERSIONS, " +
+                "A.RATING AS RELEASE_RATING, " +
+                "A.CURRENT_STATE AS RELEASE_CURRENT_STATE, " +
+                "A.RATED_USERS AS RATED_USER_COUNT, " +
+                "A.AP_APP_ID AS APP_ID " +
+                "FROM AP_APP_RELEASE AS A " +
+                "WHERE A.AP_APP_ID = ? " +
+                "AND A.CURRENT_STATE = ? ";
+
+        if (StringUtils.isNotBlank(appReleaseType)) {
+            sql += " AND A.RELEASE_TYPE = ? ";
+        }
+
+        sql += "AND A.TENANT_ID = ? ORDER BY A.ID DESC LIMIT 1";
+
+        ApplicationReleaseDTO applicationReleaseDTO = null;
+        try {
+            Connection connection = this.getDBConnection();
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                int queryIdx = 0;
+                preparedStatement.setInt(++queryIdx, appId);
+                preparedStatement.setString(++queryIdx, status);
+                if (StringUtils.isNotBlank(appReleaseType)) {
+                    preparedStatement.setString(++queryIdx, appReleaseType);
+                }
+
+                preparedStatement.setInt(++queryIdx, tenantId);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        applicationReleaseDTO = DAOUtil.constructAppReleaseDTO(resultSet);
+                    }
+                }
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Database connection error occurred while trying to get latest application release details which has "
+                    + "application ID : " + appId + " and status : " + status;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg =
+                    "Error while getting application release details which has application ID " + appId + " and status "
+                            + status + ". Execute SQL query: " + sql;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+        return applicationReleaseDTO;
+    }
+
+
+    @Override
         public String getInstalledReleaseVersionByApp(int deviceId, int appId, int tenantId) throws ApplicationManagementDAOException {
             String sql = "SELECT " +
                     "r.VERSION FROM AP_APP_RELEASE r " +
@@ -1011,122 +1081,38 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
             return applicationReleaseDTOS;
         }
 
-        @Override
-        public List<ApplicationReleaseDTO> getReleases(ReleaseSearchFilter releaseSearchFilter, int tenantId) throws ApplicationManagementDAOException {
-            String sql = "SELECT "
-                    + "AR.ID AS RELEASE_ID, "
-                    + "AR.DESCRIPTION AS RELEASE_DESCRIPTION, "
-                    + "AR.VERSION AS RELEASE_VERSION, "
-                    + "AR.UUID AS RELEASE_UUID, "
-                    + "AR.RELEASE_TYPE AS RELEASE_TYPE, "
-                    + "AR.INSTALLER_LOCATION AS AP_RELEASE_STORED_LOC, "
-                    + "AR.ICON_LOCATION AS AP_RELEASE_ICON_LOC, "
-                    + "AR.BANNER_LOCATION AS AP_RELEASE_BANNER_LOC, "
-                    + "AR.SC_1_LOCATION AS AP_RELEASE_SC1, "
-                    + "AR.SC_2_LOCATION AS AP_RELEASE_SC2, "
-                    + "AR.SC_3_LOCATION AS AP_RELEASE_SC3, "
-                    + "AR.APP_HASH_VALUE AS RELEASE_HASH_VALUE, "
-                    + "AR.APP_PRICE AS RELEASE_PRICE, "
-                    + "AR.APP_META_INFO AS RELEASE_META_INFO, "
-                    + "AR.PACKAGE_NAME AS PACKAGE_NAME, "
-                    + "AR.SUPPORTED_OS_VERSIONS AS RELEASE_SUP_OS_VERSIONS, "
-                    + "AR.RATING AS RELEASE_RATING, "
-                    + "AR.CURRENT_STATE AS RELEASE_CURRENT_STATE, "
-                    + "AR.RATED_USERS AS RATED_USER_COUNT "
-                    + "FROM AP_APP_RELEASE AS AR "
-                    + "WHERE AR.TENANT_ID = ? ";
-
-            if (releaseSearchFilter.getApplicationId() > 0) {
-                sql += "AND AR.AP_APP_ID = ? ";
-            }
-
-            if (StringUtils.isNotEmpty(releaseSearchFilter.getReleaseType())) {
-                sql += "AND AR.RELEASE_TYPE = ? ";
-            }
-
-            if (StringUtils.isNotEmpty(releaseSearchFilter.getPackageName())) {
-                if (releaseSearchFilter.isPackageNameFullMatch()) {
-                    sql += "AND AR.PACKAGE_NAME = ? ";
-                } else {
-                    sql += "AND LOWER(AR.PACKAGE_NAME) LIKE ? ";
-                }
-            }
-
-            if (StringUtils.isNotEmpty(releaseSearchFilter.getVersion())) {
-                if (releaseSearchFilter.isVersionFullMatch()) {
-                    sql += "AND AR.VERSION = ? ";
-                } else {
-                    sql += "AND LOWER(AR.VERSION) LIKE ? ";
-                }
-            }
-
-            if (!releaseSearchFilter.isLimitAndOffsetDisable()) {
-                sql += " LIMIT ? OFFSET ?";
-            }
-
-            try {
-                Connection connection = this.getDBConnection();
-                int queryIdx = 0;
-                try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                    statement.setInt(++queryIdx, tenantId);
-
-                    if (releaseSearchFilter.getApplicationId() > 0) {
-                        statement.setInt(++queryIdx, releaseSearchFilter.getApplicationId());
-                    }
-
-                    if (StringUtils.isNotEmpty(releaseSearchFilter.getReleaseType())) {
-                        statement.setString(++queryIdx, releaseSearchFilter.getReleaseType());
-                    }
-
-                    if (StringUtils.isNotEmpty(releaseSearchFilter.getPackageName())) {
-                        statement.setString(++queryIdx, releaseSearchFilter.isPackageNameFullMatch() ?
-                                releaseSearchFilter.getPackageName() : "%" +releaseSearchFilter.getPackageName() + "%");
-                    }
-
-                    if (StringUtils.isNotEmpty(releaseSearchFilter.getVersion())) {
-                        statement.setString(++queryIdx, releaseSearchFilter.isVersionFullMatch() ?
-                                releaseSearchFilter.getVersion() : "%" +releaseSearchFilter.getVersion() + "%");
-                    }
-
-                    if (!releaseSearchFilter.isLimitAndOffsetDisable()) {
-                        statement.setInt(++queryIdx, releaseSearchFilter.getLimit());
-                        statement.setInt(++queryIdx, releaseSearchFilter.getOffset());
-                    }
-
-                    List<ApplicationReleaseDTO> applicationReleaseDTOS = new ArrayList<>();
-                    try (ResultSet resultSet = statement.executeQuery()) {
-                        while (resultSet.next()) {
-                            applicationReleaseDTOS.add(DAOUtil.constructAppReleaseDTO(resultSet));
-                        }
-                        return applicationReleaseDTOS;
-                    }
-                }
-            } catch (DBConnectionException e) {
-                String msg = "Database connection error occurred while trying to search application releases.";
-                log.error(msg, e);
-                throw new ApplicationManagementDAOException(msg, e);
-            } catch (SQLException e) {
-                String msg = "Error while searching application release details , while executing the query " + sql;
-                log.error(msg, e);
-                throw new ApplicationManagementDAOException(msg, e);
-            }
-        }
-
     @Override
-    public int getReleasesCount(ReleaseSearchFilter releaseSearchFilter, int tenantId) throws ApplicationManagementDAOException {
-        int count = 0;
+    public List<ApplicationReleaseDTO> getReleases(int appId, ReleaseSearchFilterWrapper releaseSearchFilterWrapper
+            , int tenantId) throws ApplicationManagementDAOException {
         String sql = "SELECT "
-                + "COUNT(*) AS RELEASE_COUNT "
+                + "AR.ID AS RELEASE_ID, "
+                + "AR.DESCRIPTION AS RELEASE_DESCRIPTION, "
+                + "AR.VERSION AS RELEASE_VERSION, "
+                + "AR.UUID AS RELEASE_UUID, "
+                + "AR.RELEASE_TYPE AS RELEASE_TYPE, "
+                + "AR.INSTALLER_LOCATION AS AP_RELEASE_STORED_LOC, "
+                + "AR.ICON_LOCATION AS AP_RELEASE_ICON_LOC, "
+                + "AR.BANNER_LOCATION AS AP_RELEASE_BANNER_LOC, "
+                + "AR.SC_1_LOCATION AS AP_RELEASE_SC1, "
+                + "AR.SC_2_LOCATION AS AP_RELEASE_SC2, "
+                + "AR.SC_3_LOCATION AS AP_RELEASE_SC3, "
+                + "AR.APP_HASH_VALUE AS RELEASE_HASH_VALUE, "
+                + "AR.APP_PRICE AS RELEASE_PRICE, "
+                + "AR.APP_META_INFO AS RELEASE_META_INFO, "
+                + "AR.PACKAGE_NAME AS PACKAGE_NAME, "
+                + "AR.SUPPORTED_OS_VERSIONS AS RELEASE_SUP_OS_VERSIONS, "
+                + "AR.RATING AS RELEASE_RATING, "
+                + "AR.CURRENT_STATE AS RELEASE_CURRENT_STATE, "
+                + "AR.RATED_USERS AS RATED_USER_COUNT "
                 + "FROM AP_APP_RELEASE AS AR "
-                + "WHERE AR.TENANT_ID = ? ";
+                + "WHERE AR.TENANT_ID = ? "
+                + "AND AR.AP_APP_ID = ? "
+                + "AND AR.CURRENT_STATE NOT IN (?) ";
 
-        if (releaseSearchFilter.getApplicationId() > 0) {
-            sql += "AND AR.AP_APP_ID = ? ";
-        }
+        sql += "AND AR.RELEASE_TYPE IN (" + releaseSearchFilterWrapper.getApplicableReleaseTypes().stream()
+                .map(i -> "?").collect(Collectors.joining(",")) + ") ";
 
-        if (StringUtils.isNotEmpty(releaseSearchFilter.getReleaseType())) {
-            sql += "AND AR.RELEASE_TYPE = ? ";
-        }
+        ReleaseSearchFilter releaseSearchFilter = releaseSearchFilterWrapper.getReleaseSearchFilter();
 
         if (StringUtils.isNotEmpty(releaseSearchFilter.getPackageName())) {
             if (releaseSearchFilter.isPackageNameFullMatch()) {
@@ -1144,18 +1130,24 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
             }
         }
 
+        if (StringUtils.isNotEmpty(releaseSearchFilter.getInstallableState())) {
+            sql += "AND AR.CURRENT_STATE = ? ";
+        }
+
+        if (!releaseSearchFilter.isLimitAndOffsetDisable()) {
+            sql += " LIMIT ? OFFSET ?";
+        }
+
         try {
             Connection connection = this.getDBConnection();
             int queryIdx = 0;
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setInt(++queryIdx, tenantId);
+                statement.setInt(++queryIdx, appId);
+                statement.setString(++queryIdx, releaseSearchFilterWrapper.getEndState());
 
-                if (releaseSearchFilter.getApplicationId() > 0) {
-                    statement.setInt(++queryIdx, releaseSearchFilter.getApplicationId());
-                }
-
-                if (StringUtils.isNotEmpty(releaseSearchFilter.getReleaseType())) {
-                    statement.setString(++queryIdx, releaseSearchFilter.getReleaseType());
+                for (AppReleaseType appReleaseType : releaseSearchFilterWrapper.getApplicableReleaseTypes()) {
+                    statement.setString(++queryIdx, appReleaseType.toString());
                 }
 
                 if (StringUtils.isNotEmpty(releaseSearchFilter.getPackageName())) {
@@ -1166,6 +1158,96 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
                 if (StringUtils.isNotEmpty(releaseSearchFilter.getVersion())) {
                     statement.setString(++queryIdx, releaseSearchFilter.isVersionFullMatch() ?
                             releaseSearchFilter.getVersion() : "%" +releaseSearchFilter.getVersion() + "%");
+                }
+
+                if (StringUtils.isNotEmpty(releaseSearchFilter.getInstallableState())) {
+                    statement.setString(++queryIdx, releaseSearchFilter.getInstallableState());
+                }
+
+                if (!releaseSearchFilter.isLimitAndOffsetDisable()) {
+                    statement.setInt(++queryIdx, releaseSearchFilter.getLimit());
+                    statement.setInt(++queryIdx, releaseSearchFilter.getOffset());
+                }
+
+                List<ApplicationReleaseDTO> applicationReleaseDTOS = new ArrayList<>();
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    while (resultSet.next()) {
+                        applicationReleaseDTOS.add(DAOUtil.constructAppReleaseDTO(resultSet));
+                    }
+                    return applicationReleaseDTOS;
+                }
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Database connection error occurred while trying to search application releases.";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error while searching application release details , while executing the query " + sql;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public int getReleasesCount(int appId, ReleaseSearchFilterWrapper releaseSearchFilterWrapper
+            , int tenantId) throws ApplicationManagementDAOException {
+        int count = 0;
+        String sql = "SELECT "
+                + "COUNT(*) AS RELEASE_COUNT "
+                + "FROM AP_APP_RELEASE AS AR "
+                + "WHERE AR.TENANT_ID = ? "
+                + "AND AR.AP_APP_ID = ? "
+                + "AND AR.CURRENT_STATE NOT IN (?) ";
+
+        sql += "AND AR.RELEASE_TYPE IN (" + releaseSearchFilterWrapper.getApplicableReleaseTypes().stream()
+                .map(i -> "?").collect(Collectors.joining(",")) + ") ";
+
+        ReleaseSearchFilter releaseSearchFilter = releaseSearchFilterWrapper.getReleaseSearchFilter();
+
+        if (StringUtils.isNotEmpty(releaseSearchFilter.getPackageName())) {
+            if (releaseSearchFilter.isPackageNameFullMatch()) {
+                sql += "AND AR.PACKAGE_NAME = ? ";
+            } else {
+                sql += "AND LOWER(AR.PACKAGE_NAME) LIKE ? ";
+            }
+        }
+
+        if (StringUtils.isNotEmpty(releaseSearchFilter.getVersion())) {
+            if (releaseSearchFilter.isVersionFullMatch()) {
+                sql += "AND AR.VERSION = ? ";
+            } else {
+                sql += "AND LOWER(AR.VERSION) LIKE ? ";
+            }
+        }
+
+        if (StringUtils.isNotEmpty(releaseSearchFilter.getInstallableState())) {
+            sql += "AND AR.CURRENT_STATE = ? ";
+        }
+
+        try {
+            Connection connection = this.getDBConnection();
+            int queryIdx = 0;
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setInt(++queryIdx, tenantId);
+                statement.setInt(++queryIdx, appId);
+                statement.setString(++queryIdx, releaseSearchFilterWrapper.getEndState());
+
+                for (AppReleaseType appReleaseType : releaseSearchFilterWrapper.getApplicableReleaseTypes()) {
+                    statement.setString(++queryIdx, appReleaseType.toString());
+                }
+
+                if (StringUtils.isNotEmpty(releaseSearchFilter.getPackageName())) {
+                    statement.setString(++queryIdx, releaseSearchFilter.isPackageNameFullMatch() ?
+                            releaseSearchFilter.getPackageName() : "%" +releaseSearchFilter.getPackageName() + "%");
+                }
+
+                if (StringUtils.isNotEmpty(releaseSearchFilter.getVersion())) {
+                    statement.setString(++queryIdx, releaseSearchFilter.isVersionFullMatch() ?
+                            releaseSearchFilter.getVersion() : "%" +releaseSearchFilter.getVersion() + "%");
+                }
+
+                if (StringUtils.isNotEmpty(releaseSearchFilter.getInstallableState())) {
+                    statement.setString(++queryIdx, releaseSearchFilter.getInstallableState());
                 }
 
                 try (ResultSet resultSet = statement.executeQuery()) {
@@ -1184,5 +1266,62 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
             throw new ApplicationManagementDAOException(msg, e);
         }
         return count;
+    }
+
+    @Override
+    public List<ApplicationReleaseDTO> getReleasesByAppAndVersion(int appId, String version, int tenantId)
+            throws ApplicationManagementDAOException {
+        String sql = "SELECT " +
+                "A.ID AS RELEASE_ID, " +
+                "A.DESCRIPTION AS RELEASE_DESCRIPTION, " +
+                "A.VERSION AS RELEASE_VERSION, " +
+                "A.UUID AS RELEASE_UUID, " +
+                "A.RELEASE_TYPE AS RELEASE_TYPE, " +
+                "A.INSTALLER_LOCATION AS AP_RELEASE_STORED_LOC, " +
+                "A.ICON_LOCATION AS AP_RELEASE_ICON_LOC, " +
+                "A.BANNER_LOCATION AS AP_RELEASE_BANNER_LOC, " +
+                "A.SC_1_LOCATION AS AP_RELEASE_SC1, " +
+                "A.SC_2_LOCATION AS AP_RELEASE_SC2, " +
+                "A.SC_3_LOCATION AS AP_RELEASE_SC3, " +
+                "A.APP_HASH_VALUE AS RELEASE_HASH_VALUE, " +
+                "A.APP_PRICE AS RELEASE_PRICE, " +
+                "A.APP_META_INFO AS RELEASE_META_INFO, " +
+                "A.PACKAGE_NAME AS PACKAGE_NAME, " +
+                "A.SUPPORTED_OS_VERSIONS AS RELEASE_SUP_OS_VERSIONS, " +
+                "A.RATING AS RELEASE_RATING, " +
+                "A.CURRENT_STATE AS RELEASE_CURRENT_STATE, " +
+                "A.RATED_USERS AS RATED_USER_COUNT, " +
+                "A.AP_APP_ID AS APP_ID " +
+                "FROM AP_APP_RELEASE AS A " +
+                "WHERE A.AP_APP_ID = ? " +
+                "AND A.VERSION = ? " +
+                "AND A.TENANT_ID = ? ";
+
+        List<ApplicationReleaseDTO> applicationReleaseDTOS = new ArrayList<>();
+        try {
+            Connection connection = this.getDBConnection();
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1, appId);
+                preparedStatement.setString(2, version);
+                preparedStatement.setInt(3, tenantId);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    while (resultSet.next()) {
+                        applicationReleaseDTOS.add(DAOUtil.constructAppReleaseDTO(resultSet));
+                    }
+                }
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Database connection error occurred while trying to get application release details which has "
+                    + "application ID : " + appId + " and current version : " + version;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg =
+                    "Error while getting application release details which has application ID " + appId + " and current version "
+                            + version + ". Execute SQL query: " + sql;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+        return applicationReleaseDTOS;
     }
 }

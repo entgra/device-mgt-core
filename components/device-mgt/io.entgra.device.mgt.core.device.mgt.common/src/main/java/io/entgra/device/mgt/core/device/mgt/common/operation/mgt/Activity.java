@@ -24,6 +24,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.List;
+import java.util.Objects;
 
 @ApiModel(value = "Activity", description = "An activity instance carries a unique identifier that can be " +
         "used to identify a particular operation instance uniquely")
@@ -224,6 +225,18 @@ public class Activity {
 
     public void setAppType(String appType) {
         this.appType = appType;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Activity)) return false;
+        Activity activity = (Activity) o;
+        return Objects.equals(activityId, activity.activityId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(activityId);
     }
 }
 
