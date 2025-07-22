@@ -2303,5 +2303,4 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
             throw new ApplicationManagementDAOException(msg, e);
         }
     }
-
 }

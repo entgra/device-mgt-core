@@ -24,6 +24,7 @@ import java.util.List;
 
 public class ReleaseList {
     private List<ApplicationRelease> releases;
+    private Object metadata;
     private Pagination pagination;
 
     public List<ApplicationRelease> getReleases() {
@@ -40,5 +41,13 @@ public class ReleaseList {
 
     public void setPagination(Pagination pagination) {
         this.pagination = pagination;
+    }
+
+    public Object getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Object metadata) {
+        this.metadata = metadata;
     }
 }
