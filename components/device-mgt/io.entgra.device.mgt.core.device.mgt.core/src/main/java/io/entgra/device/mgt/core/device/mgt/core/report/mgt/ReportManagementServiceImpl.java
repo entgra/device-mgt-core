@@ -17,9 +17,22 @@
  */
 package io.entgra.device.mgt.core.device.mgt.core.report.mgt;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import io.entgra.device.mgt.core.device.mgt.common.Count;
 import io.entgra.device.mgt.core.device.mgt.common.Device;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.BadRequestException;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.BadRequestException;
@@ -27,6 +40,13 @@ import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementEx
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceTypeNotFoundException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ReportManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.report.mgt.ReportManagementService;
+import io.entgra.device.mgt.core.device.mgt.common.report.mgt.ReportParameters;
+import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceDAO;
+import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOException;
+import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
+import io.entgra.device.mgt.core.device.mgt.core.dao.GroupDAO;
+import io.entgra.device.mgt.core.device.mgt.core.dao.GroupManagementDAOException;
+import io.entgra.device.mgt.core.device.mgt.core.dao.GroupManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dao.*;
 import io.entgra.device.mgt.core.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
@@ -34,13 +54,17 @@ import io.entgra.device.mgt.core.device.mgt.core.util.DeviceManagerUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import io.entgra.device.mgt.core.device.mgt.core.util.HttpReportingUtil;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Calendar;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -474,6 +498,44 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             } finally {
                 DeviceManagementDAOFactory.closeConnection();
             }
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred while retrieving Tenant ID.";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        }
+    }
+
+    @Override
+    public JsonObject generateBirtReport(ReportParameters reportParameters) throws ReportManagementException {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            String generateReportURL = HttpReportingUtil.getBirtReportHost();
+            if (generateReportURL != null && !generateReportURL.isEmpty()) {
+                int tenantId = DeviceManagementDAOUtil.getTenantId();
+                generateReportURL += Constants.BirtReporting.BIRT_REPORTING_API_REPORT_PATH +
+                        Constants.BirtReporting.BIRT_REPORTING_API_GENERATE_REPORT;
+                Map<String, Object> parameters = reportParameters.getParameters();
+                if (parameters.containsKey(Constants.BirtReporting.TENANT_ID)) {
+                    parameters.replace(Constants.BirtReporting.TENANT_ID, String.valueOf(tenantId));
+                } else {
+                    parameters.put(Constants.BirtReporting.TENANT_ID, String.valueOf(tenantId));
+                }
+                reportParameters.setParameters(parameters);
+
+                HttpPost httpPost = new HttpPost(generateReportURL);
+                StringEntity requestEntity = new StringEntity(
+                        reportParameters.getJSONString(), ContentType.APPLICATION_JSON);
+                httpPost.setEntity(requestEntity);
+                HttpResponse httpResponse = httpClient.execute(httpPost);
+                return new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
+            } else {
+                String msg = "BIRT reporting host is not defined in the iot-server.sh properly.";
+                log.error(msg);
+                throw new ReportManagementException(msg);
+            }
+        } catch (IOException e) {
+            String msg = "Error occurred while invoking BIRT runtime API.";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
         } catch (DeviceManagementDAOException e) {
             String msg = "Error occurred while retrieving Tenant ID.";
             log.error(msg, e);

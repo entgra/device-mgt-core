@@ -240,4 +240,10 @@ public class Constants {
     public static final String MIME_TYPE_VND_MS_WINDOWS_MSI = "application/vnd.ms-windows.msi";
     public static final String MIME_TYPE_X_MS_INSTALLER = "application/x-ms-installer";
     public static final String MIME_TYPE_VND_APPX = "application/vnd.appx";
+
+    public static final class BirtReporting {
+        public static final String BIRT_REPORTING_HOST = "iot.birt.reporting.host";
+        public static final String BIRT_REPORTING_API_REPORT_PATH = "/report/";
+        public static final String UTF8_ENCODING = "UTF-8";
+    }
 }

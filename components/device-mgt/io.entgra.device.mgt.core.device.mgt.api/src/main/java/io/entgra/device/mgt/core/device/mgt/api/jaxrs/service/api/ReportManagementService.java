@@ -592,4 +592,36 @@ public interface ReportManagementService {
                             response = ErrorResponse.class)
             })
     Response getReportFilters();
+
+    @POST
+    @Path("/birt/report/generate")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "POST",
+            value = "Send the parameters needed to generate a BIRT report in the BIRT runtime application.",
+            notes = "This will send the BIRT report design file name and the parameters needed to" +
+                    "generate a specific BIRT report to the BIRT runtime application.",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully generated PDF report."),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. No report generated for the given report design file."),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n Error occurred while generating PDF report.",
+                            response = ErrorResponse.class)
+            })
+    Response generateBirtReport(JsonObject jsonObject);
 }

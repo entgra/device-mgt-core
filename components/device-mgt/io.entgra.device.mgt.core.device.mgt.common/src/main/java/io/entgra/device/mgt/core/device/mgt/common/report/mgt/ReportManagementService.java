@@ -114,4 +114,6 @@ public interface ReportManagementService {
      * @throws ReportManagementException
      */
     List<String> getAgentVersions() throws ReportManagementException;
+
+    JsonObject generateBirtReport(ReportParameters reportParameters) throws ReportManagementException;
 }
