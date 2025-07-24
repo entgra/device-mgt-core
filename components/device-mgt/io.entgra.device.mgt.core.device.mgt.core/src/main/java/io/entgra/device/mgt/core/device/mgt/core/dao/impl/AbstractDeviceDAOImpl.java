@@ -2234,6 +2234,75 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         return deviceLocationHistories;
     }
 
+
+
+@Override
+public List<DeviceLocationHistorySnapshot> getAllDeviceLocationInfo(String deviceType, long exactTime, PaginationRequest request)
+        throws DeviceManagementDAOException {
+
+    List<DeviceLocationHistorySnapshot> snapshotExactTime = new ArrayList<>();
+
+    long timeWindow = 1800000;
+
+    try (Connection conn = DeviceManagementDAOFactory.getConnection()) {
+        String sql = "SELECT * FROM (" +
+                "    SELECT DEVICE_ID, TENANT_ID, DEVICE_ID_NAME, DEVICE_TYPE_NAME, LATITUDE, LONGITUDE, SPEED, HEADING," +
+                "           TIMESTAMP, GEO_HASH, DEVICE_OWNER, DEVICE_ALTITUDE, DISTANCE," +
+                "           CASE " +
+                "               WHEN TIMESTAMP = ? THEN 1 " +
+                "               ELSE 2 " +
+                "           END as match_priority," +
+                "           ABS(TIMESTAMP - ?) as time_diff," +
+                "           ROW_NUMBER() OVER (" +
+                "               PARTITION BY DEVICE_ID_NAME " +
+                "               ORDER BY " +
+                "                   CASE WHEN TIMESTAMP = ? THEN 1 ELSE 2 END ASC, " +
+                "                   ABS(TIMESTAMP - ?) ASC, " +
+                "                   TIMESTAMP DESC" +
+                "           ) as rn " +
+                "    FROM DM_DEVICE_HISTORY_LAST_SEVEN_DAYS " +
+                "    WHERE (? IS NULL OR DEVICE_TYPE_NAME = ?) " +
+                "      AND TIMESTAMP BETWEEN ? AND ? " +
+                ") ranked WHERE rn = 1 " +
+                "LIMIT ? OFFSET ?";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, exactTime);
+            stmt.setLong(2, exactTime);
+            stmt.setLong(3, exactTime);
+            stmt.setLong(4, exactTime);
+
+            if (deviceType == null || deviceType.trim().isEmpty()) {
+                stmt.setNull(5, java.sql.Types.VARCHAR);
+                stmt.setNull(6, java.sql.Types.VARCHAR);
+            } else {
+                stmt.setString(5, deviceType);
+                stmt.setString(6, deviceType);
+            }
+
+            stmt.setLong(7, exactTime - timeWindow);
+            stmt.setLong(8, exactTime + timeWindow);
+            stmt.setInt(9, request.getRowCount());
+            stmt.setInt(10, request.getStartIndex());
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    DeviceLocationHistorySnapshot snapshot = DeviceManagementDAOUtil.loadDeviceLocation(rs);
+                    snapshotExactTime.add(snapshot);
+                }
+            }
+        }
+    } catch (SQLException e) {
+        String msg = "Error occurred while obtaining device location history for device type: " + deviceType;
+        log.error(msg, e);
+        throw new DeviceManagementDAOException(msg, e);
+
+    }
+
+    return snapshotExactTime;
+}
+
+
     @Override
     public void deleteDevices(List<String> deviceIdentifiers, List<Integer> deviceIds, List<Integer> enrollmentIds, List<Device> validDevices)
             throws DeviceManagementDAOException {
