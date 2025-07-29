@@ -794,6 +794,39 @@ public class OperationManagerImpl implements OperationManager {
     }
 
     @Override
+    public List<? extends Operation> getPendingOperationsByOpCode(Device device, String operationCode)
+            throws OperationManagementException {
+        List<io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation> dtoOperationList = new ArrayList<>();
+        List<Operation> operations = new ArrayList<>();
+        EnrolmentInfo enrolmentInfo = device.getEnrolmentInfo();
+        io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation.Status internalStatus =
+                io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation.Status
+                        .valueOf(Operation.Status.PENDING.toString());
+        try {
+            OperationManagementDAOFactory.openConnection();
+            dtoOperationList.addAll(operationDAO.getDeviceOperationsByStatusAndCode(
+                    enrolmentInfo.getId(), internalStatus, operationCode));
+            Operation operation;
+            for (io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation dtoOperation : dtoOperationList) {
+                operation = OperationDAOUtil.convertOperation(dtoOperation);
+                operations.add(operation);
+            }
+        } catch (OperationManagementDAOException e) {
+            String msg = "Error occurred while retrieving pending policy operations for device with id: " +
+                    device.getDeviceIdentifier() + " and type: " + device.getType();
+            log.error(msg, e);
+            throw new OperationManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source";
+            log.error(msg, e);
+            throw new OperationManagementException(msg, e);
+        } finally {
+            OperationManagementDAOFactory.closeConnection();
+        }
+        return operations;
+    }
+
+    @Override
     public Operation getNextPendingOperation(DeviceIdentifier deviceId) throws OperationManagementException {
         // setting notNowOperationFrequency to -1 to avoid picking notnow operations
         return this.getNextPendingOperation(deviceId, -1);

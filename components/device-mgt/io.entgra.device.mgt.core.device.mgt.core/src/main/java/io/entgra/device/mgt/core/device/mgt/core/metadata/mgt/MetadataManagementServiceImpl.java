@@ -93,7 +93,8 @@ public class MetadataManagementServiceImpl implements MetadataManagementService 
         try {
             MetadataManagementDAOFactory.openConnection();
             int tenantId;
-            if (metaKey.equals("EVALUATE_TENANTS") || metaKey.equals("PER_DEVICE_COST")){
+            if (metaKey.equals("EVALUATE_TENANTS") || metaKey.equals("PER_DEVICE_COST")
+                    || metaKey.equals("DEVICE_SUSPEND_ENABLED_TENANTS")){
                 // for getting per device cost and evaluate tenant list to provide the billing feature and live chat feature
                  tenantId = MultitenantConstants.SUPER_TENANT_ID;
             } else {
