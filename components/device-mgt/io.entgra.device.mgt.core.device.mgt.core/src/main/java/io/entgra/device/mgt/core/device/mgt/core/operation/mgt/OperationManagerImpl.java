@@ -794,12 +794,14 @@ public class OperationManagerImpl implements OperationManager {
     }
 
     @Override
-    public List<? extends Operation> getPendingOperationsByOpCode(Device device, String operationCode) throws OperationManagementException {
+    public List<? extends Operation> getPendingOperationsByOpCode(Device device, String operationCode)
+            throws OperationManagementException {
         List<io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation> dtoOperationList = new ArrayList<>();
         List<Operation> operations = new ArrayList<>();
         EnrolmentInfo enrolmentInfo = device.getEnrolmentInfo();
         io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation.Status internalStatus =
-                io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation.Status.valueOf(Operation.Status.PENDING.toString());
+                io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation.Status
+                        .valueOf(Operation.Status.PENDING.toString());
         try {
             OperationManagementDAOFactory.openConnection();
             dtoOperationList.addAll(operationDAO.getDeviceOperationsByStatusAndCode(

@@ -2872,7 +2872,9 @@ public class GenericOperationDAOImpl implements OperationDAO {
     }
 
     @Override
-    public List<? extends Operation> getDeviceOperationsByStatusAndCode(int enrolmentId, Operation.Status status, String operationCode) throws OperationManagementDAOException {
+    public List<? extends Operation> getDeviceOperationsByStatusAndCode(int enrolmentId, Operation.Status status,
+                                                                        String operationCode)
+            throws OperationManagementDAOException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         Operation operation;
@@ -2883,7 +2885,8 @@ public class GenericOperationDAOImpl implements OperationDAO {
                     "o.INITIATED_BY, o.OPERATION_DETAILS, o.OPERATION_PROPERTIES, om.ID AS OM_MAPPING_ID, " +
                     "om.UPDATED_TIMESTAMP FROM DM_OPERATION o " +
                     "INNER JOIN (SELECT * FROM DM_ENROLMENT_OP_MAPPING dm " +
-                    "WHERE dm.ENROLMENT_ID = ? AND dm.STATUS = ? AND dm.OPERATION_CODE = ?) om ON o.ID = om.OPERATION_ID ORDER BY o.CREATED_TIMESTAMP DESC";
+                    "WHERE dm.ENROLMENT_ID = ? AND dm.STATUS = ? AND dm.OPERATION_CODE = ?) " +
+                    "om ON o.ID = om.OPERATION_ID ORDER BY o.CREATED_TIMESTAMP DESC";
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, enrolmentId);
             stmt.setString(2, status.toString());
@@ -2902,8 +2905,10 @@ public class GenericOperationDAOImpl implements OperationDAO {
                 operations.add(operation);
             }
         } catch (SQLException e) {
-            throw new OperationManagementDAOException("SQL error occurred while retrieving the operation " +
-                    "available for the device'" + enrolmentId + "' with status '" + status.toString(), e);
+            String msg = "SQL error occurred while retrieving the operation " +
+                    "available for the device'" + enrolmentId + "' with status '" + status.toString();
+            log.error(msg, e);
+            throw new OperationManagementDAOException(msg, e);
         } finally {
             OperationManagementDAOUtil.cleanupResources(stmt, rs);
         }
