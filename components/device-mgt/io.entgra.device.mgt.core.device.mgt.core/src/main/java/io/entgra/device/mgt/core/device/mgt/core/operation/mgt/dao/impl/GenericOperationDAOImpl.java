@@ -2870,4 +2870,43 @@ public class GenericOperationDAOImpl implements OperationDAO {
 
         return operationDetails;
     }
+
+    @Override
+    public List<? extends Operation> getDeviceOperationsByStatusAndCode(int enrolmentId, Operation.Status status, String operationCode) throws OperationManagementDAOException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        Operation operation;
+        List<Operation> operations = new ArrayList<>();
+        try {
+            Connection conn = OperationManagementDAOFactory.getConnection();
+            String sql = "SELECT o.ID, o.TYPE, o.CREATED_TIMESTAMP, o.RECEIVED_TIMESTAMP, o.OPERATION_CODE, " +
+                    "o.INITIATED_BY, o.OPERATION_DETAILS, o.OPERATION_PROPERTIES, om.ID AS OM_MAPPING_ID, " +
+                    "om.UPDATED_TIMESTAMP FROM DM_OPERATION o " +
+                    "INNER JOIN (SELECT * FROM DM_ENROLMENT_OP_MAPPING dm " +
+                    "WHERE dm.ENROLMENT_ID = ? AND dm.STATUS = ? AND dm.OPERATION_CODE = ?) om ON o.ID = om.OPERATION_ID ORDER BY o.CREATED_TIMESTAMP DESC";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, enrolmentId);
+            stmt.setString(2, status.toString());
+            stmt.setString(3, operationCode);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                operation = OperationDAOUtil.getOperation(rs);
+                operation.setStatus(status);
+                if (rs.getLong("UPDATED_TIMESTAMP") == 0) {
+                    operation.setReceivedTimeStamp("");
+                } else {
+                    operation.setReceivedTimeStamp(
+                            new Timestamp((rs.getLong("UPDATED_TIMESTAMP") * 1000)).toString());
+                }
+                operations.add(operation);
+            }
+        } catch (SQLException e) {
+            throw new OperationManagementDAOException("SQL error occurred while retrieving the operation " +
+                    "available for the device'" + enrolmentId + "' with status '" + status.toString(), e);
+        } finally {
+            OperationManagementDAOUtil.cleanupResources(stmt, rs);
+        }
+        return operations;
+    }
 }

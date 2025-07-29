@@ -2533,6 +2533,12 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
+    public List<? extends Operation> getPendingOperations(Device device, String operationCode) throws OperationManagementException {
+        return pluginRepository.getOperationManager(device.getType(), this.getTenantId())
+                .getPendingOperationsByOpCode(device, operationCode);
+    }
+
+    @Override
     public void updateOperation(DeviceIdentifier deviceId, Operation operation) throws OperationManagementException {
         pluginRepository.getOperationManager(deviceId.getType(), this.getTenantId())
                 .updateOperation(deviceId, operation);
