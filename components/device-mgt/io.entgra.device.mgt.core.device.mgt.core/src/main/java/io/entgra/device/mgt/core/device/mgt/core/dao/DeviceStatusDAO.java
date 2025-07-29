@@ -17,6 +17,7 @@
  */
 package io.entgra.device.mgt.core.device.mgt.core.dao;
 
+import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo.Status;
 import io.entgra.device.mgt.core.device.mgt.common.type.mgt.DeviceStatus;
 
 import java.util.Date;
@@ -35,5 +36,18 @@ public interface DeviceStatusDAO {
     List<DeviceStatus> getStatus(int enrolmentId) throws DeviceManagementDAOException;
 
     List<DeviceStatus> getStatus(int enrolmentId, Date fromDate, Date toDate) throws DeviceManagementDAOException;
+
+    /**
+     * Get the specific {@link Status} of a device between the given dates.
+     * @param deviceId Device ID
+     * @param fromDate from date
+     * @param toDate to date
+     * @param billingStatus whether the result be ordered in descending order
+     * @param status {@link Status} to be queried. If null, all statuses will be returned.
+     * @return List of {@link DeviceStatus} objects. If no status is found, an empty list will be returned.
+     * @throws DeviceManagementDAOException if an error occurred while querying the database.
+     */
+    List<DeviceStatus> getStatus(int deviceId, Date fromDate, Date toDate, boolean billingStatus,
+                                 Status status) throws DeviceManagementDAOException;
 
 }
