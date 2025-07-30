@@ -96,7 +96,7 @@ public interface OperationManager {
      * @param device - Device object representing the device for which operations are to be fetched.
      * @param operationCode - The operation code to filter the pending operations.
      * @return A List of pending operations for the specified device and operation code.
-     * @throws OperationManagementException If some unusual behaviour is observed while fetching the
+     * @throws OperationManagementException if failed while retrieving the pending operations.
      */
     List<? extends Operation> getPendingOperationsByOpCode(Device device, String operationCode)
             throws OperationManagementException;
