@@ -735,6 +735,16 @@ public interface DeviceManagementProviderService {
     Operation getNextPendingOperation(DeviceIdentifier deviceId, long notNowOperationFrequency)
             throws OperationManagementException;
 
+    /**
+     * This method retrieves the pending operations for a given device and operation code.
+     * @param device {@link Device} object for which the pending operations are to be retrieved.
+     * @param operationCode The operation code to filter the pending operations.
+     * @return List of pending operations for the specified device and operation code.
+     * @throws OperationManagementException if an error occurs while retrieving the operations.
+     */
+    List<? extends Operation> getPendingOperations(Device device, String operationCode)
+            throws OperationManagementException;
+
     @Deprecated
     void updateOperation(DeviceIdentifier deviceId, Operation operation) throws OperationManagementException;
 

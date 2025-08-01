@@ -119,6 +119,17 @@ public final class DeviceManagementConstants {
         public static final String E_MAIL = "MAIL";
     }
 
+    public static final class MetadataKeys {
+        private MetadataKeys() {
+            throw new AssertionError();
+        }
+
+        public static final String META_KEY_EVALUATE_TENANTS = "EVALUATE_TENANTS";
+        public static final String META_KEY_DEVICE_COST = "PER_DEVICE_COST";
+        public static final String META_KEY_DEVICE_SUSPEND_ENABLED_TENANTS = "DEVICE_SUSPEND_ENABLED_TENANTS";
+
+    }
+
     public static final class EmailAttributes {
         private EmailAttributes() {
             throw new AssertionError();
