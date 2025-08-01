@@ -17,6 +17,7 @@
  */
 package io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api;
 
+import com.google.gson.JsonObject;
 import io.entgra.device.mgt.core.apimgt.annotations.Scope;
 import io.entgra.device.mgt.core.apimgt.annotations.Scopes;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceList;

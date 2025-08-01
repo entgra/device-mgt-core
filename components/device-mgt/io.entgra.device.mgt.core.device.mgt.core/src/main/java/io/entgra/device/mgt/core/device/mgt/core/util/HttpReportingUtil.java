@@ -77,6 +77,7 @@ public class HttpReportingUtil {
             switch (designFile) {
                 case Constants.BirtReporting.APP_USAGE:
                 case Constants.BirtReporting.DEVICE_INFO:
+                case Constants.BirtReporting.LOCATION_INFO:
                     return designFile += Constants.BirtReporting.BIRT_RPT_DESIGN_EXT;
             }
         }

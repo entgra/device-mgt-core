@@ -54,6 +54,7 @@ public class Constants {
         public static final String BIRT_RPT_DESIGN_EXT = ".rptdesign";
         public static final String APP_USAGE = "APP_USAGE";
         public static final String DEVICE_INFO = "DEVICE_INFO";
+        public static final String LOCATION_INFO = "LOCATION_INFO";
         public static final String UNSUPPORTED_REPORT_TYPE = "UNSUPPORTED";
         public static final String TENANT_ID = "tenantId";
     }
