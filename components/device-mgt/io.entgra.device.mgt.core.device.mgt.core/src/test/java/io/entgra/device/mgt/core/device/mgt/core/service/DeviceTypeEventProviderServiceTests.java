@@ -19,11 +19,11 @@
 package io.entgra.device.mgt.core.device.mgt.core.service;
 
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
-import io.entgra.device.mgt.core.device.mgt.core.common.BaseDeviceManagementTest;
+import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
+import io.entgra.device.mgt.core.device.mgt.common.type.MetadataResult;
 import io.entgra.device.mgt.core.device.mgt.common.type.event.mgt.DeviceTypeEvent;
 import io.entgra.device.mgt.core.device.mgt.core.TestUtils;
-import io.entgra.device.mgt.core.device.mgt.core.common.TestDataHolder;
-import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
+import io.entgra.device.mgt.core.device.mgt.core.common.BaseDeviceManagementTest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.testng.annotations.BeforeClass;
@@ -31,7 +31,9 @@ import org.testng.annotations.Test;
 
 import java.util.List;
 
+import static org.mockito.Mockito.mock;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 public class DeviceTypeEventProviderServiceTests extends BaseDeviceManagementTest {
 
@@ -42,39 +44,24 @@ public class DeviceTypeEventProviderServiceTests extends BaseDeviceManagementTes
     @Override
     public void init() throws Exception {
         initDataSource(); // Initialize the database connection
-        deviceTypeEventManagementProviderService = new DeviceTypeEventManagementProviderServiceImpl();
-
-        try {
-            // Insert initial test data into DM_DEVICE_TYPE table
-            DeviceManagementDAOFactory.beginTransaction();
-            executeUpdate("INSERT INTO DM_DEVICE_TYPE " +
-                    "(ID, NAME, DEVICE_TYPE_META, LAST_UPDATED_TIMESTAMP, PROVIDER_TENANT_ID, SHARED_WITH_ALL_TENANTS) " +
-                    "VALUES " +
-                    "(1, 'air_quality', NULL, CURRENT_TIMESTAMP, " + TestDataHolder.ALTERNATE_TENANT_ID + ", FALSE)");
-            DeviceManagementDAOFactory.commitTransaction();
-        }  finally {
-            DeviceManagementDAOFactory.closeConnection();
-        }
-
-        try {
-            // Insert initial test data into DM_DEVICE_TYPE_META table
-            DeviceManagementDAOFactory.beginTransaction();
-            executeUpdate(
-                    "INSERT INTO DM_DEVICE_TYPE_META " +
-                            "(ID, DEVICE_TYPE_ID, META_KEY, META_VALUE, LAST_UPDATED_TIMESTAMP, TENANT_ID) " +
-                            "VALUES " +
-                            "(1, 1, 'EVENT_DEFINITIONS','{\"eventDefinitions\":[{\"eventName\":\"event1\",\"eventTopicStructure\":\"topic1/structure\",\"eventAttributes\":{\"attributes\":[{\"name\":\"t\",\"type\":\"FLOAT\"}]}}]}', " +
-                            System.currentTimeMillis() + ", " + TestDataHolder.ALTERNATE_TENANT_ID + ")"
-            );
-            DeviceManagementDAOFactory.commitTransaction();
-        } finally {
-            DeviceManagementDAOFactory.closeConnection();
-        }
-
-
+        MetadataManagementService mockMetadataService = mock(MetadataManagementService.class);
+        deviceTypeEventManagementProviderService =
+                new DeviceTypeEventManagementProviderServiceImpl(mockMetadataService);
     }
 
     @Test
+    public void createDeviceTypeMetaWithEvents_JSONProcessingTest() throws Exception {
+        String deviceType = "air_quality";
+        List<DeviceTypeEvent> deviceTypeEvents = TestUtils.getDeviceTypeEvents();
+        try {
+            // Update the event definitions from the database
+            deviceTypeEventManagementProviderService.createDeviceTypeMetaWithEvents(deviceType, deviceTypeEvents);
+        } catch (DeviceManagementException e) {
+            throw new DeviceManagementException("Error occurred while creating event definitions for a device type" + e);
+        }
+    }
+
+    @Test(dependsOnMethods = {"createDeviceTypeMetaWithEvents_JSONProcessingTest"})
     public void updateDeviceTypeMetaWithEvents_JSONProcessingTest() throws Exception {
         String deviceType = "air_quality";
         List<DeviceTypeEvent> deviceTypeEvents = TestUtils.getDeviceTypeEvents();
@@ -86,19 +73,24 @@ public class DeviceTypeEventProviderServiceTests extends BaseDeviceManagementTes
         }
     }
 
-    @Test
+    @Test(dependsOnMethods = {"createDeviceTypeMetaWithEvents_JSONProcessingTest"})
     public void getDeviceTypeEventDefinitionsTest() throws Exception {
         String deviceType = "air_quality";
         try {
-            List<DeviceTypeEvent> response = deviceTypeEventManagementProviderService.getDeviceTypeEventDefinitions(deviceType);
-        // Assert
-        assertNotNull(response, "Response should not be null");
+            MetadataResult<DeviceTypeEvent> result =
+                    deviceTypeEventManagementProviderService.getDeviceTypeEventDefinitions(deviceType);
+
+            // Assert
+            assertNotNull(result, "MetadataResult should not be null");
+            assertTrue(result.isExists(), "Metadata should exist");
+            assertNotNull(result.getDefinitions(), "Definitions list should not be null");
+
         } catch (DeviceManagementException e) {
-            throw new DeviceManagementException("Error occurred while retrieving the event definitions for a device type" + e);
+            throw new DeviceManagementException("Error occurred while retrieving the event definitions for device type: " + deviceType, e);
         }
     }
 
-    @Test
+    @Test(dependsOnMethods = {"createDeviceTypeMetaWithEvents_JSONProcessingTest"})
     public void deleteDeviceTypeEventDefinitionsTest() throws Exception {
         String deviceType = "air_quality";
         try {

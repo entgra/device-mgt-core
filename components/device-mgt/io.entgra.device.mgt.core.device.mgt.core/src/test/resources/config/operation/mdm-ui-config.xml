@@ -441,6 +441,7 @@
         <Scope>am:admin:lc:app:block</Scope>
         <Scope>am:admin:lc:app:deprecate</Scope>
         <Scope>am:admin:lc:app:retire</Scope>
+        <Scope>dm:remote:connect</Scope>
     </Scopes>
     <SSOConfiguration>
         <Issuer>device-mgt</Issuer>
