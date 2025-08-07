@@ -30,7 +30,12 @@ import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.OperationStatusBean;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.analytics.EventAttributeList;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.InputValidationException;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.RequestValidationUtil;
-import io.entgra.device.mgt.core.device.mgt.common.*;
+import io.entgra.device.mgt.core.device.mgt.common.Device;
+import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
+import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo;
+import io.entgra.device.mgt.core.device.mgt.common.MonitoringOperation;
+import io.entgra.device.mgt.core.device.mgt.common.OperationMonitoringTaskConfig;
+import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationException;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationService;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.GroupAccessAuthorizationService;
@@ -1358,12 +1363,12 @@ public class DeviceMgtAPIUtils {
 
 
     public static DeviceLocationForExactTimeSnapshotWrapper getDeviceLocationHistoryPaths(
-            String authorizedUser, String deviceType, PaginationRequest request, long exactTime,
+            String authorizedUser, String deviceType, int timeWindow, PaginationRequest request, long exactTime,
             DeviceManagementProviderService dms)
             throws DeviceManagementException, DeviceAccessAuthorizationException {
 
         List<Object> pathsArray = new ArrayList<>();
-        List<DeviceLocationHistorySnapshot> snapshots = dms.getAllDeviceLocationInfo(deviceType, exactTime, request);
+        List<DeviceLocationHistorySnapshot> snapshots = dms.getAllDeviceLocationInfo(deviceType, exactTime, timeWindow, request);
 
         for (DeviceLocationHistorySnapshot snapshot : snapshots) {
             // Create device identifier from snapshot data

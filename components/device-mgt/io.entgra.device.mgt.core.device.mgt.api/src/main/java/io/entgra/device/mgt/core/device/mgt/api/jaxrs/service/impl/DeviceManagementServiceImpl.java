@@ -45,7 +45,11 @@ import io.entgra.device.mgt.core.device.mgt.common.MDMAppConstants;
 import io.entgra.device.mgt.core.device.mgt.common.OperationLogFilters;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
-import io.entgra.device.mgt.core.device.mgt.common.device.details.*;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceData;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceInfo;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocation;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationForExactTimeSnapshotWrapper;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationHistorySnapshotWrapper;
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManagerServiceImpl;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang.StringUtils;
@@ -742,12 +746,13 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
     }
 
     @GET
-    @Path("/locations/at-time")
+    @Path("{deviceType}/locations/{exactTime}")
     public Response getAllDeviceLocationHistory(
-            @QueryParam("deviceType") String deviceType,
-            @QueryParam("exactTime") long exactTime,
+            @PathParam("deviceType") String deviceType,
+            @PathParam("exactTime") long exactTime,
             @QueryParam("offset") @DefaultValue("0") int offset,
-            @QueryParam("limit") @DefaultValue("10") int limit){
+            @QueryParam("limit") @DefaultValue("10") int limit,
+            @QueryParam("timeWindow") @DefaultValue("1800000") int timeWindow){
         try {
             RequestValidationUtil.validatePaginationParameters(offset, limit);
 
@@ -762,7 +767,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             PaginationRequest request = new PaginationRequest(offset, limit);
             DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
             DeviceLocationForExactTimeSnapshotWrapper result = DeviceMgtAPIUtils.getDeviceLocationHistoryPaths(
-                    authorizedUser,deviceType, request, exactTime, dms);
+                    authorizedUser,deviceType, timeWindow, request, exactTime, dms);
             return Response.status(Response.Status.OK).entity(result).build();
         } catch (UnAuthorizedException e) {
             String msg =  "Unauthorized access - user not found";

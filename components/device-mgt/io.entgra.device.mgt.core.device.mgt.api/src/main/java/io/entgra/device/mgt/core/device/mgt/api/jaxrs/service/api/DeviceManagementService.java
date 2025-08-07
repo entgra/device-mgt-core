@@ -687,7 +687,7 @@ public interface DeviceManagementService {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/locations/at-time")
+    @Path("{deviceType}/locations/{exactTime}")
     @ApiOperation(
             produces = "application/json",
             httpMethod = "GET",
@@ -736,14 +736,14 @@ public interface DeviceManagementService {
                     name = "deviceType",
                     value = "The device type, such as ios, android, or windows.",
                     required = false)
-            @QueryParam("deviceType")
+            @PathParam("deviceType")
             @Size(max = 45)
             String deviceType,
             @ApiParam(
                     name = "exactTime",
                     value = "Define the exact timestamp to get device location in milliseconds. ",
                     required = true)
-            @QueryParam("exactTime")
+            @PathParam("exactTime")
             long exactTime,
             @ApiParam(
                     name = "offset",
@@ -751,6 +751,13 @@ public interface DeviceManagementService {
                     defaultValue = "0")
             @QueryParam("offset")
             int offset,
+            @ApiParam(
+                    name = "timeWindow",
+                    value = "The time window for the location history search.",
+                    required = false,
+                    defaultValue = "0")
+            @QueryParam("timeWindow")
+            int timeWindow,
             @ApiParam(
                     name = "limit",
                     value = "Provide how many device details you require from the starting pagination index/offset.",
