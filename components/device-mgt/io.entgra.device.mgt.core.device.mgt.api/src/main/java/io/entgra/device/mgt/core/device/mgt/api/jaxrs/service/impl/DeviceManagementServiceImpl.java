@@ -757,7 +757,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             RequestValidationUtil.validatePaginationParameters(offset, limit);
 
             if (exactTime == 0) {
-                String msg = "exactTime parameter is mandatory. Please provide a valid timestamp in milliseconds.";
+                String msg = "A mandatory parameter is missing: exactTime";
                 log.error(msg);
                 return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
             }
@@ -779,10 +779,6 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while retrieving device location history";
-            log.error(msg, e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
-        } catch (Exception e) {
-            String msg = "Unexpected error occurred while processing request";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
