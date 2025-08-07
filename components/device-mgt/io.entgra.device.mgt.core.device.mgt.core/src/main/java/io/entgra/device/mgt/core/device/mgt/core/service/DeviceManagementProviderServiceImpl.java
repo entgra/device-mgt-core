@@ -3828,7 +3828,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public List<DeviceLocationHistorySnapshot> getAllDeviceLocationInfo(String deviceType, long exactTime, PaginationRequest request)
+    public List<DeviceLocationHistorySnapshot> getAllDeviceLocationInfo(String deviceType, long exactTime, int timeWindow, PaginationRequest request)
             throws DeviceManagementException {
         if (log.isDebugEnabled()) {
             log.debug("Get paginated device location information for deviceType: " + request.getDeviceType());
@@ -3838,7 +3838,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             DeviceManagerUtil.validateDeviceListPageSize(request);
             DeviceManagementDAOFactory.openConnection();
             snapshotExactTime = deviceDAO.getAllDeviceLocationInfo(
-                    deviceType, exactTime, request);
+                    deviceType, exactTime, timeWindow, request);
         } catch (DeviceManagementDAOException e) {
             String msg = "Error occurred in getAllDeviceLocationInfo";
             log.error(msg, e);

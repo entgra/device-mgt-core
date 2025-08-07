@@ -2237,12 +2237,10 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
 
 
 @Override
-public List<DeviceLocationHistorySnapshot> getAllDeviceLocationInfo(String deviceType, long exactTime, PaginationRequest request)
+public List<DeviceLocationHistorySnapshot> getAllDeviceLocationInfo(String deviceType, long exactTime, int timeWindow, PaginationRequest request)
         throws DeviceManagementDAOException {
 
     List<DeviceLocationHistorySnapshot> snapshotExactTime = new ArrayList<>();
-
-    long timeWindow = 1800000;
 
     try (Connection conn = DeviceManagementDAOFactory.getConnection()) {
         String sql = "SELECT * FROM (" +
@@ -2261,7 +2259,7 @@ public List<DeviceLocationHistorySnapshot> getAllDeviceLocationInfo(String devic
                 "                   TIMESTAMP DESC" +
                 "           ) as rn " +
                 "    FROM DM_DEVICE_HISTORY_LAST_SEVEN_DAYS " +
-                "    WHERE (? IS NULL OR DEVICE_TYPE_NAME = ?) " +
+                "    WHERE (DEVICE_TYPE_NAME = ? OR ? = 'all') " +
                 "      AND TIMESTAMP BETWEEN ? AND ? " +
                 ") ranked WHERE rn = 1 " +
                 "LIMIT ? OFFSET ?";

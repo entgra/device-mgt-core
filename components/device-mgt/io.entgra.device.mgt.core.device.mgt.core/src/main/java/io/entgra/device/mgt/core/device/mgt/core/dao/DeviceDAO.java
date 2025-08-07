@@ -703,7 +703,7 @@ public interface DeviceDAO {
      * @return List of device location history snapshots
      * @throws DeviceManagementDAOException
      */
-    List<DeviceLocationHistorySnapshot> getAllDeviceLocationInfo(String deviceType,long exactTime,PaginationRequest request)
+    List<DeviceLocationHistorySnapshot> getAllDeviceLocationInfo(String deviceType,long exactTime,int timeWindow,PaginationRequest request)
             throws DeviceManagementDAOException;
 
 

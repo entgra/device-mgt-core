@@ -847,7 +847,7 @@ public interface DeviceManagementProviderService {
      * @throws DeviceManagementException
      * @return list of device's location histories
      */
-    List<DeviceLocationHistorySnapshot> getAllDeviceLocationInfo(String deviceType, long exactTime,PaginationRequest request)
+    List<DeviceLocationHistorySnapshot> getAllDeviceLocationInfo(String deviceType, long exactTime, int timeWindow, PaginationRequest request)
             throws DeviceManagementException;
 
     /**
