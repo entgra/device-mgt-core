@@ -45,6 +45,18 @@ import io.entgra.device.mgt.core.device.mgt.common.MDMAppConstants;
 import io.entgra.device.mgt.core.device.mgt.common.OperationLogFilters;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceData;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceInfo;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocation;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationForExactTimeSnapshotWrapper;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationHistorySnapshotWrapper;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.ConflictException;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceNotFoundException;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceTypeNotFoundException;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.InvalidConfigurationException;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.InvalidDeviceException;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.UnAuthorizedException;
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManagerServiceImpl;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang.StringUtils;
@@ -55,12 +67,7 @@ import io.entgra.device.mgt.core.device.mgt.common.app.mgt.ApplicationManagement
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.MobileAppTypes;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationException;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationService;
-import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceData;
-import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceInfo;
-import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocation;
-import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationHistorySnapshotWrapper;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.BadRequestException;
-import io.entgra.device.mgt.core.device.mgt.common.exceptions.*;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Activity;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Operation;
@@ -739,6 +746,45 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
         } catch (DeviceAccessAuthorizationException e) {
             String msg = "Error occurred while checking device access authorization";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
+    @GET
+    @Path("{deviceType}/locations/{exactTime}")
+    public Response getAllDeviceLocationHistory(
+            @PathParam("deviceType") String deviceType,
+            @PathParam("exactTime") long exactTime,
+            @QueryParam("offset") @DefaultValue("0") int offset,
+            @QueryParam("limit") @DefaultValue("10") int limit,
+            @QueryParam("timeWindow") @DefaultValue("1800000") int timeWindow){
+        try {
+            RequestValidationUtil.validatePaginationParameters(offset, limit);
+
+            if (exactTime == 0) {
+                String msg = "A mandatory parameter is missing: exactTime";
+                log.error(msg);
+                return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+            }
+
+            String authorizedUser = CarbonContext.getThreadLocalCarbonContext().getUsername();
+
+            PaginationRequest request = new PaginationRequest(offset, limit);
+            DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
+            DeviceLocationForExactTimeSnapshotWrapper result = DeviceMgtAPIUtils.getDeviceLocationHistoryPaths(
+                    authorizedUser,deviceType, timeWindow, request, exactTime, dms);
+            return Response.status(Response.Status.OK).entity(result).build();
+        } catch (UnAuthorizedException e) {
+            String msg =  "Unauthorized access - user not found";
+            log.error(msg, e);
+            return Response.status(Response.Status.FORBIDDEN).entity(msg).build();
+        } catch (DeviceAccessAuthorizationException e) {
+            String msg = "Error occurred while checking device access authorization";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while retrieving device location history";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }

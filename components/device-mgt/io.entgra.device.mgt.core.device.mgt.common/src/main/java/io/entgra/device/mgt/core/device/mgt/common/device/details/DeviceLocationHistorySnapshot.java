@@ -17,6 +17,7 @@
  */
 
 package io.entgra.device.mgt.core.device.mgt.common.device.details;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
