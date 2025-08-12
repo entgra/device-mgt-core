@@ -31,6 +31,4 @@ public class DeviceLocationForExactTimeSnapshotWrapper {
     public void setExactTimeSnapshot(List<Object> ExactTimeSnapshot) {
         this.ExactTimeSnapshot = ExactTimeSnapshot;
     }
-
-
 }

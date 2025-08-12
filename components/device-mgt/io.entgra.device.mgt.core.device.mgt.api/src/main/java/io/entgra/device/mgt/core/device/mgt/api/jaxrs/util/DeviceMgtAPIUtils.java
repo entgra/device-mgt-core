@@ -1366,7 +1366,19 @@ public class DeviceMgtAPIUtils {
         return snapshotWrapper;
     }
 
-
+    /**
+     * Getting device location history snapshot for an exact time
+     *
+     * @param authorizedUser User who initiates the request
+     * @param deviceType Device type of the device
+     * @param timeWindow Time window for the location history search
+     * @param request Pagination request
+     * @param exactTime Exact time for the location history search
+     * @param dms DeviceManagementService instance
+     * @return DeviceLocationForExactTimeSnapshotWrapper instance
+     * @throws DeviceManagementException If device details cannot be retrieved
+     * @throws DeviceAccessAuthorizationException If device authorization fails
+     */
     public static DeviceLocationForExactTimeSnapshotWrapper getDeviceLocationHistoryPaths(
             String authorizedUser, String deviceType, int timeWindow, PaginationRequest request, long exactTime,
             DeviceManagementProviderService dms)
@@ -1413,8 +1425,6 @@ public class DeviceMgtAPIUtils {
         wrapper.setExactTimeSnapshot(pathsArray);
         return wrapper;
     }
-
-
 
     /**
      * Check user who initiates the request has permission to list devices from given group Id.
