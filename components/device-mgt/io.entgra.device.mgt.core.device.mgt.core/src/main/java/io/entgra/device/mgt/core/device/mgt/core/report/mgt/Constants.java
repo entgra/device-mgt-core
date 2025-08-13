@@ -50,6 +50,8 @@ public class Constants {
         public static final String BIRT_REPORTING_HOST = "iot.birt.reporting.host";
         public static final String BIRT_REPORTING_API_REPORT_PATH = "/report";
         public static final String BIRT_REPORTING_API_GENERATE_REPORT = "/generate-report";
+        public static final String BIRT_REPORTING_API_DOWNLOAD_TEMPLATE = "/design/saveURL";
+        public static final String BIRT_REPORTING_API_TEMPLATE = "/design";
         public static final String UTF8_ENCODING = "UTF-8";
         public static final String BIRT_RPT_DESIGN_EXT = ".rptdesign";
         public static final String APP_USAGE = "APP_USAGE";

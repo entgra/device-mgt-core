@@ -41,6 +41,7 @@ import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.ReportManagementService;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.RequestValidationUtil;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.DeviceMgtAPIUtils;
+import io.swagger.util.Json;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -368,6 +369,34 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         } catch (ReportManagementException e) {
             String msg = "Error occurred while generating report.";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
+    @POST
+    @Path("/birt/template")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response downloadBirtTemplate(@QueryParam("url") String templateURL) {
+        try{
+            JsonObject birtResponse = DeviceMgtAPIUtils.getReportManagementService().downloadBirtTemplate(templateURL);
+            return Response.status(Response.Status.OK).entity(birtResponse).build();
+        } catch (ReportManagementException e) {
+            String msg = "Error occurred while saving report template.";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
+    @DELETE
+    @Path("/birt/template")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response deleteBirtTemplate(@QueryParam("templateName") String templateName) {
+        try{
+            JsonObject birtResponse = DeviceMgtAPIUtils.getReportManagementService().deleteBirtTemplate(templateName);
+            return  Response.status(Response.Status.OK).entity(birtResponse).build();
+        } catch (ReportManagementException e) {
+            String msg = "Error occurred while deleting report template.";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }

@@ -23,6 +23,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -57,6 +58,8 @@ import org.apache.commons.logging.LogFactory;
 import io.entgra.device.mgt.core.device.mgt.core.util.HttpReportingUtil;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -542,4 +545,59 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             throw new ReportManagementException(msg, e);
         }
     }
+
+    @Override
+    public JsonObject downloadBirtTemplate(String templateName) throws ReportManagementException {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+
+            String downloadURL = HttpReportingUtil.getBirtReportHost();
+            if (downloadURL != null && !downloadURL.isEmpty()) {
+                // Append the query parameter directly without encoding
+                downloadURL += Constants.BirtReporting.BIRT_REPORTING_API_DOWNLOAD_TEMPLATE
+                        + "?templateURL=" + templateName;
+
+                HttpPost httpPost = new HttpPost(downloadURL);
+                HttpResponse httpResponse = httpClient.execute(httpPost);
+                String jsonResponse = EntityUtils.toString(httpResponse.getEntity(), StandardCharsets.UTF_8);
+                return new Gson().fromJson(jsonResponse, JsonObject.class);
+
+            } else {
+                String msg = "BIRT reporting host is not defined in the iot-server.sh properly.";
+                log.error(msg);
+                throw new ReportManagementException(msg);
+            }
+        } catch (IOException e) {
+            String msg = "Error occurred while invoking BIRT runtime API.";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        }
+    }
+
+    @Override
+    public JsonObject deleteBirtTemplate(String templateName) throws ReportManagementException {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+
+            String deleteURL = HttpReportingUtil.getBirtReportHost();
+            if (deleteURL != null && !deleteURL.isEmpty()) {
+                deleteURL += Constants.BirtReporting.BIRT_REPORTING_API_TEMPLATE
+                        + "?fileName=" + templateName;
+
+                HttpDelete httpDelete = new HttpDelete(deleteURL);
+                HttpResponse httpResponse = httpClient.execute(httpDelete);
+                String jsonResponse = EntityUtils.toString(httpResponse.getEntity(), StandardCharsets.UTF_8);
+                return new Gson().fromJson(jsonResponse, JsonObject.class);
+
+            } else {
+                String msg = "BIRT reporting host is not defined in the iot-server.sh properly.";
+                log.error(msg);
+                throw new ReportManagementException(msg);
+            }
+        } catch (IOException e) {
+            String msg = "Error occurred while invoking BIRT runtime API.";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        }
+    }
+
+
 }

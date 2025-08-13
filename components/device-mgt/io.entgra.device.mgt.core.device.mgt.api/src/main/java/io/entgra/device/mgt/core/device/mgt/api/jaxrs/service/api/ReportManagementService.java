@@ -625,4 +625,76 @@ public interface ReportManagementService {
                             response = ErrorResponse.class)
             })
     Response generateBirtReport(JsonObject jsonObject);
+
+    @POST
+    @Path("/birt/template")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "POST",
+            value = "Send the template URL as a parameter to download the template file",
+            notes = "This will send the URL of the report design file for BIRT runtime to download",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully saved template"),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. No URL found"),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n Error occurred while saving report template.",
+                            response = ErrorResponse.class)
+            })
+    Response downloadBirtTemplate(
+            @ApiParam(
+                    name = "url",
+                    value = "The template download URL",
+                    required = true)
+            @QueryParam("url") String templateURL);
+
+    @DELETE
+    @Path("/birt/template")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "DELETE",
+            value = "Send the template name as a parameter to delete the template file",
+            notes = "This will send the name of the report design file for BIRT runtime to delete",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully deleted template"),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. No template found"),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n Error occurred while deleting report template.",
+                            response = ErrorResponse.class)
+            })
+    Response deleteBirtTemplate(
+            @ApiParam(
+                    name = "name",
+                    value = "The name of the report template",
+                    required = true)
+            @QueryParam("templateName") String templateURL);
 }
