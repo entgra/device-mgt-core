@@ -305,7 +305,7 @@ public class PostgreSQLOperationDAOImpl extends GenericOperationDAOImpl {
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
                 long time = DeviceManagementDAOUtil.getCurrentUTCTime();
                 stmt.setString(1, status.toString());
-                stmt.setTimestamp(2, new Timestamp(time));
+                stmt.setLong(2, time);
                 stmt.setInt(3, enrolmentId);
                 stmt.setInt(4, operationId);
                 return stmt.executeUpdate() > 0;
