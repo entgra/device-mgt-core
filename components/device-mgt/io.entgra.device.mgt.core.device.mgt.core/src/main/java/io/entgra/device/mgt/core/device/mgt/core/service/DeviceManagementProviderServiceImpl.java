@@ -184,6 +184,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
@@ -6089,6 +6090,11 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                         }
                     }
                 }
+                if (!evaluatingProperty.isMatch() &&
+                        DeviceManagementConstants.Common.FIRMWARE_MODEL.equals(evaluatingProperty.getPropertyName())) {
+                    evaluatingProperty.setMatch(this.isFirmwareModelExists(entry.getValue()));
+                }
+
                 validatedPropertyList.add(evaluatingProperty);
             }
 
@@ -6104,9 +6110,10 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public boolean isDevicePropertyValueExists(String propertyName, String propertyValue) throws DeviceManagementException {
-        if (StringUtils.isBlank(propertyName) || StringUtils.isBlank(propertyValue)) {
-            String msg = "Property name or value cannot be null or empty";
+    public boolean isFirmwareModelExists(String firmwareModelName) throws DeviceManagementException {
+        boolean isFirmwareModelExists = false;
+        if (StringUtils.isBlank(firmwareModelName)) {
+            String msg = "Firmware model name cannot be null or empty";
             log.error(msg);
             throw new IllegalArgumentException(msg);
         }
@@ -6114,19 +6121,19 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         try {
             DeviceManagementDAOFactory.openConnection();
-            return deviceDAO.isDevicePropertyValueExists(propertyName, propertyValue, tenantId);
+            isFirmwareModelExists = firmwareDAO.getExistingFirmwareModel(firmwareModelName, tenantId) != null;
         } catch (SQLException e) {
             String msg = "Error occurred while opening a connection to the data source";
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
-        } catch (DeviceManagementException e) {
-            String msg = "Error occurred while checking if device property value exists for property: " + propertyName +
-                    " and value: " + propertyValue;
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred while checking if firmware model " + firmwareModelName +" is exists";
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
         } finally {
             DeviceManagementDAOFactory.closeConnection();
         }
+        return isFirmwareModelExists;
     }
 
 }

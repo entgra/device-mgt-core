@@ -3618,7 +3618,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             Connection conn = getConnection();
             String sql = "SELECT CASE WHEN EXISTS " +
                     "(SELECT 1 FROM DM_DEVICE_PROPERTIES " +
-                    "WHERE PROPERTY_KEY = ? " +
+                    "WHERE PROPERTY_NAME = ? " +
                     "AND PROPERTY_VALUE = ? " +
                     "AND TENANT_ID = ?) " +
                     "THEN 1 ELSE 0 END AS EXISTS_FLAG";

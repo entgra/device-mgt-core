@@ -1293,11 +1293,10 @@ public interface DeviceManagementProviderService {
             throws DeviceNotFoundException, DeviceManagementException;
 
     /**
-     * This method checks if a device property value exists in the system.
-     * @param propertyName Name of the device property to check
-     * @param propertyValue Value of the device property to check
+     * This method checks if a firmware model is exists for a given device property.
+     * @param firmwareModelName Value of the firmware model name
      * @return true if the property value exists, false otherwise
      * @throws DeviceManagementException if an error occurs while checking the property value
      */
-    boolean isDevicePropertyValueExists(String propertyName, String propertyValue) throws DeviceManagementException;
+    boolean isFirmwareModelExists(String firmwareModelName) throws DeviceManagementException;
 }
