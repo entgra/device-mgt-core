@@ -18,6 +18,7 @@
  */
 package io.entgra.device.mgt.core.notification.mgt.common.exception;
 
+import java.util.Collections;
 import java.util.List;
 
 public class InvalidNotificationConfigurationException extends NotificationConfigurationServiceException {
@@ -27,6 +28,11 @@ public class InvalidNotificationConfigurationException extends NotificationConfi
     public InvalidNotificationConfigurationException(List<String> validationErrors) {
         super("Invalid notification configurations found");
         this.validationErrors = validationErrors;
+    }
+
+    public InvalidNotificationConfigurationException(String validationError) {
+        super("Invalid notification configuration: " + validationError);
+        this.validationErrors = Collections.singletonList(validationError);
     }
 
     public List<String> getValidationErrors() {

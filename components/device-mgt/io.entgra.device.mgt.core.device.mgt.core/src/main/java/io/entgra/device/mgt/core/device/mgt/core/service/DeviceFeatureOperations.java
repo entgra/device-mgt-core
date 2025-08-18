@@ -23,6 +23,7 @@ import io.entgra.device.mgt.core.device.mgt.common.dto.DeviceFeatureInfo;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceFeatureOperationException;
 
 import java.util.List;
+import java.util.Map;
 
 public interface DeviceFeatureOperations {
     /**
@@ -47,4 +48,13 @@ public interface DeviceFeatureOperations {
      */
     List<DeviceFeatureInfo> getOperationDetails(String code, String name, String type, boolean removeDeduplicateCode)
             throws DeviceFeatureOperationException;
+
+    /**
+     * Validates whether the given operation codes exist in the system.
+     *
+     * @param codes Single or multiple operation codes.
+     * @return Map of operation code to boolean indicating existence.
+     * @throws DeviceFeatureOperationException if database access fails.
+     */
+    Map<String, Boolean> validateOperationCodes(List<String> codes) throws DeviceFeatureOperationException;
 }

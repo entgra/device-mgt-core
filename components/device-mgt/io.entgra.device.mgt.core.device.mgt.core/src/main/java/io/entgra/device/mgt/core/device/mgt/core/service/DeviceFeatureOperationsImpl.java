@@ -37,6 +37,7 @@ import org.apache.commons.logging.LogFactory;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class DeviceFeatureOperationsImpl implements DeviceFeatureOperations {
 
@@ -125,5 +126,24 @@ public class DeviceFeatureOperationsImpl implements DeviceFeatureOperations {
             DeviceFeatureOperationsDAOFactory.closeConnection();
         }
         return operationList;
+    }
+
+    @Override
+    public Map<String, Boolean> validateOperationCodes(List<String> codes)
+            throws DeviceFeatureOperationException {
+        try {
+            DeviceFeatureOperationsDAOFactory.openConnection();
+            return deviceFeatureOperationDAO.operationCodesExist(codes);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error validating operation codes: " + codes;
+            log.error(msg, e);
+            throw new DeviceFeatureOperationException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error retrieving operation details from DB table.";
+            log.error(msg, e);
+            throw new DeviceFeatureOperationException(msg, e);
+        } finally {
+            DeviceFeatureOperationsDAOFactory.closeConnection();
+        }
     }
 }

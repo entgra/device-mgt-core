@@ -22,6 +22,7 @@ package io.entgra.device.mgt.core.device.mgt.core.dao;
 import io.entgra.device.mgt.core.device.mgt.common.dto.DeviceFeatureInfo;
 
 import java.util.List;
+import java.util.Map;
 
 public interface DeviceFeatureOperationDAO {
     /**
@@ -46,4 +47,12 @@ public interface DeviceFeatureOperationDAO {
     List<DeviceFeatureInfo> getOperationDetails(String code, String name, String type, boolean removeDeduplicateCode)
             throws DeviceManagementDAOException;
 
+    /**
+     * Checks whether the given operation codes exist in the DM_OPERATION_DETAILS table.
+     *
+     * @param codes Single or multiple operation codes to validate.
+     * @return Map of operation code to boolean indicating whether it exists.
+     * @throws DeviceManagementDAOException if there is an error accessing the database.
+     */
+    Map<String, Boolean> operationCodesExist(List<String> codes) throws DeviceManagementDAOException;
 }

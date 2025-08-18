@@ -24,6 +24,7 @@ import io.entgra.device.mgt.core.notification.mgt.common.beans.NotificationConfi
 
 import io.entgra.device.mgt.core.notification.mgt.api.service.NotificationConfigurationService;
 import io.entgra.device.mgt.core.notification.mgt.common.exception.InvalidNotificationConfigurationException;
+import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationConfigurationNotFoundException;
 import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationConfigurationServiceException;
 import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationConfigService;
 import org.apache.commons.httpclient.HttpStatus;
@@ -41,9 +42,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Path("/notification-configuration")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -66,6 +64,9 @@ public class NotificationConfigurationServiceImpl implements NotificationConfigu
             NotificationConfigurationList filteredConfigs =
                     notificationConfigService.getFilteredNotificationConfigurations(name, type, code, offset, limit);
             return Response.status(HttpStatus.SC_OK).entity(filteredConfigs).build();
+        } catch (NotificationConfigurationNotFoundException e) {
+            log.warn(e.getMessage());
+            return Response.status(HttpStatus.SC_NOT_FOUND).entity(e.getMessage()).build();
         } catch (NotificationConfigurationServiceException e) {
             String msg = "Unexpected error occurred while retrieving notification configurations.";
             log.error(msg, e);
@@ -97,8 +98,13 @@ public class NotificationConfigurationServiceImpl implements NotificationConfigu
     @Path("/{configId}")
     @Override
     public Response updateNotificationConfigById(@PathParam("configId") int configId,
-                                                 NotificationConfig config) {
+                                                 NotificationConfig config) { //TODO: remove the path param
         try {
+            if (config == null || config.getId() == 0) {
+                String msg = "Invalid request: configuration or configuration ID is missing";
+                log.error(msg);
+                return Response.status(HttpStatus.SC_BAD_REQUEST).entity(msg).build();
+            }
             if (configId != config.getId()) {
                 String msg = "Path ID " + configId + " does not match configuration ID " + config.getId();
                 log.error(msg);
@@ -114,10 +120,10 @@ public class NotificationConfigurationServiceImpl implements NotificationConfigu
             }
             notificationConfigService.updateNotificationConfigContext(config);
             return Response.status(HttpStatus.SC_OK).entity(config).build();
+        } catch (NotificationConfigurationNotFoundException e) {
+            log.warn(e.getMessage());
+            return Response.status(HttpStatus.SC_NOT_FOUND).entity(e.getMessage()).build();
         } catch (NotificationConfigurationServiceException e) {
-            if (e.getMessage().contains("not found")) {
-                return Response.status(HttpStatus.SC_NOT_FOUND).entity(e.getMessage()).build();
-            }
             String msg = "Error updating notification configuration: " + e.getMessage();
             log.error(msg, e);
             return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(msg).build();
@@ -139,7 +145,11 @@ public class NotificationConfigurationServiceImpl implements NotificationConfigu
                 return Response.status(HttpStatus.SC_BAD_REQUEST).entity(msg).build();
             }
             notificationConfigService.deleteNotificationConfigContext(configId);
-            return Response.status(HttpStatus.SC_OK).entity("Notification configuration deleted successfully.").build();
+            return Response.status(HttpStatus.SC_OK)
+                    .entity("Notification configuration deleted successfully.").build();
+        } catch (NotificationConfigurationNotFoundException e) {
+            log.warn(e.getMessage());
+            return Response.status(HttpStatus.SC_NOT_FOUND).entity(e.getMessage()).build();
         } catch (NotificationConfigurationServiceException e) {
             String msg = "Error occurred while deleting notification configuration with ID: " + configId;
             log.error(msg, e);
@@ -174,12 +184,10 @@ public class NotificationConfigurationServiceImpl implements NotificationConfigu
             NotificationConfigService notificationConfigService =
                     NotificationConfigurationApiUtil.getNotificationConfigurationService();
             NotificationConfig config = notificationConfigService.getNotificationConfigByID(configId);
-            if (config == null) {
-                String msg = "Notification configuration with ID '" + configId + "' not found.";
-                log.error(msg);
-                return Response.status(HttpStatus.SC_NOT_FOUND).entity(msg).build();
-            }
             return Response.status(HttpStatus.SC_OK).entity(config).build();
+        } catch (NotificationConfigurationNotFoundException e) {
+            log.warn(e.getMessage());
+            return Response.status(HttpStatus.SC_NOT_FOUND).entity(e.getMessage()).build();
         } catch (NotificationConfigurationServiceException e) {
             String msg = "Unexpected error occurred while retrieving notification configuration.";
             log.error(msg, e);

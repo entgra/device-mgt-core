@@ -31,11 +31,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 public class H2DeviceFeatureOperationDAOImpl implements DeviceFeatureOperationDAO {
@@ -149,6 +151,33 @@ public class H2DeviceFeatureOperationDAOImpl implements DeviceFeatureOperationDA
             throw new DeviceManagementDAOException(msg, e);
         }
         return operationList;
+    }
+
+    @Override
+    public Map<String, Boolean> operationCodesExist(List<String> codes) throws DeviceManagementDAOException {
+        Map<String, Boolean> result = new HashMap<>();
+        if (codes == null || codes.isEmpty()) return result;
+        String placeholders = String.join(",", Collections.nCopies(codes.size(), "?"));
+        String query =
+                "SELECT OPERATION_CODE " +
+                        "FROM DM_OPERATION_DETAILS " +
+                        "WHERE OPERATION_CODE " +
+                        "IN (" + placeholders + ")";
+        try (Connection connection = DeviceFeatureOperationsDAOFactory.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(query)) {
+            for (int i = 0; i < codes.size(); i++) {
+                stmt.setString(i + 1, codes.get(i));
+                result.put(codes.get(i), false);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    result.put(rs.getString("OPERATION_CODE"), true);
+                }
+            }
+        } catch (SQLException e) {
+            throw new DeviceManagementDAOException("Error checking operation codes in H2.", e);
+        }
+        return result;
     }
 }
 
