@@ -190,7 +190,6 @@
                 <Status>SUSPENDED</Status>
                 <Status>BLOCKED</Status>
                 <Status>REMOVED</Status>
-                <Status>SUSPENDED</Status>
                 <Status>DISENROLLMENT_REQUESTED</Status>
             </AllowedStatus>
         </DeviceStatusItem>
@@ -205,7 +204,6 @@
                 <Status>SUSPENDED</Status>
                 <Status>BLOCKED</Status>
                 <Status>REMOVED</Status>
-                <Status>SUSPENDED</Status>
                 <Status>DISENROLLMENT_REQUESTED</Status>
             </AllowedStatus>
         </DeviceStatusItem>
@@ -220,7 +218,6 @@
                 <Status>SUSPENDED</Status>
                 <Status>BLOCKED</Status>
                 <Status>REMOVED</Status>
-                <Status>SUSPENDED</Status>
                 <Status>DISENROLLMENT_REQUESTED</Status>
             </AllowedStatus>
         </DeviceStatusItem>
