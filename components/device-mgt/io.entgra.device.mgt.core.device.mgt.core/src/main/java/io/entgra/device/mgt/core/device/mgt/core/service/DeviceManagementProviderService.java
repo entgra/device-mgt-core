@@ -844,11 +844,22 @@ public interface DeviceManagementProviderService {
      *
     * @param deviceType The type of devices (e.g., ios, android, windows)
      * @param exactTime Specified given timestamp
+     * @param timeWindow The time window for location history snapshot search
      * @throws DeviceManagementException
      * @return list of device's location histories
      */
     List<DeviceLocationHistorySnapshot> getAllDeviceLocationInfo(String deviceType, long exactTime, int timeWindow, PaginationRequest request)
             throws DeviceManagementException;
+
+    /**
+     *
+     * @param deviceType The type of devices (e.g., ios, android, windows)
+     * @param exactTime pecified given timestamp
+     * @param timeWindow The time window for location history snapshot search
+     * @return The total location history snapshot count
+     * @throws DeviceManagementDAOException
+     */
+    int getDeviceLocationCount(String deviceType, long exactTime, int timeWindow) throws DeviceManagementException;
 
     /**
      * This retrieves the device pull notification payload and passes to device type pull notification subscriber.

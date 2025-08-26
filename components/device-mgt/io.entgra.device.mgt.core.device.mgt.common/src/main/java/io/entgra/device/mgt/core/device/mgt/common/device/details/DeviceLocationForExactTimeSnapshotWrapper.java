@@ -24,11 +24,17 @@ public class DeviceLocationForExactTimeSnapshotWrapper {
 
     private List<Object> ExactTimeSnapshot;
 
+    private int count;
+
     public List<Object> getExactTimeSnapshot() {
         return ExactTimeSnapshot;
     }
 
     public void setExactTimeSnapshot(List<Object> ExactTimeSnapshot) {
         this.ExactTimeSnapshot = ExactTimeSnapshot;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
     }
 }
