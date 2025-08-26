@@ -25,6 +25,7 @@ import java.util.Map;
 
 public class ReportParameters {
     String designFile;
+    String reportType;
     Map<String, Object> parameters;
 
     public String getDesignFile() {
@@ -34,6 +35,10 @@ public class ReportParameters {
     public void setDesignFile(String designFile) {
         this.designFile = designFile;
     }
+
+    public String getReportType() {return reportType;}
+
+    public void setReportType(String reportType) {this.reportType = reportType;}
 
     public Map<String, Object> getParameters() {
         return parameters;

@@ -552,7 +552,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
 
             String downloadURL = HttpReportingUtil.getBirtReportHost();
             if (downloadURL != null && !downloadURL.isEmpty()) {
-                // Append the query parameter directly without encoding
+
                 downloadURL += Constants.BirtReporting.BIRT_REPORTING_API_DOWNLOAD_TEMPLATE
                         + "?templateURL=" + templateName;
 

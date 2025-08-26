@@ -615,13 +615,13 @@ public interface ReportManagementService {
             value = {
                     @ApiResponse(
                             code = 200,
-                            message = "OK. \n Successfully generated PDF report."),
+                            message = "OK. \n Successfully generated report."),
                     @ApiResponse(
                             code = 404,
                             message = "Not Found. No report generated for the given report design file."),
                     @ApiResponse(
                             code = 500,
-                            message = "Internal Server Error. \n Error occurred while generating PDF report.",
+                            message = "Internal Server Error. \n Error occurred while generating report.",
                             response = ErrorResponse.class)
             })
     Response generateBirtReport(JsonObject jsonObject);
