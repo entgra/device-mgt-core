@@ -19,6 +19,7 @@
 package io.entgra.device.mgt.core.device.mgt.core.util;
 
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.EventPublishingException;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.ReportManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,8 +54,14 @@ public class HttpReportingUtil {
         return System.getProperty(DeviceManagementConstants.Report.REPORTING_EVENT_HOST);
     }
 
-    public static String getBirtReportHost() {
-        return System.getProperty(Constants.BirtReporting.BIRT_REPORTING_HOST);
+    public static String getBirtReportHost() throws ReportManagementException {
+        String host = System.getProperty(Constants.BirtReporting.BIRT_REPORTING_HOST);
+        if (host == null) {
+            String msg = "BIRT reporting host is not defined in the iot-server.sh properly.";
+            log.error(msg);
+            throw new ReportManagementException(msg);
+        }
+        return host;
     }
 
     public static int invokeApi(String payload, String endpoint) throws EventPublishingException {
