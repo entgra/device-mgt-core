@@ -233,18 +233,22 @@ public class PostgreSQLOperationDAOImpl extends GenericOperationDAOImpl {
         try {
             Connection connection = OperationManagementDAOFactory.getConnection();
 
-            stmt = connection.prepareStatement("SELECT ID FROM DM_ENROLMENT_OP_MAPPING WHERE ENROLMENT_ID = ? " +
-                    "AND OPERATION_ID = ?");
+            stmt = connection.prepareStatement("SELECT ID, STATUS FROM DM_ENROLMENT_OP_MAPPING WHERE " +
+                    "ENROLMENT_ID = ? AND OPERATION_ID = ?");
             stmt.setInt(1, enrolmentId);
             stmt.setInt(2, operation.getId());
 
             rs = stmt.executeQuery();
             int enPrimaryId = 0;
+            String status = null;
             if (rs.next()) {
                 enPrimaryId = rs.getInt("ID");
+                status = rs.getString("STATUS");
             }
-            stmt = connection.prepareStatement("INSERT INTO DM_DEVICE_OPERATION_RESPONSE(OPERATION_ID, ENROLMENT_ID, " +
-                            "EN_OP_MAP_ID, OPERATION_RESPONSE, IS_LARGE_RESPONSE, RECEIVED_TIMESTAMP) VALUES(?, ?, ?, ?, ?, ?)",
+            stmt = connection.prepareStatement(
+                    "INSERT INTO DM_DEVICE_OPERATION_RESPONSE(OPERATION_ID, ENROLMENT_ID, EN_OP_MAP_ID, " +
+                            "OPERATION_RESPONSE, STATUS, IS_LARGE_RESPONSE, RECEIVED_TIMESTAMP) " +
+                            "VALUES(?, ?, ?, ?, ?, ?, ?)",
                     new String[]{"id"});
             stmt.setInt(1, operation.getId());
             stmt.setInt(2, enrolmentId);
@@ -256,10 +260,11 @@ public class PostgreSQLOperationDAOImpl extends GenericOperationDAOImpl {
             } else {
                 stmt.setString(4, operation.getOperationResponse());
             }
-            stmt.setBoolean(5, isLargeResponse);
+            stmt.setString(5, status);
+            stmt.setBoolean(6, isLargeResponse);
 
             Timestamp receivedTimestamp = new Timestamp(new Date().getTime());
-            stmt.setTimestamp(6, receivedTimestamp);
+            stmt.setTimestamp(7, receivedTimestamp);
             stmt.executeUpdate();
 
             rs = stmt.getGeneratedKeys();

@@ -42,4 +42,24 @@ public interface DeviceSubTypeDAO {
 
     DeviceSubType getDeviceSubTypeByProvider(String subTypeName, int tenantId, String deviceType)
             throws SubTypeMgtDAOException;
+
+    /**
+     * Retrieves the subtype name associated with a given IMEI number.
+     *
+     * <p>This method joins the <b>COMMUNICATION_MODULE</b> and <b>DM_DEVICE_SUB_TYPE</b> tables to find
+     * the corresponding subtype name of the communication module based on the IMEI.
+     *
+     * <p>The SQL query performs the following:
+     * <ul>
+     *     <li>Joins <b>COMMUNICATION_MODULE</b> (<code>c</code>) and <b>DM_DEVICE_SUB_TYPE</b> (<code>d</code>)
+     *         on <code>c.SUB_TYPE_ID = d.SUB_TYPE_ID</code>, with the latter cast to UNSIGNED for type compatibility.</li>
+     *     <li>Filters by <code>c.IMEI = ?</code> to find the specific communication module.</li>
+     *     <li>Retrieves the corresponding <code>SUB_TYPE_NAME</code> from <code>d</code>.</li>
+     * </ul>
+     *
+     * @param imeiNumber the IMEI number of the communication module
+     * @return the subtype name if found; otherwise, null
+     * @throws SubTypeMgtDAOException if a database access error occurs
+     */
+    String getSubTypeNames(String imeiNumber) throws SubTypeMgtDAOException;
 }

@@ -43,4 +43,6 @@ public interface DeviceSubTypeService {
 
     boolean checkDeviceSubTypeExist(String subTypeId, int tenantId, String deviceType)
             throws SubTypeMgtPluginException;
+
+    String getSubTypeNames(String imeiNumber) throws SubTypeMgtPluginException;
 }

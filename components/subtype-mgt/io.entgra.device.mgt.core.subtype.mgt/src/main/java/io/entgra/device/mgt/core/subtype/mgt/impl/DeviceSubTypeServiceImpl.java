@@ -232,4 +232,17 @@ public class DeviceSubTypeServiceImpl implements DeviceSubTypeService {
             ConnectionManagerUtil.closeDBConnection();
         }
     }
+
+    @Override
+    public String getSubTypeNames(String imeiNumber) throws SubTypeMgtPluginException {
+        try {
+            return deviceSubTypeDAO.getSubTypeNames(imeiNumber);
+        } catch (SubTypeMgtDAOException e) {
+            String msg = "Error occurred while retrieving subtype names for device with IMEI: " + imeiNumber;
+            log.error(msg);
+            throw new SubTypeMgtPluginException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+    }
 }
