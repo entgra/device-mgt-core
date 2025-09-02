@@ -1247,13 +1247,12 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     private double generateCost(List<Device> allDevices, Timestamp startDate, Timestamp endDate,  Cost tenantCost,
                                 List<Device> deviceStatusNotAvailable, double totalCost) throws DeviceManagementException {
         List<DeviceStatus> deviceStatus;
-        List<DeviceStatus> suspendedStatuses;
         int tenantId = this.getTenantId();
         try {
             for (Device device : allDevices) {
                 long dateDiff = 0;
-                long suspendedDateDiff = 0;
-                deviceStatus = deviceStatusDAO.getStatus(device.getId(), tenantId, null, endDate, true);
+                long suspendedDateDiff;
+                deviceStatus = deviceStatusDAO.getStatus(device.getId(), tenantId, startDate, endDate, true);
                 if (deviceStatus.isEmpty()) {
                     if (log.isDebugEnabled()) {
                         log.debug("No device status found for the device id '" + device.getId() + "'");
@@ -1262,168 +1261,37 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                     continue;
                 }
 
+                EnrolmentInfo.Status lastRecordedStatus = deviceStatus.get(0).getStatus();
+                Date lastRecordedStatusDate = deviceStatus.get(0).getUpdateTime();
+                boolean isNonBillableStatus = EnrolmentInfo.Status.REMOVED.equals(lastRecordedStatus)
+                        || EnrolmentInfo.Status.DELETED.equals(lastRecordedStatus)
+                        || EnrolmentInfo.Status.SUSPENDED.equals(lastRecordedStatus);
+
                 // Enrolled device is older than starting bill date
                 if (device.getEnrolmentInfo().getDateOfEnrolment() < startDate.getTime()) {
-                    if (EnrolmentInfo.Status.REMOVED.equals(deviceStatus.get(0).getStatus())
-                            || EnrolmentInfo.Status.DELETED.equals(deviceStatus.get(0).getStatus())
-                            || EnrolmentInfo.Status.SUSPENDED.equals(deviceStatus.get(0).getStatus())) {
+                    if (isNonBillableStatus) {
                         // Device was REMOVED / DELETED / SUSPENDED during bill period
-                        if (deviceStatus.get(0).getUpdateTime().getTime() >= startDate.getTime()) {
-                            dateDiff = deviceStatus.get(0).getUpdateTime().getTime() - startDate.getTime();
+                        if (lastRecordedStatusDate.getTime() >= startDate.getTime()) {
+                            dateDiff = lastRecordedStatusDate.getTime() - startDate.getTime();
                         }
                     } else {
                         dateDiff = endDate.getTime() - startDate.getTime();
                     }
                 } else {
-                    if (EnrolmentInfo.Status.REMOVED.equals(deviceStatus.get(0).getStatus())
-                            || EnrolmentInfo.Status.DELETED.equals(deviceStatus.get(0).getStatus())
-                            || EnrolmentInfo.Status.SUSPENDED.equals(deviceStatus.get(0).getStatus())) {
-                        if (deviceStatus.get(0).getUpdateTime().getTime() >= device.getEnrolmentInfo().getDateOfEnrolment()) {
-                            dateDiff = deviceStatus.get(0).getUpdateTime().getTime() - device.getEnrolmentInfo().getDateOfEnrolment();
+                    if (isNonBillableStatus) {
+                        if (lastRecordedStatusDate.getTime() >= device.getEnrolmentInfo().getDateOfEnrolment()) {
+                            dateDiff = lastRecordedStatusDate.getTime() - device.getEnrolmentInfo().getDateOfEnrolment();
                         }
                     } else {
                         dateDiff = endDate.getTime() - device.getEnrolmentInfo().getDateOfEnrolment();
                     }
                 }
 
-                suspendedStatuses = deviceStatusDAO.getStatus(device.getId(), null, endDate, true,
-                        EnrolmentInfo.Status.SUSPENDED);
-                if (!suspendedStatuses.isEmpty()) {
-                    // Device has been SUSPENDED multiple times
-                    if (suspendedStatuses.size() > 1) {
-                        // Get the index of the device status object which has the last SUSPENDED date before
-                        // bill start date. This is done by getting the first occurrence of the SUSPENDED status that
-                        // is less than or equal to the starting bill date
-                        int suspendStatusIndex = 0;
-                        boolean isSuspendedBeforeStartDate = false;
-                        for (DeviceStatus suspendedStatus : suspendedStatuses) {
-                            if (suspendedStatus.getUpdateTime().getTime() <= startDate.getTime()) {
-                                suspendStatusIndex = suspendedStatuses.indexOf(suspendedStatus);
-                                isSuspendedBeforeStartDate = true;
-                                break;
-                            }
-                        }
-
-                        if (isSuspendedBeforeStartDate) {
-                            // Create a sublist of the SUSPENDED statuses, including the one just before the bill start date
-                            List<DeviceStatus> suspendStatusSublist = suspendedStatuses.subList(0,
-                                    suspendStatusIndex + 1);
-                            // Reverse the sublist so that the oldest SUSPENDED time will be at the first index eg: [15th, 20th, 25th]
-                            Collections.reverse(suspendStatusSublist);
-
-                            for (DeviceStatus suspendedStatus : suspendStatusSublist) {
-                                // Keep the next SUSPENDED status index to get the difference between each SUSPENDED state.
-                                // For the last index to avoid having array out of bounds exception, there is a
-                                // validation to check if the next suspend index is less than or equal to last index
-                                int nextSuspendIndex = suspendStatusSublist.indexOf(suspendedStatus) + 1;
-                                if (nextSuspendIndex <= suspendStatusSublist.size() - 1) {
-                                    // Get the ACTIVE statuses that are between the current SUSPENDED status and
-                                    // the next SUSPENDED status
-                                    List<DeviceStatus> activeStatuses = deviceStatusDAO.getStatus(device.getId(),
-                                            suspendedStatus.getUpdateTime(),
-                                            suspendStatusSublist.get(nextSuspendIndex).getUpdateTime(), true,
-                                            EnrolmentInfo.Status.ACTIVE);
-                                    if (!activeStatuses.isEmpty()) {
-                                        // If the SUSPENDED date is before the bill start date then get the difference
-                                        // from the last closest ACTIVE status to the bill start date and add to the
-                                        // SUSPENDED date difference
-                                        if (suspendStatusSublist.indexOf(suspendedStatus) == 0) {
-                                            long lastActiveDateAfterSuspend =
-                                                    activeStatuses.get(activeStatuses.size() - 1).getUpdateTime().getTime();
-                                            if (lastActiveDateAfterSuspend >= startDate.getTime()) {
-                                                suspendedDateDiff += lastActiveDateAfterSuspend - startDate.getTime();
-                                            }
-                                        } else {
-                                            // If the SUSPENDED date is during the billing period then get the difference
-                                            // from the last closest ACTIVE status to the current SUSPENDED time that is
-                                            // iterated through this loop
-                                            suspendedDateDiff += activeStatuses.get(activeStatuses.size() - 1).getUpdateTime().getTime()
-                                                    - suspendedStatus.getUpdateTime().getTime();
-                                        }
-                                    }
-                                } else {
-                                    // Calculate the date difference between the last ACTIVE and SUSPENDED time (last
-                                    // index of the list) if there is any. To do this, we need to get the last closest
-                                    // ACTIVE status between the last SUSPENDED date and bill end date, then subtract it
-                                    // from the current SUSPENDED state being iterated.
-                                    List<DeviceStatus> activeStatuses = deviceStatusDAO.getStatus(device.getId(),
-                                            suspendedStatus.getUpdateTime(), endDate, true,
-                                            EnrolmentInfo.Status.ACTIVE);
-                                    if (!activeStatuses.isEmpty()) {
-                                        // Edge case to handle if there is only one SUSPENDED date before the bill start date
-                                        if (suspendStatusSublist.indexOf(suspendedStatus) == 0) {
-                                            suspendedDateDiff += activeStatuses.get(activeStatuses.size() - 1).getUpdateTime().getTime()
-                                                    - startDate.getTime();
-                                        } else {
-                                            suspendedDateDiff += activeStatuses.get(activeStatuses.size() - 1).getUpdateTime().getTime() -
-                                                    suspendedStatus.getUpdateTime().getTime();
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            // If there are no SUSPENDED statuses before bill start date then reverse the sublist
-                            // so that the oldest SUSPENDED time will be at the first index eg: [15th, 20th, 25th]
-                            Collections.reverse(suspendedStatuses);
-                            for (DeviceStatus suspendedStatus : suspendedStatuses) {
-                                // Keep the next SUSPENDED status index to get the difference between each SUSPENDED
-                                // state. For the last index to avoid having array out of bounds exception, there is a
-                                // validation to check if the next suspend index is less than or equal to the last index
-                                int nextSuspendIndex = suspendedStatuses.indexOf(suspendedStatus) + 1;
-                                if (nextSuspendIndex <= suspendedStatuses.size() - 1) {
-                                    // Get the ACTIVE statuses that are between the current SUSPENDED status and
-                                    // the next SUSPENDED status
-                                    List<DeviceStatus> activeStatuses = deviceStatusDAO.getStatus(device.getId(),
-                                            suspendedStatus.getUpdateTime(),
-                                            suspendedStatuses.get(nextSuspendIndex).getUpdateTime(), true,
-                                            EnrolmentInfo.Status.ACTIVE);
-                                    if (!activeStatuses.isEmpty()) {
-                                        // To get the suspended date difference, we need to get the last closest ACTIVE
-                                        // status to the current SUSPENDED time that is iterated through this loop and
-                                        // get the difference.
-                                        suspendedDateDiff += activeStatuses.get(activeStatuses.size() - 1).getUpdateTime().getTime()
-                                                    - suspendedStatus.getUpdateTime().getTime();
-                                    }
-                                } else {
-                                    // Calculate the date difference between the last ACTIVE and SUSPENDED time (last
-                                    // index of the list) if there is any. To do this, we need to get the last closest
-                                    // ACTIVE status between the last SUSPENDED date and bill end date, then subtract it
-                                    // from the current SUSPENDED state being iterated.
-                                    List<DeviceStatus> activeStatuses = deviceStatusDAO.getStatus(device.getId(),
-                                            suspendedStatus.getUpdateTime(), endDate, true,
-                                            EnrolmentInfo.Status.ACTIVE);
-                                    if (!activeStatuses.isEmpty()) {
-                                        suspendedDateDiff += activeStatuses.get(activeStatuses.size() - 1).getUpdateTime().getTime() -
-                                                suspendedStatus.getUpdateTime().getTime();
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        // Device was SUSPENDED only once during bill period
-                        if (suspendedStatuses.get(0).getUpdateTime().getTime() >= startDate.getTime()) {
-                            suspendedDateDiff = deviceStatus.get(0).getUpdateTime().getTime() -
-                                    suspendedStatuses.get(0).getUpdateTime().getTime();
-                        } else {
-                            // Device was SUSPENDED before the bill period started. Get the ACTIVE statuses between the
-                            // SUSPENDED time and the bill ending time, then reduce the bill start time from the
-                            // closest ACTIVE time to get the SUSPENDED period
-                            List<DeviceStatus> activeStatuses = deviceStatusDAO.getStatus(device.getId(),
-                                    suspendedStatuses.get(0).getUpdateTime(), endDate, true,
-                                    EnrolmentInfo.Status.ACTIVE);
-                            if (!activeStatuses.isEmpty()) {
-                                long lastActiveDateAfterSuspend =
-                                        activeStatuses.get(activeStatuses.size() - 1).getUpdateTime().getTime();
-                                if (lastActiveDateAfterSuspend >= startDate.getTime()) {
-                                    suspendedDateDiff = lastActiveDateAfterSuspend - startDate.getTime();
-                                }
-                            }
-                        }
-                    }
-                }
+                suspendedDateDiff = calculateSuspendedBillPeriod(device.getId(), startDate, endDate,
+                        lastRecordedStatusDate);
 
                 // Reduce SUSPENDED period from the ACTIVE period
-                if (suspendedDateDiff > 0) {
+                if (dateDiff > 0 && suspendedDateDiff > 0) {
                     dateDiff -= suspendedDateDiff;
                 }
 
@@ -1450,6 +1318,200 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             throw new DeviceManagementException(msg, e);
         }
         return totalCost;
+    }
+
+    /**
+     * Calculate the period that the device was suspended during the billing cycle. This is done by checking if there
+     * are multiple SUSPENDED statuses during the billing period. If there is multiple then it will recursively
+     * calculate the SUSPENDED period by subtracting the closest ACTIVE status between the current SUSPENDED status
+     * and the next SUSPENDED status.
+     * <br>
+     * Refer <a href="https://docs.google.com/document/d/1fnAHHZQY5jbhBgwEfK4iP5J0cWKhpIOUxebC-A3JZS8/edit?usp=sharing">
+     *     Suspended Billing Calculation Document</a>
+     *
+     * @param deviceId ID of the device that the suspended period is going to be calculated
+     * @param startDate bill start {@link Date}
+     * @param endDate bill end {@link Date}
+     * @param lastRecordedStatusDate last {@link Date} of the device status that was recorded
+     * @return total SUSPENDED period in milliseconds
+     * @throws DeviceManagementDAOException if there is an error while retrieving the device status history
+     */
+    private long calculateSuspendedBillPeriod(int deviceId, Date startDate, Date endDate, Date lastRecordedStatusDate)
+            throws DeviceManagementDAOException {
+
+        List<DeviceStatus> deviceSuspendedStatuses = deviceStatusDAO.getDeviceStatusHistoryByStatus(deviceId, null,
+                endDate, true, EnrolmentInfo.Status.SUSPENDED);
+
+        if (deviceSuspendedStatuses.isEmpty()) {
+            return 0;
+        }
+
+        List<DeviceStatus> validSuspendedStatusHistory =
+                getValidDeviceStatusHistoryForBilling(deviceSuspendedStatuses, startDate);
+        return calculateSuspendedDuration(deviceId, startDate, endDate, lastRecordedStatusDate,
+                validSuspendedStatusHistory);
+    }
+
+    /**
+     * Filter out the statuses that are not needed for the billing period except the last status just before the billing
+     * start date. For example, we pass the list of all SUSPENDED device statuses for a device and we return a sublist
+     * containing the last SUSPENDED date before the bill start date and the remaining SUSPENDED statuses during the bill
+     * period.
+     * @param deviceStatuses {@link List} of {@link DeviceStatus} containing only one category of statuses. eg: only SUSPENDED statuses
+     * @param startDate bill start {@link Date}
+     * @return {@link List} of {@link DeviceStatus} containing the last SUSPENDED date before the bill start date
+     * and the remaining SUSPENDED statuses during the bill period.
+     */
+    private List<DeviceStatus> getValidDeviceStatusHistoryForBilling(List<DeviceStatus> deviceStatuses,
+                                                                     Date startDate) {
+        int indexOfStatusBeforeStartDate = findLastStatusBeforeBillStartDate(deviceStatuses, startDate);
+
+        if (indexOfStatusBeforeStartDate >= 0) {
+            // Include the status before start date by creating a sublist
+            deviceStatuses = deviceStatuses.subList(0, indexOfStatusBeforeStartDate + 1);
+        }
+
+        // Reverse the list so that the oldest status time will be the first element
+        if (deviceStatuses.size() > 1) {
+            Collections.reverse(deviceStatuses);
+        }
+        return deviceStatuses;
+    }
+
+    /**
+     * Iterate through the given device statuses to find the last status just before the billing start date and return
+     * it's index. If no index is found it will return -1.
+     *
+     * @param deviceStatuses {@link List} of {@link DeviceStatus} containing only one category of statuses. eg: only SUSPENDED statuses
+     * @param startDate bill start {@link Date}
+     * @return index of the last status just before the bill start date
+     */
+    private int findLastStatusBeforeBillStartDate(List<DeviceStatus> deviceStatuses, Date startDate) {
+        for (DeviceStatus deviceStatus : deviceStatuses) {
+            if (deviceStatus.getUpdateTime().getTime() <= startDate.getTime()) {
+                return deviceStatuses.indexOf(deviceStatus);
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Calculate the total SUSPENDED period by iterating through the SUSPENDED device statuses and get the difference
+     * between their last ACTIVE times. And explicitly handle the last SUSPENDED status
+     *
+     * @param deviceId ID of the device that the suspended period is going to be calculated
+     * @param startDate bill start {@link Date}
+     * @param endDate bill end {@link Date}
+     * @param lastRecordedStatusDate lastRecordedStatusDate last {@link Date} of the device status that was recorded
+     * @param suspendedStatusHistory {@link List} of {@link DeviceStatus} containing valid SUSPENDED statuses for a bill period
+     * @return total SUSPENDED period in milliseconds
+     * @throws DeviceManagementDAOException if there is an error while retrieving the device status history
+     */
+    private long calculateSuspendedDuration(int deviceId, Date startDate, Date endDate,
+                                            Date lastRecordedStatusDate, List<DeviceStatus> suspendedStatusHistory)
+            throws DeviceManagementDAOException {
+
+        long suspendedDateDiff = 0;
+        boolean hasSuspendedBeforeStartDate = !suspendedStatusHistory.isEmpty() &&
+                suspendedStatusHistory.get(0).getUpdateTime().getTime() <= startDate.getTime();
+
+        for (int i = 0; i < suspendedStatusHistory.size(); i++) {
+            Date currentSuspendedStatusDate = suspendedStatusHistory.get(i).getUpdateTime();
+            boolean isLastStatus = (i == suspendedStatusHistory.size() - 1);
+
+            if (isLastStatus) {
+                suspendedDateDiff += calculateLastSuspendedStatus(deviceId, startDate, endDate,
+                        lastRecordedStatusDate, currentSuspendedStatusDate, hasSuspendedBeforeStartDate);
+            } else {
+                Date nextSuspendedStatusDate = suspendedStatusHistory.get(i + 1).getUpdateTime();
+                suspendedDateDiff += calculateSuspendedStatusWithNext(deviceId, startDate,
+                        currentSuspendedStatusDate, nextSuspendedStatusDate, hasSuspendedBeforeStartDate, i);
+            }
+        }
+
+        return suspendedDateDiff;
+    }
+
+    /**
+     * Calculate the SUSPENDED period between two SUSPENDED dates by getting the closest ACTIVE status to the current
+     * SUSPENDED date. If there is no ACTIVE statuses between the SUSPENDED date then the difference between the two
+     * SUSPENDED dates will be taken as the SUSPENDED period.
+     *
+     * @param deviceId ID of the device that the suspended period is going to be calculated
+     * @param startDate bill start {@link Date}
+     * @param currentSuspendedDate current SUSPENDED {@link Date}
+     * @param nextSuspendedDate next SUSPENDED {@link Date}
+     * @param hasSuspendedBeforeStartDate if there is a SUSPENDED status before the bill start date
+     * @param indexOfCurrentSuspendedDate index of the current SUSPENDED status
+     * @return total SUSPENDED period between two SUSPENDED dates in milliseconds
+     * @throws DeviceManagementDAOException if there is an error while retrieving the device status history
+     */
+    private long calculateSuspendedStatusWithNext(int deviceId, Date startDate, Date currentSuspendedDate,
+                                                Date nextSuspendedDate, boolean hasSuspendedBeforeStartDate,
+                                                int indexOfCurrentSuspendedDate) throws DeviceManagementDAOException {
+
+        List<DeviceStatus> activeStatuses = deviceStatusDAO.getDeviceStatusHistoryByStatus(deviceId,
+                currentSuspendedDate, nextSuspendedDate,
+                true, EnrolmentInfo.Status.ACTIVE);
+
+        if (activeStatuses.isEmpty()) {
+            if (nextSuspendedDate.getTime() > currentSuspendedDate.getTime()) {
+                return nextSuspendedDate.getTime() - currentSuspendedDate.getTime();
+            }
+            return 0;
+        }
+
+        long lastActiveTime = activeStatuses.get(activeStatuses.size() - 1).getUpdateTime().getTime();
+
+        if (hasSuspendedBeforeStartDate && indexOfCurrentSuspendedDate == 0) {
+            // If the SUSPENDED was before the bill start date then reduce the last closest ACTIVE date from the bill
+            // start date. If the last ACTIVE date was before the start date then return 0.
+            return Math.max(0, lastActiveTime - startDate.getTime());
+        }
+        return lastActiveTime - currentSuspendedDate.getTime();
+    }
+
+    /**
+     * Calculate the SUSPENDED period for the last SUSPENDED status.
+     *
+     * @param deviceId ID of the device that the suspended period is going to be calculated
+     * @param startDate bill start {@link Date}
+     * @param endDate bill end {@link Date}
+     * @param lastRecordedStatusDate lastRecordedStatusDate last {@link Date} of the device status that was recorded
+     * @param lastSuspendedDate last SUSPENDED {@link Date}
+     * @param hasSuspendedBeforeStartDate if there is a SUSPENDED status before the bill start date
+     * @return total SUSPENDED period between the last SUSPENDED date and the last status that was recorded in milliseconds
+     * @throws DeviceManagementDAOException if there is an error while retrieving the device status history
+     */
+    private long calculateLastSuspendedStatus(int deviceId, Date startDate, Date endDate,
+                                            Date lastRecordedStatusDate, Date lastSuspendedDate,
+                                            boolean hasSuspendedBeforeStartDate) throws DeviceManagementDAOException {
+
+        // No calculation needed if this is the last recorded status
+        if (lastSuspendedDate.getTime() == lastRecordedStatusDate.getTime()) {
+            return 0;
+        }
+
+        List<DeviceStatus> activeStatuses = deviceStatusDAO.getDeviceStatusHistoryByStatus(deviceId,
+                lastSuspendedDate, endDate, true, EnrolmentInfo.Status.ACTIVE);
+
+        if (activeStatuses.isEmpty()) {
+            // If there are no ACTIVE statuses between the last recorded status and the last SUSPENDED status then that
+            // means either the device was REMOVED / DELETED or has not been activated.
+            if (lastSuspendedDate.getTime() >= startDate.getTime()) {
+                return lastRecordedStatusDate.getTime() - lastSuspendedDate.getTime();
+            }
+            return 0;
+        }
+
+        long lastActiveTime = activeStatuses.get(activeStatuses.size() - 1).getUpdateTime().getTime();
+
+        // If the last SUSPENDED was before the bill start date then reduce the last closest ACTIVE date from the bill
+        // start date. If the last ACTIVE date was before the start date then return 0.
+        if (hasSuspendedBeforeStartDate && lastSuspendedDate.getTime() <= startDate.getTime()) {
+            return Math.max(0, lastActiveTime - startDate.getTime());
+        }
+        return lastActiveTime - lastSuspendedDate.getTime();
     }
 
     @Override

@@ -31,13 +31,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 public class DeviceStatusDAOImpl implements DeviceStatusDAO {
 
   private List<DeviceStatus> getStatus(int id, Date fromDate, Date toDate, boolean isDeviceId, boolean billingStatus,
-                                       EnrolmentInfo.Status status) throws DeviceManagementDAOException {
+                                       Set<EnrolmentInfo.Status> statuses) throws DeviceManagementDAOException {
     List<DeviceStatus> result = new ArrayList<>();
     Connection conn;
     PreparedStatement stmt = null;
@@ -49,14 +51,19 @@ public class DeviceStatusDAOImpl implements DeviceStatusDAO {
       String sql = "SELECT ENROLMENT_ID, DEVICE_ID, UPDATE_TIME, STATUS, CHANGED_BY FROM DM_DEVICE_STATUS WHERE " + idType + " = ?";
 
       // filter the data based on a date range if specified
-      if (fromDate != null){
+      if (fromDate != null) {
         sql += " AND UPDATE_TIME >= ?";
       }
-      if (toDate != null){
+      if (toDate != null) {
         sql += " AND UPDATE_TIME <= ?";
       }
-      if (status != null){
-        sql += " AND STATUS = ?";
+      if (statuses != null && !statuses.isEmpty()) {
+        if (statuses.size() == 1) {
+          sql += " AND STATUS = ?";
+        } else {
+          String statusParams = String.join(",", Collections.nCopies(statuses.size(), "?"));
+          sql += " AND STATUS IN (" + statusParams + ")";
+        }
       }
       if (billingStatus) {
         sql += " ORDER BY UPDATE_TIME DESC";
@@ -74,8 +81,14 @@ public class DeviceStatusDAOImpl implements DeviceStatusDAO {
         Timestamp toTime = new Timestamp(toDate.getTime());
         stmt.setTimestamp(i++, toTime);
       }
-      if (status != null){
-        stmt.setString(i++, status.toString());
+      if (statuses != null && !statuses.isEmpty()) {
+        if (statuses.size() == 1) {
+          stmt.setString(i++, statuses.iterator().next().toString());
+        } else {
+          for (EnrolmentInfo.Status status : statuses) {
+            stmt.setString(i++, status.toString());
+          }
+        }
       }
       rs = stmt.executeQuery();
 
@@ -114,9 +127,15 @@ public class DeviceStatusDAOImpl implements DeviceStatusDAO {
   }
 
   @Override
-  public List<DeviceStatus> getStatus(int deviceId, Date fromDate, Date toDate, boolean billingStatus,
+  public List<DeviceStatus> getDeviceStatusHistoryByStatus(int deviceId, Date fromDate, Date toDate, boolean billingStatus,
                                       EnrolmentInfo.Status status) throws DeviceManagementDAOException {
-    return getStatus(deviceId, fromDate, toDate, true, billingStatus, status);
+    return getStatus(deviceId, fromDate, toDate, true, billingStatus, Collections.singleton(status));
+  }
+
+  @Override
+  public List<DeviceStatus> getDeviceStatusHistoryByMultipleStatus(int deviceId, Date fromDate, Date toDate,
+                                                                   boolean billingStatus, Set<EnrolmentInfo.Status> statuses) throws DeviceManagementDAOException {
+    return getStatus(deviceId, fromDate, toDate, true, billingStatus, statuses);
   }
 
   private Connection getConnection() throws SQLException {
