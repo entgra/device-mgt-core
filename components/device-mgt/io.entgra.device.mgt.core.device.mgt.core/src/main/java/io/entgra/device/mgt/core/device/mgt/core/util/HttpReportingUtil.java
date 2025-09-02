@@ -64,21 +64,6 @@ public class HttpReportingUtil {
         return host;
     }
 
-    public static int invokeApi(String payload, String endpoint) throws EventPublishingException {
-        try (CloseableHttpClient client = HttpClients.createDefault()) {
-            HttpPost apiEndpoint = new HttpPost(endpoint);
-            apiEndpoint.setHeader(HTTP.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
-            StringEntity requestEntity = new StringEntity(
-                    payload, ContentType.APPLICATION_JSON);
-            apiEndpoint.setEntity(requestEntity);
-            HttpResponse response = client.execute(apiEndpoint);
-            return response.getStatusLine().getStatusCode();
-        } catch (IOException e) {
-            throw new EventPublishingException("Error occurred when " +
-                    "invoking API. API endpoint: " + endpoint, e);
-        }
-    }
-
     public static String getReportType(String designFile) {
         if (designFile != null && !designFile.isEmpty()) {
             switch (designFile) {
