@@ -115,9 +115,30 @@ public interface ReportManagementService {
      */
     List<String> getAgentVersions() throws ReportManagementException;
 
+    /**
+     * This method is used to invoke BIRT runtime API for generating a report
+     *
+     * @param reportParameters The report parameters from the report template
+     * @return returns response containing response details from BIRT runtime
+     * @throws ReportManagementException Might occur when invoking BIRT runtime
+     */
     JsonObject generateBirtReport(ReportParameters reportParameters) throws ReportManagementException;
 
+    /**
+     * This method is used to invoke BIRT runtime API for downloading report template
+     *
+     * @param templateName The name of the report template
+     * @return returns response containing response details from BIRT runtime
+     * @throws ReportManagementException Might occur when invoking BIRT runtime
+     */
     JsonObject downloadBirtTemplate(String templateName) throws ReportManagementException;
 
+    /**
+     * This method is used to invoke BIRT runtime API for deleting report template
+     *
+     * @param templateName The name of the report template
+     * @return returns response containing response details from BIRT runtime
+     * @throws ReportManagementException Might occur when invoking BIRT runtime
+     */
     JsonObject deleteBirtTemplate(String templateName) throws ReportManagementException;
 }

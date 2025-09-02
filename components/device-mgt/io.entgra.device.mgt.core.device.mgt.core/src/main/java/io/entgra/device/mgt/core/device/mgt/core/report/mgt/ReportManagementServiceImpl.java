@@ -48,7 +48,6 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dao.GroupDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.GroupManagementDAOException;
 import io.entgra.device.mgt.core.device.mgt.core.dao.GroupManagementDAOFactory;
-import io.entgra.device.mgt.core.device.mgt.core.dao.*;
 import io.entgra.device.mgt.core.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
 import io.entgra.device.mgt.core.device.mgt.core.util.DeviceManagerUtil;
@@ -512,7 +511,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     public JsonObject generateBirtReport(ReportParameters reportParameters) throws ReportManagementException {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             String generateReportURL = HttpReportingUtil.getBirtReportHost();
-            if (generateReportURL != null && !generateReportURL.isEmpty()) {
+            if (!StringUtils.isBlank(generateReportURL)) {
                 int tenantId = DeviceManagementDAOUtil.getTenantId();
                 generateReportURL += Constants.BirtReporting.BIRT_REPORTING_API_REPORT_PATH +
                         Constants.BirtReporting.BIRT_REPORTING_API_GENERATE_REPORT;
@@ -551,7 +550,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
 
             String downloadURL = HttpReportingUtil.getBirtReportHost();
-            if (downloadURL != null && !downloadURL.isEmpty()) {
+            if (!StringUtils.isBlank(downloadURL)) {
 
                 downloadURL += Constants.BirtReporting.BIRT_REPORTING_API_DOWNLOAD_TEMPLATE
                         + "?templateURL=" + templateName;
@@ -578,7 +577,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
 
             String deleteURL = HttpReportingUtil.getBirtReportHost();
-            if (deleteURL != null && !deleteURL.isEmpty()) {
+            if (StringUtils.isBlank(deleteURL)) {
                 deleteURL += Constants.BirtReporting.BIRT_REPORTING_API_TEMPLATE
                         + "?fileName=" + templateName;
 

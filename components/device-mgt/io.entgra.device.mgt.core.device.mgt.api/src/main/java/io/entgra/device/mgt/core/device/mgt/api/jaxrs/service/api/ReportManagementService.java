@@ -24,6 +24,7 @@ import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceList;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.Constants;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ReportManagementException;
+import io.entgra.device.mgt.core.device.mgt.common.report.mgt.ReportParameters;
 import io.swagger.annotations.*;
 
 import javax.ws.rs.*;
@@ -595,7 +596,7 @@ public interface ReportManagementService {
     Response getReportFilters();
 
     @POST
-    @Path("/birt/report/generate")
+    @Path("/birt/report/")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @ApiOperation(
@@ -624,7 +625,7 @@ public interface ReportManagementService {
                             message = "Internal Server Error. \n Error occurred while generating report.",
                             response = ErrorResponse.class)
             })
-    Response generateBirtReport(JsonObject jsonObject);
+    Response generateBirtReport(ReportParameters reportParameters);
 
     @POST
     @Path("/birt/template")

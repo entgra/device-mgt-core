@@ -344,15 +344,12 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @POST
-    @Path("/birt/report/generate")
+    @Path("/birt/report/")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Override
-    public Response generateBirtReport(JsonObject jsonObject) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        ReportParameters reportParameters;
+    public Response generateBirtReport(ReportParameters reportParameters) {
         try {
-            reportParameters = objectMapper.readValue(jsonObject.toString(), ReportParameters.class);
             String designFile = HttpReportingUtil.getReportType(reportParameters.getDesignFile());
             if (!Constants.BirtReporting.UNSUPPORTED_REPORT_TYPE.equals(designFile)) {
                 reportParameters.setDesignFile(designFile.toLowerCase());
@@ -378,10 +375,6 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 log.error(msg);
                 return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
             }
-        } catch (IOException e) {
-            String msg = "Error occurred while mapping report parameters.";
-            log.error(msg, e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         } catch (ReportManagementException e) {
             String msg = "Error occurred while generating report.";
             log.error(msg, e);
