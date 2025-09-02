@@ -46,8 +46,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.ws.rs.*;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -357,16 +357,24 @@ public class ReportManagementServiceImpl implements ReportManagementService {
 
                 String httpStatus = birtResponse.has("httpStatus") ? birtResponse.get("httpStatus").getAsString(): "OK";
                 switch (httpStatus.toLowerCase()) {
-                    case "not_found":
+                    case "ok":
+                        return Response.status(Response.Status.OK).entity(birtResponse)
+                                .entity(birtResponse.toString())
+                                .build();
+                    case "not found":
                         return Response.status(Response.Status.NOT_FOUND)
                                 .entity(birtResponse.toString())
                                 .build();
-                    case "bad_request":
+                    case "bad request":
                         return Response.status(Response.Status.BAD_REQUEST)
                                 .entity(birtResponse.toString())
                                 .build();
+                    case "already reported":
+                        return Response.status(Response.Status.FOUND)
+                                .entity(birtResponse.toString())
+                                .build();
                     default:
-                        return Response.status(Response.Status.OK)
+                        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                                 .entity(birtResponse.toString())
                                 .build();
                 }
