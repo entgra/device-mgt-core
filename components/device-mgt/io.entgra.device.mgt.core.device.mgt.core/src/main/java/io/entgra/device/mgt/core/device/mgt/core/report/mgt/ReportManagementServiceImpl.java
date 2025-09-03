@@ -577,7 +577,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
 
             String deleteURL = HttpReportingUtil.getBirtReportHost();
-            if (StringUtils.isBlank(deleteURL)) {
+            if (!StringUtils.isBlank(deleteURL)) {
                 deleteURL += Constants.BirtReporting.BIRT_REPORTING_API_TEMPLATE
                         + "?fileName=" + templateName;
 
