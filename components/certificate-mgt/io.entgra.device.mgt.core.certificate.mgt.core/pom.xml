@@ -89,8 +89,6 @@
                             org.bouncycastle.operator.jcajce;version="[1.70,2)",
                             org.bouncycastle.pkcs;version="[1.70,2)",
                             org.bouncycastle.util;version="[1.70,2)",
-                            org.jscep.message,
-                            org.jscep.transaction,
                             org.osgi.framework.*;version="${imp.package.version.osgi.framework}",
                             org.osgi.service.*;version="${imp.package.version.osgi.service}",
                             org.w3c.dom,org.wso2.carbon.context;version="[4.8,5)",
@@ -105,6 +103,10 @@
                             !io.entgra.device.mgt.core.certificate.mgt.core.util,
                             io.entgra.device.mgt.core.certificate.mgt.core.*
                         </Export-Package>
+                        <Embed-Dependency>
+                            jscep;scope=compile|runtime
+                        </Embed-Dependency>
+                        <Embed-Transitive>true</Embed-Transitive>
                     </instructions>
                 </configuration>
             </plugin>
@@ -157,6 +159,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.google.code.jscep</groupId>
+            <artifactId>jscep</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.ds-annotations</artifactId>
             <scope>provided</scope>
@@ -205,10 +211,6 @@
             <groupId>org.wso2.orbit.org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk15on</artifactId>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.entgra.com.google.code.jscep</groupId>
-            <artifactId>jscep</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-codec.wso2</groupId>
