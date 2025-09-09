@@ -1252,7 +1252,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             for (Device device : allDevices) {
                 long dateDiff = 0;
                 long suspendedDateDiff;
-                deviceStatus = deviceStatusDAO.getStatus(device.getId(), tenantId, startDate, endDate, true);
+                deviceStatus = deviceStatusDAO.getStatus(device.getId(), tenantId, null, endDate, true);
                 if (deviceStatus.isEmpty()) {
                     if (log.isDebugEnabled()) {
                         log.debug("No device status found for the device id '" + device.getId() + "'");
