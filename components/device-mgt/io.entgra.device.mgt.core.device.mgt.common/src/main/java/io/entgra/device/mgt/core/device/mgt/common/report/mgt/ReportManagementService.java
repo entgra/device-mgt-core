@@ -136,9 +136,9 @@ public interface ReportManagementService {
     /**
      * This method is used to invoke BIRT runtime API for deleting report template
      *
-     * @param templateName The name of the report template
+     * @param templateNames The names of the report templates
      * @return returns response containing response details from BIRT runtime
      * @throws ReportManagementException Might occur when invoking BIRT runtime
      */
-    JsonObject deleteBirtTemplate(String templateName) throws ReportManagementException;
+    JsonObject deleteBirtTemplate(List<String> templateNames) throws ReportManagementException;
 }

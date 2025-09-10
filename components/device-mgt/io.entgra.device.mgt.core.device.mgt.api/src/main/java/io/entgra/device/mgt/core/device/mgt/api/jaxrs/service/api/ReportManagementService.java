@@ -17,7 +17,6 @@
  */
 package io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api;
 
-import com.google.gson.JsonObject;
 import io.entgra.device.mgt.core.apimgt.annotations.Scope;
 import io.entgra.device.mgt.core.apimgt.annotations.Scopes;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceList;
@@ -670,8 +669,8 @@ public interface ReportManagementService {
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "DELETE",
-            value = "Send the template name as a parameter to delete the template file",
-            notes = "This will send the name of the report design file for BIRT runtime to delete",
+            value = "Delete one or more BIRT report templates",
+            notes = "Send a JSON array with template names for BIRT runtime to delete",
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
@@ -683,19 +682,20 @@ public interface ReportManagementService {
             value = {
                     @ApiResponse(
                             code = 200,
-                            message = "OK. \n Successfully deleted template"),
+                            message = "OK. \n Successfully deleted template(s)"),
                     @ApiResponse(
                             code = 404,
-                            message = "Not Found. No template found"),
+                            message = "Not Found. No template(s) found"),
                     @ApiResponse(
                             code = 500,
-                            message = "Internal Server Error. \n Error occurred while deleting report template.",
+                            message = "Internal Server Error. \n Error occurred while deleting report template(s).",
                             response = ErrorResponse.class)
             })
     Response deleteBirtTemplate(
             @ApiParam(
-                    name = "name",
-                    value = "The name of the report template",
+                    name = "templateNames",
+                    value = "JSON array of report template names to delete",
                     required = true)
-            @QueryParam("templateName") String templateURL);
+            List<String> templateNames);
+
 }

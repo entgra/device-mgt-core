@@ -18,6 +18,7 @@
 package io.entgra.device.mgt.core.device.mgt.core.report.mgt;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -57,7 +58,6 @@ import org.apache.commons.logging.LogFactory;
 import io.entgra.device.mgt.core.device.mgt.core.util.HttpReportingUtil;
 
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.ParseException;
@@ -573,20 +573,26 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @Override
-    public JsonObject deleteBirtTemplate(String templateName) throws ReportManagementException {
+    public JsonObject deleteBirtTemplate(List<String> templateNames) throws ReportManagementException {
+        JsonArray results = new JsonArray();
+
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            String deleteUrl = HttpReportingUtil.getBirtReportHost();
+            if (!StringUtils.isBlank(deleteUrl)) {
+                for (String templateName : templateNames) {
+                    String deleteURL = deleteUrl + Constants.BirtReporting.BIRT_REPORTING_API_TEMPLATE
+                            + "?fileName=" + templateName;
 
-            String deleteURL = HttpReportingUtil.getBirtReportHost();
-            if (!StringUtils.isBlank(deleteURL)) {
-                deleteURL += Constants.BirtReporting.BIRT_REPORTING_API_TEMPLATE
-                        + "?fileName=" + templateName;
+                    HttpDelete httpDelete = new HttpDelete(deleteURL);
+                    HttpResponse httpResponse = httpClient.execute(httpDelete);
+                    String jsonResponse = EntityUtils.toString(httpResponse.getEntity(), StandardCharsets.UTF_8);
 
-                HttpDelete httpDelete = new HttpDelete(deleteURL);
-                HttpResponse httpResponse = httpClient.execute(httpDelete);
-                String jsonResponse = EntityUtils.toString(httpResponse.getEntity(), StandardCharsets.UTF_8);
-                return new Gson().fromJson(jsonResponse, JsonObject.class);
-
-            } else {
+                    results.add(new Gson().fromJson(jsonResponse, JsonObject.class));
+                }
+                JsonObject response = new JsonObject();
+                response.add("results", results);
+                return response;
+            }else{
                 String msg = "BIRT reporting host is not defined in the iot-server.sh properly.";
                 log.error(msg);
                 throw new ReportManagementException(msg);
@@ -597,6 +603,5 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             throw new ReportManagementException(msg, e);
         }
     }
-
 
 }

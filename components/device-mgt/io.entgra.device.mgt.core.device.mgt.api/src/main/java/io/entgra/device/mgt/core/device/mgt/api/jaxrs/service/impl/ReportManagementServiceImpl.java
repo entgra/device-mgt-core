@@ -358,6 +358,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 String httpStatus = birtResponse.has("httpStatus") ? birtResponse.get("httpStatus").getAsString(): "OK";
                 switch (httpStatus.toLowerCase()) {
                     case "ok":
+                    case "found":
                         return Response.status(Response.Status.OK).entity(birtResponse)
                                 .entity(birtResponse.toString())
                                 .build();
@@ -406,15 +407,17 @@ public class ReportManagementServiceImpl implements ReportManagementService {
 
     @DELETE
     @Path("/birt/template")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response deleteBirtTemplate(@QueryParam("templateName") String templateName) {
-        try{
-            JsonObject birtResponse = DeviceMgtAPIUtils.getReportManagementService().deleteBirtTemplate(templateName);
-            return  Response.status(Response.Status.OK).entity(birtResponse).build();
+    public Response deleteBirtTemplate(List<String> templateNames) {
+        try {
+            JsonObject birtResponse = DeviceMgtAPIUtils.getReportManagementService().deleteBirtTemplate(templateNames);
+            return Response.ok(birtResponse).build();
         } catch (ReportManagementException e) {
-            String msg = "Error occurred while deleting report template.";
+            String msg = "Error occurred while deleting report templates.";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
+
 }
