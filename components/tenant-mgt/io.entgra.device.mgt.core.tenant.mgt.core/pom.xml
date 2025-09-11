@@ -60,6 +60,7 @@
                             io.entgra.device.mgt.core.tenant.mgt.common.spi;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.notification.mgt.common.service.*;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.notification.mgt.common.exception.*;version="${io.entgra.device.mgt.core.version.range}",
+                            io.entgra.device.mgt.core.notification.mgt.common.beans.*;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.tenant.mgt.core,
                             org.apache.commons.logging;version="[1.2,2)",
                             org.osgi.framework;version="${imp.package.version.osgi.framework}",
