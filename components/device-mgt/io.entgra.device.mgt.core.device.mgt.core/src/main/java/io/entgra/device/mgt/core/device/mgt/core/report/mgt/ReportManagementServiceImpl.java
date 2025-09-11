@@ -574,25 +574,19 @@ public class ReportManagementServiceImpl implements ReportManagementService {
 
     @Override
     public JsonObject deleteBirtTemplate(List<String> templateNames) throws ReportManagementException {
-        JsonArray results = new JsonArray();
-
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            String deleteUrl = HttpReportingUtil.getBirtReportHost();
-            if (!StringUtils.isBlank(deleteUrl)) {
-                for (String templateName : templateNames) {
-                    String deleteURL = deleteUrl + Constants.BirtReporting.BIRT_REPORTING_API_TEMPLATE
-                            + "?fileName=" + templateName;
 
-                    HttpDelete httpDelete = new HttpDelete(deleteURL);
-                    HttpResponse httpResponse = httpClient.execute(httpDelete);
-                    String jsonResponse = EntityUtils.toString(httpResponse.getEntity(), StandardCharsets.UTF_8);
+            String deleteURL = HttpReportingUtil.getBirtReportHost();
+            if (!StringUtils.isBlank(deleteURL)) {
+                deleteURL += Constants.BirtReporting.BIRT_REPORTING_API_TEMPLATE
+                        + "?fileNames=" + String.join(",", templateNames);
 
-                    results.add(new Gson().fromJson(jsonResponse, JsonObject.class));
-                }
-                JsonObject response = new JsonObject();
-                response.add("results", results);
-                return response;
-            }else{
+                HttpDelete httpDelete = new HttpDelete(deleteURL);
+                HttpResponse httpResponse = httpClient.execute(httpDelete);
+                String jsonResponse = EntityUtils.toString(httpResponse.getEntity(), StandardCharsets.UTF_8);
+                return new Gson().fromJson(jsonResponse, JsonObject.class);
+
+            } else {
                 String msg = "BIRT reporting host is not defined in the iot-server.sh properly.";
                 log.error(msg);
                 throw new ReportManagementException(msg);
