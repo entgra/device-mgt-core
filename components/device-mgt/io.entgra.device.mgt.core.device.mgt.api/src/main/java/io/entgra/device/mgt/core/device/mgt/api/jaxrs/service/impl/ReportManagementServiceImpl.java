@@ -355,30 +355,11 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 reportParameters.setDesignFile(designFile.toLowerCase());
                 JsonObject birtResponse = DeviceMgtAPIUtils.getReportManagementService().generateBirtReport(reportParameters);
 
-                String httpStatus = birtResponse.has("httpStatus") ? birtResponse.get("httpStatus").getAsString(): "OK";
-                switch (httpStatus.toLowerCase()) {
-                    case "ok":
-                    case "found":
-                        return Response.status(Response.Status.OK).entity(birtResponse)
-                                .entity(birtResponse.toString())
-                                .build();
-                    case "not found":
-                        return Response.status(Response.Status.NOT_FOUND)
-                                .entity(birtResponse.toString())
-                                .build();
-                    case "bad request":
-                        return Response.status(Response.Status.BAD_REQUEST)
-                                .entity(birtResponse.toString())
-                                .build();
-                    case "already reported":
-                        return Response.status(Response.Status.FOUND)
-                                .entity(birtResponse.toString())
-                                .build();
-                    default:
-                        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                                .entity(birtResponse.toString())
-                                .build();
+                int statusCode = birtResponse.has("httpStatusCode") ? birtResponse.get("httpStatusCode").getAsInt() : 500;
+                if (statusCode == 500) {
+                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(birtResponse.toString()).build();
                 }
+                return Response.status(statusCode).entity(birtResponse.toString()).build();
             } else {
                 String msg = "Requested design file not found.";
                 log.error(msg);
