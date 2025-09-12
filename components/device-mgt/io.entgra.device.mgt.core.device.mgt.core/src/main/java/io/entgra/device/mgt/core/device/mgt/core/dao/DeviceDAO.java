@@ -700,12 +700,23 @@ public interface DeviceDAO {
      * Retrieve device location information at exact time with fallback
     * @param deviceType The type of devices (e.g., ios, android, windows)
      * @param exactTime Specified exact timestamp
+     * @param timeWindow The time window for location history snapshot search
      * @return List of device location history snapshots
      * @throws DeviceManagementDAOException
      */
     List<DeviceLocationHistorySnapshot> getAllDeviceLocationInfo(String deviceType,long exactTime,int timeWindow,PaginationRequest request)
             throws DeviceManagementDAOException;
 
+    /**
+     * Retrieve the total device location information count at an exact time
+     * @param deviceType The type of devices (e.g., ios, android, windows)
+     * @param exactTime Specified exact timestamp
+     * @param timeWindow The time window for location history snapshot search
+     * @return the total count of device location history snapshots
+     * @throws DeviceManagementDAOException
+     */
+    int getDeviceLocationCount(String deviceType, long exactTime, int timeWindow)
+            throws DeviceManagementDAOException;
 
     /**
      * This method is used to get the details of subscribed devices.

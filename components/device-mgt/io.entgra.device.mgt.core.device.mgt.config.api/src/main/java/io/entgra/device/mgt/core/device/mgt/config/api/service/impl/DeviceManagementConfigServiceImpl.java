@@ -250,6 +250,12 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
             log.error(msg);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
+        uiConfiguration.setGatewayUrl(
+                DeviceManagementConstants.ConfigurationManagement.HTTPS_PREFIX +
+                        SystemPropertyUtil.getRequiredProperty(DeviceManagementConstants.ConfigurationManagement.IOT_GATEWAY_HOST) +
+                        DeviceManagementConstants.ConfigurationManagement.COLON +
+                        SystemPropertyUtil.getRequiredProperty(DeviceManagementConstants.ConfigurationManagement.IOT_GATEWAY_HTTPS_PORT)
+        );
         return Response.status(Response.Status.OK).entity(uiConfiguration).build();
     }
 
