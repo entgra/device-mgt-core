@@ -336,6 +336,8 @@
         <Scope>gm:admin:groups:add</Scope>
         <Scope>dm:notif:mark-checked</Scope>
         <Scope>dm:notifications:view</Scope>
+        <Scope>dm:notif:archive</Scope>
+        <Scope>dm:notif:delete</Scope>
         <Scope>cm:cert:delete</Scope>
         <Scope>cm:cert:details:get</Scope>
         <Scope>cm:cert:view</Scope>
@@ -460,6 +462,10 @@
         <Scope>tm:tags:delete</Scope>
         <Scope>tm:tags:mapping:create</Scope>
         <Scope>tm:tags:mapping:delete</Scope>
+        <Scope>dm:notificationConfig:create</Scope>
+        <Scope>dm:notificationConfig:view</Scope>
+        <Scope>dm:notificationConfig:delete</Scope>
+        <Scope>dm:notificationConfig:update</Scope>
         <Scope>and:conf:zero-touch-sync</Scope>
         <Scope>and:conf:zero-touch-clean</Scope>
         <Scope>dm:devices:any:permitted</Scope>

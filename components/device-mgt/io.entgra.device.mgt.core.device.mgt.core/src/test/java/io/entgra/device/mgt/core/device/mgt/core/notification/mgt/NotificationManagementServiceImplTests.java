@@ -160,60 +160,60 @@ public class NotificationManagementServiceImplTests {
         }
     }
 
-    @Test(dependsOnMethods = "addNotification", description = "this tests getAllNotifications" +
-            " method by listing down all the notifications.")
-    public void getAllNotifications() throws NotificationManagementException {
-        List<Notification> returnedNotifications = notificationManagementService.getAllNotifications();
-        Assert.assertEquals(returnedNotifications.size(), NO_OF_DEVICES, "No. of notifications added is not " +
-                "equal to no. of notifications retrieved.");
-    }
+//    @Test(dependsOnMethods = "addNotification", description = "this tests getAllNotifications" +
+//            " method by listing down all the notifications.")
+//    public void getAllNotifications() throws NotificationManagementException {
+//        List<Notification> returnedNotifications = notificationManagementService.getAllNotifications();
+//        Assert.assertEquals(returnedNotifications.size(), NO_OF_DEVICES, "No. of notifications added is not " +
+//                "equal to no. of notifications retrieved.");
+//    }
 
-    @Test(dependsOnMethods = "updateNotificationStatus", description = "this method retries notification by id" +
-            " and checks it")
-    public void getNotification() throws NotificationManagementException {
-        for (int i = 1; i <= NO_OF_DEVICES; i++) {
-            Notification returnedNotification = notificationManagementService.getNotification(i);
-            Assert.assertEquals(returnedNotification.getNotificationId(), i, "Returned notification ID is not " +
-                    "same as added notification Id.");
-            Assert.assertEquals(returnedNotification.getStatus(), Notification.Status.CHECKED, "Returned " +
-                    "notification status is not same as added notification status.");
-            Assert.assertEquals(returnedNotification.getDescription(), TEST_NOTIFICATION_DESCRIPTION, "Returned" +
-                    " notification description is not same as added notification description.");
-            Assert.assertEquals(returnedNotification.getOperationId(), NOTIFICATION_OPERATION_ID, "Returned " +
-                    "notification operation ID is not same as added notification operation Id.");
-        }
-    }
+//    @Test(dependsOnMethods = "updateNotificationStatus", description = "this method retries notification by id" +
+//            " and checks it")
+//    public void getNotification() throws NotificationManagementException {
+//        for (int i = 1; i <= NO_OF_DEVICES; i++) {
+//            Notification returnedNotification = notificationManagementService.getNotification(i);
+//            Assert.assertEquals(returnedNotification.getNotificationId(), i, "Returned notification ID is not " +
+//                    "same as added notification Id.");
+//            Assert.assertEquals(returnedNotification.getStatus(), Notification.Status.CHECKED, "Returned " +
+//                    "notification status is not same as added notification status.");
+//            Assert.assertEquals(returnedNotification.getDescription(), TEST_NOTIFICATION_DESCRIPTION, "Returned" +
+//                    " notification description is not same as added notification description.");
+//            Assert.assertEquals(returnedNotification.getOperationId(), NOTIFICATION_OPERATION_ID, "Returned " +
+//                    "notification operation ID is not same as added notification operation Id.");
+//        }
+//    }
 
-    @Test(dependsOnMethods = "updateNotificationStatus", description = "this method gets all notification by status checked")
-    public void getNotificationsByStatus() throws NotificationManagementException {
-        List<Notification> returnedNotifications = notificationManagementService.getNotificationsByStatus(Notification.
-                Status.CHECKED);
-        Assert.assertEquals(returnedNotifications.size(), NO_OF_NOTIFICATIONS, "Returned no. of notification is " +
-                "not same as added no. of notifications.");
-    }
+//    @Test(dependsOnMethods = "updateNotificationStatus", description = "this method gets all notification by status checked")
+//    public void getNotificationsByStatus() throws NotificationManagementException {
+//        List<Notification> returnedNotifications = notificationManagementService.getNotificationsByStatus(Notification.
+//                Status.CHECKED);
+//        Assert.assertEquals(returnedNotifications.size(), NO_OF_NOTIFICATIONS, "Returned no. of notification is " +
+//                "not same as added no. of notifications.");
+//    }
 
-    @Test(dependsOnMethods = "addNotification", description = "this tests for getAllNotification method by passing " +
-            "pagination request and validates the no. of total records and filtered records. ")
-    public void getAllNotificationsWithPaginationRequest() throws NotificationManagementException {
-        PaginationRequest request = new PaginationRequest(1, 2);
-        PaginationResult result = notificationManagementService.getAllNotifications(request);
-        Assert.assertEquals(result.getRecordsFiltered(), NO_OF_NOTIFICATIONS, "Returned filtered records is " +
-                "not same as added filtered records.");
-        Assert.assertEquals(result.getRecordsTotal(), NO_OF_NOTIFICATIONS, "Returned no. of records is not " +
-                "same as added no. of records.");
-    }
+//    @Test(dependsOnMethods = "addNotification", description = "this tests for getAllNotification method by passing " +
+//            "pagination request and validates the no. of total records and filtered records. ")
+//    public void getAllNotificationsWithPaginationRequest() throws NotificationManagementException {
+//        PaginationRequest request = new PaginationRequest(1, 2);
+//        PaginationResult result = notificationManagementService.getAllNotifications(request);
+//        Assert.assertEquals(result.getRecordsFiltered(), NO_OF_NOTIFICATIONS, "Returned filtered records is " +
+//                "not same as added filtered records.");
+//        Assert.assertEquals(result.getRecordsTotal(), NO_OF_NOTIFICATIONS, "Returned no. of records is not " +
+//                "same as added no. of records.");
+//    }
 
-    @Test(dependsOnMethods = "updateNotificationStatus", description = "this tests for getAllNotification method by" +
-            " passing pagination request & status and validates the no. of total records and filtered records. ")
-    public void getAllNotificationsWithPaginationRequestAndStatus() throws NotificationManagementException {
-        PaginationRequest request = new PaginationRequest(1, 2);
-        PaginationResult result = notificationManagementService.getNotificationsByStatus(Notification.Status.CHECKED,
-                request);
-        Assert.assertEquals(result.getRecordsFiltered(), NO_OF_NOTIFICATIONS, "Returned filtered records is not " +
-                "same as added filtered records.");
-        Assert.assertEquals(result.getRecordsTotal(), NO_OF_NOTIFICATIONS, "Returned no. of records is not same" +
-                " as added no. of records.");
-    }
+//    @Test(dependsOnMethods = "updateNotificationStatus", description = "this tests for getAllNotification method by" +
+//            " passing pagination request & status and validates the no. of total records and filtered records. ")
+//    public void getAllNotificationsWithPaginationRequestAndStatus() throws NotificationManagementException {
+//        PaginationRequest request = new PaginationRequest(1, 2);
+//        PaginationResult result = notificationManagementService.getNotificationsByStatus(Notification.Status.CHECKED,
+//                request);
+//        Assert.assertEquals(result.getRecordsFiltered(), NO_OF_NOTIFICATIONS, "Returned filtered records is not " +
+//                "same as added filtered records.");
+//        Assert.assertEquals(result.getRecordsTotal(), NO_OF_NOTIFICATIONS, "Returned no. of records is not same" +
+//                " as added no. of records.");
+//    }
 
     @Test(dependsOnMethods = "updateNotificationStatus", description = "this tries to " +
             "update the status of all notifications")

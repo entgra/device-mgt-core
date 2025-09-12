@@ -1,0 +1,60 @@
+/*
+ *  Copyright (c) 2018 - 2025, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
+ *
+ * Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ *
+ */
+
+package io.entgra.device.mgt.core.device.mgt.core.service;
+
+import io.entgra.device.mgt.core.device.mgt.common.dto.DeviceFeatureInfo;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceFeatureOperationException;
+
+import java.util.List;
+import java.util.Map;
+
+public interface DeviceFeatureOperations {
+    /**
+     * Retrieves a list of device feature operations available for different device types.
+     * @return A list of {@link DeviceFeatureInfo} containing details of available
+     *         device feature operations.
+     * @throws DeviceFeatureOperationException If an error occurs while retrieving
+     *         or processing device feature operations.
+     */
+    List<DeviceFeatureInfo> getDeviceFeatureOperations() throws DeviceFeatureOperationException;
+
+    /**
+     * Retrieves a list of device operation details filtered by operation code, operation name, and/or device type.
+     * This method provides flexible querying by allowing any combination of the parameters.
+     * If a parameter is {@code null} or empty, it will be excluded from the filter criteria.
+     * @param code the operation code to filter by (optional).
+     * @param name the operation name to filter by (optional).
+     * @param type the device type to filter by (optional).
+     * @param removeDeduplicateCode whether to get duplicate operations code from device types or not (optional).
+     * @return a list of {@link DeviceFeatureInfo} objects matching the given filters.
+     * @throws DeviceFeatureOperationException if an error occurs while retrieving data from the underlying data store.
+     */
+    List<DeviceFeatureInfo> getOperationDetails(String code, String name, String type, boolean removeDeduplicateCode)
+            throws DeviceFeatureOperationException;
+
+    /**
+     * Validates whether the given operation codes exist in the system.
+     *
+     * @param codes Single or multiple operation codes.
+     * @return Map of operation code to boolean indicating existence.
+     * @throws DeviceFeatureOperationException if database access fails.
+     */
+    Map<String, Boolean> validateOperationCodes(List<String> codes) throws DeviceFeatureOperationException;
+}

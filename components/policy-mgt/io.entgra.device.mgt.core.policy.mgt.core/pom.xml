@@ -285,6 +285,11 @@
             <artifactId>jaxb-api</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>io.entgra.device.mgt.core</groupId>
+            <artifactId>io.entgra.device.mgt.core.notification.mgt.common</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

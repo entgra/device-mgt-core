@@ -39,6 +39,7 @@ public class DeviceMgtTenantListener implements TenantMgtListener {
             tenantManager.addDefaultRoles(tenantInfoBean);
             tenantManager.addDefaultAppCategories(tenantInfoBean);
             tenantManager.addDefaultDeviceStatusFilters(tenantInfoBean);
+            tenantManager.addDefaultNotificationArchivalMetadata(tenantInfoBean);
         } catch (TenantMgtException e) {
             String msg = "Error occurred while executing tenant creation flow";
             log.error(msg, e);

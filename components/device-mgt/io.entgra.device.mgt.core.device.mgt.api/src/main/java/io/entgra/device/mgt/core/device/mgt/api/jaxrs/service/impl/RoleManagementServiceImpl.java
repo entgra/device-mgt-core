@@ -76,6 +76,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Locale;
 
 import static io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.Constants.PRIMARY_USER_STORE;
 
@@ -124,7 +125,7 @@ public class RoleManagementServiceImpl implements RoleManagementService {
         }
     }
 
-    @GET
+ @GET
     @Path("/visible/{metaKey}")
     @Override
     public Response getVisibleRole(
@@ -160,13 +161,9 @@ public class RoleManagementServiceImpl implements RoleManagementService {
                     userStore = PRIMARY_USER_STORE;
                 }
                 try {
-                    visibleRoles = getRolesFromUserStore(filter, userStore);
-                    visibleRoleList.setList(visibleRoles);
-
-                    visibleRoles = FilteringUtil.getFilteredList(getRolesFromUserStore(filter, userStore), offset,
-                            limit);
-                    visibleRoleList.setList(visibleRoles);
-
+                    List<String> allRoles = getRolesFromUserStore(filter, userStore);
+                    visibleRoleList.setCount(allRoles.size());
+                    visibleRoleList.setList(FilteringUtil.getFilteredList(allRoles, offset, limit));
                     return Response.status(Response.Status.OK).entity(visibleRoleList).build();
                 } catch (UserStoreException e) {
                     String msg = "Error occurred while retrieving roles from the underlying user stores";
@@ -183,9 +180,11 @@ public class RoleManagementServiceImpl implements RoleManagementService {
                         }
                         String msg = "User by username: " + username + " does not exist for role retrieval.";
                         return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
-                    }
-                    visibleRoleList.setList(getFilteredVisibleRoles(userStoreManager, username));
 
+                    }
+                    List<String> userRoles = getFilteredVisibleRoles(userStoreManager, username,filter);
+                    visibleRoleList.setCount(userRoles.size());
+                    visibleRoleList.setList(FilteringUtil.getFilteredList(userRoles, offset, limit));
                     return Response.status(Response.Status.OK).entity(visibleRoleList).build();
                 } catch (UserStoreException e) {
                     String msg = "Error occurred while trying to retrieve roles of the user '" + username + "'";
@@ -205,13 +204,14 @@ public class RoleManagementServiceImpl implements RoleManagementService {
         }
     }
 
-    private List<String> getFilteredVisibleRoles(UserStoreManager userStoreManager, String username)
+    private List<String> getFilteredVisibleRoles(UserStoreManager userStoreManager, String username,String filter)
             throws UserStoreException {
-        String[] roleListOfUser;
-        roleListOfUser = userStoreManager.getRoleListOfUser(username);
+        String[] roleListOfUser= userStoreManager.getRoleListOfUser(username);
         List<String> filteredRoles = new ArrayList<>();
+
         for (String role : roleListOfUser) {
-            if (!(role.startsWith("Internal/") || role.startsWith("Authentication/"))) {
+            if (!(role.startsWith("Internal/") || role.startsWith("Authentication/")) &&
+                    role.toLowerCase(Locale.ROOT).contains(filter.toLowerCase(Locale.ROOT))) {
                 filteredRoles.add(role);
             }
         }
