@@ -589,7 +589,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @Override
-    public JsonObject deleteBirtTemplate(List<String> templateNames) throws ReportManagementException, NotFoundException, BadRequestException {
+    public JsonObject deleteBirtTemplate(List<String> templateNames) throws ReportManagementException {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
 
             String deleteURL = HttpReportingUtil.getBirtReportHost();
@@ -603,9 +603,9 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 switch (statusCode) {
                     case 200:
                         return new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
-                    case 400:
+                    case 500:
                         JsonObject errorResponse = new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
-                        throw new BadRequestException(errorResponse.get("message").getAsString());
+                        throw new ReportManagementException(errorResponse.get("message").getAsString());
                     default:
                         throw new ReportManagementException("Error Occurred While Deleting File");
                 }

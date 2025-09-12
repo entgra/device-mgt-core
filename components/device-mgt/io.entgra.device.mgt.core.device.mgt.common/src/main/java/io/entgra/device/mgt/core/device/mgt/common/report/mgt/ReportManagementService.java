@@ -143,8 +143,6 @@ public interface ReportManagementService {
      * @param templateNames The names of the report templates
      * @return returns response containing response details from BIRT runtime
      * @throws ReportManagementException Might occur when invoking BIRT runtime
-     * @throws NotFoundException Might occur if the template is not found
-     * @throws BadRequestException Might occur if the template names are empty
      */
-    JsonObject deleteBirtTemplate(List<String> templateNames) throws ReportManagementException, NotFoundException, BadRequestException;
+    JsonObject deleteBirtTemplate(List<String> templateNames) throws ReportManagementException;
 }
