@@ -18,8 +18,8 @@
 package io.entgra.device.mgt.core.device.mgt.core.report.mgt;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.NotFoundException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,8 +37,6 @@ import io.entgra.device.mgt.core.device.mgt.common.exceptions.BadRequestExceptio
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
-import io.entgra.device.mgt.core.device.mgt.common.exceptions.BadRequestException;
-import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceTypeNotFoundException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ReportManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.report.mgt.ReportManagementService;
@@ -508,7 +506,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @Override
-    public JsonObject generateBirtReport(ReportParameters reportParameters) throws ReportManagementException {
+    public JsonObject generateBirtReport(ReportParameters reportParameters) throws ReportManagementException, BadRequestException, NotFoundException {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             String generateReportURL = HttpReportingUtil.getBirtReportHost();
             if (!StringUtils.isBlank(generateReportURL)) {
@@ -528,7 +526,19 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                         reportParameters.getJSONString(), ContentType.APPLICATION_JSON);
                 httpPost.setEntity(requestEntity);
                 HttpResponse httpResponse = httpClient.execute(httpPost);
-                return new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
+                int statusCode = httpResponse.getStatusLine().getStatusCode();
+                switch (statusCode) {
+                    case 200:
+                    case 202:
+                    case 208:
+                        return new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
+                    case 400:
+                        throw new BadRequestException("Parameters mismatch.");
+                    case 404:
+                        throw new NotFoundException("Requested design file not found.");
+                    default:
+                        throw new ReportManagementException("Failed to create directory.");
+                }
             } else {
                 String msg = "BIRT reporting host is not defined in the iot-server.sh properly.";
                 log.error(msg);
@@ -546,7 +556,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @Override
-    public JsonObject downloadBirtTemplate(String templateName) throws ReportManagementException {
+    public JsonObject downloadBirtTemplate(String templateName) throws ReportManagementException, BadRequestException {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
 
             String downloadURL = HttpReportingUtil.getBirtReportHost();
@@ -557,9 +567,15 @@ public class ReportManagementServiceImpl implements ReportManagementService {
 
                 HttpPost httpPost = new HttpPost(downloadURL);
                 HttpResponse httpResponse = httpClient.execute(httpPost);
-                String jsonResponse = EntityUtils.toString(httpResponse.getEntity(), StandardCharsets.UTF_8);
-                return new Gson().fromJson(jsonResponse, JsonObject.class);
-
+                int statusCode = httpResponse.getStatusLine().getStatusCode();
+                switch (statusCode) {
+                    case 200:
+                        return new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
+                    case 400:
+                        throw new BadRequestException("Invalid file URL.");
+                    default:
+                        throw new ReportManagementException("Failed to create directory.");
+                }
             } else {
                 String msg = "BIRT reporting host is not defined in the iot-server.sh properly.";
                 log.error(msg);
@@ -573,7 +589,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @Override
-    public JsonObject deleteBirtTemplate(List<String> templateNames) throws ReportManagementException {
+    public JsonObject deleteBirtTemplate(List<String> templateNames) throws ReportManagementException, NotFoundException, BadRequestException {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
 
             String deleteURL = HttpReportingUtil.getBirtReportHost();
@@ -583,8 +599,16 @@ public class ReportManagementServiceImpl implements ReportManagementService {
 
                 HttpDelete httpDelete = new HttpDelete(deleteURL);
                 HttpResponse httpResponse = httpClient.execute(httpDelete);
-                String jsonResponse = EntityUtils.toString(httpResponse.getEntity(), StandardCharsets.UTF_8);
-                return new Gson().fromJson(jsonResponse, JsonObject.class);
+                int statusCode = httpResponse.getStatusLine().getStatusCode();
+                switch (statusCode) {
+                    case 200:
+                        return new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
+                    case 400:
+                        JsonObject errorResponse = new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
+                        throw new BadRequestException(errorResponse.get("message").getAsString());
+                    default:
+                        throw new ReportManagementException("Error Occurred While Deleting File");
+                }
 
             } else {
                 String msg = "BIRT reporting host is not defined in the iot-server.sh properly.";

@@ -31,6 +31,7 @@ import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
 import io.entgra.device.mgt.core.device.mgt.common.ReportFiltersList;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.BadRequestException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceTypeNotFoundException;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.NotFoundException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ReportManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.report.mgt.ReportParameters;
 import io.entgra.device.mgt.core.device.mgt.core.report.mgt.Constants;
@@ -354,12 +355,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             if (!Constants.BirtReporting.UNSUPPORTED_REPORT_TYPE.equals(designFile)) {
                 reportParameters.setDesignFile(designFile.toLowerCase());
                 JsonObject birtResponse = DeviceMgtAPIUtils.getReportManagementService().generateBirtReport(reportParameters);
-
-                int statusCode = birtResponse.has("httpStatusCode") ? birtResponse.get("httpStatusCode").getAsInt() : 500;
-                if (statusCode == 500) {
-                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(birtResponse.toString()).build();
-                }
-                return Response.status(statusCode).entity(birtResponse.toString()).build();
+                return Response.status(Response.Status.OK).entity(birtResponse).build();
             } else {
                 String msg = "Requested design file not found.";
                 log.error(msg);
@@ -369,6 +365,10 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             String msg = "Error occurred while generating report.";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (NotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
         }
     }
 
@@ -383,6 +383,8 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             String msg = "Error occurred while saving report template.";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }
 
@@ -395,9 +397,12 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             JsonObject birtResponse = DeviceMgtAPIUtils.getReportManagementService().deleteBirtTemplate(templateNames);
             return Response.ok(birtResponse).build();
         } catch (ReportManagementException e) {
-            String msg = "Error occurred while deleting report templates.";
-            log.error(msg, e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+            log.error(e.getMessage(), e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (NotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
         }
     }
 

@@ -22,6 +22,7 @@ import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.BadRequestException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceTypeNotFoundException;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.NotFoundException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ReportManagementException;
 
 import java.util.List;
@@ -121,8 +122,10 @@ public interface ReportManagementService {
      * @param reportParameters The report parameters from the report template
      * @return returns response containing response details from BIRT runtime
      * @throws ReportManagementException Might occur when invoking BIRT runtime
+     * @throws BadRequestException Might occur when report parameters mismatch
+     * @throws NotFoundException Might occur when the requested design file is not found
      */
-    JsonObject generateBirtReport(ReportParameters reportParameters) throws ReportManagementException;
+    JsonObject generateBirtReport(ReportParameters reportParameters) throws ReportManagementException, BadRequestException, NotFoundException;
 
     /**
      * This method is used to invoke BIRT runtime API for downloading report template
@@ -130,8 +133,9 @@ public interface ReportManagementService {
      * @param templateName The name of the report template
      * @return returns response containing response details from BIRT runtime
      * @throws ReportManagementException Might occur when invoking BIRT runtime
+     * @throws BadRequestException Might occur if the templateName is invalid
      */
-    JsonObject downloadBirtTemplate(String templateName) throws ReportManagementException;
+    JsonObject downloadBirtTemplate(String templateName) throws ReportManagementException, BadRequestException;
 
     /**
      * This method is used to invoke BIRT runtime API for deleting report template
@@ -139,6 +143,8 @@ public interface ReportManagementService {
      * @param templateNames The names of the report templates
      * @return returns response containing response details from BIRT runtime
      * @throws ReportManagementException Might occur when invoking BIRT runtime
+     * @throws NotFoundException Might occur if the template is not found
+     * @throws BadRequestException Might occur if the template names are empty
      */
-    JsonObject deleteBirtTemplate(List<String> templateNames) throws ReportManagementException;
+    JsonObject deleteBirtTemplate(List<String> templateNames) throws ReportManagementException, NotFoundException, BadRequestException;
 }
