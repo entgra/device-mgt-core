@@ -19,6 +19,7 @@
 package io.entgra.device.mgt.core.ui.request.interceptor;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.gson.JsonSyntaxException;
 import io.entgra.device.mgt.core.ui.request.interceptor.beans.AuthData;
@@ -29,6 +30,7 @@ import io.entgra.device.mgt.core.ui.request.interceptor.cache.OAuthAppCacheKey;
 import io.entgra.device.mgt.core.ui.request.interceptor.exceptions.LoginException;
 import io.entgra.device.mgt.core.ui.request.interceptor.util.HandlerConstants;
 import io.entgra.device.mgt.core.ui.request.interceptor.util.HandlerUtil;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
@@ -52,6 +54,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
@@ -60,6 +63,11 @@ import java.util.List;
 public class LoginHandler extends HttpServlet {
     private static final Log log = LogFactory.getLog(LoginHandler.class);
     private static final long serialVersionUID = 9050048549140517002L;
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ArrayList<String> supportedGrantTypes = new ArrayList<>(Arrays.asList(
+            HandlerConstants.PASSWORD_GRANT_TYPE,
+            HandlerConstants.REFRESH_TOKEN_GRANT_TYPE)
+    );
 
     private static String username;
     private static String password;
@@ -69,6 +77,7 @@ public class LoginHandler extends HttpServlet {
     private static String kmManagerUrl;
     private static String adminUsername;
     private static String adminPassword;
+    private static String[] tenantContextAppList;
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
@@ -80,13 +89,20 @@ public class LoginHandler extends HttpServlet {
             }
             httpSession = req.getSession(true);
             final String baseContextPath = req.getContextPath();
-            final String applicationName = baseContextPath.substring(1, baseContextPath.indexOf("-ui-request-handler")) + "-login";
+            final String applicationName = baseContextPath.substring(1,
+                    baseContextPath.indexOf(HandlerConstants.UI_REQUEST_HANDLER_SUFFIX)) + HandlerConstants.LOGIN_SUFFIX;
 
             JsonNode uiConfigJsonObject = HandlerUtil.getUIConfigAndPersistInSession(uiConfigUrl, gatewayUrl, httpSession,
                     resp);
-            ArrayNode tags = (ArrayNode) uiConfigJsonObject.get("appRegistration").get("tags");
-            ArrayNode scopes = (ArrayNode) uiConfigJsonObject.get("scopes");
-            int sessionTimeOut = Integer.parseInt(String.valueOf(uiConfigJsonObject.get("sessionTimeOut")));
+            ArrayNode tags = (ArrayNode) uiConfigJsonObject.get(HandlerConstants.APP_REG_KEY).get(
+                    HandlerConstants.TAGS_KEY);
+            ArrayNode scopes = (ArrayNode) uiConfigJsonObject.get(HandlerConstants.SCOPES_KEY);
+            int sessionTimeOut = Integer.parseInt(String.valueOf(uiConfigJsonObject.get(
+                    HandlerConstants.SESSION_TIMEOUT_KEY)));
+            JsonNode tenantContextEnabledApps = uiConfigJsonObject.get(HandlerConstants.TENANT_CONTEXT_ENABLED_APPS_KEY);
+            if (tenantContextEnabledApps != null) {
+                tenantContextAppList = objectMapper.readerForArrayOf(String.class).readValue(tenantContextEnabledApps);
+            }
 
             //setting session to expire in 1h
             httpSession.setMaxInactiveInterval(sessionTimeOut);
@@ -97,12 +113,9 @@ public class LoginHandler extends HttpServlet {
             OAuthApp oAuthApp = loginCache.getOAuthAppCache(oAuthAppCacheKey);
             if (oAuthApp == null) {
                 initializeAdminCredentials();
-                ArrayList<String> supportedGrantTypes = new ArrayList<>();
-                supportedGrantTypes.add(HandlerConstants.PASSWORD_GRANT_TYPE);
-                supportedGrantTypes.add(HandlerConstants.REFRESH_TOKEN_GRANT_TYPE);
                 ClassicHttpRequest apiRegEndpoint = ClassicRequestBuilder.post(gatewayUrl + HandlerConstants.APP_REG_ENDPOINT)
                         .setEntity(HandlerUtil.constructAppRegPayload(tags, applicationName,
-                                adminUsername, adminPassword, null, supportedGrantTypes))
+                                adminUsername, adminPassword, null, supportedGrantTypes, false))
                         .setHeader(org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE,
                                 org.apache.hc.core5.http.ContentType.APPLICATION_JSON.toString())
                         .setHeader(org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION, HandlerConstants.BASIC + Base64.getEncoder().encodeToString((username + HandlerConstants.COLON + password).getBytes()))
@@ -121,8 +134,8 @@ public class LoginHandler extends HttpServlet {
                     String clientSecret = null;
                     String encodedClientApp = null;
                     if (jsonNode != null) {
-                        clientId = jsonNode.get("client_id").textValue();
-                        clientSecret = jsonNode.get("client_secret").textValue();
+                        clientId = jsonNode.get(HandlerConstants.CLIENT_ID_KEY).textValue();
+                        clientSecret = jsonNode.get(HandlerConstants.CLIENT_SECRET_KEY).textValue();
                         encodedClientApp = Base64.getEncoder()
                                 .encodeToString((clientId + HandlerConstants.COLON + clientSecret).getBytes());
                         oAuthApp = new OAuthApp(
@@ -135,7 +148,9 @@ public class LoginHandler extends HttpServlet {
                         loginCache.addOAuthAppToCache(oAuthAppCacheKey, oAuthApp);
                     }
 
-                    if (getTokenAndPersistInSession(req, resp, clientId, clientSecret, encodedClientApp, scopes)) {
+                    if (getTokenAndPersistInSession(req, resp, username, clientId, clientSecret, encodedClientApp,
+                            scopes, HandlerConstants.SESSION_AUTH_DATA_KEY)) {
+                        generateTokenForTenantApp(req, resp, applicationName, loginCache, tags, scopes);
                         ProxyResponse proxyResponse = new ProxyResponse();
                         proxyResponse.setStatus(ProxyResponse.Status.SUCCESS);
                         proxyResponse.setCode(HttpStatus.SC_OK);
@@ -145,7 +160,9 @@ public class LoginHandler extends HttpServlet {
                 }
                 HandlerUtil.handleError(resp, null);
             } else {
-                getTokenAndPersistInSession(req, resp, oAuthApp.getClientId(), oAuthApp.getClientSecret(), oAuthApp.getEncodedClientApp(), scopes);
+                getTokenAndPersistInSession(req, resp, username, oAuthApp.getClientId(), oAuthApp.getClientSecret(),
+                        oAuthApp.getEncodedClientApp(), scopes, HandlerConstants.SESSION_AUTH_DATA_KEY);
+                generateTokenForTenantApp(req, resp, applicationName, loginCache, tags, scopes);
             }
         } catch (IOException e) {
             log.error("Error occurred while sending the response into the socket. ", e);
@@ -172,9 +189,9 @@ public class LoginHandler extends HttpServlet {
      * @return boolean response
      * @throws LoginException - Throws if any error occurs while getting login response
      */
-    private boolean getTokenAndPersistInSession(HttpServletRequest req, HttpServletResponse resp,
+    private boolean getTokenAndPersistInSession(HttpServletRequest req, HttpServletResponse resp, String username,
                                                 String clientId, String clientSecret, String encodedClientApp,
-                                                ArrayNode scopes) throws LoginException {
+                                                ArrayNode scopes, String sessionAuthKey) throws LoginException {
         try {
 
             ProxyResponse tokenResultResponse = getTokenResult(encodedClientApp, scopes);
@@ -196,13 +213,14 @@ public class LoginHandler extends HttpServlet {
                 return false;
             }
             AuthData authData = new AuthData();
+            authData.setUsername(username);
             authData.setClientId(clientId);
             authData.setClientSecret(clientSecret);
             authData.setEncodedClientApp(encodedClientApp);
-            authData.setAccessToken(tokenResult.get("access_token").textValue());
-            authData.setRefreshToken(tokenResult.get("refresh_token").textValue());
-            authData.setScope(tokenResult.get("scope"));
-            session.setAttribute(HandlerConstants.SESSION_AUTH_DATA_KEY, authData);
+            authData.setAccessToken(tokenResult.get(HandlerConstants.ACCESS_TOKEN_KEY).textValue());
+            authData.setRefreshToken(tokenResult.get(HandlerConstants.REFRESH_TOKEN_KEY).textValue());
+            authData.setScope(tokenResult.get(HandlerConstants.SCOPE_KEY));
+            session.setAttribute(sessionAuthKey, authData);
             return true;
         } catch (IOException e) {
             throw new LoginException("Error occurred while sending the response into the socket", e);
@@ -279,5 +297,100 @@ public class LoginHandler extends HttpServlet {
 
         adminUsername = doc.getElementsByTagName("UserName").item(0).getTextContent();
         adminPassword = doc.getElementsByTagName("Password").item(0).getTextContent();
+    }
+
+    /**
+     * Register API application under a sub tenant and add it to the {@link LoginCache}
+     *
+     * @param tenantApplicationName name of the application
+     * @param tags tags which are retrieved by reading app manager configuration
+     * @param resp  {@link HttpServletResponse}
+     * @param oAuthTenantAppCacheKey {@link OAuthAppCacheKey} stored in the {@link LoginCache}
+     * @param loginCache {@link LoginCache} stores {@link OAuthAppCacheKey}
+     * @return {@link OAuthApp} containing client credentials
+     * @throws IOException if there is an error while calling the application register endpoint
+     */
+    private OAuthApp registerTenantApp(String tenantApplicationName, ArrayNode tags, HttpServletResponse resp,
+                                       OAuthAppCacheKey oAuthTenantAppCacheKey, LoginCache loginCache) throws IOException {
+
+        ClassicHttpRequest apiTenantRegEndpoint = ClassicRequestBuilder.post(gatewayUrl +
+                        HandlerConstants.APP_REG_ENDPOINT)
+                .setEntity(HandlerUtil.constructAppRegPayload(tags, tenantApplicationName,
+                        username, password, null, supportedGrantTypes, true))
+                .setHeader(org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE,
+                        org.apache.hc.core5.http.ContentType.APPLICATION_JSON.toString())
+                .setHeader(org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION, HandlerConstants.BASIC +
+                        Base64.getEncoder().encodeToString((username + HandlerConstants.COLON + password).getBytes()))
+                .build();
+
+        ProxyResponse clientTenantAppResponse = HandlerUtil.execute(apiTenantRegEndpoint);
+
+        if (clientTenantAppResponse.getCode() == HttpStatus.SC_UNAUTHORIZED) {
+            HandlerUtil.handleError(resp, clientTenantAppResponse);
+            return null;
+        }
+
+        if (clientTenantAppResponse.getCode() == HttpStatus.SC_CREATED) {
+            JsonNode jsonNode = clientTenantAppResponse.getData();
+            if (jsonNode != null) {
+                String clientId = jsonNode.get(HandlerConstants.CLIENT_ID_KEY).textValue();
+                String clientSecret = jsonNode.get(HandlerConstants.CLIENT_SECRET_KEY).textValue();
+                String encodedClientApp = Base64.getEncoder()
+                        .encodeToString((clientId + HandlerConstants.COLON + clientSecret).getBytes());
+                OAuthApp oAuthTenantApp = new OAuthApp(
+                        tenantApplicationName,
+                        username,
+                        clientId,
+                        clientSecret,
+                        encodedClientApp
+                );
+                loginCache.addOAuthAppToCache(oAuthTenantAppCacheKey, oAuthTenantApp);
+                return oAuthTenantApp;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Generate and persist the token from an API application registered under a subtenant for the
+     * given list of UI webapps
+     *
+     * @param req {@link HttpServletRequest}
+     * @param resp {@link HttpServletResponse}
+     * @param applicationName name of the application
+     * @param loginCache {@link LoginCache} stores {@link OAuthAppCacheKey}
+     * @param tags tags which are retrieved by reading app manager configuration
+     * @param scopes User scopes JSON Array
+     * @throws LoginException if there is an error while generating and persisting the token
+     * @throws IOException if there is an error while registering the API application
+     */
+    private void generateTokenForTenantApp(HttpServletRequest req, HttpServletResponse resp, String applicationName,
+                                           LoginCache loginCache, ArrayNode tags, ArrayNode scopes)
+            throws LoginException, IOException {
+
+        if (ArrayUtils.contains(tenantContextAppList, applicationName) && HandlerUtil.isTenantAwareUsername(username)) {
+            String tenantApplicationName =
+                    applicationName.substring(0, applicationName.indexOf(HandlerConstants.LOGIN_SUFFIX)) +
+                            HandlerConstants.TENANT_CONTEXT_SUFFIX;
+            OAuthAppCacheKey oAuthTenantAppCacheKey = new OAuthAppCacheKey(tenantApplicationName, username);
+            OAuthApp oAuthTenantApp = loginCache.getOAuthAppCache(oAuthTenantAppCacheKey);
+            if (oAuthTenantApp == null) {
+                oAuthTenantApp = registerTenantApp(tenantApplicationName, tags, resp,
+                        oAuthTenantAppCacheKey, loginCache);
+                if (oAuthTenantApp != null) {
+                    getTokenAndPersistInSession(req, resp, username, oAuthTenantApp.getClientId(),
+                            oAuthTenantApp.getClientSecret(), oAuthTenantApp.getEncodedClientApp(), scopes,
+                            HandlerConstants.SESSION_TENANT_CONTEXT_AUTH_DATA_KEY);
+                } else {
+                    String msg = "Error occurred while registering tenant app: '" + tenantApplicationName + "'.";
+                    log.error(msg);
+                    throw new LoginException(msg);
+                }
+            } else {
+                getTokenAndPersistInSession(req, resp, username, oAuthTenantApp.getClientId(),
+                        oAuthTenantApp.getClientSecret(), oAuthTenantApp.getEncodedClientApp(),
+                        scopes, HandlerConstants.SESSION_TENANT_CONTEXT_AUTH_DATA_KEY);
+            }
+        }
     }
 }
