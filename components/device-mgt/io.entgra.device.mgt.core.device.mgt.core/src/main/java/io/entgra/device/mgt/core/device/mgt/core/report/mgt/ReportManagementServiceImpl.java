@@ -511,8 +511,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             String generateReportURL = HttpReportingUtil.getBirtReportHost();
             if (!StringUtils.isBlank(generateReportURL)) {
                 int tenantId = DeviceManagementDAOUtil.getTenantId();
-                generateReportURL += Constants.BirtReporting.BIRT_REPORTING_API_REPORT_PATH +
-                        Constants.BirtReporting.BIRT_REPORTING_API_GENERATE_REPORT;
+                generateReportURL += Constants.BirtReporting.BIRT_REPORTING_API_REPORT_PATH;
                 Map<String, Object> parameters = reportParameters.getParameters();
                 if (parameters.containsKey(Constants.BirtReporting.TENANT_ID)) {
                     parameters.replace(Constants.BirtReporting.TENANT_ID, String.valueOf(tenantId));
@@ -562,7 +561,8 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             String downloadURL = HttpReportingUtil.getBirtReportHost();
             if (!StringUtils.isBlank(downloadURL)) {
 
-                downloadURL += Constants.BirtReporting.BIRT_REPORTING_API_DOWNLOAD_TEMPLATE
+                downloadURL += Constants.BirtReporting.BIRT_REPORTING_API_TEMPLATE
+                        + Constants.BirtReporting.BIRT_REPORTING_API_DOWNLOAD_TEMPLATE_URL
                         + "?templateURL=" + templateName;
 
                 HttpPost httpPost = new HttpPost(downloadURL);
@@ -589,7 +589,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     }
 
     @Override
-    public JsonObject deleteBirtTemplate(List<String> templateNames) throws ReportManagementException {
+    public JsonObject deleteBirtTemplate(List<String> templateNames) throws ReportManagementException, BadRequestException {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
 
             String deleteURL = HttpReportingUtil.getBirtReportHost();
@@ -603,6 +603,8 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 switch (statusCode) {
                     case 200:
                         return new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
+                    case 400:
+                        throw new BadRequestException("Invalid template names");
                     case 500:
                         JsonObject errorResponse = new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
                         throw new ReportManagementException(errorResponse.get("message").getAsString());

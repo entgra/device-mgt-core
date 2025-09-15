@@ -399,6 +399,9 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         } catch (ReportManagementException e) {
             log.error(e.getMessage(), e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+        } catch (BadRequestException e){
+            log.error(e.getMessage(), e);
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }
 
