@@ -3858,6 +3858,26 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
+    public int getDeviceLocationCount(String deviceType, long exactTime, int timeWindow) throws DeviceManagementException {
+        int deviceLocationCount;
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            deviceLocationCount = deviceDAO.getDeviceLocationCount(deviceType, exactTime, timeWindow);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred in getAllDeviceLocationInfo";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+        return deviceLocationCount;
+    }
+
+    @Override
     public void notifyPullNotificationSubscriber(Device device, Operation operation)
             throws PullNotificationExecutionFailedException {
         if (log.isDebugEnabled()) {
