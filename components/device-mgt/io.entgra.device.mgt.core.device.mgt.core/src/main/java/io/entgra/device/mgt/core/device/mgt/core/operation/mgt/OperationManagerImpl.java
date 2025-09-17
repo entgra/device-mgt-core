@@ -18,12 +18,12 @@
 
 package io.entgra.device.mgt.core.device.mgt.core.operation.mgt;
 
-import com.google.gson.Gson;
+import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementException;
+import io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.DeviceOperationDetails;
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManagerServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.extensions.logger.spi.EntgraLogger;
 import io.entgra.device.mgt.core.notification.logger.DeviceConnectivityLogContext;
 import io.entgra.device.mgt.core.notification.logger.impl.EntgraDeviceConnectivityLoggerImpl;
-import io.entgra.device.mgt.core.notification.logger.impl.EntgraPolicyLoggerImpl;
 import org.apache.commons.lang.StringUtils;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
@@ -52,8 +52,6 @@ import io.entgra.device.mgt.core.device.mgt.common.push.notification.Notificatio
 import io.entgra.device.mgt.core.device.mgt.common.push.notification.PushNotificationConfig;
 import io.entgra.device.mgt.core.device.mgt.common.push.notification.PushNotificationExecutionFailedException;
 import io.entgra.device.mgt.core.device.mgt.common.push.notification.PushNotificationProvider;
-import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.*;
-import io.entgra.device.mgt.core.device.mgt.common.push.notification.*;
 import io.entgra.device.mgt.core.device.mgt.common.spi.DeviceManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
 import io.entgra.device.mgt.core.device.mgt.core.cache.impl.DeviceCacheManagerImpl;
@@ -75,18 +73,13 @@ import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProvide
 import io.entgra.device.mgt.core.device.mgt.core.task.DeviceTaskManager;
 import io.entgra.device.mgt.core.device.mgt.core.task.impl.DeviceTaskManagerImpl;
 import io.entgra.device.mgt.core.device.mgt.core.util.DeviceManagerUtil;
-import io.entgra.device.mgt.core.device.mgt.extensions.logger.spi.EntgraLogger;
-import io.entgra.device.mgt.core.notification.logger.DeviceConnectivityLogContext;
-import io.entgra.device.mgt.core.notification.logger.impl.EntgraDeviceConnectivityLoggerImpl;
-import org.apache.commons.lang.StringUtils;
-import org.wso2.carbon.context.CarbonContext;
-import org.wso2.carbon.context.PrivilegedCarbonContext;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -454,6 +447,21 @@ public class OperationManagerImpl implements OperationManager {
                     break;
                 }
             }
+        }
+        try {
+            String operationCode = operation.getCode();
+            String operationStatus = Operation.Status.PENDING.toString();
+            // all devices have same type in a batch, or handle grouping by type outside
+            if (!enrolments.isEmpty()) {
+                Device firstDevice = enrolments.values().iterator().next();
+                String deviceType = firstDevice.getType();
+                DeviceManagementDataHolder.getInstance().getNotificationManagementService()
+                        .handleOperationNotificationIfApplicable(operationCode, operationStatus,
+                                deviceType, new ArrayList<>(enrolments.keySet()), tenantId, "immediate");
+            }
+        } catch (NotificationManagementException e) {
+            String msg = "An Error occurred while updating handleOperationNotificationIfApplicable";
+            log.error(msg, e);
         }
         if (!isScheduled && notificationStrategy != null) {
             for (Device device : enrolments.values()) {
@@ -907,6 +915,7 @@ public class OperationManagerImpl implements OperationManager {
             throws OperationManagementException {
         int operationId = operation.getId();
         boolean isOperationUpdated = false;
+        int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
         try {
             OperationManagementDAOFactory.beginTransaction();
             if (operation.getStatus() != null) {
@@ -915,9 +924,34 @@ public class OperationManagerImpl implements OperationManager {
                     try {
                         isOperationUpdated = operationDAO.updateOperationStatus(enrolmentId, operationId,
                                 io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.
-                                        Operation.Status.valueOf(operation.getStatus().
-                                        toString()));
+                                        Operation.Status.valueOf(operation.getStatus().toString()));
                         OperationManagementDAOFactory.commitTransaction();
+                        try {
+                            OperationManagementDAOFactory.openConnection();
+                            DeviceOperationDetails previousDeviceOperationDetails =
+                                    operationDAO.getDeviceOperationDetails(enrolmentId, operationId);
+                            if (isOperationUpdated && previousDeviceOperationDetails != null) {
+                                String operationCode = operation.getCode();
+                                String operationStatus = operation.getStatus().toString();
+                                String deviceType = previousDeviceOperationDetails.getDeviceType();
+                                int deviceEnrollmentID = previousDeviceOperationDetails.getDeviceId();
+                                DeviceManagementDataHolder.getInstance()
+                                        .getNotificationManagementService()
+                                        .handleOperationNotificationIfApplicable(
+                                                operationCode,
+                                                operationStatus,
+                                                deviceType,
+                                                Collections.singletonList(deviceEnrollmentID),
+                                                tenantId,
+                                                "postSync"
+                                        );
+                            }
+                        } catch (Exception e) {
+                            String msg = "An error occurred while retrieving DeviceOperationDetails. " +
+                                    "Operation ID: " + operationId + ", Enrolment ID: " + enrolmentId +
+                                    ", Device ID: " + deviceId;
+                            log.error(msg, e);
+                        }
                         break;
                     } catch (OperationManagementDAOException e) {
                         OperationManagementDAOFactory.rollbackTransaction();
@@ -937,10 +971,11 @@ public class OperationManagerImpl implements OperationManager {
                         }
                     }
                 }
-                if (operation.getCode().equals("POLICY_REVOKE") && operation.getStatus().equals(Operation.Status.COMPLETED)){
+                if (DeviceManagementConstants.AuthorizationSkippedOperationCodes.POLICY_REVOKE_OPERATION_CODE
+                        .equals(operation.getCode()) && Operation.Status.COMPLETED.equals(operation.getStatus())) {
                     if (this.getDevice(deviceId).getEnrolmentInfo().getStatus().equals(EnrolmentInfo.Status.DISENROLLMENT_REQUESTED)) {
-                        DeviceManagementProviderService deviceManagementProviderService = DeviceManagementDataHolder.getInstance().
-                                getDeviceManagementProvider();
+                        DeviceManagementProviderService deviceManagementProviderService = DeviceManagementDataHolder.getInstance()
+                                .getDeviceManagementProvider();
                         deviceManagementProviderService.removeDevice(deviceId);
                     }
                 }
@@ -1040,6 +1075,7 @@ public class OperationManagerImpl implements OperationManager {
                     }
                 }
             }
+
         } catch (TransactionManagementException e) {
             throw new OperationManagementException("Error occurred while initiating a transaction", e);
         } catch (DeviceManagementException e) {

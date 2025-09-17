@@ -237,4 +237,38 @@ public class MetadataManagementServiceImpl implements MetadataManagementService 
         }
     }
 
+    @Override
+    public boolean clearMetadataValue(String metaKey)
+            throws MetadataManagementException, MetadataKeyNotFoundException {
+        if (log.isDebugEnabled()) {
+            log.debug("Clearing metadata value for metaKey: " + metaKey);
+        }
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        try {
+            MetadataManagementDAOFactory.beginTransaction();
+            if (!metadataDAO.isExist(tenantId, metaKey)) {
+                String msg = "Specified Metadata entry not found for clearing. {metaKey:" + metaKey + "}";
+                log.error(msg);
+                throw new MetadataKeyNotFoundException(msg);
+            }
+            boolean status = metadataDAO.clearMetadataValue(tenantId, metaKey);
+            MetadataManagementDAOFactory.commitTransaction();
+            if (status && log.isDebugEnabled()) {
+                log.debug("Successfully cleared metadata value. {metaKey:" + metaKey + "}");
+            }
+            return status;
+        } catch (MetadataManagementDAOException e) {
+            MetadataManagementDAOFactory.rollbackTransaction();
+            String msg = "Error occurred while clearing metadata value. {metaKey:" + metaKey + "}";
+            log.error(msg, e);
+            throw new MetadataManagementException(msg, e);
+        } catch (TransactionManagementException e) {
+            String msg = "Error occurred while opening a connection to the data source";
+            log.error(msg, e);
+            throw new MetadataManagementException(msg, e);
+        } finally {
+            MetadataManagementDAOFactory.closeConnection();
+        }
+    }
+
 }
