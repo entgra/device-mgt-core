@@ -25,7 +25,7 @@ import java.util.List;
 
 public class ApplicationSubscriptionInfoWrapper {
     ApplicationSubscriptionInfo filteredSubscriptionInfo;
-    List<DeviceIdentifier> ignoredDevices;
+    List<DeviceWithSubscriptionStatus> ignoredDevices;
     List<Activity> pendingActivities;
 
     public ApplicationSubscriptionInfo getFilteredSubscriptionInfo() {
@@ -36,11 +36,11 @@ public class ApplicationSubscriptionInfoWrapper {
         this.filteredSubscriptionInfo = filteredSubscriptionInfo;
     }
 
-    public List<DeviceIdentifier> getIgnoredDevices() {
+    public List<DeviceWithSubscriptionStatus> getIgnoredDevices() {
         return ignoredDevices;
     }
 
-    public void setIgnoredDevices(List<DeviceIdentifier> ignoredDevices) {
+    public void setIgnoredDevices(List<DeviceWithSubscriptionStatus> ignoredDevices) {
         this.ignoredDevices = ignoredDevices;
     }
 
