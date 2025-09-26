@@ -30,7 +30,7 @@ public class ApplicationInstallResponse {
             value = "List of devices that application release is already installed.",
             dataType = "List[io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier]"
     )
-    private List<DeviceIdentifier> ignoredDeviceIdentifiers;
+    private List<DeviceWithSubscriptionStatus> ignoredDeviceIdentifiers;
 
     @ApiModelProperty(
             name = "errorDevices",
@@ -54,11 +54,11 @@ public class ApplicationInstallResponse {
         this.activities = activity;
     }
 
-    public List<DeviceIdentifier> getIgnoredDeviceIdentifiers() {
+    public List<DeviceWithSubscriptionStatus> getIgnoredDeviceIdentifiers() {
         return ignoredDeviceIdentifiers;
     }
 
-    public void setIgnoredDeviceIdentifiers(List<DeviceIdentifier> ignoredDeviceIdentifiers) {
+    public void setIgnoredDeviceIdentifiers(List<DeviceWithSubscriptionStatus> ignoredDeviceIdentifiers) {
         this.ignoredDeviceIdentifiers = ignoredDeviceIdentifiers;
     }
 
