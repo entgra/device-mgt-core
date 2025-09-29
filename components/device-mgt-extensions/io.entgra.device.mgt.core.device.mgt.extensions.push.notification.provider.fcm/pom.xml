@@ -185,6 +185,7 @@
                             io.entgra.device.mgt.core.device.mgt.extensions.logger.spi,
                             io.entgra.device.mgt.core.notification.logger.*,
                             com.google.auth.oauth2.*,
+                            org.wso2.carbon.context,
                             okhttp3
                         </Import-Package>
                         <Embed-Dependency>
