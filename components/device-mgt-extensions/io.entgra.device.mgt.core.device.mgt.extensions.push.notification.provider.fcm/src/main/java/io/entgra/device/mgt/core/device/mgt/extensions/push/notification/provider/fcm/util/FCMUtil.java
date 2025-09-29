@@ -33,57 +33,34 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 import java.util.concurrent.TimeUnit;
 
 public class FCMUtil {
 
     private static final Log log = LogFactory.getLog(FCMUtil.class);
     private static volatile FCMUtil instance;
-    private static GoogleCredentials defaultApplication;
+    private static final Map<Integer, GoogleCredentials> TENANT_CREDENTIALS_MAP = new HashMap<>();
+    private static final String FCM_CREDENTIALS_FILE_NAME = "service-account.json";
     private static final String FCM_SERVICE_ACCOUNT_PATH = CarbonUtils.getCarbonHome() + File.separator +
-            "repository" + File.separator + "resources" + File.separator + "service-account.json";
+            "repository" + File.separator + "resources";
     private static final String[] FCM_SCOPES = { "https://www.googleapis.com/auth/firebase.messaging" };
     private Properties contextMetadataProperties;
+    private static final int SUPER_TENANT_ID = -1234;
     private static ConnectionPool connectionPool;
     private static OkHttpClient client;
+    private static final String TENANTS_DIRECTORY = "tenants";
 
     private FCMUtil() {
-        initContextConfigs();
-        initDefaultOAuthApplication();
-        initPooledConnection();
-    }
-
-    /**
-     * Initialize the connection pool for the OkHttpClient instance.
-     */
-    private void initPooledConnection() {
-        connectionPool = new ConnectionPool(25, 1, TimeUnit.MINUTES);
-        client = new OkHttpClient.Builder().connectionPool(connectionPool).build();
-    }
-
-    /**
-     * Get the Pooled OkHttpClient instance
-     * @return OkHttpClient instance
-     */
-    public OkHttpClient getHttpClient() {
-        return client;
-    }
-
-    private void initDefaultOAuthApplication() {
-        if (defaultApplication == null) {
-            Path serviceAccountPath = Paths.get(FCM_SERVICE_ACCOUNT_PATH);
-            try {
-                defaultApplication = GoogleCredentials.
-                        fromStream(Files.newInputStream(serviceAccountPath)).
-                        createScoped(FCM_SCOPES);
-            } catch (IOException e) {
-                String msg = "Fail to initialize default OAuth application for FCM communication";
-                log.error(msg);
-                throw new IllegalStateException(msg, e);
-            }
-        }
+        this.initContextConfigs();
+        this.initDefaultFCMCredentials();
+        this.initTenantedFCMCredentials();
+        this.initPooledConnection();
     }
 
     /**
@@ -104,6 +81,22 @@ public class FCMUtil {
     }
 
     /**
+     * Initialize the connection pool for the OkHttpClient instance.
+     */
+    private void initPooledConnection() {
+        connectionPool = new ConnectionPool(25, 1, TimeUnit.MINUTES);
+        client = new OkHttpClient.Builder().connectionPool(connectionPool).build();
+    }
+
+    /**
+     * Get the Pooled OkHttpClient instance
+     * @return OkHttpClient instance
+     */
+    public OkHttpClient getHttpClient() {
+        return client;
+    }
+
+    /**
      * Get the instance of FCMUtil. FCMUtil is a singleton class which should not be
      * instantiating more than once. Instantiating the class requires to read the service account file from
      * the filesystem and instantiation of the GoogleCredentials object which are costly operations.
@@ -120,8 +113,76 @@ public class FCMUtil {
         return instance;
     }
 
-    public GoogleCredentials getDefaultApplication() {
-        return defaultApplication;
+    /**
+     * Initialize the tenant specific GoogleCredentials instances for FCM communication. The credentials
+     * should be placed in the <CARBON_HOME>/repository/resources/tenants/<TENANT_ID>/service-account.json
+     * If no tenanted specific credentials found, the default credentials will be used.
+     */
+    private void initTenantedFCMCredentials() {
+        Path tenantsResourcePath = Paths.get(FCM_SERVICE_ACCOUNT_PATH + File.separator + TENANTS_DIRECTORY);
+        if (Files.exists(tenantsResourcePath) && Files.isDirectory(tenantsResourcePath)) {
+            try (Stream<Path> tenants = Files.list(tenantsResourcePath)) {
+                tenants
+                        .filter(Files::isDirectory)
+                        .forEach(tenant -> {
+                            String tenantId = tenant.getFileName().toString();
+                            Path serviceAccountPath = tenant.resolve(FCM_CREDENTIALS_FILE_NAME);
+                            if (Files.exists(serviceAccountPath)) {
+                                try {
+                                    GoogleCredentials defaultApplication = GoogleCredentials.
+                                            fromStream(Files.newInputStream(serviceAccountPath)).
+                                            createScoped(FCM_SCOPES);
+                                    TENANT_CREDENTIALS_MAP.put(Integer.parseInt(tenantId), defaultApplication);
+                                } catch (IOException e) {
+                                    String msg = "Failed to initialize credentials application for FCM communication";
+                                    log.error(msg);
+                                    throw new IllegalStateException(msg, e);
+                                }
+                            } else {
+                                log.error("No FCM application credentials found for tenant: " + tenantId);
+                            }
+                        });
+            } catch (IOException e) {
+                String msg = "Error while instantiating FCM configuration for tenants";
+                log.error(msg);
+                throw new IllegalStateException(msg, e);
+            }
+        } else {
+            String msg = "No custom FCM credentials found for any tenant";
+            log.info(msg);
+        }
+    }
+
+    /**
+     * Initialize the default GoogleCredentials instance for super tenant and other tenants which are
+     * not provided their own FCM credentials.
+     */
+    private void initDefaultFCMCredentials() {
+        try {
+            Path serviceAccountPath = Paths.get(FCM_SERVICE_ACCOUNT_PATH + File.separator +
+                    FCM_CREDENTIALS_FILE_NAME);
+            GoogleCredentials defaultApplication = GoogleCredentials.
+                    fromStream(Files.newInputStream(serviceAccountPath)).
+                    createScoped(FCM_SCOPES);
+            TENANT_CREDENTIALS_MAP.put(SUPER_TENANT_ID, defaultApplication);
+        } catch (IOException e) {
+            String msg = "Failed to initialize credentials application for FCM communication";
+            log.error(msg);
+            throw new IllegalStateException(msg, e);
+        }
+    }
+
+    /**
+     * Get the tenant specific GoogleCredentials instance for FCM API invocation.
+     * If no tenanted specific credentials found, the default credentials will be returned.
+     * @param tenantId Tenant ID of the tenant
+     * @return GoogleCredentials instance for the tenant
+     */
+    public GoogleCredentials getTenantedApplication(int tenantId) {
+        if (TENANT_CREDENTIALS_MAP.containsKey(tenantId)) {
+            return TENANT_CREDENTIALS_MAP.get(tenantId);
+        }
+        return TENANT_CREDENTIALS_MAP.get(SUPER_TENANT_ID);
     }
 
     public Properties getContextMetadataProperties() {

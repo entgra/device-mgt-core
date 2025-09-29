@@ -18,6 +18,12 @@
 package io.entgra.device.mgt.core.device.mgt.extensions.push.notification.provider.fcm;
 
 import com.google.gson.JsonObject;
+import io.entgra.device.mgt.core.device.mgt.extensions.push.notification.provider.fcm.util.FCMUtil;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
@@ -26,6 +32,7 @@ import io.entgra.device.mgt.core.device.mgt.common.push.notification.Notificatio
 import io.entgra.device.mgt.core.device.mgt.common.push.notification.PushNotificationConfig;
 import io.entgra.device.mgt.core.device.mgt.common.push.notification.PushNotificationExecutionFailedException;
 import io.entgra.device.mgt.core.device.mgt.extensions.push.notification.provider.fcm.internal.FCMDataHolder;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import io.entgra.device.mgt.core.device.mgt.extensions.push.notification.provider.fcm.util.FCMUtil;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -44,6 +51,7 @@ public class FCMNotificationStrategy implements NotificationStrategy {
     private static final String FCM_API_KEY = "fcmAPIKey";
     private static final int TIME_TO_LIVE = 2419199; // 1 second less than 28 days
     private static final int HTTP_STATUS_CODE_OK = 200;
+    private static final int HTTP_STATUS_CODE_NOT_FOUND = 404;
     private final PushNotificationConfig config;
     private static final String FCM_ENDPOINT_KEY = "FCM_SERVER_ENDPOINT";
 
@@ -60,14 +68,13 @@ public class FCMNotificationStrategy implements NotificationStrategy {
     public void execute(NotificationContext ctx) throws PushNotificationExecutionFailedException {
         try {
             if (NOTIFIER_TYPE_FCM.equals(config.getType())) {
+                int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
                 Device device = FCMDataHolder.getInstance().getDeviceManagementProviderService()
                         .getDeviceWithTypeProperties(ctx.getDeviceId());
-                if(device.getEnrolmentInfo() != null
-                        && device.getEnrolmentInfo().getStatus() != EnrolmentInfo.Status.REMOVED
-                        && device.getProperties() != null && getFCMToken(device.getProperties()) != null) {
-                    FCMUtil.getInstance().getDefaultApplication().refreshIfExpired();
-                    sendWakeUpCall(FCMUtil.getInstance().getDefaultApplication().getAccessToken().getTokenValue(),
-                            getFCMToken(device.getProperties()));
+                if(device.getProperties() != null && getFCMToken(device.getProperties()) != null) {
+                    FCMUtil.getInstance().getTenantedApplication(tenantId).refreshIfExpired();
+                    sendWakeUpCall(FCMUtil.getInstance().getTenantedApplication(tenantId).getAccessToken().getTokenValue(),
+                            getFCMToken(device.getProperties()), device.getDeviceIdentifier());
                 }
             } else {
                 if (log.isDebugEnabled()) {
@@ -87,10 +94,11 @@ public class FCMNotificationStrategy implements NotificationStrategy {
      * Send FCM message to the FCM server to initiate the push notification
      * @param accessToken Access token to authenticate with the FCM server
      * @param registrationId Registration ID of the device
+     * @param deviceIdentifier identifier of the device
      * @throws IOException If an error occurs while sending the request
      * @throws PushNotificationExecutionFailedException If an error occurs while sending the push notification
      */
-    private void sendWakeUpCall(String accessToken, String registrationId) throws IOException,
+    private void sendWakeUpCall(String accessToken, String registrationId, String deviceIdentifier) throws IOException,
             PushNotificationExecutionFailedException {
         String fcmServerEndpoint = FCMUtil.getInstance().getContextMetadataProperties()
                 .getProperty(FCM_ENDPOINT_KEY);
@@ -112,7 +120,16 @@ public class FCMNotificationStrategy implements NotificationStrategy {
                         + " Response message : " + response.message());
             }
             if(!response.isSuccessful()) {
-                String msg = "Response Status: " + response.code() + ", Response Message: " + response.message();
+                if (response.code() == HTTP_STATUS_CODE_NOT_FOUND) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("The device " + deviceIdentifier + "with FCM registration ID: "
+                                + registrationId + " was not registered in Google FCM servers, Or " +
+                                "the registration ID is expired");
+                    }
+                    return;
+                }
+                String msg = "Received FCM Response [Status: " + response.code() + ", Response Message: "
+                        + response.message() + "] for the device " + deviceIdentifier;
                 log.error(msg);
                 throw new IOException(msg);
             }
