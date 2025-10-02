@@ -26,6 +26,8 @@ import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.OperationManage
 import io.entgra.device.mgt.core.device.mgt.core.config.operation.timeout.OperationTimeout;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
 import io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementDataHolder;
+import io.entgra.device.mgt.core.device.mgt.core.operation.timeout.task.OperationTimeoutCallback;
+import io.entgra.device.mgt.core.device.mgt.core.operation.timeout.task.OperationTimeoutCallbackException;
 import io.entgra.device.mgt.core.device.mgt.core.task.impl.RandomlyAssignedScheduleTask;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,6 +41,7 @@ public class OperationTimeoutTask extends RandomlyAssignedScheduleTask {
     private static final Log log = LogFactory.getLog(OperationTimeoutTask.class);
     public static final String OPERATION_TIMEOUT_TASK = "OPERATION_TIMEOUT_TASK";
     private Map<String, String> properties;
+    private List<OperationTimeoutCallback> callbacks = new ArrayList<>();
 
     @Override
     public final void setProperties(Map<String, String> properties) {
@@ -50,6 +53,16 @@ public class OperationTimeoutTask extends RandomlyAssignedScheduleTask {
             return null;
         }
         return properties.get(name);
+    }
+
+    public void registerCallback(OperationTimeoutCallback callback) {
+        if (callback != null && !callbacks.contains(callback)) {
+            callbacks.add(callback);
+        }
+    }
+
+    public void unregisterCallback(OperationTimeoutCallback callback) {
+        callbacks.remove(callback);
     }
 
     @Override
@@ -91,16 +104,44 @@ public class OperationTimeoutTask extends RandomlyAssignedScheduleTask {
                             operationTimeoutConfig.getInitialStatus());
             String operationId;
             Operation operation;
+            List<OperationTimeoutInfo> timeoutInfos = new ArrayList<>();
+
             for (Activity activity : activities) {
                 operationId = activity.getActivityId().replace("ACTIVITY_", "");
                 for (ActivityStatus activityStatus : activity.getActivityStatus()) {
                     operation = DeviceManagementDataHolder.getInstance().getOperationManager()
                             .getOperation(Integer.parseInt(operationId));
+                    Operation.Status operationStatus = operation.getStatus();
                     operation.setStatus(Operation.Status.valueOf(operationTimeoutConfig.getNextStatus()));
                     DeviceManagementDataHolder.getInstance().getOperationManager()
                             .updateOperation(activityStatus.getDeviceIdentifier(), operation);
+
+                    if (!callbacks.isEmpty()) {
+                        OperationTimeoutInfo timeoutInfo = new
+                                OperationTimeoutInfo(activityStatus.getDeviceIdentifier(), operation, operationStatus);
+                        timeoutInfos.add(timeoutInfo);
+                    }
                 }
             }
+
+            if (!timeoutInfos.isEmpty() && !callbacks.isEmpty()) {
+                for (OperationTimeoutCallback callback : callbacks) {
+                    try {
+                        callback.onOperationTimeoutBatch(timeoutInfos);
+                        for (OperationTimeoutInfo timeoutInfo : timeoutInfos) {
+                            callback.onOperationTimeout(
+                                    timeoutInfo.getDeviceIdentifier(),
+                                    timeoutInfo.getOperation(),
+                                    timeoutInfo.getOriginalStatus()
+                            );
+                        }
+                    } catch (OperationTimeoutCallbackException e) {
+                        log.error("Error executing timeout callback", e);
+                    }
+
+                }
+            }
+
         } catch (OperationManagementException e) {
             String msg = "Error occurred while retrieving operations.";
             log.error(msg, e);
