@@ -18,4 +18,13 @@
 -->
 <ReportManagementConfiguration>
     <DatasourceName>jdbc/MDM_REPORTS_DS</DatasourceName>
+    {% if reporting_mgt_conf is defined %}
+        <ThreadPoolSize>{{reporting_mgt_conf.threadPoolSize}}</ThreadPoolSize>
+        <MaxConnections>{{reporting_mgt_conf.maxConnections}}</MaxConnections>
+        <MaxConnectionsPerRoute>{{reporting_mgt_conf.maxConnectionsPerRoute}}</MaxConnectionsPerRoute>
+    {% else %}
+        <ThreadPoolSize>10</ThreadPoolSize>
+        <MaxConnections>10</MaxConnections>
+        <MaxConnectionsPerRoute>10</MaxConnectionsPerRoute>
+    {% endif %}
 </ReportManagementConfiguration>

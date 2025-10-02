@@ -20,6 +20,8 @@ package io.entgra.device.mgt.core.device.mgt.core.report.mgt;
 
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceDetailsWrapper;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.EventPublishingException;
+import io.entgra.device.mgt.core.device.mgt.core.report.mgt.config.ReportMgtConfiguration;
+import io.entgra.device.mgt.core.device.mgt.core.report.mgt.config.ReportMgtConfigurationManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
@@ -45,21 +47,26 @@ public class ReportingPublisherManager {
     private final PoolingHttpClientConnectionManager poolingManager;
     private final ExecutorService executorService;
     private final CloseableHttpClient httpClient;
-    private static ReportingPublisherManager instance;
+    private static volatile ReportingPublisherManager instance;
 
-    public static synchronized ReportingPublisherManager getInstance() {
+    public static ReportingPublisherManager getInstance() {
         if (instance == null) {
-            instance = new ReportingPublisherManager();
+            synchronized (ReportingPublisherManager.class) {
+                if (instance == null) {
+                    instance = new ReportingPublisherManager();
+                }
+            }
         }
         return instance;
     }
 
     private ReportingPublisherManager() {
-        this.executorService = Executors.newFixedThreadPool(10); //todo make this configurable
+        ReportMgtConfiguration config = ReportMgtConfigurationManager.getInstance().getConfiguration();
+        this.executorService = Executors.newFixedThreadPool(config.getThreadPoolSize());
 
         this.poolingManager = new PoolingHttpClientConnectionManager();
-        this.poolingManager.setMaxTotal(10); //todo make this configurable
-        this.poolingManager.setDefaultMaxPerRoute(10);
+        this.poolingManager.setMaxTotal(config.getMaxConnections());
+        this.poolingManager.setDefaultMaxPerRoute(config.getMaxConnectionsPerRoute());
 
         this.httpClient = HttpClients.custom()
                 .setConnectionManager(poolingManager)
