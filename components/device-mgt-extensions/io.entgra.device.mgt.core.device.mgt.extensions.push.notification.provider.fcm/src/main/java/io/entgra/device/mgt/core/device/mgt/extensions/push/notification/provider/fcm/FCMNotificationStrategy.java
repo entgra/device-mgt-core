@@ -18,6 +18,7 @@
 package io.entgra.device.mgt.core.device.mgt.extensions.push.notification.provider.fcm;
 
 import com.google.gson.JsonObject;
+import io.entgra.device.mgt.core.device.mgt.extensions.push.notification.provider.fcm.dto.FCMCredentials;
 import io.entgra.device.mgt.core.device.mgt.extensions.push.notification.provider.fcm.util.FCMUtil;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -41,6 +42,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.util.List;
 
 public class FCMNotificationStrategy implements NotificationStrategy {
@@ -72,8 +74,7 @@ public class FCMNotificationStrategy implements NotificationStrategy {
                 Device device = FCMDataHolder.getInstance().getDeviceManagementProviderService()
                         .getDeviceWithTypeProperties(ctx.getDeviceId());
                 if(device.getProperties() != null && getFCMToken(device.getProperties()) != null) {
-                    FCMUtil.getInstance().getTenantedApplication(tenantId).refreshIfExpired();
-                    sendWakeUpCall(FCMUtil.getInstance().getTenantedApplication(tenantId).getAccessToken().getTokenValue(),
+                    sendWakeUpCall(FCMUtil.getInstance().getFCMCredentials(tenantId),
                             getFCMToken(device.getProperties()), device.getDeviceIdentifier());
                 }
             } else {
@@ -92,16 +93,18 @@ public class FCMNotificationStrategy implements NotificationStrategy {
 
     /**
      * Send FCM message to the FCM server to initiate the push notification
-     * @param accessToken Access token to authenticate with the FCM server
+     * @param fcmCredentials FCM Credentials of the tenant containing the OAuth token and the FCM URL
      * @param registrationId Registration ID of the device
      * @param deviceIdentifier identifier of the device
      * @throws IOException If an error occurs while sending the request
      * @throws PushNotificationExecutionFailedException If an error occurs while sending the push notification
      */
-    private void sendWakeUpCall(String accessToken, String registrationId, String deviceIdentifier) throws IOException,
+    private void sendWakeUpCall(FCMCredentials fcmCredentials, String registrationId, String deviceIdentifier) throws IOException,
             PushNotificationExecutionFailedException {
-        String fcmServerEndpoint = FCMUtil.getInstance().getContextMetadataProperties()
-                .getProperty(FCM_ENDPOINT_KEY);
+
+        fcmCredentials.getOauthCredentials().refreshIfExpired();
+        String accessToken = fcmCredentials.getOauthCredentials().getAccessToken().getTokenValue();
+        String fcmServerEndpoint = fcmCredentials.getFcmUrl();
         if(fcmServerEndpoint == null) {
             String msg = "Encountered configuration issue. " + FCM_ENDPOINT_KEY + " is not defined";
             log.error(msg);

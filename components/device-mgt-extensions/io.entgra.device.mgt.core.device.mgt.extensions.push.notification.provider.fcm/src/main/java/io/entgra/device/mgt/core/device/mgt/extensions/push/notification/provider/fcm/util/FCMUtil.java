@@ -18,10 +18,11 @@
 package io.entgra.device.mgt.core.device.mgt.extensions.push.notification.provider.fcm.util;
 
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.ServiceAccountCredentials;
 import io.entgra.device.mgt.core.device.mgt.core.config.DeviceConfigurationManager;
 import io.entgra.device.mgt.core.device.mgt.core.config.push.notification.ContextMetadata;
 import io.entgra.device.mgt.core.device.mgt.core.config.push.notification.PushNotificationConfiguration;
-import io.entgra.device.mgt.core.device.mgt.extensions.push.notification.provider.fcm.FCMNotificationStrategy;
+import io.entgra.device.mgt.core.device.mgt.extensions.push.notification.provider.fcm.dto.FCMCredentials;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import org.apache.commons.logging.Log;
@@ -45,7 +46,7 @@ public class FCMUtil {
 
     private static final Log log = LogFactory.getLog(FCMUtil.class);
     private static volatile FCMUtil instance;
-    private static final Map<Integer, GoogleCredentials> TENANT_CREDENTIALS_MAP = new HashMap<>();
+    private static final Map<Integer, FCMCredentials> TENANT_CREDENTIALS_MAP = new HashMap<>();
     private static final String FCM_CREDENTIALS_FILE_NAME = "service-account.json";
     private static final String FCM_SERVICE_ACCOUNT_PATH = CarbonUtils.getCarbonHome() + File.separator +
             "repository" + File.separator + "resources";
@@ -125,14 +126,15 @@ public class FCMUtil {
                 tenants
                         .filter(Files::isDirectory)
                         .forEach(tenant -> {
-                            String tenantId = tenant.getFileName().toString();
+                            int tenantId = Integer.parseInt(tenant.getFileName().toString());
                             Path serviceAccountPath = tenant.resolve(FCM_CREDENTIALS_FILE_NAME);
                             if (Files.exists(serviceAccountPath)) {
                                 try {
-                                    GoogleCredentials defaultApplication = GoogleCredentials.
+                                    GoogleCredentials credentials = GoogleCredentials.
                                             fromStream(Files.newInputStream(serviceAccountPath)).
                                             createScoped(FCM_SCOPES);
-                                    TENANT_CREDENTIALS_MAP.put(Integer.parseInt(tenantId), defaultApplication);
+                                    FCMCredentials fcmCredentials = getFcmCredentials(credentials, tenantId);
+                                    TENANT_CREDENTIALS_MAP.put(tenantId, fcmCredentials);
                                 } catch (IOException e) {
                                     String msg = "Failed to initialize credentials application for FCM communication";
                                     log.error(msg);
@@ -154,6 +156,29 @@ public class FCMUtil {
     }
 
     /**
+     * Get the FCMCredentials instance contains the GoogleCredentials and other FCM related configurations
+     * from the GoogleCredentials instance
+     * @param credentials GoogleCredentials instance
+     * @param tenantId Tenant ID of the tenant
+     * @return FCMCredentials instance
+     */
+    private FCMCredentials getFcmCredentials(GoogleCredentials credentials, int tenantId) {
+        String defaultServerUrl = contextMetadataProperties.getProperty("FCM_SERVER_ENDPOINT");
+        if (defaultServerUrl == null || defaultServerUrl.isEmpty()) {
+            String msg = "FCM_SERVER_ENDPOINT is not defined in context metadata configurations";
+            log.error(msg);
+            throw new IllegalStateException(msg);
+        }
+        if (credentials instanceof ServiceAccountCredentials) {
+            ServiceAccountCredentials sac = (ServiceAccountCredentials) credentials;
+            return new FCMCredentials(credentials, sac.getProjectId(), defaultServerUrl, tenantId);
+        }
+        String msg = "Invalid service account credentials provided for FCM";
+        log.error(msg);
+        throw new IllegalStateException(msg);
+    }
+
+    /**
      * Initialize the default GoogleCredentials instance for super tenant and other tenants which are
      * not provided their own FCM credentials.
      */
@@ -164,7 +189,8 @@ public class FCMUtil {
             GoogleCredentials defaultApplication = GoogleCredentials.
                     fromStream(Files.newInputStream(serviceAccountPath)).
                     createScoped(FCM_SCOPES);
-            TENANT_CREDENTIALS_MAP.put(SUPER_TENANT_ID, defaultApplication);
+            FCMCredentials fcmCredentials = getFcmCredentials(defaultApplication, SUPER_TENANT_ID);
+            TENANT_CREDENTIALS_MAP.put(SUPER_TENANT_ID, fcmCredentials);
         } catch (IOException e) {
             String msg = "Failed to initialize credentials application for FCM communication";
             log.error(msg);
@@ -178,7 +204,7 @@ public class FCMUtil {
      * @param tenantId Tenant ID of the tenant
      * @return GoogleCredentials instance for the tenant
      */
-    public GoogleCredentials getTenantedApplication(int tenantId) {
+    public FCMCredentials getFCMCredentials(int tenantId) {
         if (TENANT_CREDENTIALS_MAP.containsKey(tenantId)) {
             return TENANT_CREDENTIALS_MAP.get(tenantId);
         }
