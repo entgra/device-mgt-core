@@ -75,7 +75,7 @@ public class FCMNotificationStrategy implements NotificationStrategy {
                         .getDeviceWithTypeProperties(ctx.getDeviceId());
                 if(device.getProperties() != null && getFCMToken(device.getProperties()) != null) {
                     sendWakeUpCall(FCMUtil.getInstance().getFCMCredentials(tenantId),
-                            getFCMToken(device.getProperties()), device.getDeviceIdentifier());
+                            getFCMToken(device.getProperties()), device.getDeviceIdentifier(), tenantId);
                 }
             } else {
                 if (log.isDebugEnabled()) {
@@ -96,11 +96,21 @@ public class FCMNotificationStrategy implements NotificationStrategy {
      * @param fcmCredentials FCM Credentials of the tenant containing the OAuth token and the FCM URL
      * @param registrationId Registration ID of the device
      * @param deviceIdentifier identifier of the device
-     * @throws IOException If an error occurs while sending the request
+     * @param tenantId ID of the tenant
+     * @throws IOException If an error occurs while sending the request to the FCM server
      * @throws PushNotificationExecutionFailedException If an error occurs while sending the push notification
      */
-    private void sendWakeUpCall(FCMCredentials fcmCredentials, String registrationId, String deviceIdentifier) throws IOException,
+    private void sendWakeUpCall(FCMCredentials fcmCredentials, String registrationId,
+                                String deviceIdentifier, int tenantId) throws IOException,
             PushNotificationExecutionFailedException {
+
+        if (null == fcmCredentials) {
+            String msg = "FCM credentials not found. Push notification will not be sent to the device "
+                    + deviceIdentifier + " in tenant " + tenantId;
+            log.error(msg);
+            throw new PushNotificationExecutionFailedException(msg);
+        }
+
         String accessToken;
         String fcmServerEndpoint;
         try {
