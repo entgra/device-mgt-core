@@ -139,6 +139,10 @@ public class FCMUtil {
                                     String msg = "Failed to initialize credentials application for FCM communication";
                                     log.error(msg);
                                     throw new IllegalStateException(msg, e);
+                                } catch (IllegalStateException e) {
+                                    String msg = "Invalid FCM credentials provided for tenant: " + tenantId;
+                                    log.error(msg);
+                                    throw new IllegalStateException(msg, e);
                                 }
                             } else {
                                 log.error("No FCM application credentials found for tenant: " + tenantId);

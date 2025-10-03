@@ -101,14 +101,17 @@ public class FCMNotificationStrategy implements NotificationStrategy {
      */
     private void sendWakeUpCall(FCMCredentials fcmCredentials, String registrationId, String deviceIdentifier) throws IOException,
             PushNotificationExecutionFailedException {
-
-        fcmCredentials.getOauthCredentials().refreshIfExpired();
-        String accessToken = fcmCredentials.getOauthCredentials().getAccessToken().getTokenValue();
-        String fcmServerEndpoint = fcmCredentials.getFcmUrl();
-        if(fcmServerEndpoint == null) {
-            String msg = "Encountered configuration issue. " + FCM_ENDPOINT_KEY + " is not defined";
-            log.error(msg);
-            throw new PushNotificationExecutionFailedException(msg);
+        String accessToken;
+        String fcmServerEndpoint;
+        try {
+            fcmCredentials.getOauthCredentials().refreshIfExpired();
+            accessToken = fcmCredentials.getOauthCredentials().getAccessToken().getTokenValue();
+            fcmServerEndpoint = fcmCredentials.getFcmUrl();
+        } catch (IllegalStateException e) {
+            String msg = "FCM configuration error occurred while sending push notification to the device "
+                    + deviceIdentifier + " in tenant " + fcmCredentials.getTenantId();
+            log.error(msg, e);
+            throw new PushNotificationExecutionFailedException(msg, e);
         }
 
         RequestBody fcmRequest = getFCMRequest(registrationId);
