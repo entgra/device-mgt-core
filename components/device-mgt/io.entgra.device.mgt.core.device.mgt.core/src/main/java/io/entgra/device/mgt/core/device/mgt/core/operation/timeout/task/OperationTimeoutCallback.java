@@ -22,8 +22,6 @@ import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Operation;
 import io.entgra.device.mgt.core.device.mgt.core.operation.timeout.task.impl.OperationTimeoutInfo;
 
-
-
 public interface OperationTimeoutCallback {
 
     void onOperationTimeout(DeviceIdentifier deviceIdentifier, Operation operation, Operation.Status originalStatus)
