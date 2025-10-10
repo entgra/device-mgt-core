@@ -624,4 +624,55 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         }
     }
 
+    @Override
+    public JsonObject getReportData(JsonObject reportParameters, int limit, int offset)
+            throws ReportManagementException, BadRequestException {
+
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            String getReportDataURL = HttpReportingUtil.getBirtReportHost();
+            if (!StringUtils.isBlank(getReportDataURL)) {
+                int tenantId = DeviceManagementDAOUtil.getTenantId();
+                getReportDataURL += Constants.BirtReporting.BIRT_REPORTING_API_REPORT_DATA_PATH
+                        + "?limit=" + limit + "&offset=" + offset;
+
+                JsonObject parameters = reportParameters.getAsJsonObject("parameters");
+                parameters.addProperty(Constants.BirtReporting.TENANT_ID, String.valueOf(tenantId));
+                reportParameters.add("parameters", parameters);
+
+                HttpPost httpPost = new HttpPost(getReportDataURL);
+                httpPost.setEntity(new StringEntity(reportParameters.toString(), ContentType.APPLICATION_JSON));
+
+                HttpResponse httpResponse = httpClient.execute(httpPost);
+                int statusCode = httpResponse.getStatusLine().getStatusCode();
+
+                switch (statusCode) {
+                    case 200:
+                        String jsonResponse = EntityUtils.toString(httpResponse.getEntity());
+                        return new Gson().fromJson(jsonResponse, JsonObject.class);
+                    case 400:
+                        throw new BadRequestException("Design file name is required");
+                    case 500:
+                        JsonObject errorResponse =
+                                new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
+                        throw new ReportManagementException(errorResponse.get("message").getAsString());
+                    default:
+                        throw new ReportManagementException("Failed to retrieve report data. HTTP " + statusCode);
+                }
+            } else {
+                String msg = "BIRT reporting host is not defined in the iot-server.sh properly.";
+                log.error(msg);
+                throw new ReportManagementException(msg);
+            }
+        } catch (IOException e) {
+            String msg = "Error occurred while invoking BIRT runtime API.";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred while retrieving Tenant ID.";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        }
+    }
+
+
 }

@@ -52,6 +52,7 @@ public class Constants {
         public static final String BIRT_REPORTING_API_DOWNLOAD_TEMPLATE_URL = "/url";
         public static final String BIRT_REPORTING_API_TEMPLATE = "/design";
         public static final String UTF8_ENCODING = "UTF-8";
+        public static final String BIRT_REPORTING_API_REPORT_DATA_PATH = "/report/data";
         public static final String BIRT_RPT_DESIGN_EXT = ".rptdesign";
         public static final String APP_USAGE = "APP_USAGE";
         public static final String DEVICE_INFO = "DEVICE_INFO";

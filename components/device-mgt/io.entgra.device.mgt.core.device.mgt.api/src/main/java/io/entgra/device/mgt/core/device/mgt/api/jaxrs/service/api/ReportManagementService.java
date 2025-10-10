@@ -30,6 +30,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.Map;
 
 @SwaggerDefinition(
         info = @Info(
@@ -697,5 +698,54 @@ public interface ReportManagementService {
                     value = "JSON array of report template names to delete",
                     required = true)
             List<String> templateNames);
+
+    @POST
+    @Path("/data")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "POST",
+            value = "Send the parameters needed to generate report data",
+            notes = "This will send the report design file name and the parameters needed to" +
+                    "generate report data to the BIRT runtime application.",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully generated report data."),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. No report data generated for the given report design file."),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n Error occurred while generating report data.",
+                            response = ErrorResponse.class)
+            })
+    Response getReportData(
+            @ApiParam(
+                    name = "requestMap",
+                    value = "The report parameters from the report template",
+                    required = true)
+            Map<String, Object> requestMap,
+            @ApiParam(
+                    name = "limit",
+                    value = "Maximum number of records to be returned.",
+                    required = true)
+            int limit,
+            @ApiParam(
+                    name = "offset",
+                    value = "The starting index of the first record.",
+                    required = true)
+            int offset
+    );
+
 
 }

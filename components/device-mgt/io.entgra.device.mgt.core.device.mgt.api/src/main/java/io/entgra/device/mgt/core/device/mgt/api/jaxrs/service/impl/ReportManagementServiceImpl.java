@@ -19,6 +19,7 @@
 package io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceList;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
@@ -60,6 +61,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This is the service class for report generating operations
@@ -401,6 +403,22 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         } catch (BadRequestException e){
             log.error(e.getMessage(), e);
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
+
+    @POST
+    @Path("/data")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getReportData(Map<String, Object> requestBody, @QueryParam("limit") int limit, @QueryParam("offset") int offset) {
+        try{
+            JsonObject reportJson = new Gson().toJsonTree(requestBody).getAsJsonObject();
+            JsonObject birtResponse = DeviceMgtAPIUtils.getReportManagementService().getReportData(reportJson, limit, offset);
+            return Response.ok(birtResponse).build();
+        } catch (ReportManagementException e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+        } catch (BadRequestException e){
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }
