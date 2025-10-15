@@ -19,6 +19,7 @@
 package io.entgra.device.mgt.core.device.mgt.core.util;
 
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.EventPublishingException;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.ReportManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,7 +33,9 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HTTP;
 import org.json.JSONObject;
-
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.EventPublishingException;
+import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
+import io.entgra.device.mgt.core.device.mgt.core.report.mgt.Constants;
 import java.io.IOException;
 import java.net.ConnectException;
 
@@ -51,6 +54,27 @@ public class HttpReportingUtil {
         return System.getProperty(DeviceManagementConstants.Report.REPORTING_EVENT_HOST);
     }
 
+    public static String getBirtReportHost() throws ReportManagementException {
+        String host = System.getProperty(Constants.BirtReporting.BIRT_REPORTING_HOST);
+        if (host == null) {
+            String msg = "BIRT reporting host is not defined in the iot-server.sh properly.";
+            log.error(msg);
+            throw new ReportManagementException(msg);
+        }
+        return host;
+    }
+
+    public static String getReportType(String designFile) {
+        if (designFile != null && !designFile.isEmpty()) {
+            switch (designFile) {
+                case Constants.BirtReporting.APP_USAGE:
+                case Constants.BirtReporting.DEVICE_INFO:
+                case Constants.BirtReporting.LOCATION_INFO:
+                    return designFile += Constants.BirtReporting.BIRT_RPT_DESIGN_EXT;
+            }
+        }
+        return Constants.BirtReporting.UNSUPPORTED_REPORT_TYPE;
+    }
 
     public static boolean isPublishingEnabledForTenant() {
         Object configuration = DeviceManagerUtil.getConfiguration(IS_EVENT_PUBLISHING_ENABLED);

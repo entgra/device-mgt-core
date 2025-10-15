@@ -2293,12 +2293,61 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             String msg = "Error occurred while obtaining device location history for device type: " + deviceType;
             log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
-
         }
 
         return snapshotExactTime;
     }
 
+    @Override
+    public int getDeviceLocationCount(String deviceType, long exactTime, int timeWindow)
+            throws DeviceManagementDAOException {
+
+        int totalCount = 0;
+
+        try (Connection conn = DeviceManagementDAOFactory.getConnection()) {
+            String sql = "SELECT COUNT(*) FROM (" +
+                    "    SELECT DEVICE_ID_NAME, " +
+                    "           ROW_NUMBER() OVER (" +
+                    "               PARTITION BY DEVICE_ID_NAME " +
+                    "               ORDER BY " +
+                    "                   CASE WHEN TIMESTAMP = ? THEN 1 ELSE 2 END ASC, " +
+                    "                   ABS(TIMESTAMP - ?) ASC, " +
+                    "                   TIMESTAMP DESC" +
+                    "           ) as rn " +
+                    "    FROM DM_DEVICE_HISTORY_LAST_SEVEN_DAYS " +
+                    "    WHERE (DEVICE_TYPE_NAME = ? OR ? = 'all') " +
+                    "      AND TIMESTAMP BETWEEN ? AND ? " +
+                    ") ranked WHERE rn = 1";
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setLong(1, exactTime);
+                stmt.setLong(2, exactTime);
+
+                if (deviceType == null || deviceType.trim().isEmpty()) {
+                    stmt.setNull(3, java.sql.Types.VARCHAR);
+                    stmt.setNull(4, java.sql.Types.VARCHAR);
+                } else {
+                    stmt.setString(3, deviceType);
+                    stmt.setString(4, deviceType);
+                }
+
+                stmt.setLong(5, exactTime - timeWindow);
+                stmt.setLong(6, exactTime + timeWindow);
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        totalCount = rs.getInt(1);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while obtaining the total count of device locations for device type: " + deviceType;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        }
+
+        return totalCount;
+    }
 
     @Override
     public void deleteDevices(List<String> deviceIdentifiers, List<Integer> deviceIds, List<Integer> enrollmentIds, List<Device> validDevices)

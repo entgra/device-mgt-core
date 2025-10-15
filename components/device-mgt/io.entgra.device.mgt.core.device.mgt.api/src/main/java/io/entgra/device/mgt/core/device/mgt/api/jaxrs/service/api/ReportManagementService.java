@@ -23,12 +23,14 @@ import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceList;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.Constants;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ReportManagementException;
+import io.entgra.device.mgt.core.device.mgt.common.report.mgt.ReportParameters;
 import io.swagger.annotations.*;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.Map;
 
 @SwaggerDefinition(
         info = @Info(
@@ -592,4 +594,158 @@ public interface ReportManagementService {
                             response = ErrorResponse.class)
             })
     Response getReportFilters();
+
+    @POST
+    @Path("/birt/report/")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "POST",
+            value = "Send the parameters needed to generate a BIRT report in the BIRT runtime application.",
+            notes = "This will send the BIRT report design file name and the parameters needed to" +
+                    "generate a specific BIRT report to the BIRT runtime application.",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully generated report."),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. No report generated for the given report design file."),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n Error occurred while generating report.",
+                            response = ErrorResponse.class)
+            })
+    Response generateBirtReport(ReportParameters reportParameters);
+
+    @POST
+    @Path("/birt/template")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "POST",
+            value = "Send the template URL as a parameter to download the template file",
+            notes = "This will send the URL of the report design file for BIRT runtime to download",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully saved template"),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. No URL found"),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n Error occurred while saving report template.",
+                            response = ErrorResponse.class)
+            })
+    Response downloadBirtTemplate(
+            @ApiParam(
+                    name = "url",
+                    value = "The template download URL",
+                    required = true)
+            @QueryParam("url") String templateURL);
+
+    @DELETE
+    @Path("/birt/template")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "DELETE",
+            value = "Delete one or more BIRT report templates",
+            notes = "Send a JSON array with template names for BIRT runtime to delete",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully deleted template(s)"),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. No template(s) found"),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n Error occurred while deleting report template(s).",
+                            response = ErrorResponse.class)
+            })
+    Response deleteBirtTemplate(
+            @ApiParam(
+                    name = "templateNames",
+                    value = "JSON array of report template names to delete",
+                    required = true)
+            List<String> templateNames);
+
+    @POST
+    @Path("/data")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "POST",
+            value = "Send the parameters needed to generate report data",
+            notes = "This will send the report design file name and the parameters needed to" +
+                    "generate report data to the BIRT runtime application.",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully generated report data."),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. No report data generated for the given report design file."),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n Error occurred while generating report data.",
+                            response = ErrorResponse.class)
+            })
+    Response getReportData(
+            @ApiParam(
+                    name = "requestMap",
+                    value = "The report parameters from the report template",
+                    required = true)
+            Map<String, Object> requestMap,
+            @ApiParam(
+                    name = "limit",
+                    value = "Maximum number of records to be returned.",
+                    required = true)
+            int limit,
+            @ApiParam(
+                    name = "offset",
+                    value = "The starting index of the first record.",
+                    required = true)
+            int offset
+    );
+
+
 }

@@ -774,6 +774,7 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
             DeviceLocationForExactTimeSnapshotWrapper result = DeviceMgtAPIUtils.getDeviceLocationHistoryPaths(
                     authorizedUser,deviceType, timeWindow, request, exactTime, dms);
+            result.setCount(dms.getDeviceLocationCount(deviceType, exactTime, timeWindow));
             return Response.status(Response.Status.OK).entity(result).build();
         } catch (UnAuthorizedException e) {
             String msg =  "Unauthorized access - user not found";
