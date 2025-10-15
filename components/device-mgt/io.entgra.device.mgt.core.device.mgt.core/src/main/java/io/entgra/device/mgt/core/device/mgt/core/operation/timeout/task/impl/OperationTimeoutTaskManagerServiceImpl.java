@@ -170,6 +170,13 @@ public class OperationTimeoutTaskManagerServiceImpl implements OperationTimeoutT
         }
     }
 
+    /**
+     * Constructs a unique task name for an operation timeout task.
+     *
+     * @param config the operation timeout configuration containing the code and initial status
+     * @param deviceTypes the device types associated with this timeout task
+     * @return a formatted task name string for the operation timeout task
+     */
     private String constructTaskName(OperationTimeout config, String deviceTypes) {
 
         if (StringUtils.isNotEmpty(config.getCode())) {

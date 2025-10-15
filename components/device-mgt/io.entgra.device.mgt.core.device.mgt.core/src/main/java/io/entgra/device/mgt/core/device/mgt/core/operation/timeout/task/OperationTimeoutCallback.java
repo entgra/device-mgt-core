@@ -22,11 +22,25 @@ import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Operation;
 import io.entgra.device.mgt.core.device.mgt.core.operation.timeout.task.impl.OperationTimeoutInfo;
 
+import java.util.List;
+
 public interface OperationTimeoutCallback {
 
+    /**
+     * Called when an operation times out.
+     * @param deviceIdentifier the device identifier
+     * @param operation the timed-out operation
+     * @param originalStatus the operation's status at timeout
+     * @throws OperationTimeoutCallbackException if handling fails
+     */
     void onOperationTimeout(DeviceIdentifier deviceIdentifier, Operation operation, Operation.Status originalStatus)
             throws OperationTimeoutCallbackException;
 
-    void onOperationTimeoutBatch(java.util.List<OperationTimeoutInfo> timeoutOperations)
+    /**
+     * Called when multiple operations time out.
+     * @param timeoutOperations list of timed-out operations
+     * @throws OperationTimeoutCallbackException if handling fails
+     */
+    void onOperationTimeoutBatch(List<OperationTimeoutInfo> timeoutOperations)
             throws OperationTimeoutCallbackException;
 }

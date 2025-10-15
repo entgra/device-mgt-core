@@ -129,8 +129,8 @@ public class OperationTimeoutTask extends RandomlyAssignedScheduleTask {
                             }
                         }
                     } catch (NumberFormatException e) {
-                        log.error("Invalid operation ID format: " + operationId, e);
-                    } catch (Exception e) {
+                        log.error("Invalid operation ID format " + operationId, e);
+                    } catch (OperationManagementException e) {
                         log.error("Error processing operation " + operationId, e);
                     }
                 }
@@ -160,6 +160,12 @@ public class OperationTimeoutTask extends RandomlyAssignedScheduleTask {
         }
     }
 
+    /**
+     * Checks if an operation has exceeded its timeout period.
+     * @param operation the operation to check
+     * @param globalConfig the global timeout configuration
+     * @return true if the operation has timed out, false otherwise
+     */
     private boolean hasOperationTimedOut(Operation operation, OperationTimeout globalConfig) {
 
         long currentTime = System.currentTimeMillis();
@@ -196,7 +202,7 @@ public class OperationTimeoutTask extends RandomlyAssignedScheduleTask {
                     log.warn("Invalid device timeout value, using global timeout", e);
                 }
             } else {
-                log.info("DEVICE_TIMEOUT property found, using global timeout");
+                log.info(DEVICE_TIMEOUT_PROPERTY + " property not found, using global timeout");
             }
         }
 
@@ -206,6 +212,12 @@ public class OperationTimeoutTask extends RandomlyAssignedScheduleTask {
         return hasTimedOut;
     }
 
+    /**
+     * Retrieves the list of device types from the configuration.
+     * If "ALL" is specified, returns all available device types from the system.
+     * @param operationTimeoutConfig the operation timeout configuration
+     * @return list of device type names
+     */
     private List<String> getDeviceTypes(OperationTimeout operationTimeoutConfig) {
         List<String> deviceTypes = new ArrayList<>();
 

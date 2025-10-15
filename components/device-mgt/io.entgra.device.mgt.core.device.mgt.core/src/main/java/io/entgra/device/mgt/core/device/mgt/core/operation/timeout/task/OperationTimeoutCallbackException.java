@@ -18,7 +18,7 @@
 
 package io.entgra.device.mgt.core.device.mgt.core.operation.timeout.task;
 
-public class OperationTimeoutCallbackException extends RuntimeException {
+public class OperationTimeoutCallbackException extends Exception {
 
     public OperationTimeoutCallbackException(String message) {
         super(message);
