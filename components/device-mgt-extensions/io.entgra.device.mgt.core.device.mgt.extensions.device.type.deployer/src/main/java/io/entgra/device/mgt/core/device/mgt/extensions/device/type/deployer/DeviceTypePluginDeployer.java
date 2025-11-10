@@ -23,7 +23,9 @@ import io.entgra.device.mgt.core.device.mgt.extensions.device.type.deployer.util
 import io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.DeviceTypeConfigIdentifier;
 import io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.DeviceTypeManagerService;
 import io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.config.DeviceTypeConfiguration;
+import io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.config.OperationTimeoutConfig;
 import io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.config.exception.DeviceTypeConfigurationException;
+import io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.util.OperationTimeoutConfigManager;
 import org.apache.axis2.context.ConfigurationContext;
 import org.apache.axis2.deployment.AbstractDeployer;
 import org.apache.axis2.deployment.DeploymentException;
@@ -79,6 +81,15 @@ public class DeviceTypePluginDeployer extends AbstractDeployer {
                     && !tenantDomain.isEmpty()) {
                 DeviceTypeConfigIdentifier deviceTypeConfigIdentifier = new DeviceTypeConfigIdentifier(deviceType,
                                                                                                        tenantDomain);
+
+                OperationTimeoutConfig timeoutConfig = deviceTypeConfiguration.getOperationTimeoutConfig();
+                if (timeoutConfig != null) {
+                    OperationTimeoutConfigManager.addOperationTimeoutConfig(deviceType, timeoutConfig);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Operation timeout configuration loaded for device type: " + deviceType);
+                    }
+                }
+
                 ServiceRegistration serviceRegistration = registerDeviceType(deviceTypeConfigIdentifier,
                                                                              deviceTypeConfiguration);
                 this.deviceTypeServiceRegistrations.put(deploymentFileData.getAbsolutePath(), serviceRegistration);
@@ -95,6 +106,12 @@ public class DeviceTypePluginDeployer extends AbstractDeployer {
     @Override
     public void undeploy(String filePath) throws DeploymentException {
         DeviceTypeConfigIdentifier deviceTypeConfigIdentifier = this.deviceTypeConfigurationDataMap.get(filePath);
+
+        if (deviceTypeConfigIdentifier != null) {
+            OperationTimeoutConfigManager.removeOperationTimeoutConfig(
+                    deviceTypeConfigIdentifier.getDeviceType());
+        }
+
         unregisterDeviceType(filePath);
         this.deviceTypeConfigurationDataMap.remove(filePath);
         log.info("Device Type undeployed successfully : " + deviceTypeConfigIdentifier.getDeviceType() + " for tenant "

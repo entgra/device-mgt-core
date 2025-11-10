@@ -1,0 +1,77 @@
+/*
+ * Copyright (c) 2018 - 2025, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
+ *
+ * Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.config;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import java.util.ArrayList;
+import java.util.List;
+
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name = "OperationTimeoutConfig")
+public class OperationTimeoutConfig {
+
+    @XmlElement(name = "OperationTimeout")
+    private List<OperationTimeoutEntry> operationTimeouts;
+
+    /**
+     * Gets the list of operation timeout configurations.
+     * @return list of operation timeouts, or empty list if none defined
+     */
+    public List<OperationTimeoutEntry> getOperationTimeouts() {
+        if (operationTimeouts == null) {
+            operationTimeouts = new ArrayList<>();
+        }
+        return operationTimeouts;
+    }
+
+    /**
+     * Sets the list of operation timeout configurations.
+     * @param operationTimeouts list of operation timeouts to set
+     */
+    public void setOperationTimeouts(List<OperationTimeoutEntry> operationTimeouts) {
+        this.operationTimeouts = operationTimeouts;
+    }
+
+    /**
+     * Gets a specific operation timeout by operation code.
+     * @param operationCode the operation code to search for
+     * @return the OperationTimeout object if found, null otherwise
+     */
+    public OperationTimeoutEntry getOperationTimeout(String operationCode) {
+        if (operationTimeouts != null) {
+            for (OperationTimeoutEntry timeout : operationTimeouts) {
+                if (timeout.getOperationCode().equals(operationCode)) {
+                    return timeout;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Checks if a timeout is configured for the given operation code.
+     * @param operationCode the operation code to check
+     * @return true if timeout is configured, false otherwise
+     */
+    public boolean hasTimeoutForOperation(String operationCode) {
+        return getOperationTimeout(operationCode) != null;
+    }
+}
