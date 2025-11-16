@@ -18,16 +18,14 @@
 package io.entgra.device.mgt.core.application.mgt.common.wrapper;
 
 import io.entgra.device.mgt.core.application.mgt.common.dto.VppAssetDTO;
-import io.entgra.device.mgt.core.application.mgt.common.dto.VppItuneUserDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.VppPaginationDTO;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class VppItuneAssetResponseWrapper extends VppPaginationDTO {
 
     List<VppAssetDTO> assets;
-    
+
     public List<VppAssetDTO> getAssets() {
         return assets;
     }
