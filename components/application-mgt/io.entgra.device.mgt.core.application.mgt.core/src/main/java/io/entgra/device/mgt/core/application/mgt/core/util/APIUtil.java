@@ -30,8 +30,22 @@ import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationMan
 import io.entgra.device.mgt.core.application.mgt.common.exception.InvalidConfigurationException;
 import io.entgra.device.mgt.core.application.mgt.common.response.Application;
 import io.entgra.device.mgt.core.application.mgt.common.response.ApplicationRelease;
-import io.entgra.device.mgt.core.application.mgt.common.services.*;
-import io.entgra.device.mgt.core.application.mgt.common.wrapper.*;
+import io.entgra.device.mgt.core.application.mgt.common.services.ApplicationManager;
+import io.entgra.device.mgt.core.application.mgt.common.services.ApplicationStorageManager;
+import io.entgra.device.mgt.core.application.mgt.common.services.AppmDataHandler;
+import io.entgra.device.mgt.core.application.mgt.common.services.FileTransferService;
+import io.entgra.device.mgt.core.application.mgt.common.services.ReviewManager;
+import io.entgra.device.mgt.core.application.mgt.common.services.SPApplicationManager;
+import io.entgra.device.mgt.core.application.mgt.common.services.SubscriptionManager;
+import io.entgra.device.mgt.core.application.mgt.common.services.VPPApplicationManager;
+import io.entgra.device.mgt.core.application.mgt.common.wrapper.ApplicationWrapper;
+import io.entgra.device.mgt.core.application.mgt.common.wrapper.CustomAppReleaseWrapper;
+import io.entgra.device.mgt.core.application.mgt.common.wrapper.CustomAppWrapper;
+import io.entgra.device.mgt.core.application.mgt.common.wrapper.EntAppReleaseWrapper;
+import io.entgra.device.mgt.core.application.mgt.common.wrapper.PublicAppReleaseWrapper;
+import io.entgra.device.mgt.core.application.mgt.common.wrapper.PublicAppWrapper;
+import io.entgra.device.mgt.core.application.mgt.common.wrapper.WebAppReleaseWrapper;
+import io.entgra.device.mgt.core.application.mgt.common.wrapper.WebAppWrapper;
 import io.entgra.device.mgt.core.application.mgt.core.config.ConfigurationManager;
 import io.entgra.device.mgt.core.application.mgt.core.config.IdentityServiceProvider;
 import io.entgra.device.mgt.core.application.mgt.core.exception.BadRequestException;
@@ -131,6 +145,7 @@ public class APIUtil {
 
     /**
      * To get the ApplicationDTO Storage Manager from the osgi context.
+     *
      * @return ApplicationStoreManager instance in the current osgi context.
      */
     public static ApplicationStorageManager getApplicationStorageManager() {
@@ -173,6 +188,7 @@ public class APIUtil {
 
     /**
      * To get the Subscription Manager from the osgi context.
+     *
      * @return SubscriptionManager instance in the current osgi context.
      */
     public static SubscriptionManager getSubscriptionManager() {
@@ -196,6 +212,7 @@ public class APIUtil {
 
     /**
      * To get the Review Manager from the osgi context.
+     *
      * @return ReviewManager instance in the current osgi context.
      */
     public static ReviewManager getReviewManager() {
@@ -242,6 +259,7 @@ public class APIUtil {
 
     /**
      * To get the DataHandler from the osgi context.
+     *
      * @return AppmDataHandler instance in the current osgi context.
      */
     public static AppmDataHandler getDataHandler() {
@@ -302,7 +320,7 @@ public class APIUtil {
         ApplicationDTO applicationDTO = new ApplicationDTO();
         List<ApplicationReleaseDTO> applicationReleaseEntities;
 
-        if (param instanceof ApplicationWrapper){
+        if (param instanceof ApplicationWrapper) {
             ApplicationWrapper applicationWrapper = (ApplicationWrapper) param;
             DeviceType deviceType = getDeviceTypeData(applicationWrapper.getDeviceType());
             applicationDTO.setName(ApplicationManagementUtil.sanitizeName(applicationWrapper.getName(),
@@ -318,7 +336,7 @@ public class APIUtil {
             applicationReleaseEntities = applicationWrapper.getEntAppReleaseWrappers()
                     .stream().map(APIUtil::releaseWrapperToReleaseDTO).collect(Collectors.toList());
             applicationDTO.setApplicationReleaseDTOs(applicationReleaseEntities);
-        } else if (param instanceof WebAppWrapper){
+        } else if (param instanceof WebAppWrapper) {
             WebAppWrapper webAppWrapper = (WebAppWrapper) param;
             applicationDTO.setName(ApplicationManagementUtil.sanitizeName(webAppWrapper.getName(),
                     Constants.ApplicationProperties.NAME));
@@ -348,7 +366,7 @@ public class APIUtil {
             applicationReleaseEntities = publicAppWrapper.getPublicAppReleaseWrappers()
                     .stream().map(APIUtil::releaseWrapperToReleaseDTO).collect(Collectors.toList());
             applicationDTO.setApplicationReleaseDTOs(applicationReleaseEntities);
-        } else if (param instanceof CustomAppWrapper){
+        } else if (param instanceof CustomAppWrapper) {
             CustomAppWrapper customAppWrapper = (CustomAppWrapper) param;
             DeviceType deviceType = getDeviceTypeData(customAppWrapper.getDeviceType());
             applicationDTO.setName(ApplicationManagementUtil.sanitizeName(customAppWrapper.getName(),
@@ -368,9 +386,9 @@ public class APIUtil {
         return applicationDTO;
     }
 
-    public static <T> ApplicationReleaseDTO releaseWrapperToReleaseDTO(T param){
+    public static <T> ApplicationReleaseDTO releaseWrapperToReleaseDTO(T param) {
         ApplicationReleaseDTO applicationReleaseDTO = new ApplicationReleaseDTO();
-        if (param instanceof EntAppReleaseWrapper){
+        if (param instanceof EntAppReleaseWrapper) {
             EntAppReleaseWrapper entAppReleaseWrapper = (EntAppReleaseWrapper) param;
             applicationReleaseDTO.setDescription(entAppReleaseWrapper.getDescription());
             applicationReleaseDTO.setReleaseType(entAppReleaseWrapper.getReleaseType());
@@ -382,7 +400,7 @@ public class APIUtil {
             applicationReleaseDTO.setVersion(entAppReleaseWrapper.getVersion());
             //Setting package name value specifically for windows type and in an instance of android and ios it will be null
             applicationReleaseDTO.setPackageName(entAppReleaseWrapper.getPackageName());
-        } else if (param instanceof WebAppReleaseWrapper){
+        } else if (param instanceof WebAppReleaseWrapper) {
             WebAppReleaseWrapper webAppReleaseWrapper = (WebAppReleaseWrapper) param;
             applicationReleaseDTO.setDescription(webAppReleaseWrapper.getDescription());
             applicationReleaseDTO.setReleaseType(webAppReleaseWrapper.getReleaseType());
@@ -535,8 +553,9 @@ public class APIUtil {
 
     /**
      * Construct installer path
+     *
      * @param installerName Installer name
-     * @param appHash Application hash
+     * @param appHash       Application hash
      * @return Constructed installer path value
      * @throws ApplicationManagementException Throws when error encountered while constructing installer path
      */
@@ -555,9 +574,9 @@ public class APIUtil {
         String host = System.getProperty(Constants.IOT_CORE_HOST);
         MDMConfig mdmConfig = ConfigurationManager.getInstance().getConfiguration().getMdmConfig();
         String port;
-        if (Constants.HTTP_PROTOCOL.equals(mdmConfig.getArtifactDownloadProtocol())){
+        if (Constants.HTTP_PROTOCOL.equals(mdmConfig.getArtifactDownloadProtocol())) {
             port = System.getProperty(Constants.IOT_CORE_HTTP_PORT);
-        } else if( Constants.HTTPS_PROTOCOL.equals(mdmConfig.getArtifactDownloadProtocol())){
+        } else if (Constants.HTTPS_PROTOCOL.equals(mdmConfig.getArtifactDownloadProtocol())) {
             port = System.getProperty(Constants.IOT_CORE_HTTPS_PORT);
         } else {
             String msg = "In order to download application artifacts invalid protocols are defined.";
@@ -573,7 +592,7 @@ public class APIUtil {
      * To create the application icon path.
      *
      * @param applicationReleaseDTO {@link ApplicationReleaseDTO}
-     * @param tenantId tenant ID
+     * @param tenantId              tenant ID
      * @return iconPath constructed icon path.
      */
     public static String createAppIconPath(ApplicationReleaseDTO applicationReleaseDTO, int tenantId) throws ApplicationManagementException {

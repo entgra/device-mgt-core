@@ -24,7 +24,10 @@ import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManag
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class PostgreSQLVppApplicationDAO extends GenericVppApplicationDAOImpl {
 
