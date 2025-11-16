@@ -19,7 +19,6 @@
 package io.entgra.device.mgt.core.policy.mgt.common;
 
 import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
-import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PolicyPaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.policy.mgt.Policy;
 import io.entgra.device.mgt.core.device.mgt.common.policy.mgt.Profile;
@@ -34,7 +33,6 @@ public interface PolicyAdministratorPoint {
 
     /**
      * This method adds a policy to the platform
-     *
      */
 
     Policy addPolicy(Policy policy) throws PolicyManagementException;
@@ -49,6 +47,7 @@ public interface PolicyAdministratorPoint {
     void inactivatePolicy(int policyId) throws PolicyManagementException;
 
     boolean deletePolicy(Policy policy) throws PolicyManagementException;
+
     boolean deletePolicy(int policyId) throws PolicyManagementException;
 
     void publishChanges() throws PolicyManagementException;
@@ -65,7 +64,7 @@ public interface PolicyAdministratorPoint {
      * @param policy
      * @return primary key (generated key)
      */
-    Policy addPolicyToRole(List<String> roleNames, Policy policy) throws  PolicyManagementException;
+    Policy addPolicyToRole(List<String> roleNames, Policy policy) throws PolicyManagementException;
 
     /**
      * This method returns the policy of whole platform
@@ -84,7 +83,7 @@ public interface PolicyAdministratorPoint {
      * @return Policy
      */
 
-    List<Policy> getPoliciesOfDevice(DeviceIdentifier deviceIdentifier) throws  PolicyManagementException;
+    List<Policy> getPoliciesOfDevice(DeviceIdentifier deviceIdentifier) throws PolicyManagementException;
 
     /**
      * This method returns the device type specific policy.
@@ -93,7 +92,7 @@ public interface PolicyAdministratorPoint {
      * @return Policy
      */
 
-    List<Policy> getPoliciesOfDeviceType(String deviceType) throws  PolicyManagementException;
+    List<Policy> getPoliciesOfDeviceType(String deviceType) throws PolicyManagementException;
 
     /**
      * This method returns the role specific policy.
@@ -102,10 +101,10 @@ public interface PolicyAdministratorPoint {
      * @return
      */
 
-    List<Policy> getPoliciesOfRole(String roleName) throws  PolicyManagementException;
+    List<Policy> getPoliciesOfRole(String roleName) throws PolicyManagementException;
 
 
-    List<Policy> getPoliciesOfUser(String username) throws  PolicyManagementException;
+    List<Policy> getPoliciesOfUser(String username) throws PolicyManagementException;
 
 
     /**
@@ -137,13 +136,15 @@ public interface PolicyAdministratorPoint {
 
     /**
      * This method will remove the policy applied to the device.
+     *
      * @param deviceIdentifier
-      * @throws PolicyManagementException
+     * @throws PolicyManagementException
      */
     void removePolicyUsed(DeviceIdentifier deviceIdentifier) throws PolicyManagementException;
 
     /**
      * This method will add the profile to database,
+     *
      * @param profile
      * @throws PolicyManagementException
      */
@@ -168,10 +169,11 @@ public interface PolicyAdministratorPoint {
 
     /**
      * Returns a list of policies filtered by offset and limit
+     *
      * @param request {@link PolicyPaginationRequest} contains offset and limit and filters
      * @return {@link List<Policy>} - list of policies for current tenant
      * @throws PolicyManagementException when there is an error while retrieving the policies from database or
-     * while retrieving device groups
+     *                                   while retrieving device groups
      */
     List<Policy> getPolicyList(PolicyPaginationRequest request) throws PolicyManagementException;
 }

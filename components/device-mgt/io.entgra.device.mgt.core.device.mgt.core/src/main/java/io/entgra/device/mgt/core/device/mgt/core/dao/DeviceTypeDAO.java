@@ -21,6 +21,7 @@ package io.entgra.device.mgt.core.device.mgt.core.dao;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceTypeVersion;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 
 import java.util.List;
 
