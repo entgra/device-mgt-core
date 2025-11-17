@@ -57,7 +57,8 @@ public class H2DeviceFeatureOperationDAOImpl implements DeviceFeatureOperationDA
                         "OPERATION_DESCRIPTION, " +
                         "DEVICE_TYPE) " +
                 "VALUES (?, ?, ?, ?)";
-        try (Connection connection = DeviceFeatureOperationsDAOFactory.getConnection()) {
+        try {
+            Connection connection = DeviceFeatureOperationsDAOFactory.getConnection();
             Set<String> existingKeys = new HashSet<>();
             try (PreparedStatement selectStmt = connection.prepareStatement(selectQuery);
                  ResultSet rs = selectStmt.executeQuery()) {
@@ -66,8 +67,8 @@ public class H2DeviceFeatureOperationDAOImpl implements DeviceFeatureOperationDA
                 }
             }
             List<DeviceFeatureInfo> toInsert = featureList.stream()
-                    .filter(f -> !existingKeys.contains(f.getOperationCode()
-                            + "|" + f.getDeviceType()))
+                    .filter(f ->
+                            !existingKeys.contains(f.getOperationCode() + "|" + f.getDeviceType()))
                     .collect(Collectors.toList());
             if (!toInsert.isEmpty()) {
                 try (PreparedStatement insertStmt = connection.prepareStatement(insertQuery)) {
