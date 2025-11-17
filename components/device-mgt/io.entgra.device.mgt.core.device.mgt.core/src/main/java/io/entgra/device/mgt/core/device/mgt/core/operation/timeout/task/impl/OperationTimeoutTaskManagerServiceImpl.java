@@ -77,17 +77,16 @@ public class OperationTimeoutTaskManagerServiceImpl implements OperationTimeoutT
             properties.put(INITIAL_STATUS, config.getInitialStatus());
             properties.put(OPERATION_TIMEOUT_TASK_CONFIG, operationTimeoutConfig);
 
-            String taskName = OPERATION_TIMEOUT_TASK + "_" + config.getInitialStatus() + "_" + deviceTypes;
+            String taskName = OPERATION_TIMEOUT_TASK + "_" + config.getCode() + "_" + config.getInitialStatus() + "_" + deviceTypes;
 
-            if (!taskManager.isTaskScheduled(taskName)) {
-                TaskInfo taskInfo = new TaskInfo(taskName, TASK_CLASS, properties, triggerInfo);
-                taskManager.registerTask(taskInfo);
-                taskManager.rescheduleTask(taskInfo.getName());
-            } else {
-                throw new OperationTimeoutTaskException(
-                        "Operation Timeout task is already started for the device type(s) : " + config.getDeviceTypes()
-                                + ", operation code : " + config.getInitialStatus());
+            if (taskManager.isTaskScheduled(taskName)) {
+                taskManager.deleteTask(taskName);
             }
+
+            TaskInfo taskInfo = new TaskInfo(taskName, TASK_CLASS, properties, triggerInfo);
+            taskManager.registerTask(taskInfo);
+            taskManager.rescheduleTask(taskInfo.getName());
+
         } catch (TaskException e) {
             throw new OperationTimeoutTaskException("Error occurred while creating the Operation timeout task " +
                     "for the device type(s) : " + config.getDeviceTypes() + ", operation code : " + config
@@ -101,7 +100,7 @@ public class OperationTimeoutTaskManagerServiceImpl implements OperationTimeoutT
         try {
             TaskService taskService = DeviceManagementDataHolder.getInstance().getTaskService();
             String deviceTypes = StringUtils.join(config.getDeviceTypes(), "_");
-            String taskName = OPERATION_TIMEOUT_TASK + "_" + config.getInitialStatus() + "_" + deviceTypes;
+            String taskName = OPERATION_TIMEOUT_TASK + "_" + config.getCode() + "_" + config.getInitialStatus() + "_" + deviceTypes;
             if (taskService != null && taskService.isServerInit()) {
                 TaskManager taskManager = taskService.getTaskManager(OPERATION_TIMEOUT_TASK);
                 taskManager.deleteTask(taskName);
@@ -120,7 +119,7 @@ public class OperationTimeoutTaskManagerServiceImpl implements OperationTimeoutT
             TaskService taskService = DeviceManagementDataHolder.getInstance().getTaskService();
             TaskManager taskManager = taskService.getTaskManager(OPERATION_TIMEOUT_TASK);
             String deviceTypes = StringUtils.join(config.getDeviceTypes(), "_");
-            String taskName = OPERATION_TIMEOUT_TASK + "_" + config.getInitialStatus() + "_" + deviceTypes;
+            String taskName = OPERATION_TIMEOUT_TASK + "_" + config.getCode() + "_" + config.getInitialStatus() + "_" + deviceTypes;
 
             if (taskManager.isTaskScheduled(taskName)) {
                 taskManager.deleteTask(taskName);
@@ -157,7 +156,7 @@ public class OperationTimeoutTaskManagerServiceImpl implements OperationTimeoutT
     @Override
     public boolean isTaskScheduled(OperationTimeout config) throws OperationTimeoutTaskException {
         String deviceTypes = StringUtils.join(config.getDeviceTypes(), "_");
-        String taskName = OPERATION_TIMEOUT_TASK + "_" + config.getInitialStatus() + "_" + deviceTypes;
+        String taskName = OPERATION_TIMEOUT_TASK + "_" + config.getCode() + "_" + config.getInitialStatus() + "_" + deviceTypes;
         TaskService taskService = DeviceManagementDataHolder.getInstance().getTaskService();
         TaskManager taskManager;
         try {
