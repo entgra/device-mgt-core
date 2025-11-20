@@ -18,7 +18,6 @@
 
 package io.entgra.device.mgt.core.application.mgt.core.exception;
 
-
 import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException;
 
 /**

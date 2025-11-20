@@ -28,13 +28,16 @@ import io.entgra.device.mgt.core.application.mgt.core.util.DAOUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 
-    /**
+/**
  * GenericApplicationReleaseDAOImpl holds the implementation of ApplicationRelease related DAO operations.
  */
 public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements ApplicationReleaseDAO {
@@ -68,7 +71,7 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
 
         try {
             Connection connection = this.getDBConnection();
-            try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
+            try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 statement.setString(1, applicationReleaseDTO.getDescription());
                 statement.setString(2, applicationReleaseDTO.getVersion());
                 statement.setInt(3, tenantId);
@@ -89,7 +92,7 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
                 statement.setString(18, applicationReleaseDTO.getCurrentState().toUpperCase());
                 statement.setInt(19, appId);
                 statement.executeUpdate();
-                try(ResultSet resultSet = statement.getGeneratedKeys()){
+                try (ResultSet resultSet = statement.getGeneratedKeys()) {
                     if (resultSet.next()) {
                         applicationReleaseDTO.setId(resultSet.getInt(1));
                     }
@@ -109,7 +112,7 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
     }
 
     @Override
-    public ApplicationReleaseDTO getReleaseByUUID( String uuid, int tenantId) throws ApplicationManagementDAOException {
+    public ApplicationReleaseDTO getReleaseByUUID(String uuid, int tenantId) throws ApplicationManagementDAOException {
         String sql = "SELECT "
                 + "AR.ID AS RELEASE_ID, "
                 + "AR.DESCRIPTION AS RELEASE_DESCRIPTION, "
@@ -169,7 +172,7 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
                 + "WHERE UUID = ?";
         try {
             Connection connection = this.getDBConnection();
-            try (PreparedStatement statement = connection.prepareStatement(sql)){
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setDouble(1, rating);
                 statement.setInt(2, ratedUsers);
                 statement.setString(3, uuid);
@@ -239,7 +242,8 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
                 try (ResultSet resultSet = statement.executeQuery()) {
                     while (resultSet.next()) {
                         ratingValues.add(resultSet.getDouble("RATING"));
-                    } return ratingValues;
+                    }
+                    return ratingValues;
                 }
             }
         } catch (DBConnectionException e) {
@@ -260,28 +264,28 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
             throws ApplicationManagementDAOException {
         String sql = "UPDATE AP_APP_RELEASE "
                 + "SET "
-                    + "DESCRIPTION = ?, "
-                    + "VERSION = ?, "
-                    + "UUID = ?, "
-                    + "RELEASE_TYPE = ?, "
-                    + "PACKAGE_NAME = ?, "
-                    + "APP_PRICE = ?, "
-                    + "INSTALLER_LOCATION = ?, "
-                    + "BANNER_LOCATION = ?, "
-                    + "ICON_LOCATION = ?, "
-                    + "SC_1_LOCATION = ?, "
-                    + "SC_2_LOCATION = ?, "
-                    + "SC_3_LOCATION = ?, "
-                    + "APP_HASH_VALUE = ?, "
-                    + "SHARED_WITH_ALL_TENANTS = ?, "
-                    + "APP_META_INFO = ?, "
-                    + "SUPPORTED_OS_VERSIONS = ?";
+                + "DESCRIPTION = ?, "
+                + "VERSION = ?, "
+                + "UUID = ?, "
+                + "RELEASE_TYPE = ?, "
+                + "PACKAGE_NAME = ?, "
+                + "APP_PRICE = ?, "
+                + "INSTALLER_LOCATION = ?, "
+                + "BANNER_LOCATION = ?, "
+                + "ICON_LOCATION = ?, "
+                + "SC_1_LOCATION = ?, "
+                + "SC_2_LOCATION = ?, "
+                + "SC_3_LOCATION = ?, "
+                + "APP_HASH_VALUE = ?, "
+                + "SHARED_WITH_ALL_TENANTS = ?, "
+                + "APP_META_INFO = ?, "
+                + "SUPPORTED_OS_VERSIONS = ?";
 
         if (applicationReleaseDTO.getCurrentState() != null) {
             sql += ", CURRENT_STATE =  ? ";
         }
 
-        sql +=  " WHERE ID = ? AND TENANT_ID = ? ";
+        sql += " WHERE ID = ? AND TENANT_ID = ? ";
 
         int x = 17;
         try {
@@ -352,7 +356,7 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
     }
 
     @Override
-    public void deleteReleases(List<Integer> applicationReleaseIds) throws ApplicationManagementDAOException{
+    public void deleteReleases(List<Integer> applicationReleaseIds) throws ApplicationManagementDAOException {
         String sql = "DELETE "
                 + "FROM AP_APP_RELEASE "
                 + "WHERE ID = ?";
@@ -451,7 +455,7 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
     }
 
     @Override
-    public String getReleaseHashValue(String uuid, int tenantId) throws ApplicationManagementDAOException{
+    public String getReleaseHashValue(String uuid, int tenantId) throws ApplicationManagementDAOException {
         if (log.isDebugEnabled()) {
             log.debug("Getting application release artifact stored location paths for: " + uuid);
         }
@@ -461,15 +465,15 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
                 + "WHERE AR.UUID = ? AND AR.TENANT_ID = ?";
         try {
             Connection conn = this.getDBConnection();
-            try (PreparedStatement stmt = conn.prepareStatement(sql)){
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, uuid);
                 stmt.setInt(2, tenantId);
-                try (ResultSet rs = stmt.executeQuery()){
+                try (ResultSet rs = stmt.executeQuery()) {
                     if (log.isDebugEnabled()) {
                         log.debug("Successfully retrieved application release hash value for application release "
                                 + "which has release UUID: " + uuid);
                     }
-                    if(rs.next()){
+                    if (rs.next()) {
                         return rs.getString("HASH_VALUE");
                     }
                     return null;
@@ -524,7 +528,7 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
 
     @Override
     public boolean hasExistInstallableAppRelease(String releaseUuid, String installableStateName, int tenantId)
-            throws ApplicationManagementDAOException{
+            throws ApplicationManagementDAOException {
         if (log.isDebugEnabled()) {
             log.debug("Verifying application release existence in the installable state: :" + installableStateName);
         }
@@ -622,29 +626,29 @@ public class GenericApplicationReleaseDAOImpl extends AbstractDAOImpl implements
         }
     }
 
-        @Override
-        public void deleteReleasesByTenant(int tenantId) throws ApplicationManagementDAOException {
-            if (log.isDebugEnabled()) {
-                log.debug("Request received in DAO Layer to delete application releases of tenant  of id " + tenantId);
+    @Override
+    public void deleteReleasesByTenant(int tenantId) throws ApplicationManagementDAOException {
+        if (log.isDebugEnabled()) {
+            log.debug("Request received in DAO Layer to delete application releases of tenant  of id " + tenantId);
+        }
+        String sql = "DELETE FROM AP_APP_RELEASE "
+                + "WHERE TENANT_ID = ?";
+        try {
+            Connection conn = this.getDBConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, tenantId);
+                stmt.executeUpdate();
             }
-            String sql = "DELETE FROM AP_APP_RELEASE "
-                    + "WHERE TENANT_ID = ?";
-            try {
-                Connection conn = this.getDBConnection();
-                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                    stmt.setInt(1, tenantId);
-                    stmt.executeUpdate();
-                }
-            } catch (DBConnectionException e) {
-                String msg = "Error occurred while obtaining the DB connection when removing application release of tenant"
-                        +tenantId;
-                log.error(msg, e);
-                throw new ApplicationManagementDAOException(msg, e);
-            } catch (SQLException e) {
-                String msg = "SQL Error occurred while removing application release of tenant of id " + tenantId +
-                        "Executed Query: " + sql;
-                log.error(msg, e);
-                throw new ApplicationManagementDAOException(msg, e);
-            }
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection when removing application release of tenant"
+                    + tenantId;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "SQL Error occurred while removing application release of tenant of id " + tenantId +
+                    "Executed Query: " + sql;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
         }
     }
+}

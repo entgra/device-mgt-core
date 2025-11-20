@@ -38,7 +38,6 @@ import org.apache.commons.logging.LogFactory;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -47,6 +46,7 @@ public class FileDownloaderServiceProvider {
     private static final FileTransferService fileTransferService = DataHolder.getInstance().getFileTransferService();
     private static final LocalFileDownloaderService localFileDownloaderService = new LocalFileDownloaderService();
     private static final RemoteFileDownloaderService remoteFileDownloaderService = new RemoteFileDownloaderService();
+
     public static FileDownloaderService getFileDownloaderService(URL downloadUrl) throws FileDownloaderServiceException {
         try {
             if (fileTransferService.isExistsOnLocal(downloadUrl)) {
@@ -82,6 +82,7 @@ public class FileDownloaderServiceProvider {
     private static class RemoteFileDownloaderService implements FileDownloaderService {
         private static final OkHttpClient okhttpClient =
                 new OkHttpClient.Builder().connectTimeout(500, TimeUnit.MILLISECONDS).build();
+
         @Override
         public FileDescriptor download(URL downloadUrl) throws FileDownloaderServiceException {
             FileMetaEntry fileMetaEntry = getFileMetaEntry(downloadUrl);
@@ -101,6 +102,7 @@ public class FileDownloaderServiceProvider {
 
         /**
          * Generate the {@link FileMetaEntry} from the remote file
+         *
          * @param downloadUrl Remote file URL
          * @return {@link FileMetaEntry}
          * @throws FileDownloaderServiceException Throws when error encountered while generating {@link FileMetaEntry}
@@ -138,11 +140,11 @@ public class FileDownloaderServiceProvider {
          * Extracts file name segments (name and extension) by parsing the given URL.
          * This method handles two types of URL formats:
          * - If the URL includes a query parameter in the format `?fileName=`, the file name
-         *   is extracted from this query parameter (ex: when referencing an existing
-         *   screenshot or icon from the main release)
+         * is extracted from this query parameter (ex: when referencing an existing
+         * screenshot or icon from the main release)
          * - If the URL does not have the `fileName` query parameter, the method attempts to
-         *   extract the file name from the URL path. (ex: this applies to cases where new files are
-         *   uploaded, and only a path-based URL is provided)
+         * extract the file name from the URL path. (ex: this applies to cases where new files are
+         * uploaded, and only a path-based URL is provided)
          * After locating the file name (from either the query parameter or path), the method
          * splits the name into segments based on the last dot (`.`), returning the base name and
          * extension as a two-element array. If file name cannot be extracted, `null` is returned.
@@ -191,8 +193,9 @@ public class FileDownloaderServiceProvider {
 
         /**
          * Extract file name segments(filename & extensions) from content disposition header and content type header
+         *
          * @param contentDisposition Content disposition header value
-         * @param contentType Content type header value
+         * @param contentType        Content type header value
          * @return Array of name segments
          * @throws FileDownloaderServiceException Throws when error occurred while extracting name segments
          */
@@ -213,21 +216,21 @@ public class FileDownloaderServiceProvider {
                         || contentType.equals(Constants.MIME_TYPE_VND_MS_WINDOWS_MSI)) {
                     extension = Constants.EXTENSION_MSI;
                 } else {
-                    String []contentTypeSegments = contentType.split("/");
+                    String[] contentTypeSegments = contentType.split("/");
                     if (contentTypeSegments.length != 2) {
                         throw new FileDownloaderServiceException("Encountered wrong content type header value");
                     }
                     extension = contentTypeSegments[contentTypeSegments.length - 1];
                 }
-                return new String[]{ UUID.randomUUID().toString(), extension};
+                return new String[]{UUID.randomUUID().toString(), extension};
             }
 
-            String []contentDispositionSegments = contentDisposition.split("=");
+            String[] contentDispositionSegments = contentDisposition.split("=");
             if (contentDispositionSegments.length != 2) {
                 throw new FileDownloaderServiceException("Error encountered when constructing file name");
             }
             String fullQualifiedName = contentDispositionSegments[contentDispositionSegments.length - 1].replace("\"", "");
-            String []fileNameSegments = fullQualifiedName.split("\\.(?=[^.]+$)");
+            String[] fileNameSegments = fullQualifiedName.split("\\.(?=[^.]+$)");
             if (fileNameSegments.length != 2) {
                 throw new FileDownloaderServiceException("Error encountered when constructing file name");
             }
