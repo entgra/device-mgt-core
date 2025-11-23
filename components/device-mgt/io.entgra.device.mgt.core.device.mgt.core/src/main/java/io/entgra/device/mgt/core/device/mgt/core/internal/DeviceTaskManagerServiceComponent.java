@@ -20,34 +20,36 @@ package io.entgra.device.mgt.core.device.mgt.core.internal;
 
 import io.entgra.device.mgt.core.device.mgt.common.DeviceStatusTaskPluginConfig;
 import io.entgra.device.mgt.core.device.mgt.common.OperationMonitoringTaskConfig;
-import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.config.DeviceConfigurationManager;
 import io.entgra.device.mgt.core.device.mgt.core.config.DeviceManagementConfig;
-import io.entgra.device.mgt.core.device.mgt.core.config.datasource.DataSourceConfig;
 import io.entgra.device.mgt.core.device.mgt.core.config.operation.timeout.OperationTimeout;
 import io.entgra.device.mgt.core.device.mgt.core.config.operation.timeout.OperationTimeoutConfiguration;
-import io.entgra.device.mgt.core.device.mgt.core.config.ui.UIConfigurationManager;
-import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceFeatureOperationsDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
 import io.entgra.device.mgt.core.device.mgt.core.operation.timeout.task.OperationTimeoutTaskException;
 import io.entgra.device.mgt.core.device.mgt.core.operation.timeout.task.OperationTimeoutTaskManagerService;
 import io.entgra.device.mgt.core.device.mgt.core.operation.timeout.task.impl.OperationTimeoutTaskManagerServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceFeatureOperations;
-import io.entgra.device.mgt.core.device.mgt.core.service.DeviceFeatureOperationsImpl;
 import io.entgra.device.mgt.core.device.mgt.core.status.task.DeviceStatusTaskException;
 import io.entgra.device.mgt.core.device.mgt.core.status.task.DeviceStatusTaskManagerService;
 import io.entgra.device.mgt.core.device.mgt.core.status.task.impl.DeviceStatusTaskManagerServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.task.DeviceMgtTaskException;
 import io.entgra.device.mgt.core.device.mgt.core.task.DeviceTaskManagerService;
 import io.entgra.device.mgt.core.device.mgt.core.task.impl.DeviceTaskManagerServiceImpl;
+import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationManagementService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.*;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.carbon.ntask.core.service.TaskService;
 
 import java.util.Map;
+
 @Component(
         name = "io.entgra.device.mgt.core.device.mgt.core.internal.DeviceTaskManagerServiceComponent",
         immediate = true)
@@ -129,13 +131,13 @@ public class DeviceTaskManagerServiceComponent {
         OperationTimeoutConfiguration configuration = deviceManagementConfig.getOperationTimeoutConfiguration();
 
         for (OperationTimeout operationTimeout : configuration.getOperationTimeoutList()) {
-                try {
-                    operationTimeoutTaskManagerService.startTask(operationTimeout);
-                } catch (OperationTimeoutTaskException e) {
-                    log.error("Error while starting the operation timeout task for device type (s) : "
-                            + operationTimeout.getDeviceTypes() + ", operation code : "
-                            +  operationTimeout.getInitialStatus());
-                }
+            try {
+                operationTimeoutTaskManagerService.startTask(operationTimeout);
+            } catch (OperationTimeoutTaskException e) {
+                log.error("Error while starting the operation timeout task for device type (s) : "
+                        + operationTimeout.getDeviceTypes() + ", operation code : "
+                        + operationTimeout.getInitialStatus());
+            }
         }
     }
 
@@ -195,7 +197,7 @@ public class DeviceTaskManagerServiceComponent {
             } catch (OperationTimeoutTaskException e) {
                 log.error("Error while stopping the operation timeout task for device type (s) : "
                         + operationTimeout.getDeviceTypes() + ", operation code : "
-                        +  operationTimeout.getInitialStatus());
+                        + operationTimeout.getInitialStatus());
             }
         }
     }
