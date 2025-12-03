@@ -20,6 +20,7 @@ package io.entgra.device.mgt.core.apimgt.webapp.publisher;
 
 import com.google.gson.Gson;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.constants.Constants;
+import io.entgra.device.mgt.core.apimgt.webapp.publisher.config.DfrmEnabledTenantsConfig;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.config.Tenants;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.config.WebappPublisherConfig;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.dto.ApiScope;
@@ -124,6 +125,7 @@ public class APIPublisherStartupHandler implements ServerStartupObserver {
                 PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(tenantDomain, true);
                 updateScopeMetadataEntryAndRegistryWithDefaultScopes(defaultPermissions.getDefaultPermissions());
                 updateApiPublishingEnabledTenants(tenantDomain);
+                updateDfrmEnabledTenants();
             } finally {
                 PrivilegedCarbonContext.endTenantFlow();
             }
@@ -240,6 +242,35 @@ public class APIPublisherStartupHandler implements ServerStartupObserver {
             throw new IllegalStateException(msg, e);
         } catch (MetadataManagementException e) {
             String msg = "Error encountered while updating api publish enabled tenants metadata entry";
+            log.error(msg, e);
+            throw new IllegalStateException(msg, e);
+        }
+    }
+
+    private void updateDfrmEnabledTenants(){
+        MetadataManagementService metadataManagementService = APIPublisherDataHolder.getInstance().getMetadataManagementService();
+        DfrmEnabledTenantsConfig dfrmEnabledTenantsConfig = DfrmEnabledTenantsConfig.getInstance();
+
+        Metadata tenantsEntry = new Metadata();
+        List<String> tenants = new ArrayList<>();
+
+        tenants.addAll(dfrmEnabledTenantsConfig.getTenants().getTenant());
+        tenantsEntry.setMetaKey(Constants.DFRM_ENABLED_TENANT_LIST_KEY);
+        tenantsEntry.setMetaValue(gson.toJson(tenants));
+
+        try {
+            if (metadataManagementService.retrieveMetadata(Constants.DFRM_ENABLED_TENANT_LIST_KEY) == null) {
+                metadataManagementService.createMetadata(tenantsEntry);
+                return;
+            }
+
+            metadataManagementService.updateMetadata(tenantsEntry);
+        } catch (MetadataKeyAlreadyExistsException e) {
+            String msg = "Metadata entry already exists for dfrm-enabled-tenant-list";
+            log.error(msg, e);
+            throw new IllegalStateException(msg, e);
+        } catch (MetadataManagementException e) {
+            String msg = "Error encountered while updating dfrm enabled tenants metadata entry";
             log.error(msg, e);
             throw new IllegalStateException(msg, e);
         }

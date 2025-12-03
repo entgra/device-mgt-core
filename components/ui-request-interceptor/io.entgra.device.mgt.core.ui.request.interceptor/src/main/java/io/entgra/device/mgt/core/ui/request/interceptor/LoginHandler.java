@@ -128,6 +128,13 @@ public class LoginHandler extends HttpServlet {
                     return;
                 }
 
+                if (clientAppResponse.getCode() == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
+                    log.error("API Application registration failed. Backend returned 500. " +
+                            "This might be due to DFRM validation failure.");
+                    HandlerUtil.handleError(resp, clientAppResponse);
+                    return;
+                }
+
                 if (clientAppResponse.getCode() == HttpStatus.SC_CREATED) {
                     JsonNode jsonNode = clientAppResponse.getData();
                     String clientId = null;
@@ -158,7 +165,7 @@ public class LoginHandler extends HttpServlet {
                         return;
                     }
                 }
-                HandlerUtil.handleError(resp, null);
+                HandlerUtil.handleError(resp, clientAppResponse);
             } else {
                 getTokenAndPersistInSession(req, resp, username, oAuthApp.getClientId(), oAuthApp.getClientSecret(),
                         oAuthApp.getEncodedClientApp(), scopes, HandlerConstants.SESSION_AUTH_DATA_KEY);
