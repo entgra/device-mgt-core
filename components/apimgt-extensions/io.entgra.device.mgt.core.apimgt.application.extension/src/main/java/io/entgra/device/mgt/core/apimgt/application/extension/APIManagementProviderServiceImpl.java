@@ -65,7 +65,6 @@ import org.wso2.carbon.apimgt.impl.internal.ServiceReferenceHolder;
 import org.wso2.carbon.apimgt.impl.utils.APIUtil;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -417,6 +416,44 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
         return tenantDomains;
     }
 
+    private static List<String> getDfrmEnabledTenantDomains() throws APIManagerException {
+        MetadataManagementService metadataManagementService =
+                APIApplicationManagerExtensionDataHolder.getInstance().getMetadataManagementService();
+        Metadata metaData;
+        try {
+            if (Objects.equals(PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain(),
+                    MultitenantConstants.SUPER_TENANT_DOMAIN_NAME)) {
+                metaData = metadataManagementService.retrieveMetadata(Constants.DFRM_ENABLED_TENANT_LIST_KEY);
+            } else {
+                try {
+                    PrivilegedCarbonContext.startTenantFlow();
+                    PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(MultitenantConstants.SUPER_TENANT_DOMAIN_NAME, true);
+                    metaData =
+                            metadataManagementService.retrieveMetadata(Constants.DFRM_ENABLED_TENANT_LIST_KEY);
+                } finally {
+                    PrivilegedCarbonContext.endTenantFlow();
+                }
+            }
+        } catch (MetadataManagementException e) {
+            String msg = "Failed to load API publishing enabled tenant domains from meta data registry.";
+            log.error(msg, e);
+            throw new APIManagerException(msg, e);
+        }
+
+        if (metaData == null) {
+            String msg = "Null retrieved for the metadata entry when getting API publishing enabled tenant domains.";
+            log.error(msg);
+            throw new APIManagerException(msg);
+        }
+
+        JsonArray tenants = gson.fromJson(metaData.getMetaValue(), JsonArray.class);
+        List<String> tenantDomains = new ArrayList<>();
+        for (JsonElement tenant : tenants) {
+            tenantDomains.add(tenant.getAsString());
+        }
+        return tenantDomains;
+    }
+
     @Override
     public boolean isTierLoaded() {
 
@@ -466,10 +503,12 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
             BadRequestException, UnexpectedResponseException {
         String flowStartingDomain = MultitenantConstants.SUPER_TENANT_DOMAIN_NAME;
 
-        String currentTenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain(true);
+        PrivilegedCarbonContext currentContext = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        String currentTenantDomain = currentContext.getTenantDomain(true);
         // Here we are checking whether that the current tenant is API publishing enabled tenant or not
         // If the current tenant belongs to a publishing enabled tenant, then start the api application
         // registration sequences in current tenant space, otherwise in the super tenant
+        String currentUsername = currentContext.getUsername();
         if (!currentTenantDomain.equals(flowStartingDomain)) {
             List<String> publishingEnabledTenantDomains = getApiPublishingEnabledTenantDomains();
 
@@ -497,6 +536,19 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
         try {
             PrivilegedCarbonContext.startTenantFlow();
             PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(flowStartingDomain, true);
+            if (currentUsername != null) {
+                PrivilegedCarbonContext.getThreadLocalCarbonContext().setUsername(currentUsername);
+            }
+            List<String> dfrmEnabledTenants = getDfrmEnabledTenantDomains();
+            if (dfrmEnabledTenants.contains(flowStartingDomain)) {
+                boolean isDfrmApisPublished = validateDfrmApisPublished(flowStartingDomain);
+                if (!isDfrmApisPublished) {
+                    String msg = "Device Financial Risk Management (DFRM) APIs are not published for the DFRM enabled tenant: "
+                            + flowStartingDomain + ". Application registration aborted.";
+                    log.error(msg);
+                    throw new APIManagerException(msg);
+                }
+            }
             return createApiApplication(apiApplicationProfile);
 
         } finally {
@@ -530,6 +582,42 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
             return token;
         } catch (JWTClientException e) {
             String msg = "Error encountered while acquiring custom JWT token";
+            log.error(msg, e);
+            throw new APIManagerException(msg, e);
+        }
+    }
+
+    /**
+     * Validate if the tenant has required DFRM APIs published on the gateway
+     *
+     * @param tenantDomain Tenant domain to validate
+     * @return true if DFRM APIs are published, false otherwise
+     * @throws APIManagerException Throws when error encountered while checking API availability
+     */
+    private static boolean validateDfrmApisPublished(String tenantDomain) throws APIManagerException {
+        ConsumerRESTAPIServices consumerRESTAPIServices =
+                APIApplicationManagerExtensionDataHolder.getInstance().getConsumerRESTAPIServices();
+
+        try {
+            // Search for DeviceFinancialRiskManagement APIs
+            Map<String, String> queryParam = new HashMap<>();
+            queryParam.put("query", "DeviceFinanceRiskManagement");
+
+            APIInfo[] apis = consumerRESTAPIServices.getAllApis(queryParam, new HashMap<>());
+
+            if (apis == null || apis.length == 0) {
+                log.warn("DeviceFinancialRiskManagement APIs are not published for tenant: " + tenantDomain);
+                return false;
+            }
+
+            if (log.isDebugEnabled()) {
+                log.debug("Found " + apis.length + " DeviceFinancialRiskManagement API(s) for tenant: " + tenantDomain);
+            }
+
+            return true;
+
+        } catch (APIServicesException | BadRequestException | UnexpectedResponseException e) {
+            String msg = "Error encountered while checking DFRM API availability for tenant: " + tenantDomain;
             log.error(msg, e);
             throw new APIManagerException(msg, e);
         }
