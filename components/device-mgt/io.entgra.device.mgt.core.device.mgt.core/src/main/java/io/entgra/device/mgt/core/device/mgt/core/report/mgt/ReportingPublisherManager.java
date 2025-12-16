@@ -76,7 +76,9 @@ public class ReportingPublisherManager {
     public Future<Integer> publishData(DeviceDetailsWrapper deviceDetailsWrapper, String eventUrl) {
         return executorService.submit(new ReportingPublisher(deviceDetailsWrapper, eventUrl));
     }
-
+    public Future<Integer> publishLogData(String logPayload, String eventUrl) {
+        return executorService.submit(new LogPublisher(logPayload, eventUrl));
+    }
     private class ReportingPublisher implements Callable<Integer> {
         private final DeviceDetailsWrapper payload;
         private final String endpoint;
@@ -114,4 +116,45 @@ public class ReportingPublisherManager {
             }
         }
     }
+
+    private static class LogPublisher implements Callable<Integer> {
+        private final String logPayload;
+        private final String endpointUrl;
+
+        LogPublisher(String logPayload, String endpointUrl) {
+            this.logPayload = logPayload;
+            this.endpointUrl = endpointUrl;
+        }
+        @Override
+        public Integer call() throws EventPublishingException {
+
+            try (CloseableHttpClient client =
+                         HttpClients.custom().setConnectionManager(poolingManager).build()) {
+
+                HttpPost post = new HttpPost(endpointUrl);
+                post.setHeader(HTTP.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
+                post.setEntity(new StringEntity(logPayload, ContentType.APPLICATION_JSON));
+
+                HttpResponse response = client.execute(post);
+                int status = response.getStatusLine().getStatusCode();
+
+                if (log.isDebugEnabled()) {
+                    log.debug("Published DEVICE_LOG to reporting backend: "
+                            + endpointUrl + " | Status: " + status);
+                }
+
+                return status;
+
+            } catch (ConnectException e) {
+                String msg = "Connection refused while publishing DEVICE_LOG → " + endpointUrl;
+                log.error(msg, e);
+                throw new EventPublishingException(msg, e);
+            } catch (IOException e) {
+                String msg = "I/O error while publishing DEVICE_LOG → " + endpointUrl;
+                log.error(msg, e);
+                throw new EventPublishingException(msg, e);
+            }
+        }
+    }
+
 }

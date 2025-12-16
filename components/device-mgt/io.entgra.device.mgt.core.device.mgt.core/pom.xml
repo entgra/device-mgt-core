@@ -160,6 +160,8 @@
                             org.apache.http.client.methods;version="[4.3,5)",
                             org.apache.http.entity;version="[4.4,5)",
                             org.apache.http.impl.client;version="[4.3,5)",
+                            org.apache.http.impl.conn;version="[4.3,5)",
+                            org.apache.http.protocol;version="[4.4,5)",
                             org.apache.http.util;version="[4.4,5)",
                             org.apache.solr.common;version="[8.11,9)",
                             org.json;version="[3.0,4)",
@@ -230,7 +232,6 @@
             <artifactId>org.apache.felix.scr.ds-annotations</artifactId>
             <scope>provided</scope>
         </dependency>
-
 		<dependency>
 			<groupId>io.entgra.org.scannotation</groupId>
 			<artifactId>scannotation</artifactId>
@@ -238,6 +239,11 @@
         <dependency>
             <groupId>io.entgra.device.mgt.core</groupId>
             <artifactId>io.entgra.device.mgt.core.device.mgt.common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${apache.http.mime.version}</version>
         </dependency>
         <dependency>
             <groupId>org.ops4j.pax.logging</groupId>
