@@ -1265,7 +1265,8 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                 Date lastRecordedStatusDate = deviceStatus.get(0).getUpdateTime();
                 boolean isNonBillableStatus = EnrolmentInfo.Status.REMOVED.equals(lastRecordedStatus)
                         || EnrolmentInfo.Status.DELETED.equals(lastRecordedStatus)
-                        || EnrolmentInfo.Status.SUSPENDED.equals(lastRecordedStatus);
+                        || EnrolmentInfo.Status.SUSPENDED.equals(lastRecordedStatus)
+                        || EnrolmentInfo.Status.DISENROLLMENT_REQUESTED.equals(lastRecordedStatus);
 
                 // Enrolled device is older than starting bill date
                 if (device.getEnrolmentInfo().getDateOfEnrolment() < startDate.getTime()) {
