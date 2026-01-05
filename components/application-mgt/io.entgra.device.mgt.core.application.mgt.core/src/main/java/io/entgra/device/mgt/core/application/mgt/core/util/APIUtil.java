@@ -501,6 +501,22 @@ public class APIUtil {
         return application;
     }
 
+    /**
+     * Encodes a URL path fileName using percent-encoding where spaces are encoded as %20.
+     *
+     * @param fileName The string component to encode
+     * @return The encoded string with spaces as %20
+     */
+    public static String encodeUrlPathComponent(String fileName) {
+        if (fileName == null) {
+            return null;
+        }
+        String encoded = URLEncoder.encode(fileName, StandardCharsets.UTF_8);
+        encoded = encoded.replace("+", "%20")
+                .replace(" ", "%20");
+        return encoded;
+    }
+
     public static ApplicationRelease releaseDtoToRelease(ApplicationReleaseDTO applicationReleaseDTO)
             throws ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
@@ -524,28 +540,28 @@ public class APIUtil {
         applicationRelease.setRating(applicationReleaseDTO.getRating());
         applicationRelease.setIconPath(
                 basePath + Constants.ICON_ARTIFACT + Constants.FILE_NAME_PARAM +
-                        URLEncoder.encode(applicationReleaseDTO.getIconName(), StandardCharsets.UTF_8));
+                        encodeUrlPathComponent(applicationReleaseDTO.getIconName()));
         if (!StringUtils.isEmpty(applicationReleaseDTO.getBannerName())) {
             applicationRelease.setBannerPath(
                     basePath + Constants.BANNER_ARTIFACT + Constants.FILE_NAME_PARAM +
-                            URLEncoder.encode(applicationReleaseDTO.getBannerName(), StandardCharsets.UTF_8));
+                            encodeUrlPathComponent(applicationReleaseDTO.getBannerName()));
         }
         applicationRelease.setInstallerPath(
                 constructInstallerPath(applicationReleaseDTO.getInstallerName(), applicationReleaseDTO.getAppHashValue()));
         if (!StringUtils.isEmpty(applicationReleaseDTO.getScreenshotName1())) {
             screenshotPaths.add(
                     basePath + Constants.SCREENSHOT_ARTIFACT + 1 + Constants.FILE_NAME_PARAM +
-                            URLEncoder.encode(applicationReleaseDTO.getScreenshotName1(), StandardCharsets.UTF_8));
+                            encodeUrlPathComponent(applicationReleaseDTO.getScreenshotName1()));
         }
         if (!StringUtils.isEmpty(applicationReleaseDTO.getScreenshotName2())) {
             screenshotPaths.add(
                     basePath + Constants.SCREENSHOT_ARTIFACT + 2 + Constants.FILE_NAME_PARAM +
-                            URLEncoder.encode(applicationReleaseDTO.getScreenshotName2(), StandardCharsets.UTF_8));
+                            encodeUrlPathComponent(applicationReleaseDTO.getScreenshotName2()));
         }
         if (!StringUtils.isEmpty(applicationReleaseDTO.getScreenshotName3())) {
             screenshotPaths.add(
                     basePath + Constants.SCREENSHOT_ARTIFACT + 3 + Constants.FILE_NAME_PARAM +
-                            URLEncoder.encode(applicationReleaseDTO.getScreenshotName3(), StandardCharsets.UTF_8));
+                            encodeUrlPathComponent(applicationReleaseDTO.getScreenshotName3()));
         }
         applicationRelease.setScreenshots(screenshotPaths);
         return applicationRelease;
@@ -567,7 +583,7 @@ public class APIUtil {
         return urlValidator.isValid(installerName)
                 ? installerName
                 : basePath + Constants.APP_ARTIFACT + Constants.FILE_NAME_PARAM +
-                URLEncoder.encode(installerName, StandardCharsets.UTF_8);
+                encodeUrlPathComponent(installerName);
     }
 
     public static String getArtifactDownloadBaseURL() throws ApplicationManagementException {
