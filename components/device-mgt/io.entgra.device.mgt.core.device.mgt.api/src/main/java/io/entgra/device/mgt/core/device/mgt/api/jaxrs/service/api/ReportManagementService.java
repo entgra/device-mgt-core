@@ -747,5 +747,33 @@ public interface ReportManagementService {
             int offset
     );
 
-
+    @GET
+    @Path("/birt/report/params")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Get the parameters defined in the BIRT report template",
+            notes = "This will retrieve all input parameters defined in the current BIRT report design file.",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully retrieved report parameters."),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. No report template loaded."),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n Error occurred while retrieving report parameters.",
+                            response = ErrorResponse.class)
+            })
+    Response getReportParams();
 }

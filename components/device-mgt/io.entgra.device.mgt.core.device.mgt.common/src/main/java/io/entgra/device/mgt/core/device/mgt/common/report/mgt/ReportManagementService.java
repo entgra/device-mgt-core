@@ -17,6 +17,7 @@
  */
 package io.entgra.device.mgt.core.device.mgt.common.report.mgt;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
@@ -158,4 +159,20 @@ public interface ReportManagementService {
      * @throws BadRequestException Might occur when report parameters mismatch
      */
     JsonObject getReportData(JsonObject reportParameters, int limit, int offset) throws ReportManagementException, BadRequestException;
+
+    /**
+     * This method is used to invoke the BIRT runtime API for retrieving
+     * report parameter metadata.
+     *
+     * It extracts all input parameters defined in the currently loaded
+     * BIRT report design file (.rptdesign), which can be used by the UI
+     * to dynamically build the report configuration form.
+     *
+     * @return returns response containing report parameter definitions
+     *         from the BIRT runtime
+     * @throws ReportManagementException Might occur when invoking BIRT runtime
+     * @throws BadRequestException Might occur if no valid report template is loaded
+     */
+    JsonArray getBirtReportParameters() throws ReportManagementException, BadRequestException;
+
 }

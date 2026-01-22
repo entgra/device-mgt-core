@@ -18,6 +18,7 @@
 package io.entgra.device.mgt.core.device.mgt.core.report.mgt;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.NotFoundException;
 import org.apache.commons.lang.StringUtils;
@@ -25,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -671,6 +673,47 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             String msg = "Error occurred while retrieving Tenant ID.";
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
+        }
+    }
+    @Override
+    public JsonArray getBirtReportParameters()
+            throws ReportManagementException, BadRequestException {
+
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+
+            String paramsURL = HttpReportingUtil.getBirtReportHost();
+            if (!StringUtils.isBlank(paramsURL)) {
+
+                paramsURL += Constants.BirtReporting.BIRT_REPORTING_API_REPORT_PATH
+                        + "params";
+
+                HttpGet httpGet = new HttpGet(paramsURL);
+                HttpResponse httpResponse = httpClient.execute(httpGet);
+
+                int statusCode = httpResponse.getStatusLine().getStatusCode();
+
+                switch (statusCode) {
+                    case 200:
+                        return new Gson().fromJson(
+                                EntityUtils.toString(httpResponse.getEntity()),
+                                JsonArray.class
+                        );
+                    case 400:
+                        throw new BadRequestException("Invalid request");
+                    default:
+                        throw new ReportManagementException(
+                                "Failed to fetch report parameters. HTTP " + statusCode
+                        );
+                }
+            } else {
+                throw new ReportManagementException(
+                        "BIRT reporting host is not defined"
+                );
+            }
+        } catch (IOException e) {
+            throw new ReportManagementException(
+                    "Error occurred while invoking BIRT runtime API", e
+            );
         }
     }
 
