@@ -65,6 +65,11 @@ public class MDMWindowsOperationUtil {
             case ENTERPRISE:
                 EnterpriseApplication enterpriseApplication = new EnterpriseApplication();
                 createEnterpriseAppPayload(appType, metaJsonArray, enterpriseApplication);
+                if (MDMAppConstants.WindowsConstants.MSI.equalsIgnoreCase(appType)) {
+                    enterpriseApplication.getHostedMSIApplication().setContentUrl(application.getLocation());
+                } else if (MDMAppConstants.WindowsConstants.APPX.equalsIgnoreCase(appType)) {
+                    enterpriseApplication.getHostedAppxApplication().setPackageUri(application.getLocation());
+                }
                 operation.setCode(MDMAppConstants.WindowsConstants.INSTALL_ENTERPRISE_APPLICATION);
                 operation.setPayLoad(enterpriseApplication.toJSON());
                 break;
@@ -159,10 +164,7 @@ public class MDMWindowsOperationUtil {
                 metaElement = metaJsonArray.get(i);
                 metaObject = metaElement.getAsJsonObject();
 
-                if (MDMAppConstants.WindowsConstants.APPX_PACKAGE_URI.equals(metaObject.get("key").getAsString())) {
-                    hostedAppxApplication.setPackageUri(metaObject.get("value").getAsString().trim());
-                }
-                else if (MDMAppConstants.WindowsConstants.APPX_PACKAGE_FAMILY_NAME.equals(metaObject.get("key").getAsString())) {
+                if (MDMAppConstants.WindowsConstants.APPX_PACKAGE_FAMILY_NAME.equals(metaObject.get("key").getAsString())) {
                     hostedAppxApplication.setPackageFamilyName(metaObject.get("value").getAsString().trim());
                 }
                 else if (MDMAppConstants.WindowsConstants.APPX_DEPENDENCY_PACKAGE_URL.equals(metaObject.get("key").getAsString())
@@ -190,9 +192,6 @@ public class MDMWindowsOperationUtil {
 
                 if (MDMAppConstants.WindowsConstants.MSI_PRODUCT_ID.equals(metaObject.get("key").getAsString())) {
                     hostedMSIApplication.setProductId(metaObject.get("value").getAsString().trim());
-                }
-                else if (MDMAppConstants.WindowsConstants.MSI_CONTENT_URI.equals(metaObject.get("key").getAsString())) {
-                    hostedMSIApplication.setContentUrl(metaObject.get("value").getAsString().trim());
                 }
                 else if (MDMAppConstants.WindowsConstants.MSI_FILE_HASH.equals(metaObject.get("key").getAsString())) {
                     hostedMSIApplication.setFileHash(metaObject.get("value").getAsString().trim());
