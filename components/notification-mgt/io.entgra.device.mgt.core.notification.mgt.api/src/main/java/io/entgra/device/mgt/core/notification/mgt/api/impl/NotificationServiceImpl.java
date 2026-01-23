@@ -19,6 +19,10 @@
 
 package io.entgra.device.mgt.core.notification.mgt.api.impl;
 
+import io.entgra.device.mgt.core.notification.mgt.api.beans.NotificationActionRequest;
+import io.entgra.device.mgt.core.notification.mgt.api.beans.UserNotificationsRequest;
+import io.entgra.device.mgt.core.notification.mgt.api.beans.UsernameRequest;
+import io.entgra.device.mgt.core.notification.mgt.api.beans.UsernameWithNotificationIdsRequest;
 import io.entgra.device.mgt.core.notification.mgt.api.service.NotificationService;
 import io.entgra.device.mgt.core.notification.mgt.api.util.NotificationManagementApiUtil;
 import io.entgra.device.mgt.core.notification.mgt.common.dto.Notification;
@@ -34,7 +38,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Produces;
@@ -70,20 +73,21 @@ public class NotificationServiceImpl implements NotificationService {
         }
     }
 
-    @GET
-    @Path("/{username}")
-    public Response getUserNotificationsWithStatus(@PathParam("username") String username,
-                                                   @QueryParam("isRead") Boolean isRead,
-                                                   @QueryParam("limit") int limit,
-                                                   @QueryParam("offset") int offset) {
+    @POST
+    @Path("/user-notifications")
+    public Response getUserNotificationsWithStatus(UserNotificationsRequest request) {
         NotificationManagementService notificationService =
                 NotificationManagementApiUtil.getNotificationManagementService();
         try {
+            if (request == null) {
+                return Response.status(HttpStatus.SC_BAD_REQUEST).entity("Request body is required").build();
+            }
             PaginatedUserNotificationResponse response =
-                    notificationService.getUserNotificationsWithStatus(username, limit, offset, isRead);
+                    notificationService.getUserNotificationsWithStatus(
+                            request.getUsername(), request.getLimit(), request.getOffset(), request.getIsRead());
             return Response.status(HttpStatus.SC_OK).entity(response).build();
         } catch (NotificationManagementException e) {
-            String msg = "Failed to retrieve user notifications with status for user: " + username;
+            String msg = "Failed to retrieve user notifications with status.";
             log.error(msg, e);
             return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(msg).build();
         }
@@ -91,18 +95,20 @@ public class NotificationServiceImpl implements NotificationService {
 
     @PUT
     @Path("/action")
-    public Response updateNotificationAction(@QueryParam("notificationId") List<Integer> notificationIds,
-                                             @QueryParam("username") String username,
-                                             @QueryParam("isRead") boolean isRead) {
+    public Response updateNotificationAction(NotificationActionRequest request) {
         NotificationManagementService notificationService =
                 NotificationManagementApiUtil.getNotificationManagementService();
         try {
-            notificationService.updateNotificationActionForUser(notificationIds, username, isRead);
-            String status = isRead ? "READ" : "UNREAD";
+            if (request == null) {
+                return Response.status(HttpStatus.SC_BAD_REQUEST).entity("Request body is required").build();
+            }
+            notificationService.updateNotificationActionForUser(
+                    request.getNotificationIds(), request.getUsername(), request.isRead());
+            String status = request.isRead() ? "READ" : "UNREAD";
             return Response.status(HttpStatus.SC_OK)
                     .entity("Notification(s) marked as " + status).build();
         } catch (NotificationManagementException e) {
-            String msg = "Failed to update notification action for user: " + username;
+            String msg = "Failed to update notification action.";
             log.error(msg, e);
             return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(msg).build();
         }
@@ -110,39 +116,41 @@ public class NotificationServiceImpl implements NotificationService {
 
 
     @DELETE
-    @Path("/{username}/delete-selected")
+    @Path("/delete-selected")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response deleteSelectedNotifications(
-            @PathParam("username") String username,
-            List<Integer> notificationIds
-    ) {
+    public Response deleteSelectedNotifications(UsernameWithNotificationIdsRequest request) {
         NotificationManagementService notificationService =
                 NotificationManagementApiUtil.getNotificationManagementService();
         try {
-            Map<String, List<Integer>> result = notificationService.deleteUserNotifications(notificationIds, username);
+            if (request == null) {
+                return Response.status(HttpStatus.SC_BAD_REQUEST).entity("Request body is required").build();
+            }
+            Map<String, List<Integer>> result = notificationService.deleteUserNotifications(
+                    request.getNotificationIds(), request.getUsername());
             return Response.status(HttpStatus.SC_OK).entity(result).build();
         } catch (NotificationManagementException e) {
-            String msg = "Failed to delete selected notifications for user: " + username;
+            String msg = "Failed to delete selected notifications.";
             log.error(msg, e);
             return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
 
     @DELETE
-    @Path("/{username}/delete-all")
+    @Path("/delete-all")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response deleteAllNotifications(
-            @PathParam("username") String username
-    ) {
+    public Response deleteAllNotifications(UsernameRequest request) {
         NotificationManagementService notificationService =
                 NotificationManagementApiUtil.getNotificationManagementService();
         try {
-            notificationService.deleteAllUserNotifications(username);
+            if (request == null) {
+                return Response.status(HttpStatus.SC_BAD_REQUEST).entity("Request body is required").build();
+            }
+            notificationService.deleteAllUserNotifications(request.getUsername());
             String msg = "All notifications deleted successfully";
             return Response.status(HttpStatus.SC_OK).entity(msg).build();
         } catch (NotificationManagementException e) {
-            String msg = "Failed to delete all notifications for user: " + username;
+            String msg = "Failed to delete all notifications.";
             log.error(msg, e);
             return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(msg).build();
         }
@@ -152,15 +160,18 @@ public class NotificationServiceImpl implements NotificationService {
     @Path("/archive-selected")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response archiveSelectedNotifications(@QueryParam("username") String username,
-                                                 List<Integer> notificationIds) {
+    public Response archiveSelectedNotifications(UsernameWithNotificationIdsRequest request) {
         NotificationManagementService notificationService =
                 NotificationManagementApiUtil.getNotificationManagementService();
         try {
-            Map<String, List<Integer>> result = notificationService.archiveUserNotifications(notificationIds, username);
+            if (request == null) {
+                return Response.status(HttpStatus.SC_BAD_REQUEST).entity("Request body is required").build();
+            }
+            Map<String, List<Integer>> result = notificationService.archiveUserNotifications(
+                    request.getNotificationIds(), request.getUsername());
             return Response.status(HttpStatus.SC_OK).entity(result).build();
         } catch (NotificationArchivalException e) {
-            String msg = "Error archiving selected notifications for user: " + username;
+            String msg = "Error archiving selected notifications.";
             log.error(msg, e);
             return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(msg).build();
         }
@@ -170,15 +181,18 @@ public class NotificationServiceImpl implements NotificationService {
     @Path("/archive-all")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response archiveAllNotifications(@QueryParam("username") String username) {
+    public Response archiveAllNotifications(UsernameRequest request) {
         NotificationManagementService notificationService =
                 NotificationManagementApiUtil.getNotificationManagementService();
         try {
-            notificationService.archiveAllUserNotifications(username);
+            if (request == null) {
+                return Response.status(HttpStatus.SC_BAD_REQUEST).entity("Request body is required").build();
+            }
+            notificationService.archiveAllUserNotifications(request.getUsername());
             String msg = "All notifications archived successfully";
             return Response.status(HttpStatus.SC_OK).entity(msg).build();
         } catch (NotificationArchivalException e) {
-            String msg = "Error archiving all notifications for user: " + username;
+            String msg = "Error archiving all notifications.";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }

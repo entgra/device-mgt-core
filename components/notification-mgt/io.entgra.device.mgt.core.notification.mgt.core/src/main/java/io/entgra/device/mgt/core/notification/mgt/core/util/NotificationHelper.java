@@ -38,14 +38,16 @@ import org.wso2.carbon.user.api.UserStoreManager;
 
 import java.lang.reflect.Type;
 import java.sql.Timestamp;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Calendar;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.Arrays;
+import java.util.ArrayList;
 
 public class NotificationHelper {
     private static final Log log = LogFactory.getLog(NotificationHelper.class);
     private static final Gson gson = new Gson();
-    private static final int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
 
     /**
      * Extracts all usernames from the given recipients object including users and roles.
@@ -74,7 +76,12 @@ public class NotificationHelper {
                 usernameSet.addAll(Arrays.asList(usersWithRole));
             }
         }
-        return new ArrayList<>(usernameSet);
+        String tenantDomain = getTenantDomain();
+        Set<String> tenantAware = new HashSet<>();
+        for (String u : usernameSet) {
+            tenantAware.add(toTenantAwareUsername(u, tenantDomain));
+        }
+        return new ArrayList<>(tenantAware);
     }
 
     /**
@@ -86,7 +93,9 @@ public class NotificationHelper {
      */
     public static NotificationConfig getNotificationConfigurationByCode(String code)
             throws NotificationManagementException {
-        log.info("Fetching notification configuration for code: " + code);
+        if (log.isDebugEnabled()) {
+            log.debug("Fetching notification configuration for code: " + code);
+        }
         MetadataManagementService metaDataService = NotificationManagementDataHolder
                 .getInstance().getMetaDataManagementService();
         try {
@@ -105,7 +114,6 @@ public class NotificationHelper {
                 log.debug("Existing metadata: " + existingMetadata);
             }
             String metaValue = existingMetadata.getMetaValue();
-            log.info("Meta value: " + metaValue);
             Type listType = new TypeToken<NotificationConfigurationList>() {}.getType();
             NotificationConfigurationList configList = gson.fromJson(metaValue, listType);
             if (configList == null || configList.getNotificationConfigurations() == null) {
@@ -182,7 +190,9 @@ public class NotificationHelper {
      */
     public static NotificationConfigurationList getNotificationConfigurationsFromMetadata()
             throws NotificationManagementException {
-        log.info("Fetching all notification configurations from metadata.");
+        if (log.isDebugEnabled()) {
+            log.debug("Fetching all notification configurations from metadata.");
+        }
         MetadataManagementService metaDataService = NotificationManagementDataHolder
                 .getInstance().getMetaDataManagementService();
         try {
@@ -226,19 +236,25 @@ public class NotificationHelper {
      *
      * @param username the username to validate
      */
-    public static void validateUserExists(String username) throws NotificationManagementException {
+    public static String validateUserExists(String username) throws NotificationManagementException {
         if (username == null || username.trim().isEmpty()) {
             String msg = "Username must not be null or empty.";
             log.warn(msg);
             throw new NotificationManagementException(msg);
         }
         try {
+            int tenantId = getCurrentTenantId();
+            String tenantDomain = getTenantDomain();
+            // normalize to the tenant-aware username we use for notification storage/queries.
+            String tenantAwareUsername = toTenantAwareUsername(username, tenantDomain);
+            String userToValidate = stripTenantDomainIfMatches(tenantAwareUsername, tenantDomain);
             UserStoreManager userStoreManager = NotificationManagementDataHolder.getInstance()
                     .getRealmService().getTenantUserRealm(tenantId).getUserStoreManager();
-            if (!userStoreManager.isExistingUser(username)) {
+            if (!userStoreManager.isExistingUser(userToValidate)) {
                 String msg = "User by username: " + username + " does not exist.";
                 throw new NotificationManagementException(msg);
             }
+            return tenantAwareUsername;
         } catch (UserStoreException e) {
             String msg = "Error while retrieving the user.";
             log.error(msg, e);
@@ -246,14 +262,6 @@ public class NotificationHelper {
         }
     }
 
-    /**
-     * Validates that all users and roles in the recipients exist in the system.
-     * Checks if the recipients object is not null.
-     * Returns an appropriate Response if any user or role does not exist or if there is an error.
-     *
-     * @param recipients the NotificationConfigRecipients object containing users and roles
-     * @return a Response with error status if any user or role is invalid or does not exist, otherwise null
-     */
     /**
      * Validates that all users and roles in the recipients exist in the system.
      * Throws NotificationConfigurationServiceException if any user or role is invalid or does not exist.
@@ -269,6 +277,7 @@ public class NotificationHelper {
             throw new NotificationConfigurationServiceException(msg);
         }
         try {
+            int tenantId = getCurrentTenantId();
             UserStoreManager userStoreManager = NotificationManagementDataHolder.getInstance()
                     .getRealmService().getTenantUserRealm(tenantId).getUserStoreManager();
             // validate roles
@@ -281,7 +290,9 @@ public class NotificationHelper {
             }
             // validate users
             for (String user : recipients.getUsers()) {
-                if (!userStoreManager.isExistingUser(user)) {
+                String tenantDomain = getTenantDomain();
+                String userToValidate = stripTenantDomainIfMatches(user, tenantDomain);
+                if (!userStoreManager.isExistingUser(userToValidate)) {
                     String msg = "User by username: " + user + " does not exist.";
                     log.warn(msg);
                     throw new NotificationConfigurationServiceException(msg);
@@ -292,5 +303,84 @@ public class NotificationHelper {
             log.error(msg, e);
             throw new NotificationConfigurationServiceException(msg, e);
         }
+    }
+
+    /**
+     * gets the current tenant id from the thread-local Carbon context.
+     * @return current tenant id
+     */
+    private static int getCurrentTenantId() {
+        return PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+    }
+
+    /**
+     * resolves the tenant domain for a given tenant id.
+     * if the tenant domain cannot be resolved, this falls back to {@code carbon.super}.</p>
+     * @return tenant domain (never blank)
+     */
+    private static String getTenantDomain() {
+        try {
+            String domain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+            return (domain == null || domain.trim().isEmpty()) ? Constants.SUPER_TENANT_DOMAIN : domain.trim();
+        } catch (Exception e) {
+            log.debug("Failed to resolve tenant domain. Using carbon.super.", e);
+            return Constants.SUPER_TENANT_DOMAIN;
+        }
+    }
+
+    /**
+     * converts a username into a tenant-aware username for notification storage or publishing,
+     * with validation to ensure the tenant domain is correct.
+     * - for the super tenant, usernames are stored/published without the suffix {@code @carbon.super}.
+     * - for sub-tenants, usernames are ensured to be tenant-aware:
+     * -- if the username already contains {@code @} and the domain matches {@code tenantDomain}, it is returned as-is.
+     * -- if the username contains {@code @} but the domain does not match {@code tenantDomain},
+     *    the domain is replaced with {@code tenantDomain}.
+     * -- if the username does not contain {@code @}, {@code @tenantDomain} is appended.
+     * - if the username is {@code null}, {@code null} is returned.
+     * - if the username is empty or only whitespace, it is trimmed and returned as an empty string.
+     * @param username the raw username
+     * @param tenantDomain the tenant domain to validate against
+     * @return a tenant-aware username with the correct tenant domain
+     */
+    private static String toTenantAwareUsername(String username, String tenantDomain) {
+        if (username == null) {
+            return null;
+        }
+        String user = username.trim();
+        if (user.isEmpty()) {
+            return user;
+        }
+        if (Constants.SUPER_TENANT_DOMAIN.equals(tenantDomain)) {
+            return user.replace("@" + Constants.SUPER_TENANT_DOMAIN, "");
+        }
+        String suffix = "@" + tenantDomain;
+        if (user.endsWith(suffix)) {
+            return user;
+        }
+        return user + suffix;
+    }
+
+    /**
+     * strips the tenant domain from a tenant-aware username, if it matches the given tenant domain.
+     * this is used for user-store validations where the tenant realm expects the local username
+     * (without {@code @tenantDomain}).
+     * @param username username possibly containing {@code @tenantDomain}
+     * @param tenantDomain tenant domain to strip if present
+     * @return local username if stripped, otherwise the input username
+     */
+    private static String stripTenantDomainIfMatches(String username, String tenantDomain) {
+        if (username == null) {
+            return null;
+        }
+        String user = username.trim();
+        if (user.isEmpty() || tenantDomain == null || tenantDomain.trim().isEmpty()) {
+            return user;
+        }
+        String suffix = "@" + tenantDomain.trim();
+        if (user.endsWith(suffix)) {
+            return user.substring(0, user.length() - suffix.length());
+        }
+        return user;
     }
 }

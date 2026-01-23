@@ -21,6 +21,10 @@ package io.entgra.device.mgt.core.notification.mgt.api.service;
 
 import io.entgra.device.mgt.core.apimgt.annotations.Scope;
 import io.entgra.device.mgt.core.apimgt.annotations.Scopes;
+import io.entgra.device.mgt.core.notification.mgt.api.beans.NotificationActionRequest;
+import io.entgra.device.mgt.core.notification.mgt.api.beans.UserNotificationsRequest;
+import io.entgra.device.mgt.core.notification.mgt.api.beans.UsernameRequest;
+import io.entgra.device.mgt.core.notification.mgt.api.beans.UsernameWithNotificationIdsRequest;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiOperation;
@@ -36,14 +40,12 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.List;
 
 /**
  * Notifications related REST-API.
@@ -157,11 +159,11 @@ public interface NotificationService {
             @QueryParam("limit")
             int limit);
 
-    @GET
-    @Path("/{username}")
+    @POST
+    @Path("/user-notifications")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
-            httpMethod = "GET",
+            httpMethod = "POST",
             value = "Get Notifications With User Read/Unread Status",
             notes = "Retrieve notifications for a specific user with their read/unread status.",
             tags = "Notification Management",
@@ -193,31 +195,10 @@ public interface NotificationService {
     )
     Response getUserNotificationsWithStatus(
             @ApiParam(
-                    name = "username",
-                    value = "Username to retrieve notifications for",
+                    name = "request",
+                    value = "Request body containing username, isRead, limit and offset",
                     required = true)
-            @PathParam("username")
-            String username,
-            @ApiParam(
-                    name = "isRead",
-                    value = "Notification isRead status to filter by (true = read, false = unread)",
-                    required = false)
-            @QueryParam("isRead")
-            Boolean isRead,
-            @ApiParam(
-                    name = "limit",
-                    value = "Maximum number of results to return",
-                    required = false,
-                    defaultValue = "10")
-            @QueryParam("limit")
-            int limit,
-            @ApiParam(
-                    name = "offset",
-                    value = "Starting index for result pagination",
-                    required = false,
-                    defaultValue = "0")
-            @QueryParam("offset")
-            int offset);
+            UserNotificationsRequest request);
 
     @PUT
     @Path("/action")
@@ -251,27 +232,14 @@ public interface NotificationService {
     )
     Response updateNotificationAction(
             @ApiParam(
-                    name = "notificationId",
-                    value = "List of notification IDs to update",
+                    name = "request",
+                    value = "Request body containing username, notificationIds and isRead",
                     required = true)
-            @QueryParam("notificationId")
-            List<Integer> notificationIds,
-            @ApiParam(
-                    name = "username",
-                    value = "Username for whom the notification actions should be updated",
-                    required = true)
-            @QueryParam("username")
-            String username,
-            @ApiParam(
-                    name = "isRead",
-                    value = "Notification read status to set: true for READ, false for UNREAD",
-                    required = true)
-            @QueryParam("isRead")
-            boolean isRead
+            NotificationActionRequest request
     );
 
     @DELETE
-    @Path("/{username}/delete-selected")
+    @Path("/delete-selected")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "DELETE",
@@ -302,20 +270,14 @@ public interface NotificationService {
     )
     Response deleteSelectedNotifications(
             @ApiParam(
-                    name = "username",
-                    value = "Username for whom the notifications should be deleted",
+                    name = "request",
+                    value = "Request body containing username and notificationIds",
                     required = true)
-            @PathParam("username")
-            String username,
-            @ApiParam(
-                    name = "notificationIds",
-                    value = "List of Notification IDs to be deleted",
-                    required = true)
-            List<Integer> notificationIds
+            UsernameWithNotificationIdsRequest request
     );
 
     @DELETE
-    @Path("/{username}/delete-all")
+    @Path("/delete-all")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "DELETE",
@@ -346,11 +308,10 @@ public interface NotificationService {
     )
     Response deleteAllNotifications(
             @ApiParam(
-                    name = "username",
-                    value = "Username for whom all notifications should be deleted",
+                    name = "request",
+                    value = "Request body containing username",
                     required = true)
-            @PathParam("username")
-            String username
+            UsernameRequest request
     );
 
     @POST
@@ -385,16 +346,10 @@ public interface NotificationService {
     )
     Response archiveSelectedNotifications(
             @ApiParam(
-                    name = "username",
-                    value = "Username for whom the notifications should be archived",
+                    name = "request",
+                    value = "Request body containing username and notificationIds",
                     required = true)
-            @QueryParam("username") String username,
-
-            @ApiParam(
-                    name = "notificationIds",
-                    value = "List of Notification IDs to be archived (passed in request body).",
-                    required = true)
-            List<Integer> notificationIds
+            UsernameWithNotificationIdsRequest request
     );
 
 
@@ -430,10 +385,10 @@ public interface NotificationService {
     )
     Response archiveAllNotifications(
             @ApiParam(
-                    name = "username",
-                    value = "Username for whom all notifications should be archived",
+                    name = "request",
+                    value = "Request body containing username",
                     required = true)
-            @QueryParam("username") String username
+            UsernameRequest request
     );
 
 }

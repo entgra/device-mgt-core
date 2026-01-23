@@ -81,7 +81,7 @@ public class NotificationManagementServiceImpl implements NotificationManagement
     @Override
     public PaginatedUserNotificationResponse getUserNotificationsWithStatus(
             String username, int limit, int offset, Boolean isRead) throws NotificationManagementException {
-        NotificationHelper.validateUserExists(username);
+        username = NotificationHelper.validateUserExists(username);
         try {
             NotificationManagementDAOFactory.openConnection();
             return notificationDAO.getUserNotificationsWithStatus(username, limit, offset, isRead);
@@ -101,7 +101,7 @@ public class NotificationManagementServiceImpl implements NotificationManagement
     @Override
     public void updateNotificationActionForUser(List<Integer> notificationIds, String username, boolean isRead)
             throws NotificationManagementException {
-        NotificationHelper.validateUserExists(username);
+        username = NotificationHelper.validateUserExists(username);
         try {
             NotificationManagementDAOFactory.beginTransaction();
             notificationDAO.updateNotificationAction(notificationIds, username, isRead);
@@ -126,6 +126,7 @@ public class NotificationManagementServiceImpl implements NotificationManagement
     @Override
     public int getUserNotificationCount(String username, Boolean isRead) throws NotificationManagementException {
         try {
+            username = NotificationHelper.validateUserExists(username);
             NotificationManagementDAOFactory.openConnection();
             return notificationDAO.getNotificationActionsCountByUser(username, isRead);
         } catch (SQLException e) {
@@ -144,7 +145,7 @@ public class NotificationManagementServiceImpl implements NotificationManagement
     @Override
     public Map<String, List<Integer>> deleteUserNotifications(List<Integer> notificationIds, String username)
             throws NotificationManagementException {
-        NotificationHelper.validateUserExists(username);
+        username = NotificationHelper.validateUserExists(username);
         try {
             NotificationManagementDAOFactory.beginTransaction();
             Map<String, List<Integer>> result = notificationDAO.deleteUserNotifications(notificationIds, username);
@@ -175,13 +176,25 @@ public class NotificationManagementServiceImpl implements NotificationManagement
             return Map.of("archived", Collections.emptyList(), "invalid", Collections.emptyList());
         }
         try {
-            NotificationHelper.validateUserExists(username);
+            username = NotificationHelper.validateUserExists(username);
             NotificationArchivalDestDAOFactory.beginTransaction();
             NotificationArchivalSourceDAOFactory.beginTransaction();
             Map<String, List<Integer>> result =
                     notificationArchiveDAO.archiveUserNotifications(notificationIds, username);
             NotificationArchivalDestDAOFactory.commitTransaction();
             NotificationArchivalSourceDAOFactory.commitTransaction();
+            try {
+                NotificationManagementDAOFactory.openConnection();
+                int unreadCount = notificationDAO.getUnreadNotificationCountForUser(username);
+                String payload = String.format("{\"unreadCount\":%d}", unreadCount);
+                NotificationEventBroker.pushMessage(payload, Collections.singletonList(username));
+            } catch (SQLException | NotificationManagementDAOException e) {
+                String msg = "Error occurred while retrieving unread notification count for user: " + username;
+                log.error(msg, e);
+                throw new NotificationArchivalException(msg, e);
+            } finally {
+                NotificationManagementDAOFactory.closeConnection();
+            }
             return result;
         } catch (NotificationManagementException e) {
             NotificationArchivalDestDAOFactory.rollbackTransaction();
@@ -204,7 +217,7 @@ public class NotificationManagementServiceImpl implements NotificationManagement
 
     @Override
     public void deleteAllUserNotifications(String username) throws NotificationManagementException {
-        NotificationHelper.validateUserExists(username);
+        username = NotificationHelper.validateUserExists(username);
         try {
             NotificationManagementDAOFactory.beginTransaction();
             notificationDAO.deleteAllUserNotifications(username);
@@ -229,12 +242,24 @@ public class NotificationManagementServiceImpl implements NotificationManagement
     @Override
     public void archiveAllUserNotifications(String username) throws NotificationArchivalException {
         try {
-            NotificationHelper.validateUserExists(username);
+            username = NotificationHelper.validateUserExists(username);
             NotificationArchivalDestDAOFactory.beginTransaction();
             NotificationArchivalSourceDAOFactory.beginTransaction();
             notificationArchiveDAO.archiveAllUserNotifications(username);
             NotificationArchivalDestDAOFactory.commitTransaction();
             NotificationArchivalSourceDAOFactory.commitTransaction();
+            try {
+                NotificationManagementDAOFactory.openConnection();
+                int unreadCount = notificationDAO.getUnreadNotificationCountForUser(username);
+                String payload = String.format("{\"unreadCount\":%d}", unreadCount);
+                NotificationEventBroker.pushMessage(payload, Collections.singletonList(username));
+            } catch (SQLException | NotificationManagementDAOException e) {
+                String msg = "Error occurred while retrieving unread notification count for user: " + username;
+                log.error(msg, e);
+                throw new NotificationArchivalException(msg, e);
+            } finally {
+                NotificationManagementDAOFactory.closeConnection();
+            }
         } catch (NotificationManagementException e) {
             String msg = "Error occurred while archiving user notifications for user: " + username +
                     "user doesn't exist";
