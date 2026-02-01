@@ -116,7 +116,7 @@ public class NotificationServiceImpl implements NotificationService {
 
 
     @DELETE
-    @Path("/delete-selected")
+    @Path("/user-notifications")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response deleteSelectedNotifications(UsernameWithNotificationIdsRequest request) {
@@ -137,7 +137,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @DELETE
-    @Path("/delete-all")
+    @Path("/user-notifications/all")
     @Produces(MediaType.APPLICATION_JSON)
     public Response deleteAllNotifications(UsernameRequest request) {
         NotificationManagementService notificationService =

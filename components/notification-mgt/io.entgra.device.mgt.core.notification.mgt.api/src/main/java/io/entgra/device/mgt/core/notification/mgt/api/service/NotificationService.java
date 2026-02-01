@@ -239,7 +239,7 @@ public interface NotificationService {
     );
 
     @DELETE
-    @Path("/delete-selected")
+    @Path("/user-notifications")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "DELETE",
@@ -277,7 +277,7 @@ public interface NotificationService {
     );
 
     @DELETE
-    @Path("/delete-all")
+    @Path("/user-notifications/all")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "DELETE",

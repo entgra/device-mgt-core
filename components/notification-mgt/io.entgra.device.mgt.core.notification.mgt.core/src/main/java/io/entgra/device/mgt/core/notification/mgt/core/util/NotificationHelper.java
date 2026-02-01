@@ -231,25 +231,24 @@ public class NotificationHelper {
     }
 
     /**
-     * Validates that a user exists in the system.
-     * Checks if the provided username is not null or empty and exists in the user store.
+     * Validates that a user exists in the system and returns the tenant-aware username
      *
      * @param username the username to validate
+     * @return tenant-aware username
      */
-    public static String validateUserExists(String username) throws NotificationManagementException {
+    public static String getTenantAwareUsernameIfUserExists(String username) throws NotificationManagementException {
         if (username == null || username.trim().isEmpty()) {
             String msg = "Username must not be null or empty.";
             log.warn(msg);
             throw new NotificationManagementException(msg);
         }
         try {
-            int tenantId = getCurrentTenantId();
             String tenantDomain = getTenantDomain();
             // normalize to the tenant-aware username we use for notification storage/queries.
             String tenantAwareUsername = toTenantAwareUsername(username, tenantDomain);
             String userToValidate = stripTenantDomainIfMatches(tenantAwareUsername, tenantDomain);
-            UserStoreManager userStoreManager = NotificationManagementDataHolder.getInstance()
-                    .getRealmService().getTenantUserRealm(tenantId).getUserStoreManager();
+            UserStoreManager userStoreManager =
+                    PrivilegedCarbonContext.getThreadLocalCarbonContext().getUserRealm().getUserStoreManager();
             if (!userStoreManager.isExistingUser(userToValidate)) {
                 String msg = "User by username: " + username + " does not exist.";
                 throw new NotificationManagementException(msg);
@@ -277,9 +276,8 @@ public class NotificationHelper {
             throw new NotificationConfigurationServiceException(msg);
         }
         try {
-            int tenantId = getCurrentTenantId();
-            UserStoreManager userStoreManager = NotificationManagementDataHolder.getInstance()
-                    .getRealmService().getTenantUserRealm(tenantId).getUserStoreManager();
+            UserStoreManager userStoreManager =
+                    PrivilegedCarbonContext.getThreadLocalCarbonContext().getUserRealm().getUserStoreManager();
             // validate roles
             for (String role : recipients.getRoles()) {
                 if (!userStoreManager.isExistingRole(role)) {
@@ -306,26 +304,24 @@ public class NotificationHelper {
     }
 
     /**
-     * gets the current tenant id from the thread-local Carbon context.
-     * @return current tenant id
-     */
-    private static int getCurrentTenantId() {
-        return PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
-    }
-
-    /**
-     * resolves the tenant domain for a given tenant id.
-     * if the tenant domain cannot be resolved, this falls back to {@code carbon.super}.</p>
+     * resolves the tenant domain
+     * if the tenant domain cannot be resolved from the thread-local carbon context, this falls back to
+     * {@code carbon.super} when the tenant context is confirmed to be the super. for non-super tenants, fail fast.
      * @return tenant domain (never blank)
      */
     private static String getTenantDomain() {
-        try {
-            String domain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-            return (domain == null || domain.trim().isEmpty()) ? Constants.SUPER_TENANT_DOMAIN : domain.trim();
-        } catch (Exception e) {
-            log.debug("Failed to resolve tenant domain. Using carbon.super.", e);
+        final PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        String domain = ctx.getTenantDomain();
+        if (domain != null && !domain.trim().isEmpty()) {
+            return domain.trim();
+        }
+        int tenantId = ctx.getTenantId();
+        if (tenantId == Constants.SUPER_TENANT_ID) {
             return Constants.SUPER_TENANT_DOMAIN;
         }
+        String msg = "Tenant domain is not available in the thread-local Carbon context for tenantId: " + tenantId;
+        log.error(msg);
+        throw new IllegalStateException(msg);
     }
 
     /**
