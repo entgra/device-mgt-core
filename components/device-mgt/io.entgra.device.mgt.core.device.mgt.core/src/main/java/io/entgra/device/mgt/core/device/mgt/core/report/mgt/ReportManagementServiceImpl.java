@@ -58,6 +58,7 @@ import org.apache.commons.logging.LogFactory;
 import io.entgra.device.mgt.core.device.mgt.core.util.HttpReportingUtil;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.ParseException;
@@ -678,20 +679,14 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     @Override
     public JsonArray getBirtReportParameters()
             throws ReportManagementException, BadRequestException {
-
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-
             String paramsURL = HttpReportingUtil.getBirtReportHost();
             if (!StringUtils.isBlank(paramsURL)) {
-
                 paramsURL += Constants.BirtReporting.BIRT_REPORTING_API_REPORT_PATH
                         + "params";
-
                 HttpGet httpGet = new HttpGet(paramsURL);
                 HttpResponse httpResponse = httpClient.execute(httpGet);
-
                 int statusCode = httpResponse.getStatusLine().getStatusCode();
-
                 switch (statusCode) {
                     case 200:
                         return new Gson().fromJson(
@@ -713,6 +708,51 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         } catch (IOException e) {
             throw new ReportManagementException(
                     "Error occurred while invoking BIRT runtime API", e
+            );
+        }
+    }
+    @Override
+    public JsonObject getBirtReportPreview(String fileName)
+            throws ReportManagementException, BadRequestException {
+        if (StringUtils.isBlank(fileName)) {
+            throw new BadRequestException("Design file name is required");
+        }
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            String previewURL = HttpReportingUtil.getBirtReportHost();
+            if (StringUtils.isBlank(previewURL)) {
+                throw new ReportManagementException(
+                        "BIRT reporting host is not defined"
+                );
+            }
+            previewURL += Constants.BirtReporting.BIRT_REPORTING_API_REPORT_PATH
+                    + "preview?fileName="
+                    + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name());
+            HttpGet httpGet = new HttpGet(previewURL);
+            HttpResponse httpResponse = httpClient.execute(httpGet);
+            int statusCode = httpResponse.getStatusLine().getStatusCode();
+
+            switch (statusCode) {
+                case 200:
+                    return new Gson().fromJson(
+                            EntityUtils.toString(httpResponse.getEntity()),
+                            JsonObject.class
+                    );
+                case 400:
+                    throw new BadRequestException(
+                            EntityUtils.toString(httpResponse.getEntity())
+                    );
+                case 404:
+                    throw new ReportManagementException(
+                            "Preview not available for report: " + fileName
+                    );
+                default:
+                    throw new ReportManagementException(
+                            "Failed to fetch report preview. HTTP " + statusCode
+                    );
+            }
+        } catch (IOException e) {
+            throw new ReportManagementException(
+                    "Error occurred while invoking BIRT preview API", e
             );
         }
     }

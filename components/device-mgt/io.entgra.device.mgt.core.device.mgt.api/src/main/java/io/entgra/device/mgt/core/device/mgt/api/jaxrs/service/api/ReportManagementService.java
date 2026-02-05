@@ -776,4 +776,33 @@ public interface ReportManagementService {
                             response = ErrorResponse.class)
             })
     Response getReportParams();
+
+    @GET
+    @Path("/birt/report/preview")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Get preview metadata of a BIRT report template",
+            notes = "Returns preview information (title, columns) for the given BIRT report design file",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(
+                                    name = Constants.SCOPE,
+                                    value = "perm:devices:view"
+                            )
+                    })
+            }
+    )
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK. Successfully retrieved report preview."),
+            @ApiResponse(code = 400, message = "Bad Request. Invalid or missing file name."),
+            @ApiResponse(code = 404, message = "Not Found. Report design not found."),
+            @ApiResponse(code = 500, message = "Internal Server Error.",
+                    response = ErrorResponse.class)
+    })
+    Response getReportPreview(
+            @QueryParam("fileName") String fileName
+    );
 }

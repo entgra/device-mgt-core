@@ -440,4 +440,20 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         }
     }
 
+    @GET
+    @Path("/birt/report/preview")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getReportPreview(@QueryParam("fileName") String fileName) {
+        try {
+            JsonObject response = DeviceMgtAPIUtils.getReportManagementService()
+                            .getBirtReportPreview(fileName);
+            return Response.ok(response).build();
+        } catch (BadRequestException e) {
+            return Response.status(400).entity(e.getMessage()).build();
+        } catch (ReportManagementException e) {
+            return Response.status(500).entity(e.getMessage()).build();
+        }
+    }
+
+
 }
