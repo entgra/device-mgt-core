@@ -124,7 +124,7 @@ public interface DeviceTypeDAO {
 	 * Update device type version
 	 * @param deviceTypeVersion device type version details
 	 * @return update status
-	 * @throws DeviceManagementException
+	 * @throws DeviceManagementDAOException
 	 */
 	boolean updateDeviceTypeVersion(DeviceTypeVersion deviceTypeVersion) throws DeviceManagementDAOException;
 
