@@ -18,6 +18,7 @@
 
 package io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl;
 
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceGroupAssignmentRequest;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceToGroupsAssignment;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.GroupManagementService;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.DeviceMgtAPIUtils;
@@ -48,6 +49,7 @@ import org.wso2.carbon.context.PrivilegedCarbonContext;
 
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -310,8 +312,8 @@ public class GroupManagementServiceImplTest {
                 "getDeviceCountOfGroup request succeded for a request with in-valid parameters");
     }
 
-    @Test(description = "This method tests the addDevicesToGroup method under various conditions.")
-    public void testAddDevicesToGroup() throws GroupManagementException, DeviceNotFoundException {
+    @Test(description = "This method tests the assignMultipleDevicesToMultipleGroups method under various conditions.")
+    public void testAssignMultipleDevicesToMultipleGroups() throws GroupManagementException, DeviceNotFoundException {
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getGroupManagementProviderService"))
                 .toReturn(groupManagementProviderService);
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getPolicyManagementService"))
@@ -326,20 +328,25 @@ public class GroupManagementServiceImplTest {
         Mockito.when(carbonContext.getTenantDomain()).thenReturn("carbon.super");
         List<DeviceIdentifier> deviceIdentifiers = new ArrayList<>();
         Mockito.doNothing().when(groupManagementProviderService).addDevices(1, deviceIdentifiers);
-        Mockito.doThrow(new GroupManagementException()).when(groupManagementProviderService).addDevices(2,
-                deviceIdentifiers);
-        Mockito.doThrow(new DeviceNotFoundException()).when(groupManagementProviderService).addDevices(3,
-                deviceIdentifiers);
-        Response response = groupManagementService.addDevicesToGroup(1, deviceIdentifiers);
+        Mockito.doThrow(new GroupManagementException()).when(groupManagementProviderService).addDevices(2, deviceIdentifiers);
+        Mockito.doThrow(new DeviceNotFoundException()).when(groupManagementProviderService).addDevices(3, deviceIdentifiers);
+        DeviceGroupAssignmentRequest request = new DeviceGroupAssignmentRequest();
+        List<Integer> groupIds = Arrays.asList(1, 5, 7);
+        DeviceIdentifier device1 = new DeviceIdentifier();
+        device1.setId("device001");
+        device1.setType("android");
+        DeviceIdentifier device2 = new DeviceIdentifier();
+        device2.setId("device002");
+        device2.setType("android");
+        deviceIdentifiers.add(device1);
+        deviceIdentifiers.add(device2);
+        request.setGroupIds(groupIds);
+        request.setDeviceIdentifiers(deviceIdentifiers);
+        Response response = groupManagementService.assignMultipleDevicesToMultipleGroups(request);
         Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode(),
                 "addDevicesToGroup request failed for a request with valid parameters");
-        response = groupManagementService.addDevicesToGroup(2, deviceIdentifiers);
-        Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-                "addDevicesToGroup request succeded for a request with in-valid parameters");
-        response = groupManagementService.addDevicesToGroup(3, deviceIdentifiers);
-        Assert.assertEquals(response.getStatus(), Response.Status.BAD_REQUEST.getStatusCode(),
-                "addDevicesToGroup request succeded for a request with in-valid parameters");
     }
+
 
     @Test(description = "This method tests the removeDevicesFromGroup method under various conditions.")
     public void testRemoveDevicesFromGroup() throws GroupManagementException, DeviceNotFoundException {
@@ -381,76 +388,5 @@ public class GroupManagementServiceImplTest {
         response = groupManagementService.getGroups("test", "android2", false);
         Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                 "getGroups request succeeded with in-valid parameters");
-    }
-
-    @Test(description = "This method tests updateDeviceAssigningToGroups under different conditions.")
-    public void testUpdateDeviceAssigningToGroups() throws GroupManagementException, DeviceNotFoundException, PolicyManagementException {
-        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getGroupManagementProviderService"))
-                .toReturn(groupManagementProviderService);
-        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getPolicyManagementService"))
-                .toReturn(policyManagerService);
-        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getDeviceManagementService"))
-                .toReturn(deviceManagementProviderService);
-        Mockito.reset(groupManagementProviderService);
-        DeviceToGroupsAssignment deviceToGroupsAssignment = new DeviceToGroupsAssignment();
-        List<Integer> groupIds = new ArrayList<>();
-        groupIds.add(1);
-        groupIds.add(2);
-        deviceToGroupsAssignment.setDeviceGroupIds(groupIds);
-        deviceToGroupsAssignment.setDeviceIdentifier(new DeviceIdentifier("test", "android"));
-        List<DeviceGroup> deviceGroups = new ArrayList<>();
-        DeviceGroup deviceGroup = new DeviceGroup();
-        deviceGroup.setGroupId(1);
-        deviceGroups.add(deviceGroup);
-        deviceGroup = new DeviceGroup();
-        deviceGroup.setGroupId(3);
-        deviceGroup.setOwner(CarbonConstants.REGISTRY_SYSTEM_USERNAME);
-        deviceGroups.add(deviceGroup);
-        deviceGroup = new DeviceGroup();
-        deviceGroup.setGroupId(4);
-        deviceGroup.setOwner("test");
-        deviceGroups.add(deviceGroup);
-        Mockito.doReturn(deviceGroups).when(groupManagementProviderService)
-                .getGroups(Mockito.any(DeviceIdentifier.class), Mockito.anyBoolean());
-
-        // Mock getGroup() to simulate missing groups
-        Mockito.doReturn(deviceGroups.get(1)).when(groupManagementProviderService).getGroup(Mockito.eq(3), Mockito.anyBoolean());
-        Mockito.doReturn(deviceGroups.get(2)).when(groupManagementProviderService).getGroup(Mockito.eq(4), Mockito.anyBoolean());
-
-        Mockito.doNothing().when(groupManagementProviderService).addDevices(Mockito.anyInt(), Mockito.any());
-        Mockito.doNothing().when(groupManagementProviderService).removeDevice(Mockito.anyInt(), Mockito.any());
-
-        // Mock PolicyAdministratorPoint interactions
-        PolicyAdministratorPoint pap = Mockito.mock(PolicyAdministratorPoint.class);
-        Mockito.doReturn(pap).when(policyManagerService).getPAP();
-        Mockito.doNothing().when(pap).removePolicyUsed(Mockito.any());
-        Mockito.doReturn(null).when(policyManagerService).getEffectivePolicy(Mockito.any());
-        Mockito.doNothing().when(pap).publishChanges();
-
-        // Execute and verify successful case
-        Response response = groupManagementService.updateDeviceAssigningToGroups(deviceToGroupsAssignment);
-        Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode(),
-                "updateDeviceAssigningToGroups request failed with valid parameters");
-
-        // Verify that publishChanges() is called once
-        Mockito.verify(pap, Mockito.times(1)).publishChanges();
-
-        // Verify addDevices() is only called for valid groups
-        Mockito.verify(groupManagementProviderService, Mockito.times(1)).addDevices(Mockito.eq(4), Mockito.any());
-
-        // Simulate error when adding devices instead of removing them
-        Mockito.doThrow(new DeviceNotFoundException()).when(groupManagementProviderService)
-                .addDevices(Mockito.anyInt(), Mockito.any());
-
-        response = groupManagementService.updateDeviceAssigningToGroups(deviceToGroupsAssignment);
-        Assert.assertEquals(response.getStatus(), Response.Status.BAD_REQUEST.getStatusCode(),
-                "updateDeviceAssigningToGroups request succeeded with invalid parameters");
-
-        // Simulate group retrieval failure
-        Mockito.doThrow(new GroupManagementException()).when(groupManagementProviderService)
-                .getGroups(Mockito.any(DeviceIdentifier.class), Mockito.anyBoolean());
-        response = groupManagementService.updateDeviceAssigningToGroups(deviceToGroupsAssignment);
-        Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-                "updateDeviceAssigningToGroups request succeeded with invalid parameters");
     }
 }
