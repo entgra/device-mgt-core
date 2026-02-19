@@ -28,6 +28,7 @@ import io.entgra.device.mgt.core.device.mgt.common.app.mgt.App;
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.windows.AppStoreApplication;
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.windows.EnterpriseApplication;
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.windows.HostedAppxApplication;
+import io.entgra.device.mgt.core.device.mgt.common.app.mgt.windows.HostedExeApplication;
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.windows.HostedMSIApplication;
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.windows.WebClipApplication;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.UnknownApplicationTypeException;
@@ -69,6 +70,8 @@ public class MDMWindowsOperationUtil {
                     enterpriseApplication.getHostedMSIApplication().setContentUrl(application.getLocation());
                 } else if (MDMAppConstants.WindowsConstants.APPX.equalsIgnoreCase(appType)) {
                     enterpriseApplication.getHostedAppxApplication().setPackageUri(application.getLocation());
+                } else if (MDMAppConstants.WindowsConstants.EXE.equalsIgnoreCase(appType)) {
+                    enterpriseApplication.getHostedExeApplication().setContentUrl(application.getLocation());
                 }
                 operation.setCode(MDMAppConstants.WindowsConstants.INSTALL_ENTERPRISE_APPLICATION);
                 operation.setPayLoad(enterpriseApplication.toJSON());
@@ -198,6 +201,18 @@ public class MDMWindowsOperationUtil {
                 }
             }
             enterpriseApplication.setHostedMSIApplication(hostedMSIApplication);
+        } else if (MDMAppConstants.WindowsConstants.EXE.equalsIgnoreCase(appType)) {
+            HostedExeApplication hostedExeApplication = new HostedExeApplication();
+
+            for (int i = 0; i < metaJsonArray.size(); i++) {
+                metaElement = metaJsonArray.get(i);
+                metaObject = metaElement.getAsJsonObject();
+
+               if (MDMAppConstants.WindowsConstants.MSI_FILE_HASH.equals(metaObject.get("key").getAsString())) {
+                    hostedExeApplication.setFileHash(metaObject.get("value").getAsString().trim());
+                }
+            }
+            enterpriseApplication.setHostedExeApplication(hostedExeApplication);
         }
     }
 
