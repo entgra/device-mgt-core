@@ -880,9 +880,10 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 String windowsInstallerName = applicationArtifact.getInstallerName();
                 String extension = windowsInstallerName.substring(windowsInstallerName.lastIndexOf(".") + 1);
                 if (!extension.equalsIgnoreCase(Constants.MSI) &&
-                        !extension.equalsIgnoreCase(Constants.APPX)) {
+                        !extension.equalsIgnoreCase(Constants.APPX) &&
+                        !extension.equalsIgnoreCase(Constants.EXE)) {
                     String msg = "Application Type doesn't match with supporting application types of " +
-                            deviceType + "platform which are APPX and MSI";
+                            deviceType + " platform which are APPX, MSI and EXE";
                     log.error(msg);
                     throw new BadRequestException(msg);
                 }
