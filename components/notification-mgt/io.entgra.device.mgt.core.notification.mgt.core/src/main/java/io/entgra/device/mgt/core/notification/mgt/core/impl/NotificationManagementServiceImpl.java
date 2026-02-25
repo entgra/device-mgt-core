@@ -124,6 +124,31 @@ public class NotificationManagementServiceImpl implements NotificationManagement
     }
 
     @Override
+    public void updateAllNotificationActionForUser(String username, boolean isRead)
+            throws NotificationManagementException {
+        username = NotificationHelper.getTenantAwareUsernameIfUserExists(username);
+        try {
+            NotificationManagementDAOFactory.beginTransaction();
+            notificationDAO.updateAllNotificationAction(username, isRead);
+            NotificationManagementDAOFactory.commitTransaction();
+            int unreadCount = notificationDAO.getUnreadNotificationCountForUser(username);
+            String payload = String.format("{\"unreadCount\":%d}", unreadCount);
+            NotificationEventBroker.pushMessage(payload, Collections.singletonList(username));
+        } catch (NotificationManagementDAOException e) {
+            String msg = "Error occurred while updating all notification actions";
+            log.error(msg, e);
+            throw new NotificationManagementException(msg, e);
+        } catch (TransactionManagementException e) {
+            NotificationManagementDAOFactory.rollbackTransaction();
+            String msg = "Error occurred while updating all notification actions for user: " + username;
+            log.error(msg, e);
+            throw new NotificationManagementException(msg, e);
+        } finally {
+            NotificationManagementDAOFactory.closeConnection();
+        }
+    }
+
+    @Override
     public int getUserNotificationCount(String username, Boolean isRead) throws NotificationManagementException {
         try {
             username = NotificationHelper.getTenantAwareUsernameIfUserExists(username);

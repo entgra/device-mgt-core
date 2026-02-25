@@ -40,4 +40,13 @@ public class NotificationManagementApiUtil {
         }
         return notificationManagementService;
     }
+
+    /**
+     * Gets the authenticated username from the thread-local Carbon Context.
+     * @return String authenticated username
+     */
+    public static String getAuthenticatedUser() {
+        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        return ctx.getUsername();
+    }
 }

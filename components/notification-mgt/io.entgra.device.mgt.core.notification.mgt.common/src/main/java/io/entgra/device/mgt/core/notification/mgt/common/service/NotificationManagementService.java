@@ -64,6 +64,17 @@ public interface NotificationManagementService {
             throws NotificationManagementException;
 
     /**
+     * Updates the action type (e.g., READ or UNREAD) for all notifications
+     * for a specific user and pushes the updated unread count.
+     *
+     * @param username Username for whom the actions are to be updated.
+     * @param isRead   Action type to set (e.g., "READ", "UNREAD").
+     * @throws NotificationManagementException If an error occurs while processing the update.
+     */
+    void updateAllNotificationActionForUser(String username, boolean isRead)
+            throws NotificationManagementException;
+
+    /**
      * Retrieves the total number of user notification actions for a specific user,
      * optionally filtered by notification status.
      *

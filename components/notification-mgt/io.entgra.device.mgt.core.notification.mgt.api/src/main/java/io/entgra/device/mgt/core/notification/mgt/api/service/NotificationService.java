@@ -238,6 +238,44 @@ public interface NotificationService {
             NotificationActionRequest request
     );
 
+    @PUT
+    @Path("/action/all")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "PUT",
+            value = "Update All Notification Actions",
+            notes = "Mark all notifications as READ or UNREAD for a given user.",
+            tags = "Notification Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = SCOPE, value = "dm:notif:mark-checked")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. Successfully updated all notification actions.",
+                            response = Response.class),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. Missing or invalid parameters.",
+                            response = Response.class),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. Failed to update notification actions.",
+                            response = Response.class)
+            }
+    )
+    Response updateAllNotificationAction(
+            @ApiParam(
+                    name = "request",
+                    value = "Request body containing isRead",
+                    required = true)
+            NotificationActionRequest request
+    );
+
     @DELETE
     @Path("/user-notifications")
     @ApiOperation(
