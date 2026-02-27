@@ -214,6 +214,27 @@ public class AbstractNotificationManagementDAOImpl implements NotificationManage
     }
 
     @Override
+    public void updateAllNotificationAction(String username, boolean isRead)
+            throws NotificationManagementDAOException {
+        String query =
+                "UPDATE DM_NOTIFICATION_USER_ACTION " +
+                        "SET IS_READ = ? " +
+                        "WHERE USERNAME = ?";
+        try {
+            Connection connection = NotificationManagementDAOFactory.getConnection();
+            try (PreparedStatement ps = connection.prepareStatement(query)) {
+                ps.setBoolean(1, isRead);
+                ps.setString(2, username);
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while updating all notification actions for user: " + username;
+            log.error(msg, e);
+            throw new NotificationManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
     public List<UserNotificationAction> getAllNotificationUserActions() throws NotificationManagementDAOException {
         List<UserNotificationAction> userNotificationActions = new ArrayList<>();
         String query =

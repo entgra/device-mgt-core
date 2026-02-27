@@ -77,6 +77,17 @@ public interface NotificationManagementDAO {
             throws NotificationManagementDAOException;
 
     /**
+     * Updates the action type (e.g., READ or UNREAD) for all notifications
+     * for the given user.
+     *
+     * @param username    Username for whom the actions are to be updated.
+     * @param isRead      Action type to set (e.g., "READ", "UNREAD").
+     * @throws NotificationManagementDAOException If an error occurs while updating the notifications.
+     */
+    void updateAllNotificationAction(String username, boolean isRead)
+            throws NotificationManagementDAOException;
+
+    /**
      * Retrieves all notification actions performed by all users.
      *
      * @return a list of {@link UserNotificationAction} objects representing actions taken by users
