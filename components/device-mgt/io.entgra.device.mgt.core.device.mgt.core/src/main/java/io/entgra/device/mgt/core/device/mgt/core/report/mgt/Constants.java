@@ -59,6 +59,7 @@ public class Constants {
         public static final String LOCATION_INFO = "LOCATION_INFO";
         public static final String UNSUPPORTED_REPORT_TYPE = "UNSUPPORTED";
         public static final String TENANT_ID = "tenantId";
+        public static final String DEVICE_LOG = "DEVICE_LOG";
     }
 }
 

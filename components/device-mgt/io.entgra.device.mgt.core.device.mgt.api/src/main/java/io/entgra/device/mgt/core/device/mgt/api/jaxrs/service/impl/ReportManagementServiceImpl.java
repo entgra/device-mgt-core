@@ -20,6 +20,7 @@ package io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceList;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
@@ -422,5 +423,37 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }
+
+    @Override
+    @GET
+    @Path("/birt/report/params")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getReportParams() {
+        try {
+            JsonArray response = DeviceMgtAPIUtils.getReportManagementService().getBirtReportParameters();
+            return Response.ok(response).build();
+
+        } catch (ReportManagementException e) {
+            return Response.status(500).entity(e.getMessage()).build();
+        } catch (BadRequestException e) {
+            return Response.status(400).entity(e.getMessage()).build();
+        }
+    }
+
+    @GET
+    @Path("/birt/report/preview")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getReportPreview(@QueryParam("fileName") String fileName) {
+        try {
+            JsonObject response = DeviceMgtAPIUtils.getReportManagementService()
+                            .getBirtReportPreview(fileName);
+            return Response.ok(response).build();
+        } catch (BadRequestException e) {
+            return Response.status(400).entity(e.getMessage()).build();
+        } catch (ReportManagementException e) {
+            return Response.status(500).entity(e.getMessage()).build();
+        }
+    }
+
 
 }
