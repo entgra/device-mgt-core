@@ -1260,6 +1260,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                             app.setIdentifier(application.getPackageName());
                             app.setMetaData(application.getApplicationReleases().get(0).getMetaData());
                             app.setName(application.getInstallerName());
+                            app.setLocation(application.getApplicationReleases().get(0).getInstallerPath());
                             if (SubAction.INSTALL.toString().equalsIgnoreCase(action)) {
                                 return MDMWindowsOperationUtil.createInstallAppOperation(app);
                             } else {

@@ -26,6 +26,7 @@ import io.entgra.device.mgt.core.device.mgt.core.config.cache.CertificateCacheCo
 import io.entgra.device.mgt.core.device.mgt.core.config.cache.DeviceCacheConfiguration;
 import io.entgra.device.mgt.core.device.mgt.core.config.cache.GeoFenceCacheConfiguration;
 import io.entgra.device.mgt.core.device.mgt.core.config.enrollment.guide.EnrollmentGuideConfiguration;
+import io.entgra.device.mgt.core.device.mgt.core.config.mqtt.MQTTConfiguration;
 import io.entgra.device.mgt.core.device.mgt.core.config.geo.location.GeoLocationConfiguration;
 import io.entgra.device.mgt.core.device.mgt.core.config.identity.IdentityConfigurations;
 import io.entgra.device.mgt.core.device.mgt.core.config.keymanager.KeyManagerConfigurations;
@@ -75,7 +76,7 @@ public final class DeviceManagementConfig {
     private OperationTimeoutConfiguration operationTimeoutConfiguration;
     private MetaDataConfiguration metaDataConfiguration;
     private EnrollmentGuideConfiguration enrollmentGuideConfiguration;
-
+    private MQTTConfiguration mqttConfiguration;
     private DefaultPermissions defaultPermissions;
 
     @XmlElement(name = "ManagementRepository", required = true)
@@ -299,5 +300,15 @@ public final class DeviceManagementConfig {
     public void setDefaultPermissions(DefaultPermissions defaultPermissions) {
         this.defaultPermissions = defaultPermissions;
     }
+
+    @XmlElement(name = "MQTTConfigurations", required = true)
+    public MQTTConfiguration getMqttConfiguration() {
+        return mqttConfiguration;
+    }
+
+    public void setMqttConfiguration(MQTTConfiguration mqttConfiguration) {
+        this.mqttConfiguration = mqttConfiguration;
+    }
+
 }
 

@@ -146,4 +146,16 @@ public interface ReportManagementService {
      * @throws BadRequestException Might occur if templateNames is invalid
      */
     JsonObject deleteBirtTemplate(List<String> templateNames) throws ReportManagementException, BadRequestException;
+
+    /**
+     * This method is used to invoke BIRT runtime API for extracting report data
+     *
+     * @param reportParameters The report specific parameters
+     * @param limit limit for pagination
+     * @param offset offset for pagination
+     * @return returns response containing extracted results from BIRT runtime
+     * @throws ReportManagementException Might occur when invoking BIRT runtime
+     * @throws BadRequestException Might occur when report parameters mismatch
+     */
+    JsonObject getReportData(JsonObject reportParameters, int limit, int offset) throws ReportManagementException, BadRequestException;
 }

@@ -253,27 +253,4 @@ public class DeviceSubTypeDAOImpl implements DeviceSubTypeDAO {
         }
     }
 
-    @Override
-    public String getSubTypeNames(String imeiNumber) throws SubTypeMgtDAOException {
-        String sql = "SELECT d.SUB_TYPE_NAME FROM COMMUNICATION_MODULE c JOIN DM_DEVICE_SUB_TYPE d " +
-                "ON c.SUB_TYPE_ID = d.SUB_TYPE_ID WHERE c.IMEI = ?";
-        try {
-            Connection conn = ConnectionManagerUtil.getDBConnection();
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, imeiNumber);
-
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        return rs.getString("SUB_TYPE_NAME");
-                    } else {
-                        return null;
-                    }
-                }
-            }
-        } catch (SQLException | DBConnectionException e) {
-            String msg = "Error occurred while retrieving subtype name for IMEI: " + imeiNumber;
-            log.error(msg, e);
-            throw new SubTypeMgtDAOException(msg, e);
-        }
-    }
 }

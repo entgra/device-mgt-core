@@ -24,6 +24,14 @@
     <SessionTimeOut>3600</SessionTimeOut>
     <!--  maximum number of login cache entries  -->
     <LoginCacheCapacity>10000</LoginCacheCapacity>
+    <!--
+        The UI app names that will use the API tenant context paths when using the request handlers i.e. '/t/{tenantDomain}/api/'
+        Add '-login' suffix to the app name eg:
+        <TenantContextEnabledApps>
+            <AppName>endpoint-mgt-login</AppName>
+        </TenantContextEnabledApps>
+     -->
+    <TenantContextEnabledApps></TenantContextEnabledApps>
     <!-- hubspot account info for live chat -->
     <HubspotChat>
         <EnableHubspot>false</EnableHubspot>
@@ -415,6 +423,7 @@
         <Scope>win:ops:enterprise-app-install</Scope>
         <Scope>win:ops:wns-config</Scope>
         <Scope>win:ops:send-notif</Scope>
+        <Scope>win:ops:device-log</Scope>
         <Scope>win:microsoft-store:search</Scope>
         <Scope>win:updates:read</Scope>
         <Scope>win:ops:os-updates-install</Scope>
@@ -504,6 +513,7 @@
         <Scope>dm:device-type:statistic:view</Scope>
         <Scope>dm:device-type:statistic:delete</Scope>
         <Scope>dm:remote:connect</Scope>
+        <Scope>win:ops:unlock-devices</Scope>
     </Scopes>
     <SSOConfiguration>
         <Issuer>device-mgt</Issuer>

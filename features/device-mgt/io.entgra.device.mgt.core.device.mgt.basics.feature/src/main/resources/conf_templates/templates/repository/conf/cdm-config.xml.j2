@@ -382,6 +382,19 @@
                 {% endif%}
             </OperationTimeouts>
     </OperationTimeoutConfigurations>
+    <MQTTConfigurations>
+        {% if device_mgt_conf.mqtt_config is defined %}
+        <CompressionThresholdKb>
+            {{ device_mgt_conf.mqtt_config.compression_threshold_kb }}
+        </CompressionThresholdKb>
+        <CompressionLevel>
+            {{ device_mgt_conf.mqtt_config.compression_level }}
+        </CompressionLevel>
+        {% else %}
+        <CompressionThresholdKb>4</CompressionThresholdKb>
+        <CompressionLevel>1</CompressionLevel>
+        {% endif %}
+    </MQTTConfigurations>
     <EnrollmentGuideConfiguration>
             {% if device_mgt_conf.enrollment_guide_conf is defined %}
             <Enable>{{device_mgt_conf.enrollment_guide_conf.enable}}</Enable>

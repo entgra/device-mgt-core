@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - 2023, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
+ * Copyright (c) 2018 - 2025, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
  *
  * Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -15,23 +15,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.entgra.device.mgt.core.application.mgt.common.wrapper;
 
-import io.entgra.device.mgt.core.application.mgt.common.dto.VppAssetDTO;
-import io.entgra.device.mgt.core.application.mgt.common.dto.VppPaginationDTO;
+package io.entgra.device.mgt.core.device.mgt.common.operation.mgt;
 
 import java.util.List;
 
-public class VppItuneAssetResponseWrapper extends VppPaginationDTO {
+public class CustomOperation {
+    private Operation operation;
+    private List<String> deviceIds;
 
-    List<VppAssetDTO> assets;
-
-    public List<VppAssetDTO> getAssets() {
-        return assets;
+    public Operation getOperation() {
+        return operation;
     }
 
-    public void setAssets(List<VppAssetDTO> assets) {
-        this.assets = assets;
+    public void setOperation(Operation operation) {
+        this.operation = operation;
     }
 
+    public List<String> getDeviceIds() {
+        return deviceIds;
+    }
+
+    public void setDeviceIds(List<String> deviceIds) {
+        this.deviceIds = deviceIds;
+    }
 }

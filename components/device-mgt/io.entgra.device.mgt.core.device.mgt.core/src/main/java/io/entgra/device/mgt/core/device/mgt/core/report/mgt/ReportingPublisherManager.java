@@ -20,9 +20,12 @@ package io.entgra.device.mgt.core.device.mgt.core.report.mgt;
 
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceDetailsWrapper;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.EventPublishingException;
+import io.entgra.device.mgt.core.device.mgt.core.report.mgt.config.ReportMgtConfiguration;
+import io.entgra.device.mgt.core.device.mgt.core.report.mgt.config.ReportMgtConfigurationManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -41,38 +44,65 @@ import java.util.concurrent.Future;
 public class ReportingPublisherManager {
 
     private static final Log log = LogFactory.getLog(ReportingPublisherManager.class);
-    private final static ExecutorService executorService;
-    private DeviceDetailsWrapper payload;
-    private String endpoint;
-    private static final PoolingHttpClientConnectionManager poolingManager;
+    private final PoolingHttpClientConnectionManager poolingManager;
+    private final ExecutorService executorService;
+    private final CloseableHttpClient httpClient;
+    private static volatile ReportingPublisherManager instance;
 
-    static {
-        executorService = Executors.newFixedThreadPool(10); //todo make this configurable
-        poolingManager = new PoolingHttpClientConnectionManager();
-        poolingManager.setMaxTotal(10); //todo make this configurable
-        poolingManager.setDefaultMaxPerRoute(10);
+    public static ReportingPublisherManager getInstance() {
+        if (instance == null) {
+            synchronized (ReportingPublisherManager.class) {
+                if (instance == null) {
+                    instance = new ReportingPublisherManager();
+                }
+            }
+        }
+        return instance;
+    }
+
+    private ReportingPublisherManager() {
+        ReportMgtConfiguration config = ReportMgtConfigurationManager.getInstance().getConfiguration();
+        this.executorService = Executors.newFixedThreadPool(config.getThreadPoolSize());
+
+        this.poolingManager = new PoolingHttpClientConnectionManager();
+        this.poolingManager.setMaxTotal(config.getMaxConnections());
+        this.poolingManager.setDefaultMaxPerRoute(config.getMaxConnectionsPerRoute());
+
+        this.httpClient = HttpClients.custom()
+                .setConnectionManager(poolingManager)
+                .build();
     }
 
     public Future<Integer> publishData(DeviceDetailsWrapper deviceDetailsWrapper, String eventUrl) {
-        this.payload = deviceDetailsWrapper;
-        this.endpoint = eventUrl;
-        return executorService.submit(new ReportingPublisher());
+        return executorService.submit(new ReportingPublisher(deviceDetailsWrapper, eventUrl));
     }
 
     private class ReportingPublisher implements Callable<Integer> {
+        private final DeviceDetailsWrapper payload;
+        private final String endpoint;
+
+        private ReportingPublisher(DeviceDetailsWrapper payload, String eventUrl) {
+            this.payload = payload;
+            this.endpoint = eventUrl;
+        }
+
         @Override
         public Integer call() throws EventPublishingException {
-            try (CloseableHttpClient client = HttpClients.custom().setConnectionManager(poolingManager).build()) {
-                HttpPost apiEndpoint = new HttpPost(endpoint);
-                apiEndpoint.setHeader(HTTP.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+            HttpPost apiEndpoint = new HttpPost(endpoint);
+            apiEndpoint.setHeader(HTTP.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+
+            try {
                 StringEntity requestEntity = new StringEntity(payload.getJSONString(), ContentType.APPLICATION_JSON);
                 apiEndpoint.setEntity(requestEntity);
-                HttpResponse response = client.execute(apiEndpoint);
-                int statusCode = response.getStatusLine().getStatusCode();
-                if (log.isDebugEnabled()) {
-                    log.debug("Published data to the reporting backend: " + endpoint + ", Response code: " + statusCode);
+                try (CloseableHttpResponse response = httpClient.execute(apiEndpoint)) {
+                    int statusCode = response.getStatusLine().getStatusCode();
+
+                    if (log.isDebugEnabled()) {
+                        log.debug("Published data to reporting backend: " + endpoint +
+                                ", Response code: " + statusCode);
+                    }
+                    return statusCode;
                 }
-                return statusCode;
             } catch (ConnectException e) {
                 String message = "Connection refused while publishing reporting data to the API: " + endpoint;
                 log.error(message, e);

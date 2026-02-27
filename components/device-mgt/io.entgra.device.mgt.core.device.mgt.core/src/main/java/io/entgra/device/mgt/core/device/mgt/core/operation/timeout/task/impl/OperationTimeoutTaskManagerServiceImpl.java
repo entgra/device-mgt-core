@@ -79,15 +79,14 @@ public class OperationTimeoutTaskManagerServiceImpl implements OperationTimeoutT
 
             String taskName = constructTaskName(config, deviceTypes);
 
-            if (!taskManager.isTaskScheduled(taskName)) {
-                TaskInfo taskInfo = new TaskInfo(taskName, TASK_CLASS, properties, triggerInfo);
-                taskManager.registerTask(taskInfo);
-                taskManager.rescheduleTask(taskInfo.getName());
-            } else {
-                throw new OperationTimeoutTaskException(
-                        "Operation Timeout task is already started for the device type(s) : " + config.getDeviceTypes()
-                                + ", operation code : " + config.getInitialStatus());
+            if (taskManager.isTaskScheduled(taskName)) {
+                taskManager.deleteTask(taskName);
             }
+
+            TaskInfo taskInfo = new TaskInfo(taskName, TASK_CLASS, properties, triggerInfo);
+            taskManager.registerTask(taskInfo);
+            taskManager.rescheduleTask(taskInfo.getName());
+
         } catch (TaskException e) {
             throw new OperationTimeoutTaskException("Error occurred while creating the Operation timeout task " +
                     "for the device type(s) : " + config.getDeviceTypes() + ", operation code : " + config

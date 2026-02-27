@@ -17,24 +17,11 @@
  */
 package io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl;
 
-import io.entgra.device.mgt.core.device.mgt.common.PolicyPaginationRequest;
-import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManagerServiceImpl;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.context.PrivilegedCarbonContext;
-import io.entgra.device.mgt.core.device.mgt.common.Device;
-import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
-import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
-import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
-import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationException;
-import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationService;
-import io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementDataHolder;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.PolicyList;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.PolicyWrapper;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.PriorityUpdatedPolicyWrapper;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ProfileFeature;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.*;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.PolicyManagementService;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.FilteringUtil;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.RequestValidationUtil;
@@ -42,12 +29,13 @@ import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.DeviceMgtAPIUtils;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.DeviceMgtUtil;
 import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
-import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
+import io.entgra.device.mgt.core.device.mgt.common.PolicyPaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationException;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationService;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.policy.mgt.Policy;
 import io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementDataHolder;
+import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManagerServiceImpl;
 import io.entgra.device.mgt.core.policy.mgt.common.PolicyAdministratorPoint;
 import io.entgra.device.mgt.core.policy.mgt.common.PolicyManagementException;
 import io.entgra.device.mgt.core.policy.mgt.core.PolicyManagerService;
@@ -56,7 +44,15 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 
 import javax.validation.Valid;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
@@ -79,7 +75,7 @@ public class PolicyManagementServiceImpl implements PolicyManagementService {
                 .validatePolicyDetails(policyWrapper);
         // validation failure results;
         if (!features.isEmpty()) {
-            String msg = "Policy feature/s validation failed." ;
+            String msg = "Policy feature/s validation failed.";
             log.error(msg);
             return Response.status(Response.Status.BAD_REQUEST).entity(msg + " Features : " + features).build();
         }
@@ -98,7 +94,7 @@ public class PolicyManagementServiceImpl implements PolicyManagementService {
                 String username = threadLocalCarbonContext.getUsername();
                 try {
                     String requiredPermission = PermissionManagerServiceImpl.getInstance().getRequiredPermission();
-                    String[] requiredPermissions = new String[] {requiredPermission};
+                    String[] requiredPermissions = new String[]{requiredPermission};
                     if (!deviceAccessAuthorizationService.isUserAuthorized(deviceIdentifier, username, requiredPermissions)) {
                         return Response.status(Response.Status.UNAUTHORIZED).entity(
                                 new ErrorResponse.ErrorResponseBuilder().setMessage
@@ -141,7 +137,7 @@ public class PolicyManagementServiceImpl implements PolicyManagementService {
      * @param policyWrapper {@link PolicyWrapper}
      * @return {@link Policy}
      * @throws DeviceManagementException if error occurred while creating {@link Policy} object from
-     * {@link PolicyWrapper}
+     *                                   {@link PolicyWrapper}
      */
     private Policy getPolicyFromWrapper(@Valid PolicyWrapper policyWrapper) throws DeviceManagementException {
         Policy policy = new Policy();
@@ -184,10 +180,10 @@ public class PolicyManagementServiceImpl implements PolicyManagementService {
         try {
             PolicyAdministratorPoint policyAdministratorPoint = policyManagementService.getPAP();
             policies = policyAdministratorPoint.getPolicies();
-            if(offset == 0 && limit == 0){
+            if (offset == 0 && limit == 0) {
                 targetPolicies.setCount(policies.size());
                 targetPolicies.setList(policies);
-            }else{
+            } else {
                 targetPolicies.setCount(policies.size());
                 filteredPolicies = FilteringUtil.getFilteredList(policies, offset, limit);
                 targetPolicies.setList(filteredPolicies);
@@ -231,7 +227,7 @@ public class PolicyManagementServiceImpl implements PolicyManagementService {
                 .validatePolicyDetails(policyWrapper);
         // validation failure results;
         if (!features.isEmpty()) {
-            String msg = "Policy feature/s validation failed." ;
+            String msg = "Policy feature/s validation failed.";
             log.error(msg);
             return Response.status(Response.Status.BAD_REQUEST).entity(msg + " Features : " + features).build();
         }
@@ -290,7 +286,7 @@ public class PolicyManagementServiceImpl implements PolicyManagementService {
         }
         if (policyDeleted) {
             return Response.status(Response.Status.OK).entity("Policies have been successfully " +
-                                                              "deleted").build();
+                    "deleted").build();
         } else {
             //TODO:Check of this logic is correct
             String modifiedInvalidPolicyIds =
@@ -438,7 +434,7 @@ public class PolicyManagementServiceImpl implements PolicyManagementService {
                 return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
             }
         } catch (PolicyManagementException e) {
-            String msg = "Error occurred while retrieving policy corresponding to the id '" + deviceType + "'"+ deviceId;
+            String msg = "Error occurred while retrieving policy corresponding to the id '" + deviceType + "'" + deviceId;
             log.error(msg, e);
             return Response.serverError().entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(msg).build()).build();
@@ -484,9 +480,9 @@ public class PolicyManagementServiceImpl implements PolicyManagementService {
                 = RequestValidationUtil.validateProfileFeatures(profileFeaturesList);
         // validation failure results;
         if (!features.isEmpty()) {
-            String msg = "Policy feature/s validation failed." ;
+            String msg = "Policy feature/s validation failed.";
             log.error(msg);
-            return Response.status(Response.Status.BAD_REQUEST).entity(msg + " Features : " +features).build();
+            return Response.status(Response.Status.BAD_REQUEST).entity(msg + " Features : " + features).build();
         }
         return Response.status(Response.Status.OK).entity("Valid request").build();
 
@@ -508,13 +504,13 @@ public class PolicyManagementServiceImpl implements PolicyManagementService {
         List<Policy> policies;
         PolicyList targetPolicies = new PolicyList();
         PolicyPaginationRequest request = new PolicyPaginationRequest(offset, limit);
-        if (name != null){
+        if (name != null) {
             request.setName(name);
         }
-        if (type != null){
+        if (type != null) {
             request.setType(type);
         }
-        if (status != null){
+        if (status != null) {
             request.setStatus(status);
         }
         if (deviceType != null) {

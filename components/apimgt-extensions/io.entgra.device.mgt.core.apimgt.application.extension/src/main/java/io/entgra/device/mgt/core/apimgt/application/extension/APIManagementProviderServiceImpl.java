@@ -470,10 +470,23 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
         // Here we are checking whether that the current tenant is API publishing enabled tenant or not
         // If the current tenant belongs to a publishing enabled tenant, then start the api application
         // registration sequences in current tenant space, otherwise in the super tenant
-        for (String tenantDomain : getApiPublishingEnabledTenantDomains()) {
-            if (Objects.equals(tenantDomain, currentTenantDomain)) {
+        if (!currentTenantDomain.equals(flowStartingDomain)) {
+            List<String> publishingEnabledTenantDomains = getApiPublishingEnabledTenantDomains();
+
+            for (String tenantDomain : publishingEnabledTenantDomains) {
+                if (Objects.equals(tenantDomain, currentTenantDomain)) {
+                    flowStartingDomain = currentTenantDomain;
+                    break;
+                }
+            }
+
+            // If the current tenant domain is not in the API publishing enabled tenant list and if the application
+            // register payload has the registerOnSameTenant property as true, then the application will be created
+            // under the same tenant. This configuration is added so that we can create API applications under
+            // subtenants without configuring the API published enabled tenant list.
+            if (!publishingEnabledTenantDomains.contains(currentTenantDomain) &&
+                    apiApplicationProfile.isRegisterOnSameTenant()) {
                 flowStartingDomain = currentTenantDomain;
-                break;
             }
         }
 

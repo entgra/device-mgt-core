@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - 2023, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
+ * Copyright (c) 2018 - 2025, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
  *
  * Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -15,23 +15,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.entgra.device.mgt.core.application.mgt.common.wrapper;
 
-import io.entgra.device.mgt.core.application.mgt.common.dto.VppAssetDTO;
-import io.entgra.device.mgt.core.application.mgt.common.dto.VppPaginationDTO;
+package io.entgra.device.mgt.core.ui.request.interceptor.exceptions;
 
-import java.util.List;
+public class TenantInvokerException extends Exception {
+    private static final long serialVersionUID = 5747919813876558204L;
 
-public class VppItuneAssetResponseWrapper extends VppPaginationDTO {
-
-    List<VppAssetDTO> assets;
-
-    public List<VppAssetDTO> getAssets() {
-        return assets;
+    public TenantInvokerException(String message) {
+        super(message);
     }
 
-    public void setAssets(List<VppAssetDTO> assets) {
-        this.assets = assets;
+    public TenantInvokerException(String message, Throwable cause) {
+        super(message, cause);
     }
-
 }

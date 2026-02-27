@@ -18,9 +18,7 @@
 package io.entgra.device.mgt.core.application.mgt.common.wrapper;
 
 import io.entgra.device.mgt.core.application.mgt.common.dto.VppItuneAssetDTO;
-import io.entgra.device.mgt.core.application.mgt.common.dto.VppItuneUserDTO;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class VppAssociateRequestWrapper {
