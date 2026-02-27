@@ -93,38 +93,54 @@ public class OperationTimeoutTask extends RandomlyAssignedScheduleTask {
             List<String> deviceTypes = getDeviceTypes(operationTimeoutConfig);
 
             List<Activity> activities = DeviceManagementDataHolder.getInstance().getOperationManager()
-                    .getActivities(deviceTypes, operationTimeoutConfig.getCode(), timeMillis,
+                    .getTimeoutActivities(deviceTypes, operationTimeoutConfig.getCode(), timeMillis,
                             operationTimeoutConfig.getInitialStatus());
 
             if (activities == null || activities.isEmpty()) {
                 return;
             }
 
-            String operationId;
-            Operation operation;
             List<OperationTimeoutInfo> timeoutInfos = new ArrayList<>();
 
             for (Activity activity : activities) {
-                operationId = activity.getActivityId().replace("ACTIVITY_", "");
+                int operationId = activity.getOperationId();
+                String createdTimeStamp = activity.getCreatedTimeStamp();
+
+                if (createdTimeStamp == null || createdTimeStamp.isEmpty()) {
+                    log.warn("Skipping operation " + operationId + " - missing created timestamp");
+                    continue;
+                }
+
+                Operation operation = new Operation();
+                operation.setId(operationId);
+                operation.setCode(activity.getCode());
+                operation.setType(Operation.Type.valueOf(activity.getType().name()));
+                operation.setCreatedTimeStamp(createdTimeStamp);
+
                 for (ActivityStatus activityStatus : activity.getActivityStatus()) {
                     try {
-                        operation = DeviceManagementDataHolder.getInstance().getOperationManager()
-                                .getOperation(Integer.parseInt(operationId));
-
-                        if (operation == null) {
-                            continue;
+                        if (log.isDebugEnabled()) {
+                            log.debug("Checking timeout - OpId: " + operationId
+                                    + ", DeviceId: " + activityStatus.getDeviceIdentifier().getId()
+                                    + ", Status: " + activityStatus.getStatus());
                         }
 
                         if (hasOperationTimedOut(operation, operationTimeoutConfig)) {
-                            Operation.Status operationStatus = operation.getStatus();
+                            Operation.Status originalStatus = Operation.Status.valueOf(activityStatus.getStatus().name());
                             operation.setStatus(Operation.Status.valueOf(operationTimeoutConfig.getNextStatus()));
 
                             DeviceManagementDataHolder.getInstance().getOperationManager()
                                     .updateOperation(activityStatus.getDeviceIdentifier(), operation);
 
+                            if (log.isDebugEnabled()) {
+                                log.debug("Operation timed out - OpId: " + operationId
+                                        + ", DeviceId: " + activityStatus.getDeviceIdentifier().getId()
+                                        + ", " + originalStatus + " -> " + operationTimeoutConfig.getNextStatus());
+                            }
+
                             if (!callbacks.isEmpty()) {
                                 OperationTimeoutInfo timeoutInfo = new OperationTimeoutInfo(
-                                        activityStatus.getDeviceIdentifier(), operation, operationStatus);
+                                        activityStatus.getDeviceIdentifier(), operation, originalStatus);
                                 timeoutInfos.add(timeoutInfo);
                             }
                         }
@@ -132,6 +148,8 @@ public class OperationTimeoutTask extends RandomlyAssignedScheduleTask {
                         log.error("Invalid operation ID format " + operationId, e);
                     } catch (OperationManagementException e) {
                         log.error("Error processing operation " + operationId, e);
+                    } catch (IllegalArgumentException e) {
+                        log.error("Invalid status or type for operation " + operationId, e);
                     }
                 }
             }

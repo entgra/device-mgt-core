@@ -156,4 +156,16 @@ public interface OperationManager {
 
     List<Activity> getActivities(List<String> deviceTypes, String operationCode, long updatedSince, String operationStatus)
             throws OperationManagementException;
+    /**
+     * Retrieves timeout activities for operations matching the specified criteria.
+     *
+     * @param deviceTypes     List of device types to filter operations
+     * @param operationCode   Operation code to filter (e.g., REMOTE_RELAY_OFF)
+     * @param updatedSince    Timestamp in milliseconds to filter operations updated before this time
+     * @param operationStatus Operation status to filter (e.g., PENDING,NOTNOW)
+     * @return List of activities with essential timeout information
+     * @throws OperationManagementException If error occurs while retrieving timeout activities
+     */
+    List<Activity> getTimeoutActivities(List<String> deviceTypes, String operationCode, long updatedSince, String operationStatus)
+            throws OperationManagementException;
 }

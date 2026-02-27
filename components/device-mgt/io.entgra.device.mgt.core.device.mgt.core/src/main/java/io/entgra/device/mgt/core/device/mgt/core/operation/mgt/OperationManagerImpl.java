@@ -1732,4 +1732,23 @@ public class OperationManagerImpl implements OperationManager {
             OperationManagementDAOFactory.closeConnection();
         }
     }
+
+    @Override
+    public List<Activity> getTimeoutActivities(List<String> deviceTypes, String operationCode, long updatedSince, String operationStatus)
+            throws OperationManagementException {
+        try {
+            OperationManagementDAOFactory.openConnection();
+            return operationDAO.getTimeoutActivities(deviceTypes, operationCode, updatedSince, operationStatus);
+        } catch (SQLException e) {
+            String errMsg = "Error occurred while opening a connection to the data source.";
+            log.error(errMsg, e);
+            throw new OperationManagementException(errMsg, e);
+        } catch (OperationManagementDAOException e) {
+            String errMsg = "Error occurred while getting the activity list.";
+            log.error(errMsg);
+            throw new OperationManagementException(errMsg, e);
+        } finally {
+            OperationManagementDAOFactory.closeConnection();
+        }
+    }
 }

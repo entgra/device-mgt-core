@@ -162,4 +162,17 @@ public interface OperationDAO {
      */
     OperationDTO getOperationDetailsById(int operationId, int tenantId)
             throws OperationManagementDAOException;
+
+    /**
+     * Retrieves timeout activities for operations from the DM_ENROLMENT_OP_MAPPING table.
+     *
+     * @param deviceTypes     list of device types to filter operations.
+     * @param operationCode   operation code to filter (e.g., REMOTE_RELAY_OFF).
+     * @param updatedSince    timestamp in milliseconds to filter operations updated before this time.
+     * @param operationStatus operation status to filter (e.g., PENDING, NOTNOW).
+     * @return {@link List<Activity>} containing timeout-relevant activity information.
+     * @throws OperationManagementDAOException if connection establishment or SQL execution fails.
+     */
+    List<Activity> getTimeoutActivities(List<String> deviceTypes, String operationCode, long updatedSince, String operationStatus)
+            throws OperationManagementDAOException;
 }
