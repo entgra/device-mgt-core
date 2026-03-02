@@ -68,6 +68,10 @@ public class HttpReportingUtil {
         if (designFile != null && !designFile.isEmpty()) {
             switch (designFile) {
                 case Constants.BirtReporting.APP_USAGE:
+                case Constants.BirtReporting.APP_USAGE_TOTAL:
+                case Constants.BirtReporting.APP_INFO:
+                case Constants.BirtReporting.APP_LAUNCH:
+                case Constants.BirtReporting.APP_LAUNCH_TOTAL:
                 case Constants.BirtReporting.DEVICE_INFO:
                 case Constants.BirtReporting.LOCATION_INFO:
                     return designFile += Constants.BirtReporting.BIRT_RPT_DESIGN_EXT;
