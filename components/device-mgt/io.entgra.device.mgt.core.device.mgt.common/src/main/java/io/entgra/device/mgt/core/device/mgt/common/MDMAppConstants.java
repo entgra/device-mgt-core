@@ -65,6 +65,7 @@ public class MDMAppConstants {
 		//App type constants related to window device type
 		public static final String MSI = "MSI";
 		public static final String APPX = "APPX";
+		public static final String EXE = "EXE";
 
 		//MSI Meta Key Constant
 		public static final String MSI_PRODUCT_ID = "Product_Id";

@@ -96,6 +96,7 @@ public class Constants {
     //App type constants related to window device type
     public static final String MSI = "MSI";
     public static final String APPX = "APPX";
+    public static final String EXE = "EXE";
 
     public static final String ENTERPRISE_APP_TYPE = "ENTERPRISE";
     public static final String PUBLIC_APP_TYPE = "ENTERPRISE";
