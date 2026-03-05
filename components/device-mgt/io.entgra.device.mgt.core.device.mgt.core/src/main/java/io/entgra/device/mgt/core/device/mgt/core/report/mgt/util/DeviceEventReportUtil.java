@@ -23,39 +23,39 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import io.entgra.device.mgt.core.device.mgt.common.Device;
-import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLogEntryBean;
-import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLogPayloadBean;
-import io.entgra.device.mgt.core.device.mgt.common.device.details.LogsDetailsWrapper;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceEventEntryBean;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceEventPayloadBean;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.EventDetailsWrapper;
 import io.entgra.device.mgt.core.device.mgt.core.util.DeviceManagerUtil;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DeviceLogReportUtil {
+public class DeviceEventReportUtil {
 
-    public static LogsDetailsWrapper createLogsWrapper(Device device, JsonArray payloadArray) {
-        List<DeviceLogPayloadBean> payload = new ArrayList<>();
+    public static EventDetailsWrapper createLogsWrapper(Device device, JsonArray payloadArray) {
+        List<DeviceEventPayloadBean> payload = new ArrayList<>();
 
         for (JsonElement element : payloadArray) {
             JsonObject payloadObj = element.getAsJsonObject();
-            DeviceLogPayloadBean logPayload = new DeviceLogPayloadBean();
-            logPayload.setLogType(payloadObj.get("LOG_TYPE").getAsString());
+            DeviceEventPayloadBean logPayload = new DeviceEventPayloadBean();
+            logPayload.setEventType(payloadObj.get("EVENT_TYPE").getAsString());
 
-            JsonArray logDataArray = payloadObj.getAsJsonArray("LOG_DATA");
-            List<DeviceLogEntryBean> logData = new ArrayList<>();
+            JsonArray logDataArray = payloadObj.getAsJsonArray("EVENT_DATA");
+            List<DeviceEventEntryBean> logData = new ArrayList<>();
 
             for (JsonElement logDataElement : logDataArray) {
                 JsonObject logDataObj = logDataElement.getAsJsonObject();
-                DeviceLogEntryBean entry = new DeviceLogEntryBean();
+                DeviceEventEntryBean entry = new DeviceEventEntryBean();
                 entry.setTimestamp(logDataObj.get("TIMESTAMP").getAsLong());
                 entry.setData(logDataObj.get("DATA").getAsString());
                 logData.add(entry);
             }
 
-            logPayload.setLogData(logData);
+            logPayload.setEventData(logData);
             payload.add(logPayload);
         }
 
-        LogsDetailsWrapper logsWrapper = new LogsDetailsWrapper();
+        EventDetailsWrapper logsWrapper = new EventDetailsWrapper();
         logsWrapper.setDeviceId(device.getDeviceIdentifier());
         logsWrapper.setTenantId(DeviceManagerUtil.getTenantId());
         logsWrapper.setDeviceType(device.getType());

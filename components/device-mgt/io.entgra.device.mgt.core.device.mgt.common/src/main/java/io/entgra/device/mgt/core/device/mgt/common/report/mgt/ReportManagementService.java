@@ -175,4 +175,27 @@ public interface ReportManagementService {
      */
     JsonArray getBirtReportParameters() throws ReportManagementException, BadRequestException;
 
+
+    /**
+     * This method is used to invoke the BIRT runtime API for retrieving
+     * preview metadata of a given report template.
+     *
+     * It extracts high-level preview information from the specified
+     * BIRT report design file (.rptdesign), such as:
+     *  - report title
+     *  - column headers
+     *
+     * This preview metadata is used by the UI to display a lightweight
+     * preview of the report structure before rendering or downloading.
+     *
+     * @param fileName name of the BIRT report design file
+     *                 (e.g. "device_log.rptdesign")
+     * @return returns response containing preview metadata of the report
+     *         from the BIRT runtime
+     * @throws ReportManagementException Might occur when invoking BIRT runtime
+     * @throws BadRequestException Might occur if the file name is invalid
+     *                             or report template is not found
+     */
+    JsonObject getBirtReportPreview(String fileName)
+            throws ReportManagementException, BadRequestException;
 }

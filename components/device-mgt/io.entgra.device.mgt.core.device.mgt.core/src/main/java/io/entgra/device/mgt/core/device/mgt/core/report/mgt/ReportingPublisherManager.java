@@ -19,13 +19,12 @@
 package io.entgra.device.mgt.core.device.mgt.core.report.mgt;
 
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceDetailsWrapper;
-import io.entgra.device.mgt.core.device.mgt.common.device.details.LogsDetailsWrapper;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.EventDetailsWrapper;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.EventPublishingException;
 import io.entgra.device.mgt.core.device.mgt.core.report.mgt.config.ReportMgtConfiguration;
 import io.entgra.device.mgt.core.device.mgt.core.report.mgt.config.ReportMgtConfigurationManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
@@ -78,7 +77,7 @@ public class ReportingPublisherManager {
         return executorService.submit(new ReportingPublisher(deviceDetailsWrapper, eventUrl));
     }
 
-    public Future<Integer> publishLogData(LogsDetailsWrapper logsDetailsWrapper, String eventUrl) {
+    public Future<Integer> publishLogData(EventDetailsWrapper logsDetailsWrapper, String eventUrl) {
         return executorService.submit(
                 new LogsReportingPublisher(logsDetailsWrapper, eventUrl)
         );
@@ -125,10 +124,10 @@ public class ReportingPublisherManager {
 
     private class LogsReportingPublisher implements Callable<Integer> {
 
-        private final LogsDetailsWrapper payload;
+        private final EventDetailsWrapper payload;
         private final String endpoint;
 
-        private LogsReportingPublisher(LogsDetailsWrapper payload, String endpoint) {
+        private LogsReportingPublisher(EventDetailsWrapper payload, String endpoint) {
             this.payload = payload;
             this.endpoint = endpoint;
         }

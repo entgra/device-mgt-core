@@ -432,12 +432,29 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         try {
             JsonArray response = DeviceMgtAPIUtils.getReportManagementService().getBirtReportParameters();
             return Response.ok(response).build();
-
         } catch (ReportManagementException e) {
+            log.error("Error while retrieving BIRT report parameters", e);
             return Response.status(500).entity(e.getMessage()).build();
         } catch (BadRequestException e) {
+            log.error("Invalid request while retrieving BIRT report parameters", e);
             return Response.status(400).entity(e.getMessage()).build();
         }
     }
 
+    @GET
+    @Path("/birt/report/preview")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getReportPreview(@QueryParam("fileName") String fileName) {
+        try {
+            JsonObject response = DeviceMgtAPIUtils.getReportManagementService()
+                            .getBirtReportPreview(fileName);
+            return Response.ok(response).build();
+        } catch (BadRequestException e) {
+            log.error("Invalid file name provided for BIRT report preview: " + fileName, e);
+            return Response.status(400).entity(e.getMessage()).build();
+        } catch (ReportManagementException e) {
+            log.error("Error while generating BIRT report preview for file: " + fileName, e);
+            return Response.status(500).entity(e.getMessage()).build();
+        }
+    }
 }

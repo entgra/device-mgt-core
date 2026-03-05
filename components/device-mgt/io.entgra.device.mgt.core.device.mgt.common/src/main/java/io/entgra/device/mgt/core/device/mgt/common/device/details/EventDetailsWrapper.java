@@ -21,7 +21,7 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
-public class LogsDetailsWrapper {
+public class EventDetailsWrapper {
 
     @SerializedName(value = "DEVICE_ID", alternate = {"deviceId"})
     private String deviceId;
@@ -33,7 +33,7 @@ public class LogsDetailsWrapper {
     private String deviceType;
 
     @SerializedName(value = "PAYLOAD", alternate = {"payload"})
-    private List<DeviceLogPayloadBean> payload;
+    private List<DeviceEventPayloadBean> payload;
 
     public String getDeviceId() {
         return deviceId;
@@ -59,11 +59,11 @@ public class LogsDetailsWrapper {
         this.deviceType = deviceType;
     }
 
-    public List<DeviceLogPayloadBean> getPayload() {
+    public List<DeviceEventPayloadBean> getPayload() {
         return payload;
     }
 
-    public void setPayload(List<DeviceLogPayloadBean> payload) {
+    public void setPayload(List<DeviceEventPayloadBean> payload) {
         this.payload = payload;
     }
 

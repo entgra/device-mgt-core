@@ -19,29 +19,28 @@
 package io.entgra.device.mgt.core.device.mgt.common.device.details;
 
 import com.google.gson.annotations.SerializedName;
-import java.util.List;
 
-public class DeviceLogPayloadBean {
+public class DeviceEventEntryBean {
 
-    @SerializedName(value = "LOG_TYPE", alternate = {"logType"})
-    private String logType;
+    @SerializedName(value = "TIMESTAMP", alternate = {"timestamp"})
+    private Long timestamp;
 
-    @SerializedName(value = "LOG_DATA", alternate = {"logData"})
-    private List<DeviceLogEntryBean> logData;
+    @SerializedName(value = "DATA", alternate = {"data"})
+    private String data;
 
-    public String getLogType() {
-        return logType;
+    public Long getTimestamp() {
+        return timestamp;
     }
 
-    public void setLogType(String logType) {
-        this.logType = logType;
+    public void setTimestamp(Long timestamp) {
+        this.timestamp = timestamp;
     }
 
-    public List<DeviceLogEntryBean> getLogData() {
-        return logData;
+    public String getData() {
+        return data;
     }
 
-    public void setLogData(List<DeviceLogEntryBean> logData) {
-        this.logData = logData;
+    public void setData(String data) {
+        this.data = data;
     }
 }
