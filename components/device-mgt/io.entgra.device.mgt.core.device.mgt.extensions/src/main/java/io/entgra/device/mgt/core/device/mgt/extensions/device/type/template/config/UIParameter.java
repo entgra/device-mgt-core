@@ -100,6 +100,38 @@ public class UIParameter {
     @XmlElement(name = "payloadKey")
     private String payloadKey;
 
+    @XmlElement(name = "dataSourceKey")
+    private String dataSourceKey;
+
+    @XmlElement(name = "dataSourcePath")
+    private String dataSourcePath;
+
+    @XmlElement(name = "dataSourceSearchPath")
+    private String dataSourceSearchPath;
+
+    @XmlElement(name = "rowKey")
+    private String rowKey;
+
+    @XmlElementWrapper(name = "tableSelectColumns")
+    @XmlElement(name = "tableSelectColumn")
+    private List<TableSelectColumn> tableSelectColumns;
+
+    /** Optional link for extra resources. */
+    @XmlElement(name = "configLinkPath")
+    private String configLinkPath;
+
+    /** Optional i18n key for the config link label. */
+    @XmlElement(name = "configLinkLabelKey")
+    private String configLinkLabelKey;
+
+    /** Scope required to load the table list. */
+    @XmlElement(name = "requiredScope")
+    private String requiredScope;
+
+    /** Scope required for search requests. */
+    @XmlElement(name = "searchScope")
+    private String searchScope;
+
     public String getId() {
         return id;
     }
@@ -220,5 +252,77 @@ public class UIParameter {
 
     public void setPayloadKey(String payloadKey) {
         this.payloadKey = payloadKey;
+    }
+
+    public String getDataSourceKey() {
+        return dataSourceKey;
+    }
+
+    public void setDataSourceKey(String dataSourceKey) {
+        this.dataSourceKey = dataSourceKey;
+    }
+
+    public String getDataSourcePath() {
+        return dataSourcePath;
+    }
+
+    public void setDataSourcePath(String dataSourcePath) {
+        this.dataSourcePath = dataSourcePath;
+    }
+
+    public String getDataSourceSearchPath() {
+        return dataSourceSearchPath;
+    }
+
+    public void setDataSourceSearchPath(String dataSourceSearchPath) {
+        this.dataSourceSearchPath = dataSourceSearchPath;
+    }
+
+    public String getRowKey() {
+        return rowKey;
+    }
+
+    public void setRowKey(String rowKey) {
+        this.rowKey = rowKey;
+    }
+
+    public List<TableSelectColumn> getTableSelectColumns() {
+        return tableSelectColumns;
+    }
+
+    public void setTableSelectColumns(List<TableSelectColumn> tableSelectColumns) {
+        this.tableSelectColumns = tableSelectColumns;
+    }
+
+    public String getConfigLinkPath() {
+        return configLinkPath;
+    }
+
+    public void setConfigLinkPath(String configLinkPath) {
+        this.configLinkPath = configLinkPath;
+    }
+
+    public String getConfigLinkLabelKey() {
+        return configLinkLabelKey;
+    }
+
+    public void setConfigLinkLabelKey(String configLinkLabelKey) {
+        this.configLinkLabelKey = configLinkLabelKey;
+    }
+
+    public String getRequiredScope() {
+        return requiredScope;
+    }
+
+    public void setRequiredScope(String requiredScope) {
+        this.requiredScope = requiredScope;
+    }
+
+    public String getSearchScope() {
+        return searchScope;
+    }
+
+    public void setSearchScope(String searchScope) {
+        this.searchScope = searchScope;
     }
 }

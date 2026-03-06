@@ -517,6 +517,9 @@
         <Scope>and:ops:suspend</Scope>
         <Scope>win:ops:unlock-devices</Scope>
         <Scope>dm:reports:view</Scope>
+        <Scope>and:ops:exec-task</Scope>
+        <Scope>and:ops:exec-script</Scope>
+        <Scope>dm:metadata:search</Scope>
     </Scopes>
     <SSOConfiguration>
         <Issuer>device-mgt</Issuer>
