@@ -197,7 +197,12 @@ public class MDMWindowsOperationUtil {
                     hostedMSIApplication.setProductId(metaObject.get("value").getAsString().trim());
                 }
                 else if (MDMAppConstants.WindowsConstants.MSI_FILE_HASH.equals(metaObject.get("key").getAsString())) {
-                    hostedMSIApplication.setFileHash(metaObject.get("value").getAsString().trim());
+                    if (metaObject.has("value") && !metaObject.get("value").isJsonNull()) {
+                        hostedMSIApplication.setFileHash(metaObject.get("value").getAsString().trim());
+                    }
+                    else {
+                        log.warn("MSI File_Hash is null or missing in metadata for app payload creation.");
+                    }
                 }
             }
             enterpriseApplication.setHostedMSIApplication(hostedMSIApplication);
