@@ -608,7 +608,7 @@ public interface ReportManagementService {
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:reports:view")
                     })
             }
     )
@@ -639,7 +639,7 @@ public interface ReportManagementService {
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:reports:view")
                     })
             }
     )
@@ -675,7 +675,7 @@ public interface ReportManagementService {
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:reports:view")
                     })
             }
     )
@@ -712,7 +712,7 @@ public interface ReportManagementService {
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:reports:view")
                     })
             }
     )
@@ -758,7 +758,7 @@ public interface ReportManagementService {
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:reports:view")
                     })
             }
     )
@@ -778,7 +778,7 @@ public interface ReportManagementService {
     Response getReportParams();
 
     @GET
-    @Path("/birt/report/preview")
+    @Path("/birt/report /preview")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
@@ -790,7 +790,7 @@ public interface ReportManagementService {
                     @Extension(properties = {
                             @ExtensionProperty(
                                     name = Constants.SCOPE,
-                                    value = "perm:devices:view"
+                                    value = "dm:reports:view"
                             )
                     })
             }
