@@ -21,6 +21,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.entgra.device.mgt.core.device.mgt.core.common.util.SystemPropertyUtil;
 import org.apache.commons.logging.Log;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.OTPManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.operation.change.status.task.OperationConfigurationService;
