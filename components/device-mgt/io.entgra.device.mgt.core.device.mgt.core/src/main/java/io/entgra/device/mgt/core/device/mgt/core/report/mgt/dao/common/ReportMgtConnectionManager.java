@@ -19,11 +19,11 @@ package io.entgra.device.mgt.core.device.mgt.core.report.mgt.dao.common;
 
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DBConnectionException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.IllegalTransactionStateException;
-import io.entgra.device.mgt.core.device.mgt.core.report.mgt.config.ReportMgtConfigurationManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -41,13 +41,8 @@ public class ReportMgtConnectionManager {
     private static final ThreadLocal<Connection> currentConnection = new ThreadLocal<>();
     private static DataSource dataSource;
 
-    static {
-        String dataSourceName = ReportMgtConfigurationManager.getInstance().getConfiguration().getDatasourceName();
-        init(dataSourceName);
-    }
-
     public static void init(String datasourceName) {
-        resolveDataSource(datasourceName);
+        dataSource = resolveDataSource(datasourceName);
     }
 
     public static String getDatabaseType() {
@@ -67,11 +62,11 @@ public class ReportMgtConnectionManager {
      */
     public static DataSource resolveDataSource(String dataSourceName) {
         try {
-            dataSource = InitialContext.doLookup(dataSourceName);
-        } catch (Exception e) {
-            throw new RuntimeException("Error in looking up data source: " + e.getMessage(), e);
+            return InitialContext.doLookup(dataSourceName);
+        }  catch (NamingException e) {
+            String msg = "Error occurred while JNDI lookup for the datasource";
+            throw new IllegalStateException(msg, e);
         }
-        return dataSource;
     }
 
     public static void openDBConnection() throws DBConnectionException {
@@ -88,10 +83,6 @@ public class ReportMgtConnectionManager {
     }
 
     public static Connection getDBConnection() throws DBConnectionException {
-        if (dataSource == null) {
-            String dataSourceName = ReportMgtConfigurationManager.getInstance().getConfiguration().getDatasourceName();
-            init(dataSourceName);
-        }
         Connection conn = currentConnection.get();
         if (conn == null) {
             try {

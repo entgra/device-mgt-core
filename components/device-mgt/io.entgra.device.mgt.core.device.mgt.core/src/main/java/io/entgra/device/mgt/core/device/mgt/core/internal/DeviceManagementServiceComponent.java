@@ -22,6 +22,8 @@ import io.entgra.device.mgt.core.device.mgt.common.exceptions.MetadataManagement
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.authorization.GroupAccessAuthorizationServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.DeviceStatusManagementServiceImpl;
+import io.entgra.device.mgt.core.device.mgt.core.report.mgt.config.ReportMgtConfigurationManager;
+import io.entgra.device.mgt.core.device.mgt.core.report.mgt.dao.common.ReportMgtConnectionManager;
 import io.entgra.device.mgt.core.device.mgt.core.service.TagManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.service.TagManagementProviderServiceImpl;
 import io.entgra.device.mgt.core.server.bootup.heartbeat.beacon.service.HeartBeatManagementService;
@@ -163,6 +165,7 @@ public class DeviceManagementServiceComponent {
             OTPManagementDAOFactory.init(dsConfig.getJndiLookupDefinition().getJndiName());
             /*Initialize the device cache*/
             DeviceManagerUtil.initializeDeviceCache();
+            ReportMgtConnectionManager.init(ReportMgtConfigurationManager.getInstance().getConfiguration().getDatasourceName());
 
             /* Initialize Operation Manager */
             this.initOperationsManager();

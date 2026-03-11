@@ -608,7 +608,7 @@ public interface ReportManagementService {
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:devices:view")
                     })
             }
     )
@@ -639,7 +639,7 @@ public interface ReportManagementService {
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:devices:view")
                     })
             }
     )
@@ -675,7 +675,7 @@ public interface ReportManagementService {
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:devices:view")
                     })
             }
     )
@@ -712,7 +712,7 @@ public interface ReportManagementService {
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:devices:view")
                     })
             }
     )
