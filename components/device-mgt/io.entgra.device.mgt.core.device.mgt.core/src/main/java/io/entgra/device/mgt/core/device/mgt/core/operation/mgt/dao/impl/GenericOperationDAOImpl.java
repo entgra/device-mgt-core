@@ -2300,14 +2300,14 @@ public class GenericOperationDAOImpl implements OperationDAO {
             }
 
             if (updatedSince != 0) {
-                sql.append("AND UPDATED_TIMESTAMP < ? ");
+                sql.append("AND CREATED_TIMESTAMP < ? ");
             }
 
             if (operationStatus != null) {
                 sql.append("AND STATUS = ? ");
             }
 
-            sql.append("ORDER BY OPERATION_ID, UPDATED_TIMESTAMP");
+            sql.append("ORDER BY OPERATION_ID, CREATED_TIMESTAMP");
 
             int index = 1;
             try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
