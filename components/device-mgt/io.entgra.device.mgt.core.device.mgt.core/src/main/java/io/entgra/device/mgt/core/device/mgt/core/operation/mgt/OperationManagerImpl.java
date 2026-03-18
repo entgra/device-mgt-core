@@ -927,7 +927,6 @@ public class OperationManagerImpl implements OperationManager {
                                         Operation.Status.valueOf(operation.getStatus().toString()));
                         OperationManagementDAOFactory.commitTransaction();
                         try {
-                            OperationManagementDAOFactory.openConnection();
                             DeviceOperationDetails previousDeviceOperationDetails =
                                     operationDAO.getDeviceOperationDetails(enrolmentId, operationId);
                             if (isOperationUpdated && previousDeviceOperationDetails != null) {

@@ -69,8 +69,14 @@ public class ArchivalSourceDAOFactory {
     }
 
     public static void beginTransaction() throws TransactionManagementException {
+        Connection conn = currentConnection.get();
+        if (conn != null) {
+            throw new IllegalTransactionStateException("A transaction is already active within the context of " +
+                    "this particular thread. Therefore, calling 'beginTransaction/openConnection' while another " +
+                    "transaction is already active is a sign of improper transaction handling");
+        }
         try {
-            Connection conn = dataSource.getConnection();
+            conn = dataSource.getConnection();
             conn.setAutoCommit(false);
             currentConnection.set(conn);
         } catch (SQLException e) {
@@ -80,7 +86,14 @@ public class ArchivalSourceDAOFactory {
     }
 
     public static void openConnection() throws SQLException {
-        currentConnection.set(dataSource.getConnection());
+        Connection conn = currentConnection.get();
+        if (conn != null) {
+            throw new IllegalTransactionStateException("A transaction is already active within the context of " +
+                    "this particular thread. Therefore, calling 'beginTransaction/openConnection' while another " +
+                    "transaction is already active is a sign of improper transaction handling");
+        }
+        conn = dataSource.getConnection();
+        currentConnection.set(conn);
     }
 
     public static Connection getConnection() throws SQLException {
