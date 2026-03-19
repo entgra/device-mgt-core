@@ -88,12 +88,12 @@ public class OperationTimeoutTask extends RandomlyAssignedScheduleTask {
         Gson gson = new Gson();
         OperationTimeout operationTimeoutConfig = gson.fromJson(operationTimeoutTaskConfigStr, OperationTimeout.class);
         try {
-            long timeMillis = System.currentTimeMillis() - (long) operationTimeoutConfig.getTimeout();
+            long thresholdSeconds = (System.currentTimeMillis() - (long) operationTimeoutConfig.getTimeout()) / 1000L;
 
             List<String> deviceTypes = getDeviceTypes(operationTimeoutConfig);
 
             List<Activity> activities = DeviceManagementDataHolder.getInstance().getOperationManager()
-                    .getTimeoutActivities(deviceTypes, operationTimeoutConfig.getCode(), timeMillis,
+                    .getTimeoutActivities(deviceTypes, operationTimeoutConfig.getCode(), thresholdSeconds,
                             operationTimeoutConfig.getInitialStatus());
 
             if (activities == null || activities.isEmpty()) {
