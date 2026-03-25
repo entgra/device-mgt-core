@@ -354,16 +354,6 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     @Override
     public Response generateBirtReport(ReportParameters reportParameters) {
         try {
-//            String designFile = HttpReportingUtil.getReportType(reportParameters.getDesignFile());
-//            if (!Constants.BirtReporting.UNSUPPORTED_REPORT_TYPE.equals(designFile)) {
-//                reportParameters.setDesignFile(designFile.toLowerCase());
-//                JsonObject birtResponse = DeviceMgtAPIUtils.getReportManagementService().generateBirtReport(reportParameters);
-//                return Response.status(Response.Status.OK).entity(birtResponse).build();
-//            } else {
-//                String msg = "Requested design file not found.";
-//                log.error(msg);
-//                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
-//            }
             String designFile = reportParameters.getDesignFile();
 
             if (designFile == null || designFile.isEmpty()) {
