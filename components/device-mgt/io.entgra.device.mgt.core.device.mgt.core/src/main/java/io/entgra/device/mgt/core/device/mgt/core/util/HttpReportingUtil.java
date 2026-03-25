@@ -64,19 +64,6 @@ public class HttpReportingUtil {
         return host;
     }
 
-    public static String getReportType(String designFile) {
-        if (designFile != null && !designFile.isEmpty()) {
-            switch (designFile) {
-                case Constants.BirtReporting.APP_USAGE:
-                case Constants.BirtReporting.DEVICE_INFO:
-                case Constants.BirtReporting.LOCATION_INFO:
-                case Constants.BirtReporting.DEVICE_EVENT:
-                    return designFile += Constants.BirtReporting.BIRT_RPT_DESIGN_EXT;
-            }
-        }
-        return Constants.BirtReporting.UNSUPPORTED_REPORT_TYPE;
-    }
-
     public static boolean isPublishingEnabledForTenant() {
         Object configuration = DeviceManagerUtil.getConfiguration(IS_EVENT_PUBLISHING_ENABLED);
         if (configuration != null) {
