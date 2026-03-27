@@ -187,6 +187,7 @@ public class AbstractNotificationManagementDAOImpl implements NotificationManage
         if (notificationIds == null || notificationIds.isEmpty()) {
             return;
         }
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         String placeholders = notificationIds.stream()
                 .map(id -> "?")
                 .collect(Collectors.joining(", "));
@@ -195,7 +196,9 @@ public class AbstractNotificationManagementDAOImpl implements NotificationManage
                         "SET IS_READ = ? " +
                         "WHERE USERNAME = ? " +
                         "AND NOTIFICATION_ID " +
-                        "IN (" + placeholders + ")";
+                        "IN (" + placeholders + ") " +
+                        "AND NOTIFICATION_ID IN " +
+                        "(SELECT NOTIFICATION_ID FROM DM_NOTIFICATION WHERE TENANT_ID = ?)";
         try {
             Connection connection = NotificationManagementDAOFactory.getConnection();
             try (PreparedStatement ps = connection.prepareStatement(query)) {
@@ -204,6 +207,7 @@ public class AbstractNotificationManagementDAOImpl implements NotificationManage
                 for (int i = 0; i < notificationIds.size(); i++) {
                     ps.setInt(i + 3, notificationIds.get(i));
                 }
+                ps.setInt(notificationIds.size() + 3, tenantId);
                 ps.executeUpdate();
             }
         } catch (SQLException e) {
@@ -216,15 +220,19 @@ public class AbstractNotificationManagementDAOImpl implements NotificationManage
     @Override
     public void updateAllNotificationAction(String username, boolean isRead)
             throws NotificationManagementDAOException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         String query =
                 "UPDATE DM_NOTIFICATION_USER_ACTION " +
                         "SET IS_READ = ? " +
-                        "WHERE USERNAME = ?";
+                        "WHERE USERNAME = ? " +
+                        "AND NOTIFICATION_ID IN " +
+                        "(SELECT NOTIFICATION_ID FROM DM_NOTIFICATION WHERE TENANT_ID = ?)";
         try {
             Connection connection = NotificationManagementDAOFactory.getConnection();
             try (PreparedStatement ps = connection.prepareStatement(query)) {
                 ps.setBoolean(1, isRead);
                 ps.setString(2, username);
+                ps.setInt(3, tenantId);
                 ps.executeUpdate();
             }
         } catch (SQLException e) {
@@ -457,15 +465,30 @@ public class AbstractNotificationManagementDAOImpl implements NotificationManage
     }
 
     @Override
-    public void deleteAllUserNotifications(String username) throws NotificationManagementDAOException {
-        String query =
+    public void deleteAllUserNotifications(String username, Boolean isRead) throws NotificationManagementDAOException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        StringBuilder query = new StringBuilder(
                 "DELETE " +
                         "FROM DM_NOTIFICATION_USER_ACTION " +
-                        "WHERE USERNAME = ?";
+                        "WHERE USERNAME = ? " +
+                        "AND NOTIFICATION_ID IN " +
+                        "(SELECT NOTIFICATION_ID FROM DM_NOTIFICATION WHERE TENANT_ID = ?)");
+
+        if (isRead != null) {
+            query.append(" AND IS_READ = ?");
+        }
+
         try {
             Connection connection = NotificationManagementDAOFactory.getConnection();
-            try (PreparedStatement stmt = connection.prepareStatement(query)) {
-                stmt.setString(1, username);
+            try (PreparedStatement stmt = connection.prepareStatement(query.toString())) {
+                int paramIndex = 1;
+                stmt.setString(paramIndex++, username);
+                stmt.setInt(paramIndex++, tenantId);
+                
+                if (isRead != null) {
+                    stmt.setBoolean(paramIndex++, isRead);
+                }
+                
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {

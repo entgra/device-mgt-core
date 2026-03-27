@@ -262,6 +262,24 @@ public class NotificationHelper {
     }
 
     /**
+     * Gets the authenticated user from the Carbon context and returns the tenant-aware username.
+     * Validates that the user exists in the system.
+     *
+     * @return tenant-aware authenticated username
+     * @throws NotificationManagementException if the authenticated user is not found or does not exist
+     */
+    public static String getAuthenticatedUser() throws NotificationManagementException {
+        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        String username = ctx.getUsername();
+        if (username == null || username.trim().isEmpty()) {
+            String msg = "Authenticated user not found in context.";
+            log.warn(msg);
+            throw new NotificationManagementException(msg);
+        }
+        return getTenantAwareUsernameIfUserExists(username);
+    }
+
+    /**
      * Validates that all users and roles in the recipients exist in the system.
      * Throws NotificationConfigurationServiceException if any user or role is invalid or does not exist.
      *

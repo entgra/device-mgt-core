@@ -270,10 +270,10 @@ public interface NotificationService {
     )
     Response updateAllNotificationAction(
             @ApiParam(
-                    name = "request",
-                    value = "Request body containing isRead",
+                    name = "read",
+                    value = "Boolean flag to mark all notifications as read or unread",
                     required = true)
-            NotificationActionRequest request
+            @QueryParam("read") boolean isRead
     );
 
     @DELETE
@@ -346,10 +346,10 @@ public interface NotificationService {
     )
     Response deleteAllNotifications(
             @ApiParam(
-                    name = "request",
-                    value = "Request body containing username",
-                    required = true)
-            UsernameRequest request
+                    name = "read",
+                    value = "Optional boolean flag to delete only read or unread notifications. If not provided, all notifications will be deleted.",
+                    required = false)
+            @QueryParam("read") Boolean isRead
     );
 
     @POST
@@ -421,12 +421,6 @@ public interface NotificationService {
                             response = Response.class)
             }
     )
-    Response archiveAllNotifications(
-            @ApiParam(
-                    name = "request",
-                    value = "Request body containing username",
-                    required = true)
-            UsernameRequest request
-    );
+    Response archiveAllNotifications();
 
 }

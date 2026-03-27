@@ -155,11 +155,13 @@ public interface NotificationManagementDAO {
 
     /**
      * Deletes all notifications for the given user from the active user notification table.
+     * Optionally filters by read/unread status.
      *
      * @param username the username whose notifications should be deleted.
+     * @param isRead   filter by read/unread status; if null, both read and unread notifications are deleted
      * @throws NotificationManagementDAOException if an error occurs during the deletion process.
      */
-    void deleteAllUserNotifications(String username) throws NotificationManagementDAOException;
+    void deleteAllUserNotifications(String username, Boolean isRead) throws NotificationManagementDAOException;
 
     /**
      * Retrieves a paginated list of user notifications along with their read/unread status.
