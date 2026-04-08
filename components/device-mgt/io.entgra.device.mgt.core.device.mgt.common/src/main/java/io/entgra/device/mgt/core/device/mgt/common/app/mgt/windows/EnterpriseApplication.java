@@ -30,6 +30,7 @@ public class EnterpriseApplication implements Serializable {
 
     private HostedAppxApplication hostedAppxApplication;
     private HostedMSIApplication hostedMSIApplication;
+    private HostedExeApplication hostedExeApplication;
 
     public HostedAppxApplication getHostedAppxApplication() {
         return hostedAppxApplication;
@@ -45,6 +46,14 @@ public class EnterpriseApplication implements Serializable {
 
     public void setHostedMSIApplication(HostedMSIApplication hostedMSIApplication) {
         this.hostedMSIApplication = hostedMSIApplication;
+    }
+
+    public HostedExeApplication getHostedExeApplication() {
+        return hostedExeApplication;
+    }
+
+    public void setHostedExeApplication(HostedExeApplication hostedExeApplication) {
+        this.hostedExeApplication = hostedExeApplication;
     }
 
     public String toJSON() {
