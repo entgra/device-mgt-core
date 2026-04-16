@@ -64,6 +64,17 @@ public interface NotificationManagementService {
             throws NotificationManagementException;
 
     /**
+     * Updates the action type (e.g., READ or UNREAD) for all notifications
+     * for a specific user and pushes the updated unread count.
+     *
+     * @param username Username for whom the actions are to be updated.
+     * @param isRead   Action type to set (e.g., "READ", "UNREAD").
+     * @throws NotificationManagementException If an error occurs while processing the update.
+     */
+    void updateAllNotificationActionForUser(String username, boolean isRead)
+            throws NotificationManagementException;
+
+    /**
      * Retrieves the total number of user notification actions for a specific user,
      * optionally filtered by notification status.
      *
@@ -103,11 +114,13 @@ public interface NotificationManagementService {
 
     /**
      * Deletes all notifications for the given user from the active user notification table.
+     * Optionally filters by read/unread status.
      *
      * @param username the username whose notifications should be deleted.
+     * @param isRead   filter by read/unread status; if null, both read and unread notifications are deleted
      * @throws NotificationManagementException if an error occurs during the deletion process.
      */
-    void deleteAllUserNotifications(String username) throws NotificationManagementException;
+    void deleteAllUserNotifications(String username, Boolean isRead) throws NotificationManagementException;
 
     /**
      * Archives all notifications for the given user by moving them from the active

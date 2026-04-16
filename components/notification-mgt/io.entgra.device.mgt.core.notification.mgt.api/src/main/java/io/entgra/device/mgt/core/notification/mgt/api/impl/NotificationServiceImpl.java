@@ -21,10 +21,10 @@ package io.entgra.device.mgt.core.notification.mgt.api.impl;
 
 import io.entgra.device.mgt.core.notification.mgt.api.beans.NotificationActionRequest;
 import io.entgra.device.mgt.core.notification.mgt.api.beans.UserNotificationsRequest;
-import io.entgra.device.mgt.core.notification.mgt.api.beans.UsernameRequest;
 import io.entgra.device.mgt.core.notification.mgt.api.beans.UsernameWithNotificationIdsRequest;
 import io.entgra.device.mgt.core.notification.mgt.api.service.NotificationService;
 import io.entgra.device.mgt.core.notification.mgt.api.util.NotificationManagementApiUtil;
+import io.entgra.device.mgt.core.notification.mgt.core.util.NotificationHelper;
 import io.entgra.device.mgt.core.notification.mgt.common.dto.Notification;
 import io.entgra.device.mgt.core.notification.mgt.common.dto.PaginatedUserNotificationResponse;
 import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationArchivalException;
@@ -82,9 +82,10 @@ public class NotificationServiceImpl implements NotificationService {
             if (request == null) {
                 return Response.status(HttpStatus.SC_BAD_REQUEST).entity("Request body is required").build();
             }
+            String authenticatedUser = NotificationHelper.getAuthenticatedUser();
             PaginatedUserNotificationResponse response =
                     notificationService.getUserNotificationsWithStatus(
-                            request.getUsername(), request.getLimit(), request.getOffset(), request.getIsRead());
+                            authenticatedUser, request.getLimit(), request.getOffset(), request.getIsRead());
             return Response.status(HttpStatus.SC_OK).entity(response).build();
         } catch (NotificationManagementException e) {
             String msg = "Failed to retrieve user notifications with status.";
@@ -102,13 +103,32 @@ public class NotificationServiceImpl implements NotificationService {
             if (request == null) {
                 return Response.status(HttpStatus.SC_BAD_REQUEST).entity("Request body is required").build();
             }
+            String authenticatedUser = NotificationHelper.getAuthenticatedUser();
             notificationService.updateNotificationActionForUser(
-                    request.getNotificationIds(), request.getUsername(), request.isRead());
+                    request.getNotificationIds(), authenticatedUser, request.isRead());
             String status = request.isRead() ? "READ" : "UNREAD";
             return Response.status(HttpStatus.SC_OK)
                     .entity("Notification(s) marked as " + status).build();
         } catch (NotificationManagementException e) {
             String msg = "Failed to update notification action.";
+            log.error(msg, e);
+            return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
+    @PUT
+    @Path("/action/all")
+    public Response updateAllNotificationAction(@QueryParam("read") boolean isRead) {
+        NotificationManagementService notificationService =
+                NotificationManagementApiUtil.getNotificationManagementService();
+        try {
+            String authenticatedUser = NotificationHelper.getAuthenticatedUser();
+            notificationService.updateAllNotificationActionForUser(authenticatedUser, isRead);
+            String status = isRead ? "READ" : "UNREAD";
+            return Response.status(HttpStatus.SC_OK)
+                    .entity("All notifications marked as " + status).build();
+        } catch (NotificationManagementException e) {
+            String msg = "Failed to update all notification actions.";
             log.error(msg, e);
             return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(msg).build();
         }
@@ -126,8 +146,9 @@ public class NotificationServiceImpl implements NotificationService {
             if (request == null) {
                 return Response.status(HttpStatus.SC_BAD_REQUEST).entity("Request body is required").build();
             }
+            String authenticatedUser = NotificationHelper.getAuthenticatedUser();
             Map<String, List<Integer>> result = notificationService.deleteUserNotifications(
-                    request.getNotificationIds(), request.getUsername());
+                    request.getNotificationIds(), authenticatedUser);
             return Response.status(HttpStatus.SC_OK).entity(result).build();
         } catch (NotificationManagementException e) {
             String msg = "Failed to delete selected notifications.";
@@ -139,15 +160,17 @@ public class NotificationServiceImpl implements NotificationService {
     @DELETE
     @Path("/user-notifications/all")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response deleteAllNotifications(UsernameRequest request) {
+    public Response deleteAllNotifications(
+            @QueryParam("read") Boolean isRead) {
         NotificationManagementService notificationService =
                 NotificationManagementApiUtil.getNotificationManagementService();
         try {
-            if (request == null) {
-                return Response.status(HttpStatus.SC_BAD_REQUEST).entity("Request body is required").build();
-            }
-            notificationService.deleteAllUserNotifications(request.getUsername());
+            String authenticatedUser = NotificationHelper.getAuthenticatedUser();
+            notificationService.deleteAllUserNotifications(authenticatedUser, isRead);
             String msg = "All notifications deleted successfully";
+            if (isRead != null) {
+                msg = isRead ? "All read notifications deleted successfully" : "All unread notifications deleted successfully";
+            }
             return Response.status(HttpStatus.SC_OK).entity(msg).build();
         } catch (NotificationManagementException e) {
             String msg = "Failed to delete all notifications.";
@@ -167,11 +190,16 @@ public class NotificationServiceImpl implements NotificationService {
             if (request == null) {
                 return Response.status(HttpStatus.SC_BAD_REQUEST).entity("Request body is required").build();
             }
+            String authenticatedUser = NotificationHelper.getAuthenticatedUser();
             Map<String, List<Integer>> result = notificationService.archiveUserNotifications(
-                    request.getNotificationIds(), request.getUsername());
+                    request.getNotificationIds(), authenticatedUser);
             return Response.status(HttpStatus.SC_OK).entity(result).build();
         } catch (NotificationArchivalException e) {
             String msg = "Error archiving selected notifications.";
+            log.error(msg, e);
+            return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (NotificationManagementException e) {
+            String msg = "Error occurred while getting authenticated user.";
             log.error(msg, e);
             return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(msg).build();
         }
@@ -181,18 +209,20 @@ public class NotificationServiceImpl implements NotificationService {
     @Path("/archive-all")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response archiveAllNotifications(UsernameRequest request) {
+    public Response archiveAllNotifications() {
         NotificationManagementService notificationService =
                 NotificationManagementApiUtil.getNotificationManagementService();
         try {
-            if (request == null) {
-                return Response.status(HttpStatus.SC_BAD_REQUEST).entity("Request body is required").build();
-            }
-            notificationService.archiveAllUserNotifications(request.getUsername());
+            String authenticatedUser = NotificationHelper.getAuthenticatedUser();
+            notificationService.archiveAllUserNotifications(authenticatedUser);
             String msg = "All notifications archived successfully";
             return Response.status(HttpStatus.SC_OK).entity(msg).build();
         } catch (NotificationArchivalException e) {
             String msg = "Error archiving all notifications.";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (NotificationManagementException e) {
+            String msg = "Error occurred while getting authenticated user.";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }

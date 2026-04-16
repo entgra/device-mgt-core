@@ -77,6 +77,17 @@ public interface NotificationManagementDAO {
             throws NotificationManagementDAOException;
 
     /**
+     * Updates the action type (e.g., READ or UNREAD) for all notifications
+     * for the given user.
+     *
+     * @param username    Username for whom the actions are to be updated.
+     * @param isRead      Action type to set (e.g., "READ", "UNREAD").
+     * @throws NotificationManagementDAOException If an error occurs while updating the notifications.
+     */
+    void updateAllNotificationAction(String username, boolean isRead)
+            throws NotificationManagementDAOException;
+
+    /**
      * Retrieves all notification actions performed by all users.
      *
      * @return a list of {@link UserNotificationAction} objects representing actions taken by users
@@ -144,11 +155,13 @@ public interface NotificationManagementDAO {
 
     /**
      * Deletes all notifications for the given user from the active user notification table.
+     * Optionally filters by read/unread status.
      *
      * @param username the username whose notifications should be deleted.
+     * @param isRead   filter by read/unread status; if null, both read and unread notifications are deleted
      * @throws NotificationManagementDAOException if an error occurs during the deletion process.
      */
-    void deleteAllUserNotifications(String username) throws NotificationManagementDAOException;
+    void deleteAllUserNotifications(String username, Boolean isRead) throws NotificationManagementDAOException;
 
     /**
      * Retrieves a paginated list of user notifications along with their read/unread status.
