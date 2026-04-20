@@ -51,7 +51,7 @@ public class HttpReportingUtil {
     private static final String TRACKER_CONFIG = "locationPublishing";
 
     public static String getReportingHost() {
-        return System.getProperty(DeviceManagementConstants.Report.REPORTING_EVENT_HOST);
+       return System.getProperty(DeviceManagementConstants.Report.REPORTING_EVENT_HOST);
     }
 
     public static String getBirtReportHost() throws ReportManagementException {
@@ -70,6 +70,7 @@ public class HttpReportingUtil {
                 case Constants.BirtReporting.APP_USAGE:
                 case Constants.BirtReporting.DEVICE_INFO:
                 case Constants.BirtReporting.LOCATION_INFO:
+                case Constants.BirtReporting.DEVICE_LOG:
                     return designFile += Constants.BirtReporting.BIRT_RPT_DESIGN_EXT;
             }
         }

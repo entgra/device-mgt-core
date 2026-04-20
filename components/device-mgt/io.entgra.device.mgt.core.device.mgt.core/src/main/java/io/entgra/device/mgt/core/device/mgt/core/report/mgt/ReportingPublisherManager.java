@@ -19,6 +19,7 @@
 package io.entgra.device.mgt.core.device.mgt.core.report.mgt;
 
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceDetailsWrapper;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.LogsDetailsWrapper;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.EventPublishingException;
 import io.entgra.device.mgt.core.device.mgt.core.report.mgt.config.ReportMgtConfiguration;
 import io.entgra.device.mgt.core.device.mgt.core.report.mgt.config.ReportMgtConfigurationManager;
@@ -77,6 +78,13 @@ public class ReportingPublisherManager {
         return executorService.submit(new ReportingPublisher(deviceDetailsWrapper, eventUrl));
     }
 
+    public Future<Integer> publishLogData(LogsDetailsWrapper logsDetailsWrapper, String eventUrl) {
+        return executorService.submit(
+                new LogsReportingPublisher(logsDetailsWrapper, eventUrl)
+        );
+    }
+
+
     private class ReportingPublisher implements Callable<Integer> {
         private final DeviceDetailsWrapper payload;
         private final String endpoint;
@@ -114,4 +122,48 @@ public class ReportingPublisherManager {
             }
         }
     }
+
+    private class LogsReportingPublisher implements Callable<Integer> {
+
+        private final LogsDetailsWrapper payload;
+        private final String endpoint;
+
+        private LogsReportingPublisher(LogsDetailsWrapper payload, String endpoint) {
+            this.payload = payload;
+            this.endpoint = endpoint;
+        }
+
+        @Override
+        public Integer call() throws EventPublishingException {
+
+            HttpPost apiEndpoint = new HttpPost(endpoint);
+            apiEndpoint.setHeader(HTTP.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+
+            try {
+                StringEntity requestEntity =
+                        new StringEntity(payload.getJSONString(), ContentType.APPLICATION_JSON);
+                apiEndpoint.setEntity(requestEntity);
+
+                try (CloseableHttpResponse response = httpClient.execute(apiEndpoint)) {
+                    int statusCode = response.getStatusLine().getStatusCode();
+
+                    if (log.isDebugEnabled()) {
+                        log.debug("Published DEVICE_LOGS to reporting backend: "
+                                + endpoint + ", Response code: " + statusCode);
+                    }
+                    return statusCode;
+                }
+
+            } catch (ConnectException e) {
+                String message = "Connection refused while publishing DEVICE_LOGS to: " + endpoint;
+                log.error(message, e);
+                throw new EventPublishingException(message, e);
+            } catch (IOException e) {
+                String message = "Error occurred while publishing DEVICE_LOGS to: " + endpoint;
+                log.error(message, e);
+                throw new EventPublishingException(message, e);
+            }
+        }
+    }
+
 }

@@ -19,8 +19,16 @@
 package io.entgra.device.mgt.core.device.mgt.core.service;
 
 import com.google.common.reflect.TypeToken;
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.LogsDetailsWrapper;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ConflictException;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.EventPublishingException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceTypeDAO;
@@ -37,6 +45,8 @@ import io.entgra.device.mgt.core.device.mgt.core.dto.OperationDTO;
 import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.OperationMgtConstants;
 import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.dao.OperationManagementDAOException;
 import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.dao.OperationManagementDAOFactory;
+import io.entgra.device.mgt.core.device.mgt.core.report.mgt.ReportingPublisherManager;
+import io.entgra.device.mgt.core.device.mgt.core.report.mgt.util.DeviceLogReportUtil;
 import io.entgra.device.mgt.core.device.mgt.extensions.logger.spi.EntgraLogger;
 import io.entgra.device.mgt.core.notification.logger.DeviceEnrolmentLogContext;
 import io.entgra.device.mgt.core.notification.logger.impl.EntgraDeviceEnrolmentLoggerImpl;
@@ -2581,6 +2591,50 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                         .updateOperation(device.getEnrolmentInfo().getId(), operation,
                                 new DeviceIdentifier(device.getDeviceIdentifier(), device.getType()));
             }
+            if (DeviceManagementConstants.Report.DEVICE_LOGS.equals(operation.getCode())) {
+
+                String operationResponse = operation.getOperationResponse();
+
+                if (StringUtils.isEmpty(operationResponse)) {
+                    log.warn("DEVICE_LOGS operationResponse is empty for device: "
+                            + device.getDeviceIdentifier());
+                    return;
+                }
+
+                try {
+                    String reportingHost = HttpReportingUtil.getReportingHost();
+
+                    if (StringUtils.isBlank(reportingHost)
+                            || !HttpReportingUtil.isPublishingEnabledForTenant()) {
+                        return;
+                    }
+                    String eventUrl = reportingHost
+                            + DeviceManagementConstants.Report.REPORTING_CONTEXT
+                            + DeviceManagementConstants.URL_SEPERATOR
+                            + DeviceManagementConstants.OPERATION_LOG;
+                    Gson gson = new GsonBuilder()
+                            .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
+                            .create();
+
+                    JsonObject responseObject =
+                            JsonParser.parseString(operationResponse).getAsJsonObject();
+
+                    JsonArray payloadArray = responseObject.getAsJsonArray("PAYLOAD");
+
+                    if (payloadArray == null || payloadArray.isEmpty()) {
+                        log.warn("DEVICE_LOGS PAYLOAD is empty for device: "
+                                + device.getDeviceIdentifier());
+                        return;
+                    }
+                    LogsDetailsWrapper logsWrapper = DeviceLogReportUtil.createLogsWrapper(device, payloadArray);
+                    ReportingPublisherManager publisher = ReportingPublisherManager.getInstance();
+                    publisher.publishLogData(logsWrapper, eventUrl);
+
+                } catch (Exception e) {
+                    log.error("Error while publishing DEVICE_LOGS for device: "
+                            + device.getDeviceIdentifier(), e);
+                }
+            }
             if (DeviceManagerUtil.isPublishOperationResponseEnabled()) {
                 List<String> permittedOperations = DeviceManagerUtil.getEnabledOperationsForResponsePublish();
                 if (permittedOperations.contains(operation.getCode())
@@ -2609,6 +2663,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
 //            throw new OperationManagementException(msg, e);
 //        }
     }
+
 
     @Override
     public boolean updateProperties(DeviceIdentifier deviceId, List<Device.Property> properties)
