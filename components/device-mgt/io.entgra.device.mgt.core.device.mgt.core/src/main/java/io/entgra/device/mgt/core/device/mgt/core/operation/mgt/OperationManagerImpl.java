@@ -96,6 +96,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 public class OperationManagerImpl implements OperationManager {
 
+    private static final String SKIP_IMMEDIATE_NOTIFICATION_PROPERTY = "skip-immediate-notification";
     DeviceConnectivityLogContext.Builder deviceConnectivityLogContextBuilder = new DeviceConnectivityLogContext.Builder();
     private static final EntgraLogger log = new EntgraDeviceConnectivityLoggerImpl(OperationManagerImpl.class);
     private static final int CACHE_VALIDITY_PERIOD = 5 * 60 * 1000;
@@ -228,7 +229,9 @@ public class OperationManagerImpl implements OperationManager {
                     for (Integer enrolmentId : pendingOperationIDs.keySet()) {
                         operation.setId(pendingOperationIDs.get(enrolmentId));
                         device = enrolments.get(enrolmentId);
-                        this.sendNotification(operation, device);
+                        if (!shouldSkipImmediateNotification(operation)) {
+                            this.sendNotification(operation, device);
+                        }
                         //No need to keep this enrollment as it has a pending operation
                         enrolments.remove(enrolmentId);
                     }
@@ -301,7 +304,9 @@ public class OperationManagerImpl implements OperationManager {
                 for (Integer enrolmentId : pendingOperationIDs.keySet()) {
                     operation.setId(pendingOperationIDs.get(enrolmentId));
                     device = enrolments.get(enrolmentId);
-                    this.sendNotification(operation, device);
+                    if (!shouldSkipImmediateNotification(operation)) {
+                        this.sendNotification(operation, device);
+                    }
                     //No need to keep this enrollment as it has a pending operation
                     enrolments.remove(enrolmentId);
                 }
@@ -375,7 +380,9 @@ public class OperationManagerImpl implements OperationManager {
                     for (Integer enrolmentId : pendingOperationIDs.keySet()) {
                         operation.setId(pendingOperationIDs.get(enrolmentId));
                         device = enrolments.get(enrolmentId);
-                        this.sendNotification(operation, device);
+                        if (!shouldSkipImmediateNotification(operation)) {
+                            this.sendNotification(operation, device);
+                        }
                         //No need to keep this enrollment as it has a pending operation
                         enrolments.remove(enrolmentId);
                     }
@@ -463,11 +470,25 @@ public class OperationManagerImpl implements OperationManager {
             String msg = "An Error occurred while updating handleOperationNotificationIfApplicable";
             log.error(msg, e);
         }
-        if (!isScheduled && notificationStrategy != null) {
+        if (!isScheduled && notificationStrategy != null && !shouldSkipImmediateNotification(operation)) {
             for (Device device : enrolments.values()) {
                 this.sendNotification(operation, device);
             }
         }
+    }
+
+    /**
+     * Checks if the given operation is configured to skip immediate notifications.
+     *
+     * @param operation the operation to check
+     * @return true if the skip property is set to "true", false otherwise
+     */
+    private boolean shouldSkipImmediateNotification(Operation operation) {
+        if (operation == null || operation.getProperties() == null) {
+            return false;
+        }
+        return Boolean.parseBoolean(
+                operation.getProperties().getProperty(SKIP_IMMEDIATE_NOTIFICATION_PROPERTY, Boolean.FALSE.toString()));
     }
 
     private void sendNotification(Operation operation, Device device) {
