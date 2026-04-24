@@ -40,6 +40,7 @@ public final class DeviceManagementConstants {
     public static final String DEFAULT_TOKEN_TYPE = "DEFAULT";
     public static final String INTERNAL_APP_NAME = "Custom_token_generator_app";
     public static final String INTERNAL_APP_TAGS = "device_management";
+    public static final String OPERATION_LOG="operation-log";
 
     public static final class ConfigurationManagement {
         private ConfigurationManagement(){
@@ -199,10 +200,11 @@ public final class DeviceManagementConstants {
         private Report() {
             throw new AssertionError();
         }
-        public static final String REPORTING_EVENT_HOST = "iot.reporting.event.host";
+        public static final String REPORTING_EVENT_HOST =  "iot.reporting.event.host";
         public static final String REPORTING_CONTEXT = "/reporting/api/analyticsadmin/v1.0/event";
         public static final String DEVICE_INFO_PARAM =  "device-info";
         public static final String APP_USAGE_ENDPOINT = REPORTING_CONTEXT + "/app-usage";
+        public static final String DEVICE_EVENT = "DEVICE_EVENT";
     }
 
     public static final class Payload {

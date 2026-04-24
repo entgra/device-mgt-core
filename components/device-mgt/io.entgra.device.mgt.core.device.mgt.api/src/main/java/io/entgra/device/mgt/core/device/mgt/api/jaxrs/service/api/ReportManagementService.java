@@ -608,7 +608,7 @@ public interface ReportManagementService {
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:reports:view")
                     })
             }
     )
@@ -639,7 +639,7 @@ public interface ReportManagementService {
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:reports:view")
                     })
             }
     )
@@ -675,7 +675,7 @@ public interface ReportManagementService {
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:reports:view")
                     })
             }
     )
@@ -712,7 +712,7 @@ public interface ReportManagementService {
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:reports:view")
                     })
             }
     )
@@ -747,5 +747,70 @@ public interface ReportManagementService {
             int offset
     );
 
+    @GET
+    @Path("/birt/report/params")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Get the parameters defined in the BIRT report template",
+            notes = "This will retrieve all input parameters defined in the current BIRT report design file.",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:reports:view")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully retrieved report parameters."),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. No report template loaded."),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n Error occurred while retrieving report parameters.",
+                            response = ErrorResponse.class)
+            })
+    Response getReportParams();
 
+    @GET
+    @Path("/birt/report /preview")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Get preview metadata of a BIRT report template",
+            notes = "Returns preview information (title, columns) for the given BIRT report design file",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(
+                                    name = Constants.SCOPE,
+                                    value = "dm:reports:view"
+                            )
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. Successfully retrieved report preview."),
+                    @ApiResponse(code = 400,
+                            message = "Bad Request. Invalid or missing file name."),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. Report design not found."),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error.",
+                    response = ErrorResponse.class)
+    })
+    Response getReportPreview(
+            @QueryParam("fileName") String fileName
+    );
 }
