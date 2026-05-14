@@ -141,4 +141,36 @@ public class UserManagementAdminServiceImpl implements UserManagementAdminServic
         }
     }
 
+    @POST
+    @Path("/domain/{tenantDomain}/scopes")
+    @Override
+    public Response publishScopesToTenant(@PathParam("tenantDomain") String tenantDomain) {
+        try {
+            if (CarbonContext.getThreadLocalCarbonContext().getTenantId() != MultitenantConstants.SUPER_TENANT_ID){
+                String msg = "Only super tenants are allowed to publish scopes to tenants.";
+                log.error(msg);
+                return Response.status(Response.Status.UNAUTHORIZED).entity(msg).build();
+            }
+            if (MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
+                String msg = "You are not allowed to publish scopes to the super tenant.";
+                log.error(msg);
+                return Response.status(Response.Status.UNAUTHORIZED).entity(msg).build();
+            }
+
+            if (log.isDebugEnabled()) {
+                log.debug("Scope publishing process has been initiated for tenant:" + tenantDomain);
+            }
+
+            TenantManagerAdminService tenantManagerAdminService = DeviceMgtAPIUtils.getTenantManagerAdminService();
+            tenantManagerAdminService.publishScopesToTenant(tenantDomain);
+
+            return Response.status(Response.Status.OK).entity("Scope publishing process has been completed " +
+                    "successfully for tenant: " + tenantDomain).build();
+        } catch (TenantMgtException e) {
+            String msg = "Error occurred while publishing scopes to tenant: " + tenantDomain;
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
 }

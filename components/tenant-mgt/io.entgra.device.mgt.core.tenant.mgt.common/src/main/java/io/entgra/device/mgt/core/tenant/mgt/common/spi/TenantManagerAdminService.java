@@ -24,4 +24,5 @@ public interface TenantManagerAdminService {
 
     void deleteTenant(String tenantDomain) throws TenantMgtException;
     int getTenantId(String tenantDomain) throws TenantMgtException;
+    void publishScopesToTenant(String tenantDomain) throws TenantMgtException;
 }

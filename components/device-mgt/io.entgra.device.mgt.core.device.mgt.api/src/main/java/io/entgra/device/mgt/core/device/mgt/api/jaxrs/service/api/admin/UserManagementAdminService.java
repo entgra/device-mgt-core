@@ -68,6 +68,13 @@ import javax.ws.rs.core.Response;
                         key = "um:admin:tenants:remove",
                         roles = {"Internal/devicemgt-admin"},
                         permissions = {"/device-mgt/admin/tenants/delete"}
+                ),
+                @Scope(
+                        name = "Publish Scopes to Tenant",
+                        description = "Publish Scopes to Tenant",
+                        key = "um:admin:users:view",
+                        roles = {"Internal/devicemgt-admin"},
+                        permissions = {"/device-mgt/admin/users/view"}
                 )
         }
 )
@@ -307,4 +314,39 @@ public interface UserManagementAdminService {
             @QueryParam("deleteAppArtifacts")
             @DefaultValue("false")
             boolean deleteAppArtifacts);
+
+    @POST
+    @Path("/domain/{tenantDomain}/scopes")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            consumes = MediaType.APPLICATION_JSON,
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "POST",
+            value = "Publish scopes to a tenant by tenant domain.",
+            notes = "This API allows the publishing of scopes to a tenant by providing the tenant domain.",
+            tags = "Tenant details management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "um:admin:tenants:publish-scopes")
+                    })
+            }
+    )
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK. \n Scopes have been published successfully."),
+            @ApiResponse(
+                    code = 401,
+                    message = "Unauthorized. \n Unauthorized attempt to publish scopes to tenant."),
+            @ApiResponse(
+                    code = 500,
+                    message = "Internal Server Error. \n Server error occurred while publishing scopes to the tenant.",
+                    response = ErrorResponse.class)
+    })
+    Response publishScopesToTenant(
+            @ApiParam(
+                    name = "tenantDomain",
+                    value = "The domain of the tenant to publish scopes to.",
+                    required = true)
+            @PathParam("tenantDomain")
+            String tenantDomain);
 }
