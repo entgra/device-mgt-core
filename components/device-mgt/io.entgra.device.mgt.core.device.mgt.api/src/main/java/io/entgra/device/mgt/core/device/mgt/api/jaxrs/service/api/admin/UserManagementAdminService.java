@@ -75,6 +75,13 @@ import javax.ws.rs.core.Response;
                         key = "um:admin:users:view",
                         roles = {"Internal/devicemgt-admin"},
                         permissions = {"/device-mgt/admin/users/view"}
+                ),
+                @Scope(
+                        name = "Update Tenant Scope Bindings",
+                        description = "Update Tenant Scope Bindings",
+                        key = "um:admin:users:view",
+                        roles = {"Internal/devicemgt-admin"},
+                        permissions = {"/device-mgt/admin/users/view"}
                 )
         }
 )
@@ -328,7 +335,7 @@ public interface UserManagementAdminService {
             tags = "Tenant details management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "um:admin:tenants:publish-scopes")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "um:admin:users:view")
                     })
             }
     )
@@ -349,4 +356,51 @@ public interface UserManagementAdminService {
                     required = true)
             @PathParam("tenantDomain")
             String tenantDomain);
+
+    @PUT
+    @Path("/domain/{tenantDomain}/scopes/{roleName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            consumes = MediaType.APPLICATION_JSON,
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "PUT",
+            value = "Add a role to the bindings of the specified scopes in a tenant.",
+            notes = "This API allows adding a role to the bindings of a list of scopes within a tenant. " +
+                    "Provide the tenant domain, the role name, and a list of scope names whose bindings should be updated.",
+            tags = "Tenant details management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "um:admin:users:view")
+                    })
+            }
+    )
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK. \n Role has been added to the specified scope bindings successfully."),
+            @ApiResponse(
+                    code = 401,
+                    message = "Unauthorized. \n Unauthorized attempt to update scope bindings."),
+            @ApiResponse(
+                    code = 500,
+                    message = "Internal Server Error. \n Server error occurred while updating scope bindings.",
+                    response = ErrorResponse.class)
+    })
+    Response updateTenantScopeBindings(
+            @ApiParam(
+                    name = "tenantDomain",
+                    value = "The domain of the tenant.",
+                    required = true)
+            @PathParam("tenantDomain")
+            String tenantDomain,
+            @ApiParam(
+                    name = "roleName",
+                    value = "The name of the role to add to the scope bindings.",
+                    required = true)
+            @PathParam("roleName")
+            String roleName,
+            @ApiParam(
+                    name = "scopeNames",
+                    value = "The list of scope names whose bindings should be updated with the given role.",
+                    required = true)
+            java.util.List<String> scopeNames);
 }
