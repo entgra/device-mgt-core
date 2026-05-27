@@ -18,6 +18,7 @@
 package io.entgra.device.mgt.core.apimgt.application.extension.internal;
 
 import io.entgra.device.mgt.core.apimgt.application.extension.APIManagementProviderService;
+import io.entgra.device.mgt.core.apimgt.application.extension.validator.ApiApplicationRegistrationValidator;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.APIApplicationServices;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.ConsumerRESTAPIServices;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.IOAuthClientService;
@@ -29,7 +30,10 @@ import org.wso2.carbon.registry.indexing.service.TenantIndexingLoader;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.user.core.tenant.TenantManager;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Hashtable;
+import java.util.List;
 
 public class APIApplicationManagerExtensionDataHolder {
     private static APIApplicationManagerExtensionDataHolder thisInstance = new APIApplicationManagerExtensionDataHolder();
@@ -43,6 +47,7 @@ public class APIApplicationManagerExtensionDataHolder {
     private APIApplicationServices apiApplicationServices;
     private MetadataManagementService metadataManagementService;
     private IOAuthClientService ioAuthClientService;
+    private final List<ApiApplicationRegistrationValidator> apiApplicationRegistrationValidators = new ArrayList<>();
 
     private APIApplicationManagerExtensionDataHolder() {
     }
@@ -146,5 +151,17 @@ public class APIApplicationManagerExtensionDataHolder {
 
     public void setIoAuthClientService(IOAuthClientService ioAuthClientService) {
         this.ioAuthClientService = ioAuthClientService;
+    }
+
+    public List<ApiApplicationRegistrationValidator> getApiApplicationRegistrationValidators() {
+        return Collections.unmodifiableList(apiApplicationRegistrationValidators);
+    }
+
+    public void addApiApplicationRegistrationValidator(ApiApplicationRegistrationValidator validator) {
+        apiApplicationRegistrationValidators.add(validator);
+    }
+
+    public void removeApiApplicationRegistrationValidator(ApiApplicationRegistrationValidator validator) {
+        apiApplicationRegistrationValidators.remove(validator);
     }
 }

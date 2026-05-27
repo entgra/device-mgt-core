@@ -130,7 +130,7 @@ public class LoginHandler extends HttpServlet {
 
                 if (clientAppResponse.getCode() == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
                     log.error("API Application registration failed. Backend returned 500. " +
-                            "This might be due to DFRM validation failure.");
+                            "This might be due to a registration prerequisite validation failure.");
                     HandlerUtil.handleError(resp, clientAppResponse);
                     return;
                 }

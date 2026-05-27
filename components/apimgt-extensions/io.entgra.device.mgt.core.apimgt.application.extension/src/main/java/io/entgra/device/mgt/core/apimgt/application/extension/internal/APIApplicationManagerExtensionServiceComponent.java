@@ -21,6 +21,9 @@ import io.entgra.device.mgt.core.apimgt.extension.rest.api.APIApplicationService
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.ConsumerRESTAPIServices;
 import io.entgra.device.mgt.core.apimgt.application.extension.APIManagementProviderService;
 import io.entgra.device.mgt.core.apimgt.application.extension.APIManagementProviderServiceImpl;
+import io.entgra.device.mgt.core.apimgt.application.extension.validator.ApiApplicationRegistrationValidator;
+import io.entgra.device.mgt.core.apimgt.application.extension.validator.MetadataBasedApiApplicationRegistrationValidator;
+import io.entgra.device.mgt.core.apimgt.extension.rest.api.constants.Constants;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.IOAuthClientService;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
 import org.apache.commons.logging.Log;
@@ -49,6 +52,9 @@ public class APIApplicationManagerExtensionServiceComponent {
             APIApplicationManagerExtensionDataHolder.getInstance().setAPIManagementProviderService(apiManagementProviderService);
             BundleContext bundleContext = componentContext.getBundleContext();
             bundleContext.registerService(APIManagementProviderService.class.getName(), apiManagementProviderService, null);
+            bundleContext.registerService(ApiApplicationRegistrationValidator.class.getName(),
+                    new MetadataBasedApiApplicationRegistrationValidator(
+                            Constants.DFRM_ENABLED_TENANT_LIST_KEY, "DeviceFinanceRiskManagement"), null);
         }  catch (Throwable e) {
             log.error("Error occurred while initializing API application management extension bundle", e);
         }
@@ -239,5 +245,29 @@ public class APIApplicationManagerExtensionServiceComponent {
             log.debug("Unsetting DCR REST API Service");
         }
         APIApplicationManagerExtensionDataHolder.getInstance().setIoAuthClientService(null);
+    }
+
+    @Reference(
+            name = "api.application.registration.validator",
+            service = io.entgra.device.mgt.core.apimgt.application.extension.validator.ApiApplicationRegistrationValidator.class,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetApiApplicationRegistrationValidator")
+    protected void setApiApplicationRegistrationValidator(
+            ApiApplicationRegistrationValidator apiApplicationRegistrationValidator) {
+        if (log.isDebugEnabled()) {
+            log.debug("Setting ApiApplicationRegistrationValidator");
+        }
+        APIApplicationManagerExtensionDataHolder.getInstance()
+                .addApiApplicationRegistrationValidator(apiApplicationRegistrationValidator);
+    }
+
+    protected void unsetApiApplicationRegistrationValidator(
+            ApiApplicationRegistrationValidator apiApplicationRegistrationValidator) {
+        if (log.isDebugEnabled()) {
+            log.debug("Unsetting ApiApplicationRegistrationValidator");
+        }
+        APIApplicationManagerExtensionDataHolder.getInstance()
+                .removeApiApplicationRegistrationValidator(apiApplicationRegistrationValidator);
     }
 }
