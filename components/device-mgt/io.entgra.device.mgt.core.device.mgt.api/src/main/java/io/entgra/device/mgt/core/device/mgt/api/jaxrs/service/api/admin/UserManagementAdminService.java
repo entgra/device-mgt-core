@@ -72,16 +72,16 @@ import javax.ws.rs.core.Response;
                 @Scope(
                         name = "Publish Scopes to Tenant",
                         description = "Publish Scopes to Tenant",
-                        key = "um:admin:users:view",
+                        key = "um:admin:users:modify",
                         roles = {"Internal/devicemgt-admin"},
-                        permissions = {"/device-mgt/admin/users/view"}
+                        permissions = {"/device-mgt/admin/users/modify"}
                 ),
                 @Scope(
                         name = "Update Tenant Scope Bindings",
                         description = "Update Tenant Scope Bindings",
-                        key = "um:admin:users:view",
+                        key = "um:admin:users:modify",
                         roles = {"Internal/devicemgt-admin"},
-                        permissions = {"/device-mgt/admin/users/view"}
+                        permissions = {"/device-mgt/admin/users/modify"}
                 )
         }
 )
@@ -335,7 +335,7 @@ public interface UserManagementAdminService {
             tags = "Tenant details management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "um:admin:users:view")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "um:admin:users:modify")
                     })
             }
     )
@@ -371,7 +371,7 @@ public interface UserManagementAdminService {
             tags = "Tenant details management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "um:admin:users:view")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "um:admin:users:modify")
                     })
             }
     )
