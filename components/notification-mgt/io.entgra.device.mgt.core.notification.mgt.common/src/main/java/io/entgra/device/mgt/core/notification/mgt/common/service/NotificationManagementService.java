@@ -141,7 +141,7 @@ public interface NotificationManagementService {
      * @param operationCode The unique code representing the operation (e.g., "POLICY_REVOKE").
      * @param operationStatus The current status of the operation (e.g., "COMPLETED", "PENDING").
      * @param deviceType The type of the device associated with the operation (e.g., "android").
-     * @param deviceEnrollmentIDs deviceEnrollmentID The unique identifier for the device enrollment.
+     * @param deviceIds {@link io.entgra.device.mgt.core.device.mgt.common.Device} primary keys ({@code DM_DEVICE.ID}).
      * @param tenantId The tenant ID representing the specific tenant context for which notifications
      *                 are being sent.
      * @param notificationTriggerPoint The point in the process at which the notification should be triggered
@@ -151,7 +151,7 @@ public interface NotificationManagementService {
      *                                        (e.g., issues with inserting notifications, user retrieval).
      */
     void handleOperationNotificationIfApplicable(String operationCode, String operationStatus,
-                                                 String deviceType, List<Integer> deviceEnrollmentIDs,
+                                                 String deviceType, List<Integer> deviceIds,
                                                  int tenantId, String notificationTriggerPoint)
             throws NotificationManagementException;
 
@@ -183,5 +183,15 @@ public interface NotificationManagementService {
      * @throws NotificationManagementException If an error occurs while handling the notification.
      */
     void handleTaskNotificationIfApplicable(int tenantId, String message)
+            throws NotificationManagementException;
+
+    /**
+     * Removes device associations from notifications and deletes notifications that no longer
+     * reference any device. Task notifications without device mappings are not affected.
+     *
+     * @param deviceIds device primary keys ({@code DM_DEVICE.ID})
+     * @param tenantId  tenant id
+     */
+    void purgeNotificationsForDevices(List<Integer> deviceIds, int tenantId)
             throws NotificationManagementException;
 }
