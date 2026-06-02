@@ -29,10 +29,7 @@ import org.wso2.carbon.registry.indexing.service.TenantIndexingLoader;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.user.core.tenant.TenantManager;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Hashtable;
-import java.util.List;
 
 public class APIApplicationManagerExtensionDataHolder {
     private static APIApplicationManagerExtensionDataHolder thisInstance = new APIApplicationManagerExtensionDataHolder();
