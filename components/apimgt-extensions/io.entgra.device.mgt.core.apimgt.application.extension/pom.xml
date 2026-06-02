@@ -156,12 +156,18 @@
                             org.wso2.carbon.apimgt.impl;version="[9.28,10)",
                             org.wso2.carbon.apimgt.impl.utils;version="[9.28,10)",
                             org.wso2.carbon.apimgt.impl.internal;version="[9.28,10)",
-                            org.wso2.carbon.context;version="[4.8,5)",org.wso2.carbon.registry.core.exceptions;version="[1.0,2)",
+                            org.wso2.carbon.context;version="[4.8,5)",
+                            org.wso2.carbon.registry.core.exceptions;version="[1.0,2)",
                             org.wso2.carbon.registry.core.service;version="[1.0,2)",
                             org.wso2.carbon.registry.indexing.service;version="[4.8,5)",
                             org.wso2.carbon.user.api;version="[1.0,2)",
                             org.wso2.carbon.user.core.service;version="[4.8,5)",
-                            org.wso2.carbon.user.core.tenant;version="[4.8,5)"
+                            org.wso2.carbon.user.core.tenant;version="[4.8,5)",
+                            javax.xml.bind;version="[0.0,3)",
+                            javax.xml.bind.annotation;version="[0.0,3)",
+                            javax.xml.parsers;version="[0.0.0,3.0.0)",
+                            org.w3c.dom;version="[0.0.0,3.0.0)",
+                            org.wso2.carbon.utils;version="[4.4,5)"
                         </Import-Package>
                         <Export-Package>
                             !io.entgra.device.mgt.core.apimgt.application.extension.internal,

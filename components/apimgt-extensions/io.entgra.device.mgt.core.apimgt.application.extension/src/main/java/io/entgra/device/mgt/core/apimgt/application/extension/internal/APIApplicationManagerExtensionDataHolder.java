@@ -18,7 +18,6 @@
 package io.entgra.device.mgt.core.apimgt.application.extension.internal;
 
 import io.entgra.device.mgt.core.apimgt.application.extension.APIManagementProviderService;
-import io.entgra.device.mgt.core.apimgt.application.extension.validator.ApiApplicationRegistrationValidator;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.APIApplicationServices;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.ConsumerRESTAPIServices;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.IOAuthClientService;
@@ -47,7 +46,6 @@ public class APIApplicationManagerExtensionDataHolder {
     private APIApplicationServices apiApplicationServices;
     private MetadataManagementService metadataManagementService;
     private IOAuthClientService ioAuthClientService;
-    private final List<ApiApplicationRegistrationValidator> apiApplicationRegistrationValidators = new ArrayList<>();
 
     private APIApplicationManagerExtensionDataHolder() {
     }
@@ -151,17 +149,5 @@ public class APIApplicationManagerExtensionDataHolder {
 
     public void setIoAuthClientService(IOAuthClientService ioAuthClientService) {
         this.ioAuthClientService = ioAuthClientService;
-    }
-
-    public List<ApiApplicationRegistrationValidator> getApiApplicationRegistrationValidators() {
-        return Collections.unmodifiableList(apiApplicationRegistrationValidators);
-    }
-
-    public void addApiApplicationRegistrationValidator(ApiApplicationRegistrationValidator validator) {
-        apiApplicationRegistrationValidators.add(validator);
-    }
-
-    public void removeApiApplicationRegistrationValidator(ApiApplicationRegistrationValidator validator) {
-        apiApplicationRegistrationValidators.remove(validator);
     }
 }

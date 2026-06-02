@@ -29,6 +29,10 @@ import io.entgra.device.mgt.core.apimgt.application.extension.constants.ApiAppli
 import io.entgra.device.mgt.core.apimgt.application.extension.exception.APIManagerException;
 import io.entgra.device.mgt.core.apimgt.application.extension.internal.APIApplicationManagerExtensionDataHolder;
 import io.entgra.device.mgt.core.apimgt.application.extension.validator.ApiApplicationRegistrationValidator;
+import io.entgra.device.mgt.core.apimgt.application.extension.validator.MetadataBasedApiApplicationRegistrationValidator;
+import io.entgra.device.mgt.core.apimgt.application.extension.config.ApiApplicationValidatorConfig;
+import io.entgra.device.mgt.core.apimgt.application.extension.config.ApiApplicationValidatorConfigManager;
+import io.entgra.device.mgt.core.apimgt.application.extension.config.ValidatorConfig;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.ConsumerRESTAPIServices;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.IOAuthClientService;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.bean.APIMConsumer.APIInfo;
@@ -502,9 +506,13 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
             if (currentUsername != null) {
                 PrivilegedCarbonContext.getThreadLocalCarbonContext().setUsername(currentUsername);
             }
-            for (ApiApplicationRegistrationValidator validator :
-                    APIApplicationManagerExtensionDataHolder.getInstance().getApiApplicationRegistrationValidators()) {
-                validator.validate(flowStartingDomain);
+            ApiApplicationValidatorConfig validatorConfig = ApiApplicationValidatorConfigManager.getInstance().getApiApplicationValidatorConfig();
+            if (validatorConfig != null && validatorConfig.getValidators() != null) {
+                for (ValidatorConfig validatorConfigItem : validatorConfig.getValidators()) {
+                    ApiApplicationRegistrationValidator validator = new MetadataBasedApiApplicationRegistrationValidator(
+                            validatorConfigItem.getMetadataKey(), validatorConfigItem.getApiSearchQuery());
+                    validator.validate(flowStartingDomain);
+                }
             }
             return createApiApplication(apiApplicationProfile);
 
