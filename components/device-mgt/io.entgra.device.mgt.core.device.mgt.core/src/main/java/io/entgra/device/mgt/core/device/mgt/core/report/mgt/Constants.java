@@ -60,6 +60,8 @@ public class Constants {
         public static final String UNSUPPORTED_REPORT_TYPE = "UNSUPPORTED";
         public static final String TENANT_ID = "tenantId";
         public static final String DEVICE_EVENT="DEVICE_EVENT";
+        public static final String BIRT_REPORTING_API_UPLOAD_TEMPLATE_FILE = "/file";
+        public static final String CATEGORY_ICON_UPLOAD_ENDPOINT = "device-mgt/v1.0/reports/category/icon/uploads";
     }
 }
 

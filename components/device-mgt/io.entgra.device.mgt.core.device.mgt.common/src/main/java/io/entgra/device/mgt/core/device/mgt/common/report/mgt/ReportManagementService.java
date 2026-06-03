@@ -19,13 +19,17 @@ package io.entgra.device.mgt.core.device.mgt.common.report.mgt;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import io.entgra.device.mgt.core.application.mgt.common.FileMetaEntry;
+import io.entgra.device.mgt.core.application.mgt.common.TransferLink;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.BadRequestException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceTypeNotFoundException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.NotFoundException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ReportManagementException;
+import io.entgra.device.mgt.core.device.mgt.common.dto.IconFile;
 
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -175,7 +179,17 @@ public interface ReportManagementService {
      */
     JsonArray getBirtReportParameters() throws ReportManagementException, BadRequestException;
 
-
+    /**
+     * This method is used to invoke BIRT runtime API for uploading a report template file
+     *
+     * @param fileInputStream  InputStream of the uploaded .rptdesign file
+     * @param fileName         Original file name
+     * @return returns response containing response details from BIRT runtime
+     * @throws ReportManagementException Might occur when invoking BIRT runtime
+     * @throws BadRequestException Might occur when file is invalid or missing
+     */
+    JsonObject uploadBirtTemplateFile(InputStream fileInputStream, String fileName)
+            throws ReportManagementException, BadRequestException;
     /**
      * This method is used to invoke the BIRT runtime API for retrieving
      * preview metadata of a given report template.
@@ -198,4 +212,34 @@ public interface ReportManagementService {
      */
     JsonObject getBirtReportPreview(String fileName)
             throws ReportManagementException, BadRequestException;
+
+
+    /**
+     * Generate a chunked-upload link for a report category icon.
+     * Returns a TransferLink whose relativeTransferLink is used by the
+     * frontend to POST each chunk to /reports/category/icon/uploads/{uuid}
+     */
+    TransferLink generateCategoryIconUploadLink(FileMetaEntry fileMetaEntry)
+            throws ReportManagementException;
+
+    /**
+     * Accept one chunk of a category icon being uploaded.
+     *
+     * @param uuid        the artifact-holder UUID from the upload link
+     * @param inputStream the chunk byte stream
+     */
+    void uploadCategoryIcon(String uuid, InputStream inputStream)
+            throws ReportManagementException, NotFoundException;
+
+    /**
+     * Stream back a previously uploaded category icon file.
+     *
+     * @param uuid     artifact-holder UUID
+     * @param fileName full qualified name, e.g. "icon.png"
+     */
+    IconFile downloadCategoryIcon(String uuid, String fileName)
+            throws ReportManagementException, NotFoundException;
+
 }
+
+

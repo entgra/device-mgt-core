@@ -18,10 +18,12 @@
 
 package io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import io.entgra.device.mgt.core.application.mgt.common.FileMetaEntry;
+import io.entgra.device.mgt.core.application.mgt.common.TransferLink;
+import io.entgra.device.mgt.core.application.mgt.common.wrapper.TransferLinkWrapper;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceList;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.ReportManagementService;
@@ -36,15 +38,10 @@ import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceTypeNotFound
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.NotFoundException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ReportManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.report.mgt.ReportParameters;
+import io.entgra.device.mgt.core.device.mgt.common.dto.IconFile;
 import io.entgra.device.mgt.core.device.mgt.core.report.mgt.Constants;
-import io.entgra.device.mgt.core.device.mgt.core.util.HttpReportingUtil;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceList;
-import io.entgra.device.mgt.core.device.mgt.common.ReportFiltersList;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.ReportManagementService;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.RequestValidationUtil;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.DeviceMgtAPIUtils;
-import io.swagger.util.Json;
+import org.apache.cxf.jaxrs.ext.multipart.Attachment;
+import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -60,7 +57,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -398,6 +399,53 @@ public class ReportManagementServiceImpl implements ReportManagementService {
         }
     }
 
+    @POST
+    @Path("/birt/template/file")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Override
+    public Response uploadBirtTemplateFile(MultipartBody multipartBody) {
+        try {
+            Attachment fileAttachment = multipartBody.getAttachment("file");
+            if (fileAttachment == null) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("Missing file attachment.").build();
+            }
+
+            String fileName = fileAttachment.getContentDisposition().getParameter("filename");
+            if (fileName == null || !fileName.endsWith(".rptdesign")) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("Only .rptdesign files are accepted.").build();
+            }
+
+            InputStream fileInputStream = fileAttachment.getDataHandler().getInputStream();
+
+            JsonObject birtResponse = DeviceMgtAPIUtils
+                    .getReportManagementService()
+                    .uploadBirtTemplateFile(fileInputStream, fileName);
+
+            int responseStatus = birtResponse.has("status")
+                    ? birtResponse.get("status").getAsInt()
+                    : 200;
+
+            if (responseStatus == 208) {
+                return Response.status(208).entity(birtResponse).build();
+            }
+            return Response.status(Response.Status.OK).entity(birtResponse).build();
+
+        } catch (ReportManagementException e) {
+            String msg = "Error occurred while uploading report template file.";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (IOException e) {
+            String msg = "Error reading uploaded file stream.";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
     @DELETE
     @Path("/birt/template")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -464,4 +512,111 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             return Response.status(500).entity(e.getMessage()).build();
         }
     }
+
+    @POST
+    @Path("/category/icon/upload-links")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Override
+    public Response generateCategoryIconUploadLink(FileMetaEntry fileMetaEntry) {
+        try {
+            TransferLink transferLink = DeviceMgtAPIUtils
+                    .getReportManagementService()
+                    .generateCategoryIconUploadLink(fileMetaEntry);
+
+            TransferLinkWrapper wrapper = new TransferLinkWrapper();
+            wrapper.setDirectTransferLink(transferLink.getDirectTransferLink());
+            wrapper.setRelativeTransferLink(transferLink.getRelativeTransferLink());
+
+            return Response.status(Response.Status.CREATED).entity(wrapper).build();
+        } catch (ReportManagementException e) {
+            String msg = "Error occurred while generating category icon upload link";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse.ErrorResponseBuilder()
+                            .setMessage(msg).build()).build();
+        }
+    }
+
+    @POST
+    @Path("/category/icon/uploads/{uuid}")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Override
+    public Response uploadCategoryIcon(
+            @PathParam("uuid") String uuid,
+            MultipartBody chunk) {
+        try {
+            InputStream inputStream = chunk.getAttachment("chunk")
+                    .getObject(InputStream.class);
+            DeviceMgtAPIUtils.getReportManagementService()
+                    .uploadCategoryIcon(uuid, inputStream);
+            return Response.status(Response.Status.OK).build();
+        } catch (NotFoundException e) {
+            String msg = "Upload link not found for uuid: " + uuid;
+            log.error(msg, e);
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(new ErrorResponse.ErrorResponseBuilder()
+                            .setMessage(msg).build()).build();
+        } catch (ReportManagementException e) {
+            String msg = "Error occurred while uploading category icon chunk";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse.ErrorResponseBuilder()
+                            .setMessage(msg).build()).build();
+        }
+    }
+
+    @GET
+    @Path("/category/icon/uploads/{uuid}/{fileName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Override
+    public Response downloadCategoryIcon(
+            @PathParam("uuid") String uuid,
+            @PathParam("fileName") String fileName) {
+        try {
+            String decodedFileName;
+            try {
+                decodedFileName = java.net.URLDecoder.decode(
+                        fileName, java.nio.charset.StandardCharsets.UTF_8.name());
+            } catch (Exception e) {
+                decodedFileName = fileName;
+            }
+
+            IconFile iconFile = DeviceMgtAPIUtils
+                    .getReportManagementService()
+                    .downloadCategoryIcon(uuid, decodedFileName);
+
+            byte[] fileBytes = java.nio.file.Files.readAllBytes(
+                    iconFile.getFile().toPath());
+
+            String base64Data = java.util.Base64.getEncoder()
+                    .encodeToString(fileBytes);
+
+            // FIX: use Gson which is already in your project
+            com.google.gson.JsonObject jsonResponse = new com.google.gson.JsonObject();
+            jsonResponse.addProperty("data", base64Data);
+            jsonResponse.addProperty("contentType", iconFile.getContentType());
+
+            return Response.ok(jsonResponse.toString(), MediaType.APPLICATION_JSON)
+                    .header("Cache-Control", "max-age=3600")
+                    .build();
+
+        } catch (io.entgra.device.mgt.core.device.mgt.common.exceptions
+                         .NotFoundException e) {
+            String msg = "Icon not found for uuid: " + uuid;
+            log.error(msg, e);
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(new ErrorResponse.ErrorResponseBuilder()
+                            .setMessage(msg).build()).build();
+        } catch (Exception e) {
+            String msg = "Error downloading category icon";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse.ErrorResponseBuilder()
+                            .setMessage(msg).build()).build();
+        }
+    }
 }
+
+
