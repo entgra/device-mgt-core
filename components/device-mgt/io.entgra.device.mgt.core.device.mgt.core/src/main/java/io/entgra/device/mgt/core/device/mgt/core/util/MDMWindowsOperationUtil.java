@@ -197,8 +197,16 @@ public class MDMWindowsOperationUtil {
                     hostedMSIApplication.setProductId(metaObject.get("value").getAsString().trim());
                 }
                 else if (MDMAppConstants.WindowsConstants.MSI_FILE_HASH.equals(metaObject.get("key").getAsString())) {
-                    hostedMSIApplication.setFileHash(metaObject.get("value").getAsString().trim());
+                    if (metaObject.has("value") && !metaObject.get("value").isJsonNull()) {
+                        hostedMSIApplication.setFileHash(metaObject.get("value").getAsString().trim());
+                    }
                 }
+            }
+
+            if (hostedMSIApplication.getFileHash() == null || hostedMSIApplication.getFileHash().trim().isEmpty()) {
+                String msg = "Failed to create MSI application payload: required metadata field File_Hash is missing.";
+                log.error(msg);
+                throw new IllegalArgumentException(msg);
             }
             enterpriseApplication.setHostedMSIApplication(hostedMSIApplication);
         } else if (MDMAppConstants.WindowsConstants.EXE.equalsIgnoreCase(appType)) {
