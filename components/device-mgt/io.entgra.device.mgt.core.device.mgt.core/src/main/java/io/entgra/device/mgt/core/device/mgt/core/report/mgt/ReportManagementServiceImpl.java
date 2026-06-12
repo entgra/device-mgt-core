@@ -537,13 +537,13 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 HttpResponse httpResponse = httpClient.execute(httpPost);
                 int statusCode = httpResponse.getStatusLine().getStatusCode();
                 switch (statusCode) {
-                    case 200:
-                    case 202:
-                    case 208:
+                    case Constants.BirtReporting.HTTP_STATUS_OK:
+                    case Constants.BirtReporting.HTTP_STATUS_ACCEPTED:
+                    case Constants.BirtReporting.HTTP_STATUS_ALREADY_REPORTED:
                         return new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
-                    case 400:
+                    case Constants.BirtReporting.HTTP_STATUS_BAD_REQUEST:
                         throw new BadRequestException("Parameters mismatch.");
-                    case 404:
+                    case Constants.BirtReporting.HTTP_STATUS_NOT_FOUND:
                         throw new NotFoundException("Requested design file not found.");
                     default:
                         throw new ReportManagementException("Failed to create directory.");
@@ -579,9 +579,9 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 HttpResponse httpResponse = httpClient.execute(httpPost);
                 int statusCode = httpResponse.getStatusLine().getStatusCode();
                 switch (statusCode) {
-                    case 200:
+                    case Constants.BirtReporting.HTTP_STATUS_OK:
                         return new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
-                    case 400:
+                    case Constants.BirtReporting.HTTP_STATUS_BAD_REQUEST:
                         throw new BadRequestException("Invalid file URL.");
                     default:
                         throw new ReportManagementException("Failed to create directory.");
@@ -624,16 +624,16 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 int statusCode = httpResponse.getStatusLine().getStatusCode();
 
                 switch (statusCode) {
-                    case 200:
+                    case Constants.BirtReporting.HTTP_STATUS_OK:
                         return new Gson().fromJson(
                                 EntityUtils.toString(httpResponse.getEntity()),
                                 JsonObject.class);
-                    case 208:
+                    case Constants.BirtReporting.HTTP_STATUS_ALREADY_REPORTED:
                         JsonObject alreadyExists = new JsonObject();
-                        alreadyExists.addProperty("status", 208);
+                        alreadyExists.addProperty("status", Constants.BirtReporting.HTTP_STATUS_ALREADY_REPORTED);
                         alreadyExists.addProperty("message", "Design Report Name Already Exists");
                         return alreadyExists;
-                    case 400:
+                    case Constants.BirtReporting.HTTP_STATUS_BAD_REQUEST:
                         throw new BadRequestException("Invalid file or unsupported file type.");
                     default:
                         throw new ReportManagementException(
@@ -664,11 +664,11 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 HttpResponse httpResponse = httpClient.execute(httpDelete);
                 int statusCode = httpResponse.getStatusLine().getStatusCode();
                 switch (statusCode) {
-                    case 200:
+                    case Constants.BirtReporting.HTTP_STATUS_OK:
                         return new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
-                    case 400:
+                    case Constants.BirtReporting.HTTP_STATUS_BAD_REQUEST:
                         throw new BadRequestException("Invalid template names");
-                    case 500:
+                    case Constants.BirtReporting.HTTP_STATUS_INTERNAL_SERVER_ERROR:
                         JsonObject errorResponse = new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
                         throw new ReportManagementException(errorResponse.get("message").getAsString());
                     default:
@@ -709,12 +709,12 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 int statusCode = httpResponse.getStatusLine().getStatusCode();
 
                 switch (statusCode) {
-                    case 200:
+                    case Constants.BirtReporting.HTTP_STATUS_OK:
                         String jsonResponse = EntityUtils.toString(httpResponse.getEntity());
                         return new Gson().fromJson(jsonResponse, JsonObject.class);
-                    case 400:
+                    case Constants.BirtReporting.HTTP_STATUS_BAD_REQUEST:
                         throw new BadRequestException("Design file name is required");
-                    case 500:
+                    case Constants.BirtReporting.HTTP_STATUS_INTERNAL_SERVER_ERROR:
                         JsonObject errorResponse =
                                 new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
                         throw new ReportManagementException(errorResponse.get("message").getAsString());
@@ -761,10 +761,10 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             log.debug("Received response from BIRT params API. Status:"+ statusCode);
 
             switch (statusCode) {
-                case 200:
+                case Constants.BirtReporting.HTTP_STATUS_OK:
                     return new Gson().fromJson(responseBody, JsonArray.class);
 
-                case 400: {
+                case Constants.BirtReporting.HTTP_STATUS_BAD_REQUEST: {
                     String msg = "Bad request when calling BIRT params API";
                     log.error(msg);
                     throw new BadRequestException(
@@ -816,18 +816,18 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             log.debug("BIRT preview API responded with status:"+ statusCode + fileName);
             switch (statusCode) {
 
-                case 200:
+                case Constants.BirtReporting.HTTP_STATUS_OK:
                     log.info("Successfully fetched preview for report:"+ fileName);
                     return new Gson().fromJson(responseBody, JsonObject.class);
 
-                case 400: {
+                case Constants.BirtReporting.HTTP_STATUS_BAD_REQUEST: {
                     String msg = "Bad request while fetching preview for report: " + fileName;
                     log.error(msg);
                     throw new BadRequestException(
                             StringUtils.defaultIfBlank(responseBody, "Invalid request")
                     );
                 }
-                case 404: {
+                case Constants.BirtReporting.HTTP_STATUS_NOT_FOUND: {
                     String msg = "Preview not found for report: " + fileName;
                     log.error(msg);
                     throw new ReportManagementException(msg);
@@ -925,14 +925,27 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             log.warn("Could not probe content type for: " + file.getAbsolutePath());
         }
 
-        if (contentType == null || contentType.equals("application/octet-stream")) {
-            String name = file.getName().toLowerCase();
-            if      (name.endsWith(".png"))  contentType = "image/png";
-            else if (name.endsWith(".jpg") ||
-                    name.endsWith(".jpeg")) contentType = "image/jpeg";
-            else if (name.endsWith(".webp")) contentType = "image/webp";
-            else if (name.endsWith(".svg"))  contentType = "image/svg+xml";
-            else                             contentType = "image/png";
+        if (contentType == null || contentType.equals(Constants.CONTENT_TYPE_OCTET_STREAM)) {
+            String extension = file.getName().toLowerCase()
+                    .substring(file.getName().lastIndexOf('.'));
+            switch (extension) {
+                case Constants.FILE_EXT_PNG:
+                    contentType = Constants.CONTENT_TYPE_PNG;
+                    break;
+                case Constants.FILE_EXT_JPG:
+                case Constants.FILE_EXT_JPEG:
+                    contentType = Constants.CONTENT_TYPE_JPEG;
+                    break;
+                case Constants.FILE_EXT_WEBP:
+                    contentType = Constants.CONTENT_TYPE_WEBP;
+                    break;
+                case Constants.FILE_EXT_SVG:
+                    contentType = Constants.CONTENT_TYPE_SVG;
+                    break;
+                default:
+                    contentType = Constants.CONTENT_TYPE_PNG;
+                    break;
+            }
         }
 
         return new IconFile(file, contentType);

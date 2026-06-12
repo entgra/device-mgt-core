@@ -26,6 +26,7 @@ import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceEventEntryBean;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceEventPayloadBean;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.EventDetailsWrapper;
+import io.entgra.device.mgt.core.device.mgt.core.report.mgt.Constants;
 import io.entgra.device.mgt.core.device.mgt.core.util.DeviceManagerUtil;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,16 +39,22 @@ public class DeviceEventReportUtil {
         for (JsonElement element : payloadArray) {
             JsonObject payloadObj = element.getAsJsonObject();
             DeviceEventPayloadBean logPayload = new DeviceEventPayloadBean();
-            logPayload.setEventType(payloadObj.get("EVENT_TYPE").getAsString());
+            logPayload.setEventType(
+                    payloadObj.get(Constants.BirtReporting.EVENT_TYPE).getAsString());
 
-            JsonArray logDataArray = payloadObj.getAsJsonArray("EVENT_DATA");
+            JsonArray logDataArray =
+                    payloadObj.getAsJsonArray(Constants.BirtReporting.EVENT_DATA);
+
             List<DeviceEventEntryBean> logData = new ArrayList<>();
 
             for (JsonElement logDataElement : logDataArray) {
                 JsonObject logDataObj = logDataElement.getAsJsonObject();
                 DeviceEventEntryBean entry = new DeviceEventEntryBean();
-                entry.setTimestamp(logDataObj.get("TIMESTAMP").getAsLong());
-                entry.setData(logDataObj.get("DATA").getAsString());
+                entry.setTimestamp(
+                        logDataObj.get(Constants.BirtReporting.TIMESTAMP).getAsLong());
+                entry.setData(
+                        logDataObj.get(Constants.BirtReporting.DATA).getAsString());
+
                 logData.add(entry);
             }
 

@@ -45,6 +45,16 @@ public class Constants {
     public static final String URI_SEPARATOR = "/";
     public static final String URI_QUERY_SEPARATOR = "?";
     public static final String COLON = ":";
+    public static final String FILE_EXT_PNG = ".png";
+    public static final String FILE_EXT_JPG = ".jpg";
+    public static final String FILE_EXT_JPEG = ".jpeg";
+    public static final String FILE_EXT_WEBP = ".webp";
+    public static final String FILE_EXT_SVG = ".svg";
+    public static final String CONTENT_TYPE_PNG = "image/png";
+    public static final String CONTENT_TYPE_JPEG = "image/jpeg";
+    public static final String CONTENT_TYPE_WEBP = "image/webp";
+    public static final String CONTENT_TYPE_SVG = "image/svg+xml";
+    public static final String CONTENT_TYPE_OCTET_STREAM = "application/octet-stream";
 
     public final static class BirtReporting {
         public static final String BIRT_REPORTING_HOST = "iot.birt.reporting.host";
@@ -62,6 +72,20 @@ public class Constants {
         public static final String DEVICE_EVENT="DEVICE_EVENT";
         public static final String BIRT_REPORTING_API_UPLOAD_TEMPLATE_FILE = "/file";
         public static final String CATEGORY_ICON_UPLOAD_ENDPOINT = "device-mgt/v1.0/reports/category/icon/uploads";
+        public static final String EVENT_TYPE = "EVENT_TYPE";
+        public static final String EVENT_DATA = "EVENT_DATA";
+        public static final String TIMESTAMP = "TIMESTAMP";
+        public static final String DATA = "DATA";
+        public static final int HTTP_STATUS_OK = 200;
+        public static final int HTTP_STATUS_ACCEPTED = 202;
+        public static final int HTTP_STATUS_ALREADY_REPORTED = 208;
+        public static final int HTTP_STATUS_BAD_REQUEST = 400;
+        public static final int HTTP_STATUS_NOT_FOUND = 404;
+        public static final int HTTP_STATUS_INTERNAL_SERVER_ERROR = 500;
+        public static final String RESPONSE_FIELD_STATUS = "status";
+        public static final String RESPONSE_FIELD_MESSAGE = "message";
+        public static final String RESPONSE_ALREADY_EXISTS_MSG = "Design Report Name Already Exists";
+        public static final String QUERY_PARAM_FILE_NAMES = "fileNames";
     }
 }
 
