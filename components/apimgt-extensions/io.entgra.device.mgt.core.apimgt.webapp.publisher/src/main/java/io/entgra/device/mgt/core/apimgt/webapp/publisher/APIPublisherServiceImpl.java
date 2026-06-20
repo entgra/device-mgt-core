@@ -41,10 +41,9 @@ import io.entgra.device.mgt.core.apimgt.webapp.publisher.dto.ApiScope;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.dto.ApiUriTemplate;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.exception.APIManagerPublisherException;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.internal.APIPublisherDataHolder;
-import io.entgra.device.mgt.core.device.mgt.core.config.DeviceConfigurationManager;
-import io.entgra.device.mgt.core.device.mgt.core.config.DeviceManagementConfig;
+import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementException;
+import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.config.permission.DefaultPermission;
-import io.entgra.device.mgt.core.device.mgt.core.config.permission.DefaultPermissions;
 import io.entgra.device.mgt.core.device.mgt.core.config.permission.ScopeMapping;
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -53,7 +52,6 @@ import org.apache.commons.logging.LogFactory;
 import org.json.JSONObject;
 import org.wso2.carbon.CarbonConstants;
 import org.wso2.carbon.apimgt.api.APIManagementException;
-import org.wso2.carbon.apimgt.api.APIProvider;
 import org.wso2.carbon.apimgt.api.model.APIIdentifier;
 import org.wso2.carbon.apimgt.impl.APIConstants;
 import org.wso2.carbon.apimgt.impl.APIManagerFactory;
@@ -555,11 +553,7 @@ public class APIPublisherServiceImpl implements APIPublisherService {
                             }
                         }
                         for (String role : rolePermissions.keySet()) {
-                            try {
-                                updatePermissions(role, rolePermissions.get(role));
-                            } catch (UserStoreException e) {
-                                log.error("Error occurred when adding permissions to role: " + role, e);
-                            }
+                            updatePermissions(role, rolePermissions.get(role));
                         }
                     }
                 } catch (IOException | DirectoryIteratorException e) {
@@ -604,13 +598,7 @@ public class APIPublisherServiceImpl implements APIPublisherService {
                 updateScopes(roleName, publisherRESTAPIServices, scopeList, removedPermissions, permScopeMap, true);
             }
 
-            try {
-                updatePermissions(roleName, Arrays.asList(permissions));
-            } catch (UserStoreException e) {
-                String errorMsg = "Error occurred when adding permissions to role: " + roleName;
-                log.error(errorMsg, e);
-                throw new APIManagerPublisherException(errorMsg, e);
-            }
+            updatePermissions(roleName, Arrays.asList(permissions));
         } catch (APIServicesException e) {
             String errorMsg = "Error while processing Publisher REST API response";
             log.error(errorMsg, e);
@@ -693,17 +681,42 @@ public class APIPublisherServiceImpl implements APIPublisherService {
         }
     }
 
-    private void updatePermissions(String role, List<String> permissions) throws UserStoreException {
-        if (role == null || permissions == null) return;
-        AuthorizationManager authorizationManager = APIPublisherDataHolder.getInstance().getUserRealm()
-                .getAuthorizationManager();
-        if (log.isDebugEnabled()) {
-            log.debug("Updating the role '" + role + "'");
-        }
-        authorizationManager.clearRoleAuthorization(role);
-        for (String permission : permissions) {
-            authorizationManager.authorizeRole(role, permission, CarbonConstants.UI_PERMISSION_ACTION);
-            authorizationManager.refreshAllowedRolesForResource(permission);
+    /**
+     * Updates the given role with the specified UI permissions.
+     * This method clears all existing authorizations for the role and adds(updates) new permissions.
+     * If any error occurs during the process, a failure notification is triggered.
+     *
+     * @param roleName    the name of the role to update
+     * @param permissions the list of UI permissions to assign to the role
+     */
+    private void updatePermissions(String roleName, List<String> permissions) {
+        NotificationManagementService notificationManagementService =
+                APIPublisherDataHolder.getInstance().getNotificationManagementService();
+        if (roleName == null || permissions == null) return;
+        try {
+            AuthorizationManager authorizationManager = APIPublisherDataHolder.getInstance().getUserRealm()
+                    .getAuthorizationManager();
+            if (log.isDebugEnabled()) {
+                log.debug("Updating the role '" + roleName + "'");
+            }
+            authorizationManager.clearRoleAuthorization(roleName);
+            for (String permission : permissions) {
+                authorizationManager.authorizeRole(roleName, permission, CarbonConstants.UI_PERMISSION_ACTION);
+                authorizationManager.refreshAllowedRolesForResource(permission);
+            }
+        } catch (UserStoreException e) {
+            String errorMsg = "Error occurred when adding permissions to role: " + roleName;
+            log.error(errorMsg, e);
+            int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+            String message = String.format("Role Permission updation was failed for the role %s", roleName);
+            try {
+                notificationManagementService.handleTaskNotificationIfApplicable(
+                        tenantId,
+                        message
+                );
+            } catch (NotificationManagementException error) {
+                log.error("Failed to send notification for role permission update failure", error);
+            }
         }
     }
 

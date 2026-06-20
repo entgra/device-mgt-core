@@ -17,7 +17,6 @@
  */
 package io.entgra.device.mgt.core.application.mgt.core.dao;
 
-import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManagementDAOException;
 import io.entgra.device.mgt.core.application.mgt.core.exception.VisibilityManagementDAOException;
 
 import java.util.List;
@@ -25,7 +24,6 @@ import java.util.List;
 /**
  * This interface provides the list of operations that are performed in the database layer with respect to the
  * visibility.
- *
  */
 public interface VisibilityDAO {
 
@@ -66,7 +64,7 @@ public interface VisibilityDAO {
      * This method is responsible to delete all application unrestricted roles
      *
      * @param applicationId Application Id
-     * @param tenantId Tenant Id
+     * @param tenantId      Tenant Id
      * @throws VisibilityManagementDAOException if error occurred while deleting application unrestricted roles
      */
     void deleteAppUnrestrictedRoles(int applicationId, int tenantId) throws VisibilityManagementDAOException;

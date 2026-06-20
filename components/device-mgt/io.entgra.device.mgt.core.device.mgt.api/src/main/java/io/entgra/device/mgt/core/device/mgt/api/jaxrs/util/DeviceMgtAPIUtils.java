@@ -35,12 +35,14 @@ import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
 import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo;
 import io.entgra.device.mgt.core.device.mgt.common.MonitoringOperation;
 import io.entgra.device.mgt.core.device.mgt.common.OperationMonitoringTaskConfig;
+import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationException;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.DeviceAccessAuthorizationService;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.GroupAccessAuthorizationService;
 import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.ConfigurationEntry;
 import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.PlatformConfiguration;
 import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.PlatformConfigurationManagementService;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationForExactTimeSnapshotWrapper;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationHistory;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationHistorySnapshot;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationHistorySnapshotWrapper;
@@ -65,6 +67,7 @@ import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManage
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionUtils;
 import io.entgra.device.mgt.core.device.mgt.core.privacy.PrivacyComplianceProvider;
 import io.entgra.device.mgt.core.device.mgt.core.search.mgt.SearchManagerService;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceFeatureOperations;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeEventManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeStatisticManagementProviderService;
@@ -133,8 +136,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 
 /**
@@ -185,6 +190,7 @@ public class DeviceMgtAPIUtils {
     private static volatile TagManagementProviderService tagManagementService;
     private static volatile DeviceTypeEventManagementProviderService deviceTypeEventManagementProviderService;
     private static volatile DeviceTypeStatisticManagementProviderService deviceTypeStatisticManagementProviderService;
+    private static volatile DeviceFeatureOperations deviceFeatureOperations;
 
     static {
         String keyStorePassword = ServerConfiguration.getInstance().getFirstProperty("Security.KeyStore.Password");
@@ -1362,6 +1368,66 @@ public class DeviceMgtAPIUtils {
     }
 
     /**
+     * Getting device location history snapshot for an exact time
+     *
+     * @param authorizedUser User who initiates the request
+     * @param deviceType Device type of the device
+     * @param timeWindow Time window for the location history search
+     * @param request Pagination request
+     * @param exactTime Exact time for the location history search
+     * @param dms DeviceManagementService instance
+     * @return DeviceLocationForExactTimeSnapshotWrapper instance
+     * @throws DeviceManagementException If device details cannot be retrieved
+     * @throws DeviceAccessAuthorizationException If device authorization fails
+     */
+    public static DeviceLocationForExactTimeSnapshotWrapper getDeviceLocationHistoryPaths(
+            String authorizedUser, String deviceType, int timeWindow, PaginationRequest request, long exactTime,
+            DeviceManagementProviderService dms)
+            throws DeviceManagementException, DeviceAccessAuthorizationException {
+
+        List<Object> pathsArray = new ArrayList<>();
+        List<DeviceLocationHistorySnapshot> snapshots = dms.getAllDeviceLocationInfo(deviceType, exactTime, timeWindow, request);
+
+        for (DeviceLocationHistorySnapshot snapshot : snapshots) {
+            // Create device identifier from snapshot data
+            DeviceIdentifier identifier = new DeviceIdentifier(snapshot.getDeviceIdentifier().getId(),
+                    snapshot.getDeviceIdentifier().getType());
+
+            String[] requiredPermissions = {
+                    PermissionManagerServiceImpl.getInstance().getRequiredPermission()
+            };
+
+            if (getDeviceAccessAuthorizationService().isUserAuthorized(identifier, authorizedUser, requiredPermissions)) {
+
+                try {
+                    // Get device details for this specific device
+                    Device device = dms.getDevice(identifier, false);
+
+                    Map<String, Object> pathEntry = new HashMap<>();
+                    // Use device details
+                    pathEntry.put("Id", device.getId());
+                    pathEntry.put("deviceId", identifier.getId());
+                    pathEntry.put("deviceType", identifier.getType());
+                    pathEntry.put("owner", device.getEnrolmentInfo().getOwner());
+                    pathEntry.put("deviceName", device.getName());
+                    // Add location data from snapshot
+                    pathEntry.put("latitude", snapshot.getLatitude());
+                    pathEntry.put("longitude", snapshot.getLongitude());
+                    pathEntry.put("timestamp", snapshot.getUpdatedTime());
+                    pathsArray.add(pathEntry);
+
+                } catch (DeviceManagementException e) {
+                    log.warn("Could not retrieve device details for device: " + identifier.getId(), e);
+                }
+            }
+        }
+
+        DeviceLocationForExactTimeSnapshotWrapper wrapper = new DeviceLocationForExactTimeSnapshotWrapper();
+        wrapper.setExactTimeSnapshot(pathsArray);
+        return wrapper;
+    }
+
+    /**
      * Check user who initiates the request has permission to list devices from given group Id.
      *
      * @param groupId        Group ID of the group
@@ -1413,5 +1479,27 @@ public class DeviceMgtAPIUtils {
             }
         }
         return tenantManagerAdminService;
+    }
+
+    /**
+     * Initializing and accessing method for DeviceFeatureOperations.
+     *
+     * @return DeviceFeatureOperations instance
+     * @throws IllegalStateException if DeviceFeatureOperations cannot be initialized
+     */
+    public static DeviceFeatureOperations getDeviceFeatureOperations() {
+        if (deviceFeatureOperations == null) {
+            synchronized (DeviceMgtAPIUtils.class) {
+                if (deviceFeatureOperations == null) {
+                    PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+                    deviceFeatureOperations = (DeviceFeatureOperations) ctx.getOSGiService(
+                            DeviceFeatureOperations.class, null);
+                    if (deviceFeatureOperations == null) {
+                        throw new IllegalStateException("DeviceStatusManagementService Management service not initialized.");
+                    }
+                }
+            }
+        }
+        return deviceFeatureOperations;
     }
 }

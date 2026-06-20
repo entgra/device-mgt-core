@@ -48,14 +48,6 @@
             <artifactId>bcpkix-jdk15on</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.entgra.com.google.code.jscep</groupId>
-            <artifactId>jscep</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>commons-io.wso2</groupId>
-            <artifactId>commons-io</artifactId>
-        </dependency>
-        <dependency>
             <groupId>commons-lang.wso2</groupId>
             <artifactId>commons-lang</artifactId>
         </dependency>
@@ -121,12 +113,6 @@
                                 </bundleDef>
                                 <bundleDef>
                                     org.wso2.orbit.org.bouncycastle:bcpkix-jdk15on:${bcpkix.wso2.version}
-                                </bundleDef>
-                                <bundleDef>
-                                    io.entgra.com.google.code.jscep:jscep:${jscep.version}
-                                </bundleDef>
-                                <bundleDef>
-                                    commons-io.wso2:commons-io:${version.commons.io}
                                 </bundleDef>
                                 <bundleDef>
                                     commons-lang.wso2:commons-lang:${version.commons.lang}

@@ -39,6 +39,7 @@ public class DeviceMgtTenantListener implements TenantMgtListener {
             tenantManager.addDefaultRoles(tenantInfoBean);
             tenantManager.addDefaultAppCategories(tenantInfoBean);
             tenantManager.addDefaultDeviceStatusFilters(tenantInfoBean);
+            tenantManager.addDefaultNotificationArchivalMetadata(tenantInfoBean);
         } catch (TenantMgtException e) {
             String msg = "Error occurred while executing tenant creation flow";
             log.error(msg, e);
@@ -63,10 +64,10 @@ public class DeviceMgtTenantListener implements TenantMgtListener {
     @Override
     public void onTenantInitialActivation(int tenantId) throws StratosException {
         TenantManager tenantManager = TenantMgtDataHolder.getInstance().getTenantManager();
-        String tenantDomain = null;
         try {
-            tenantDomain = tenantManager.getTenantDomain(tenantId);
-            tenantManager.publishScopesToTenant(tenantDomain);
+            if (tenantManager != null) {
+                tenantManager.publishScopesToTenant(tenantManager.getTenantDomain(tenantId));
+            }
         } catch (TenantMgtException e) {
             log.error("Error occurred while executing tenant initial activation flow", e);
         }

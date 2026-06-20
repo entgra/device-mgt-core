@@ -30,8 +30,11 @@ import io.entgra.device.mgt.core.device.mgt.core.common.TestDataHolder;
 import io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementDataHolder;
 import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.*;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
+import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementException;
+import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationManagementService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -102,7 +105,18 @@ public class OperationManagementTests extends BaseDeviceManagementTest {
 
     @Test
     public void addCommandOperation() throws DeviceManagementException, OperationManagementException,
-            InvalidDeviceException {
+            InvalidDeviceException, NotificationManagementException {
+        // mock NotificationManagementService and inject into DeviceManagementDataHolder
+        NotificationManagementService notificationService = Mockito.mock(NotificationManagementService.class);
+        Mockito.doNothing().when(notificationService).handleOperationNotificationIfApplicable(
+                Mockito.anyString(),
+                Mockito.anyString(),
+                Mockito.anyString(),
+                Mockito.anyList(),
+                Mockito.anyInt(),
+                Mockito.anyString()
+        );
+        DeviceManagementDataHolder.getInstance().setNotificationManagementService(notificationService);
         OperationManager operationManager = PowerMockito.spy(
                 new OperationManagerImpl(DEVICE_TYPE, deviceManagementService));
         try {

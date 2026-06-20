@@ -22,6 +22,7 @@ import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.BadRequestException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceTypeNotFoundException;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.NotFoundException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ReportManagementException;
 
 import java.util.List;
@@ -114,4 +115,47 @@ public interface ReportManagementService {
      * @throws ReportManagementException
      */
     List<String> getAgentVersions() throws ReportManagementException;
+
+    /**
+     * This method is used to invoke BIRT runtime API for generating a report
+     *
+     * @param reportParameters The report parameters from the report template
+     * @return returns response containing response details from BIRT runtime
+     * @throws ReportManagementException Might occur when invoking BIRT runtime
+     * @throws BadRequestException Might occur when report parameters mismatch
+     * @throws NotFoundException Might occur when the requested design file is not found
+     */
+    JsonObject generateBirtReport(ReportParameters reportParameters) throws ReportManagementException, BadRequestException, NotFoundException;
+
+    /**
+     * This method is used to invoke BIRT runtime API for downloading report template
+     *
+     * @param templateName The name of the report template
+     * @return returns response containing response details from BIRT runtime
+     * @throws ReportManagementException Might occur when invoking BIRT runtime
+     * @throws BadRequestException Might occur if the templateName is invalid
+     */
+    JsonObject downloadBirtTemplate(String templateName) throws ReportManagementException, BadRequestException;
+
+    /**
+     * This method is used to invoke BIRT runtime API for deleting report template
+     *
+     * @param templateNames The names of the report templates
+     * @return returns response containing response details from BIRT runtime
+     * @throws ReportManagementException Might occur when invoking BIRT runtime
+     * @throws BadRequestException Might occur if templateNames is invalid
+     */
+    JsonObject deleteBirtTemplate(List<String> templateNames) throws ReportManagementException, BadRequestException;
+
+    /**
+     * This method is used to invoke BIRT runtime API for extracting report data
+     *
+     * @param reportParameters The report specific parameters
+     * @param limit limit for pagination
+     * @param offset offset for pagination
+     * @return returns response containing extracted results from BIRT runtime
+     * @throws ReportManagementException Might occur when invoking BIRT runtime
+     * @throws BadRequestException Might occur when report parameters mismatch
+     */
+    JsonObject getReportData(JsonObject reportParameters, int limit, int offset) throws ReportManagementException, BadRequestException;
 }

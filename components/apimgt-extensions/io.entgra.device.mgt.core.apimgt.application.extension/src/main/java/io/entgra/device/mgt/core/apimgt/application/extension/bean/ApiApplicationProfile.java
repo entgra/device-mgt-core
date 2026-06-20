@@ -26,6 +26,7 @@ public class ApiApplicationProfile {
     private String grantTypes;
     private String owner;
     private TOKEN_TYPE tokenType = TOKEN_TYPE.JWT;
+    private boolean registerOnSameTenant;
 
     public String getOwner() {
         return owner;
@@ -73,6 +74,14 @@ public class ApiApplicationProfile {
 
     public void setTokenType(TOKEN_TYPE tokenType) {
         this.tokenType = tokenType;
+    }
+
+    public boolean isRegisterOnSameTenant() {
+        return registerOnSameTenant;
+    }
+
+    public void setRegisterOnSameTenant(boolean registerOnSameTenant) {
+        this.registerOnSameTenant = registerOnSameTenant;
     }
 
     public enum TOKEN_TYPE {

@@ -28,6 +28,11 @@ import io.entgra.device.mgt.core.apimgt.application.extension.bean.TokenCreation
 import io.entgra.device.mgt.core.apimgt.application.extension.constants.ApiApplicationConstants;
 import io.entgra.device.mgt.core.apimgt.application.extension.exception.APIManagerException;
 import io.entgra.device.mgt.core.apimgt.application.extension.internal.APIApplicationManagerExtensionDataHolder;
+import io.entgra.device.mgt.core.apimgt.application.extension.validator.ApiApplicationRegistrationValidator;
+import io.entgra.device.mgt.core.apimgt.application.extension.validator.MetadataBasedApiApplicationRegistrationValidator;
+import io.entgra.device.mgt.core.apimgt.application.extension.config.ApiApplicationValidatorConfig;
+import io.entgra.device.mgt.core.apimgt.application.extension.config.ApiApplicationValidatorConfigManager;
+import io.entgra.device.mgt.core.apimgt.application.extension.config.ValidatorConfig;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.ConsumerRESTAPIServices;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.IOAuthClientService;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.bean.APIMConsumer.APIInfo;
@@ -65,7 +70,6 @@ import org.wso2.carbon.apimgt.impl.internal.ServiceReferenceHolder;
 import org.wso2.carbon.apimgt.impl.utils.APIUtil;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -404,7 +408,7 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
         }
 
         if (metaData == null) {
-            String msg = "Null retrieved for the metadata entry when getting API publishing enabled tenant domains.";
+            String msg = "Null retrieved for metadata entry with key: " + Constants.API_PUBLISHING_ENABLED_TENANT_LIST_KEY;
             log.error(msg);
             throw new APIManagerException(msg);
         }
@@ -466,14 +470,29 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
             BadRequestException, UnexpectedResponseException {
         String flowStartingDomain = MultitenantConstants.SUPER_TENANT_DOMAIN_NAME;
 
-        String currentTenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain(true);
+        PrivilegedCarbonContext currentContext = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        String currentTenantDomain = currentContext.getTenantDomain(true);
         // Here we are checking whether that the current tenant is API publishing enabled tenant or not
         // If the current tenant belongs to a publishing enabled tenant, then start the api application
         // registration sequences in current tenant space, otherwise in the super tenant
-        for (String tenantDomain : getApiPublishingEnabledTenantDomains()) {
-            if (Objects.equals(tenantDomain, currentTenantDomain)) {
+        String currentUsername = currentContext.getUsername();
+        if (!currentTenantDomain.equals(flowStartingDomain)) {
+            List<String> publishingEnabledTenantDomains = getApiPublishingEnabledTenantDomains();
+
+            for (String tenantDomain : publishingEnabledTenantDomains) {
+                if (Objects.equals(tenantDomain, currentTenantDomain)) {
+                    flowStartingDomain = currentTenantDomain;
+                    break;
+                }
+            }
+
+            // If the current tenant domain is not in the API publishing enabled tenant list and if the application
+            // register payload has the registerOnSameTenant property as true, then the application will be created
+            // under the same tenant. This configuration is added so that we can create API applications under
+            // subtenants without configuring the API published enabled tenant list.
+            if (!publishingEnabledTenantDomains.contains(currentTenantDomain) &&
+                    apiApplicationProfile.isRegisterOnSameTenant()) {
                 flowStartingDomain = currentTenantDomain;
-                break;
             }
         }
 
@@ -484,6 +503,17 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
         try {
             PrivilegedCarbonContext.startTenantFlow();
             PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(flowStartingDomain, true);
+            if (currentUsername != null) {
+                PrivilegedCarbonContext.getThreadLocalCarbonContext().setUsername(currentUsername);
+            }
+            ApiApplicationValidatorConfig validatorConfig = ApiApplicationValidatorConfigManager.getInstance().getApiApplicationValidatorConfig();
+            if (validatorConfig != null && validatorConfig.getValidators() != null) {
+                for (ValidatorConfig validatorConfigItem : validatorConfig.getValidators()) {
+                    ApiApplicationRegistrationValidator validator = new MetadataBasedApiApplicationRegistrationValidator(
+                            validatorConfigItem.getMetadataKey(), validatorConfigItem.getApiSearchQuery());
+                    validator.validate(flowStartingDomain);
+                }
+            }
             return createApiApplication(apiApplicationProfile);
 
         } finally {
@@ -521,4 +551,5 @@ public class APIManagementProviderServiceImpl implements APIManagementProviderSe
             throw new APIManagerException(msg, e);
         }
     }
+
 }

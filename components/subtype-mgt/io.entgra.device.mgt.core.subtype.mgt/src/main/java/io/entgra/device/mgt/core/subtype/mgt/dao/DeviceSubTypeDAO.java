@@ -42,4 +42,5 @@ public interface DeviceSubTypeDAO {
 
     DeviceSubType getDeviceSubTypeByProvider(String subTypeName, int tenantId, String deviceType)
             throws SubTypeMgtDAOException;
+
 }

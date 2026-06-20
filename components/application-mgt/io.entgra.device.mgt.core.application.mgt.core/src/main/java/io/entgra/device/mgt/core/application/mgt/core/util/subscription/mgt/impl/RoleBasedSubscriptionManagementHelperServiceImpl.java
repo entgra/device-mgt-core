@@ -44,7 +44,6 @@ import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
-import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOException;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceDetailsDTO;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import org.apache.commons.logging.Log;
@@ -229,12 +228,12 @@ public class RoleBasedSubscriptionManagementHelperServiceImpl implements Subscri
      * This method requires that the database connection is already opened before being invoked.
      * Ensure that {ConnectionManagerUtil.openDBConnection()} is called prior to executing this method.
      *
-     * @param roleName the name of the role
-     * @param tenantId the ID of the tenant
+     * @param roleName              the name of the role
+     * @param tenantId              the ID of the tenant
      * @param applicationReleaseDTO the ApplicationReleaseDTO object containing application details
      * @return the count of device IDs owned by users with the specified role and device type
-     * @throws UserStoreException if an error occurs while accessing the user store
-     * @throws DeviceManagementException if an error occurs while retrieving device information
+     * @throws UserStoreException             if an error occurs while accessing the user store
+     * @throws DeviceManagementException      if an error occurs while retrieving device information
      * @throws ApplicationManagementException if an error occurs while retrieving application details
      */
     private int getDeviceIdsOwnByRoleWithType(String roleName, int tenantId, ApplicationReleaseDTO applicationReleaseDTO)

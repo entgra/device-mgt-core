@@ -35,6 +35,8 @@ public class UIConfiguration {
     private int loginCacheCapacity;
     private Billing billing;
     private HubspotChat hubspotChat;
+    private String gatewayUrl;
+    private List<String> tenantContextEnabledApps;
 
     private DeviceInfoConfigurations deviceInfoConfigurations;
 
@@ -120,5 +122,23 @@ public class UIConfiguration {
 
     public void setDeviceStatusConfigurations(DeviceStatusConfigurations deviceStatusConfigurations) {
         this.deviceStatusConfigurations = deviceStatusConfigurations;
+    }
+
+    public String getGatewayUrl() {
+        return gatewayUrl;
+    }
+
+    public void setGatewayUrl(String gatewayUrl) {
+        this.gatewayUrl = gatewayUrl;
+    }
+
+    @XmlElementWrapper(name = "TenantContextEnabledApps")
+    @XmlElement(name = "AppName")
+    public List<String> getTenantContextEnabledApps() {
+        return tenantContextEnabledApps;
+    }
+
+    public void setTenantContextEnabledApps(List<String> tenantContextEnabledApps) {
+        this.tenantContextEnabledApps = tenantContextEnabledApps;
     }
 }

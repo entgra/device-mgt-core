@@ -36,7 +36,11 @@ import io.entgra.device.mgt.core.application.mgt.core.dao.ApplicationDAO;
 import io.entgra.device.mgt.core.application.mgt.core.dao.ApplicationReleaseDAO;
 import io.entgra.device.mgt.core.application.mgt.core.dao.ReviewDAO;
 import io.entgra.device.mgt.core.application.mgt.core.dao.common.ApplicationManagementDAOFactory;
-import io.entgra.device.mgt.core.application.mgt.core.exception.*;
+import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManagementDAOException;
+import io.entgra.device.mgt.core.application.mgt.core.exception.BadRequestException;
+import io.entgra.device.mgt.core.application.mgt.core.exception.ForbiddenException;
+import io.entgra.device.mgt.core.application.mgt.core.exception.NotFoundException;
+import io.entgra.device.mgt.core.application.mgt.core.exception.ReviewManagementDAOException;
 import io.entgra.device.mgt.core.application.mgt.core.util.ConnectionManagerUtil;
 import io.entgra.device.mgt.core.application.mgt.core.util.Constants;
 import org.apache.commons.logging.Log;
@@ -273,7 +277,7 @@ public class ReviewManagerImpl implements ReviewManager {
 
     @Override
     public Review updateReview(ReviewWrapper updatingReview, int reviewId, String uuid,
-            boolean isPrivilegedUser) throws ReviewManagementException, ApplicationManagementException {
+                               boolean isPrivilegedUser) throws ReviewManagementException, ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         String username = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
         ReviewDTO reviewDTO = getReview(reviewId, tenantId);
@@ -393,7 +397,7 @@ public class ReviewManagerImpl implements ReviewManager {
             log.error(msg, e);
             throw new ReviewManagementException(msg, e);
         } catch (DBConnectionException e) {
-            String msg ="Error occurred while getting the DB connection to get all reviews for application release which"
+            String msg = "Error occurred while getting the DB connection to get all reviews for application release which"
                     + " has UUID " + uuid;
             log.error(msg, e);
             throw new ReviewManagementException(msg, e);
@@ -459,7 +463,7 @@ public class ReviewManagerImpl implements ReviewManager {
             log.error(msg, e);
             throw new ReviewManagementException(msg, e);
         } catch (DBConnectionException e) {
-            String msg =  "Error occurred while getting DB connection to get all " + username + "'s reviews for "
+            String msg = "Error occurred while getting DB connection to get all " + username + "'s reviews for "
                     + "application which has an application release of uuid: " + uuid;
             log.error(msg, e);
             throw new ReviewManagementException(msg, e);
@@ -579,7 +583,8 @@ public class ReviewManagerImpl implements ReviewManager {
         return reviewIds;
     }
 
-    @Override public void deleteReview(String uuid, int reviewId, boolean isPriviledgedUser)
+    @Override
+    public void deleteReview(String uuid, int reviewId, boolean isPriviledgedUser)
             throws ReviewManagementException, ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         String username = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
@@ -643,7 +648,8 @@ public class ReviewManagerImpl implements ReviewManager {
         }
     }
 
-    @Override public Rating getAppReleaseRating(String appReleaseUuid)
+    @Override
+    public Rating getAppReleaseRating(String appReleaseUuid)
             throws ReviewManagementException, ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         try {
@@ -677,7 +683,8 @@ public class ReviewManagerImpl implements ReviewManager {
         }
     }
 
-    @Override public Rating getAppRating(String appReleaseUuid)
+    @Override
+    public Rating getAppRating(String appReleaseUuid)
             throws ReviewManagementException, ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         try {

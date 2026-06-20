@@ -142,6 +142,16 @@
             <artifactId>jaxb-api</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>io.entgra.device.mgt.core</groupId>
+            <artifactId>io.entgra.device.mgt.core.notification.mgt.common</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.entgra.device.mgt.core</groupId>
+            <artifactId>io.entgra.device.mgt.core.apimgt.application.extension</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
 
@@ -167,6 +177,7 @@
                             com.google.gson;version="[2.9,3)",
                             com.google.gson.reflect;version="[2.9,3)",
                             io.entgra.device.mgt.core.apimgt.annotations;version="${io.entgra.device.mgt.core.version.range}",
+                            io.entgra.device.mgt.core.apimgt.application.extension.config;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.apimgt.extension.rest.api.*,
                             io.entgra.device.mgt.core.apimgt.webapp.publisher.config,
                             io.entgra.device.mgt.core.apimgt.webapp.publisher.dto,
@@ -174,9 +185,12 @@
                             io.entgra.device.mgt.core.device.mgt.common.exceptions,
                             io.entgra.device.mgt.core.device.mgt.common.permission.mgt,
                             io.entgra.device.mgt.core.device.mgt.common.metadata.mgt,
+                            io.entgra.device.mgt.core.device.mgt.common.notification.mgt.*;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.device.mgt.core.config,
                             io.entgra.device.mgt.core.device.mgt.core.config.permission,
                             io.entgra.device.mgt.core.device.mgt.core.permission.mgt;version="${io.entgra.device.mgt.core.version.range}",
+                            io.entgra.device.mgt.core.notification.mgt.common.service;version="${io.entgra.device.mgt.core.version.range}",
+                            io.entgra.device.mgt.core.notification.mgt.common.exception;version="${io.entgra.device.mgt.core.version.range}",
                             io.swagger.annotations;version="[1.6,2)",
                             javax.servlet;version="[2.6,3)",
                             javax.xml.bind;version="[0.0,1)",

@@ -17,30 +17,54 @@
  */
 package io.entgra.device.mgt.core.device.mgt.core.report.mgt;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.NotFoundException;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import io.entgra.device.mgt.core.device.mgt.common.Count;
 import io.entgra.device.mgt.core.device.mgt.common.Device;
-import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
-import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.BadRequestException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
+import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
+import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceTypeNotFoundException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ReportManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.report.mgt.ReportManagementService;
-import io.entgra.device.mgt.core.device.mgt.core.dao.*;
+import io.entgra.device.mgt.core.device.mgt.common.report.mgt.ReportParameters;
+import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceDAO;
+import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOException;
+import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
+import io.entgra.device.mgt.core.device.mgt.core.dao.GroupDAO;
+import io.entgra.device.mgt.core.device.mgt.core.dao.GroupManagementDAOException;
+import io.entgra.device.mgt.core.device.mgt.core.dao.GroupManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
 import io.entgra.device.mgt.core.device.mgt.core.util.DeviceManagerUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import io.entgra.device.mgt.core.device.mgt.core.util.HttpReportingUtil;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Calendar;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -480,4 +504,175 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             throw new ReportManagementException(msg, e);
         }
     }
+
+    @Override
+    public JsonObject generateBirtReport(ReportParameters reportParameters) throws ReportManagementException, BadRequestException, NotFoundException {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            String generateReportURL = HttpReportingUtil.getBirtReportHost();
+            if (!StringUtils.isBlank(generateReportURL)) {
+                int tenantId = DeviceManagementDAOUtil.getTenantId();
+                generateReportURL += Constants.BirtReporting.BIRT_REPORTING_API_REPORT_PATH;
+                Map<String, Object> parameters = reportParameters.getParameters();
+                if (parameters.containsKey(Constants.BirtReporting.TENANT_ID)) {
+                    parameters.replace(Constants.BirtReporting.TENANT_ID, String.valueOf(tenantId));
+                } else {
+                    parameters.put(Constants.BirtReporting.TENANT_ID, String.valueOf(tenantId));
+                }
+                reportParameters.setParameters(parameters);
+
+                HttpPost httpPost = new HttpPost(generateReportURL);
+                StringEntity requestEntity = new StringEntity(
+                        reportParameters.getJSONString(), ContentType.APPLICATION_JSON);
+                httpPost.setEntity(requestEntity);
+                HttpResponse httpResponse = httpClient.execute(httpPost);
+                int statusCode = httpResponse.getStatusLine().getStatusCode();
+                switch (statusCode) {
+                    case 200:
+                    case 202:
+                    case 208:
+                        return new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
+                    case 400:
+                        throw new BadRequestException("Parameters mismatch.");
+                    case 404:
+                        throw new NotFoundException("Requested design file not found.");
+                    default:
+                        throw new ReportManagementException("Failed to create directory.");
+                }
+            } else {
+                String msg = "BIRT reporting host is not defined in the iot-server.sh properly.";
+                log.error(msg);
+                throw new ReportManagementException(msg);
+            }
+        } catch (IOException e) {
+            String msg = "Error occurred while invoking BIRT runtime API.";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred while retrieving Tenant ID.";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        }
+    }
+
+    @Override
+    public JsonObject downloadBirtTemplate(String templateName) throws ReportManagementException, BadRequestException {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+
+            String downloadURL = HttpReportingUtil.getBirtReportHost();
+            if (!StringUtils.isBlank(downloadURL)) {
+
+                downloadURL += Constants.BirtReporting.BIRT_REPORTING_API_TEMPLATE
+                        + Constants.BirtReporting.BIRT_REPORTING_API_DOWNLOAD_TEMPLATE_URL
+                        + "?templateURL=" + templateName;
+
+                HttpPost httpPost = new HttpPost(downloadURL);
+                HttpResponse httpResponse = httpClient.execute(httpPost);
+                int statusCode = httpResponse.getStatusLine().getStatusCode();
+                switch (statusCode) {
+                    case 200:
+                        return new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
+                    case 400:
+                        throw new BadRequestException("Invalid file URL.");
+                    default:
+                        throw new ReportManagementException("Failed to create directory.");
+                }
+            } else {
+                String msg = "BIRT reporting host is not defined in the iot-server.sh properly.";
+                log.error(msg);
+                throw new ReportManagementException(msg);
+            }
+        } catch (IOException e) {
+            String msg = "Error occurred while invoking BIRT runtime API.";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        }
+    }
+
+    @Override
+    public JsonObject deleteBirtTemplate(List<String> templateNames) throws ReportManagementException, BadRequestException {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+
+            String deleteURL = HttpReportingUtil.getBirtReportHost();
+            if (!StringUtils.isBlank(deleteURL)) {
+                deleteURL += Constants.BirtReporting.BIRT_REPORTING_API_TEMPLATE
+                        + "?fileNames=" + String.join(",", templateNames);
+
+                HttpDelete httpDelete = new HttpDelete(deleteURL);
+                HttpResponse httpResponse = httpClient.execute(httpDelete);
+                int statusCode = httpResponse.getStatusLine().getStatusCode();
+                switch (statusCode) {
+                    case 200:
+                        return new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
+                    case 400:
+                        throw new BadRequestException("Invalid template names");
+                    case 500:
+                        JsonObject errorResponse = new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
+                        throw new ReportManagementException(errorResponse.get("message").getAsString());
+                    default:
+                        throw new ReportManagementException("Error Occurred While Deleting File");
+                }
+
+            } else {
+                String msg = "BIRT reporting host is not defined in the iot-server.sh properly.";
+                log.error(msg);
+                throw new ReportManagementException(msg);
+            }
+        } catch (IOException e) {
+            String msg = "Error occurred while invoking BIRT runtime API.";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        }
+    }
+
+    @Override
+    public JsonObject getReportData(JsonObject reportParameters, int limit, int offset)
+            throws ReportManagementException, BadRequestException {
+
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            String getReportDataURL = HttpReportingUtil.getBirtReportHost();
+            if (!StringUtils.isBlank(getReportDataURL)) {
+                int tenantId = DeviceManagementDAOUtil.getTenantId();
+                getReportDataURL += Constants.BirtReporting.BIRT_REPORTING_API_REPORT_DATA_PATH
+                        + "?limit=" + limit + "&offset=" + offset;
+
+                JsonObject parameters = reportParameters.getAsJsonObject("parameters");
+                parameters.addProperty(Constants.BirtReporting.TENANT_ID, String.valueOf(tenantId));
+                reportParameters.add("parameters", parameters);
+
+                HttpPost httpPost = new HttpPost(getReportDataURL);
+                httpPost.setEntity(new StringEntity(reportParameters.toString(), ContentType.APPLICATION_JSON));
+
+                HttpResponse httpResponse = httpClient.execute(httpPost);
+                int statusCode = httpResponse.getStatusLine().getStatusCode();
+
+                switch (statusCode) {
+                    case 200:
+                        String jsonResponse = EntityUtils.toString(httpResponse.getEntity());
+                        return new Gson().fromJson(jsonResponse, JsonObject.class);
+                    case 400:
+                        throw new BadRequestException("Design file name is required");
+                    case 500:
+                        JsonObject errorResponse =
+                                new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
+                        throw new ReportManagementException(errorResponse.get("message").getAsString());
+                    default:
+                        throw new ReportManagementException("Failed to retrieve report data. HTTP " + statusCode);
+                }
+            } else {
+                String msg = "BIRT reporting host is not defined in the iot-server.sh properly.";
+                log.error(msg);
+                throw new ReportManagementException(msg);
+            }
+        } catch (IOException e) {
+            String msg = "Error occurred while invoking BIRT runtime API.";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred while retrieving Tenant ID.";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        }
+    }
+
+
 }

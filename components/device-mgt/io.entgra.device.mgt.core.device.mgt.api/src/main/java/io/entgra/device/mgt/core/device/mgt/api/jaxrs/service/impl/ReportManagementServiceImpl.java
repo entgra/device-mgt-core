@@ -18,6 +18,8 @@
 
 package io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceList;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
@@ -30,16 +32,36 @@ import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
 import io.entgra.device.mgt.core.device.mgt.common.ReportFiltersList;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.BadRequestException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceTypeNotFoundException;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.NotFoundException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ReportManagementException;
+import io.entgra.device.mgt.core.device.mgt.common.report.mgt.ReportParameters;
 import io.entgra.device.mgt.core.device.mgt.core.report.mgt.Constants;
+import io.entgra.device.mgt.core.device.mgt.core.util.HttpReportingUtil;
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceList;
+import io.entgra.device.mgt.core.device.mgt.common.ReportFiltersList;
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.ReportManagementService;
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.RequestValidationUtil;
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.DeviceMgtAPIUtils;
+import io.swagger.util.Json;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This is the service class for report generating operations
@@ -323,4 +345,82 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
+
+    @POST
+    @Path("/birt/report/")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Override
+    public Response generateBirtReport(ReportParameters reportParameters) {
+        try {
+            String designFile = HttpReportingUtil.getReportType(reportParameters.getDesignFile());
+            if (!Constants.BirtReporting.UNSUPPORTED_REPORT_TYPE.equals(designFile)) {
+                reportParameters.setDesignFile(designFile.toLowerCase());
+                JsonObject birtResponse = DeviceMgtAPIUtils.getReportManagementService().generateBirtReport(reportParameters);
+                return Response.status(Response.Status.OK).entity(birtResponse).build();
+            } else {
+                String msg = "Requested design file not found.";
+                log.error(msg);
+                return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+            }
+        } catch (ReportManagementException e) {
+            String msg = "Error occurred while generating report.";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (NotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+        }
+    }
+
+    @POST
+    @Path("/birt/template")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response downloadBirtTemplate(@QueryParam("url") String templateURL) {
+        try{
+            JsonObject birtResponse = DeviceMgtAPIUtils.getReportManagementService().downloadBirtTemplate(templateURL);
+            return Response.status(Response.Status.OK).entity(birtResponse).build();
+        } catch (ReportManagementException e) {
+            String msg = "Error occurred while saving report template.";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
+
+    @DELETE
+    @Path("/birt/template")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response deleteBirtTemplate(List<String> templateNames) {
+        try {
+            JsonObject birtResponse = DeviceMgtAPIUtils.getReportManagementService().deleteBirtTemplate(templateNames);
+            return Response.ok(birtResponse).build();
+        } catch (ReportManagementException e) {
+            log.error(e.getMessage(), e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+        } catch (BadRequestException e){
+            log.error(e.getMessage(), e);
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
+
+    @POST
+    @Path("/data")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getReportData(Map<String, Object> requestBody, @QueryParam("limit") int limit, @QueryParam("offset") int offset) {
+        try{
+            JsonObject reportJson = new Gson().toJsonTree(requestBody).getAsJsonObject();
+            JsonObject birtResponse = DeviceMgtAPIUtils.getReportManagementService().getReportData(reportJson, limit, offset);
+            return Response.ok(birtResponse).build();
+        } catch (ReportManagementException e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+        } catch (BadRequestException e){
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
+
 }

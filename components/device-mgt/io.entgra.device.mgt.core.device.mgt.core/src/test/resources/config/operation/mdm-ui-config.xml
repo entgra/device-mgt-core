@@ -24,6 +24,14 @@
     <SessionTimeOut>3600</SessionTimeOut>
     <!--  maximum number of login cache entries  -->
     <LoginCacheCapacity>10000</LoginCacheCapacity>
+    <!--
+        The UI app names that will use the API tenant context paths when using the request handlers i.e. '/t/{tenantDomain}/api/'
+        Add '-login' suffix to the app name eg:
+        <TenantContextEnabledApps>
+            <AppName>endpoint-mgt-login</AppName>
+        </TenantContextEnabledApps>
+     -->
+    <TenantContextEnabledApps></TenantContextEnabledApps>
     <!-- hubspot account info for live chat -->
     <HubspotChat>
         <EnableHubspot>false</EnableHubspot>
@@ -293,6 +301,7 @@
         <Scope>um:users:update</Scope>
         <Scope>um:users:invite</Scope>
         <Scope>um:admin:users:view</Scope>
+        <Scope>um:admin:users:modify</Scope>
         <Scope>dm:admin:enrollment:update</Scope>
         <Scope>gm:devices:view</Scope>
         <Scope>gm:groups:update</Scope>
@@ -319,6 +328,12 @@
         <Scope>gm:admin:groups:add</Scope>
         <Scope>dm:notif:mark-checked</Scope>
         <Scope>dm:notifications:view</Scope>
+        <Scope>dm:notif:archive</Scope>
+        <Scope>dm:notif:delete</Scope>
+        <Scope>dm:notificationConfig:view</Scope>
+        <Scope>dm:notificationConfig:create</Scope>
+        <Scope>dm:notificationConfig:update</Scope>
+        <Scope>dm:notificationConfig:delete</Scope>
         <Scope>cm:cert:delete</Scope>
         <Scope>cm:cert:details:get</Scope>
         <Scope>cm:cert:view</Scope>
@@ -442,6 +457,7 @@
         <Scope>am:admin:lc:app:deprecate</Scope>
         <Scope>am:admin:lc:app:retire</Scope>
         <Scope>dm:remote:connect</Scope>
+        <Scope>win:ops:unlock-devices</Scope>
     </Scopes>
     <SSOConfiguration>
         <Issuer>device-mgt</Issuer>

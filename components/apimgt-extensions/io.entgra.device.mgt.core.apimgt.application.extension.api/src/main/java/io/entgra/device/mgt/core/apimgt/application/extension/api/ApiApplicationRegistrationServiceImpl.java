@@ -136,6 +136,7 @@ public class ApiApplicationRegistrationServiceImpl implements ApiApplicationRegi
             apiApplicationProfile.setGrantTypes(String.join(" ", registrationProfile.getSupportedGrantTypes()));
             apiApplicationProfile.setTokenType(Enum.valueOf(ApiApplicationProfile.TOKEN_TYPE.class,
                     registrationProfile.getTokenType()));
+            apiApplicationProfile.setRegisterOnSameTenant(registrationProfile.isRegisterOnSameTenant());
             ApiApplicationKey apiApplicationKey =
                     apiManagementProviderService.registerApiApplication(apiApplicationProfile);
             return Response.status(Response.Status.CREATED).entity(apiApplicationKey).build();

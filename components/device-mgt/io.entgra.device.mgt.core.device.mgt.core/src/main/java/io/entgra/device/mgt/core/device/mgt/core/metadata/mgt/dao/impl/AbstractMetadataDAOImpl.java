@@ -172,4 +172,26 @@ public abstract class AbstractMetadataDAOImpl implements MetadataDAO {
         return false;
     }
 
+    @Override
+    public boolean clearMetadataValue(int tenantId, String metaKey) throws MetadataManagementDAOException {
+        try {
+            Connection conn = MetadataManagementDAOFactory.getConnection();
+            String sql =
+                    "UPDATE DM_METADATA " +
+                    "SET METADATA_VALUE = NULL " +
+                    "WHERE TENANT_ID = ? " +
+                            "AND METADATA_KEY = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, tenantId);
+                stmt.setString(2, metaKey);
+                int rows = stmt.executeUpdate();
+                return rows == 1;
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while clearing the metadata value for key: " + metaKey;
+            log.error(msg, e);
+            throw new MetadataManagementDAOException(msg, e);
+        }
+    }
+
 }

@@ -156,6 +156,9 @@ public class HandlerUtil {
     }
 
     public static boolean isTokenExpired(JsonNode jsonBody) {
+        if (jsonBody.isNull() || StringUtils.isBlank(jsonBody.textValue())) {
+            return false;
+        }
         return jsonBody.textValue().contains("Access token expired") || jsonBody.textValue()
                 .contains("Invalid input. Access token validation failed");
     }
@@ -433,6 +436,32 @@ public class HandlerUtil {
         return urlBuilder.toString();
     }
 
+    /**
+     * Generates the target URL with the tenant context path appended for the proxy request.
+     * eg: /t/{tenantDomain}/api/device-mgt/
+     *
+     * @param req         incoming {@link HttpServletRequest}
+     * @param apiEndpoint API Endpoint URL
+     * @param tenantDomain Tenant domain
+     * @return Target URL
+     */
+    public static String generateTenantBackendRequestURL(HttpServletRequest req, String apiEndpoint,
+                                                         String tenantDomain) {
+        StringBuilder urlBuilder = new StringBuilder();
+        if (StringUtils.isNotBlank(tenantDomain)) {
+            urlBuilder.append(apiEndpoint).append(HandlerConstants.API_TENANT_CONTEXT).append(tenantDomain)
+                    .append(HandlerConstants.API_COMMON_CONTEXT)
+                    .append(req.getPathInfo().replace(" ", HandlerConstants.URL_ENCODE_SPACE));
+        } else {
+            urlBuilder.append(apiEndpoint).append(HandlerConstants.API_COMMON_CONTEXT)
+                    .append(req.getPathInfo().replace(" ", HandlerConstants.URL_ENCODE_SPACE));
+        }
+        if (StringUtils.isNotEmpty(req.getQueryString())) {
+            urlBuilder.append(HandlerConstants.URI_QUERY_SEPARATOR).append(req.getQueryString());
+        }
+        return urlBuilder.toString();
+    }
+
     public static String getIOTGatewayBase(HttpServletRequest req) {
         return req.getScheme() + HandlerConstants.SCHEME_SEPARATOR + System.getProperty(HandlerConstants.IOT_GW_HOST_ENV_VAR)
                 + HandlerConstants.COLON + HandlerUtil.getGatewayPort(req.getScheme());
@@ -495,14 +524,17 @@ public class HandlerUtil {
      * Constructs the application registration payload for DCR.
      *
      * @param tags - tags which are retrieved by reading app manager configuration
+     * @param appName - application name of the OAuth app
      * @param username - username provided from login form or admin username
      * @param password - password provided from login form or admin password
      * @param callbackUrl - callback url
      * @param supportedGrantTypes - supported grant types
+     * @param isRegisterOnSameTenant - register the app under the same tenant
      * @return {@link StringEntity} of the payload to create the client application
      */
     public static StringEntity constructAppRegPayload(ArrayNode tags, String appName, String username, String password,
-                                                      String callbackUrl, ArrayList<String> supportedGrantTypes) {
+                                                      String callbackUrl, ArrayList<String> supportedGrantTypes,
+                                                      boolean isRegisterOnSameTenant) {
 
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> data = new HashMap<>();
@@ -518,6 +550,9 @@ public class HandlerUtil {
         if (supportedGrantTypes != null) {
             data.put(HandlerConstants.GRANT_TYPE_KEY, supportedGrantTypes);
 
+        }
+        if (isRegisterOnSameTenant) {
+            data.put(HandlerConstants.REGISTER_ON_SAME_TENANT, true);
         }
 
         return new StringEntity(objectMapper.valueToTree(data).toString(), ContentType.APPLICATION_JSON);
@@ -638,15 +673,50 @@ public class HandlerUtil {
         return retryResponse;
     }
 
+    /**
+     * Retry request again after refreshing the access token
+     *
+     * @param req         incoming {@link HttpServletRequest}
+     * @param httpRequest {@link ClassicHttpRequest} related to the current request.
+     * @param apiEndpoint gateway endpoint URL
+     * @param isTenantContext whether the URL context path should include the tenant domain
+     * @return {@link ProxyResponse} if successful and <code>null</code> if failed.
+     * @throws IOException If an error occurs when try to retry the request.
+     */
+    public static ProxyResponse retryRequestWithRefreshedToken(HttpServletRequest req, ClassicHttpRequest httpRequest,
+                                                               String apiEndpoint,
+                                                               boolean isTenantContext) throws IOException {
+
+        ProxyResponse retryResponse = refreshToken(req, apiEndpoint, false, isTenantContext);
+        if (isResponseSuccessful(retryResponse)) {
+            HttpSession session = req.getSession(false);
+            if (session == null) {
+                log.error("Unauthorized, You are not logged in. Please log in to the portal");
+                return constructProxyResponseByErrorCode(HttpStatus.SC_UNAUTHORIZED);
+            }
+            httpRequest.setHeader(HttpHeaders.AUTHORIZATION, HandlerConstants.BEARER + authData.getAccessToken());
+            ProxyResponse proxyResponse = HandlerUtil.execute(httpRequest);
+            if (proxyResponse.getExecutorResponse().contains(HandlerConstants.EXECUTOR_EXCEPTION_PREFIX)) {
+                log.error("Error occurred while invoking the API after refreshing the token.");
+                return proxyResponse;
+            }
+            return proxyResponse;
+        }
+        return retryResponse;
+    }
+
     /***
      * This method is responsible to get the refresh token
      *
      * @param req {@link HttpServletRequest}
+     * @param keymanagerUrl URL of the key manager
+     * @param isDefaultAuthToken is default access token
+     * @param isTenantContext is token generated for subtenant
      * @return If successfully renew tokens, returns TRUE otherwise return FALSE
      * @throws IOException If an error occurs while witting error response to client side or invoke token renewal API
      */
-    private static ProxyResponse refreshToken(HttpServletRequest req, String keymanagerUrl, boolean isDefaultAuthToken)
-            throws IOException {
+    private static ProxyResponse refreshToken(HttpServletRequest req, String keymanagerUrl, boolean isDefaultAuthToken,
+                                              boolean isTenantContext) throws IOException {
         if (log.isDebugEnabled()) {
             log.debug("refreshing the token");
         }
@@ -659,6 +729,8 @@ public class HandlerUtil {
         }
         if (isDefaultAuthToken) {
             authData = (AuthData) session.getAttribute(HandlerConstants.SESSION_DEFAULT_AUTH_DATA_KEY);
+        } else if (isTenantContext) {
+            authData = (AuthData) session.getAttribute(HandlerConstants.SESSION_TENANT_CONTEXT_AUTH_DATA_KEY);
         } else {
             authData = (AuthData) session.getAttribute(HandlerConstants.SESSION_AUTH_DATA_KEY);
         }
@@ -670,7 +742,8 @@ public class HandlerUtil {
 
         JsonNode tokenResponse = tokenResultResponse.getData();
         if (tokenResponse != null) {
-            setNewAuthData(constructAuthDataFromTokenResult(tokenResponse, authData), session);
+            setNewAuthData(constructAuthDataFromTokenResult(tokenResponse, authData), session, isDefaultAuthToken,
+                    isTenantContext);
             return tokenResultResponse;
         }
 
@@ -680,7 +753,7 @@ public class HandlerUtil {
     }
 
     private static ProxyResponse refreshToken(HttpServletRequest req, String keymanagerUrl) throws IOException {
-        return refreshToken(req, keymanagerUrl, false);
+        return refreshToken(req, keymanagerUrl, false, false);
     }
 
     public static ProxyResponse getTokenResult(AuthData authData, String keymanagerUrl) throws IOException {
@@ -703,9 +776,23 @@ public class HandlerUtil {
         return HandlerUtil.execute(tokenEndpoint);
     }
 
-    public static void setNewAuthData(AuthData newAuthData, HttpSession session) {
+    /**
+     * Persist the new authentication data after a token is refreshed in the current HttpSession.
+     * @param newAuthData authentication data from refreshed token
+     * @param session the HttpSession
+     * @param isDefaultAuthToken is default token
+     * @param isTenantContext is token generated for subtenant
+     */
+    private static void setNewAuthData(AuthData newAuthData, HttpSession session, boolean isDefaultAuthToken,
+                                      boolean isTenantContext) {
         authData = newAuthData;
-        session.setAttribute(HandlerConstants.SESSION_AUTH_DATA_KEY, newAuthData);
+        if (isDefaultAuthToken) {
+            session.setAttribute(HandlerConstants.SESSION_DEFAULT_AUTH_DATA_KEY, newAuthData);
+        } else if (isTenantContext) {
+            session.setAttribute(HandlerConstants.SESSION_TENANT_CONTEXT_AUTH_DATA_KEY, newAuthData);
+        } else {
+            session.setAttribute(HandlerConstants.SESSION_AUTH_DATA_KEY, newAuthData);
+        }
     }
 
     /**
@@ -814,5 +901,28 @@ public class HandlerUtil {
             }
         }
         return stringBuilder.toString();
+    }
+
+    /**
+     * Checks if the username has the tenant domain available
+     *
+     * @param username name of the logged in session user
+     * @return true if the tenant domain is available otherwise false
+     */
+    public static boolean isTenantAwareUsername(String username) {
+        return StringUtils.isNotBlank(username) && username.contains(HandlerConstants.AT_SYMBOL);
+    }
+
+    /**
+     * Returns the tenant domain from the username if available
+     *
+     * @param username name of the logged in session user
+     * @return return tenant domain if available else return null
+     */
+    public static String getTenantDomainFromUsername(String username) {
+        if (isTenantAwareUsername(username)) {
+            return username.substring(username.indexOf(HandlerConstants.AT_SYMBOL) + 1);
+        }
+        return null;
     }
 }

@@ -48,6 +48,7 @@ public class RegistrationProfile {
 
     private ArrayList<String> supportedGrantTypes;
     private String tokenType;
+    private boolean registerOnSameTenant;
 
     public String getApplicationName() {
         return applicationName;
@@ -119,5 +120,13 @@ public class RegistrationProfile {
 
     public void setTokenType(String tokenType) {
         this.tokenType = tokenType;
+    }
+
+    public boolean isRegisterOnSameTenant() {
+        return registerOnSameTenant;
+    }
+
+    public void setRegisterOnSameTenant(boolean registerOnSameTenant) {
+        this.registerOnSameTenant = registerOnSameTenant;
     }
 }

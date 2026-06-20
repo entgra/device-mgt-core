@@ -18,12 +18,12 @@
 
 package io.entgra.device.mgt.core.device.mgt.core.operation.mgt;
 
-import com.google.gson.Gson;
+import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementException;
+import io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.DeviceOperationDetails;
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManagerServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.extensions.logger.spi.EntgraLogger;
 import io.entgra.device.mgt.core.notification.logger.DeviceConnectivityLogContext;
 import io.entgra.device.mgt.core.notification.logger.impl.EntgraDeviceConnectivityLoggerImpl;
-import io.entgra.device.mgt.core.notification.logger.impl.EntgraPolicyLoggerImpl;
 import org.apache.commons.lang.StringUtils;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
@@ -52,8 +52,6 @@ import io.entgra.device.mgt.core.device.mgt.common.push.notification.Notificatio
 import io.entgra.device.mgt.core.device.mgt.common.push.notification.PushNotificationConfig;
 import io.entgra.device.mgt.core.device.mgt.common.push.notification.PushNotificationExecutionFailedException;
 import io.entgra.device.mgt.core.device.mgt.common.push.notification.PushNotificationProvider;
-import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.*;
-import io.entgra.device.mgt.core.device.mgt.common.push.notification.*;
 import io.entgra.device.mgt.core.device.mgt.common.spi.DeviceManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
 import io.entgra.device.mgt.core.device.mgt.core.cache.impl.DeviceCacheManagerImpl;
@@ -75,18 +73,13 @@ import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProvide
 import io.entgra.device.mgt.core.device.mgt.core.task.DeviceTaskManager;
 import io.entgra.device.mgt.core.device.mgt.core.task.impl.DeviceTaskManagerImpl;
 import io.entgra.device.mgt.core.device.mgt.core.util.DeviceManagerUtil;
-import io.entgra.device.mgt.core.device.mgt.extensions.logger.spi.EntgraLogger;
-import io.entgra.device.mgt.core.notification.logger.DeviceConnectivityLogContext;
-import io.entgra.device.mgt.core.notification.logger.impl.EntgraDeviceConnectivityLoggerImpl;
-import org.apache.commons.lang.StringUtils;
-import org.wso2.carbon.context.CarbonContext;
-import org.wso2.carbon.context.PrivilegedCarbonContext;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -103,6 +96,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 public class OperationManagerImpl implements OperationManager {
 
+    private static final String SKIP_IMMEDIATE_NOTIFICATION_PROPERTY = "skip-immediate-notification";
     DeviceConnectivityLogContext.Builder deviceConnectivityLogContextBuilder = new DeviceConnectivityLogContext.Builder();
     private static final EntgraLogger log = new EntgraDeviceConnectivityLoggerImpl(OperationManagerImpl.class);
     private static final int CACHE_VALIDITY_PERIOD = 5 * 60 * 1000;
@@ -235,7 +229,9 @@ public class OperationManagerImpl implements OperationManager {
                     for (Integer enrolmentId : pendingOperationIDs.keySet()) {
                         operation.setId(pendingOperationIDs.get(enrolmentId));
                         device = enrolments.get(enrolmentId);
-                        this.sendNotification(operation, device);
+                        if (!shouldSkipImmediateNotification(operation)) {
+                            this.sendNotification(operation, device);
+                        }
                         //No need to keep this enrollment as it has a pending operation
                         enrolments.remove(enrolmentId);
                     }
@@ -308,7 +304,9 @@ public class OperationManagerImpl implements OperationManager {
                 for (Integer enrolmentId : pendingOperationIDs.keySet()) {
                     operation.setId(pendingOperationIDs.get(enrolmentId));
                     device = enrolments.get(enrolmentId);
-                    this.sendNotification(operation, device);
+                    if (!shouldSkipImmediateNotification(operation)) {
+                        this.sendNotification(operation, device);
+                    }
                     //No need to keep this enrollment as it has a pending operation
                     enrolments.remove(enrolmentId);
                 }
@@ -382,7 +380,9 @@ public class OperationManagerImpl implements OperationManager {
                     for (Integer enrolmentId : pendingOperationIDs.keySet()) {
                         operation.setId(pendingOperationIDs.get(enrolmentId));
                         device = enrolments.get(enrolmentId);
-                        this.sendNotification(operation, device);
+                        if (!shouldSkipImmediateNotification(operation)) {
+                            this.sendNotification(operation, device);
+                        }
                         //No need to keep this enrollment as it has a pending operation
                         enrolments.remove(enrolmentId);
                     }
@@ -455,11 +455,40 @@ public class OperationManagerImpl implements OperationManager {
                 }
             }
         }
-        if (!isScheduled && notificationStrategy != null) {
+        try {
+            String operationCode = operation.getCode();
+            String operationStatus = Operation.Status.PENDING.toString();
+            // all devices have same type in a batch, or handle grouping by type outside
+            if (!enrolments.isEmpty()) {
+                Device firstDevice = enrolments.values().iterator().next();
+                String deviceType = firstDevice.getType();
+                DeviceManagementDataHolder.getInstance().getNotificationManagementService()
+                        .handleOperationNotificationIfApplicable(operationCode, operationStatus,
+                                deviceType, new ArrayList<>(enrolments.keySet()), tenantId, "immediate");
+            }
+        } catch (NotificationManagementException e) {
+            String msg = "An Error occurred while updating handleOperationNotificationIfApplicable";
+            log.error(msg, e);
+        }
+        if (!isScheduled && notificationStrategy != null && !shouldSkipImmediateNotification(operation)) {
             for (Device device : enrolments.values()) {
                 this.sendNotification(operation, device);
             }
         }
+    }
+
+    /**
+     * Checks if the given operation is configured to skip immediate notifications.
+     *
+     * @param operation the operation to check
+     * @return true if the skip property is set to "true", false otherwise
+     */
+    private boolean shouldSkipImmediateNotification(Operation operation) {
+        if (operation == null || operation.getProperties() == null) {
+            return false;
+        }
+        return Boolean.parseBoolean(
+                operation.getProperties().getProperty(SKIP_IMMEDIATE_NOTIFICATION_PROPERTY, Boolean.FALSE.toString()));
     }
 
     private void sendNotification(Operation operation, Device device) {
@@ -940,6 +969,7 @@ public class OperationManagerImpl implements OperationManager {
             throws OperationManagementException {
         int operationId = operation.getId();
         boolean isOperationUpdated = false;
+        int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
         try {
             OperationManagementDAOFactory.beginTransaction();
             if (operation.getStatus() != null) {
@@ -948,9 +978,33 @@ public class OperationManagerImpl implements OperationManager {
                     try {
                         isOperationUpdated = operationDAO.updateOperationStatus(enrolmentId, operationId,
                                 io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.
-                                        Operation.Status.valueOf(operation.getStatus().
-                                        toString()));
+                                        Operation.Status.valueOf(operation.getStatus().toString()));
                         OperationManagementDAOFactory.commitTransaction();
+                        try {
+                            DeviceOperationDetails previousDeviceOperationDetails =
+                                    operationDAO.getDeviceOperationDetails(enrolmentId, operationId);
+                            if (isOperationUpdated && previousDeviceOperationDetails != null) {
+                                String operationCode = operation.getCode();
+                                String operationStatus = operation.getStatus().toString();
+                                String deviceType = previousDeviceOperationDetails.getDeviceType();
+                                int deviceEnrollmentID = previousDeviceOperationDetails.getDeviceId();
+                                DeviceManagementDataHolder.getInstance()
+                                        .getNotificationManagementService()
+                                        .handleOperationNotificationIfApplicable(
+                                                operationCode,
+                                                operationStatus,
+                                                deviceType,
+                                                Collections.singletonList(deviceEnrollmentID),
+                                                tenantId,
+                                                "postSync"
+                                        );
+                            }
+                        } catch (Exception e) {
+                            String msg = "An error occurred while retrieving DeviceOperationDetails. " +
+                                    "Operation ID: " + operationId + ", Enrolment ID: " + enrolmentId +
+                                    ", Device ID: " + deviceId;
+                            log.error(msg, e);
+                        }
                         break;
                     } catch (OperationManagementDAOException e) {
                         OperationManagementDAOFactory.rollbackTransaction();
@@ -970,10 +1024,11 @@ public class OperationManagerImpl implements OperationManager {
                         }
                     }
                 }
-                if (operation.getCode().equals("POLICY_REVOKE") && operation.getStatus().equals(Operation.Status.COMPLETED)){
+                if (DeviceManagementConstants.AuthorizationSkippedOperationCodes.POLICY_REVOKE_OPERATION_CODE
+                        .equals(operation.getCode()) && Operation.Status.COMPLETED.equals(operation.getStatus())) {
                     if (this.getDevice(deviceId).getEnrolmentInfo().getStatus().equals(EnrolmentInfo.Status.DISENROLLMENT_REQUESTED)) {
-                        DeviceManagementProviderService deviceManagementProviderService = DeviceManagementDataHolder.getInstance().
-                                getDeviceManagementProvider();
+                        DeviceManagementProviderService deviceManagementProviderService = DeviceManagementDataHolder.getInstance()
+                                .getDeviceManagementProvider();
                         deviceManagementProviderService.removeDevice(deviceId);
                     }
                 }
@@ -1073,6 +1128,7 @@ public class OperationManagerImpl implements OperationManager {
                     }
                 }
             }
+
         } catch (TransactionManagementException e) {
             throw new OperationManagementException("Error occurred while initiating a transaction", e);
         } catch (DeviceManagementException e) {
@@ -1725,6 +1781,25 @@ public class OperationManagerImpl implements OperationManager {
             throw new OperationManagementException("Error occurred while opening a connection to the data source.", e);
         } catch (OperationManagementDAOException e) {
             throw new OperationManagementException("Error occurred while getting the activity list.", e);
+        } finally {
+            OperationManagementDAOFactory.closeConnection();
+        }
+    }
+
+    @Override
+    public List<Activity> getTimeoutActivities(List<String> deviceTypes, String operationCode, long updatedSince, String operationStatus)
+            throws OperationManagementException {
+        try {
+            OperationManagementDAOFactory.openConnection();
+            return operationDAO.getTimeoutActivities(deviceTypes, operationCode, updatedSince, operationStatus);
+        } catch (SQLException e) {
+            String errMsg = "Error occurred while opening a connection to the data source.";
+            log.error(errMsg, e);
+            throw new OperationManagementException(errMsg, e);
+        } catch (OperationManagementDAOException e) {
+            String errMsg = "Error occurred while getting the activity list.";
+            log.error(errMsg);
+            throw new OperationManagementException(errMsg, e);
         } finally {
             OperationManagementDAOFactory.closeConnection();
         }

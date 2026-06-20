@@ -22,6 +22,8 @@ import io.entgra.device.mgt.core.apimgt.extension.rest.api.APIApplicationService
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.PublisherRESTAPIServices;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.GroupAccessAuthorizationService;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceFeatureOperations;
+import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationManagementService;
 import io.entgra.device.mgt.core.server.bootup.heartbeat.beacon.service.HeartBeatManagementService;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import io.entgra.device.mgt.core.device.mgt.common.DeviceStatusTaskPluginConfig;
@@ -101,6 +103,8 @@ public class DeviceManagementDataHolder {
     private APIApplicationServices apiApplicationServices;
     private PublisherRESTAPIServices publisherRESTAPIServices;
     private DeviceManagementStartupHandler deviceManagementStartupHandler;
+    private NotificationManagementService notificationManagementService;
+    private DeviceFeatureOperations deviceFeatureOperations;
 
     private final Map<DeviceType, DeviceStatusTaskPluginConfig> deviceStatusTaskPluginConfigs = Collections.synchronizedMap(
             new HashMap<>());
@@ -465,5 +469,21 @@ public class DeviceManagementDataHolder {
 
     public void setDeviceManagementStartupHandler(DeviceManagementStartupHandler deviceManagementStartupHandler) {
         this.deviceManagementStartupHandler = deviceManagementStartupHandler;
+    }
+
+    public NotificationManagementService getNotificationManagementService() {
+        return notificationManagementService;
+    }
+
+    public void setNotificationManagementService(NotificationManagementService notificationManagementService) {
+        this.notificationManagementService = notificationManagementService;
+    }
+
+    public DeviceFeatureOperations getDeviceFeatureOperations() {
+        return deviceFeatureOperations;
+    }
+
+    public void setDeviceFeatureOperations(DeviceFeatureOperations deviceFeatureOperations) {
+        this.deviceFeatureOperations = deviceFeatureOperations;
     }
 }
