@@ -114,11 +114,26 @@ public interface NotificationManagementDAO {
      * @param tenantId         The ID of the tenant for whom the notification is being created.
      * @param notificationConfigId The ID of the notification configuration to associate with the notification.
      * @param type             The type of the notification.
-     * @param description      A description providing details of the notification.
+     * @param notificationContext JSON payload stored in {@code NOTIFICATION_CONTEXT}.
      * @return The ID of the newly inserted notification.
      * @throws NotificationManagementDAOException If an error occurs while inserting the notification.
      */
-    int insertNotification(int tenantId, int notificationConfigId, String type, String description)
+    int insertNotification(int tenantId, int notificationConfigId, String type, String notificationContext)
+            throws NotificationManagementDAOException;
+
+    /**
+     * Links a notification to one or more devices.
+     *
+     * @param notificationId notification id
+     * @param deviceIds      {@link io.entgra.device.mgt.core.device.mgt.common.Device} primary keys
+     */
+    void insertNotificationDeviceMappings(int notificationId, List<Integer> deviceIds)
+            throws NotificationManagementDAOException;
+
+    /**
+     * Removes device links and deletes notifications that no longer reference any device.
+     */
+    void purgeNotificationsForDevices(List<Integer> deviceIds, int tenantId)
             throws NotificationManagementDAOException;
 
     /**

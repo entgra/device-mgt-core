@@ -2350,7 +2350,8 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
     }
 
     @Override
-    public void deleteDevices(List<String> deviceIdentifiers, List<Integer> deviceIds, List<Integer> enrollmentIds, List<Device> validDevices)
+    public void deleteDevices(List<String> deviceIdentifiers, List<Integer> deviceIds, List<Integer> enrollmentIds,
+                              List<Device> validDevices, int tenantId)
             throws DeviceManagementDAOException {
         Connection conn;
         try {
@@ -2372,7 +2373,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 if (log.isDebugEnabled()) {
                     log.debug("Successfully removed device info data of devices: " + deviceIdentifiers);
                 }
-                removeDeviceNotification(conn, deviceIds);
+                purgeDeviceNotifications(conn, deviceIds, tenantId);
                 if (log.isDebugEnabled()) {
                     log.debug("Successfully removed device notification data of devices: " + deviceIdentifiers);
                 }
@@ -2697,29 +2698,86 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
-    /***
-     * This method removes records of a given list of devices from the DM_NOTIFICATION table
-     * @param conn Connection object
-     * @param deviceIds list of device ids (primary keys)
-     * @throws DeviceManagementDAOException if deletion fails
+    /**
+     * Removes device links from notifications and deletes notifications that no longer reference any device.
+     * Batch notifications keep their {@code DM_NOTIFICATION} row while other devices remain linked.
+     *
+     * @param conn active connection (same transaction as device delete)
+     * @param deviceIds {@link Device} primary keys
      */
-    private void removeDeviceNotification(Connection conn, List<Integer> deviceIds) throws DeviceManagementDAOException {
-        String sql = "DELETE FROM DM_NOTIFICATION WHERE DEVICE_ID = ?";
+    private void purgeDeviceNotifications(Connection conn, List<Integer> deviceIds, int tenantId)
+            throws DeviceManagementDAOException {
+        if (conn == null) {
+            throw new DeviceManagementDAOException("Connection must not be null when purging device notifications");
+        }
+        if (deviceIds == null || deviceIds.isEmpty()) {
+            return;
+        }
+        String selectNotificationIdsSql =
+                "SELECT DISTINCT nd.NOTIFICATION_ID " +
+                        "FROM DM_NOTIFICATION_DEVICE nd " +
+                        "INNER JOIN DM_NOTIFICATION n " +
+                        "ON nd.NOTIFICATION_ID = n.NOTIFICATION_ID " +
+                        "WHERE nd.DEVICE_ID = ? " +
+                        "AND n.TENANT_ID = ?";
+        String deleteMappingSql =
+                "DELETE FROM DM_NOTIFICATION_DEVICE " +
+                        "WHERE NOTIFICATION_ID = ? " +
+                        "AND DEVICE_ID = ?";
+        String countMappingsSql =
+                "SELECT COUNT(*) " +
+                        "FROM DM_NOTIFICATION_DEVICE " +
+                        "WHERE NOTIFICATION_ID = ?";
+        String deleteNotificationSql =
+                "DELETE FROM DM_NOTIFICATION " +
+                        "WHERE NOTIFICATION_ID = ? " +
+                        "AND TENANT_ID = ?";
         try {
-            if (!executeBatchOperation(conn, sql, deviceIds)) {
-                String msg = "Failed to remove device notifications of devices with deviceIds : " + deviceIds +
-                        " while executing batch operation";
-                log.error(msg);
-                throw new DeviceManagementDAOException(msg);
+            for (Integer deviceId : deviceIds) {
+                if (deviceId == null) {
+                    continue;
+                }
+                List<Integer> notificationIds = new ArrayList<>();
+                try (PreparedStatement selectStmt = conn.prepareStatement(selectNotificationIdsSql)) {
+                    selectStmt.setInt(1, deviceId);
+                    selectStmt.setInt(2, tenantId);
+                    try (ResultSet rs = selectStmt.executeQuery()) {
+                        while (rs.next()) {
+                            notificationIds.add(rs.getInt("NOTIFICATION_ID"));
+                        }
+                    }
+                }
+                for (Integer notificationId : notificationIds) {
+                    try (PreparedStatement deleteMappingStmt = conn.prepareStatement(deleteMappingSql)) {
+                        deleteMappingStmt.setInt(1, notificationId);
+                        deleteMappingStmt.setInt(2, deviceId);
+                        deleteMappingStmt.executeUpdate();
+                    }
+                    int remainingDeviceCount = 0;
+                    try (PreparedStatement countStmt = conn.prepareStatement(countMappingsSql)) {
+                        countStmt.setInt(1, notificationId);
+                        try (ResultSet countRs = countStmt.executeQuery()) {
+                            if (countRs.next()) {
+                                remainingDeviceCount = countRs.getInt(1);
+                            }
+                        }
+                    }
+                    if (remainingDeviceCount == 0) {
+                        try (PreparedStatement deleteNotificationStmt =
+                                     conn.prepareStatement(deleteNotificationSql)) {
+                            deleteNotificationStmt.setInt(1, notificationId);
+                            deleteNotificationStmt.setInt(2, tenantId);
+                            deleteNotificationStmt.executeUpdate();
+                        }
+                    }
+                }
             }
         } catch (SQLException e) {
-            String msg = "SQL error occurred while removing device notifications of devices with deviceIds : " + deviceIds;
+            String msg = "SQL error occurred while purging notifications for devices with deviceIds : " + deviceIds;
             log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
-
     }
-
 
     /***
      * This method removes records of a given list of devices from the DM_DEVICE_POLICY_APPLIED table

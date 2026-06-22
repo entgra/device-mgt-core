@@ -26,8 +26,7 @@ import io.entgra.device.mgt.core.notification.mgt.common.exception.UnsupportedDa
 import io.entgra.device.mgt.core.notification.mgt.core.config.datasource.JNDILookupDefinition;
 import io.entgra.device.mgt.core.notification.mgt.core.config.datasource.NotificationDatasourceConfiguration;
 import io.entgra.device.mgt.core.notification.mgt.core.dao.NotificationManagementDAO;
-import io.entgra.device.mgt.core.notification.mgt.core.dao.impl.GenericNotificationManagementDAOImpl;
-import io.entgra.device.mgt.core.notification.mgt.core.dao.impl.H2NotificationManagementDAOImpl;
+import io.entgra.device.mgt.core.notification.mgt.core.dao.AbstractNotificationManagementDAOImpl;
 import io.entgra.device.mgt.core.notification.mgt.core.dao.impl.OracleNotificationManagementDAOImpl;
 import io.entgra.device.mgt.core.notification.mgt.core.dao.impl.PostgreNotificationManagementDAOImpl;
 import io.entgra.device.mgt.core.notification.mgt.core.dao.impl.SQLServerNotificationManagementDAOImpl;
@@ -112,9 +111,8 @@ public class NotificationManagementDAOFactory {
             case NotificationManagementConstants.DataBaseTypes.DB_TYPE_POSTGRESQL:
                 return new PostgreNotificationManagementDAOImpl();
             case NotificationManagementConstants.DataBaseTypes.DB_TYPE_H2:
-                return new H2NotificationManagementDAOImpl();
             case NotificationManagementConstants.DataBaseTypes.DB_TYPE_MYSQL:
-                return new GenericNotificationManagementDAOImpl();
+                return new AbstractNotificationManagementDAOImpl();
             default:
                 throw new UnsupportedDatabaseEngineException("Unsupported database product: " + productName);
         }

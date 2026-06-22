@@ -462,9 +462,13 @@ public class OperationManagerImpl implements OperationManager {
             if (!enrolments.isEmpty()) {
                 Device firstDevice = enrolments.values().iterator().next();
                 String deviceType = firstDevice.getType();
+                List<Integer> deviceIds = new ArrayList<>();
+                for (Device device : enrolments.values()) {
+                    deviceIds.add(device.getId());
+                }
                 DeviceManagementDataHolder.getInstance().getNotificationManagementService()
                         .handleOperationNotificationIfApplicable(operationCode, operationStatus,
-                                deviceType, new ArrayList<>(enrolments.keySet()), tenantId, "immediate");
+                                deviceType, deviceIds, tenantId, "immediate");
             }
         } catch (NotificationManagementException e) {
             String msg = "An Error occurred while updating handleOperationNotificationIfApplicable";
@@ -954,14 +958,14 @@ public class OperationManagerImpl implements OperationManager {
                                 String operationCode = operation.getCode();
                                 String operationStatus = operation.getStatus().toString();
                                 String deviceType = previousDeviceOperationDetails.getDeviceType();
-                                int deviceEnrollmentID = previousDeviceOperationDetails.getDeviceId();
+                                int notifiedDeviceId = previousDeviceOperationDetails.getDeviceId();
                                 DeviceManagementDataHolder.getInstance()
                                         .getNotificationManagementService()
                                         .handleOperationNotificationIfApplicable(
                                                 operationCode,
                                                 operationStatus,
                                                 deviceType,
-                                                Collections.singletonList(deviceEnrollmentID),
+                                                Collections.singletonList(notifiedDeviceId),
                                                 tenantId,
                                                 "postSync"
                                         );
