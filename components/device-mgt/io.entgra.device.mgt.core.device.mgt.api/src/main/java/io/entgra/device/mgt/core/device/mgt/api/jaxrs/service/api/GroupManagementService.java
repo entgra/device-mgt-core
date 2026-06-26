@@ -20,9 +20,9 @@ package io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api;
 
 import io.entgra.device.mgt.core.apimgt.annotations.Scope;
 import io.entgra.device.mgt.core.apimgt.annotations.Scopes;
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceGroupAssignmentRequest;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceGroupList;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceList;
-import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceToGroupsAssignment;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.RoleList;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.Constants;
@@ -999,13 +999,13 @@ public interface GroupManagementService {
                     required = true)
             @PathParam("groupId") int groupId);
 
-    @Path("/id/{groupId}/devices/add")
+    @Path("/devices/add")
     @POST
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = HTTPConstants.HEADER_POST,
-            value = "Adding Devices to a Group",
-            notes = "Add the enrolled devices to a group.",
+            value = "Assign Multiple Devices to Multiple Groups",
+            notes = "Add already enrolled devices to multiple groups using this API.",
             tags = "Device Group Management",
             extensions = {
                     @Extension(properties = {
@@ -1014,7 +1014,7 @@ public interface GroupManagementService {
             }
     )
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK. \n Successfully add devices to the group.",
+            @ApiResponse(code = 200, message = "OK. \nSuccessfully assigned the devices to groups.",
                     responseHeaders = {
                             @ResponseHeader(
                                     name = "Content-Type",
@@ -1029,31 +1029,25 @@ public interface GroupManagementService {
                                             "Used by caches, or in conditional requests."),
                     }),
             @ApiResponse(
-                    code = 304,
-                    message = "Not Modified. \n Empty body because the client has already the latest version of " +
-                            "the requested resource."),
-            @ApiResponse(
                     code = 404,
-                    message = "No groups found.",
+                    message = "No groups or devices found.",
                     response = ErrorResponse.class),
             @ApiResponse(
                     code = 406,
-                    message = "Not Acceptable.\n The requested media type is not supported."),
+                    message = "Not Acceptable.\nThe requested media type is not supported."),
             @ApiResponse(
                     code = 500,
-                    message = "Internal Server Error. \n Server error occurred while adding devices to the group.",
+                    message = "Internal Server Error.\nServer error occurred while assigning devices to groups.",
                     response = ErrorResponse.class)
     })
-    Response addDevicesToGroup(@ApiParam(
-            name = "groupId",
-            value = "ID of the group.",
-            required = true)
-                               @PathParam("groupId") int groupId,
-                               @ApiParam(
-                                       name = "deviceIdentifiers",
-                                       value = "Device identifiers of the devices which needed be added.",
-                                       required = true)
-                               @Valid List<DeviceIdentifier> deviceIdentifiers);
+    Response assignMultipleDevicesToMultipleGroups(
+            @ApiParam(
+                    name = "deviceGroupAssignmentRequest",
+                    value = "In the payload, provide a list of device identifiers and a list of group IDs " +
+                            "to assign all devices to all groups.",
+                    required = true)
+            @Valid DeviceGroupAssignmentRequest deviceGroupAssignmentRequest);
+
 
     @Path("/id/{groupId}/devices/remove")
     @POST
@@ -1111,60 +1105,6 @@ public interface GroupManagementService {
                                                     "  You can define many device IDs as comma separated values.",
                                             required = true)
                                     @Valid List<DeviceIdentifier> deviceIdentifiers);
-
-    @Path("/device/assign")
-    @POST
-    @ApiOperation(
-            produces = MediaType.APPLICATION_JSON,
-            httpMethod = HTTPConstants.HEADER_POST,
-            value = "Adding a Device to Many Groups",
-            notes = "Add an already enrolled device to many groups, using this API.",
-            tags = "Device Group Management",
-            extensions = {
-                    @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "gm:devices:assign")
-                    })
-            }
-    )
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK. \n Successfully assign the device to groups.",
-                    responseHeaders = {
-                            @ResponseHeader(
-                                    name = "Content-Type",
-                                    description = "The content type of the body"),
-                            @ResponseHeader(
-                                    name = "ETag",
-                                    description = "Entity Tag of the response resource.\n" +
-                                            "Used by caches, or in conditional requests."),
-                            @ResponseHeader(
-                                    name = "Last-Modified",
-                                    description = "Date and time the resource has been modified the last time.\n" +
-                                            "Used by caches, or in conditional requests."),
-                    }),
-            @ApiResponse(
-                    code = 304,
-                    message = "Not Modified. \n Empty body because the client has already the latest version of " +
-                            "the requested resource."),
-            @ApiResponse(
-                    code = 404,
-                    message = "No groups found.",
-                    response = ErrorResponse.class),
-            @ApiResponse(
-                    code = 406,
-                    message = "Not Acceptable.\n The requested media type is not supported."),
-            @ApiResponse(
-                    code = 500,
-                    message = "Internal Server Error. \n Server error occurred while adding devices to the group.",
-                    response = ErrorResponse.class)
-    })
-    Response updateDeviceAssigningToGroups(
-            @ApiParam(
-                    name = "deviceToGroupsAssignment",
-                    value = "In the payload, define the group IDs that you need to add the device to as comma " +
-                            "separated values, and the device identifier and type of the device, such as android, " +
-                            "ios, and windows, that needs to be added to the groups.",
-                    required = true)
-            @Valid DeviceToGroupsAssignment deviceToGroupsAssignment);
 
     @Path("/device")
     @GET
