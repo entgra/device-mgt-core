@@ -27,6 +27,7 @@ import io.entgra.device.mgt.core.device.mgt.common.exceptions.MetadataManagement
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.TransactionManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.Metadata;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
+import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
 import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.dao.MetadataDAO;
 import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.dao.MetadataManagementDAOException;
 import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.dao.MetadataManagementDAOFactory;
@@ -168,7 +169,7 @@ public class MetadataManagementServiceImpl implements MetadataManagementService 
             int tenantId;
             if (metaKey.equals("EVALUATE_TENANTS")) {
                 // for getting per device cost and evaluate tenant list to provide the billing feature and live chat feature
-                tenantId = MultitenantConstants.SUPER_TENANT_ID;
+                 tenantId = MultitenantConstants.SUPER_TENANT_ID;
             } else {
                 tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
             }
