@@ -19,8 +19,6 @@ package io.entgra.device.mgt.core.device.mgt.common.report.mgt;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import io.entgra.device.mgt.core.application.mgt.common.FileMetaEntry;
-import io.entgra.device.mgt.core.application.mgt.common.TransferLink;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.BadRequestException;

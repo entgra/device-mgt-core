@@ -20,11 +20,11 @@ package io.entgra.device.mgt.core.device.mgt.core.report.mgt;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import io.entgra.device.mgt.core.application.mgt.common.ChunkDescriptor;
-import io.entgra.device.mgt.core.application.mgt.common.FileMetaEntry;
-import io.entgra.device.mgt.core.application.mgt.common.TransferLink;
-import io.entgra.device.mgt.core.application.mgt.core.exception.FileTransferServiceHelperUtilException;
-import io.entgra.device.mgt.core.application.mgt.core.util.FileTransferServiceHelperUtil;
+import io.entgra.device.mgt.core.device.mgt.common.report.mgt.ChunkDescriptor;
+import io.entgra.device.mgt.core.device.mgt.common.report.mgt.FileMetaEntry;
+import io.entgra.device.mgt.core.device.mgt.common.report.mgt.TransferLink;
+import io.entgra.device.mgt.core.device.mgt.core.report.mgt.exception.FileTransferServiceHelperUtilException;
+import io.entgra.device.mgt.core.device.mgt.core.report.mgt.util.CategoryIconFileTransferUtil;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.NotFoundException;
 import io.entgra.device.mgt.core.device.mgt.common.dto.IconFile;
 import org.apache.commons.lang.StringUtils;
@@ -851,7 +851,7 @@ public class ReportManagementServiceImpl implements ReportManagementService {
     public TransferLink generateCategoryIconUploadLink(FileMetaEntry fileMetaEntry)
             throws ReportManagementException {
         try {
-            Path artifactHolder = FileTransferServiceHelperUtil
+            Path artifactHolder = CategoryIconFileTransferUtil
                     .createCategoryIconArtifactHolder(fileMetaEntry);
             return new TransferLink.TransferLinkBuilder(artifactHolder.getFileName().toString())
                     .withEndpoint(Constants.BirtReporting.CATEGORY_ICON_UPLOAD_ENDPOINT)
@@ -868,9 +868,9 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             throws ReportManagementException, NotFoundException {
         ChunkDescriptor chunkDescriptor = new ChunkDescriptor();
         try {
-            FileTransferServiceHelperUtil.populateCategoryIconChunkDescriptor(
+            CategoryIconFileTransferUtil.populateCategoryIconChunkDescriptor(
                     uuid, inputStream, chunkDescriptor);
-            FileTransferServiceHelperUtil.writeChunk(chunkDescriptor);
+            CategoryIconFileTransferUtil.writeChunk(chunkDescriptor);
         } catch (FileTransferServiceHelperUtilException e) {
             String msg = "Error occurred while uploading category icon chunk for uuid: " + uuid;
             log.error(msg, e);
