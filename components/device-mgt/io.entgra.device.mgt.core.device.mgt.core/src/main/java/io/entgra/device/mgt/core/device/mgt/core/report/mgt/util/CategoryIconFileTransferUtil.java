@@ -38,12 +38,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.UUID;
 
-/**
- * Utility that manages the local artifact holders used while uploading category icons
- * for reports. This holds only the category icon related file transfer helpers that were
- * previously provided by the application management component, so that device management
- * core does not depend on the application management component.
- */
 public class CategoryIconFileTransferUtil {
     private static final Log log = LogFactory.getLog(CategoryIconFileTransferUtil.class);
     private static final String META_ENTRY_FILE_NAME = ".meta.json";
