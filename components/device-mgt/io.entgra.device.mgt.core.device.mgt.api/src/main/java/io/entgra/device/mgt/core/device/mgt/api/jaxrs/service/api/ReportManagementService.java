@@ -19,12 +19,14 @@ package io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api;
 
 import io.entgra.device.mgt.core.apimgt.annotations.Scope;
 import io.entgra.device.mgt.core.apimgt.annotations.Scopes;
+import io.entgra.device.mgt.core.application.mgt.common.FileMetaEntry;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceList;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.Constants;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ReportManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.report.mgt.ReportParameters;
 import io.swagger.annotations.*;
+import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -53,6 +55,13 @@ import java.util.Map;
                         name = "Getting Details of Registered Devices",
                         description = "Getting Details of Registered Devices",
                         key = "dm:devices:view",
+                        roles = {"Internal/devicemgt-user"},
+                        permissions = {"/device-mgt/devices/owning-device/view"}
+                ),
+                @Scope(
+                        name = "Getting Details of reports",
+                        description = "Getting Details of reports",
+                        key = "dm:reports:view",
                         roles = {"Internal/devicemgt-user"},
                         permissions = {"/device-mgt/devices/owning-device/view"}
                 ),
@@ -608,7 +617,7 @@ public interface ReportManagementService {
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:reports:view")
                     })
             }
     )
@@ -639,7 +648,7 @@ public interface ReportManagementService {
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:reports:view")
                     })
             }
     )
@@ -675,7 +684,7 @@ public interface ReportManagementService {
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:reports:view")
                     })
             }
     )
@@ -700,6 +709,40 @@ public interface ReportManagementService {
             List<String> templateNames);
 
     @POST
+    @Path("/birt/template/file")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "POST",
+            value = "Upload a BIRT report template file directly",
+            notes = "This will upload a .rptdesign file directly to the BIRT runtime application.",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:reports:view")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully uploaded template"),
+                    @ApiResponse(
+                            code = 208,
+                            message = "Already Reported. \n Template with this name already exists."),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. \n Invalid file or missing file."),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n Error occurred while uploading report template.",
+                            response = ErrorResponse.class)
+            })
+    Response uploadBirtTemplateFile(MultipartBody multipartBody);
+
+    @POST
     @Path("/data")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -712,7 +755,7 @@ public interface ReportManagementService {
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
-                            @ExtensionProperty(name = Constants.SCOPE, value = "perm:devices:view")
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:reports:view")
                     })
             }
     )
@@ -747,5 +790,141 @@ public interface ReportManagementService {
             int offset
     );
 
+    @GET
+    @Path("/birt/report/params")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Get the parameters defined in the BIRT report template",
+            notes = "This will retrieve all input parameters defined in the current BIRT report design file.",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:reports:view")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully retrieved report parameters."),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. No report template loaded."),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n Error occurred while retrieving report parameters.",
+                            response = ErrorResponse.class)
+            })
+    Response getReportParams();
 
+    @GET
+    @Path("/birt/report/preview")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Get preview metadata of a BIRT report template",
+            notes = "Returns preview information (title, columns) for the given BIRT report design file",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(
+                                    name = Constants.SCOPE,
+                                    value = "dm:reports:view"
+                            )
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. Successfully retrieved report preview."),
+                    @ApiResponse(code = 400,
+                            message = "Bad Request. Invalid or missing file name."),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Not Found. Report design not found."),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error.",
+                    response = ErrorResponse.class)
+    })
+    Response getReportPreview(
+            @QueryParam("fileName") String fileName
+    );
+
+    @POST
+    @Path("/category/icon/upload-links")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            httpMethod  = "POST",
+            value       = "Generate upload link for report category icon",
+            tags        = "Device Management",
+            extensions  = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:reports:view")
+                    })
+            }
+    )
+    @ApiResponses(value = {
+            @ApiResponse(code = 201, message = "Created. Upload link generated successfully."),
+            @ApiResponse(code = 500, message = "Internal Server Error.",
+                    response = ErrorResponse.class)
+    })
+    Response generateCategoryIconUploadLink(FileMetaEntry fileMetaEntry);
+
+
+    @POST
+    @Path("/category/icon/uploads/{uuid}")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            httpMethod  = "POST",
+            value       = "Upload a chunk of a report category icon",
+            tags        = "Device Management",
+            extensions  = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:reports:view")
+                    })
+            }
+    )
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK. Chunk accepted."),
+            @ApiResponse(code = 404, message = "Not Found. Upload link not found.",
+                    response = ErrorResponse.class),
+            @ApiResponse(code = 500, message = "Internal Server Error.",
+                    response = ErrorResponse.class)
+    })
+    Response uploadCategoryIcon(
+            @PathParam("uuid") String uuid,
+            MultipartBody chunk);
+
+    @GET
+    @Path("/category/icon/uploads/{uuid}/{fileName}")
+    @Produces(MediaType.WILDCARD)
+    @ApiOperation(
+            httpMethod  = "GET",
+            value       = "Download a report category icon",
+            tags        = "Device Management",
+            extensions  = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:reports:view")
+                    })
+            }
+    )
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK. Icon returned."),
+            @ApiResponse(code = 404, message = "Not Found.",
+                    response = ErrorResponse.class),
+            @ApiResponse(code = 500, message = "Internal Server Error.",
+                    response = ErrorResponse.class)
+    })
+    Response downloadCategoryIcon(
+            @PathParam("uuid") String uuid,
+            @PathParam("fileName") String fileName);
 }

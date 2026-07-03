@@ -19,12 +19,13 @@
 package io.entgra.device.mgt.core.device.mgt.core.report.mgt;
 
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceDetailsWrapper;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.EventDetailsWrapper;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.EventPublishingException;
+import io.entgra.device.mgt.core.application.mgt.core.util.Constants;
 import io.entgra.device.mgt.core.device.mgt.core.report.mgt.config.ReportMgtConfiguration;
 import io.entgra.device.mgt.core.device.mgt.core.report.mgt.config.ReportMgtConfigurationManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
@@ -74,16 +75,26 @@ public class ReportingPublisherManager {
     }
 
     public Future<Integer> publishData(DeviceDetailsWrapper deviceDetailsWrapper, String eventUrl) {
-        return executorService.submit(new ReportingPublisher(deviceDetailsWrapper, eventUrl));
+        return publish(deviceDetailsWrapper.getJSONString(), eventUrl, Constants.REPORTING_DATA_LABEL);
+    }
+
+    public Future<Integer> publishLogData(EventDetailsWrapper logsDetailsWrapper, String eventUrl) {
+        return publish(logsDetailsWrapper.getJSONString(), eventUrl, Constants.REPORTING_DEVICE_LOGS_LABEL);
+    }
+
+    private Future<Integer> publish(String jsonPayload, String eventUrl, String dataLabel) {
+        return executorService.submit(new ReportingPublisher(jsonPayload, eventUrl, dataLabel));
     }
 
     private class ReportingPublisher implements Callable<Integer> {
-        private final DeviceDetailsWrapper payload;
+        private final String payload;
         private final String endpoint;
+        private final String dataLabel;
 
-        private ReportingPublisher(DeviceDetailsWrapper payload, String eventUrl) {
+        private ReportingPublisher(String payload, String endpoint, String dataLabel) {
             this.payload = payload;
-            this.endpoint = eventUrl;
+            this.endpoint = endpoint;
+            this.dataLabel = dataLabel;
         }
 
         @Override
@@ -92,26 +103,27 @@ public class ReportingPublisherManager {
             apiEndpoint.setHeader(HTTP.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
             try {
-                StringEntity requestEntity = new StringEntity(payload.getJSONString(), ContentType.APPLICATION_JSON);
+                StringEntity requestEntity = new StringEntity(payload, ContentType.APPLICATION_JSON);
                 apiEndpoint.setEntity(requestEntity);
                 try (CloseableHttpResponse response = httpClient.execute(apiEndpoint)) {
                     int statusCode = response.getStatusLine().getStatusCode();
 
                     if (log.isDebugEnabled()) {
-                        log.debug("Published data to reporting backend: " + endpoint +
+                        log.debug("Published " + dataLabel + " to reporting backend: " + endpoint +
                                 ", Response code: " + statusCode);
                     }
                     return statusCode;
                 }
             } catch (ConnectException e) {
-                String message = "Connection refused while publishing reporting data to the API: " + endpoint;
+                String message = "Connection refused while publishing " + dataLabel + " to the API: " + endpoint;
                 log.error(message, e);
                 throw new EventPublishingException(message, e);
             } catch (IOException e) {
-                String message = "Error occurred when publishing reporting data to the API: " + endpoint;
+                String message = "Error occurred when publishing " + dataLabel + " to the API: " + endpoint;
                 log.error(message, e);
                 throw new EventPublishingException(message, e);
             }
         }
     }
+
 }
