@@ -241,4 +241,8 @@ public class Constants {
     public static final String MIME_TYPE_X_MS_INSTALLER = "application/x-ms-installer";
     public static final String MIME_TYPE_VND_APPX = "application/vnd.appx";
 
+    // Reporting publisher data labels
+    public static final String REPORTING_DATA_LABEL = "data";
+    public static final String REPORTING_DEVICE_LOGS_LABEL = "DEVICE_LOGS";
+
 }
