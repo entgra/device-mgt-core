@@ -87,4 +87,14 @@ public interface TenantManager {
      * @throws TenantMgtException If an error occurs while initializing the metadata for the tenant.
      */
     void addDefaultNotificationArchivalMetadata(TenantInfoBean tenantInfoBean) throws TenantMgtException;
+
+    /**
+     * Adds a role to the bindings of the specified scopes within a tenant.
+     *
+     * @param tenantDomain The domain of the tenant.
+     * @param roleName     The name of the role to add to each scope's bindings.
+     * @param scopeNames   The list of scope names whose bindings should be updated.
+     * @throws TenantMgtException If an error occurs while updating the scope bindings.
+     */
+    void updateTenantScopeBindings(String tenantDomain, String roleName, java.util.List<String> scopeNames) throws TenantMgtException;
 }

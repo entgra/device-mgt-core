@@ -147,6 +147,11 @@
             <artifactId>io.entgra.device.mgt.core.notification.mgt.common</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>io.entgra.device.mgt.core</groupId>
+            <artifactId>io.entgra.device.mgt.core.apimgt.application.extension</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
 
@@ -172,6 +177,7 @@
                             com.google.gson;version="[2.9,3)",
                             com.google.gson.reflect;version="[2.9,3)",
                             io.entgra.device.mgt.core.apimgt.annotations;version="${io.entgra.device.mgt.core.version.range}",
+                            io.entgra.device.mgt.core.apimgt.application.extension.config;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.apimgt.extension.rest.api.*,
                             io.entgra.device.mgt.core.apimgt.webapp.publisher.config,
                             io.entgra.device.mgt.core.apimgt.webapp.publisher.dto,

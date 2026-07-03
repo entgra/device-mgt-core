@@ -18,13 +18,21 @@
 package io.entgra.device.mgt.core.device.mgt.core.report.mgt;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import io.entgra.device.mgt.core.application.mgt.common.ChunkDescriptor;
+import io.entgra.device.mgt.core.application.mgt.common.FileMetaEntry;
+import io.entgra.device.mgt.core.application.mgt.common.TransferLink;
+import io.entgra.device.mgt.core.application.mgt.core.exception.FileTransferServiceHelperUtilException;
+import io.entgra.device.mgt.core.application.mgt.core.util.FileTransferServiceHelperUtil;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.NotFoundException;
+import io.entgra.device.mgt.core.device.mgt.common.dto.IconFile;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -50,20 +58,22 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.GroupManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
 import io.entgra.device.mgt.core.device.mgt.core.util.DeviceManagerUtil;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import io.entgra.device.mgt.core.device.mgt.core.util.HttpReportingUtil;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.ContentType;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Calendar;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -527,13 +537,13 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 HttpResponse httpResponse = httpClient.execute(httpPost);
                 int statusCode = httpResponse.getStatusLine().getStatusCode();
                 switch (statusCode) {
-                    case 200:
-                    case 202:
-                    case 208:
+                    case Constants.BirtReporting.HTTP_STATUS_OK:
+                    case Constants.BirtReporting.HTTP_STATUS_ACCEPTED:
+                    case Constants.BirtReporting.HTTP_STATUS_ALREADY_REPORTED:
                         return new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
-                    case 400:
+                    case Constants.BirtReporting.HTTP_STATUS_BAD_REQUEST:
                         throw new BadRequestException("Parameters mismatch.");
-                    case 404:
+                    case Constants.BirtReporting.HTTP_STATUS_NOT_FOUND:
                         throw new NotFoundException("Requested design file not found.");
                     default:
                         throw new ReportManagementException("Failed to create directory.");
@@ -569,9 +579,9 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 HttpResponse httpResponse = httpClient.execute(httpPost);
                 int statusCode = httpResponse.getStatusLine().getStatusCode();
                 switch (statusCode) {
-                    case 200:
+                    case Constants.BirtReporting.HTTP_STATUS_OK:
                         return new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
-                    case 400:
+                    case Constants.BirtReporting.HTTP_STATUS_BAD_REQUEST:
                         throw new BadRequestException("Invalid file URL.");
                     default:
                         throw new ReportManagementException("Failed to create directory.");
@@ -583,6 +593,59 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             }
         } catch (IOException e) {
             String msg = "Error occurred while invoking BIRT runtime API.";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        }
+    }
+
+    @Override
+    public JsonObject uploadBirtTemplateFile(InputStream fileInputStream, String fileName)
+            throws ReportManagementException, BadRequestException {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            String uploadURL = HttpReportingUtil.getBirtReportHost();
+            if (!StringUtils.isBlank(uploadURL)) {
+                uploadURL += Constants.BirtReporting.BIRT_REPORTING_API_TEMPLATE
+                        + Constants.BirtReporting.BIRT_REPORTING_API_UPLOAD_TEMPLATE_FILE;
+
+                HttpPost httpPost = new HttpPost(uploadURL);
+
+                MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+                builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+                builder.addBinaryBody(
+                        "file",
+                        fileInputStream,
+                        org.apache.http.entity.ContentType.APPLICATION_OCTET_STREAM,
+                        fileName
+                );
+
+                httpPost.setEntity(builder.build());
+
+                HttpResponse httpResponse = httpClient.execute(httpPost);
+                int statusCode = httpResponse.getStatusLine().getStatusCode();
+
+                switch (statusCode) {
+                    case Constants.BirtReporting.HTTP_STATUS_OK:
+                        return new Gson().fromJson(
+                                EntityUtils.toString(httpResponse.getEntity()),
+                                JsonObject.class);
+                    case Constants.BirtReporting.HTTP_STATUS_ALREADY_REPORTED:
+                        JsonObject alreadyExists = new JsonObject();
+                        alreadyExists.addProperty("status", Constants.BirtReporting.HTTP_STATUS_ALREADY_REPORTED);
+                        alreadyExists.addProperty("message", "Design Report Name Already Exists");
+                        return alreadyExists;
+                    case Constants.BirtReporting.HTTP_STATUS_BAD_REQUEST:
+                        throw new BadRequestException("Invalid file or unsupported file type.");
+                    default:
+                        throw new ReportManagementException(
+                                "Failed to upload template. BIRT runtime returned: " + statusCode);
+                }
+            } else {
+                String msg = "BIRT reporting host is not defined in the iot-server.sh properly.";
+                log.error(msg);
+                throw new ReportManagementException(msg);
+            }
+        } catch (IOException e) {
+            String msg = "Error occurred while invoking BIRT runtime API for file upload.";
             log.error(msg, e);
             throw new ReportManagementException(msg, e);
         }
@@ -601,11 +664,11 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 HttpResponse httpResponse = httpClient.execute(httpDelete);
                 int statusCode = httpResponse.getStatusLine().getStatusCode();
                 switch (statusCode) {
-                    case 200:
+                    case Constants.BirtReporting.HTTP_STATUS_OK:
                         return new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
-                    case 400:
+                    case Constants.BirtReporting.HTTP_STATUS_BAD_REQUEST:
                         throw new BadRequestException("Invalid template names");
-                    case 500:
+                    case Constants.BirtReporting.HTTP_STATUS_INTERNAL_SERVER_ERROR:
                         JsonObject errorResponse = new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
                         throw new ReportManagementException(errorResponse.get("message").getAsString());
                     default:
@@ -646,12 +709,12 @@ public class ReportManagementServiceImpl implements ReportManagementService {
                 int statusCode = httpResponse.getStatusLine().getStatusCode();
 
                 switch (statusCode) {
-                    case 200:
+                    case Constants.BirtReporting.HTTP_STATUS_OK:
                         String jsonResponse = EntityUtils.toString(httpResponse.getEntity());
                         return new Gson().fromJson(jsonResponse, JsonObject.class);
-                    case 400:
+                    case Constants.BirtReporting.HTTP_STATUS_BAD_REQUEST:
                         throw new BadRequestException("Design file name is required");
-                    case 500:
+                    case Constants.BirtReporting.HTTP_STATUS_INTERNAL_SERVER_ERROR:
                         JsonObject errorResponse =
                                 new Gson().fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
                         throw new ReportManagementException(errorResponse.get("message").getAsString());
@@ -673,6 +736,218 @@ public class ReportManagementServiceImpl implements ReportManagementService {
             throw new ReportManagementException(msg, e);
         }
     }
+    @Override
+    public JsonArray getBirtReportParameters()
+            throws ReportManagementException, BadRequestException {
+
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+
+            String paramsURL = HttpReportingUtil.getBirtReportHost();
+
+            if (StringUtils.isBlank(paramsURL)) {
+                String msg = "BIRT reporting host is not defined";
+                log.error(msg);
+                throw new ReportManagementException(msg);
+            }
+            paramsURL += Constants.BirtReporting.BIRT_REPORTING_API_REPORT_PATH + "params";
+            log.debug("Invoking BIRT params API:"+paramsURL);
+
+            HttpGet httpGet = new HttpGet(paramsURL);
+            HttpResponse httpResponse = httpClient.execute(httpGet);
+
+            int statusCode = httpResponse.getStatusLine().getStatusCode();
+            String responseBody = EntityUtils.toString(httpResponse.getEntity());
+
+            log.debug("Received response from BIRT params API. Status:"+ statusCode);
+
+            switch (statusCode) {
+                case Constants.BirtReporting.HTTP_STATUS_OK:
+                    return new Gson().fromJson(responseBody, JsonArray.class);
+
+                case Constants.BirtReporting.HTTP_STATUS_BAD_REQUEST: {
+                    String msg = "Bad request when calling BIRT params API";
+                    log.error(msg);
+                    throw new BadRequestException(
+                            StringUtils.defaultIfBlank(responseBody, "Invalid request")
+                    );
+                }
+                default: {
+                    String msg = "Failed to fetch report parameters. HTTP " + statusCode;
+                    log.error(msg);
+                    throw new ReportManagementException(msg);
+                }
+            }
+        } catch (IOException e) {
+            String msg = "Error occurred while invoking BIRT runtime API";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        }
+    }
+    @Override
+    public JsonObject getBirtReportPreview(String fileName)
+            throws ReportManagementException, BadRequestException {
+
+        if (StringUtils.isBlank(fileName)) {
+            log.error("Preview request received with empty fileName");
+            throw new BadRequestException("Design file name is required");
+        }
+
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            String previewURL = HttpReportingUtil.getBirtReportHost();
+            if (StringUtils.isBlank(previewURL)) {
+                String msg = "BIRT reporting host is not defined";
+                log.error(msg);
+                throw new ReportManagementException(msg);
+            }
+
+            previewURL += Constants.BirtReporting.BIRT_REPORTING_API_REPORT_PATH
+                    + "preview?fileName="
+                    + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name());
+
+            log.debug("Invoking BIRT preview API for file:"+ fileName);
+
+            HttpGet httpGet = new HttpGet(previewURL);
+            HttpResponse httpResponse = httpClient.execute(httpGet);
+
+            int statusCode = httpResponse.getStatusLine().getStatusCode();
+            String responseBody = httpResponse.getEntity() != null
+                    ? EntityUtils.toString(httpResponse.getEntity())
+                    : null;
+            log.debug("BIRT preview API responded with status:"+ statusCode + fileName);
+            switch (statusCode) {
+
+                case Constants.BirtReporting.HTTP_STATUS_OK:
+                    log.info("Successfully fetched preview for report:"+ fileName);
+                    return new Gson().fromJson(responseBody, JsonObject.class);
+
+                case Constants.BirtReporting.HTTP_STATUS_BAD_REQUEST: {
+                    String msg = "Bad request while fetching preview for report: " + fileName;
+                    log.error(msg);
+                    throw new BadRequestException(
+                            StringUtils.defaultIfBlank(responseBody, "Invalid request")
+                    );
+                }
+                case Constants.BirtReporting.HTTP_STATUS_NOT_FOUND: {
+                    String msg = "Preview not found for report: " + fileName;
+                    log.error(msg);
+                    throw new ReportManagementException(msg);
+                }
+
+                default: {
+                    String msg = "Failed to fetch report preview. File: " + fileName +
+                            ", HTTP " + statusCode;
+                    log.error(msg);
+                    throw new ReportManagementException(msg);
+                }
+            }
+        } catch (IOException e) {
+            String msg = "Error occurred while invoking BIRT preview API for file: " + fileName;
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        }
+    }
+
+    @Override
+    public TransferLink generateCategoryIconUploadLink(FileMetaEntry fileMetaEntry)
+            throws ReportManagementException {
+        try {
+            Path artifactHolder = FileTransferServiceHelperUtil
+                    .createCategoryIconArtifactHolder(fileMetaEntry);
+            return new TransferLink.TransferLinkBuilder(artifactHolder.getFileName().toString())
+                    .withEndpoint(Constants.BirtReporting.CATEGORY_ICON_UPLOAD_ENDPOINT)
+                    .build();
+        } catch (FileTransferServiceHelperUtilException e) {
+            String msg = "Error encountered while generating category icon upload link";
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        }
+    }
+
+    @Override
+    public void uploadCategoryIcon(String uuid, InputStream inputStream)
+            throws ReportManagementException, NotFoundException {
+        ChunkDescriptor chunkDescriptor = new ChunkDescriptor();
+        try {
+            FileTransferServiceHelperUtil.populateCategoryIconChunkDescriptor(
+                    uuid, inputStream, chunkDescriptor);
+            FileTransferServiceHelperUtil.writeChunk(chunkDescriptor);
+        } catch (FileTransferServiceHelperUtilException e) {
+            String msg = "Error occurred while uploading category icon chunk for uuid: " + uuid;
+            log.error(msg, e);
+            throw new ReportManagementException(msg, e);
+        }
+
+    }
+
+    @Override
+    public IconFile downloadCategoryIcon(String uuid, String fileName)
+            throws ReportManagementException, NotFoundException {
+
+        String decodedFileName;
+        try {
+            decodedFileName = java.net.URLDecoder.decode(fileName,
+                    java.nio.charset.StandardCharsets.UTF_8.name());
+        } catch (java.io.UnsupportedEncodingException e) {
+            decodedFileName = fileName;
+        }
+
+        java.nio.file.Path filePath = java.nio.file.Paths.get(
+                System.getProperty("carbon.home"),
+                "repository", "resources", "category-icons",
+                uuid, decodedFileName
+        );
+
+        java.io.File file = filePath.toFile();
+
+        if (!file.exists()) {
+
+            String sanitized = decodedFileName.replace(
+                    "[^a-zA-Z0-9._-]", "_");
+            java.nio.file.Path sanitizedPath = java.nio.file.Paths.get(
+                    System.getProperty("carbon.home"),
+                    "repository", "resources", "category-icons",
+                    uuid, sanitized
+            );
+            file = sanitizedPath.toFile();
+            if (!file.exists()) {
+                String msg = "Icon file not found for uuid: " + uuid
+                        + ", fileName: " + fileName;
+                log.error(msg);
+                throw new NotFoundException(msg);
+            }
+        }
 
 
+        String contentType = null;
+        try {
+            contentType = java.nio.file.Files.probeContentType(file.toPath());
+        } catch (java.io.IOException e) {
+            log.warn("Could not probe content type for: " + file.getAbsolutePath());
+        }
+
+        if (contentType == null || contentType.equals(Constants.CONTENT_TYPE_OCTET_STREAM)) {
+            String extension = file.getName().toLowerCase()
+                    .substring(file.getName().lastIndexOf('.'));
+            switch (extension) {
+                case Constants.FILE_EXT_PNG:
+                    contentType = Constants.CONTENT_TYPE_PNG;
+                    break;
+                case Constants.FILE_EXT_JPG:
+                case Constants.FILE_EXT_JPEG:
+                    contentType = Constants.CONTENT_TYPE_JPEG;
+                    break;
+                case Constants.FILE_EXT_WEBP:
+                    contentType = Constants.CONTENT_TYPE_WEBP;
+                    break;
+                case Constants.FILE_EXT_SVG:
+                    contentType = Constants.CONTENT_TYPE_SVG;
+                    break;
+                default:
+                    contentType = Constants.CONTENT_TYPE_PNG;
+                    break;
+            }
+        }
+
+        return new IconFile(file, contentType);
+    }
 }

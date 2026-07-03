@@ -19,7 +19,13 @@
 package io.entgra.device.mgt.core.device.mgt.core.service;
 
 import com.google.common.reflect.TypeToken;
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.EventDetailsWrapper;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ConflictException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceDAO;
@@ -37,6 +43,8 @@ import io.entgra.device.mgt.core.device.mgt.core.dto.OperationDTO;
 import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.OperationMgtConstants;
 import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.dao.OperationManagementDAOException;
 import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.dao.OperationManagementDAOFactory;
+import io.entgra.device.mgt.core.device.mgt.core.report.mgt.ReportingPublisherManager;
+import io.entgra.device.mgt.core.device.mgt.core.report.mgt.util.DeviceEventReportUtil;
 import io.entgra.device.mgt.core.device.mgt.extensions.logger.spi.EntgraLogger;
 import io.entgra.device.mgt.core.notification.logger.DeviceEnrolmentLogContext;
 import io.entgra.device.mgt.core.notification.logger.impl.EntgraDeviceEnrolmentLoggerImpl;
@@ -852,7 +860,8 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         try {
             DeviceManagementDAOFactory.beginTransaction();
             //deleting device from the core
-            deviceDAO.deleteDevices(validDeviceIdentifiers, new ArrayList<>(deviceIds), enrollmentIds, validDevices);
+            deviceDAO.deleteDevices(validDeviceIdentifiers, new ArrayList<>(deviceIds), enrollmentIds, validDevices,
+                    tenantId);
             for (Map.Entry<String, DeviceManager> entry : deviceManagerMap.entrySet()) {
                 try {
                     // deleting device from the plugin level
@@ -1171,7 +1180,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
      * @return Whether status is changed or not
      * @throws DeviceManagementException on errors while trying to calculate Cost
      */
-    public BillingResponse calculateUsage(String tenantDomain, Timestamp startDate, Timestamp endDate, List<Device> allDevices) throws MetadataManagementDAOException, DeviceManagementException {
+    private BillingResponse calculateUsage(String tenantDomain, Timestamp startDate, Timestamp endDate, List<Device> allDevices) throws MetadataManagementDAOException, DeviceManagementException {
 
         BillingResponse billingResponse = new BillingResponse();
         List<Device> deviceStatusNotAvailable = new ArrayList<>();
@@ -1228,33 +1237,72 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         return billingResponse;
     }
 
-    public double generateCost(List<Device> allDevices, Timestamp startDate, Timestamp endDate,  Cost tenantCost, List<Device> deviceStatusNotAvailable, double totalCost) throws DeviceManagementException {
+    /**
+     * Calculate the cost of each device's usage by getting the history of the device statuses and getting the difference
+     * between the start of the billing date and the last {@link EnrolmentInfo.Status}. Additionally, if the device
+     * was SUSPENDED, which means that the device was not used for a certain period of time, it is reduced from the total
+     * billing period. The cost for each device will be calculated by getting the cost of device usage per day and
+     * multiplying that by the device usage period.
+     *
+     * @param allDevices list of {@link Device}'s for usage calculation
+     * @param startDate start of the bill date
+     * @param endDate end of the bill date
+     * @param tenantCost cost of a {@link Device} per year
+     * @param deviceStatusNotAvailable list of {@link Device}'s that does not have any {@link DeviceStatus}
+     * @param totalCost total cost of all {@link Device}'s
+     * @return total cost of all {@link Device}'s
+     * @throws DeviceManagementException if an error occurs while retrieving {@link DeviceStatus}
+     */
+    private double generateCost(List<Device> allDevices, Timestamp startDate, Timestamp endDate,  Cost tenantCost,
+                                List<Device> deviceStatusNotAvailable, double totalCost) throws DeviceManagementException {
         List<DeviceStatus> deviceStatus;
+        int tenantId = this.getTenantId();
         try {
             for (Device device : allDevices) {
                 long dateDiff = 0;
-                int tenantId = this.getTenantId();
+                long suspendedDateDiff;
                 deviceStatus = deviceStatusDAO.getStatus(device.getId(), tenantId, null, endDate, true);
+                if (deviceStatus.isEmpty()) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("No device status found for the device id '" + device.getId() + "'");
+                    }
+                    deviceStatusNotAvailable.add(device);
+                    continue;
+                }
+
+                EnrolmentInfo.Status lastRecordedStatus = deviceStatus.get(0).getStatus();
+                Date lastRecordedStatusDate = deviceStatus.get(0).getUpdateTime();
+                boolean isNonBillableStatus = EnrolmentInfo.Status.REMOVED.equals(lastRecordedStatus)
+                        || EnrolmentInfo.Status.DELETED.equals(lastRecordedStatus)
+                        || EnrolmentInfo.Status.SUSPENDED.equals(lastRecordedStatus)
+                        || EnrolmentInfo.Status.DISENROLLMENT_REQUESTED.equals(lastRecordedStatus);
+
+                // Enrolled device is older than starting bill date
                 if (device.getEnrolmentInfo().getDateOfEnrolment() < startDate.getTime()) {
-                    if (!deviceStatus.isEmpty() && (String.valueOf(deviceStatus.get(0).getStatus()).equals("REMOVED")
-                            || String.valueOf(deviceStatus.get(0).getStatus()).equals("DELETED"))) {
-                        if (deviceStatus.get(0).getUpdateTime().getTime() >= startDate.getTime()) {
-                            dateDiff = deviceStatus.get(0).getUpdateTime().getTime() - startDate.getTime();
+                    if (isNonBillableStatus) {
+                        // Device was REMOVED / DELETED / SUSPENDED during bill period
+                        if (lastRecordedStatusDate.getTime() >= startDate.getTime()) {
+                            dateDiff = lastRecordedStatusDate.getTime() - startDate.getTime();
                         }
-                    } else if (!deviceStatus.isEmpty() && (!String.valueOf(deviceStatus.get(0).getStatus()).equals("REMOVED")
-                            && !String.valueOf(deviceStatus.get(0).getStatus()).equals("DELETED"))) {
+                    } else {
                         dateDiff = endDate.getTime() - startDate.getTime();
                     }
                 } else {
-                    if (!deviceStatus.isEmpty() && (String.valueOf(deviceStatus.get(0).getStatus()).equals("REMOVED")
-                            || String.valueOf(deviceStatus.get(0).getStatus()).equals("DELETED"))) {
-                        if (deviceStatus.get(0).getUpdateTime().getTime() >= device.getEnrolmentInfo().getDateOfEnrolment()) {
-                            dateDiff = deviceStatus.get(0).getUpdateTime().getTime() - device.getEnrolmentInfo().getDateOfEnrolment();
+                    if (isNonBillableStatus) {
+                        if (lastRecordedStatusDate.getTime() >= device.getEnrolmentInfo().getDateOfEnrolment()) {
+                            dateDiff = lastRecordedStatusDate.getTime() - device.getEnrolmentInfo().getDateOfEnrolment();
                         }
-                    } else if (!deviceStatus.isEmpty() && (!String.valueOf(deviceStatus.get(0).getStatus()).equals("REMOVED")
-                            && !String.valueOf(deviceStatus.get(0).getStatus()).equals("DELETED"))) {
+                    } else {
                         dateDiff = endDate.getTime() - device.getEnrolmentInfo().getDateOfEnrolment();
                     }
+                }
+
+                suspendedDateDiff = calculateSuspendedBillPeriod(device.getId(), startDate, endDate,
+                        lastRecordedStatusDate);
+
+                // Reduce SUSPENDED period from the ACTIVE period
+                if (dateDiff > 0 && suspendedDateDiff > 0) {
+                    dateDiff -= suspendedDateDiff;
                 }
 
                 // Convert dateDiff to days as a decimal value
@@ -1273,9 +1321,6 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                 device.setCost(Math.round(cost * 100.0) / 100.0);
                 long totalDays = dateInDays + device.getDaysUsed();
                 device.setDaysUsed((int) totalDays);
-                if (deviceStatus.isEmpty()) {
-                    deviceStatusNotAvailable.add(device);
-                }
             }
         } catch (DeviceManagementDAOException e) {
             String msg = "Error occurred in retrieving status history for a device in billing.";
@@ -1283,6 +1328,200 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             throw new DeviceManagementException(msg, e);
         }
         return totalCost;
+    }
+
+    /**
+     * Calculate the period that the device was suspended during the billing cycle. This is done by checking if there
+     * are multiple SUSPENDED statuses during the billing period. If there is multiple then it will recursively
+     * calculate the SUSPENDED period by subtracting the closest ACTIVE status between the current SUSPENDED status
+     * and the next SUSPENDED status.
+     * <br>
+     * Refer <a href="https://docs.google.com/document/d/1fnAHHZQY5jbhBgwEfK4iP5J0cWKhpIOUxebC-A3JZS8/edit?usp=sharing">
+     *     Suspended Billing Calculation Document</a>
+     *
+     * @param deviceId ID of the device that the suspended period is going to be calculated
+     * @param startDate bill start {@link Date}
+     * @param endDate bill end {@link Date}
+     * @param lastRecordedStatusDate last {@link Date} of the device status that was recorded
+     * @return total SUSPENDED period in milliseconds
+     * @throws DeviceManagementDAOException if there is an error while retrieving the device status history
+     */
+    private long calculateSuspendedBillPeriod(int deviceId, Date startDate, Date endDate, Date lastRecordedStatusDate)
+            throws DeviceManagementDAOException {
+
+        List<DeviceStatus> deviceSuspendedStatuses = deviceStatusDAO.getDeviceStatusHistoryByStatus(deviceId, null,
+                endDate, true, EnrolmentInfo.Status.SUSPENDED);
+
+        if (deviceSuspendedStatuses.isEmpty()) {
+            return 0;
+        }
+
+        List<DeviceStatus> validSuspendedStatusHistory =
+                getValidDeviceStatusHistoryForBilling(deviceSuspendedStatuses, startDate);
+        return calculateSuspendedDuration(deviceId, startDate, endDate, lastRecordedStatusDate,
+                validSuspendedStatusHistory);
+    }
+
+    /**
+     * Filter out the statuses that are not needed for the billing period except the last status just before the billing
+     * start date. For example, we pass the list of all SUSPENDED device statuses for a device and we return a sublist
+     * containing the last SUSPENDED date before the bill start date and the remaining SUSPENDED statuses during the bill
+     * period.
+     * @param deviceStatuses {@link List} of {@link DeviceStatus} containing only one category of statuses. eg: only SUSPENDED statuses
+     * @param startDate bill start {@link Date}
+     * @return {@link List} of {@link DeviceStatus} containing the last SUSPENDED date before the bill start date
+     * and the remaining SUSPENDED statuses during the bill period.
+     */
+    private List<DeviceStatus> getValidDeviceStatusHistoryForBilling(List<DeviceStatus> deviceStatuses,
+                                                                     Date startDate) {
+        int indexOfStatusBeforeStartDate = findLastStatusBeforeBillStartDate(deviceStatuses, startDate);
+
+        if (indexOfStatusBeforeStartDate >= 0) {
+            // Include the status before start date by creating a sublist
+            deviceStatuses = deviceStatuses.subList(0, indexOfStatusBeforeStartDate + 1);
+        }
+
+        // Reverse the list so that the oldest status time will be the first element
+        if (deviceStatuses.size() > 1) {
+            Collections.reverse(deviceStatuses);
+        }
+        return deviceStatuses;
+    }
+
+    /**
+     * Iterate through the given device statuses to find the last status just before the billing start date and return
+     * it's index. If no index is found it will return -1.
+     *
+     * @param deviceStatuses {@link List} of {@link DeviceStatus} containing only one category of statuses. eg: only SUSPENDED statuses
+     * @param startDate bill start {@link Date}
+     * @return index of the last status just before the bill start date
+     */
+    private int findLastStatusBeforeBillStartDate(List<DeviceStatus> deviceStatuses, Date startDate) {
+        for (DeviceStatus deviceStatus : deviceStatuses) {
+            if (deviceStatus.getUpdateTime().getTime() <= startDate.getTime()) {
+                return deviceStatuses.indexOf(deviceStatus);
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Calculate the total SUSPENDED period by iterating through the SUSPENDED device statuses and get the difference
+     * between their last ACTIVE times. And explicitly handle the last SUSPENDED status
+     *
+     * @param deviceId ID of the device that the suspended period is going to be calculated
+     * @param startDate bill start {@link Date}
+     * @param endDate bill end {@link Date}
+     * @param lastRecordedStatusDate lastRecordedStatusDate last {@link Date} of the device status that was recorded
+     * @param suspendedStatusHistory {@link List} of {@link DeviceStatus} containing valid SUSPENDED statuses for a bill period
+     * @return total SUSPENDED period in milliseconds
+     * @throws DeviceManagementDAOException if there is an error while retrieving the device status history
+     */
+    private long calculateSuspendedDuration(int deviceId, Date startDate, Date endDate,
+                                            Date lastRecordedStatusDate, List<DeviceStatus> suspendedStatusHistory)
+            throws DeviceManagementDAOException {
+
+        long suspendedDateDiff = 0;
+        boolean hasSuspendedBeforeStartDate = !suspendedStatusHistory.isEmpty() &&
+                suspendedStatusHistory.get(0).getUpdateTime().getTime() <= startDate.getTime();
+
+        for (int i = 0; i < suspendedStatusHistory.size(); i++) {
+            Date currentSuspendedStatusDate = suspendedStatusHistory.get(i).getUpdateTime();
+            boolean isLastStatus = (i == suspendedStatusHistory.size() - 1);
+
+            if (isLastStatus) {
+                suspendedDateDiff += calculateLastSuspendedStatus(deviceId, startDate, endDate,
+                        lastRecordedStatusDate, currentSuspendedStatusDate, hasSuspendedBeforeStartDate);
+            } else {
+                Date nextSuspendedStatusDate = suspendedStatusHistory.get(i + 1).getUpdateTime();
+                suspendedDateDiff += calculateSuspendedStatusWithNext(deviceId, startDate,
+                        currentSuspendedStatusDate, nextSuspendedStatusDate, hasSuspendedBeforeStartDate, i);
+            }
+        }
+
+        return suspendedDateDiff;
+    }
+
+    /**
+     * Calculate the SUSPENDED period between two SUSPENDED dates by getting the closest ACTIVE status to the current
+     * SUSPENDED date. If there is no ACTIVE statuses between the SUSPENDED date then the difference between the two
+     * SUSPENDED dates will be taken as the SUSPENDED period.
+     *
+     * @param deviceId ID of the device that the suspended period is going to be calculated
+     * @param startDate bill start {@link Date}
+     * @param currentSuspendedDate current SUSPENDED {@link Date}
+     * @param nextSuspendedDate next SUSPENDED {@link Date}
+     * @param hasSuspendedBeforeStartDate if there is a SUSPENDED status before the bill start date
+     * @param indexOfCurrentSuspendedDate index of the current SUSPENDED status
+     * @return total SUSPENDED period between two SUSPENDED dates in milliseconds
+     * @throws DeviceManagementDAOException if there is an error while retrieving the device status history
+     */
+    private long calculateSuspendedStatusWithNext(int deviceId, Date startDate, Date currentSuspendedDate,
+                                                Date nextSuspendedDate, boolean hasSuspendedBeforeStartDate,
+                                                int indexOfCurrentSuspendedDate) throws DeviceManagementDAOException {
+
+        List<DeviceStatus> activeStatuses = deviceStatusDAO.getDeviceStatusHistoryByStatus(deviceId,
+                currentSuspendedDate, nextSuspendedDate,
+                true, EnrolmentInfo.Status.ACTIVE);
+
+        if (activeStatuses.isEmpty()) {
+            if (nextSuspendedDate.getTime() > currentSuspendedDate.getTime()) {
+                return nextSuspendedDate.getTime() - currentSuspendedDate.getTime();
+            }
+            return 0;
+        }
+
+        long lastActiveTime = activeStatuses.get(activeStatuses.size() - 1).getUpdateTime().getTime();
+
+        if (hasSuspendedBeforeStartDate && indexOfCurrentSuspendedDate == 0) {
+            // If the SUSPENDED was before the bill start date then reduce the last closest ACTIVE date from the bill
+            // start date. If the last ACTIVE date was before the start date then return 0.
+            return Math.max(0, lastActiveTime - startDate.getTime());
+        }
+        return lastActiveTime - currentSuspendedDate.getTime();
+    }
+
+    /**
+     * Calculate the SUSPENDED period for the last SUSPENDED status.
+     *
+     * @param deviceId ID of the device that the suspended period is going to be calculated
+     * @param startDate bill start {@link Date}
+     * @param endDate bill end {@link Date}
+     * @param lastRecordedStatusDate lastRecordedStatusDate last {@link Date} of the device status that was recorded
+     * @param lastSuspendedDate last SUSPENDED {@link Date}
+     * @param hasSuspendedBeforeStartDate if there is a SUSPENDED status before the bill start date
+     * @return total SUSPENDED period between the last SUSPENDED date and the last status that was recorded in milliseconds
+     * @throws DeviceManagementDAOException if there is an error while retrieving the device status history
+     */
+    private long calculateLastSuspendedStatus(int deviceId, Date startDate, Date endDate,
+                                            Date lastRecordedStatusDate, Date lastSuspendedDate,
+                                            boolean hasSuspendedBeforeStartDate) throws DeviceManagementDAOException {
+
+        // No calculation needed if this is the last recorded status
+        if (lastSuspendedDate.getTime() == lastRecordedStatusDate.getTime()) {
+            return 0;
+        }
+
+        List<DeviceStatus> activeStatuses = deviceStatusDAO.getDeviceStatusHistoryByStatus(deviceId,
+                lastSuspendedDate, endDate, true, EnrolmentInfo.Status.ACTIVE);
+
+        if (activeStatuses.isEmpty()) {
+            // If there are no ACTIVE statuses between the last recorded status and the last SUSPENDED status then that
+            // means either the device was REMOVED / DELETED or has not been activated.
+            if (lastSuspendedDate.getTime() >= startDate.getTime()) {
+                return lastRecordedStatusDate.getTime() - lastSuspendedDate.getTime();
+            }
+            return 0;
+        }
+
+        long lastActiveTime = activeStatuses.get(activeStatuses.size() - 1).getUpdateTime().getTime();
+
+        // If the last SUSPENDED was before the bill start date then reduce the last closest ACTIVE date from the bill
+        // start date. If the last ACTIVE date was before the start date then return 0.
+        if (hasSuspendedBeforeStartDate && lastSuspendedDate.getTime() <= startDate.getTime()) {
+            return Math.max(0, lastActiveTime - startDate.getTime());
+        }
+        return lastActiveTime - lastSuspendedDate.getTime();
     }
 
     @Override
@@ -2533,6 +2772,13 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
+    public List<? extends Operation> getPendingOperations(Device device, String operationCode)
+            throws OperationManagementException {
+        return pluginRepository.getOperationManager(device.getType(), this.getTenantId())
+                .getPendingOperationsByOpCode(device, operationCode);
+    }
+
+    @Override
     public void updateOperation(DeviceIdentifier deviceId, Operation operation) throws OperationManagementException {
         pluginRepository.getOperationManager(deviceId.getType(), this.getTenantId())
                 .updateOperation(deviceId, operation);
@@ -2581,6 +2827,50 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                         .updateOperation(device.getEnrolmentInfo().getId(), operation,
                                 new DeviceIdentifier(device.getDeviceIdentifier(), device.getType()));
             }
+            if (DeviceManagementConstants.Report.DEVICE_EVENT.equals(operation.getCode())) {
+
+                String operationResponse = operation.getOperationResponse();
+
+                if (StringUtils.isEmpty(operationResponse)) {
+                    log.warn("DEVICE_EVENT operationResponse is empty for device: "
+                            + device.getDeviceIdentifier());
+                    return;
+                }
+
+                try {
+                    String reportingHost = HttpReportingUtil.getReportingHost();
+
+                    if (StringUtils.isBlank(reportingHost)
+                            || !HttpReportingUtil.isPublishingEnabledForTenant()) {
+                        return;
+                    }
+                    String eventUrl = reportingHost
+                            + DeviceManagementConstants.Report.REPORTING_CONTEXT
+                            + DeviceManagementConstants.URL_SEPERATOR
+                            + DeviceManagementConstants.OPERATION_LOG;
+                    Gson gson = new GsonBuilder()
+                            .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
+                            .create();
+
+                    JsonObject responseObject =
+                            JsonParser.parseString(operationResponse).getAsJsonObject();
+
+                    JsonArray payloadArray = responseObject.getAsJsonArray("PAYLOAD");
+
+                    if (payloadArray == null || payloadArray.isEmpty()) {
+                        log.warn("DEVICE_EVENT PAYLOAD is empty for device: "
+                                + device.getDeviceIdentifier());
+                        return;
+                    }
+                    EventDetailsWrapper logsWrapper = DeviceEventReportUtil.createLogsWrapper(device, payloadArray);
+                    ReportingPublisherManager publisher = ReportingPublisherManager.getInstance();
+                    publisher.publishLogData(logsWrapper, eventUrl);
+
+                } catch (Exception e) {
+                    log.error("Error while publishing DEVICE_EVENT for device: "
+                            + device.getDeviceIdentifier(), e);
+                }
+            }
             if (DeviceManagerUtil.isPublishOperationResponseEnabled()) {
                 List<String> permittedOperations = DeviceManagerUtil.getEnabledOperationsForResponsePublish();
                 if (permittedOperations.contains(operation.getCode())
@@ -2609,6 +2899,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
 //            throw new OperationManagementException(msg, e);
 //        }
     }
+
 
     @Override
     public boolean updateProperties(DeviceIdentifier deviceId, List<Device.Property> properties)

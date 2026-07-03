@@ -37,6 +37,7 @@ public class Column {
     private boolean isRequired;
     private String tooltip;
     private String docLink;
+    private PackageSearchInput packageSearchInput;
 
     @XmlAttribute(name = "name", required = true)
     public String getName() { return name; }
@@ -136,5 +137,14 @@ public class Column {
 
     public void setDocLink(String docLink) {
         this.docLink = docLink;
+    }
+
+    @XmlElement(name = "PackageSearchInput")
+    public PackageSearchInput getPackageSearchInput() {
+        return packageSearchInput;
+    }
+
+    public void setPackageSearchInput(PackageSearchInput packageSearchInput) {
+        this.packageSearchInput = packageSearchInput;
     }
 }

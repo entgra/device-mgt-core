@@ -513,7 +513,9 @@
         <Scope>dm:device-type:statistic:view</Scope>
         <Scope>dm:device-type:statistic:delete</Scope>
         <Scope>dm:remote:connect</Scope>
+        <Scope>and:ops:suspend</Scope>
         <Scope>win:ops:unlock-devices</Scope>
+        <Scope>dm:reports:view</Scope>
     </Scopes>
     <SSOConfiguration>
         <Issuer>device-mgt</Issuer>

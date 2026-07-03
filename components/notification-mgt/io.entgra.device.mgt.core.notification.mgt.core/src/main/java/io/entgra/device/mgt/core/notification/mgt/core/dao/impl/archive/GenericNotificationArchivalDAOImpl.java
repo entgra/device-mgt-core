@@ -55,7 +55,7 @@ public class GenericNotificationArchivalDAOImpl extends AbstractNotificationArch
                 "SELECT NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
-                        "DESCRIPTION, " +
+                        "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP " +
                         "FROM " + SOURCE_DB + ".DM_NOTIFICATION " +
@@ -66,7 +66,7 @@ public class GenericNotificationArchivalDAOImpl extends AbstractNotificationArch
                         "(NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
-                        "DESCRIPTION, " +
+                        "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP) " +
                         "VALUES (?, ?, ?, ?, ?, ?)";
@@ -85,7 +85,7 @@ public class GenericNotificationArchivalDAOImpl extends AbstractNotificationArch
                         insertStmt.setInt(1, id);
                         insertStmt.setInt(2, rs.getInt("NOTIFICATION_CONFIG_ID"));
                         insertStmt.setInt(3, rs.getInt("TENANT_ID"));
-                        insertStmt.setString(4, rs.getString("DESCRIPTION"));
+                        insertStmt.setString(4, rs.getString("NOTIFICATION_CONTEXT"));
                         insertStmt.setString(5, rs.getString("TYPE"));
                         insertStmt.setTimestamp(6, rs.getTimestamp("CREATED_TIMESTAMP"));
                         insertStmt.addBatch();

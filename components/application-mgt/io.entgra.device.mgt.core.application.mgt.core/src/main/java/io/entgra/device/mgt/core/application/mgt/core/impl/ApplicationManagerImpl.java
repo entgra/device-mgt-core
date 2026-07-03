@@ -18,6 +18,10 @@
 
 package io.entgra.device.mgt.core.application.mgt.core.impl;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import io.entgra.device.mgt.core.application.mgt.common.ApplicationArtifact;
 import io.entgra.device.mgt.core.application.mgt.common.ApplicationInstaller;
 import io.entgra.device.mgt.core.application.mgt.common.ApplicationList;
@@ -82,6 +86,7 @@ import io.entgra.device.mgt.core.application.mgt.core.util.ApplicationManagement
 import io.entgra.device.mgt.core.application.mgt.core.util.ConnectionManagerUtil;
 import io.entgra.device.mgt.core.application.mgt.core.util.Constants;
 import io.entgra.device.mgt.core.device.mgt.common.Base64File;
+import io.entgra.device.mgt.core.device.mgt.common.MDMAppConstants;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.MetadataManagementException;
@@ -518,8 +523,6 @@ public class ApplicationManagerImpl implements ApplicationManager {
             log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
         }
-        // TODO: artifact URLs are not working for Windows AppX installations https://roadmap.entgra.net/issues/11010
-        //ApplicationManagementUtil.addInstallerPathToMetadata(releaseDTO);
         applicationDTO.getApplicationReleaseDTOs().clear();
         applicationDTO.getApplicationReleaseDTOs().add(releaseDTO);
         return applicationDTO;
@@ -882,9 +885,10 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 String windowsInstallerName = applicationArtifact.getInstallerName();
                 String extension = windowsInstallerName.substring(windowsInstallerName.lastIndexOf(".") + 1);
                 if (!extension.equalsIgnoreCase(Constants.MSI) &&
-                        !extension.equalsIgnoreCase(Constants.APPX)) {
+                        !extension.equalsIgnoreCase(Constants.APPX) &&
+                        !extension.equalsIgnoreCase(Constants.EXE)) {
                     String msg = "Application Type doesn't match with supporting application types of " +
-                            deviceType + "platform which are APPX and MSI";
+                            deviceType + " platform which are APPX, MSI and EXE";
                     log.error(msg);
                     throw new BadRequestException(msg);
                 }
@@ -918,6 +922,10 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     throw new BadRequestException(msg);
                 }
                 applicationReleaseDTO.setAppHashValue(md5OfApp);
+                if (DeviceTypes.WINDOWS.name().equalsIgnoreCase(deviceType) && applicationArtifact.getInstallerName()
+                        .toLowerCase().endsWith(Constants.EXTENSION_MSI)) {
+                    syncHashInMetadata(applicationReleaseDTO, md5OfApp);
+                }
                 applicationStorageManager
                         .uploadReleaseArtifact(applicationReleaseDTO, deviceType,
                                 Files.newInputStream(Paths.get(applicationArtifact.getInstallerPath())), tenantId);
@@ -1007,6 +1015,10 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     applicationReleaseDTO.setPackageName(packageName);
                     String deletingAppHashValue = applicationReleaseDTO.getAppHashValue();
                     applicationReleaseDTO.setAppHashValue(md5OfApp);
+                    if (DeviceTypes.WINDOWS.name().equalsIgnoreCase(deviceType) && applicationArtifact.getInstallerName()
+                            .toLowerCase().endsWith(Constants.EXTENSION_MSI)) {
+                        syncHashInMetadata(applicationReleaseDTO, md5OfApp);
+                    }
                     applicationStorageManager.uploadReleaseArtifact(applicationReleaseDTO, deviceType,
                             Files.newInputStream(Paths.get(applicationArtifact.getInstallerPath())),
                             tenantId);
@@ -4535,4 +4547,52 @@ public class ApplicationManagerImpl implements ApplicationManager {
             ConnectionManagerUtil.closeDBConnection();
         }
     }
+
+    /**
+     * Synchronizes the backend calculated hash with the hash stored in the metadata JSON.
+     * @param releaseDTO The DTO containing existing metadata.
+     * @param md5OfApp The correct hash calculated by the backend.
+     * @throws ApplicationManagementException if metadata is malformed.
+     */
+    private void syncHashInMetadata(ApplicationReleaseDTO releaseDTO, String md5OfApp)
+            throws ApplicationManagementException {
+        String metaDataStr = releaseDTO.getMetaData();
+        if (StringUtils.isBlank(metaDataStr)) {
+            return;
+        }
+            try {
+                JsonArray metaDataArray = JsonParser.parseString(metaDataStr).getAsJsonArray();
+                String fileHashKey = MDMAppConstants.WindowsConstants.MSI_FILE_HASH;
+                int hashFoundIndex = -1;
+
+                for (int i = 0; i < metaDataArray.size(); i++) {
+                    JsonObject obj = metaDataArray.get(i).getAsJsonObject();
+
+                    if (obj.has("key") && fileHashKey.equals(obj.get("key").getAsString())) {
+                        hashFoundIndex = i;
+                        break;
+                    }
+                }
+                JsonObject hashObj = new JsonObject();
+                hashObj.addProperty("key", fileHashKey);
+                hashObj.addProperty("value", md5OfApp);
+
+                if (hashFoundIndex >= 0) {
+                    metaDataArray.set(hashFoundIndex, hashObj);
+                } else {
+                    metaDataArray.add(hashObj);
+                }
+
+                releaseDTO.setMetaData(metaDataArray.toString());
+            } catch (JsonSyntaxException e) {
+                String msg = "Invalid JSON format found in metadata while synchronizing File_Hash";
+                log.error(msg, e);
+                throw new ApplicationManagementException(msg, e);
+            } catch (IllegalStateException e) {
+                String msg = "Metadata JSON structure is invalid. Expected JSON array while synchronizing File_Hash";
+                log.error(msg, e);
+                throw new ApplicationManagementException(msg, e);
+            }
+        }
+
 }

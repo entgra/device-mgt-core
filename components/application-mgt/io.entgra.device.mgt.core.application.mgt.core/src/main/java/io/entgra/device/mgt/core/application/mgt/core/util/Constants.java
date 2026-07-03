@@ -96,6 +96,7 @@ public class Constants {
     //App type constants related to window device type
     public static final String MSI = "MSI";
     public static final String APPX = "APPX";
+    public static final String EXE = "EXE";
 
     public static final String ENTERPRISE_APP_TYPE = "ENTERPRISE";
     public static final String PUBLIC_APP_TYPE = "ENTERPRISE";
@@ -240,5 +241,9 @@ public class Constants {
     public static final String MIME_TYPE_VND_MS_WINDOWS_MSI = "application/vnd.ms-windows.msi";
     public static final String MIME_TYPE_X_MS_INSTALLER = "application/x-ms-installer";
     public static final String MIME_TYPE_VND_APPX = "application/vnd.appx";
+
+    // Reporting publisher data labels
+    public static final String REPORTING_DATA_LABEL = "data";
+    public static final String REPORTING_DEVICE_LOGS_LABEL = "DEVICE_LOGS";
 
 }

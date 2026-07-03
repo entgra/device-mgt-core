@@ -57,7 +57,7 @@ public class SQLServerNotificationManagementDAOImpl extends AbstractNotification
                         notification.setNotificationId(resultSet.getInt("NOTIFICATION_ID"));
                         notification.setNotificationConfigId(resultSet.getInt("NOTIFICATION_CONFIG_ID"));
                         notification.setTenantId(resultSet.getInt("TENANT_ID"));
-                        notification.setDescription(resultSet.getString("DESCRIPTION"));
+                        notification.setDescription(resultSet.getString("NOTIFICATION_CONTEXT"));
                         notification.setCreatedTimestamp(resultSet.getTimestamp("CREATED_TIMESTAMP"));
                         notifications.add(notification);
                     }
@@ -72,13 +72,13 @@ public class SQLServerNotificationManagementDAOImpl extends AbstractNotification
     }
 
     @Override
-    public int insertNotification(int tenantId, int notificationConfigId, String type, String description)
+    public int insertNotification(int tenantId, int notificationConfigId, String type, String notificationContext)
             throws NotificationManagementDAOException {
         String sql =
                 "INSERT INTO DM_NOTIFICATION " +
                         "(NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
-                        "DESCRIPTION, " +
+                        "NOTIFICATION_CONTEXT, " +
                         "TYPE) " +
                         "OUTPUT INSERTED.NOTIFICATION_ID " +
                         "VALUES (?, ?, ?, ?)";
@@ -86,7 +86,7 @@ public class SQLServerNotificationManagementDAOImpl extends AbstractNotification
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, notificationConfigId);
             stmt.setInt(2, tenantId);
-            stmt.setString(3, description);
+            stmt.setString(3, notificationContext);
             stmt.setString(4, type);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -101,73 +101,4 @@ public class SQLServerNotificationManagementDAOImpl extends AbstractNotification
         return -1;
     }
 
-    @Override
-    public PaginatedUserNotificationResponse getUserNotificationsWithStatus(
-            String username, int limit, int offset, Boolean isRead) throws NotificationManagementDAOException {
-        List<UserNotificationPayload> result = new ArrayList<>();
-        int totalCount = 0;
-        try (Connection connection = NotificationManagementDAOFactory.getConnection()) {
-            StringBuilder countQuery = new StringBuilder(
-                    "SELECT COUNT(*) " +
-                            "FROM DM_NOTIFICATION_USER_ACTION ua " +
-                            "JOIN DM_NOTIFICATION n " +
-                            "ON ua.NOTIFICATION_ID = n.NOTIFICATION_ID " +
-                            "WHERE ua.USERNAME = ? " +
-                            "AND n.TENANT_ID = ? "
-            );
-            if (isRead != null) countQuery.append("AND ua.IS_READ = ? ");
-            try (PreparedStatement ps = connection.prepareStatement(countQuery.toString())) {
-                int idx = 1;
-                ps.setString(idx++, username);
-                ps.setInt(idx++, PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId());
-                if (isRead != null) ps.setBoolean(idx++, isRead);
-
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) totalCount = rs.getInt(1);
-                }
-            }
-            StringBuilder query = new StringBuilder(
-                    "SELECT " +
-                            "ua.NOTIFICATION_ID, " +
-                            "ua.IS_READ, " +
-                            "ua.ACTION_TIMESTAMP, " +
-                            "n.DESCRIPTION, " +
-                            "n.TYPE, " +
-                            "n.CREATED_TIMESTAMP " +
-                            "FROM DM_NOTIFICATION_USER_ACTION ua " +
-                            "JOIN DM_NOTIFICATION n " +
-                            "ON ua.NOTIFICATION_ID = n.NOTIFICATION_ID " +
-                            "WHERE ua.USERNAME = ? " +
-                            "AND n.TENANT_ID = ? "
-            );
-            if (isRead != null) query.append("AND ua.IS_READ = ? ");
-            query.append("ORDER BY ua.ACTION_TIMESTAMP DESC ");
-            query.append("OFFSET ? ROWS ");
-            if (limit > 0) query.append("FETCH NEXT ? ROWS ONLY ");
-            try (PreparedStatement ps = connection.prepareStatement(query.toString())) {
-                int idx = 1;
-                ps.setString(idx++, username);
-                ps.setInt(idx++, PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId());
-                if (isRead != null) ps.setBoolean(idx++, isRead);
-                ps.setInt(idx++, offset > 0 ? offset : 0);
-                if (limit > 0) ps.setInt(idx++, limit);
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        boolean readStatus = rs.getBoolean("IS_READ");
-                        result.add(new UserNotificationPayload(
-                                rs.getInt("NOTIFICATION_ID"),
-                                rs.getString("DESCRIPTION"),
-                                rs.getString("TYPE"),
-                                readStatus ? "READ" : "UNREAD",
-                                username,
-                                rs.getTimestamp("CREATED_TIMESTAMP")
-                        ));
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            throw new NotificationManagementDAOException("Error in SQLServer getUserNotificationsWithStatus", e);
-        }
-        return new PaginatedUserNotificationResponse(result, totalCount);
-    }
 }

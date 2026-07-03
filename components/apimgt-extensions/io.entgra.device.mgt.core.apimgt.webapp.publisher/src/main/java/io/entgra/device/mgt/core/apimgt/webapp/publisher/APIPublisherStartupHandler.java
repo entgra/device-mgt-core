@@ -22,6 +22,9 @@ import com.google.gson.Gson;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.constants.Constants;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.config.Tenants;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.config.WebappPublisherConfig;
+import io.entgra.device.mgt.core.apimgt.application.extension.config.ApiApplicationValidatorConfig;
+import io.entgra.device.mgt.core.apimgt.application.extension.config.ApiApplicationValidatorConfigManager;
+import io.entgra.device.mgt.core.apimgt.application.extension.config.ValidatorConfig;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.dto.ApiScope;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.exception.APIManagerPublisherException;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.internal.APIPublisherDataHolder;
@@ -124,6 +127,7 @@ public class APIPublisherStartupHandler implements ServerStartupObserver {
                 PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(tenantDomain, true);
                 updateScopeMetadataEntryAndRegistryWithDefaultScopes(defaultPermissions.getDefaultPermissions());
                 updateApiPublishingEnabledTenants(tenantDomain);
+                initializeValidatorMetadataKeys();
             } finally {
                 PrivilegedCarbonContext.endTenantFlow();
             }
@@ -242,6 +246,37 @@ public class APIPublisherStartupHandler implements ServerStartupObserver {
             String msg = "Error encountered while updating api publish enabled tenants metadata entry";
             log.error(msg, e);
             throw new IllegalStateException(msg, e);
+        }
+    }
+
+    private void initializeValidatorMetadataKeys() {
+        MetadataManagementService metadataManagementService = APIPublisherDataHolder.getInstance().getMetadataManagementService();
+        ApiApplicationValidatorConfig validatorConfig = ApiApplicationValidatorConfigManager.getInstance().getApiApplicationValidatorConfig();
+
+        if (validatorConfig == null || validatorConfig.getValidators() == null) {
+            return;
+        }
+
+        for (ValidatorConfig validatorConfigItem : validatorConfig.getValidators()) {
+            String metadataKey = validatorConfigItem.getMetadataKey();
+            Metadata tenantsEntry = new Metadata();
+            List<String> tenants = new ArrayList<>();
+            tenantsEntry.setMetaKey(metadataKey);
+            tenantsEntry.setMetaValue(gson.toJson(tenants));
+
+            try {
+                if (metadataManagementService.retrieveMetadata(metadataKey) == null) {
+                    metadataManagementService.createMetadata(tenantsEntry);
+                }
+            } catch (MetadataKeyAlreadyExistsException e) {
+                String msg = "Metadata entry already exists for " + metadataKey;
+                log.error(msg, e);
+                throw new IllegalStateException(msg, e);
+            } catch (MetadataManagementException e) {
+                String msg = "Error encountered while updating " + metadataKey + " metadata entry";
+                log.error(msg, e);
+                throw new IllegalStateException(msg, e);
+            }
         }
     }
 }

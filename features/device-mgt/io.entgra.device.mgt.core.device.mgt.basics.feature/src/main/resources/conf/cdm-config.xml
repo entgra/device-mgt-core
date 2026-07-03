@@ -208,6 +208,10 @@
         <OperationTimeouts>
         </OperationTimeouts>
     </OperationTimeoutConfigurations>
+    <MQTTConfigurations>
+        <CompressionThresholdKb>4</CompressionThresholdKb>
+        <CompressionLevel>1</CompressionLevel>
+    </MQTTConfigurations>
     <EnrollmentGuideConfiguration>
         <Enable>false</Enable>
         <Mail>Replace with mail</Mail>

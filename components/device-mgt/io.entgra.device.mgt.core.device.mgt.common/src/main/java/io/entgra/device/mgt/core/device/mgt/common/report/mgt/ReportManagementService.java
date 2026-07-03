@@ -17,14 +17,19 @@
  */
 package io.entgra.device.mgt.core.device.mgt.common.report.mgt;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import io.entgra.device.mgt.core.application.mgt.common.FileMetaEntry;
+import io.entgra.device.mgt.core.application.mgt.common.TransferLink;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.BadRequestException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceTypeNotFoundException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.NotFoundException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ReportManagementException;
+import io.entgra.device.mgt.core.device.mgt.common.dto.IconFile;
 
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -158,4 +163,83 @@ public interface ReportManagementService {
      * @throws BadRequestException Might occur when report parameters mismatch
      */
     JsonObject getReportData(JsonObject reportParameters, int limit, int offset) throws ReportManagementException, BadRequestException;
+
+    /**
+     * This method is used to invoke the BIRT runtime API for retrieving
+     * report parameter metadata.
+     *
+     * It extracts all input parameters defined in the currently loaded
+     * BIRT report design file (.rptdesign), which can be used by the UI
+     * to dynamically build the report configuration form.
+     *
+     * @return returns response containing report parameter definitions
+     *         from the BIRT runtime
+     * @throws ReportManagementException Might occur when invoking BIRT runtime
+     * @throws BadRequestException Might occur if no valid report template is loaded
+     */
+    JsonArray getBirtReportParameters() throws ReportManagementException, BadRequestException;
+
+    /**
+     * This method is used to invoke BIRT runtime API for uploading a report template file
+     *
+     * @param fileInputStream  InputStream of the uploaded .rptdesign file
+     * @param fileName         Original file name
+     * @return returns response containing response details from BIRT runtime
+     * @throws ReportManagementException Might occur when invoking BIRT runtime
+     * @throws BadRequestException Might occur when file is invalid or missing
+     */
+    JsonObject uploadBirtTemplateFile(InputStream fileInputStream, String fileName)
+            throws ReportManagementException, BadRequestException;
+    /**
+     * This method is used to invoke the BIRT runtime API for retrieving
+     * preview metadata of a given report template.
+     *
+     * It extracts high-level preview information from the specified
+     * BIRT report design file (.rptdesign), such as:
+     *  - report title
+     *  - column headers
+     *
+     * This preview metadata is used by the UI to display a lightweight
+     * preview of the report structure before rendering or downloading.
+     *
+     * @param fileName name of the BIRT report design file
+     *                 (e.g. "device_log.rptdesign")
+     * @return returns response containing preview metadata of the report
+     *         from the BIRT runtime
+     * @throws ReportManagementException Might occur when invoking BIRT runtime
+     * @throws BadRequestException Might occur if the file name is invalid
+     *                             or report template is not found
+     */
+    JsonObject getBirtReportPreview(String fileName)
+            throws ReportManagementException, BadRequestException;
+
+
+    /**
+     * Generate a chunked-upload link for a report category icon.
+     * Returns a TransferLink whose relativeTransferLink is used by the
+     * frontend to POST each chunk to /reports/category/icon/uploads/{uuid}
+     */
+    TransferLink generateCategoryIconUploadLink(FileMetaEntry fileMetaEntry)
+            throws ReportManagementException;
+
+    /**
+     * Accept one chunk of a category icon being uploaded.
+     *
+     * @param uuid        the artifact-holder UUID from the upload link
+     * @param inputStream the chunk byte stream
+     */
+    void uploadCategoryIcon(String uuid, InputStream inputStream)
+            throws ReportManagementException, NotFoundException;
+
+    /**
+     * Stream back a previously uploaded category icon file.
+     *
+     * @param uuid     artifact-holder UUID
+     * @param fileName full qualified name, e.g. "icon.png"
+     */
+    IconFile downloadCategoryIcon(String uuid, String fileName)
+            throws ReportManagementException, NotFoundException;
+
 }
+
+

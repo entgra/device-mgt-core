@@ -501,4 +501,67 @@ public class TenantManagerImpl implements TenantManager {
             endTenantFlow();
         }
     }
+    @Override
+    public void updateTenantScopeBindings(String tenantDomain, String roleName, List<String> scopeNames) throws TenantMgtException {
+        if (MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
+            String msg = "Updating scope bindings for super tenant is not allowed via this operation.";
+            log.error(msg);
+            throw new TenantMgtException(msg);
+        }
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(tenantDomain, true);
+            PublisherRESTAPIServices publisherRESTAPIServices = TenantMgtDataHolder.getInstance().getPublisherRESTAPIServices();
+
+            Scope[] subTenantScopes = publisherRESTAPIServices.getScopes();
+            if (subTenantScopes == null) {
+                return;
+            }
+
+            Map<String, Scope> scopeMap = new HashMap<>();
+            for (Scope scope : subTenantScopes) {
+                scopeMap.put(scope.getName(), scope);
+            }
+
+            for (String scopeName : scopeNames) {
+                Scope targetScope = scopeMap.get(scopeName);
+                if (targetScope == null) {
+                    log.warn("Scope '" + scopeName + "' not found in tenant '" + tenantDomain + "'. Skipping.");
+                    continue;
+                }
+                List<String> bindings = targetScope.getBindings();
+                if (bindings == null) {
+                    bindings = new ArrayList<>();
+                }
+                if (!bindings.contains(roleName)) {
+                    bindings.add(roleName);
+                    targetScope.setBindings(bindings);
+                    publisherRESTAPIServices.updateSharedScope(targetScope);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Added role '" + roleName + "' to bindings of scope '" + scopeName
+                                + "' in tenant '" + tenantDomain + "'.");
+                    }
+                } else {
+                    if (log.isDebugEnabled()) {
+                        log.debug("Role '" + roleName + "' already present in bindings of scope '" + scopeName
+                                + "' in tenant '" + tenantDomain + "'. Skipping.");
+                    }
+                }
+            }
+        } catch (BadRequestException e) {
+            String msg = "Invalid request sent when updating scope bindings for '" + tenantDomain + "' tenant space.";
+            log.error(msg, e);
+            throw new TenantMgtException(msg, e);
+        } catch (UnexpectedResponseException e) {
+            String msg = "Unexpected response received when updating scope bindings for '" + tenantDomain + "' tenant space.";
+            log.error(msg, e);
+            throw new TenantMgtException(msg, e);
+        } catch (APIServicesException e) {
+            String msg = "Error occurred while updating scope bindings for '" + tenantDomain + "' tenant space.";
+            log.error(msg, e);
+            throw new TenantMgtException(msg, e);
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+    }
 }

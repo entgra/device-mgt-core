@@ -91,6 +91,16 @@ public interface OperationManager {
 
     List<? extends Operation> getPendingOperations(Device device) throws OperationManagementException;
 
+    /**
+     * Method to retrieve the list of pending operations for a device by operation code.
+     * @param device - Device object representing the device for which operations are to be fetched.
+     * @param operationCode - The operation code to filter the pending operations.
+     * @return A List of pending operations for the specified device and operation code.
+     * @throws OperationManagementException if failed while retrieving the pending operations.
+     */
+    List<? extends Operation> getPendingOperationsByOpCode(Device device, String operationCode)
+            throws OperationManagementException;
+
     Operation getNextPendingOperation(DeviceIdentifier deviceId, long notNowOperationFrequency)
             throws OperationManagementException;
 
@@ -155,5 +165,17 @@ public interface OperationManager {
     boolean isOperationExist(DeviceIdentifier deviceId, int operationId) throws OperationManagementException;
 
     List<Activity> getActivities(List<String> deviceTypes, String operationCode, long updatedSince, String operationStatus)
+            throws OperationManagementException;
+    /**
+     * Retrieves timeout activities for operations matching the specified criteria.
+     *
+     * @param deviceTypes     List of device types to filter operations
+     * @param operationCode   Operation code to filter (e.g., REMOTE_RELAY_OFF)
+     * @param updatedSince    Timestamp in milliseconds to filter operations updated before this time
+     * @param operationStatus Operation status to filter (e.g., PENDING,NOTNOW)
+     * @return List of activities with essential timeout information
+     * @throws OperationManagementException If error occurs while retrieving timeout activities
+     */
+    List<Activity> getTimeoutActivities(List<String> deviceTypes, String operationCode, long updatedSince, String operationStatus)
             throws OperationManagementException;
 }

@@ -58,7 +58,7 @@ public class SQLServerNotificationArchivalDAOImpl extends AbstractNotificationAr
                         "NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
-                        "DESCRIPTION, " +
+                        "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP " +
                         "FROM " + SOURCE_DB + ".DM_NOTIFICATION " +
@@ -69,7 +69,7 @@ public class SQLServerNotificationArchivalDAOImpl extends AbstractNotificationAr
                         "(NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
-                        "DESCRIPTION, " +
+                        "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP) " +
                         "VALUES (?, ?, ?, ?, ?, ?)";
@@ -85,7 +85,7 @@ public class SQLServerNotificationArchivalDAOImpl extends AbstractNotificationAr
                     ins.setInt(1, id);
                     ins.setInt(2, rs.getInt("NOTIFICATION_CONFIG_ID"));
                     ins.setInt(3, rs.getInt("TENANT_ID"));
-                    ins.setString(4, rs.getString("DESCRIPTION"));
+                    ins.setString(4, rs.getString("NOTIFICATION_CONTEXT"));
                     ins.setString(5, rs.getString("TYPE"));
                     ins.setTimestamp(6, rs.getTimestamp("CREATED_TIMESTAMP"));
                     ins.addBatch();
@@ -155,14 +155,14 @@ public class SQLServerNotificationArchivalDAOImpl extends AbstractNotificationAr
                         "(NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
-                        "DESCRIPTION, " +
+                        "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP) " +
                         "SELECT " +
                         "NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
-                        "DESCRIPTION, " +
+                        "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP " +
                         "FROM " + SOURCE_DB + ".DM_NOTIFICATION " +
@@ -218,14 +218,14 @@ public class SQLServerNotificationArchivalDAOImpl extends AbstractNotificationAr
                         "(NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
-                        "DESCRIPTION, " +
+                        "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP) " +
                         "SELECT " +
                         "NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
-                        "DESCRIPTION, " +
+                        "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP " +
                         "FROM " + SOURCE_DB + ".DM_NOTIFICATION " +
