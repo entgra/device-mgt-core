@@ -21,9 +21,11 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import io.entgra.device.mgt.core.device.mgt.core.config.DeviceConfigurationManager;
 import io.entgra.device.mgt.core.device.mgt.core.config.push.notification.ContextMetadata;
+import io.entgra.device.mgt.core.device.mgt.core.config.push.notification.FCMConfiguration;
 import io.entgra.device.mgt.core.device.mgt.core.config.push.notification.PushNotificationConfiguration;
 import io.entgra.device.mgt.core.device.mgt.extensions.push.notification.provider.fcm.dto.FCMCredentials;
 import okhttp3.ConnectionPool;
+import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -85,8 +87,43 @@ public class FCMUtil {
      * Initialize the connection pool for the OkHttpClient instance.
      */
     private void initPooledConnection() {
-        connectionPool = new ConnectionPool(25, 1, TimeUnit.MINUTES);
-        client = new OkHttpClient.Builder().connectionPool(connectionPool).build();
+        FCMConfiguration config = getFCMConfiguration();
+
+        connectionPool = new ConnectionPool(config.getHttpConnectionPoolMaxIdle(),
+                config.getHttpConnectionKeepAliveMinutes(), TimeUnit.MINUTES);
+
+        // FCM is a single host and the wake-up dispatcher fans out onto its user + task pools,
+        // so many sends run concurrently against this one client. OkHttp's default dispatcher
+        // caps maxRequestsPerHost at 5, which under a task burst leaves calls queued in the
+        // dispatcher's ready-queue. Because the per-call timeout clock includes that queue wait,
+        // queued calls burn their timeout budget and fail with SocketTimeoutException. The
+        // configured limits should stay above the combined pool size so no send blocks on the
+        // dispatcher queue.
+        Dispatcher dispatcher = new Dispatcher();
+        dispatcher.setMaxRequests(config.getHttpMaxRequests());
+        dispatcher.setMaxRequestsPerHost(config.getHttpMaxRequestsPerHost());
+
+        // Set timeouts explicitly rather than relying on OkHttp's 10s defaults; the read timeout
+        // governs the response-header read that was timing out under load.
+        client = new OkHttpClient.Builder()
+                .connectionPool(connectionPool)
+                .dispatcher(dispatcher)
+                .connectTimeout(config.getHttpConnectTimeoutSeconds(), TimeUnit.SECONDS)
+                .writeTimeout(config.getHttpWriteTimeoutSeconds(), TimeUnit.SECONDS)
+                .readTimeout(config.getHttpReadTimeoutSeconds(), TimeUnit.SECONDS)
+                .callTimeout(config.getHttpCallTimeoutSeconds(), TimeUnit.SECONDS)
+                .build();
+    }
+
+    /**
+     * Resolve the FCM configuration from cdm-config.xml, falling back to defaults if the
+     * FCMConfiguration block is absent.
+     */
+    private static FCMConfiguration getFCMConfiguration() {
+        PushNotificationConfiguration pushNotificationConfiguration = DeviceConfigurationManager.getInstance()
+                .getDeviceManagementConfig().getPushNotificationConfiguration();
+        FCMConfiguration fcmConfiguration = pushNotificationConfiguration.getFCMConfiguration();
+        return fcmConfiguration != null ? fcmConfiguration : new FCMConfiguration();
     }
 
     /**

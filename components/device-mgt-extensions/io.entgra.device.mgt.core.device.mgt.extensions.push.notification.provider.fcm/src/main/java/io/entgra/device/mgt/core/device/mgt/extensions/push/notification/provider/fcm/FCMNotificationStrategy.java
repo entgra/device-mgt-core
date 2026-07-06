@@ -18,6 +18,7 @@
 package io.entgra.device.mgt.core.device.mgt.extensions.push.notification.provider.fcm;
 
 import com.google.gson.JsonObject;
+import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Operation;
 import io.entgra.device.mgt.core.device.mgt.extensions.push.notification.provider.fcm.dto.FCMCredentials;
 import io.entgra.device.mgt.core.device.mgt.extensions.push.notification.provider.fcm.util.FCMUtil;
 import okhttp3.Request;
@@ -51,6 +52,7 @@ public class FCMNotificationStrategy implements NotificationStrategy {
     private static final String NOTIFIER_TYPE_FCM = "FCM";
     private static final String FCM_TOKEN = "FCM_TOKEN";
     private static final String FCM_API_KEY = "fcmAPIKey";
+    private static final String SYSTEM = "system";
     private static final int TIME_TO_LIVE = 2419199; // 1 second less than 28 days
     private static final int HTTP_STATUS_CODE_OK = 200;
     private static final int HTTP_STATUS_CODE_NOT_FOUND = 404;
@@ -73,9 +75,32 @@ public class FCMNotificationStrategy implements NotificationStrategy {
                 int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
                 Device device = FCMDataHolder.getInstance().getDeviceManagementProviderService()
                         .getDeviceWithTypeProperties(ctx.getDeviceId());
-                if(device.getProperties() != null && getFCMToken(device.getProperties()) != null) {
-                    sendWakeUpCall(FCMUtil.getInstance().getFCMCredentials(tenantId),
-                            getFCMToken(device.getProperties()), device.getDeviceIdentifier(), tenantId);
+                if (device.getProperties() != null && getFCMToken(device.getProperties()) != null) {
+                    String registrationId = getFCMToken(device.getProperties());
+                    String deviceIdentifier = device.getDeviceIdentifier();
+                    FCMCredentials credentials = FCMUtil.getInstance().getFCMCredentials(tenantId);
+
+                    Operation operation = ctx.getOperation();
+                    // Task initiated operations are persisted with initiatedBy = SYSTEM; user
+                    // initiated operations carry the real username. User initiated wake-up calls
+                    // are high priority and bypass the per-device cooldown.
+                    boolean highPriority = operation == null
+                            || !SYSTEM.equalsIgnoreCase(operation.getInitiatedBy());
+                    int operationId = operation != null ? operation.getId() : -1;
+                    int enrolmentId = device.getEnrolmentInfo() != null
+                            ? device.getEnrolmentInfo().getId() : -1;
+
+                    FCMWakeUpRequest request = FCMWakeUpRequest.newBuilder()
+                            .tenantId(tenantId)
+                            .deviceType(device.getType())
+                            .deviceIdentifier(deviceIdentifier)
+                            .highPriority(highPriority)
+                            .operationId(operationId)
+                            .enrolmentId(enrolmentId)
+                            .sender(() -> sendWakeUpCall(credentials, registrationId, deviceIdentifier, tenantId))
+                            .build();
+
+                    FCMWakeUpDispatcher.getInstance().dispatch(request);
                 }
             } else {
                 if (log.isDebugEnabled()) {
@@ -85,8 +110,6 @@ public class FCMNotificationStrategy implements NotificationStrategy {
             }
         } catch (DeviceManagementException e) {
             throw new PushNotificationExecutionFailedException("Error occurred while retrieving device information", e);
-        } catch (IOException e) {
-            throw new PushNotificationExecutionFailedException("Error occurred while sending push notification", e);
         }
     }
 
