@@ -317,6 +317,7 @@
         <Scope>um:users:update</Scope>
         <Scope>um:users:invite</Scope>
         <Scope>um:admin:users:view</Scope>
+        <Scope>um:admin:users:modify</Scope>
         <Scope>um:admin:tenants:remove</Scope>
         <Scope>dm:admin:enrollment:update</Scope>
         <Scope>gm:devices:view</Scope>
