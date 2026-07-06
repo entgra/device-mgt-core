@@ -47,6 +47,17 @@ public interface OperationManager {
     void addTaskOperation(String deviceType, Operation operation, DynamicTaskContext dynamicTaskContext) throws OperationManagementException;
 
     /**
+     * Mark the push notification status of an operation as SCHEDULED so the periodic push
+     * notification scheduler task will re-attempt the wake-up call. This is used to reschedule
+     * a wake-up call when its asynchronous delivery (e.g. via FCM) fails.
+     *
+     * @param operationId  ID of the operation whose push notification failed
+     * @param enrolmentId  enrolment (device) ID the operation belongs to
+     * @throws OperationManagementException if the push notification status could not be updated
+     */
+    void scheduleNotification(int operationId, int enrolmentId) throws OperationManagementException;
+
+    /**
      * Method to retrieve the list of all operations to a device.
      *
      * @param deviceId - Device Identifier of the device

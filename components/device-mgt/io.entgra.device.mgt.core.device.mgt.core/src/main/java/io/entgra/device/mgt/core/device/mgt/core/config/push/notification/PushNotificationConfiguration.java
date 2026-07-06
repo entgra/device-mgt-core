@@ -34,6 +34,16 @@ public class PushNotificationConfiguration {
     private boolean schedulerTaskEnabled;
     private List<String> pushNotificationProviders;
     private List<ContextMetadata> contextMetadata;
+    private FCMConfiguration fcmConfiguration;
+
+    @XmlElement(name = "FCMConfiguration")
+    public FCMConfiguration getFCMConfiguration() {
+        return fcmConfiguration;
+    }
+
+    public void setFCMConfiguration(FCMConfiguration fcmConfiguration) {
+        this.fcmConfiguration = fcmConfiguration;
+    }
 
     @XmlElement(name = "SchedulerBatchSize", required = true)
     public int getSchedulerBatchSize() {
