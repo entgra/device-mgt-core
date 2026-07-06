@@ -55,6 +55,9 @@ public class Constants {
     public static final String CONTENT_TYPE_WEBP = "image/webp";
     public static final String CONTENT_TYPE_SVG = "image/svg+xml";
     public static final String CONTENT_TYPE_OCTET_STREAM = "application/octet-stream";
+    // reporting publisher data labels
+    public static final String REPORTING_DATA_LABEL = "data";
+    public static final String REPORTING_DEVICE_LOGS_LABEL = "DEVICE_LOGS";
 
     public final static class BirtReporting {
         public static final String BIRT_REPORTING_HOST = "iot.birt.reporting.host";

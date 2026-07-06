@@ -21,7 +21,6 @@ package io.entgra.device.mgt.core.device.mgt.core.report.mgt;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceDetailsWrapper;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.EventDetailsWrapper;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.EventPublishingException;
-import io.entgra.device.mgt.core.application.mgt.core.util.Constants;
 import io.entgra.device.mgt.core.device.mgt.core.report.mgt.config.ReportMgtConfiguration;
 import io.entgra.device.mgt.core.device.mgt.core.report.mgt.config.ReportMgtConfigurationManager;
 import org.apache.commons.logging.Log;

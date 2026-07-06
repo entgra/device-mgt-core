@@ -21,6 +21,7 @@ package io.entgra.device.mgt.core.device.mgt.core.util;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.EventPublishingException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ReportManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;

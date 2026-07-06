@@ -19,7 +19,7 @@ package io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api;
 
 import io.entgra.device.mgt.core.apimgt.annotations.Scope;
 import io.entgra.device.mgt.core.apimgt.annotations.Scopes;
-import io.entgra.device.mgt.core.application.mgt.common.FileMetaEntry;
+import io.entgra.device.mgt.core.device.mgt.common.report.mgt.FileMetaEntry;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceList;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.Constants;
