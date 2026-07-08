@@ -210,7 +210,7 @@
     </OperationTimeoutConfigurations>
     <MQTTConfigurations>
         <CompressionThresholdKb>4</CompressionThresholdKb>
-        <CompressionLevel>1</CompressionLevel>
+        <CompressionLevel>0</CompressionLevel>
     </MQTTConfigurations>
     <EnrollmentGuideConfiguration>
         <Enable>false</Enable>
