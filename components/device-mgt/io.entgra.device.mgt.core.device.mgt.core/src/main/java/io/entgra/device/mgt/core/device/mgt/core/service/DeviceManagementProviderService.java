@@ -716,6 +716,19 @@ public interface DeviceManagementProviderService {
     void addTaskOperation(String type, List<Device> devices, Operation operation)
             throws OperationManagementException;
 
+    /**
+     * Mark the push notification status of an operation as SCHEDULED so the periodic push
+     * notification scheduler task re-attempts the wake-up call. Used to reschedule a wake-up
+     * call when its asynchronous delivery (e.g. via FCM) fails.
+     *
+     * @param deviceType  device type the operation belongs to
+     * @param operationId ID of the operation whose push notification failed
+     * @param enrolmentId enrolment (device) ID the operation belongs to
+     * @throws OperationManagementException if the push notification status could not be updated
+     */
+    void scheduleNotification(String deviceType, int operationId, int enrolmentId)
+            throws OperationManagementException;
+
     List<? extends Operation> getOperations(DeviceIdentifier deviceId) throws OperationManagementException;
 
     PaginationResult getOperations(DeviceIdentifier deviceId,

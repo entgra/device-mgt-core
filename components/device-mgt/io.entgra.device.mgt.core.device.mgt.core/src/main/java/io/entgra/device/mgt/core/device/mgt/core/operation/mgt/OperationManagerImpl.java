@@ -521,38 +521,11 @@ public class OperationManagerImpl implements OperationManager {
                      * Reschedule if push notification failed. Doing db transactions in atomic way to prevent
                      * deadlocks.
                      */
-                    int failAttempts = 0;
-                    while (true) {
-                        try {
-                            OperationManagementDAOFactory.beginTransaction();
-                            operationMappingDAO.updateOperationMapping(operation.getId(), device.getEnrolmentInfo().getId(),
-                                    io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation.PushNotificationStatus.SCHEDULED);
-                            OperationManagementDAOFactory.commitTransaction();
-                            break;
-                        } catch (OperationManagementDAOException ex) {
-                            OperationManagementDAOFactory.rollbackTransaction();
-                            if (++failAttempts > 3) {
-                                String msg = "Error occurred while setting push notification status to SCHEDULED. Operation ID: " +
-                                        operation.getId() + ", Enrollment ID: " + device.getEnrolmentInfo().getId() +
-                                        ", Device ID:" + device.getDeviceIdentifier();
-                                log.error(msg, e);
-                                break;
-                            }
-                            log.warn("Unable to set push notification status to SCHEDULED. Operation ID: " +
-                                    operation.getId() + ", Enrollment ID: " + device.getEnrolmentInfo().getId() +
-                                    ", Device ID:" + device.getDeviceIdentifier() + ", Attempt: " + failAttempts +
-                                    ", Error: " + e.getMessage());
-                            try {
-                                Thread.sleep(2000);
-                            } catch (InterruptedException ignore) {
-                                break;
-                            }
-                        } catch (TransactionManagementException ex) {
-                            log.error("Error occurred while initiating the transaction", ex);
-                            break;
-                        } finally {
-                            OperationManagementDAOFactory.closeConnection();
-                        }
+                    try {
+                        this.scheduleNotification(operation.getId(), device.getEnrolmentInfo().getId());
+                    } catch (OperationManagementException ex) {
+                        log.error("Unable to reschedule push notification for operation ID: " + operation.getId()
+                                + ", Device ID: " + device.getDeviceIdentifier(), ex);
                     }
                 } catch (Exception e) {
                     log.error("Error occurred while sending notifications to " + device.getType() +
@@ -560,6 +533,51 @@ public class OperationManagerImpl implements OperationManager {
                 }
                 PrivilegedCarbonContext.endTenantFlow();
             });
+        }
+    }
+
+    /**
+     * Mark the push notification status of an operation as SCHEDULED so that the periodic push
+     * notification scheduler task re-attempts the wake-up call. DB transactions are done in an
+     * atomic way to prevent deadlocks. Used both for synchronous push failures and for
+     * asynchronous wake-up delivery failures reported back by notification strategies
+     * (e.g. the FCM dispatcher).
+     */
+    @Override
+    public void scheduleNotification(int operationId, int enrolmentId) throws OperationManagementException {
+        int failAttempts = 0;
+        while (true) {
+            try {
+                OperationManagementDAOFactory.beginTransaction();
+                operationMappingDAO.updateOperationMapping(operationId, enrolmentId,
+                        io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation.PushNotificationStatus.SCHEDULED);
+                OperationManagementDAOFactory.commitTransaction();
+                return;
+            } catch (OperationManagementDAOException ex) {
+                OperationManagementDAOFactory.rollbackTransaction();
+                if (++failAttempts > 3) {
+                    String msg = "Error occurred while setting push notification status to SCHEDULED. Operation ID: " +
+                            operationId + ", Enrollment ID: " + enrolmentId;
+                    log.error(msg, ex);
+                    throw new OperationManagementException(msg, ex);
+                }
+                log.warn("Unable to set push notification status to SCHEDULED. Operation ID: " +
+                        operationId + ", Enrollment ID: " + enrolmentId + ", Attempt: " + failAttempts +
+                        ", Error: " + ex.getMessage());
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException ignore) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            } catch (TransactionManagementException ex) {
+                String msg = "Error occurred while initiating the transaction to set push notification status to "
+                        + "SCHEDULED. Operation ID: " + operationId + ", Enrollment ID: " + enrolmentId;
+                log.error(msg, ex);
+                throw new OperationManagementException(msg, ex);
+            } finally {
+                OperationManagementDAOFactory.closeConnection();
+            }
         }
     }
 

@@ -2726,6 +2726,13 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
+    public void scheduleNotification(String deviceType, int operationId, int enrolmentId)
+            throws OperationManagementException {
+        pluginRepository.getOperationManager(deviceType, this.getTenantId())
+                .scheduleNotification(operationId, enrolmentId);
+    }
+
+    @Override
     public List<? extends Operation> getOperations(DeviceIdentifier deviceId) throws OperationManagementException {
         return pluginRepository.getOperationManager(deviceId.getType(), this.getTenantId()).getOperations(deviceId);
     }
