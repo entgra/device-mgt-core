@@ -289,4 +289,50 @@ public interface ApplicationDAO {
     void deleteApplicationsByTenant(int tenantId) throws ApplicationManagementDAOException;
 
     List<ReleaseVersionInfo> getApplicationReleaseVersions(String uuid, int tenantId) throws ApplicationManagementDAOException;
+
+    /**
+     * Retrieves the application associated with the given firmware model ID for the specified tenant.
+     *
+     * @param firmwareModelId the ID of the firmware model
+     * @param tenantId the tenant ID
+     * @return the {@link ApplicationDTO} associated with the firmware model
+     * @throws ApplicationManagementDAOException if an error occurs while retrieving the application from the database
+     */
+    ApplicationDTO getApplicationForModel(int firmwareModelId, int tenantId) throws ApplicationManagementDAOException;
+
+    /**
+     * Retrieve firmware models IDs associate with a given application.
+     *
+     * @param applicationId Application ID
+     * @return List of firmware model IDs associate with application.
+     * @throws ApplicationManagementDAOException Throws when error encountered while retrieving firmware models.
+     */
+    List<Integer> getFirmwareModelIdsForApp(int applicationId) throws ApplicationManagementDAOException;
+
+    /**
+     * Add device firmware model mapping entry for the application.
+     *
+     * @param appId            Application ID
+     * @param firmwareModelIds Firmware model IDs
+     * @throws ApplicationManagementDAOException Throws when error encountered while adding device firmware model mapping.
+     */
+    void addDeviceFirmwareModelMapping(int appId, List<Integer> firmwareModelIds, int tenantId) throws ApplicationManagementDAOException;
+
+    /**
+     * Retrieve all device firmware model IDs which are having mapping with application in given tenant.
+     *
+     * @param tenantId Tenant ID
+     * @return List of firmware IDs
+     * @throws ApplicationManagementDAOException Throws when error encountered while getting firmware model IDs.
+     */
+    List<Integer> getAllDeviceFirmwareModelIds(int tenantId) throws ApplicationManagementDAOException;
+
+    /**
+     * Delete exiting application mapping with device firmware models.
+     *
+     * @param appId            Application ID
+     * @param tenantId         Tenant ID
+     * @throws ApplicationManagementDAOException Throws when error encountered while deleting device firmware model mapping.
+     */
+    void deleteDeviceFirmwareModelMapping(int appId, int tenantId) throws ApplicationManagementDAOException;
 }

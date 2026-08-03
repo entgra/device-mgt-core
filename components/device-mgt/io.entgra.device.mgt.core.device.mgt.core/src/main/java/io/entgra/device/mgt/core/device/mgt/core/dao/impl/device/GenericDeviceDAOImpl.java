@@ -144,6 +144,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                 sql = sql + " AND d.NAME LIKE ?";
                 isDeviceNameProvided = true;
             }
+
             sql = sql + ") d1 WHERE d1.ID = e.DEVICE_ID AND TENANT_ID = ?";
             //Add the query for device-type
             if (deviceType != null && !deviceType.isEmpty()) {

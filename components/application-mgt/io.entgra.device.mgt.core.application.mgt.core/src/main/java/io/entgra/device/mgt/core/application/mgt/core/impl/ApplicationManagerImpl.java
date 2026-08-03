@@ -18,6 +18,20 @@
 
 package io.entgra.device.mgt.core.application.mgt.core.impl;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import io.entgra.device.mgt.core.application.mgt.common.*;
+import io.entgra.device.mgt.core.application.mgt.common.exception.FileDownloaderServiceException;
+import io.entgra.device.mgt.core.application.mgt.common.response.*;
+import io.entgra.device.mgt.core.application.mgt.core.config.FirmwareConfiguration;
+import io.entgra.device.mgt.core.application.mgt.core.exception.BadRequestException;
+import io.entgra.device.mgt.core.application.mgt.core.dao.*;
+import io.entgra.device.mgt.core.application.mgt.core.exception.*;
+import io.entgra.device.mgt.core.application.mgt.core.dao.SPApplicationDAO;
+import io.entgra.device.mgt.core.application.mgt.core.util.ApplicationManagementUtil;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -47,10 +61,6 @@ import io.entgra.device.mgt.core.application.mgt.common.exception.LifecycleManag
 import io.entgra.device.mgt.core.application.mgt.common.exception.RequestValidatingException;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ResourceManagementException;
 import io.entgra.device.mgt.core.application.mgt.common.exception.TransactionManagementException;
-import io.entgra.device.mgt.core.application.mgt.common.response.Application;
-import io.entgra.device.mgt.core.application.mgt.common.response.ApplicationRelease;
-import io.entgra.device.mgt.core.application.mgt.common.response.Category;
-import io.entgra.device.mgt.core.application.mgt.common.response.Tag;
 import io.entgra.device.mgt.core.application.mgt.common.services.ApplicationManager;
 import io.entgra.device.mgt.core.application.mgt.common.services.ApplicationStorageManager;
 import io.entgra.device.mgt.core.application.mgt.common.wrapper.ApplicationUpdateWrapper;
@@ -85,21 +95,36 @@ import io.entgra.device.mgt.core.application.mgt.core.util.APIUtil;
 import io.entgra.device.mgt.core.application.mgt.core.util.ApplicationManagementUtil;
 import io.entgra.device.mgt.core.application.mgt.core.util.ConnectionManagerUtil;
 import io.entgra.device.mgt.core.application.mgt.core.util.Constants;
+import io.entgra.device.mgt.core.device.mgt.common.*;
+import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
+import io.entgra.device.mgt.core.device.mgt.common.app.mgt.DeviceFirmwareModel;
+import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareModelManagementService;
+import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareModelSearchFilter;
+import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareResult;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceFirmwareModelManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.Base64File;
 import io.entgra.device.mgt.core.device.mgt.common.MDMAppConstants;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.MetadataManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.Metadata;
+import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Operation;
+import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.OperationManagementException;
+import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.common.exception.StorageManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.json.JSONObject;
@@ -112,15 +137,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -141,6 +161,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
     private SPApplicationDAO spApplicationDAO;
     private VppApplicationDAO vppApplicationDAO;
     private ReviewDAO reviewDAO;
+    private static final OkHttpClient httpClient = new OkHttpClient();
 
     public ApplicationManagerImpl() {
         initDataAccessObjects();
@@ -427,8 +448,12 @@ public class ApplicationManagerImpl implements ApplicationManager {
             ApplicationDTO applicationDTO = applicationManager.getApplication(appId);
             DeviceType deviceType = APIUtil.getDeviceTypeData(applicationDTO.getDeviceTypeId());
             ApplicationArtifact artifact = ApplicationManagementUtil.constructApplicationArtifact(releaseWrapper.getIconLink(), releaseWrapper.getScreenshotLinks(),
-                    releaseWrapper.getArtifactLink(), releaseWrapper.getBannerLink());
+                    isCustomArtifactsManagedByAppStore() ? releaseWrapper.getArtifactLink() : null, releaseWrapper.getBannerLink());
             ApplicationReleaseDTO releaseDTO = APIUtil.releaseWrapperToReleaseDTO(releaseWrapper);
+            if (!isCustomArtifactsManagedByAppStore()) {
+                releaseDTO.setInstallerName(releaseWrapper.getArtifactLink());
+                populateMetadataFromResourceHeaders(releaseDTO, getDownloadableFirmwareUrl(releaseWrapper.getArtifactLink()).toString());
+            }
             releaseDTO = uploadCustomAppReleaseArtifacts(releaseDTO, artifact, deviceType.getName());
             try {
                 return createRelease(applicationDTO, releaseDTO, ApplicationType.CUSTOM, isPublished);
@@ -444,6 +469,98 @@ public class ApplicationManagerImpl implements ApplicationManager {
             throw new ApplicationManagementException(msg, e);
         } catch (FileDownloaderServiceException e) {
             String msg = "Error encountered while downloading application release artifacts";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        }
+    }
+
+    /**
+     * Populate metadata from resource headers
+     *
+     * @param releaseDTO  {@link ApplicationReleaseDTO}
+     * @param resourceUrl Resource URL
+     * @throws ApplicationManagementException Throws when error encountered when populating metadata.
+     */
+    private void populateMetadataFromResourceHeaders(ApplicationReleaseDTO releaseDTO, String resourceUrl)
+            throws ApplicationManagementException {
+        Request request = new Request.Builder().url(resourceUrl).head().build();
+
+        try (Response response = httpClient.newCall(request).execute()) {
+            Properties properties = new Properties();
+            if (response.isSuccessful()) {
+                properties.setProperty("contentType", response.header("Content-Type"));
+                properties.setProperty("contentLength", response.header("Content-Length"));
+                releaseDTO.setMetaData(getUpdatedMetadataString(releaseDTO.getMetaData(), properties));
+            } else {
+                String msg = "Error occurred while executing HEAD request to get application release metadata. " +
+                        "Response code: " + response.code();
+                log.error(msg);
+                throw new ApplicationManagementException(msg);
+            }
+        } catch (IOException e) {
+            String msg = "Error occurred while retrieving application release metadata";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        }
+    }
+
+    /**
+     * Get updated metadata string value
+     *
+     * @param existingMetadata Existing metadata string
+     * @param newMetadata      New metadata values
+     * @return Updated metadata string
+     */
+    private String getUpdatedMetadataString(String existingMetadata, Properties newMetadata) {
+        JsonArray parsedMetadata;
+        if (StringUtils.isBlank(existingMetadata)) {
+            parsedMetadata = new JsonArray();
+        } else {
+            JsonElement existingMetadataJson = new JsonParser().parse(existingMetadata);
+            if (!existingMetadataJson.isJsonArray()) {
+                String msg = "Metadata contains invalid JSON format";
+                log.error(msg);
+                throw new IllegalArgumentException(msg);
+            }
+            parsedMetadata = existingMetadataJson.getAsJsonArray();
+        }
+
+        JsonObject newMetadataJson;
+        for (String key : newMetadata.stringPropertyNames()) {
+            newMetadataJson = new JsonObject();
+            newMetadataJson.addProperty(key, newMetadata.getProperty(key));
+            parsedMetadata.add(newMetadataJson);
+        }
+
+        return parsedMetadata.toString();
+    }
+
+    private boolean isCustomArtifactsManagedByAppStore() throws ApplicationManagementException {
+        return Objects.equals(getFirmwareConfiguration().getDeliveryConfiguration().getMethod(), "APP_STORE");
+    }
+
+    private FirmwareConfiguration getFirmwareConfiguration() throws ApplicationManagementException {
+        final Gson gson = new Gson();
+        MetadataManagementService metadataManagementService = DataHolder.getInstance().getMetadataManagementService();
+        try {
+            Metadata firmwareMgtMetadata = metadataManagementService.retrieveMetadata(PrivilegedCarbonContext
+                    .getThreadLocalCarbonContext().getTenantDomain() + Constants.FIRMWARE_CONFIGS_PREFIX);
+            if (firmwareMgtMetadata == null) {
+                String msg = "Firmware configuration not found";
+                log.error(msg);
+                throw new IllegalStateException(msg);
+            }
+
+            FirmwareConfiguration firmwareMgtConfigs = gson.fromJson(firmwareMgtMetadata.getMetaValue(), FirmwareConfiguration.class);
+            if (firmwareMgtConfigs == null) {
+                String msg = "Null retrieved for firmware configuration";
+                log.error(msg);
+                throw new IllegalStateException(msg);
+            }
+
+            return firmwareMgtConfigs;
+        } catch (MetadataManagementException e) {
+            String msg = "Failed to load firmware management metadata";
             log.error(msg, e);
             throw new ApplicationManagementException(msg, e);
         }
@@ -737,25 +854,29 @@ public class ApplicationManagerImpl implements ApplicationManager {
             throws ResourceManagementException, ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         ApplicationStorageManager applicationStorageManager = APIUtil.getApplicationStorageManager();
-        try {
-            String md5OfApp = applicationStorageManager.
-                    getMD5(Files.newInputStream(Paths.get(applicationArtifact.getInstallerPath())));
-            validateReleaseBinaryFileHash(md5OfApp);
-            releaseDTO.setUuid(UUID.randomUUID().toString());
-            releaseDTO.setAppHashValue(md5OfApp);
-            releaseDTO.setInstallerName(applicationArtifact.getInstallerName());
+        releaseDTO.setUuid(UUID.randomUUID().toString());
+        if (isCustomArtifactsManagedByAppStore()) {
+            try {
+                String md5OfApp = applicationStorageManager.
+                        getMD5(Files.newInputStream(Paths.get(applicationArtifact.getInstallerPath())));
+                validateReleaseBinaryFileHash(md5OfApp);
+                releaseDTO.setAppHashValue(md5OfApp);
+                releaseDTO.setInstallerName(applicationArtifact.getInstallerName());
 
-            applicationStorageManager.uploadReleaseArtifact(releaseDTO, deviceType,
-                    Files.newInputStream(Paths.get(applicationArtifact.getInstallerPath())), tenantId);
-        } catch (IOException e) {
-            String msg = "Error occurred when uploading release artifact into the server";
-            log.error(msg);
-            throw new ApplicationManagementException(msg, e);
-        } catch (StorageManagementException e) {
-            String msg = "Error occurred while md5sum value retrieving process: application UUID "
-                    + releaseDTO.getUuid();
-            log.error(msg, e);
-            throw new ApplicationManagementException(msg, e);
+                applicationStorageManager.uploadReleaseArtifact(releaseDTO, deviceType,
+                        Files.newInputStream(Paths.get(applicationArtifact.getInstallerPath())), tenantId);
+            } catch (IOException e) {
+                String msg = "Error occurred when uploading release artifact into the server";
+                log.error(msg);
+                throw new ApplicationManagementException(msg, e);
+            } catch (StorageManagementException e) {
+                String msg = "Error occurred while md5sum value retrieving process: application UUID "
+                        + releaseDTO.getUuid();
+                log.error(msg, e);
+                throw new ApplicationManagementException(msg, e);
+            }
+        } else {
+            releaseDTO.setAppHashValue(DigestUtils.md5Hex(releaseDTO.getInstallerName()));
         }
         return addImageArtifacts(releaseDTO, applicationArtifact, tenantId);
     }
@@ -1069,28 +1190,36 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 (applicationArtifact.getIconName(), Constants.ICON_NAME));
         applicationReleaseDTO.setBannerName(applicationArtifact.getBannerName());
 
-        Map<String, InputStream> screenshots = applicationArtifact.getScreenshots();
-        List<String> screenshotNames = new ArrayList<>(screenshots.keySet());
+        // for custom application screenshots aren't mandatory
+        if (applicationArtifact.getScreenshots() == null || applicationArtifact.getScreenshots().isEmpty()) {
+            applicationReleaseDTO = applicationStorageManager
+                    .uploadImageArtifacts(applicationReleaseDTO, applicationArtifact.getIconStream(),
+                            applicationArtifact.getBannerStream(), null, tenantId);
+        } else {
+            Map<String, InputStream> screenshots = applicationArtifact.getScreenshots();
+            List<String> screenshotNames = new ArrayList<>(screenshots.keySet());
 
-        int counter = 1;
-        for (String scName : screenshotNames) {
-            if (counter == 1) {
-                applicationReleaseDTO.setScreenshotName1(ApplicationManagementUtil.sanitizeName
-                        (scName, Constants.SCREENSHOT_NAME + counter));
-            } else if (counter == 2) {
-                applicationReleaseDTO.setScreenshotName2(ApplicationManagementUtil.sanitizeName
-                        (scName, Constants.SCREENSHOT_NAME + counter));
-            } else if (counter == 3) {
-                applicationReleaseDTO.setScreenshotName3(ApplicationManagementUtil.sanitizeName
-                        (scName, Constants.SCREENSHOT_NAME + counter));
+            int counter = 1;
+            for (String scName : screenshotNames) {
+                if (counter == 1) {
+                    applicationReleaseDTO.setScreenshotName1(ApplicationManagementUtil.sanitizeName
+                            (scName, Constants.SCREENSHOT_NAME + counter));
+                } else if (counter == 2) {
+                    applicationReleaseDTO.setScreenshotName2(ApplicationManagementUtil.sanitizeName
+                            (scName, Constants.SCREENSHOT_NAME + counter));
+                } else if (counter == 3) {
+                    applicationReleaseDTO.setScreenshotName3(ApplicationManagementUtil.sanitizeName
+                            (scName, Constants.SCREENSHOT_NAME + counter));
+                }
+                counter++;
             }
-            counter++;
+
+            // Upload images
+            applicationReleaseDTO = applicationStorageManager
+                    .uploadImageArtifacts(applicationReleaseDTO, applicationArtifact.getIconStream(),
+                            applicationArtifact.getBannerStream(), new ArrayList<>(screenshots.values()), tenantId);
         }
 
-        // Upload images
-        applicationReleaseDTO = applicationStorageManager
-                .uploadImageArtifacts(applicationReleaseDTO, applicationArtifact.getIconStream(),
-                        applicationArtifact.getBannerStream(), new ArrayList<>(screenshots.values()), tenantId);
         return applicationReleaseDTO;
     }
 
@@ -1170,7 +1299,9 @@ public class ApplicationManagerImpl implements ApplicationManager {
     @Override
     public ApplicationList getApplications(Filter filter) throws ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
-        String userName = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
+
+        boolean isTestRoleAvailable = hasTestRolesAssigned();
+
         ApplicationList applicationList = new ApplicationList();
         List<Application> applications = new ArrayList<>();
         DeviceType deviceType;
@@ -1202,12 +1333,16 @@ public class ApplicationManagerImpl implements ApplicationManager {
 
                     List<ApplicationReleaseDTO> filteredApplicationReleaseDTOs = new ArrayList<>();
                     for (ApplicationReleaseDTO applicationReleaseDTO : applicationDTO.getApplicationReleaseDTOs()) {
+                        if (ApplicationType.CUSTOM.toString().equals(applicationDTO.getType()) && !isTestRoleAvailable
+                                && AppReleaseType.TEST.equals(applicationReleaseDTO.getReleaseType())) {
+                            continue;
+                        }
                         if (StringUtils.isNotEmpty(filter.getVersion()) && !filter.getVersion()
                                 .equals(applicationReleaseDTO.getVersion())) {
                             continue;
                         }
                         if (StringUtils.isNotEmpty(filter.getAppReleaseState()) && !filter.getAppReleaseState()
-                                .equals(applicationReleaseDTO.getCurrentState())) {
+                                .equalsIgnoreCase(applicationReleaseDTO.getCurrentState())) {
                             continue;
                         }
                         if (StringUtils.isNotEmpty(filter.getAppReleaseType()) && !filter.getAppReleaseType()
@@ -1221,6 +1356,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     Application application = APIUtil.appDtoToAppResponse(applicationDTO);
                     application.setDeletableApp(isDeletableApp);
                     application.setHideableApp(isHideableApp);
+                    populateFirmwareModels(applicationDTO, application);
                     applications.add(application);
                 }
             }
@@ -1245,6 +1381,29 @@ public class ApplicationManagerImpl implements ApplicationManager {
             throw new ApplicationManagementException(msg, e);
         } finally {
             ConnectionManagerUtil.closeDBConnection();
+        }
+    }
+
+    private void populateFirmwareModels(ApplicationDTO applicationDTO, Application application) throws ApplicationManagementException {
+        try {
+            if (applicationDTO.getType().equalsIgnoreCase(ApplicationType.CUSTOM.toString())) {
+                List<String> firmwareDeviceModels = new ArrayList<>();
+                List<Integer> firmwareModelIds = this.applicationDAO.getFirmwareModelIdsForApp(applicationDTO.getId());
+                for (int firmwareModelId : firmwareModelIds) {
+                    DeviceFirmwareModel deviceFirmwareModel = DataHolder.getInstance()
+                            .getDeviceFirmwareModelManagementService().getDeviceFirmwareModel(firmwareModelId);
+                    firmwareDeviceModels.add(deviceFirmwareModel.getFirmwareModelName());
+                }
+                application.setFirmwareModels(firmwareDeviceModels);
+            }
+        } catch (DeviceFirmwareModelManagementException e) {
+            String msg = "Error encountered while getting firmware device models.";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } catch (ApplicationManagementDAOException e) {
+            String msg = "DAO exception while population firmware models for application " + application.getId();
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
         }
     }
 
@@ -1428,7 +1587,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         ApplicationReleaseDTO applicationReleaseDTO = null;
-        if (applicationDTO.getApplicationReleaseDTOs().size() > 0) {
+        if (!applicationDTO.getApplicationReleaseDTOs().isEmpty()) {
             applicationReleaseDTO = applicationDTO.getApplicationReleaseDTOs().get(0);
         }
         try {
@@ -1442,8 +1601,16 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 if (log.isDebugEnabled()) {
                     log.debug("New ApplicationDTO entry added to AP_APP table. App Id:" + appId);
                 }
-                //add application categories
 
+                // add device firmware model mapping
+                if (Objects.equals(applicationDTO.getType(), "CUSTOM")) {
+                    if (applicationDTO.getFirmwareModelIds() == null || applicationDTO.getFirmwareModelIds().isEmpty()) {
+                        throw new ApplicationManagementDAOException("Firmware model ids are required.");
+                    }
+                    this.applicationDAO.addDeviceFirmwareModelMapping(appId, applicationDTO.getFirmwareModelIds(), tenantId);
+                }
+
+                //add application categories
                 List<Integer> categoryIds = applicationDAO.getCategoryIdsForCategoryNames(applicationDTO.getAppCategories(), tenantId);
                 this.applicationDAO.addCategoryMapping(categoryIds, appId, tenantId);
 
@@ -1502,7 +1669,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                             LifecycleChanger lifecycleChanger = new LifecycleChanger();
                             lifecycleChanger.setAction(state);
                             lifecycleChanger.setReason("Updated to " + state);
-                            this.changeLifecycleState(applicationReleaseDTO, lifecycleChanger);
+                            this.changeLifecycleState(applicationReleaseDTO, lifecycleChanger, applicationDTO.getType());
                         }
                     }
                     if (Constants.ENTERPRISE_APP_TYPE.equals(applicationDTO.getType()) || Constants.PUBLIC_APP_TYPE.equals(applicationDTO.getType())) {
@@ -1579,7 +1746,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             throw new BadRequestException(msg);
         }
 
-        if (!type.equals(ApplicationType.ENTERPRISE)) {
+        if (!(type.equals(ApplicationType.ENTERPRISE) || type.equals(ApplicationType.CUSTOM))) {
             int applicationReleaseCount = applicationDTO.getApplicationReleaseDTOs().size();
             if (applicationReleaseCount > 0) {
                 String msg = "Application type of " + applicationDTO.getType() + " can only have one release";
@@ -1591,7 +1758,9 @@ public class ApplicationManagerImpl implements ApplicationManager {
         try {
             ConnectionManagerUtil.beginDBTransaction();
             String lifeCycleState = lifecycleStateManager.getInitialState();
-            String[] publishStates = {"IN-REVIEW", "APPROVED", "PUBLISHED"};
+            //todo Need to fix this publishStates retrieving logic by reading the lifecycle config
+            List<String> publishStates = type.equals(ApplicationType.CUSTOM) ? Arrays.asList("IN-REVIEW", "APPROVED", "RELEASED")
+                    : Arrays.asList("IN-REVIEW", "APPROVED", "PUBLISHED");
 
             applicationReleaseDTO.setCurrentState(lifeCycleState);
             LifecycleState lifecycleState = getLifecycleStateInstance(lifeCycleState, lifeCycleState);
@@ -1604,7 +1773,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     LifecycleChanger lifecycleChanger = new LifecycleChanger();
                     lifecycleChanger.setAction(state);
                     lifecycleChanger.setReason("Updated to " + state);
-                    this.changeLifecycleState(applicationReleaseDTO, lifecycleChanger);
+                    this.changeLifecycleState(applicationReleaseDTO, lifecycleChanger, applicationDTO.getType());
                 }
             }
             ApplicationRelease applicationRelease = APIUtil.releaseDtoToRelease(applicationReleaseDTO);
@@ -1776,6 +1945,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             Application application = APIUtil.appDtoToAppResponse(applicationDTO);
             application.setHideableApp(isHideableApp.get());
             application.setDeletableApp(isDeletableApp.get());
+            populateFirmwareModels(applicationDTO, application);
             return application;
         } catch (DBConnectionException e) {
             String msg =
@@ -2000,7 +2170,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
      * Get assigned role list of the given user.
      *
      * @param userName Username
-     * @return List of roles
+     * @return {@link String[]} List of roles
      * @throws UserStoreException If it is unable to load {@link UserRealm} from {@link CarbonContext}
      */
     private String[] getRolesOfUser(String userName) throws UserStoreException {
@@ -2065,6 +2235,10 @@ public class ApplicationManagerImpl implements ApplicationManager {
             this.applicationDAO.deleteAppCategories(applicationDTO.getId(), tenantId);
             this.visibilityDAO.deleteAppUnrestrictedRoles(applicationDTO.getId(), tenantId);
             this.spApplicationDAO.deleteApplicationFromServiceProviders(applicationDTO.getId(), tenantId);
+            // Delete existing firmware model mappings from Firmware(CUSTOM) applications
+            if (ApplicationType.CUSTOM.toString().equalsIgnoreCase(applicationDTO.getType())) {
+                this.applicationDAO.deleteDeviceFirmwareModelMapping(applicationDTO.getId(), tenantId);
+            }
             this.applicationDAO.deleteApplication(applicationDTO.getId(), tenantId);
             APIUtil.getApplicationStorageManager().deleteAllApplicationReleaseArtifacts(deletingAppHashVals, tenantId);
             ConnectionManagerUtil.commitDBTransaction();
@@ -2426,26 +2600,39 @@ public class ApplicationManagerImpl implements ApplicationManager {
 
         try {
             ConnectionManagerUtil.beginDBTransaction();
-            ApplicationReleaseDTO applicationReleaseDTO = this.applicationReleaseDAO
-                    .getReleaseByUUID(releaseUuid, tenantId);
+            ApplicationDTO applicationDTO = this.applicationDAO.getApplication(releaseUuid, tenantId);
+
+            if (applicationDTO == null || applicationDTO.getApplicationReleaseDTOs() == null || applicationDTO.getApplicationReleaseDTOs().isEmpty()) {
+                String msg = "Couldn't find an Application for application release UUID: " + releaseUuid +" . Please verify the request.";
+                log.error(msg);
+                throw new NotFoundException(msg);
+            }
+
+            ApplicationReleaseDTO applicationReleaseDTO = applicationDTO.getApplicationReleaseDTOs().stream()
+                    .filter(release -> Objects.equals(release.getUuid(), releaseUuid))
+                    .findFirst()
+                    .orElse(null);
 
             if (applicationReleaseDTO == null) {
-                String msg = "Couldn't found an application release for the UUID: " + releaseUuid;
+                String msg = "Couldn't find an release associated with release UUID: " + releaseUuid +" . Please verify the request.";
                 log.error(msg);
                 throw new NotFoundException(msg);
             }
             if (lifecycleStateManager
                     .isValidStateChange(applicationReleaseDTO.getCurrentState(), lifecycleChanger.getAction(), userName,
                             tenantId)) {
-                if (lifecycleStateManager.isInstallableState(lifecycleChanger.getAction()) && applicationReleaseDAO
-                        .hasExistInstallableAppRelease(applicationReleaseDTO.getUuid(),
-                                lifecycleStateManager.getInstallableState(), tenantId)) {
-                    String msg = "Installable application release is already registered for the application. "
-                            + "Therefore it is not permitted to change the lifecycle state from "
-                            + applicationReleaseDTO.getCurrentState() + " to " + lifecycleChanger.getAction();
-                    log.error(msg);
-                    throw new ForbiddenException(msg);
+                if (!ApplicationType.CUSTOM.toString().equalsIgnoreCase(applicationDTO.getType())) {
+                    if (lifecycleStateManager.isInstallableState(lifecycleChanger.getAction()) && applicationReleaseDAO
+                            .hasExistInstallableAppRelease(applicationReleaseDTO.getUuid(),
+                                    lifecycleStateManager.getInstallableState(applicationDTO.getType()), tenantId)) {
+                        String msg = "Installable application release is already registered for the application. "
+                                + "Therefore it is not permitted to change the lifecycle state from "
+                                + applicationReleaseDTO.getCurrentState() + " to " + lifecycleChanger.getAction();
+                        log.error(msg);
+                        throw new ForbiddenException(msg);
+                    }
                 }
+
                 LifecycleState lifecycleState = new LifecycleState();
                 lifecycleState.setCurrentState(lifecycleChanger.getAction());
                 lifecycleState.setPreviousState(applicationReleaseDTO.getCurrentState());
@@ -2492,7 +2679,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
         }
     }
 
-    public ApplicationRelease changeLifecycleState(ApplicationReleaseDTO applicationReleaseDTO, LifecycleChanger lifecycleChanger) throws ApplicationManagementException {
+    public ApplicationRelease changeLifecycleState(ApplicationReleaseDTO applicationReleaseDTO, LifecycleChanger lifecycleChanger, String applicationType) throws ApplicationManagementException {
 
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
         String userName = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
@@ -2506,15 +2693,18 @@ public class ApplicationManagerImpl implements ApplicationManager {
             if (lifecycleStateManager
                     .isValidStateChange(applicationReleaseDTO.getCurrentState(), lifecycleChanger.getAction(), userName,
                             tenantId)) {
-                if (lifecycleStateManager.isInstallableState(lifecycleChanger.getAction()) && applicationReleaseDAO
-                        .hasExistInstallableAppRelease(applicationReleaseDTO.getUuid(),
-                                lifecycleStateManager.getInstallableState(), tenantId)) {
-                    String msg = "Installable application release is already registered for the application. "
-                            + "Therefore it is not permitted to change the lifecycle state from "
-                            + applicationReleaseDTO.getCurrentState() + " to " + lifecycleChanger.getAction();
-                    log.error(msg);
-                    throw new ForbiddenException(msg);
+                if (!ApplicationType.CUSTOM.toString().equalsIgnoreCase(applicationType)) {
+                    if (lifecycleStateManager.isInstallableState(lifecycleChanger.getAction()) && applicationReleaseDAO
+                            .hasExistInstallableAppRelease(applicationReleaseDTO.getUuid(),
+                                    lifecycleStateManager.getInstallableState(applicationType), tenantId)) {
+                        String msg = "Installable application release is already registered for the application. "
+                                + "Therefore it is not permitted to change the lifecycle state from "
+                                + applicationReleaseDTO.getCurrentState() + " to " + lifecycleChanger.getAction();
+                        log.error(msg);
+                        throw new ForbiddenException(msg);
+                    }
                 }
+
                 LifecycleState lifecycleState = new LifecycleState();
                 lifecycleState.setCurrentState(lifecycleChanger.getAction());
                 lifecycleState.setPreviousState(applicationReleaseDTO.getCurrentState());
@@ -2522,7 +2712,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 lifecycleState.setReasonForChange(lifecycleChanger.getReason());
                 applicationReleaseDTO.setCurrentState(lifecycleChanger.getAction());
                 if (this.applicationReleaseDAO.updateRelease(applicationReleaseDTO, tenantId) == null) {
-                    String msg = "Application release updating is failed/.";
+                    String msg = "Application release updating is failed.";
                     log.error(msg);
                     throw new ApplicationManagementException(msg);
                 }
@@ -2600,7 +2790,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             }
             try {
                 ConnectionManagerUtil.openDBConnection();
-                if (applicationDAO.isExistingAppName(appName, deviceTypeId, tenantId)) {
+                if (applicationDAO.isExistingAppName(appName.trim(), deviceTypeId, tenantId)) {
                     return true;
                 }
             } catch (DBConnectionException e) {
@@ -2641,7 +2831,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             if (!StringUtils.isEmpty(sanitizedName) && !applicationDTO.getName()
                     .equals(sanitizedName)) {
                 if (applicationDAO
-                        .isExistingAppName(sanitizedName.trim(), applicationDTO.getDeviceTypeId(),
+                        .isExistingAppName(sanitizedName, applicationDTO.getDeviceTypeId(),
                                 tenantId)) {
                     String msg = "Already an application registered with same name " + sanitizedName
                             + ". Hence you can't update the application name from " + applicationDTO.getName() + " to "
@@ -2686,11 +2876,8 @@ public class ApplicationManagerImpl implements ApplicationManager {
             List<String> appTags = this.applicationDAO.getAppTags(applicationId, tenantId);
 
             boolean isExistingAppRestricted = !appUnrestrictedRoles.isEmpty();
-            boolean isUpdatingAppRestricted = false;
-            if (applicationUpdateWrapper.getUnrestrictedRoles() != null && !applicationUpdateWrapper
-                    .getUnrestrictedRoles().isEmpty()) {
-                isUpdatingAppRestricted = true;
-            }
+            boolean isUpdatingAppRestricted = applicationUpdateWrapper.getUnrestrictedRoles() != null && !applicationUpdateWrapper
+                    .getUnrestrictedRoles().isEmpty();
 
             if (isExistingAppRestricted && !isUpdatingAppRestricted) {
                 visibilityDAO.deleteUnrestrictedRoles(appUnrestrictedRoles, applicationId, tenantId);
@@ -3246,13 +3433,23 @@ public class ApplicationManagerImpl implements ApplicationManager {
     }
 
     @Override
-    public String getInstallableLifecycleState() throws ApplicationManagementException {
+    public String getInstallableLifecycleState(String applicationType) throws ApplicationManagementException {
         if (lifecycleStateManager == null) {
             String msg = "Application lifecycle manager is not initialed. Please contact the administrator.";
             log.error(msg);
             throw new ApplicationManagementException(msg);
         }
-        return lifecycleStateManager.getInstallableState();
+        return lifecycleStateManager.getInstallableState(applicationType);
+    }
+
+    @Override
+    public Map<String, String> getInstallableLifecycleStates() throws ApplicationManagementException {
+        if (lifecycleStateManager == null) {
+            String msg = "Application lifecycle manager is not initialed. Please contact the administrator.";
+            log.error(msg);
+            throw new ApplicationManagementException(msg);
+        }
+        return lifecycleStateManager.getInstallableStates();
     }
 
     /**
@@ -3267,20 +3464,23 @@ public class ApplicationManagerImpl implements ApplicationManager {
             log.error(msg);
             throw new BadRequestException(msg);
         }
-        String appType = filter.getAppType();
 
-        if (!StringUtils.isEmpty(appType)) {
-            boolean isValidAppType = false;
-            for (ApplicationType applicationType : ApplicationType.values()) {
-                if (applicationType.toString().equalsIgnoreCase(appType) || Constants.ALL.equalsIgnoreCase(appType)) {
-                    isValidAppType = true;
-                    break;
-                }
-            }
-            if (!isValidAppType) {
-                String msg =
-                        "Filter validation is failed, Invalid application type is found in filter. Application Type: "
-                                + appType + " Please verify the request payload";
+        List<String> appTypes = filter.getAppTypes();
+
+        if (appTypes != null && !appTypes.isEmpty()) {
+            Set<String> validAppTypes = Arrays.stream(ApplicationType.values())
+                    .map(Enum::name)
+                    .collect(Collectors.toSet());
+
+            List<String> invalidTypes = appTypes.stream()
+                    .filter(type -> !validAppTypes.contains(type))
+                    .collect(Collectors.toList());
+
+            if (!invalidTypes.isEmpty()) {
+                String msg = String.format(
+                        "Filter validation failed. Invalid application type(s) found: %s. Valid types are: %s.",
+                        invalidTypes, validAppTypes
+                );
                 log.error(msg);
                 throw new BadRequestException(msg);
             }
@@ -3367,7 +3567,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             if (!StringUtils.isEmpty(entAppReleaseWrapper.getDescription())) {
                 applicationReleaseDTO.get().setDescription(entAppReleaseWrapper.getDescription());
             }
-            if (!StringUtils.isEmpty(entAppReleaseWrapper.getReleaseType())) {
+            if (!StringUtils.isEmpty(String.valueOf(entAppReleaseWrapper.getReleaseType()))) {
                 applicationReleaseDTO.get().setReleaseType(entAppReleaseWrapper.getReleaseType());
             }
             if (!StringUtils.isEmpty(entAppReleaseWrapper.getMetaData())) {
@@ -3459,7 +3659,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             if (!StringUtils.isEmpty(publicAppReleaseWrapper.getDescription())) {
                 applicationReleaseDTO.get().setDescription(publicAppReleaseWrapper.getDescription());
             }
-            if (!StringUtils.isEmpty(publicAppReleaseWrapper.getReleaseType())) {
+            if (!StringUtils.isEmpty(String.valueOf(publicAppReleaseWrapper.getReleaseType()))) {
                 applicationReleaseDTO.get().setReleaseType(publicAppReleaseWrapper.getReleaseType());
             }
             if (!StringUtils.isEmpty(publicAppReleaseWrapper.getMetaData())) {
@@ -3533,7 +3733,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             if (!StringUtils.isEmpty(webAppReleaseWrapper.getDescription())) {
                 applicationReleaseDTO.get().setDescription(webAppReleaseWrapper.getDescription());
             }
-            if (!StringUtils.isEmpty(webAppReleaseWrapper.getReleaseType())) {
+            if (!StringUtils.isEmpty(String.valueOf(webAppReleaseWrapper.getReleaseType()))) {
                 applicationReleaseDTO.get().setReleaseType(webAppReleaseWrapper.getReleaseType());
             }
             if (!StringUtils.isEmpty(webAppReleaseWrapper.getMetaData())) {
@@ -3595,9 +3795,11 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     applicationDTO.getApplicationReleaseDTOs().get(0));
             validateAppReleaseUpdating(customAppReleaseWrapper, applicationDTO, applicationArtifact,
                     ApplicationType.CUSTOM.toString());
-            applicationReleaseDTO.get().setPrice(customAppReleaseWrapper.getPrice());
             applicationReleaseDTO.get()
                     .setIsSharedWithAllTenants(applicationReleaseDTO.get().getIsSharedWithAllTenants());
+            if (customAppReleaseWrapper.getPrice() != null) {
+                applicationReleaseDTO.get().setPrice(customAppReleaseWrapper.getPrice());
+            }
             if (!StringUtils.isEmpty(customAppReleaseWrapper.getPackageName())) {
                 applicationReleaseDTO.get().setVersion(customAppReleaseWrapper.getVersion());
             }
@@ -3607,7 +3809,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             if (!StringUtils.isEmpty(customAppReleaseWrapper.getDescription())) {
                 applicationReleaseDTO.get().setDescription(customAppReleaseWrapper.getDescription());
             }
-            if (!StringUtils.isEmpty(customAppReleaseWrapper.getReleaseType())) {
+            if (!StringUtils.isEmpty(String.valueOf(customAppReleaseWrapper.getReleaseType()))) {
                 applicationReleaseDTO.get().setReleaseType(customAppReleaseWrapper.getReleaseType());
             }
             if (!StringUtils.isEmpty(customAppReleaseWrapper.getMetaData())) {
@@ -4548,6 +4750,556 @@ public class ApplicationManagerImpl implements ApplicationManager {
         }
     }
 
+    @Override
+    public List<Firmware> getAvailableFirmwaresForDevice(String deviceId, String currentVersion) throws ApplicationManagementException {
+        try {
+            DeviceManagementProviderService deviceManagementService = DataHolder.getInstance().getDeviceManagementService();
+            Device device = deviceManagementService.getDevice(deviceId, false);
+
+            if (device == null) {
+                String msg = "Device is not found with id: " + deviceId;
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+
+            try {
+                DataHolder.getInstance().getDeviceFirmwareModelManagementService().addDeviceFirmwareVersion(device.getId()
+                        , currentVersion);
+            } catch (DeviceFirmwareModelManagementException e) {
+                String msg = "Failed to update current firmware version of the device associated with device " +
+                        "identifier [" + device.getDeviceIdentifier() + "]";
+                log.error(msg);
+                throw new ApplicationManagementException(msg, e);
+            }
+
+            DeviceFirmwareModel deviceFirmwareModel = deviceManagementService.getDeviceFirmwareModel(device.getId());
+            if (deviceFirmwareModel == null) {
+                log.warn("Device firmware model is not found with id: " + deviceId);
+                return Collections.emptyList();
+            }
+
+            int firmwareModelId = deviceFirmwareModel.getFirmwareId();
+            int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+
+            // Get all firmware releases for this device model, ordered by version/primary key as needed
+            List<ApplicationReleaseDTO> applicationReleaseDTOS;
+            Map<String, Operation> pendingFirmwareInstallOperationMap = null;
+            try {
+                ConnectionManagerUtil.openDBConnection();
+                ApplicationDTO applicationDTO = applicationDAO.getApplicationForModel(firmwareModelId, tenantId);
+
+                if (applicationDTO == null) {
+                    log.warn("Firmware Variant is not found with device sub type id: " + firmwareModelId);
+                    return Collections.emptyList();
+                }
+
+                if (!ApplicationType.CUSTOM.name().equals(applicationDTO.getType())) {
+                    String msg = "Only 'CUSTOM' applications can be associated with a device subtype. " + "Application Id: "
+                            + applicationDTO.getId() + "Application Type: " + applicationDTO.getType();
+                    log.error(msg);
+                    throw new ApplicationManagementException(msg);
+                }
+
+                String filteringAppReleaseType = !hasTestRolesAssigned() ? AppReleaseType.PRODUCTION.name() : null;
+                String firmwareInstallableState = lifecycleStateManager.getInstallableState(applicationDTO.getType());
+
+                if (!StringUtils.isBlank(currentVersion)) {
+                    List<ApplicationReleaseDTO> existingReleasesForTheVersion = applicationReleaseDAO
+                            .getReleasesByAppAndVersion(applicationDTO.getId(), currentVersion, tenantId);
+                    if (existingReleasesForTheVersion.isEmpty()) {
+                        ApplicationReleaseDTO latestAppReleaseDTO = applicationReleaseDAO.getLatestAppRelease(applicationDTO.getId()
+                                , firmwareInstallableState, filteringAppReleaseType, tenantId);
+                        if (latestAppReleaseDTO == null) {
+                            return Collections.emptyList();
+                        }
+
+                        List<Firmware> latestFirmwares = new ArrayList<>();
+                        latestFirmwares.add(toFirmware(latestAppReleaseDTO));
+                        return latestFirmwares;
+                    }
+                } else {
+                    currentVersion = applicationReleaseDAO.getInstalledReleaseVersionByApp(device.getId()
+                            , applicationDTO.getId(), tenantId);
+                }
+
+                if (currentVersion != null) {
+                    applicationReleaseDTOS = applicationReleaseDAO.getAppReleasesAfterVersion(applicationDTO.getId()
+                            , currentVersion, firmwareInstallableState, filteringAppReleaseType, tenantId);
+                    pendingFirmwareInstallOperationMap = getFilteredPendingFirmwareInstallOperations(deviceManagementService
+                            , device, applicationDTO.getId(), currentVersion, tenantId);
+                } else {
+                    applicationReleaseDTOS = applicationReleaseDAO.getReleasesByAppAndStatus(applicationDTO.getId()
+                            , firmwareInstallableState, filteringAppReleaseType, tenantId);
+                }
+
+            } catch (ApplicationManagementDAOException e) {
+                String msg = "Error occurred while retrieving application related data from the database. Device Id:"
+                        + deviceId;
+                log.error(msg, e);
+                throw new ApplicationManagementException(msg, e);
+            } finally {
+                ConnectionManagerUtil.closeDBConnection();
+            }
+
+            if (applicationReleaseDTOS == null || applicationReleaseDTOS.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            List<Firmware> availableFirmwares = applicationReleaseDTOS.stream()
+                    .map(this::toFirmware)
+                    .collect(Collectors.toList());
+
+            if (pendingFirmwareInstallOperationMap != null && !pendingFirmwareInstallOperationMap.isEmpty()) {
+                attachPendingOperationStatuses(availableFirmwares, pendingFirmwareInstallOperationMap);
+            }
+            return availableFirmwares;
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while retrieving device details for id: " + deviceId;
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        }
+    }
+
+    /**
+     * Converts an {@link ApplicationReleaseDTO} object to a {@link Firmware} domain object.
+     * <p>
+     * This method maps application release data such as UUID, version, description, release channel,
+     * current state, download URL, package name, device models, build number, file size, and icon path
+     * into a fully populated {@link Firmware} object.
+     *
+     * @param dto the application release DTO containing metadata about the firmware
+     * @return a {@link Firmware} object constructed from the given DTO
+     */
+    /**
+     * Converts an {@link ApplicationReleaseDTO} object to a {@link Firmware} domain object.
+     * <p>
+     * This method maps application release data such as UUID, version, description, release channel,
+     * current state, download URL, package name, device models, build number, file size, and icon path
+     * into a fully populated {@link Firmware} object.
+     *
+     * @param dto the application release DTO containing metadata about the firmware
+     * @return a {@link Firmware} object constructed from the given DTO
+     */
+    private Firmware toFirmware(ApplicationReleaseDTO dto) {
+        try {
+            Firmware firmware = new Firmware();
+            firmware.setFirmwareReleaseId(dto.getUuid());
+            firmware.setFirmwareVersion(dto.getVersion());
+            firmware.setDescription(dto.getDescription());
+            firmware.setReleaseChannel(String.valueOf(dto.getReleaseType()));
+            firmware.setCurrentStatus(dto.getCurrentState());
+            firmware.setVersionId(dto.getId());
+            firmware.setDownloadUrl(getDownloadableFirmwareUrl(dto.getInstallerName()).toString());
+            firmware.setPackageName(dto.getPackageName());
+            attachMetadata(dto, firmware);
+            return firmware;
+        } catch (ApplicationManagementException e) {
+            String msg = "Error encountered while generating firmware delivery URL";
+            log.error(msg, e);
+            throw new IllegalStateException(msg, e);
+        }
+    }
+
+    private void attachMetadata(ApplicationReleaseDTO applicationReleaseDTO, Firmware firmware) {
+        if (StringUtils.isBlank(applicationReleaseDTO.getMetaData())) {
+            return;
+        }
+
+        JsonElement existingMetadataJson = new JsonParser().parse(applicationReleaseDTO.getMetaData());
+        if (!existingMetadataJson.isJsonArray()) {
+            String msg = "Metadata contains invalid JSON format";
+            log.error(msg);
+            throw new IllegalArgumentException(msg);
+        }
+        JsonArray parsedMetadata = existingMetadataJson.getAsJsonArray();
+
+        for (JsonElement jsonElement : parsedMetadata) {
+            if (!jsonElement.isJsonObject()) {
+                String msg = "Metadata array contains invalid JSON element format";
+                log.error(msg);
+                throw new IllegalArgumentException(msg);
+            }
+
+            if (jsonElement.getAsJsonObject().has("contentLength")) {
+                firmware.setFileSize(jsonElement.getAsJsonObject().get("contentLength").getAsLong());
+            }
+        }
+    }
+
+    /**
+     * Get the downloadable firmware URL
+     *
+     * @param firmwareURI Firmware URI
+     * @return Downloadable URL
+     * @throws ApplicationManagementException Throws when error encountered while generating downloadable URL
+     */
+    private URL getDownloadableFirmwareUrl(String firmwareURI) throws ApplicationManagementException {
+        try {
+            if (isCustomArtifactsManagedByAppStore()) {
+                return new URL(firmwareURI);
+            }
+
+            String CDNUri = getFirmwareConfiguration().getDeliveryConfiguration().getCdnUri();
+            if (firmwareURI.startsWith(CDNUri)) {
+                return new URL(firmwareURI);
+            }
+
+            return new URL(CDNUri + firmwareURI);
+        } catch (MalformedURLException e) {
+            String msg = "Malformed URL encountered when generating the downloadable URL for the firmware";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        }
+    }
+
+    /**
+     * Attaches pending operation statuses to the provided list of firmware objects.
+     * <p>
+     * For each firmware in the list, this method checks whether a corresponding operation exists
+     * in the given map using the firmware's release UUID. If found, it creates an {@link OperationStatusBean}
+     * with the operation ID and status, and assigns it to the firmware.
+     *
+     * @param firmwares     the list of firmware objects to which operation status should be attached
+     * @param operationMap  a map of firmware UUIDs to pending {@link Operation} instances
+     */
+    private void attachPendingOperationStatuses(List<Firmware> firmwares, Map<String, Operation> operationMap) {
+        for (Firmware firmware : firmwares) {
+            Operation op = operationMap.get(firmware.getFirmwareReleaseId());
+            if (op != null) {
+                OperationStatusBean status = new OperationStatusBean();
+                status.setOperationId(op.getId());
+                status.setStatus(String.valueOf(op.getStatus()));
+                firmware.setOperationStatus(status);
+            }
+        }
+    }
+
+    /**
+     * @param deviceManagementService
+     * @param device
+     * @param currentVersion
+     * @param tenantId                Tenant Id
+     * @return {@link Map<>} contains key as 'UUID' of the application release and the value as {@link Operation}
+     * @throws ApplicationManagementException
+     */
+    private Map<String, Operation> getFilteredPendingFirmwareInstallOperations(DeviceManagementProviderService deviceManagementService
+            , Device device, int applicationId, String currentVersion, int tenantId) throws ApplicationManagementException {
+        List<? extends Operation> operations;
+        try {
+            operations = deviceManagementService.getDeviceOperations
+                    (new DeviceIdentifier(device.getDeviceIdentifier(), device.getType()),
+                            Operation.Status.PENDING, MDMAppConstants.AndroidConstants.OPCODE_INSTALL_FIRMWARE);
+        } catch (OperationManagementException e) {
+            String msg = "Error occurred while searching for PENDING firmware operations related to the device with " +
+                    "deviceId: " + device.getId();
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        }
+
+        Map<String, Operation> pendingMap = new HashMap<>();
+        for (Operation op : operations) {
+            JsonElement elem = JsonParser.parseString(new Gson().toJson(op.getPayLoad()));
+            if (elem.isJsonObject()) {
+                JsonObject obj = elem.getAsJsonObject();
+                if (obj.has("uuid")) {
+                    pendingMap.put(obj.get("uuid").getAsString(), op);
+                }
+            }
+        }
+
+        List<String> pendingFirmwareUuids = new ArrayList<>(pendingMap.keySet());
+
+        if (!pendingFirmwareUuids.isEmpty()) {
+            List<ApplicationReleaseDTO> pendingAppReleaseDTOs;
+            ApplicationReleaseDTO installedAppReleaseDTO;
+            try {
+                ConnectionManagerUtil.openDBConnection();
+                pendingAppReleaseDTOs = applicationReleaseDAO.getReleasesByUUIDs(pendingFirmwareUuids, tenantId);
+                installedAppReleaseDTO = applicationReleaseDAO.getReleaseByVersion(applicationId, currentVersion, tenantId);
+            } catch (ApplicationManagementDAOException e) {
+                String msg = "Error occurred while getting application releases that having pending app installation for given devices.";
+                log.error(msg ,e);
+                throw new ApplicationManagementException(msg, e);
+            } finally {
+                ConnectionManagerUtil.closeDBConnection();
+            }
+
+            for (ApplicationReleaseDTO pendingAppReleaseDTO : pendingAppReleaseDTOs) {
+                Operation.Status movingStatus = null;
+                if (pendingAppReleaseDTO.getId() == installedAppReleaseDTO.getId()) {
+                    movingStatus = Operation.Status.COMPLETED;
+                } else if (pendingAppReleaseDTO.getId() <= installedAppReleaseDTO.getId()) {
+                    movingStatus = Operation.Status.CONFIRMED;
+                }
+
+                if (movingStatus != null) {
+                    Operation operation = pendingMap.get(pendingAppReleaseDTO.getUuid());
+                    operation.setStatus(movingStatus);
+                    try {
+                        deviceManagementService.updateOperation(device, operation);
+                    } catch (OperationManagementException e) {
+                        String msg = "Error occurred while updating operation data of pending Firmware operations. Operation: " + operation.getId();
+                        log.error(msg, e);
+                        throw new ApplicationManagementException(msg, e);
+                    }
+                    updateSubStatus(device.getId(), Collections.singletonList(operation.getId()), movingStatus.toString());
+                    pendingMap.remove(pendingAppReleaseDTO.getUuid());
+                }
+            }
+        }
+        return pendingMap;
+    }
+
+    /**
+     *
+     * @throws ApplicationManagementException
+     */
+    private boolean hasTestRolesAssigned() throws ApplicationManagementException {
+        MetadataManagementService metadataManagementService = DataHolder.getInstance().getMetadataManagementService();
+        String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+        String metadataKey = tenantDomain + "_FIRMWARE_CONFIGS";
+
+        try {
+            Metadata metadata = metadataManagementService.retrieveMetadata(metadataKey);
+            if (metadata != null) {
+                String metaValue = metadata.getMetaValue();
+                try {
+                    JSONObject jsonObject = new JSONObject(metaValue);
+                    JSONArray channelsArray = jsonObject.optJSONArray("channels");
+
+                    if (channelsArray != null && channelsArray.length() > 0) {
+                        List<String> channels = new ArrayList<>();
+                        for (int i = 0; i < channelsArray.length(); i++) {
+                            channels.add(channelsArray.optString(i));
+                        }
+                        return hasUserRole(channels, PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername());
+                    }
+                } catch (JSONException e) {
+                    String msg = "Error occurred when parsing firmware config. Invalid JSON in metadata: " + metaValue;
+                    log.error(msg, e);
+                    throw new ApplicationManagementException(msg, e);
+                } catch (UserStoreException e) {
+                    String msg = "Error occurred when checking channel config with user roles.";
+                    log.error(msg, e);
+                    throw new ApplicationManagementException(msg, e);
+                }
+            }
+        } catch (MetadataManagementException e) {
+            String msg = "Error occurred when loading meta data for meta key: " + metadataKey;
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        }
+        return false;
+    }
+
+    @Override
+    public DeviceFirmwareResult getDevicesByFirmwareMatchType(String uuid, FirmwareMatchType matchType, int groupId
+            , io.entgra.device.mgt.core.application.mgt.common.PaginationRequest paginationRequest)
+            throws ApplicationManagementException {
+        Application application = getApplicationByUuid(uuid);
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        String currentReleaseVersion = application.getApplicationReleases()
+                .stream()
+                .findFirst()
+                .map(ApplicationRelease::getVersion)
+                .orElse(null);
+
+        if (currentReleaseVersion == null) {
+            String msg = "No release version found for application: " + uuid;
+            log.error(msg);
+            throw new ApplicationManagementException(msg);
+        }
+
+        List<String> versions;
+        List<Integer> firmwareModelIds;
+        String firmwareInstallableState = lifecycleStateManager.getInstallableState(ApplicationType.CUSTOM.toString());
+
+        try {
+            ConnectionManagerUtil.openDBConnection();
+            switch (matchType) {
+                case APPLICABLE:
+                    List<ApplicationReleaseDTO> older = applicationReleaseDAO.getAppReleasesBeforeVersion(
+                            application.getId(), currentReleaseVersion, firmwareInstallableState, tenantId);
+                    versions = older.stream()
+                            .map(ApplicationReleaseDTO::getVersion)
+                            .collect(Collectors.toList());
+                    break;
+                case NON_APPLICABLE:
+                    List<ApplicationReleaseDTO> newer = applicationReleaseDAO.getAppReleasesAfterVersion(
+                            application.getId(), currentReleaseVersion, firmwareInstallableState, null, tenantId);
+                    versions = newer.stream()
+                            .map(ApplicationReleaseDTO::getVersion)
+                            .collect(Collectors.toList());
+                    versions.add(currentReleaseVersion);
+                    break;
+                case UNMANAGED:
+                    List<ApplicationReleaseDTO> olderManaged = applicationReleaseDAO.getAppReleasesBeforeVersion(
+                            application.getId(), currentReleaseVersion, firmwareInstallableState, tenantId);
+                    List<ApplicationReleaseDTO> newerManaged = applicationReleaseDAO.getAppReleasesAfterVersion(
+                            application.getId(), currentReleaseVersion, firmwareInstallableState, null, tenantId);
+                    versions = Stream.concat(
+                            Stream.concat(
+                                    newerManaged.stream().map(ApplicationReleaseDTO::getVersion),
+                                    olderManaged.stream().map(ApplicationReleaseDTO::getVersion)
+                            ),
+                            Stream.of(currentReleaseVersion)
+                    ).collect(Collectors.toList());
+                    break;
+                default:
+                    String msg = "Unknown firmware match type.: " + matchType;
+                    log.error(msg);
+                    throw new ApplicationManagementException(msg);
+            }
+            if (versions.isEmpty()) {
+                DeviceFirmwareResult deviceFirmwareResult = new DeviceFirmwareResult();
+                deviceFirmwareResult.setRecordsFiltered(0);
+                deviceFirmwareResult.setRecordsTotal(0);
+                deviceFirmwareResult.setData(new ArrayList<>());
+                return deviceFirmwareResult;
+            }
+            firmwareModelIds = applicationDAO.getFirmwareModelIdsForApp(application.getId());
+        } catch (ApplicationManagementDAOException e) {
+            String msg = "Error retrieving application release data.";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+
+        DeviceManagementProviderService dms = DataHolder.getInstance().getDeviceManagementService();
+        boolean requireMatching = matchType != FirmwareMatchType.UNMANAGED;
+        try {
+            DeviceFirmwareModelSearchFilter deviceFirmwareModelSearchFilter = new DeviceFirmwareModelSearchFilter();
+            deviceFirmwareModelSearchFilter.setFirmwareModelIds(firmwareModelIds);
+            deviceFirmwareModelSearchFilter.setFirmwareVersions(versions);
+            deviceFirmwareModelSearchFilter.setGroupId(groupId);
+            deviceFirmwareModelSearchFilter.setLimit(paginationRequest.getLimit());
+            deviceFirmwareModelSearchFilter.setOffset(paginationRequest.getOffSet());
+            return dms.getFilteredDeviceListByFirmwareVersion(deviceFirmwareModelSearchFilter, tenantId, requireMatching);
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while getting device data.";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        }
+    }
+
+    @Override
+    public List<DeviceFirmwareModel> getAvailableDeviceFirmwareModels(String deviceType) throws ApplicationManagementException {
+
+        DeviceFirmwareModelManagementService deviceFirmwareModelManagementService = DataHolder.getInstance()
+                .getDeviceFirmwareModelManagementService();
+        List<DeviceFirmwareModel> deviceFirmwareModels;
+        try {
+            deviceFirmwareModels = deviceFirmwareModelManagementService.getFirmwareModelsByDeviceType(deviceType);
+            if (deviceFirmwareModels == null || deviceFirmwareModels.isEmpty()) {
+                if (log.isDebugEnabled()) {
+                    log.debug("No device firmware models found for device type: " + deviceType);
+                }
+                return deviceFirmwareModels;
+            }
+        } catch (DeviceFirmwareModelManagementException e) {
+            String msg = "Error encountered while getting device firmware models for device type: " + deviceType;
+            log.error(msg);
+            throw new ApplicationManagementException(msg, e);
+        }
+
+        try {
+            ConnectionManagerUtil.openDBConnection();
+            List<DeviceFirmwareModel> mappingAvailableModels = this.applicationDAO
+                    .getAllDeviceFirmwareModelIds(PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId())
+                    .stream()
+                    .map(DeviceFirmwareModel::new)
+                    .collect(Collectors.toList());
+            if (mappingAvailableModels.isEmpty()) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Didn't found any firmware model IDs associated with firmwares.");
+                }
+                return deviceFirmwareModels;
+            }
+
+            List<DeviceFirmwareModel> availableFirmwareModels = new ArrayList<>();
+            for (DeviceFirmwareModel deviceFirmwareModel : deviceFirmwareModels) {
+                if (!mappingAvailableModels.contains(deviceFirmwareModel)) {
+                    availableFirmwareModels.add(deviceFirmwareModel);
+                }
+            }
+
+            return availableFirmwareModels;
+        } catch (ApplicationManagementDAOException e) {
+            String msg = "Error encountered while getting device firmware models for device type: " + deviceType;
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+    }
+
+    @Override
+    public ReleaseList getApplicationReleases(int appId, ReleaseSearchFilter releaseSearchFilter) throws ApplicationManagementException {
+        ApplicationDTO applicationDTO = getApplication(appId);
+        if (applicationDTO == null) {
+            String msg = "Failed to find a application with application ID: " + appId;
+            log.error(msg);
+            throw new ApplicationManagementException(msg);
+        }
+
+        ReleaseList releaseList;
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        try {
+            ConnectionManagerUtil.openDBConnection();
+            List<AppReleaseType> applicableReleaseTypes = new ArrayList<>();
+
+            if (hasTestRolesAssigned()) {
+                if (StringUtils.isNotEmpty(releaseSearchFilter.getReleaseType())) {
+                    applicableReleaseTypes.add(AppReleaseType.valueOf(releaseSearchFilter.getReleaseType()));
+                } else {
+                    applicableReleaseTypes.add(AppReleaseType.TEST);
+                    applicableReleaseTypes.add(AppReleaseType.PRODUCTION);
+                }
+            } else {
+                if (StringUtils.isNotEmpty(releaseSearchFilter.getReleaseType())
+                        && !AppReleaseType.PRODUCTION.toString().equalsIgnoreCase(releaseSearchFilter.getReleaseType())) {
+                    releaseList = new ReleaseList();
+                    releaseList.setPagination(new Pagination());
+                    releaseList.setReleases(Collections.emptyList());
+                    return releaseList;
+                } else {
+                    applicableReleaseTypes.add(AppReleaseType.PRODUCTION);
+                }
+            }
+
+            ReleaseSearchFilterWrapper releaseSearchFilterWrapper = new ReleaseSearchFilterWrapper();
+            releaseSearchFilterWrapper.setReleaseSearchFilter(releaseSearchFilter);
+            releaseSearchFilterWrapper.setApplicableReleaseTypes(applicableReleaseTypes);
+            releaseSearchFilterWrapper.setEndState(lifecycleStateManager.getEndState().toUpperCase(Locale.ROOT));
+
+            List<ApplicationReleaseDTO> applicationReleaseDTOS = this.applicationReleaseDAO.getReleases(appId
+                    , releaseSearchFilterWrapper, tenantId);
+            int count = this.applicationReleaseDAO.getReleasesCount(appId, releaseSearchFilterWrapper, tenantId);
+            List<ApplicationRelease>  applicationReleases = new ArrayList<>();
+            for (ApplicationReleaseDTO applicationReleaseDTO : applicationReleaseDTOS) {
+                applicationReleases.add(APIUtil.releaseDtoToRelease(applicationReleaseDTO));
+            }
+
+            Pagination pagination = new Pagination();
+            pagination.setLimit(releaseSearchFilter.getLimit());
+            pagination.setOffset(releaseSearchFilter.getOffset());
+            pagination.setCount(count);
+            pagination.setSize(applicationReleases.size());
+
+            releaseList = new ReleaseList();
+            releaseList.setReleases(applicationReleases);
+            releaseList.setPagination(pagination);
+        } catch (ApplicationManagementDAOException e) {
+            String msg = "DAO exception occurred while searching application releases";
+            log.error(msg, e);
+            throw new ApplicationManagementException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+
+        return releaseList;
+    }
     /**
      * Synchronizes the backend calculated hash with the hash stored in the metadata JSON.
      * @param releaseDTO The DTO containing existing metadata.

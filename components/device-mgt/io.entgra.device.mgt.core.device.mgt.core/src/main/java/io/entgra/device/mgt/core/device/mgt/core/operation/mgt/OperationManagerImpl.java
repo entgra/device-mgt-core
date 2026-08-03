@@ -244,6 +244,7 @@ public class OperationManagerImpl implements OperationManager {
                         Activity activity = new Activity();
                         activity.setActivityId(DeviceManagementConstants.OperationAttributes.ACTIVITY +
                                 operation.getId());
+                        activity.setOperationId(operation.getId());
                         activity.setActivityStatus(
                                 this.getActivityStatus(deviceValidationResult, deviceAuthorizationResult));
                         return activity;
@@ -257,6 +258,7 @@ public class OperationManagerImpl implements OperationManager {
                 activity.setCode(operationCode);
                 activity.setCreatedTimeStamp(new Date().toString());
                 activity.setType(Activity.Type.valueOf(operationDto.getType().toString()));
+                activity.setOperationId(operation.getId());
                 //For now set the operation statuses only for admin triggered operations
                 if (!isScheduledOperation) {
                     activity.setActivityStatus(
@@ -1788,6 +1790,51 @@ public class OperationManagerImpl implements OperationManager {
         } finally {
             OperationManagementDAOFactory.closeConnection();
         }
+    }
+
+    @Override
+    public List<? extends Operation> getOperationsByDeviceOperationCodeAndStatus(
+            DeviceIdentifier deviceId, Operation.Status status,
+            String operationCode) throws OperationManagementException {
+        List<Operation> operations = new ArrayList<>();
+        List<io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation> dtoOperationList = new ArrayList<>();
+
+        if (!isActionAuthorized(deviceId)) {
+            throw new OperationManagementException("User '" + getUser() + "' is not authorized to access the '" +
+                    deviceId.getType() + "' device, which carries the identifier '" +
+                    deviceId.getId() + "'");
+        }
+
+        EnrolmentInfo enrolmentInfo = this.getActiveEnrolmentInfo(deviceId);
+        if (enrolmentInfo == null) {
+            throw new OperationManagementException(
+                    "Device not found for device id:" + deviceId.getId() + " " + "type:" +
+                            deviceId.getType());
+        }
+
+        try {
+            int enrolmentId = enrolmentInfo.getId();
+            OperationManagementDAOFactory.openConnection();
+            io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation.Status dtoOpStatus =
+                    io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation.Status.valueOf(status.toString());
+            dtoOperationList.addAll(operationDAO.getDeviceOperationsByOperationCodeAndStatus(enrolmentId, dtoOpStatus, operationCode));
+            Operation operation;
+            for (io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation dtoOperation : dtoOperationList) {
+                operation = OperationDAOUtil.convertOperation(dtoOperation);
+                operations.add(operation);
+            }
+        } catch (OperationManagementDAOException e) {
+            throw new OperationManagementException("Error occurred while retrieving the list of " +
+                    "operations assigned for '" + deviceId.getType() +
+                    "' device '" +
+                    deviceId.getId() + "' and status:" + status.toString(), e);
+        } catch (SQLException e) {
+            throw new OperationManagementException(
+                    "Error occurred while opening a connection to the data source", e);
+        } finally {
+            OperationManagementDAOFactory.closeConnection();
+        }
+        return operations;
     }
 
     @Override

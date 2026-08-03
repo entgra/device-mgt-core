@@ -279,6 +279,22 @@ public class DeviceEventManagementServiceImpl implements DeviceEventManagementSe
         return DeviceMgtAPIUtils.getDeviceManagementService().getDevicesByType(request).getRecordsTotal() > 0;
     }
 
+
+    /**
+     * Persists the given list of event definitions for the specified device type.
+     *
+     * @param deviceType the device type to persist events for
+     * @param events the list of {@link DeviceTypeEvent} definitions to persist
+     * @throws DeviceManagementException if an error occurs while updating metadata
+     * @throws IllegalStateException if the update fails silently (returns false)
+     */
+    private void persistEvents(String deviceType, List<DeviceTypeEvent> events) throws DeviceManagementException {
+        if (!DeviceMgtAPIUtils.getDeviceTypeEventManagementProviderService()
+                .updateDeviceTypeMetaWithEvents(deviceType, events)) {
+            throw new IllegalStateException("Failed to persist device type event definitions.");
+        }
+    }
+
     /**
      * Returns a HTTP 400 Bad Request response with the given message and logs the error.
      *

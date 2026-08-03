@@ -19,6 +19,9 @@
 package io.entgra.device.mgt.core.device.mgt.core.service;
 
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.Application;
+import io.entgra.device.mgt.core.device.mgt.common.app.mgt.DeviceFirmwareModel;
+import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareResult;
+import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareModelSearchFilter;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ConflictException;
 import io.entgra.device.mgt.core.device.mgt.core.cache.DeviceCacheKey;
 import io.entgra.device.mgt.core.device.mgt.core.config.DeviceManagementConfig;
@@ -671,6 +674,16 @@ public interface DeviceManagementProviderService {
 
     boolean enrollDevice(Device device) throws DeviceManagementException;
 
+    /**
+     * Adds a firmware model contains by a device.
+     * @param device {@link Device} object which contains the device information.
+     * @param firmwareModel
+     * @param tenantId
+     * @return
+     * @throws DeviceManagementException
+     */
+    DeviceFirmwareModel addDeviceFirmwareModel(Device device, String firmwareModel, int tenantId) throws DeviceManagementException;
+
     boolean saveConfiguration(PlatformConfiguration configuration) throws DeviceManagementException;
 
     boolean disenrollDevice(DeviceIdentifier deviceId) throws DeviceManagementException;
@@ -940,6 +953,7 @@ public interface DeviceManagementProviderService {
      * @throws AmbiguousConfigurationException if configuration is ambiguous
      * the property payload
      */
+    @Deprecated
     DeviceConfiguration getDeviceConfiguration(Map<String, String> propertyMap)
             throws DeviceManagementException, DeviceNotFoundException, UnauthorizedDeviceAccessException,
                    AmbiguousConfigurationException;
@@ -1226,4 +1240,95 @@ public interface DeviceManagementProviderService {
      *         and general management properties.
      */
     DeviceManagementConfig getDeviceManagementConfig();
+
+
+    /**
+     * This method is used to retrieve the list of devices based on the group id and properties map.
+     * @param groupId ID of the group
+     * @param propertiesMap properties map to filter the devices
+     * @return List of devices that are in the group and match the properties
+     * @throws DeviceManagementException
+     */
+    List<Device> getGroupedDevicesBasedOnProperties(int groupId, Map<String, String> propertiesMap)
+            throws DeviceManagementException;
+
+    /**
+     * This method is used to retrieve the list of operations for a given device id and status.
+     * @param deviceId device id
+     * @param status status of the operation
+     * @param operationCode operation code
+     * @return List of operations belongs to the given deviceID and under the queried status and operation code
+     */
+    List<? extends Operation> getDeviceOperations(DeviceIdentifier deviceId, Operation.Status status, String operationCode)
+            throws OperationManagementException;
+
+
+    /**
+     * This method is used to retrieve the device firmware model of a given device
+     * @param deviceId id of the device
+     * @return {@link DeviceFirmwareModel} which contains the firmware model details of the device
+     * @throws DeviceManagementException
+     */
+    DeviceFirmwareModel getDeviceFirmwareModel(int deviceId) throws DeviceManagementException;
+
+    /**
+     * Retrieves a list of devices filtered by firmware model IDs and firmware versions.
+     * Depending on the {@code requireMatchingDevices} flag, this method will either return:
+     * <ul>
+     *     <li>Devices that have firmware matching the specified versions and model IDs (if {@code true})</li>
+     *     <li>Devices that do not match the specified firmware versions or model IDs (if {@code false})</li>
+     * </ul>
+     *
+     * @param searchFilter Filter criteria containing firmware model IDs and versions
+     * @param tenantId Tenant ID used to scope the device search
+     * @param requireMatchingDevices If {@code true}, returns devices matching the given firmware versions and model IDs;
+     *                               if {@code false}, returns devices that do not match them
+     * @return {@link DeviceFirmwareResult} filled with filtered devices based on the given criteria
+     * @throws DeviceManagementException if an error occurs while fetching the device list
+     */
+    DeviceFirmwareResult getFilteredDeviceListByFirmwareVersion(DeviceFirmwareModelSearchFilter searchFilter, int tenantId,
+                                                                boolean requireMatchingDevices)
+            throws DeviceManagementException;
+
+    /**
+     * This method is used to retrieve a list of devices based on the given properties.
+     * @param deviceProps Map of device properties to filter the devices
+     * @return {@link List} of {@link DevicePropertyInfo} that match the given properties
+     * @throws DeviceManagementException if an error occurs while fetching the device list
+     * @throws DeviceNotFoundException if no devices are found matching the given properties
+     */
+    List<DevicePropertyInfo> getDeviceBasedOnProperties(Map<String, String> deviceProps)
+            throws DeviceManagementException, DeviceNotFoundException;
+
+    /**
+     * This method retrieves the device configuration based on the provided device property information.
+     * @param devicePropertyInfo DevicePropertyInfo object containing the properties of the device
+     * @return {@link DeviceConfiguration} containing the configuration details of the device
+     * @throws DeviceManagementException if an error occurs while fetching the device configuration
+     * @throws UnauthorizedDeviceAccessException if the required token property is not found on
+     * @throws AmbiguousConfigurationException if the configuration is ambiguous
+     */
+    DeviceConfiguration getDeviceConfiguration(DevicePropertyInfo devicePropertyInfo)
+            throws DeviceManagementException, UnauthorizedDeviceAccessException, AmbiguousConfigurationException;
+
+    /**
+     * This method is used to validate device properties.
+     * @param deviceIdentifier DeviceIdentifier object containing the device information
+     * @param validationProps Map of properties to validate against the device
+     * @param tenantId Tenant ID for scoping the validation
+     * @return List of PropertyValidationInfo objects containing validation results
+     * @throws DeviceNotFoundException if the device is not found
+     * @throws DeviceManagementException if an error occurs during validation
+     */
+    List<PropertyValidationInfo> validateDeviceProperties(DeviceIdentifier deviceIdentifier,
+                                                          Map<String, String> validationProps, int tenantId)
+            throws DeviceNotFoundException, DeviceManagementException;
+
+    /**
+     * This method checks if a firmware model is exists for a given device property.
+     * @param firmwareModelName Value of the firmware model name
+     * @return true if the property value exists, false otherwise
+     * @throws DeviceManagementException if an error occurs while checking the property value
+     */
+    boolean isFirmwareModelExists(String firmwareModelName) throws DeviceManagementException;
 }

@@ -17,13 +17,7 @@
  */
 package io.entgra.device.mgt.core.application.mgt.core.management;
 
-import io.entgra.device.mgt.core.application.mgt.common.ApplicationArtifact;
-import io.entgra.device.mgt.core.application.mgt.common.ApplicationList;
-import io.entgra.device.mgt.core.application.mgt.common.ChunkDescriptor;
-import io.entgra.device.mgt.core.application.mgt.common.FileMetaEntry;
-import io.entgra.device.mgt.core.application.mgt.common.Filter;
-import io.entgra.device.mgt.core.application.mgt.common.LifecycleState;
-import io.entgra.device.mgt.core.application.mgt.common.TransferLink;
+import io.entgra.device.mgt.core.application.mgt.common.*;
 import io.entgra.device.mgt.core.application.mgt.common.services.FileTransferService;
 import io.entgra.device.mgt.core.application.mgt.core.impl.FileTransferServiceImpl;
 import org.apache.commons.logging.Log;
@@ -113,7 +107,7 @@ public class ApplicationManagementTest extends BaseTestCase {
         releaseWrapper.setDescription("First release");
         releaseWrapper.setIsSharedWithAllTenants(false);
         releaseWrapper.setMetaData("[{\"key\": \"Just a metadata\"}]");
-        releaseWrapper.setReleaseType("free");
+        releaseWrapper.setReleaseType(AppReleaseType.PRODUCTION);
         releaseWrapper.setPrice(5.7);
         releaseWrapper.setSupportedOsVersions("4.0-7.0");
 

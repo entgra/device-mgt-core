@@ -33,6 +33,8 @@ import io.entgra.device.mgt.core.application.mgt.core.impl.FileTransferServiceIm
 import io.entgra.device.mgt.core.application.mgt.core.lifecycle.LifecycleStateManager;
 import io.entgra.device.mgt.core.application.mgt.core.task.ScheduledAppSubscriptionTaskManager;
 import io.entgra.device.mgt.core.application.mgt.core.util.ApplicationManagementUtil;
+import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareModelManagementService;
+import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -203,5 +205,45 @@ public class ApplicationManagementServiceComponent {
             log.debug("Removing the task service from Application Management SC");
         }
         DataHolder.getInstance().setTaskService(null);
+    }
+
+    @Reference(
+            name = "metadata.mgt.service",
+            service = io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetMetadataManagementService")
+    protected void setMetadataManagementService(MetadataManagementService metadataManagementService) {
+        if (log.isDebugEnabled()) {
+            log.debug("Setting the metadata management service to Application Management Service.");
+        }
+        DataHolder.getInstance().setMetadataManagementService(metadataManagementService);
+    }
+
+    protected void unsetMetadataManagementService(MetadataManagementService metadataManagementService) {
+        if (log.isDebugEnabled()) {
+            log.debug("Removing the metadata management service from Application Management Service.");
+        }
+        DataHolder.getInstance().setMetadataManagementService(null);
+    }
+
+    @Reference(
+            name = "device.firmware.model.mgt.service",
+            service = io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareModelManagementService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetDeviceFirmwareModelManagementService")
+    protected void setDeviceFirmwareModelManagementService(DeviceFirmwareModelManagementService deviceFirmwareModelManagementService) {
+        if (log.isDebugEnabled()) {
+            log.debug("Setting the device firmware model management service.");
+        }
+        DataHolder.getInstance().setDeviceFirmwareModelManagementService(deviceFirmwareModelManagementService);
+    }
+
+    protected void unsetDeviceFirmwareModelManagementService(DeviceFirmwareModelManagementService deviceFirmwareModelManagementService) {
+        if (log.isDebugEnabled()) {
+            log.debug("Removing the device firmware model management service.");
+        }
+        DataHolder.getInstance().setDeviceFirmwareModelManagementService(null);
     }
 }

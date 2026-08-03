@@ -17,6 +17,7 @@
  */
 package io.entgra.device.mgt.core.application.mgt.common.wrapper;
 
+import io.entgra.device.mgt.core.application.mgt.common.AppReleaseType;
 import io.entgra.device.mgt.core.device.mgt.common.Base64File;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -37,7 +38,7 @@ public class CustomAppReleaseWrapper {
             required = true,
             example = "alpha, beta etc")
     @NotNull
-    private String releaseType;
+    private AppReleaseType releaseType;
 
     @ApiModelProperty(name = "price",
             value = "Price of the application release",
@@ -122,11 +123,11 @@ public class CustomAppReleaseWrapper {
         this.iconLink = iconLink;
     }
 
-    public String getReleaseType() {
+    public AppReleaseType getReleaseType() {
         return releaseType;
     }
 
-    public void setReleaseType(String releaseType) {
+    public void setReleaseType(AppReleaseType releaseType) {
         this.releaseType = releaseType;
     }
 

@@ -21,6 +21,7 @@ package io.entgra.device.mgt.core.device.mgt.core.internal;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.APIApplicationServices;
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.PublisherRESTAPIServices;
 import io.entgra.device.mgt.core.device.mgt.common.authorization.GroupAccessAuthorizationService;
+import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareModelManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceFeatureOperations;
 import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationManagementService;
@@ -103,6 +104,7 @@ public class DeviceManagementDataHolder {
     private APIApplicationServices apiApplicationServices;
     private PublisherRESTAPIServices publisherRESTAPIServices;
     private DeviceManagementStartupHandler deviceManagementStartupHandler;
+    private DeviceFirmwareModelManagementService deviceFirmwareModelManagementService;
     private NotificationManagementService notificationManagementService;
     private DeviceFeatureOperations deviceFeatureOperations;
 
@@ -469,6 +471,14 @@ public class DeviceManagementDataHolder {
 
     public void setDeviceManagementStartupHandler(DeviceManagementStartupHandler deviceManagementStartupHandler) {
         this.deviceManagementStartupHandler = deviceManagementStartupHandler;
+    }
+
+    public void setDeviceFirmwareModelManagementService(DeviceFirmwareModelManagementService deviceFirmwareModelManagementService) {
+        this.deviceFirmwareModelManagementService = deviceFirmwareModelManagementService;
+    }
+
+    public DeviceFirmwareModelManagementService getDeviceFirmwareModelManagementService() {
+        return this.deviceFirmwareModelManagementService;
     }
 
     public NotificationManagementService getNotificationManagementService() {

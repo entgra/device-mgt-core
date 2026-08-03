@@ -26,6 +26,8 @@ import io.entgra.device.mgt.core.application.mgt.common.services.ReviewManager;
 import io.entgra.device.mgt.core.application.mgt.common.services.SubscriptionManager;
 import io.entgra.device.mgt.core.application.mgt.common.services.VPPApplicationManager;
 import io.entgra.device.mgt.core.application.mgt.core.lifecycle.LifecycleStateManager;
+import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareModelManagementService;
+import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import org.wso2.carbon.ntask.core.service.TaskService;
 import org.wso2.carbon.user.core.service.RealmService;
@@ -56,7 +58,12 @@ public class DataHolder {
     private AppmDataHandler configManager;
 
     private TaskService taskService;
+
     private FileTransferService fileTransferService;
+
+    private MetadataManagementService metadataManagementService;
+
+    private DeviceFirmwareModelManagementService deviceFirmwareModelManagementService;
 
     private static final DataHolder applicationMgtDataHolder = new DataHolder();
 
@@ -162,5 +169,27 @@ public class DataHolder {
 
     public void setFileTransferService(FileTransferService fileTransferService) {
         this.fileTransferService = fileTransferService;
+    }
+
+    public MetadataManagementService getMetadataManagementService() {
+        if (metadataManagementService == null) {
+            throw new IllegalStateException("Metadata management service not initialized properly.");
+        }
+        return metadataManagementService;
+    }
+
+    public void setMetadataManagementService(MetadataManagementService metadataManagementService) {
+        this.metadataManagementService = metadataManagementService;
+    }
+
+    public DeviceFirmwareModelManagementService getDeviceFirmwareModelManagementService() {
+        if (deviceFirmwareModelManagementService == null) {
+            throw new IllegalStateException("Device firmware model management service not initialized properly.");
+        }
+        return deviceFirmwareModelManagementService;
+    }
+
+    public void setDeviceFirmwareModelManagementService(DeviceFirmwareModelManagementService deviceFirmwareModelManagementService) {
+        this.deviceFirmwareModelManagementService = deviceFirmwareModelManagementService;
     }
 }

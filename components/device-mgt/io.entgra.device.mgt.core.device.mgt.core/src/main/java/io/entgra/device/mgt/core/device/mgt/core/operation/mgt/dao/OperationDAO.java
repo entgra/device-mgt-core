@@ -43,6 +43,18 @@ public interface OperationDAO {
     List<? extends Operation> getOperationsByDeviceAndStatus(int enrolmentId, Operation.Status status)
             throws OperationManagementDAOException;
 
+    /**
+     * This method provides querying the Operations by enrolmentId operation status and operationCode.
+     * @param enrolmentId enrolment ID
+     * @param status operation status
+     * @param operationCode operation code
+     * @return List of operations matching the given parameters
+     * @throws OperationManagementDAOException
+     */
+    List<? extends Operation> getDeviceOperationsByOperationCodeAndStatus(int enrolmentId,
+                                                                          Operation.Status status, String operationCode)
+            throws OperationManagementDAOException;
+
     List<? extends Operation> getOperationsByDeviceAndStatus(int enrolmentId, PaginationRequest request, Operation.Status status)
             throws OperationManagementDAOException;
 

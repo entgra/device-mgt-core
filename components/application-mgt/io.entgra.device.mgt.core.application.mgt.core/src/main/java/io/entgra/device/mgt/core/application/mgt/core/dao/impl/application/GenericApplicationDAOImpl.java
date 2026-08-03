@@ -28,7 +28,6 @@ import io.entgra.device.mgt.core.application.mgt.core.dao.ApplicationDAO;
 import io.entgra.device.mgt.core.application.mgt.core.dao.impl.AbstractDAOImpl;
 import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManagementDAOException;
 import io.entgra.device.mgt.core.application.mgt.core.exception.UnexpectedServerErrorException;
-import io.entgra.device.mgt.core.application.mgt.core.util.Constants;
 import io.entgra.device.mgt.core.application.mgt.core.util.DAOUtil;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import org.apache.commons.lang.StringUtils;
@@ -39,6 +38,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 /**
  * This handles Application related operations.
@@ -140,16 +140,25 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                     + "AP_APP.ID = AP_APP_FAVOURITES.AP_APP_ID ";
         }
         sql += "LEFT JOIN AP_APP_RELEASE ON "
-        + "AP_APP.ID = AP_APP_RELEASE.AP_APP_ID "
-        + "INNER JOIN (SELECT AP_APP.ID FROM AP_APP ";
+                + "AP_APP.ID = AP_APP_RELEASE.AP_APP_ID ";
+        sql += "LEFT JOIN AP_APP_CATEGORY_MAPPING ON "
+                + "AP_APP.ID = AP_APP_CATEGORY_MAPPING.AP_APP_ID "
+                + "LEFT JOIN AP_APP_CATEGORY ON "
+                + "AP_APP_CATEGORY_MAPPING.AP_APP_CATEGORY_ID = AP_APP_CATEGORY.ID ";
+        sql += "INNER JOIN (SELECT AP_APP.ID FROM AP_APP "
+                + "LEFT JOIN AP_APP_CATEGORY_MAPPING ON "
+                + "AP_APP.ID = AP_APP_CATEGORY_MAPPING.AP_APP_ID "
+                + "LEFT JOIN AP_APP_CATEGORY ON "
+                + "AP_APP_CATEGORY_MAPPING.AP_APP_CATEGORY_ID = AP_APP_CATEGORY.ID ";
         if (StringUtils.isNotEmpty(filter.getVersion()) || StringUtils.isNotEmpty(filter.getAppReleaseState())
                 || StringUtils.isNotEmpty(filter.getAppReleaseType())) {
             sql += "LEFT JOIN AP_APP_RELEASE ON AP_APP.ID = AP_APP_RELEASE.AP_APP_ID ";
         }
         sql += "WHERE AP_APP.TENANT_ID = ? ";
 
-        if (StringUtils.isNotEmpty(filter.getAppType()) && !Constants.ALL.equalsIgnoreCase(filter.getAppType())) {
-            sql += "AND AP_APP.TYPE = ? ";
+        if (filter.getAppTypes() != null && !filter.getAppTypes().isEmpty()) {
+            String placeholders = filter.getAppTypes().stream().map(type -> "?").collect(Collectors.joining(", "));
+            sql += "AND AP_APP.TYPE IN (" + placeholders + ") ";
         }
         if (StringUtils.isNotEmpty(filter.getAppName())) {
             sql += "AND LOWER (AP_APP.NAME) ";
@@ -184,6 +193,11 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
         if (filter.isNotRetired()) {
             sql +=  "AND AP_APP.STATUS != 'RETIRED' ";
         }
+        if (filter.getCategories() != null && !filter.getCategories().isEmpty()) {
+            String placeholders = filter.getCategories().stream().map(c -> "?")
+                    .collect(Collectors.joining(", "));
+            sql += "AND AP_APP_CATEGORY.CATEGORY IN (" + placeholders + ") ";
+        }
         sql += "GROUP BY AP_APP.ID ORDER BY AP_APP.ID ";
         if (StringUtils.isNotEmpty(filter.getSortBy())) {
             sql += filter.getSortBy() +" ";
@@ -210,8 +224,10 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 int paramIndex = 1;
                 stmt.setInt(paramIndex++, tenantId);
-                if (StringUtils.isNotEmpty(filter.getAppType()) && !Constants.ALL.equalsIgnoreCase(filter.getAppType())) {
-                    stmt.setString(paramIndex++, filter.getAppType());
+                if (filter.getAppTypes() != null && !filter.getAppTypes().isEmpty()) {
+                    for (String type : filter.getAppTypes()) {
+                        stmt.setString(paramIndex++, type);
+                    }
                 }
                 if (StringUtils.isNotEmpty(filter.getAppName())) {
                     if (filter.isFullMatch()) {
@@ -237,6 +253,11 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                 }
                 if (deviceTypeId > 0) {
                     stmt.setInt(paramIndex++, deviceTypeId);
+                }
+                if (filter.getCategories() != null && !filter.getCategories().isEmpty()) {
+                    for (String category : filter.getCategories()) {
+                        stmt.setString(paramIndex++, category);
+                    }
                 }
                 if (filter.getLimit() != -1) {
                     stmt.setInt(paramIndex++, filter.getLimit());
@@ -276,6 +297,10 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                 + "FROM AP_APP "
                 + "LEFT JOIN AP_APP_RELEASE ON "
                 + "AP_APP.ID = AP_APP_RELEASE.AP_APP_ID "
+                + "LEFT JOIN AP_APP_CATEGORY_MAPPING ON "
+                + "AP_APP.ID = AP_APP_CATEGORY_MAPPING.AP_APP_ID "
+                + "LEFT JOIN AP_APP_CATEGORY ON "
+                + "AP_APP_CATEGORY_MAPPING.AP_APP_CATEGORY_ID = AP_APP_CATEGORY.ID "
                 + "INNER JOIN (SELECT ID FROM AP_APP) AS app_data ON app_data.ID = AP_APP.ID "
                 + "WHERE AP_APP.TENANT_ID = ?";
 
@@ -283,8 +308,9 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
             throw new ApplicationManagementDAOException("Filter need to be instantiated");
         }
 
-        if (!StringUtils.isEmpty(filter.getAppType())) {
-            sql += " AND AP_APP.TYPE = ?";
+        if (filter.getAppTypes() != null && !filter.getAppTypes().isEmpty()) {
+            String placeholders = filter.getAppTypes().stream().map(type -> "?").collect(Collectors.joining(", "));
+            sql += " AND AP_APP.TYPE IN (" + placeholders + ") ";
         }
         if (!StringUtils.isEmpty(filter.getAppName())) {
             sql += " AND LOWER (AP_APP.NAME) ";
@@ -319,14 +345,21 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
         if (filter.isNotRetired()) {
             sql +=  " AND AP_APP.STATUS != 'RETIRED'";
         }
+        if (filter.getCategories() != null && !filter.getCategories().isEmpty()) {
+            String placeholders = filter.getCategories().stream().map(c -> "?")
+                    .collect(Collectors.joining(", "));
+            sql += " AND AP_APP_CATEGORY.CATEGORY IN (" + placeholders + ") ";
+        }
 
         try {
             conn = this.getDBConnection();
             stmt = conn.prepareStatement(sql);
             stmt.setInt(paramIndex++, tenantId);
 
-            if (filter.getAppType() != null && !filter.getAppType().isEmpty()) {
-                stmt.setString(paramIndex++, filter.getAppType());
+            if (filter.getAppTypes() != null && !filter.getAppTypes().isEmpty()) {
+                for (String type : filter.getAppTypes()) {
+                    stmt.setString(paramIndex++, type);
+                }
             }
             if (filter.getAppName() != null && !filter.getAppName().isEmpty()) {
                 if (filter.isFullMatch()) {
@@ -351,7 +384,12 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
                 stmt.setString(paramIndex++, filter.getAppReleaseState());
             }
             if (deviceTypeId > 0 ) {
-                stmt.setInt(paramIndex, deviceTypeId);
+                stmt.setInt(paramIndex++, deviceTypeId);
+            }
+            if (filter.getCategories() != null && !filter.getCategories().isEmpty()) {
+                for (String category : filter.getCategories()) {
+                    stmt.setString(paramIndex++, category);
+                }
             }
             rs = stmt.executeQuery();
             if (rs.next()) {
@@ -2096,4 +2134,173 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
         return releaseVersionInfos;
     }
 
+    @Override
+    public ApplicationDTO getApplicationForModel(int firmwareModelId, int tenantId) throws ApplicationManagementDAOException {
+        String sql = "SELECT "
+                + "AP.ID AS APP_ID, "
+                + "AP.NAME AS APP_NAME, "
+                + "AP.DESCRIPTION AS APP_DESCRIPTION, "
+                + "AP.TYPE AS APP_TYPE, "
+                + "AP.STATUS AS APP_STATUS, "
+                + "AP.SUB_TYPE AS APP_SUB_TYPE, "
+                + "AP.CURRENCY AS APP_CURRENCY, "
+                + "AP.RATING AS APP_RATING, "
+                + "AP.DEVICE_TYPE_ID AS APP_DEVICE_TYPE_ID "
+                + "FROM AP_APP AP "
+                + "INNER JOIN AP_APP_DEVICE_MODEL AD "
+                + "ON AP.ID = AD.APP_ID "
+                + "WHERE AD.FIRMWARE_DEVICE_MODEL_ID = ? "
+                + "AND AP.TENANT_ID = ?";
+        try {
+            Connection conn = this.getDBConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, firmwareModelId);
+                stmt.setInt(2, tenantId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    return DAOUtil.loadApplicationWithoutReleases(rs);
+                }
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection to get application for firmware model ID: "
+                    + firmwareModelId;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred to get application details with firmware model id " + firmwareModelId + " while executing "
+                    + "query. Query: " + sql;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (UnexpectedServerErrorException e) {
+            String msg = "Found more than one application for firmware model ID: " + firmwareModelId;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public void addDeviceFirmwareModelMapping(int appId, List<Integer> firmwareModelIds, int tenantId) throws ApplicationManagementDAOException {
+        String sql = "INSERT INTO " +
+                "AP_APP_DEVICE_MODEL (" +
+                "APP_ID, " +
+                "FIRMWARE_DEVICE_MODEL_ID, " +
+                "TENANT_ID " +
+                ") " +
+                "VALUES (?, ?, ?)";
+        try {
+            Connection connection = this.getDBConnection();
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                for (Integer firmwareModelId : firmwareModelIds) {
+                    preparedStatement.setInt(1, appId);
+                    preparedStatement.setInt(2, firmwareModelId);
+                    preparedStatement.setInt(3, tenantId);
+                    preparedStatement.addBatch();
+                }
+                preparedStatement.executeBatch();
+            }
+        } catch (SQLException e) {
+            String msg = "SQL error encountered while adding device firmware model mapping for firmware " +
+                    "model IDs: [" + firmwareModelIds.toString() + "]";
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while adding device firmware model mapping for firmware " +
+                    "model IDs: [" + firmwareModelIds.toString() + "]. Executed query: " + sql;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public List<Integer> getAllDeviceFirmwareModelIds(int tenantId) throws ApplicationManagementDAOException {
+        List<Integer> firmwareModelIds = new ArrayList<>();
+        String sql = "SELECT "
+                + "FIRMWARE_DEVICE_MODEL_ID "
+                + "FROM AP_APP_DEVICE_MODEL "
+                + "WHERE TENANT_ID = ? ";
+        try {
+            Connection conn = this.getDBConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, tenantId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while(rs.next()) {
+                        firmwareModelIds.add(rs.getInt("FIRMWARE_DEVICE_MODEL_ID"));
+                    }
+                }
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection to get firmware model IDs for tenant ID: "
+                    + tenantId;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred to getting firmware model ID associate with tenant ID " + tenantId
+                    + " while executing query. Query: " + sql;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+
+        return firmwareModelIds;
+    }
+
+    @Override
+    public List<Integer> getFirmwareModelIdsForApp(int applicationId) throws ApplicationManagementDAOException {
+        List<Integer> firmwareModelIds = new ArrayList<>();
+        String sql = "SELECT "
+                + "FIRMWARE_DEVICE_MODEL_ID "
+                + "FROM AP_APP_DEVICE_MODEL "
+                + "WHERE APP_ID = ? ";
+        try {
+            Connection conn = this.getDBConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, applicationId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while(rs.next()) {
+                        firmwareModelIds.add(rs.getInt("FIRMWARE_DEVICE_MODEL_ID"));
+                    }
+                }
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection to get firmware model IDs for application ID: "
+                    + applicationId;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred to getting firmware model ID associate with application ID " + applicationId
+                    + " while executing query. Query: " + sql;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+
+        return firmwareModelIds;
+    }
+
+    @Override
+    public void deleteDeviceFirmwareModelMapping(int appId, int tenantId) throws ApplicationManagementDAOException {
+        if (log.isDebugEnabled()) {
+            log.debug("Deleting firmware model ID mappings for firmware ID " + appId + " and tenant ID " + tenantId);
+        }
+
+        String sql = "DELETE " +
+                "FROM AP_APP_DEVICE_MODEL " +
+                "WHERE APP_ID = ? " +
+                "AND TENANT_ID = ?";
+
+        try {
+            Connection connection = this.getDBConnection();
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1, appId);
+                preparedStatement.setInt(2, tenantId);
+                preparedStatement.execute();
+            }
+        } catch (SQLException e) {
+            String msg = "SQL error encountered while delete device firmware model mapping for firmware ID: " + appId;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while delete device firmware model mapping for firmware " +
+                    "app ID: " + appId + ". Executed query: " + sql;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+    }
 }
