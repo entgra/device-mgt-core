@@ -42,6 +42,7 @@ import io.entgra.device.mgt.core.device.mgt.common.authorization.GroupAccessAuth
 import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.ConfigurationEntry;
 import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.PlatformConfiguration;
 import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.PlatformConfigurationManagementService;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationForExactTimeSnapshotWrapper;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationHistory;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationHistorySnapshot;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationHistorySnapshotWrapper;
@@ -71,6 +72,7 @@ import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManage
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionUtils;
 import io.entgra.device.mgt.core.device.mgt.core.privacy.PrivacyComplianceProvider;
 import io.entgra.device.mgt.core.device.mgt.core.search.mgt.SearchManagerService;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceFeatureOperations;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceTypeEventManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceFeatureOperations;

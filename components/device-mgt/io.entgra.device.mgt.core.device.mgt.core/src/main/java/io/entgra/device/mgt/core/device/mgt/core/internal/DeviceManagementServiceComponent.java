@@ -334,6 +334,7 @@ public class DeviceManagementServiceComponent {
         TagManagementProviderService tagManagementProviderService = new TagManagementProviderServiceImpl();
         bundleContext.registerService(TagManagementProviderService.class.getName(), tagManagementProviderService, null);
 
+
         /* Registering DeviceAccessAuthorization Service */
         DeviceAccessAuthorizationService deviceAccessAuthorizationService = new DeviceAccessAuthorizationServiceImpl();
         DeviceManagementDataHolder.getInstance().setDeviceAccessAuthorizationService(deviceAccessAuthorizationService);
