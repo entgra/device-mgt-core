@@ -240,4 +240,5 @@ public class APIApplicationManagerExtensionServiceComponent {
         }
         APIApplicationManagerExtensionDataHolder.getInstance().setIoAuthClientService(null);
     }
+
 }

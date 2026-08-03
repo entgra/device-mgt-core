@@ -24,6 +24,14 @@
     <SessionTimeOut>3600</SessionTimeOut>
     <!--  maximum number of login cache entries  -->
     <LoginCacheCapacity>10000</LoginCacheCapacity>
+    <!--
+        The UI app names that will use the API tenant context paths when using the request handlers i.e. '/t/{tenantDomain}/api/'
+        Add '-login' suffix to the app name eg:
+        <TenantContextEnabledApps>
+            <AppName>endpoint-mgt-login</AppName>
+        </TenantContextEnabledApps>
+     -->
+    <TenantContextEnabledApps></TenantContextEnabledApps>
     <!-- hubspot account info for live chat -->
     <HubspotChat>
         <EnableHubspot>false</EnableHubspot>
@@ -54,27 +62,27 @@
         <DeviceInfoItem>
             <DefinedValue>owner</DefinedValue>
             <DisplayValue>label_owner</DisplayValue>
-            <Type>default</Type>
+            <Type>enrolmentInfo</Type>
         </DeviceInfoItem>
         <DeviceInfoItem>
             <DefinedValue>serial</DefinedValue>
             <DisplayValue>label_serialNumber</DisplayValue>
-            <Type>default</Type>
+            <Type>deviceDetailsMap</Type>
         </DeviceInfoItem>
         <DeviceInfoItem>
             <DefinedValue>ownership</DefinedValue>
             <DisplayValue>label_ownership</DisplayValue>
-            <Type>default</Type>
+            <Type>enrolmentInfo</Type>
         </DeviceInfoItem>
         <DeviceInfoItem>
             <DefinedValue>status</DefinedValue>
             <DisplayValue>label_status</DisplayValue>
-            <Type>default</Type>
+            <Type>enrolmentInfo</Type>
         </DeviceInfoItem>
         <DeviceInfoItem>
             <DefinedValue>dateOfLastUpdate</DefinedValue>
             <DisplayValue>label_last_updated</DisplayValue>
-            <Type>default</Type>
+            <Type>enrolmentInfo</Type>
         </DeviceInfoItem>
         <DeviceInfoItem>
             <DefinedValue>actions</DefinedValue>
@@ -83,8 +91,8 @@
         </DeviceInfoItem>
         <DeviceInfoItem>
             <DefinedValue>batteryLevel</DefinedValue>
-            <DisplayValue>label_battery_leve</DisplayValue>
-            <Type>deviceInfo</Type>
+            <DisplayValue>label_battery_level</DisplayValue>
+            <Type>deviceDetailsMap</Type>
         </DeviceInfoItem>
         <DeviceInfoItem>
             <DefinedValue>deviceModel</DefinedValue>
@@ -169,6 +177,18 @@
         <DeviceInfoItem>
             <DefinedValue>FIRMWARE_MODEL</DefinedValue>
             <DisplayValue>label_firmware_model</DisplayValue>
+            <DefinedValue>FIRMWARE_VERSION</DefinedValue>
+            <DisplayValue>label_firmware_version</DisplayValue>
+            <Type>deviceDetailsMap</Type>
+        </DeviceInfoItem>
+        <DeviceInfoItem>
+            <DefinedValue>FIRMWARE_SYSTEM_VERSION</DefinedValue>
+            <DisplayValue>label_firmware_system_version</DisplayValue>
+            <Type>deviceDetailsMap</Type>
+        </DeviceInfoItem>
+        <DeviceInfoItem>
+            <DefinedValue>FIRMWARE_APP_VERSION</DefinedValue>
+            <DisplayValue>label_firmware_app_version</DisplayValue>
             <Type>deviceDetailsMap</Type>
         </DeviceInfoItem>
     </DeviceInfoConfigurations>
@@ -304,6 +324,7 @@
         <Scope>um:users:update</Scope>
         <Scope>um:users:invite</Scope>
         <Scope>um:admin:users:view</Scope>
+        <Scope>um:admin:users:modify</Scope>
         <Scope>um:admin:tenants:remove</Scope>
         <Scope>dm:admin:enrollment:update</Scope>
         <Scope>gm:devices:view</Scope>
@@ -331,6 +352,8 @@
         <Scope>gm:admin:groups:add</Scope>
         <Scope>dm:notif:mark-checked</Scope>
         <Scope>dm:notifications:view</Scope>
+        <Scope>dm:notif:archive</Scope>
+        <Scope>dm:notif:delete</Scope>
         <Scope>cm:cert:delete</Scope>
         <Scope>cm:cert:details:get</Scope>
         <Scope>cm:cert:view</Scope>
@@ -408,6 +431,7 @@
         <Scope>win:ops:enterprise-app-install</Scope>
         <Scope>win:ops:wns-config</Scope>
         <Scope>win:ops:send-notif</Scope>
+        <Scope>win:ops:device-log</Scope>
         <Scope>win:microsoft-store:search</Scope>
         <Scope>win:updates:read</Scope>
         <Scope>win:ops:os-updates-install</Scope>
@@ -455,6 +479,10 @@
         <Scope>tm:tags:delete</Scope>
         <Scope>tm:tags:mapping:create</Scope>
         <Scope>tm:tags:mapping:delete</Scope>
+        <Scope>dm:notificationConfig:create</Scope>
+        <Scope>dm:notificationConfig:view</Scope>
+        <Scope>dm:notificationConfig:delete</Scope>
+        <Scope>dm:notificationConfig:update</Scope>
         <Scope>and:conf:zero-touch-sync</Scope>
         <Scope>and:conf:zero-touch-clean</Scope>
         <Scope>dm:devices:any:permitted</Scope>
@@ -492,6 +520,14 @@
         <Scope>dm:device-firmware-models:view</Scope>
         <Scope>am:pub:device-firmware-models:view</Scope>
         <Scope>am:store:firmware:view</Scope>
+        <Scope>dm:device-type:statistic:create</Scope>
+        <Scope>dm:device-type:statistic:modify</Scope>
+        <Scope>dm:device-type:statistic:view</Scope>
+        <Scope>dm:device-type:statistic:delete</Scope>
+        <Scope>dm:remote:connect</Scope>
+        <Scope>and:ops:suspend</Scope>
+        <Scope>win:ops:unlock-devices</Scope>
+        <Scope>dm:reports:view</Scope>
     </Scopes>
     <SSOConfiguration>
         <Issuer>device-mgt</Issuer>

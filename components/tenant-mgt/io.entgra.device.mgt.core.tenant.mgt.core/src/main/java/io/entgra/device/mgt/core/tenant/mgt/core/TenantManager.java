@@ -74,4 +74,27 @@ public interface TenantManager {
      * @throws TenantMgtException If there is an issue retrieving the tenant domain.
      */
     String getTenantDomain(int tenantId) throws TenantMgtException;
+
+    /**
+     * Adds the default notification archival configuration metadata for the newly created tenant.
+     * <p>
+     * This sets the default archival type (e.g., "DB") and archival period (e.g., "12 months")
+     * into the metadata storage under the notification configuration meta key. This ensures
+     * that each tenant starts with a sensible default if no specific configurations are present.
+     * </p>
+     *
+     * @param tenantInfoBean The tenant information object containing the new tenant's ID and domain.
+     * @throws TenantMgtException If an error occurs while initializing the metadata for the tenant.
+     */
+    void addDefaultNotificationArchivalMetadata(TenantInfoBean tenantInfoBean) throws TenantMgtException;
+
+    /**
+     * Adds a role to the bindings of the specified scopes within a tenant.
+     *
+     * @param tenantDomain The domain of the tenant.
+     * @param roleName     The name of the role to add to each scope's bindings.
+     * @param scopeNames   The list of scope names whose bindings should be updated.
+     * @throws TenantMgtException If an error occurs while updating the scope bindings.
+     */
+    void updateTenantScopeBindings(String tenantDomain, String roleName, java.util.List<String> scopeNames) throws TenantMgtException;
 }

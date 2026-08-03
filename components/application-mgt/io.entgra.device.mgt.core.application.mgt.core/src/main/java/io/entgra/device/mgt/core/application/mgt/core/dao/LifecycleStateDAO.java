@@ -29,8 +29,8 @@ public interface LifecycleStateDAO {
 
     /**
      * To get the latest lifecycle state for the given application id and the application release UUID.
-     * @param uuid UUID of the application release
      *
+     * @param uuid UUID of the application release
      * @return Latest Lifecycle State for the given application release
      * @throws LifeCycleManagementDAOException Lifecycle Management DAO Exception.
      */
@@ -38,9 +38,9 @@ public interface LifecycleStateDAO {
 
     /**
      * To get all changed lifecycle states for the given application release id.
-     * @param appReleaseId id of the application release.
-     * @param tenantId Tenant Id.
      *
+     * @param appReleaseId id of the application release.
+     * @param tenantId     Tenant Id.
      * @return Lifecycle States for the given application release
      * @throws LifeCycleManagementDAOException Lifecycle Management DAO Exception.
      */
@@ -48,17 +48,17 @@ public interface LifecycleStateDAO {
 
     /**
      * To add new lifecycle states for the given application release.
-     * @param state LifecycleState.
-     * @param tenantId Tenant id
      *
+     * @param state    LifecycleState.
+     * @param tenantId Tenant id
      * @throws LifeCycleManagementDAOException Lifecycle Management DAO Exception.
      */
     void addLifecycleState(LifecycleState state, int appReleaseId, int tenantId) throws LifeCycleManagementDAOException;
 
     /**
      * To delete lifecycle state data of specific application release.
-     * @param releaseId Id of the LifecycleState.
      *
+     * @param releaseId Id of the LifecycleState.
      * @throws LifeCycleManagementDAOException Lifecycle Management DAO Exception.
      */
     void deleteLifecycleStateByReleaseId(int releaseId) throws LifeCycleManagementDAOException;

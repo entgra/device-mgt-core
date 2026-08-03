@@ -34,6 +34,8 @@ public final class Constants {
     public static final String ATTRIBUTES = "attributes";
     public static final String EVENT_ATTRIBUTES = "eventAttributes";
     public static final String EVENT_TOPIC_STRUCTURE = "eventTopicStructure";
+    public static final String DEVICE_EVENT_META_KEY_PATTERN = "dm:%s:event:definition";
+    public static final String DEVICE_STATISTIC_META_KEY_PATTERN = "dm:%s:statistic:definition";
 
 }
 

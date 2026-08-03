@@ -21,12 +21,15 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Represents the Application Management Configuration.
+ * Represents the Report Management Configuration.
  */
 @XmlRootElement(name = "ReportManagementConfiguration")
 public class ReportMgtConfiguration {
 
     private String datasourceName;
+    private int threadPoolSize;
+    private int maxConnections;
+    private int MaxConnectionsPerRoute;
 
     @XmlElement(name = "DatasourceName", required = true)
     public String getDatasourceName() {
@@ -35,6 +38,33 @@ public class ReportMgtConfiguration {
 
     public void setDatasourceName(String datasourceName) {
         this.datasourceName = datasourceName;
+    }
+
+    @XmlElement(name = "ThreadPoolSize", required = true)
+    public int getThreadPoolSize(){
+        return threadPoolSize;
+    }
+
+    public void setThreadPoolSize(int threadPoolSize){
+        this.threadPoolSize = threadPoolSize;
+    }
+
+    @XmlElement(name = "MaxConnections", required = true)
+    public int getMaxConnections(){
+        return maxConnections;
+    }
+
+    public void setMaxConnections(int maxConnections){
+        this.maxConnections = maxConnections;
+    }
+
+    @XmlElement(name = "MaxConnectionsPerRoute", required = true)
+    public  int getMaxConnectionsPerRoute(){
+        return MaxConnectionsPerRoute;
+    }
+
+    public void setMaxConnectionsPerRoute(int maxConnectionsPerRoute){
+        this.MaxConnectionsPerRoute = maxConnectionsPerRoute;
     }
 
 }

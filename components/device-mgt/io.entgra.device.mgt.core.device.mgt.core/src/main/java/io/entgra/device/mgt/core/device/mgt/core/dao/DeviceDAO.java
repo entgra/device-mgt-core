@@ -654,7 +654,8 @@ public interface DeviceDAO {
      * @param enrollmentIds list of enrollment ids.
      * @throws DeviceManagementDAOException when no enrolments are found for the given device.
      */
-    void deleteDevices(List<String> deviceIdentifiers, List<Integer> deviceIds, List<Integer> enrollmentIds, List<Device> validDevices) throws DeviceManagementDAOException;
+    void deleteDevices(List<String> deviceIdentifiers, List<Integer> deviceIds, List<Integer> enrollmentIds,
+                       List<Device> validDevices, int tenantId) throws DeviceManagementDAOException;
 
     boolean transferDevice(String deviceType, String deviceId, String owner, int destinationTenantId)
             throws DeviceManagementDAOException, SQLException;
@@ -705,6 +706,28 @@ public interface DeviceDAO {
      * @throws DeviceManagementDAOException
      */
     List<DeviceLocationHistorySnapshot> getDeviceLocationInfo(DeviceIdentifier deviceIdentifier, long from, long to)
+            throws DeviceManagementDAOException;
+
+    /**
+     * Retrieve device location information at exact time with fallback
+    * @param deviceType The type of devices (e.g., ios, android, windows)
+     * @param exactTime Specified exact timestamp
+     * @param timeWindow The time window for location history snapshot search
+     * @return List of device location history snapshots
+     * @throws DeviceManagementDAOException
+     */
+    List<DeviceLocationHistorySnapshot> getAllDeviceLocationInfo(String deviceType,long exactTime,int timeWindow,PaginationRequest request)
+            throws DeviceManagementDAOException;
+
+    /**
+     * Retrieve the total device location information count at an exact time
+     * @param deviceType The type of devices (e.g., ios, android, windows)
+     * @param exactTime Specified exact timestamp
+     * @param timeWindow The time window for location history snapshot search
+     * @return the total count of device location history snapshots
+     * @throws DeviceManagementDAOException
+     */
+    int getDeviceLocationCount(String deviceType, long exactTime, int timeWindow)
             throws DeviceManagementDAOException;
 
     /**

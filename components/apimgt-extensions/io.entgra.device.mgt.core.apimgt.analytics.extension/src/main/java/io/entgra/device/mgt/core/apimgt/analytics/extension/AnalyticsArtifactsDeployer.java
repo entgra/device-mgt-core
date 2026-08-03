@@ -33,7 +33,17 @@ import org.apache.velocity.runtime.RuntimeConstants;
 import org.wso2.carbon.utils.CarbonUtils;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * This class is responsible for deploying and undeploying analytics artifacts such as
@@ -61,6 +71,18 @@ public class AnalyticsArtifactsDeployer {
 
     // Default version and other constants
     public static final String DEFAULT_STREAM_VERSION = "1.0.0";
+    private static final String DEFAULT_DEVICE_ID_ATTRIBUTE = "deviceId";
+    private static final String DEFAULT_TIMESTAMP_ATTRIBUTE = "ts";
+    private static final String STRING = "STRING";
+    private static final String LONG = "LONG";
+    private static final String CONTEXT_NAME = "name";
+    private static final String CONTEXT_VERSION = "version";
+    private static final String CONTEXT_STREAM_NAME = "streamName";
+    private static final String CONTEXT_STREAM_VERSION = "streamVersion";
+    private static final String CONTEXT_METADATA_LIST = "metaDataList";
+    private static final String CONTEXT_PROPERTIES = "properties";
+    private static final String CONTEXT_EVENT_ADAPTER_TYPE = "eventAdapterType";
+    private static final String CONTEXT_CUSTOM_MAPPING_TYPE = "customMappingType";
 
     // General constants for file handling
     public static final String UTF_8_ENCODING = "UTF-8";
@@ -191,12 +213,26 @@ public class AnalyticsArtifactsDeployer {
      */
     private VelocityContext populateContextForEventStreams(EventStreamData eventStreamData) {
         VelocityContext context = new VelocityContext();
-        context.put("name", eventStreamData.getName());
-        context.put("version", eventStreamData.getVersion());
-        context.put("metaData",
-                eventStreamData.getMetaData() != null ? eventStreamData.getMetaData() : new MetaData("deviceId", "STRING"));
+        context.put(CONTEXT_NAME, eventStreamData.getName());
+        context.put(CONTEXT_VERSION, eventStreamData.getVersion());
+
+        List<MetaData> metaDataList = new ArrayList<>();
+        Optional.ofNullable(eventStreamData.getMetaDataList())
+                .ifPresent(md -> metaDataList.addAll((Collection<MetaData>) md));
+        Set<String> existingNames = metaDataList.stream()
+                .map(MetaData::getName)
+                .collect(Collectors.toSet());
+        // Only add if not already present
+        if (!existingNames.contains(DEFAULT_DEVICE_ID_ATTRIBUTE)) {
+            metaDataList.add(new MetaData(DEFAULT_DEVICE_ID_ATTRIBUTE, STRING));
+        }
+        if (!existingNames.contains(DEFAULT_TIMESTAMP_ATTRIBUTE)) {
+            metaDataList.add(new MetaData(DEFAULT_TIMESTAMP_ATTRIBUTE, LONG));
+        }
+        context.put(CONTEXT_METADATA_LIST, metaDataList);
+
         if (eventStreamData.getPayloadData() != null) {
-            context.put("properties", eventStreamData.getPayloadData());
+            context.put(CONTEXT_PROPERTIES, eventStreamData.getPayloadData());
         }
         return context;
     }
@@ -209,12 +245,12 @@ public class AnalyticsArtifactsDeployer {
      */
     private VelocityContext populateContextForEventPublisher(EventPublisherData eventPublisherData) {
         VelocityContext context = new VelocityContext();
-        context.put("name", eventPublisherData.getName());
-        context.put("streamName", eventPublisherData.getStreamName());
-        context.put("streamVersion", eventPublisherData.getStreamVersion());
-        context.put("properties", eventPublisherData.getPropertyList());
-        context.put("eventAdapterType", eventPublisherData.getEventAdaptorType());
-        context.put("customMappingType", eventPublisherData.getCustomMappingType());
+        context.put(CONTEXT_NAME, eventPublisherData.getName());
+        context.put(CONTEXT_STREAM_NAME, eventPublisherData.getStreamName());
+        context.put(CONTEXT_STREAM_VERSION, eventPublisherData.getStreamVersion());
+        context.put(CONTEXT_PROPERTIES, eventPublisherData.getPropertyList());
+        context.put(CONTEXT_EVENT_ADAPTER_TYPE, eventPublisherData.getEventAdaptorType());
+        context.put(CONTEXT_CUSTOM_MAPPING_TYPE, eventPublisherData.getCustomMappingType());
         return context;
     }
 
@@ -226,12 +262,12 @@ public class AnalyticsArtifactsDeployer {
      */
     private VelocityContext populateContextForEventReceiver(EventReceiverData eventReceiverData) {
         VelocityContext context = new VelocityContext();
-        context.put("name", eventReceiverData.getName());
-        context.put("streamName", eventReceiverData.getStreamName());
-        context.put("streamVersion", eventReceiverData.getStreamVersion());
-        context.put("properties", eventReceiverData.getPropertyList());
-        context.put("eventAdapterType", eventReceiverData.getEventAdapterType());
-        context.put("customMappingType", eventReceiverData.getCustomMappingType());
+        context.put(CONTEXT_NAME, eventReceiverData.getName());
+        context.put(CONTEXT_STREAM_NAME, eventReceiverData.getStreamName());
+        context.put(CONTEXT_STREAM_VERSION, eventReceiverData.getStreamVersion());
+        context.put(CONTEXT_PROPERTIES, eventReceiverData.getPropertyList());
+        context.put(CONTEXT_EVENT_ADAPTER_TYPE, eventReceiverData.getEventAdapterType());
+        context.put(CONTEXT_CUSTOM_MAPPING_TYPE, eventReceiverData.getCustomMappingType());
         return context;
     }
 
@@ -286,8 +322,8 @@ public class AnalyticsArtifactsDeployer {
     /**
      * Constructs the file location for tenant-specific deployment directory.
      *
-     * @param tenantId Tenant ID for multi-tenancy support.
-     * @param fileName The name of the file being deployed.
+     * @param tenantId         Tenant ID for multi-tenancy support.
+     * @param fileName         The name of the file being deployed.
      * @param artifactLocation The specific directory where the artifact is located (eventstreams, eventpublishers, etc.).
      * @return The full file path as a string.
      */

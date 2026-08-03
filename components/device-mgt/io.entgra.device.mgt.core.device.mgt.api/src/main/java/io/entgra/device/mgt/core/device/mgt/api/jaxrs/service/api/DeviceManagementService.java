@@ -28,6 +28,7 @@ import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo;
 import io.entgra.device.mgt.core.device.mgt.common.Feature;
 import io.entgra.device.mgt.core.device.mgt.common.app.mgt.Application;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceInfo;
+import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceLocationHistorySnapshotWrapper;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Activity;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Operation;
 import io.entgra.device.mgt.core.device.mgt.common.policy.mgt.Policy;
@@ -47,6 +48,7 @@ import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.annotations.Tag;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -682,6 +684,88 @@ public interface DeviceManagementService {
                     value = "Defines how the output should be.",
                     required = true)
             @QueryParam("type") String type);
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{deviceType}/locations/{exactTime}")
+    @ApiOperation(
+            produces = "application/json",
+            httpMethod = "GET",
+            value = "Getting the Location Details of Devices",
+            notes = "Get the location details of devices for a given time.",
+            response = Response.class,
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:devices:details")
+                    })
+            }
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    code = 200,
+                    message = "OK.",
+                    response = Response.class,
+                    responseHeaders = {
+                            @ResponseHeader(
+                                    name = "Content-Type",
+                                    description = "The content type of the body"),
+                            @ResponseHeader(
+                                    name = "ETag",
+                                    description = "Entity Tag of the response resource.\n" +
+                                            "Used by caches, or in conditional requests."),
+                            @ResponseHeader(
+                                    name = "Last-Modified",
+                                    description = "Date and time the resource was last modified.\n" +
+                                            "Used by caches, or in conditional requests."),
+                    }),
+            @ApiResponse(
+                    code = 400,
+                    message = "Bad Request. \n Invalid Device Identifiers found.",
+                    response = Response.class),
+            @ApiResponse(
+                    code = 401,
+                    message = "Unauthorized. \n Unauthorized request."),
+            @ApiResponse(
+                    code = 500,
+                    message = "Internal Server Error. \n Error on retrieving stats",
+                    response = Response.class)
+    })
+    Response getAllDeviceLocationHistory(
+            @ApiParam(
+                    name = "deviceType",
+                    value = "The device type, such as ios, android, or windows.",
+                    required = false)
+            @PathParam("deviceType")
+            @Size(max = 45)
+            String deviceType,
+            @ApiParam(
+                    name = "exactTime",
+                    value = "Define the exact timestamp to get device location in milliseconds. ",
+                    required = true)
+            @PathParam("exactTime")
+            long exactTime,
+            @ApiParam(
+                    name = "offset",
+                    value = "The starting pagination index for the complete list of qualified items.",
+                    defaultValue = "0")
+            @QueryParam("offset")
+            int offset,
+            @ApiParam(
+                    name = "timeWindow",
+                    value = "The time window for the location history search.",
+                    required = false,
+                    defaultValue = "0")
+            @QueryParam("timeWindow")
+            int timeWindow,
+            @ApiParam(
+                    name = "limit",
+                    value = "Provide how many device details you require from the starting pagination index/offset.",
+                    defaultValue = "10")
+            @QueryParam("limit")
+            int limit
+            );
+
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)

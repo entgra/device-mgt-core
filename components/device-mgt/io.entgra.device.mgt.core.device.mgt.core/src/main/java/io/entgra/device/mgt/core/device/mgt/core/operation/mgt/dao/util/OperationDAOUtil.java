@@ -310,6 +310,84 @@ public class OperationDAOUtil {
         }
     }
 
+    public static List<Activity> getTimeoutActivities(ResultSet rs) throws OperationManagementDAOException {
+        Map<Integer, ActivityMapper> activityMap = new TreeMap<>();
+        List<Activity> activities = new ArrayList<>();
+        ActivityMapper activityMapper;
+
+        try {
+            while (rs.next()) {
+                int operationId = rs.getInt("OPERATION_ID");
+                int enrolmentId = rs.getInt("ENROLMENT_ID");
+
+                activityMapper = activityMap.get(operationId);
+
+                if (activityMapper != null) {
+                    // Activity already exists, check if we need to add this device's status
+                    ActivityStatus existingStatus = activityMapper.getActivityStatusMap().get(enrolmentId);
+
+                    if (existingStatus == null) {
+                        // New device for this operation
+                        ActivityStatus activityStatus = new ActivityStatus();
+                        DeviceIdentifier deviceIdentifier = new DeviceIdentifier();
+                        deviceIdentifier.setId(rs.getString("DEVICE_IDENTIFICATION"));
+                        deviceIdentifier.setType(rs.getString("DEVICE_TYPE"));
+                        activityStatus.setDeviceIdentifier(deviceIdentifier);
+                        activityStatus.setStatus(ActivityStatus.Status.valueOf(rs.getString("STATUS")));
+
+                        if (rs.getLong("UPDATED_TIMESTAMP") != 0) {
+                            activityStatus.setUpdatedTimestamp(
+                                    String.valueOf(rs.getLong("UPDATED_TIMESTAMP") * 1000));
+                        }
+
+                        activityMapper.getActivityStatusMap().put(enrolmentId, activityStatus);
+                    }
+                } else {
+                    Activity activity = new Activity();
+                    activity.setType(Activity.Type.valueOf(rs.getString("TYPE")));
+                    activity.setCreatedTimeStamp(String.valueOf(rs.getLong("CREATED_TIMESTAMP") * 1000));
+                    activity.setCode(rs.getString("OPERATION_CODE"));
+                    activity.setOperationId(operationId);
+                    activity.setInitiatedBy(rs.getString("INITIATED_BY"));
+                    activity.setActivityId(getActivityId(operationId));
+
+                    ActivityStatus activityStatus = new ActivityStatus();
+                    DeviceIdentifier deviceIdentifier = new DeviceIdentifier();
+                    deviceIdentifier.setId(rs.getString("DEVICE_IDENTIFICATION"));
+                    deviceIdentifier.setType(rs.getString("DEVICE_TYPE"));
+                    activityStatus.setDeviceIdentifier(deviceIdentifier);
+                    activityStatus.setStatus(ActivityStatus.Status.valueOf(rs.getString("STATUS")));
+
+                    if (rs.getLong("UPDATED_TIMESTAMP") != 0) {
+                        activityStatus.setUpdatedTimestamp(
+                                String.valueOf(rs.getLong("UPDATED_TIMESTAMP") * 1000));
+                    }
+
+                    ActivityMapper newActivityMapper = new ActivityMapper();
+                    Map<Integer, ActivityStatus> statusMap = new TreeMap<>();
+                    statusMap.put(enrolmentId, activityStatus);
+                    newActivityMapper.setActivity(activity);
+                    newActivityMapper.setActivityStatusMap(statusMap);
+
+                    activityMap.put(operationId, newActivityMapper);
+                }
+            }
+
+            for (ActivityMapper mapper : activityMap.values()) {
+                List<ActivityStatus> statusList = new ArrayList<>(mapper.getActivityStatusMap().values());
+                mapper.getActivity().setActivityStatus(statusList);
+                activities.add(mapper.getActivity());
+            }
+
+            return activities;
+
+        } catch (SQLException e) {
+            String msg = "Error occurred while getting timeout activity data from the result set.";
+            log.error(msg, e);
+            throw new OperationManagementDAOException(msg, e);
+        }
+    }
+
     public static DeviceActivity populateActivity(ResultSet rs) throws SQLException {
         DeviceActivity deviceActivity = new DeviceActivity();
         List<OperationResponse> operationResponses = new ArrayList<>();

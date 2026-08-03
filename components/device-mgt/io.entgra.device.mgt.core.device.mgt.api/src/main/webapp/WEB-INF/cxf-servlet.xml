@@ -44,6 +44,7 @@
             <ref bean="applicationManagementAdminService"/>
             <ref bean="deviceTypeManagementAdminService"/>
 			<ref bean="deviceEventManagementService"/>
+			<ref bean="deviceStatisticManagementService"/>
 			<ref bean="deviceAgentService"/>
             <ref bean="swaggerResource"/>
             <ref bean="analyticsArtifactsManagementService"/>
@@ -53,6 +54,7 @@
             <ref bean="tagManagementService"/>
             <ref bean="deviceFirmwareModelManagementService"/>
             <ref bean="deviceFirmwareModelManagementAdminService"/>
+            <ref bean="deviceFeatureOperationService"/>
         </jaxrs:serviceBeans>
         <jaxrs:providers>
             <ref bean="jsonProvider"/>
@@ -98,6 +100,7 @@
     <bean id="deviceTypeManagementAdminService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.admin.DeviceTypeManagementAdminServiceImpl"/>
 	<bean id="deviceAccessAuthorizationAdminService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.admin.DeviceAccessAuthorizationAdminServiceImpl"/>
 	<bean id="deviceEventManagementService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.DeviceEventManagementServiceImpl"/>
+	<bean id="deviceStatisticManagementService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.DeviceStatisticManagementServiceImpl"/>
 	<bean id="deviceAgentService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.DeviceAgentServiceImpl"/>
 	<bean id="jsonProvider" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.common.GsonMessageBodyHandler"/>
     <bean id="analyticsArtifactsManagementService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.AnalyticsArtifactsManagementServiceImpl"/>
@@ -107,6 +110,7 @@
     <bean id="tagManagementService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.TagManagementServiceImpl"/>
     <bean id="deviceFirmwareModelManagementService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.DeviceFirmwareManagementServiceImpl"/>
     <bean id="deviceFirmwareModelManagementAdminService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.admin.DeviceFirmwareModelManagementAdminServiceImpl"/>
+    <bean id="deviceFeatureOperationService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.DeviceFeatureOperationServiceImpl"/>
 
     <!--<bean id="errorHandler" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.common.ErrorHandler"/>-->
     <cxf:bus>

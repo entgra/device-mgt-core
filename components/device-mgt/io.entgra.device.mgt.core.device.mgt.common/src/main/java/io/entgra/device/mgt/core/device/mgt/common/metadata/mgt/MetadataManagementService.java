@@ -88,4 +88,14 @@ public interface MetadataManagementService {
      */
     boolean deleteMetadata(String metaKey) throws MetadataManagementException, MetadataKeyNotFoundException;
 
+    /**
+     * Clears the value of a metadata entry for the current tenant, while keeping the metadata key intact.
+     *
+     * @param metaKey the metadata key whose value should be cleared
+     * @return true if the metadata value was successfully cleared, false otherwise
+     * @throws MetadataManagementException if an error occurs while clearing the metadata value
+     * @throws MetadataKeyNotFoundException if the specified metadata key does not exist
+     */
+    boolean clearMetadataValue(String metaKey) throws MetadataManagementException, MetadataKeyNotFoundException;
+
 }

@@ -95,7 +95,7 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
     @Produces(MediaType.APPLICATION_JSON)
     public Response getConfiguration(@HeaderParam("token") String token,
                                      @QueryParam("properties") String properties,
-                                     @QueryParam("withAccessToken") boolean withAccessToken,
+                                     @QueryParam("requireOtpToken") boolean requireOtpToken,
                                      @QueryParam("withGateways") boolean withGateways) {
         DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
         try {
@@ -127,8 +127,12 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
                 devicesConfiguration.setHttpGateway(buildHttpGatewayUrl());
                 devicesConfiguration.setHttpsGateway(buildHttpsGatewayUrl());
             }
-            if (withAccessToken) setAccessTokenToDeviceConfigurations(devicesConfiguration);
-            else setOTPTokenToDeviceConfigurations(devicesConfiguration);
+
+            if (!requireOtpToken) {
+                setAccessTokenToDeviceConfigurations(devicesConfiguration);
+                return Response.status(Response.Status.OK).entity(devicesConfiguration).build();
+            }
+            setOTPTokenToDeviceConfigurations(devicesConfiguration);
             return Response.status(Response.Status.OK).entity(devicesConfiguration).build();
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while retrieving configurations";
@@ -274,6 +278,12 @@ public class DeviceManagementConfigServiceImpl implements DeviceManagementConfig
             log.error(msg);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
+        uiConfiguration.setGatewayUrl(
+                DeviceManagementConstants.ConfigurationManagement.HTTPS_PREFIX +
+                        SystemPropertyUtil.getRequiredProperty(DeviceManagementConstants.ConfigurationManagement.IOT_GATEWAY_HOST) +
+                        DeviceManagementConstants.ConfigurationManagement.COLON +
+                        SystemPropertyUtil.getRequiredProperty(DeviceManagementConstants.ConfigurationManagement.IOT_GATEWAY_HTTPS_PORT)
+        );
         return Response.status(Response.Status.OK).entity(uiConfiguration).build();
     }
 

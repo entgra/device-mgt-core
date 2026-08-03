@@ -5,10 +5,12 @@
   "nickName": "",
   "description": "",
   "metaData": [
+#foreach( $meta in $metaDataList )
     {
-      "name": "${metaData.name}",
-      "type": "${metaData.type}"
-    }
+      "name": "${meta.name}",
+      "type": "${meta.type}"
+    }#if( $foreach.hasNext ),#end
+#end
   ],
   "correlationData": [],
   "payloadData": [
@@ -16,11 +18,7 @@
     {
       "name": "${property.name}",
       "type": "${property.value}"
-    },
+    }#if( $foreach.hasNext ),#end
 #end
-    {
-      "name": "ts",
-      "type": "LONG"
-    }
   ]
 }
