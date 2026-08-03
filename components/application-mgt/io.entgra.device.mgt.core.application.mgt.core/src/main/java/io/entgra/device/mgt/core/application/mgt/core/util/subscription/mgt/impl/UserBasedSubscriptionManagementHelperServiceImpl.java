@@ -44,7 +44,6 @@ import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
-import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOException;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceDetailsDTO;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import org.apache.commons.logging.Log;
@@ -184,7 +183,7 @@ public class UserBasedSubscriptionManagementHelperServiceImpl implements Subscri
             List<Integer> deviceIdsOwnByUser = getDeviceIdsOwnByUser(subscriptionInfo.getIdentifier());
             SubscriptionStatisticDTO subscriptionStatisticDTO = subscriptionDAO.
                     getSubscriptionStatistic(deviceIdsOwnByUser, isUnsubscribe, tenantId, applicationReleaseDTO.getId());
-            List <DeviceDetailsDTO> devices = DataHolder.getInstance().getDeviceManagementService().getDevicesByTenantId(tenantId,
+            List<DeviceDetailsDTO> devices = DataHolder.getInstance().getDeviceManagementService().getDevicesByTenantId(tenantId,
                     applicationDAO.getApplication(applicationReleaseDTO.getUuid(), tenantId).getDeviceTypeId(), subscriptionInfo.getIdentifier(), null);
             int allDeviceCount = devices.size();
             return SubscriptionManagementHelperUtil.getSubscriptionStatistics(subscriptionStatisticDTO, allDeviceCount);
@@ -207,7 +206,7 @@ public class UserBasedSubscriptionManagementHelperServiceImpl implements Subscri
         PaginationRequest paginationRequest = new PaginationRequest(-1, -1);
         paginationRequest.setOwner(username);
         paginationRequest.setStatusList(Arrays.asList(EnrolmentInfo.Status.ACTIVE.name(),
-                EnrolmentInfo.Status.INACTIVE.name(),EnrolmentInfo.Status.UNREACHABLE.name()));
+                EnrolmentInfo.Status.INACTIVE.name(), EnrolmentInfo.Status.UNREACHABLE.name()));
         PaginationResult ownDeviceIds = HelperUtil.getDeviceManagementProviderService().
                 getAllDevicesIdList(paginationRequest);
         if (ownDeviceIds.getData() != null) {

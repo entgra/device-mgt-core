@@ -1103,6 +1103,24 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                     "WHERE  dgm.GROUP_ID = ?) dgm1 " +
                     "WHERE d.ID = dgm1.DEVICE_ID " +
                     "AND d.TENANT_ID = ?";
+
+            if (request.getCustomProperty() != null && !request.getCustomProperty().isEmpty()) {
+                sql = sql + " AND ";
+                boolean firstCondition = true;
+                for (Map.Entry<String, String> entry : request.getCustomProperty().entrySet()) {
+                    if (!firstCondition) {
+                        sql += "AND ";
+                    }
+                    sql += "EXISTS (" +
+                            "SELECT VALUE_FIELD " +
+                            "FROM DM_DEVICE_INFO di " +
+                            "WHERE di.DEVICE_ID = d.ID " +
+                            "AND di.KEY_FIELD = '" + entry.getKey() + "' " +
+                            "AND di.VALUE_FIELD LIKE ? ) ";
+                    firstCondition = false;
+                }
+            }
+
             //Add the query for device-name
             if (deviceName != null && !deviceName.isEmpty()) {
                 sql = sql + " AND d.NAME LIKE ?";
@@ -1127,7 +1145,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             }
             //Add the query for owner
             if (owner != null && !owner.isEmpty()) {
-                sql = sql + " AND e.OWNER = ?";
+                sql = sql + " AND e.OWNER LIKE ?";
                 isOwnerProvided = true;
             } else if (ownerPattern != null && !ownerPattern.isEmpty()) {
                 sql = sql + " AND e.OWNER LIKE ?";
@@ -1151,6 +1169,11 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 int paramIdx = 1;
                 stmt.setInt(paramIdx++, groupId);
                 stmt.setInt(paramIdx++, tenantId);
+                if (request.getCustomProperty() != null && !request.getCustomProperty().isEmpty()) {
+                    for (Map.Entry<String, String> entry : request.getCustomProperty().entrySet()) {
+                        stmt.setString(paramIdx++, "%" + entry.getValue() + "%");
+                    }
+                }
                 if (isDeviceNameProvided) {
                     stmt.setString(paramIdx++, "%" + deviceName + "%");
                 }
@@ -1165,7 +1188,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                     stmt.setString(paramIdx++, ownership);
                 }
                 if (isOwnerProvided) {
-                    stmt.setString(paramIdx++, owner);
+                    stmt.setString(paramIdx++, "%" + owner + "%");
                 } else if (isOwnerPatternProvided) {
                     stmt.setString(paramIdx++, ownerPattern + "%");
                 }
@@ -1382,6 +1405,27 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                     "FROM " +
                     "DM_DEVICE d " +
                     "WHERE 1=1 ";
+
+            if (request.getCustomProperty() != null && !request.getCustomProperty().isEmpty()) {
+                sql = sql + "AND ";
+                boolean firstCondition = true;
+                for (Map.Entry<String, String> entry : request.getCustomProperty().entrySet()) {
+                    if (!firstCondition) {
+                        sql += "AND ";
+                    }
+                    sql += "EXISTS (" +
+                            "SELECT VALUE_FIELD " +
+                            "FROM DM_DEVICE_INFO di " +
+                            "WHERE di.DEVICE_ID = d.ID " +
+                            "AND di.KEY_FIELD = '" + entry.getKey() + "' " +
+                            "AND di.VALUE_FIELD LIKE ? ) ";
+                    firstCondition = false;
+                }
+                sql += "AND d.TENANT_ID = ? ";
+            } else {
+                sql = sql + "AND d.TENANT_ID = ? ";
+            }
+
             //Add query for last updated timestamp
             if (since != null) {
                 sql = sql + " AND d.LAST_UPDATED_TIMESTAMP > ?";
@@ -1424,6 +1468,12 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
 
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 int paramIdx = 1;
+                if (request.getCustomProperty() != null && !request.getCustomProperty().isEmpty()) {
+                    for (Map.Entry<String, String> entry : request.getCustomProperty().entrySet()) {
+                        stmt.setString(paramIdx++, "%" + entry.getValue() + "%");
+                    }
+                }
+                stmt.setInt(paramIdx++, tenantId);
                 if (isSinceProvided) {
                     stmt.setTimestamp(paramIdx++, new Timestamp(since.getTime()));
                 }
@@ -2235,8 +2285,124 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         return deviceLocationHistories;
     }
 
+
     @Override
-    public void deleteDevices(List<String> deviceIdentifiers, List<Integer> deviceIds, List<Integer> enrollmentIds, List<Device> validDevices)
+    public List<DeviceLocationHistorySnapshot> getAllDeviceLocationInfo(String deviceType, long exactTime, int timeWindow, PaginationRequest request)
+            throws DeviceManagementDAOException {
+
+        List<DeviceLocationHistorySnapshot> snapshotExactTime = new ArrayList<>();
+
+        try (Connection conn = DeviceManagementDAOFactory.getConnection()) {
+            String sql = "SELECT * FROM (" +
+                    "    SELECT DEVICE_ID, TENANT_ID, DEVICE_ID_NAME, DEVICE_TYPE_NAME, LATITUDE, LONGITUDE, SPEED, HEADING," +
+                    "           TIMESTAMP, GEO_HASH, DEVICE_OWNER, DEVICE_ALTITUDE, DISTANCE," +
+                    "           CASE " +
+                    "               WHEN TIMESTAMP = ? THEN 1 " +
+                    "               ELSE 2 " +
+                    "           END as match_priority," +
+                    "           ABS(TIMESTAMP - ?) as time_diff," +
+                    "           ROW_NUMBER() OVER (" +
+                    "               PARTITION BY DEVICE_ID_NAME " +
+                    "               ORDER BY " +
+                    "                   CASE WHEN TIMESTAMP = ? THEN 1 ELSE 2 END ASC, " +
+                    "                   ABS(TIMESTAMP - ?) ASC, " +
+                    "                   TIMESTAMP DESC" +
+                    "           ) as rn " +
+                    "    FROM DM_DEVICE_HISTORY_LAST_SEVEN_DAYS " +
+                    "    WHERE (DEVICE_TYPE_NAME = ? OR ? = 'all') " +
+                    "      AND TIMESTAMP BETWEEN ? AND ? " +
+                    ") ranked WHERE rn = 1 " +
+                    "LIMIT ? OFFSET ?";
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setLong(1, exactTime);
+                stmt.setLong(2, exactTime);
+                stmt.setLong(3, exactTime);
+                stmt.setLong(4, exactTime);
+
+                if (deviceType == null || deviceType.trim().isEmpty()) {
+                    stmt.setNull(5, java.sql.Types.VARCHAR);
+                    stmt.setNull(6, java.sql.Types.VARCHAR);
+                } else {
+                    stmt.setString(5, deviceType);
+                    stmt.setString(6, deviceType);
+                }
+
+                stmt.setLong(7, exactTime - timeWindow);
+                stmt.setLong(8, exactTime + timeWindow);
+                stmt.setInt(9, request.getRowCount());
+                stmt.setInt(10, request.getStartIndex());
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        DeviceLocationHistorySnapshot snapshot = DeviceManagementDAOUtil.loadDeviceLocation(rs);
+                        snapshotExactTime.add(snapshot);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while obtaining device location history for device type: " + deviceType;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        }
+
+        return snapshotExactTime;
+    }
+
+    @Override
+    public int getDeviceLocationCount(String deviceType, long exactTime, int timeWindow)
+            throws DeviceManagementDAOException {
+
+        int totalCount = 0;
+
+        try (Connection conn = DeviceManagementDAOFactory.getConnection()) {
+            String sql = "SELECT COUNT(*) FROM (" +
+                    "    SELECT DEVICE_ID_NAME, " +
+                    "           ROW_NUMBER() OVER (" +
+                    "               PARTITION BY DEVICE_ID_NAME " +
+                    "               ORDER BY " +
+                    "                   CASE WHEN TIMESTAMP = ? THEN 1 ELSE 2 END ASC, " +
+                    "                   ABS(TIMESTAMP - ?) ASC, " +
+                    "                   TIMESTAMP DESC" +
+                    "           ) as rn " +
+                    "    FROM DM_DEVICE_HISTORY_LAST_SEVEN_DAYS " +
+                    "    WHERE (DEVICE_TYPE_NAME = ? OR ? = 'all') " +
+                    "      AND TIMESTAMP BETWEEN ? AND ? " +
+                    ") ranked WHERE rn = 1";
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setLong(1, exactTime);
+                stmt.setLong(2, exactTime);
+
+                if (deviceType == null || deviceType.trim().isEmpty()) {
+                    stmt.setNull(3, java.sql.Types.VARCHAR);
+                    stmt.setNull(4, java.sql.Types.VARCHAR);
+                } else {
+                    stmt.setString(3, deviceType);
+                    stmt.setString(4, deviceType);
+                }
+
+                stmt.setLong(5, exactTime - timeWindow);
+                stmt.setLong(6, exactTime + timeWindow);
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        totalCount = rs.getInt(1);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while obtaining the total count of device locations for device type: " + deviceType;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        }
+
+        return totalCount;
+    }
+
+    @Override
+    public void deleteDevices(List<String> deviceIdentifiers, List<Integer> deviceIds, List<Integer> enrollmentIds,
+                              List<Device> validDevices, int tenantId)
             throws DeviceManagementDAOException {
         Connection conn;
         try {
@@ -2258,7 +2424,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 if (log.isDebugEnabled()) {
                     log.debug("Successfully removed device info data of devices: " + deviceIdentifiers);
                 }
-                removeDeviceNotification(conn, deviceIds);
+                purgeDeviceNotifications(conn, deviceIds, tenantId);
                 if (log.isDebugEnabled()) {
                     log.debug("Successfully removed device notification data of devices: " + deviceIdentifiers);
                 }
@@ -2583,29 +2749,86 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
-    /***
-     * This method removes records of a given list of devices from the DM_NOTIFICATION table
-     * @param conn Connection object
-     * @param deviceIds list of device ids (primary keys)
-     * @throws DeviceManagementDAOException if deletion fails
+    /**
+     * Removes device links from notifications and deletes notifications that no longer reference any device.
+     * Batch notifications keep their {@code DM_NOTIFICATION} row while other devices remain linked.
+     *
+     * @param conn active connection (same transaction as device delete)
+     * @param deviceIds {@link Device} primary keys
      */
-    private void removeDeviceNotification(Connection conn, List<Integer> deviceIds) throws DeviceManagementDAOException {
-        String sql = "DELETE FROM DM_NOTIFICATION WHERE DEVICE_ID = ?";
+    private void purgeDeviceNotifications(Connection conn, List<Integer> deviceIds, int tenantId)
+            throws DeviceManagementDAOException {
+        if (conn == null) {
+            throw new DeviceManagementDAOException("Connection must not be null when purging device notifications");
+        }
+        if (deviceIds == null || deviceIds.isEmpty()) {
+            return;
+        }
+        String selectNotificationIdsSql =
+                "SELECT DISTINCT nd.NOTIFICATION_ID " +
+                        "FROM DM_NOTIFICATION_DEVICE nd " +
+                        "INNER JOIN DM_NOTIFICATION n " +
+                        "ON nd.NOTIFICATION_ID = n.NOTIFICATION_ID " +
+                        "WHERE nd.DEVICE_ID = ? " +
+                        "AND n.TENANT_ID = ?";
+        String deleteMappingSql =
+                "DELETE FROM DM_NOTIFICATION_DEVICE " +
+                        "WHERE NOTIFICATION_ID = ? " +
+                        "AND DEVICE_ID = ?";
+        String countMappingsSql =
+                "SELECT COUNT(*) " +
+                        "FROM DM_NOTIFICATION_DEVICE " +
+                        "WHERE NOTIFICATION_ID = ?";
+        String deleteNotificationSql =
+                "DELETE FROM DM_NOTIFICATION " +
+                        "WHERE NOTIFICATION_ID = ? " +
+                        "AND TENANT_ID = ?";
         try {
-            if (!executeBatchOperation(conn, sql, deviceIds)) {
-                String msg = "Failed to remove device notifications of devices with deviceIds : " + deviceIds +
-                        " while executing batch operation";
-                log.error(msg);
-                throw new DeviceManagementDAOException(msg);
+            for (Integer deviceId : deviceIds) {
+                if (deviceId == null) {
+                    continue;
+                }
+                List<Integer> notificationIds = new ArrayList<>();
+                try (PreparedStatement selectStmt = conn.prepareStatement(selectNotificationIdsSql)) {
+                    selectStmt.setInt(1, deviceId);
+                    selectStmt.setInt(2, tenantId);
+                    try (ResultSet rs = selectStmt.executeQuery()) {
+                        while (rs.next()) {
+                            notificationIds.add(rs.getInt("NOTIFICATION_ID"));
+                        }
+                    }
+                }
+                for (Integer notificationId : notificationIds) {
+                    try (PreparedStatement deleteMappingStmt = conn.prepareStatement(deleteMappingSql)) {
+                        deleteMappingStmt.setInt(1, notificationId);
+                        deleteMappingStmt.setInt(2, deviceId);
+                        deleteMappingStmt.executeUpdate();
+                    }
+                    int remainingDeviceCount = 0;
+                    try (PreparedStatement countStmt = conn.prepareStatement(countMappingsSql)) {
+                        countStmt.setInt(1, notificationId);
+                        try (ResultSet countRs = countStmt.executeQuery()) {
+                            if (countRs.next()) {
+                                remainingDeviceCount = countRs.getInt(1);
+                            }
+                        }
+                    }
+                    if (remainingDeviceCount == 0) {
+                        try (PreparedStatement deleteNotificationStmt =
+                                     conn.prepareStatement(deleteNotificationSql)) {
+                            deleteNotificationStmt.setInt(1, notificationId);
+                            deleteNotificationStmt.setInt(2, tenantId);
+                            deleteNotificationStmt.executeUpdate();
+                        }
+                    }
+                }
             }
         } catch (SQLException e) {
-            String msg = "SQL error occurred while removing device notifications of devices with deviceIds : " + deviceIds;
+            String msg = "SQL error occurred while purging notifications for devices with deviceIds : " + deviceIds;
             log.error(msg, e);
             throw new DeviceManagementDAOException(msg, e);
         }
-
     }
-
 
     /***
      * This method removes records of a given list of devices from the DM_DEVICE_POLICY_APPLIED table
@@ -3279,7 +3502,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         return devices;
     }
 
-    public abstract void refactorDeviceStatus (Connection conn, List<Device> validDevices)
+    public abstract void refactorDeviceStatus(Connection conn, List<Device> validDevices)
             throws DeviceManagementDAOException;
 
     @Override
@@ -3517,7 +3740,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                     "INNER JOIN DM_ENROLMENT e " +
                     "ON d.ID = e.DEVICE_ID " +
                     "WHERE e.TENANT_ID = ? " +
-                    "AND e.DEVICE_ID IN (" + deviceIdStringList+ ") " +
+                    "AND e.DEVICE_ID IN (" + deviceIdStringList + ") " +
                     "AND e.STATUS NOT IN ('DELETED', 'REMOVED')";
 
             if (paginationRequest.getOwner() != null) {
@@ -3561,7 +3784,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                     preparedStatement.setInt(parameterIdx, paginationRequest.getDeviceTypeId());
                 }
 
-                try(ResultSet resultSet = preparedStatement.executeQuery()) {
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     if (resultSet.next()) {
                         deviceCount = resultSet.getInt("COUNT");
                     }

@@ -200,7 +200,13 @@ public class HeartBeatManagementServiceImpl implements HeartBeatManagementServic
                         if (presentCandidate.getTimeOfElection().before(new Timestamp(System.currentTimeMillis()
                                 - TimeUnit.SECONDS.toMillis(elapsedTimeInSeconds)))) {
                             heartBeatDAO.purgeCandidates();
-                            electCandidate(servers);
+                            // Check if the present candidate is still an active server before re-electing
+                            String presentCandidateServerUUID = presentCandidate.getServerUUID();
+                            if (servers.containsKey(presentCandidateServerUUID)) {
+                                heartBeatDAO.recordElectedCandidate(presentCandidateServerUUID);
+                            } else {
+                                electCandidate(servers);
+                            }
                         }
                     } else {
                         //first time execution, elect if not present

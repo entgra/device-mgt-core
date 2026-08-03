@@ -21,6 +21,7 @@ import io.entgra.device.mgt.core.apimgt.extension.rest.api.APIApplicationService
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.PublisherRESTAPIServices;
 import io.entgra.device.mgt.core.application.mgt.common.services.ApplicationManager;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
+import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationConfigService;
 import io.entgra.device.mgt.core.tenant.mgt.core.TenantManager;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.WhiteLabelManagementService;
 import org.wso2.carbon.user.core.service.RealmService;
@@ -40,6 +41,8 @@ public class TenantMgtDataHolder {
     private APIApplicationServices apiApplicationServices;
 
     private PublisherRESTAPIServices publisherRESTAPIServices;
+
+    private NotificationConfigService notificationConfigService;
 
     public RealmService getRealmService() {
         if (realmService == null) {
@@ -101,5 +104,20 @@ public class TenantMgtDataHolder {
 
     public void setPublisherRESTAPIServices(PublisherRESTAPIServices publisherRESTAPIServices) {
         this.publisherRESTAPIServices = publisherRESTAPIServices;
+    }
+
+    /**
+     * Retrieves the API Manager Publisher REST API Service instance from OSGI service context.
+     * @return {@link PublisherRESTAPIServices} API Manager Publisher REST API Service
+     */
+    public NotificationConfigService getNotificationConfigService() {
+        if (notificationConfigService == null) {
+            throw new IllegalStateException("API Manager Publisher REST API Service was not initialized.");
+        }
+        return notificationConfigService;
+    }
+
+    public void setNotificationConfigService(NotificationConfigService notificationConfigService) {
+        this.notificationConfigService = notificationConfigService;
     }
 }

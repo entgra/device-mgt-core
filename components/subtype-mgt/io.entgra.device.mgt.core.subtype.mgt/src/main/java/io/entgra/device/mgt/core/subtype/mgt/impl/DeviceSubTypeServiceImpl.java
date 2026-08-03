@@ -232,4 +232,5 @@ public class DeviceSubTypeServiceImpl implements DeviceSubTypeService {
             ConnectionManagerUtil.closeDBConnection();
         }
     }
+
 }

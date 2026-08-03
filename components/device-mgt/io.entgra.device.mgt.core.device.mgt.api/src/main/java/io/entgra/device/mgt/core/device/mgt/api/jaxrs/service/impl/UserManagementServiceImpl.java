@@ -20,25 +20,6 @@ package io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import org.apache.commons.lang.StringUtils;
-import io.entgra.device.mgt.core.device.mgt.extensions.logger.spi.EntgraLogger;
-import io.entgra.device.mgt.core.notification.logger.UserMgtLogContext;
-import io.entgra.device.mgt.core.notification.logger.impl.EntgraUserMgtLoggerImpl;
-import org.apache.http.HttpStatus;
-import org.eclipse.wst.common.uriresolver.internal.util.URIEncoder;
-import org.wso2.carbon.context.CarbonContext;
-import org.wso2.carbon.context.PrivilegedCarbonContext;
-import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
-import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo;
-import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.ConfigurationManagementException;
-import io.entgra.device.mgt.core.device.mgt.common.exceptions.OTPManagementException;
-import io.entgra.device.mgt.core.device.mgt.common.invitation.mgt.DeviceEnrollmentInvitation;
-import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Activity;
-import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.OperationManagementException;
-import io.entgra.device.mgt.core.device.mgt.common.spi.OTPManagementService;
-import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
-import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
-import io.entgra.device.mgt.core.device.mgt.core.service.EmailMetaInfo;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ActivityList;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.BasicUserInfo;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.BasicUserInfoList;
@@ -59,6 +40,24 @@ import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.RequestV
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.Constants;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.CredentialManagementResponseBuilder;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.DeviceMgtAPIUtils;
+import io.entgra.device.mgt.core.device.mgt.common.configuration.mgt.ConfigurationManagementException;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.OTPManagementException;
+import io.entgra.device.mgt.core.device.mgt.common.invitation.mgt.DeviceEnrollmentInvitation;
+import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Activity;
+import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.OperationManagementException;
+import io.entgra.device.mgt.core.device.mgt.common.spi.OTPManagementService;
+import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
+import io.entgra.device.mgt.core.device.mgt.core.service.EmailMetaInfo;
+import io.entgra.device.mgt.core.device.mgt.extensions.logger.spi.EntgraLogger;
+import io.entgra.device.mgt.core.notification.logger.UserMgtLogContext;
+import io.entgra.device.mgt.core.notification.logger.impl.EntgraUserMgtLoggerImpl;
+import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpStatus;
+import org.eclipse.wst.common.uriresolver.internal.util.URIEncoder;
+import org.wso2.carbon.context.CarbonContext;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.identity.claim.metadata.mgt.ClaimMetadataManagementAdminService;
 import org.wso2.carbon.identity.claim.metadata.mgt.dto.AttributeMappingDTO;
 import org.wso2.carbon.identity.claim.metadata.mgt.dto.ClaimPropertyDTO;
@@ -66,7 +65,11 @@ import org.wso2.carbon.identity.claim.metadata.mgt.dto.LocalClaimDTO;
 import org.wso2.carbon.identity.claim.metadata.mgt.exception.ClaimMetadataException;
 import org.wso2.carbon.identity.user.store.count.UserStoreCountRetriever;
 import org.wso2.carbon.identity.user.store.count.exception.UserStoreCounterException;
-import org.wso2.carbon.user.api.*;
+import org.wso2.carbon.user.api.Permission;
+import org.wso2.carbon.user.api.RealmConfiguration;
+import org.wso2.carbon.user.api.UserRealm;
+import org.wso2.carbon.user.api.UserStoreException;
+import org.wso2.carbon.user.api.UserStoreManager;
 import org.wso2.carbon.user.core.UserCoreConstants;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.user.mgt.UserRealmProxy;
@@ -75,7 +78,6 @@ import org.wso2.carbon.user.mgt.common.UserAdminException;
 import org.wso2.carbon.utils.CarbonUtils;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 
-import javax.ws.rs.*;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -96,8 +98,15 @@ import java.security.SecureRandom;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
-import java.util.*;
+import java.util.Set;
 
 @Path("/users")
 @Produces(MediaType.APPLICATION_JSON)
@@ -131,7 +140,7 @@ public class UserManagementServiceImpl implements UserManagementService {
                             " already exists. Therefore, request made to add user was refused.");
                 }
                 // returning response with bad request state
-                String msg = "User by username: " + userInfo.getUsername() + " already exists. Try with another username." ;
+                String msg = "User by username: " + userInfo.getUsername() + " already exists. Try with another username.";
                 return Response.status(Response.Status.CONFLICT).entity(msg).build();
             }
 
@@ -498,18 +507,18 @@ public class UserManagementServiceImpl implements UserManagementService {
     @Path("/search")
     @Override
     public Response getUsers(@QueryParam("username") String username, @QueryParam("firstName") String firstName,
-            @QueryParam("lastName") String lastName, @QueryParam("emailAddress") String emailAddress,
-            @HeaderParam("If-Modified-Since") String timestamp, @QueryParam("offset") int offset,
-            @QueryParam("limit") int limit) {
+                             @QueryParam("lastName") String lastName, @QueryParam("emailAddress") String emailAddress,
+                             @HeaderParam("If-Modified-Since") String timestamp, @QueryParam("offset") int offset,
+                             @QueryParam("limit") int limit) {
 
-        if (RequestValidationUtil.isNonFilterRequest(username,firstName, lastName, emailAddress)) {
+        if (RequestValidationUtil.isNonFilterRequest(username, firstName, lastName, emailAddress)) {
             return getUsers(null, timestamp, offset, limit, null);
         }
 
         RequestValidationUtil.validatePaginationParameters(offset, limit);
 
-        if(log.isDebugEnabled()) {
-            log.debug("Filtering users - filter: {username: " + username  +", firstName: " + firstName + ", lastName: "
+        if (log.isDebugEnabled()) {
+            log.debug("Filtering users - filter: {username: " + username + ", firstName: " + firstName + ", lastName: "
                     + lastName + ", emailAddress: " + emailAddress + "}");
         }
 
@@ -688,7 +697,7 @@ public class UserManagementServiceImpl implements UserManagementService {
         if (domain != null && !domain.isEmpty()) {
             userStoreDomain = domain;
         }
-        if (limit == 0){
+        if (limit == 0) {
             //If there is no limit is passed, then return all.
             limit = -1;
         }
@@ -1190,9 +1199,9 @@ public class UserManagementServiceImpl implements UserManagementService {
     /**
      * This method is used to build String map for user claims with updated external device details
      *
-     * @param username username of the particular user
-     * @param domain domain of the particular user
-     * @param deviceList Array of external device details
+     * @param username         username of the particular user
+     * @param domain           domain of the particular user
+     * @param deviceList       Array of external device details
      * @param userStoreManager {@link UserStoreManager} instance
      * @return String map
      * @throws UserStoreException If any error occurs while calling into UserStoreManager service
@@ -1255,6 +1264,7 @@ public class UserManagementServiceImpl implements UserManagementService {
 
     /**
      * Check if the user can be removed or not
+     *
      * @param username Username of the user
      * @return True when user can be removed, otherwise false
      * @throws DeviceManagementException Throws when error occurred while getting device count
@@ -1311,7 +1321,7 @@ public class UserManagementServiceImpl implements UserManagementService {
     /**
      * Searches users which matches a given filter based on a claim
      *
-     * @param claim the claim value to apply the filter. If <code>null</code> users will be filtered by username.
+     * @param claim  the claim value to apply the filter. If <code>null</code> users will be filtered by username.
      * @param filter the search query.
      * @return <code>List<String></code> of users which matches.
      * @throws UserStoreException If unable to search users.
@@ -1354,8 +1364,9 @@ public class UserManagementServiceImpl implements UserManagementService {
 
     /**
      * Returns a list of permissions of a given role
-     * @param roleName name of the role
-     * @param tenantId the user's tenetId
+     *
+     * @param roleName  name of the role
+     * @param tenantId  the user's tenetId
      * @param userRealm user realm of the tenant
      * @return list of permissions
      * @throws UserAdminException If unable to get the permissions
@@ -1379,6 +1390,7 @@ public class UserManagementServiceImpl implements UserManagementService {
 
     /**
      * Returns a Response with the list of user stores available for a tenant
+     *
      * @return list of user stores
      * @throws UserStoreException If unable to search for user stores
      */
@@ -1415,15 +1427,16 @@ public class UserManagementServiceImpl implements UserManagementService {
 
     /**
      * Iterates through the list of all users and returns a list of users from the specified user store domain
+     *
      * @param domain user store domain name
-     * @param users list of all users from UserStoreManager
+     * @param users  list of all users from UserStoreManager
      * @return list of users from specified user store domain
      */
     public List<String> getUsersFromDomain(String domain, List<String> users) {
         List<String> userList = new ArrayList<>();
-        for(String username : users) {
+        for (String username : users) {
             String[] domainName = username.split("/");
-            if(domain.equals(Constants.PRIMARY_USER_STORE) && domainName.length == 1) {
+            if (domain.equals(Constants.PRIMARY_USER_STORE) && domainName.length == 1) {
                 userList.add(username);
             } else if (domainName[0].equals(domain) && domainName.length > 1) {
                 userList.add(username);

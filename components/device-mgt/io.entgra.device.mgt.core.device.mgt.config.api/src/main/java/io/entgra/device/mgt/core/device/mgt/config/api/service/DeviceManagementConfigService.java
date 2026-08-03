@@ -149,10 +149,10 @@ public interface DeviceManagementConfigService {
             @QueryParam("properties")
                     String properties,
             @ApiParam(
-                    name = "withAccessToken",
-                    value = "Whether to use access token or otp token for device configuration")
-            @QueryParam("withAccessToken")
-                    boolean withAccessToken,
+                    name = "requireOtpToken",
+                    value = "Specificy to obtain an OTP token instead of an OAuth token")
+            @QueryParam("requireOtpToken")
+                    boolean requireOtpToken,
             @ApiParam(
                     name = "withGateways",
                     value = "Whether to retrieve gateway properties or not")

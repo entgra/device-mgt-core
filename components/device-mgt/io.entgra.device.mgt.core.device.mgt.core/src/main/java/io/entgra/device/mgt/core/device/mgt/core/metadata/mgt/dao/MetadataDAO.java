@@ -100,4 +100,15 @@ public interface MetadataDAO {
      */
     int getMetadataCount(int tenantId) throws MetadataManagementDAOException;
 
+    /**
+     * Clears the value of a given metadata entry for a tenant by setting its value to NULL,
+     * while keeping the metadata key and record intact.
+     *
+     * @param tenantId the tenant ID associated with the metadata
+     * @param metaKey the metadata key whose value should be cleared
+     * @return true if the metadata value was successfully cleared, false otherwise
+     * @throws MetadataManagementDAOException if an error occurs while accessing the database
+     */
+    boolean clearMetadataValue(int tenantId, String metaKey) throws MetadataManagementDAOException;
+
 }

@@ -27,6 +27,8 @@ import io.entgra.device.mgt.core.application.mgt.common.SubscriptionType;
 import io.entgra.device.mgt.core.application.mgt.common.dto.CategorizedSubscriptionCountsDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ScheduledSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceOperationDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceOperationDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.ScheduledSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException;
 import io.entgra.device.mgt.core.application.mgt.common.exception.SubscriptionManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
@@ -45,6 +47,7 @@ public interface SubscriptionManager {
 
     /**
      * Performs bulk subscription operation for a given application and a subscriber list.
+     *
      * @param applicationUUID UUID of the application to subscribe/unsubscribe
      * @param params          list of subscribers.
      *                        This list can be of either {@link DeviceIdentifier} if {@param subType} is equal to
@@ -62,16 +65,17 @@ public interface SubscriptionManager {
 
     /**
      * Performs bulk subscription operation for a given application and a subscriber list.
-     * @param applicationUUID UUID of the application to subscribe/unsubscribe
-     * @param params          list of subscribers.
-     *                        This list can be of either {@link DeviceIdentifier} if {@param subType} is equal to
-     *                        DEVICE or {@link String} if {@param subType} is USER, ROLE or GROUP
-     * @param subType         subscription type. E.g. <code>DEVICE, USER, ROLE, GROUP</code>
-     * @param action          subscription action. E.g. <code>INSTALL/UNINSTALL</code>
-     * @param <T>             generic type of the method.
-     * @param properties      Application properties that need to be sent with operation payload to the device
+     *
+     * @param applicationUUID                UUID of the application to subscribe/unsubscribe
+     * @param params                         list of subscribers.
+     *                                       This list can be of either {@link DeviceIdentifier} if {@param subType} is equal to
+     *                                       DEVICE or {@link String} if {@param subType} is USER, ROLE or GROUP
+     * @param subType                        subscription type. E.g. <code>DEVICE, USER, ROLE, GROUP</code>
+     * @param action                         subscription action. E.g. <code>INSTALL/UNINSTALL</code>
+     * @param <T>                            generic type of the method.
+     * @param properties                     Application properties that need to be sent with operation payload to the device
      * @param isOperationReExecutingDisabled To prevent adding the application subscribing operation to devices that are
-     *                                      already subscribed application successfully.
+     *                                       already subscribed application successfully.
      * @return {@link ApplicationInstallResponse}
      * @throws ApplicationManagementException if error occurs when subscribing to the given application
      */
@@ -126,17 +130,18 @@ public interface SubscriptionManager {
 
     /**
      * Perform google enterprise app install
-     * @param applicationUUID UUID of the application to subscribe/unsubscribe
-     * @param params          list of subscribers. This list can be of either
-     *                        {@link io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier} if {@param subType} is equal
-     *                        to DEVICE or {@link String} if {@param subType} is USER, ROLE or GROUP
-     * @param subType         subscription type. E.g. <code>DEVICE, USER, ROLE, GROUP</code> {@see {
-     * @param action          subscription action. E.g. <code>INSTALL/UNINSTALL</code> {@see {
-     * @param <T>             generic type of the method.
-     * @param requiresUpdatingExternal  should an external server be updated. Such as Google EMM APIs
+     *
+     * @param applicationUUID          UUID of the application to subscribe/unsubscribe
+     * @param params                   list of subscribers. This list can be of either
+     *                                 {@link io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier} if {@param subType} is equal
+     *                                 to DEVICE or {@link String} if {@param subType} is USER, ROLE or GROUP
+     * @param subType                  subscription type. E.g. <code>DEVICE, USER, ROLE, GROUP</code> {@see {
+     * @param action                   subscription action. E.g. <code>INSTALL/UNINSTALL</code> {@see {
+     * @param <T>                      generic type of the method.
+     * @param requiresUpdatingExternal should an external server be updated. Such as Google EMM APIs
      * @return {@link ApplicationInstallResponse}
      * @throws ApplicationManagementException ApplicationManagementException if error occurs when subscribing to the
-     * given application
+     *                                        given application
      * @link SubscriptionType }}
      */
     <T> void performEntAppSubscription(String applicationUUID, List<T> params, String subType, String action,
@@ -147,9 +152,9 @@ public interface SubscriptionManager {
      * This is used in enterprise app installing policy.
      *
      * @param deviceIdentifier Device identifiers
-     * @param apps Applications
+     * @param apps             Applications
      * @throws ApplicationManagementException if error occurred while installing given applications into the given
-     * device
+     *                                        device
      */
     void installAppsForDevice(DeviceIdentifier deviceIdentifier, List<App> apps)
             throws ApplicationManagementException;
@@ -189,21 +194,21 @@ public interface SubscriptionManager {
      * @throws {@link ApplicationManagementException} Exception of the application management
      */
     PaginationResult getAppInstalledSubscribers(int offsetValue, int limitValue, String appUUID,
-                                               String subType, Boolean uninstalled, String searchName)
+                                                String subType, Boolean uninstalled, String searchName)
             throws ApplicationManagementException;
 
     /**
      * This method is responsible to provide application subscription data for given application release UUID.
      *
-     * @param request paginated request object.
-     * @param actionStatus status of the operation.
-     * @param action action related to the device.
-     * @param appUUID application release UUID
-     * @param  installedVersion installed version
+     * @param request          paginated request object.
+     * @param actionStatus     status of the operation.
+     * @param action           action related to the device.
+     * @param appUUID          application release UUID
+     * @param installedVersion installed version
      * @return {@link PaginationResult}
      * @throws ApplicationManagementException if offset or limit contains incorrect values, if it couldn't find an
-     * application release for given UUID, if an error occurred while getting device details of subscribed device ids,
-     * if an error occurred while getting subscription details of given application release UUID.
+     *                                        application release for given UUID, if an error occurred while getting device details of subscribed device ids,
+     *                                        if an error occurred while getting subscription details of given application release UUID.
      */
     CategorizedSubscriptionResult getAppSubscriptionDetails(PaginationRequest request, String appUUID, String actionStatus, String action, String installedVersion)
             throws ApplicationManagementException;
@@ -231,9 +236,10 @@ public interface SubscriptionManager {
 
     /**
      * Get subscription data describes by {@link SubscriptionInfo} entity
+     *
      * @param subscriptionInfo {@link SubscriptionInfo}
-     * @param limit Limit value
-     * @param offset Offset value
+     * @param limit            Limit value
+     * @param offset           Offset value
      * @return {@link SubscriptionResponse}
      * @throws ApplicationManagementException Throws when error encountered while getting subscription data
      */
@@ -242,9 +248,10 @@ public interface SubscriptionManager {
 
     /**
      * Get status based subscription data describes by {@link SubscriptionInfo} entity
+     *
      * @param subscriptionInfo {@link SubscriptionInfo}
-     * @param limit Limit value
-     * @param offset Offset value
+     * @param limit            Limit value
+     * @param offset           Offset value
      * @return {@link SubscriptionResponse}
      * @throws ApplicationManagementException Throws when error encountered while getting subscription data
      */
@@ -253,6 +260,7 @@ public interface SubscriptionManager {
 
     /**
      * Get subscription statistics related data describes by the {@link SubscriptionInfo}
+     *
      * @param subscriptionInfo {@link SubscriptionInfo}
      * @return {@link SubscriptionStatistics}
      * @throws ApplicationManagementException Throws when error encountered while getting statistics
@@ -263,7 +271,7 @@ public interface SubscriptionManager {
      * This method is responsible for retrieving device subscription details related to the given UUID.
      *
      * @param deviceId the deviceId of the device that need to get operation details.
-     * @param uuid the UUID of the application release.
+     * @param uuid     the UUID of the application release.
      * @return {@link DeviceOperationDTO} which contains the details of device subscriptions.
      * @throws SubscriptionManagementException if there is an error while fetching the details.
      */
@@ -275,7 +283,7 @@ public interface SubscriptionManager {
      *
      * @param uuid the UUID of the application release.
      * @return {@link List<CategorizedSubscriptionCountsDTO>} which contains counts of subscriptions
-       and unsubscription for each subscription type.
+     * and unsubscription for each subscription type.
      * @throws SubscriptionManagementException if there is an error while fetching the details.
      */
     List<CategorizedSubscriptionCountsDTO> getSubscriptionCountsByUUID(String uuid)

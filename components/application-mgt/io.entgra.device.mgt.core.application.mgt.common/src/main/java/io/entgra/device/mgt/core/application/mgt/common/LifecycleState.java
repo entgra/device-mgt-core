@@ -91,7 +91,11 @@ public class LifecycleState {
         this.nextStates = nextStates;
     }
 
-    public String getReasonForChange() { return reasonForChange; }
+    public String getReasonForChange() {
+        return reasonForChange;
+    }
 
-    public void setReasonForChange(String reasonForChange) { this.reasonForChange = reasonForChange; }
+    public void setReasonForChange(String reasonForChange) {
+        this.reasonForChange = reasonForChange;
+    }
 }

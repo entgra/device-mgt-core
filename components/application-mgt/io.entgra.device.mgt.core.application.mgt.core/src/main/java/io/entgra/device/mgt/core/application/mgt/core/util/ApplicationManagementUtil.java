@@ -20,6 +20,10 @@ package io.entgra.device.mgt.core.application.mgt.core.util;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import io.entgra.device.mgt.core.application.mgt.common.*;
+import io.entgra.device.mgt.core.application.mgt.common.ApplicationArtifact;
+import io.entgra.device.mgt.core.application.mgt.common.FileDataHolder;
+import io.entgra.device.mgt.core.application.mgt.common.FileDescriptor;
+import io.entgra.device.mgt.core.application.mgt.common.LifecycleChanger;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ItuneAppDTO;
@@ -90,10 +94,10 @@ public class ApplicationManagementUtil {
     /**
      * Construct ApplicationArtifact from given base64 artifact files
      *
-     * @param iconBase64 icon of the application
+     * @param iconBase64        icon of the application
      * @param screenshotsBase64 screenshots of the application
-     * @param binaryFileBase64 binary file of the application
-     * @param bannerFileBase64 banner of the application
+     * @param binaryFileBase64  binary file of the application
+     * @param bannerFileBase64  banner of the application
      * @return ApplicationArtifact the give base64 release artifact files
      * @throws BadRequestException if any invalid payload is found
      */
@@ -211,7 +215,6 @@ public class ApplicationManagementUtil {
     }
 
     /**
-     *
      * @param base64File Base64File that should be converted to FileDataHolder bean
      * @return FileDataHolder bean which contains input stream and name of the file
      */
@@ -261,6 +264,7 @@ public class ApplicationManagementUtil {
         // TODO: implement as an extension
         return new VppApplicationManagerImpl();
     }
+
     /**
      * This is useful to delete application artifacts if any error occurred while creating release/application
      * after uploading the artifacts
@@ -616,7 +620,7 @@ public class ApplicationManagementUtil {
      * Sanitize app names and shorten icon/screenshot file names
      *
      * @param originalName Original name of the file which is being uploaded
-     * @param type Type - Name/Artifact(Icon, Screenshot, etc.)
+     * @param type         Type - Name/Artifact(Icon, Screenshot, etc.)
      * @return Sanitized and shortened file name
      */
     public static String sanitizeName(String originalName, String type) {
@@ -654,6 +658,7 @@ public class ApplicationManagementUtil {
 
     /**
      * Add installer path metadata value to windows applications
+     *
      * @param applicationReleaseDTO {@link ApplicationReleaseDTO}
      * @throws ApplicationManagementException Throws when error encountered while updating the app metadata
      */
@@ -688,20 +693,21 @@ public class ApplicationManagementUtil {
 
     /**
      * Extract name segments from installer path
+     *
      * @param applicationReleaseDTO {@link ApplicationReleaseDTO}
-     * @param installerPath Installer path
+     * @param installerPath         Installer path
      * @return Extracted file name segments
      * @throws ApplicationManagementException Throws when error encountered while extracting name segments from installer path
      */
     private static String[] extractNameSegments(ApplicationReleaseDTO applicationReleaseDTO, String installerPath)
             throws ApplicationManagementException {
-        String []installerPathSegments = installerPath.split("/");
+        String[] installerPathSegments = installerPath.split("/");
         if (installerPathSegments.length == 0) {
             throw new ApplicationManagementException("Received malformed url for installer path of the app : "
                     + applicationReleaseDTO.getInstallerName());
         }
         String fullQualifiedName = installerPathSegments[installerPathSegments.length - 1];
-        String []fileNameSegments = fullQualifiedName.split("\\.(?=[^.]+$)");
+        String[] fileNameSegments = fullQualifiedName.split("\\.(?=[^.]+$)");
         if (fileNameSegments.length != 2) {
             throw new ApplicationManagementException("Received malformed url for installer path of the app : "
                     + applicationReleaseDTO.getInstallerName());

@@ -21,15 +21,23 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import io.entgra.device.mgt.core.application.mgt.common.AppReleaseType;
 import io.entgra.device.mgt.core.application.mgt.common.dto.*;
+import io.entgra.device.mgt.core.application.mgt.common.ExecutionStatus;
+import io.entgra.device.mgt.core.application.mgt.common.SubscriptionType;
+import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.IdentityServerDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.ReviewDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.ScheduledSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.VppAssetDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.VppAssociationDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.VppUserDTO;
 import io.entgra.device.mgt.core.application.mgt.core.exception.UnexpectedServerErrorException;
+import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Activity;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONException;
-import io.entgra.device.mgt.core.application.mgt.common.ExecutionStatus;
-import io.entgra.device.mgt.core.application.mgt.common.SubscriptionType;
-
-import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -38,10 +46,10 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Date;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -121,7 +129,7 @@ public class DAOUtil {
         return deviceSubscriptionDTOS;
     }
 
-    public static DeviceSubscriptionDTO constructDeviceSubscriptionDTO(ResultSet rs ) throws SQLException {
+    public static DeviceSubscriptionDTO constructDeviceSubscriptionDTO(ResultSet rs) throws SQLException {
         DeviceSubscriptionDTO deviceSubscriptionDTO = new DeviceSubscriptionDTO();
         deviceSubscriptionDTO.setId(rs.getInt("ID"));
         deviceSubscriptionDTO.setSubscribedBy(rs.getString("SUBSCRIBED_BY"));
@@ -132,7 +140,7 @@ public class DAOUtil {
         deviceSubscriptionDTO.setActionTriggeredFrom(rs.getString("ACTION_TRIGGERED_FROM"));
         deviceSubscriptionDTO.setDeviceId(rs.getInt("DEVICE_ID"));
         deviceSubscriptionDTO.setStatus(rs.getString("STATUS"));
-        return  deviceSubscriptionDTO;
+        return deviceSubscriptionDTO;
     }
 
     /**
@@ -209,7 +217,8 @@ public class DAOUtil {
             identityServerDTO.setDescription(rs.getString("DESCRIPTION"));
             identityServerDTO.setUrl(rs.getString("URL"));
             String apiParamsJson = rs.getString("API_PARAMS");
-            Map<String, String> apiParams = new Gson().fromJson(apiParamsJson, new TypeToken<HashMap<String, String>>() {}.getType());
+            Map<String, String> apiParams = new Gson().fromJson(apiParamsJson, new TypeToken<HashMap<String, String>>() {
+            }.getType());
             identityServerDTO.setApiParams(apiParams);
             identityServerDTO.setUsername(rs.getString("USERNAME"));
             identityServerDTO.setPassword(rs.getString("PASSWORD"));
@@ -272,7 +281,7 @@ public class DAOUtil {
 
     public static ApplicationDTO loadDeviceApp(ResultSet rs) throws SQLException {
         ApplicationDTO application = new ApplicationDTO();
-        application.setId( rs.getInt("APP_ID"));
+        application.setId(rs.getInt("APP_ID"));
         application.setName(rs.getString("APP_NAME"));
         application.setDescription(rs.getString("APP_DESCRIPTION"));
         application.setType(rs.getString("APP_TYPE"));
@@ -331,7 +340,7 @@ public class DAOUtil {
         return reviewDTOs.get(0);
     }
 
-    public static List<ReviewDTO> loadReviews (ResultSet rs) throws SQLException {
+    public static List<ReviewDTO> loadReviews(ResultSet rs) throws SQLException {
         List<ReviewDTO> reviewDTOs = new ArrayList<>();
         while (rs.next()) {
             ReviewDTO reviewDTO = new ReviewDTO();
@@ -350,7 +359,7 @@ public class DAOUtil {
         return reviewDTOs;
     }
 
-    public  static ScheduledSubscriptionDTO loadScheduledSubscription(ResultSet rs)
+    public static ScheduledSubscriptionDTO loadScheduledSubscription(ResultSet rs)
             throws SQLException, UnexpectedServerErrorException {
         List<ScheduledSubscriptionDTO> subscriptionDTOs = loadScheduledSubscriptions(rs);
 
@@ -394,7 +403,7 @@ public class DAOUtil {
     }
 
     public static Activity loadOperationActivity(ResultSet rs) throws SQLException, UnexpectedServerErrorException {
-        List<Activity> activity  = loadOperationActivities(rs);
+        List<Activity> activity = loadOperationActivities(rs);
         if (activity.isEmpty()) {
             return null;
         }
@@ -406,7 +415,7 @@ public class DAOUtil {
         return activity.get(0);
     }
 
-    public static  List<Activity> loadOperationActivities (ResultSet rs) throws SQLException {
+    public static List<Activity> loadOperationActivities(ResultSet rs) throws SQLException {
         List<Activity> activities = new ArrayList<>();
         while (rs.next()) {
             Activity activity = new Activity();
@@ -434,7 +443,7 @@ public class DAOUtil {
         return vppUserDTOS.get(0);
     }
 
-    public static List<VppUserDTO> loadVppUsers (ResultSet rs) throws SQLException {
+    public static List<VppUserDTO> loadVppUsers(ResultSet rs) throws SQLException {
         List<VppUserDTO> vppUserDTOS = new ArrayList<>();
         while (rs.next()) {
             VppUserDTO vppUserDTO = new VppUserDTO();
@@ -443,16 +452,16 @@ public class DAOUtil {
             vppUserDTO.setTenantId(rs.getInt("TENANT_ID"));
             vppUserDTO.setEmail(rs.getString("EMAIL"));
             vppUserDTO.setInviteCode(rs.getString("INVITE_CODE"));
-            if (columnExist(rs,"STATUS")) {
+            if (columnExist(rs, "STATUS")) {
                 vppUserDTO.setStatus(rs.getString("STATUS"));
             }
-            if (columnExist(rs,"MANAGED_ID")) {
+            if (columnExist(rs, "MANAGED_ID")) {
                 vppUserDTO.setManagedId(rs.getString("MANAGED_ID"));
             }
-            if (columnExist(rs,"TEMP_PASSWORD")) {
+            if (columnExist(rs, "TEMP_PASSWORD")) {
                 vppUserDTO.setTmpPassword(rs.getString("TEMP_PASSWORD"));
             }
-            if (columnExist(rs,"DM_USERNAME")) {
+            if (columnExist(rs, "DM_USERNAME")) {
                 vppUserDTO.setDmUsername(rs.getString("DM_USERNAME"));
             }
             if (rs.getLong("CREATED_TIME") != 0) {
@@ -466,11 +475,11 @@ public class DAOUtil {
         return vppUserDTOS;
     }
 
-    private static boolean columnExist(ResultSet rs, String column){
-        try{
+    private static boolean columnExist(ResultSet rs, String column) {
+        try {
             rs.findColumn(column);
             return true;
-        } catch (SQLException sqlex){
+        } catch (SQLException sqlex) {
         }
 
         return false;
@@ -489,7 +498,7 @@ public class DAOUtil {
         return vppAssetDTOS.get(0);
     }
 
-    public static List<VppAssetDTO> loadAssets (ResultSet rs) throws SQLException {
+    public static List<VppAssetDTO> loadAssets(ResultSet rs) throws SQLException {
         List<VppAssetDTO> vppAssetDTOS = new ArrayList<>();
         while (rs.next()) {
             VppAssetDTO vppAssetDTO = new VppAssetDTO();
@@ -541,7 +550,7 @@ public class DAOUtil {
         return vppAssociationDTOS.get(0);
     }
 
-    public static List<VppAssociationDTO> loadAssignments (ResultSet rs) throws SQLException {
+    public static List<VppAssociationDTO> loadAssignments(ResultSet rs) throws SQLException {
         List<VppAssociationDTO> vppAssociationDTOS = new ArrayList<>();
         while (rs.next()) {
             VppAssociationDTO vppAssociationDTO = new VppAssociationDTO();

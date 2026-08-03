@@ -31,6 +31,8 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.impl.DeviceTypeEventDAOImpl
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.TagDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.TenantDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.FirmwareDAOImpl;
+import io.entgra.device.mgt.core.device.mgt.core.dao.impl.TagDAOImpl;
+import io.entgra.device.mgt.core.device.mgt.core.dao.impl.TenantDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.device.GenericDeviceDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.device.OracleDeviceDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.device.PostgreSQLDeviceDAOImpl;

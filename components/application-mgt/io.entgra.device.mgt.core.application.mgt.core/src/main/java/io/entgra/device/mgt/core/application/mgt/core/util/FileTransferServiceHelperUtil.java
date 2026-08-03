@@ -47,6 +47,8 @@ public class FileTransferServiceHelperUtil {
     private static final String ROOT = "iot-artifact-holder";
     private static final String SYSTEM_PROPERTY_TEMP_DIR = "java.io.tmpdir";
     private static final String META_ENTRY_FILE_NAME = ".meta.json";
+    private static final String CATEGORY_ICON_ROOT = "category-icons";
+    private static final String CARBON_HOME = "carbon.home";
     private static final Gson gson = new Gson();
     public static void createDefaultRootStructure() throws FileTransferServiceHelperUtilException {
         try {
@@ -299,5 +301,60 @@ public class FileTransferServiceHelperUtil {
         } catch (ApplicationStorageManagementException e) {
             throw new FileTransferServiceHelperUtilException("Error encountered while getting file input stream", e);
         }
+    }
+
+    public static Path createCategoryIconArtifactHolder(FileMetaEntry fileMetaEntry)
+            throws FileTransferServiceHelperUtilException {
+        try {
+            Path root = Paths.get(
+                    System.getProperty(CARBON_HOME),
+                    "repository", "resources", CATEGORY_ICON_ROOT
+            );
+            if (Files.notExists(root)) {
+                setMinimumPermissions(Files.createDirectories(root));
+            }
+            Path artifactHolder = root.resolve(UUID.randomUUID().toString());
+            if (Files.exists(artifactHolder)) {
+                throw new FileTransferServiceHelperUtilException(
+                        "Artifact holder already exists in " + artifactHolder);
+            }
+            setMinimumPermissions(Files.createDirectory(artifactHolder));
+            createMetaEntry(fileMetaEntry, artifactHolder);
+            createArtifactFile(fileMetaEntry, artifactHolder);
+            return artifactHolder;
+        } catch (IOException e) {
+            String msg = "Error occurred while creating category icon artifact holder";
+            log.error(msg, e);
+            throw new FileTransferServiceHelperUtilException(msg, e);
+        }
+    }
+
+
+    public static void populateCategoryIconChunkDescriptor(
+            String artifactHolder,
+            InputStream chunk,
+            ChunkDescriptor chunkDescriptor)
+            throws FileTransferServiceHelperUtilException, NotFoundException {
+
+        Path root = Paths.get(
+                System.getProperty(CARBON_HOME),
+                "repository", "resources", CATEGORY_ICON_ROOT
+        );
+        Path holder = root.resolve(artifactHolder);
+
+        if (Files.notExists(holder)) {
+            throw new NotFoundException(
+                    holder.toAbsolutePath() + " does not exist");
+        }
+        if (!Files.isDirectory(holder)) {
+            throw new FileTransferServiceHelperUtilException(
+                    holder.toAbsolutePath() + " is not a directory");
+        }
+
+        Path metaEntry = locateMetaEntry(holder);
+        chunkDescriptor.setChunk(chunk);
+        FileDescriptor fileDescriptor = new FileDescriptor();
+        populateFileDescriptor(metaEntry, holder, fileDescriptor);
+        chunkDescriptor.setAssociateFileDescriptor(fileDescriptor);
     }
 }

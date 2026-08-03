@@ -45,6 +45,7 @@ import java.util.List;
  *         &lt;element name="PolicyMonitoring" type="{}PolicyMonitoring"/>
  *         &lt;element name="DeviceAuthorizationConfig" type="{}DeviceAuthorizationConfig"/>
  *         &lt;element name="DeviceStatusTaskConfig" type="{}DeviceStatusTaskConfig"/>
+ *         &lt;element name="OperationTimeoutConfig" type="{}OperationTimeoutConfig"/>
  *       &lt;/sequence>
  *       &lt;attribute name="name" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/restriction>
@@ -91,6 +92,8 @@ public class DeviceTypeConfiguration {
     protected DeviceEnrollmentInvitationDetails deviceEnrollmentInvitationDetails;
     @XmlElement(name = "DeviceTypeMetaDetails")
     protected DeviceTypeMetaDetails deviceTypeMetaDetails;
+    @XmlElement(name = "OperationTimeoutConfig")
+    protected OperationTimeoutConfig operationTimeoutConfig;
 
     public DeviceTypePlatformDetails getDeviceTypePlatformDetails() {
         return deviceTypePlatformDetails;
@@ -422,5 +425,21 @@ public class DeviceTypeConfiguration {
 
     public void setDeviceTypeMetaDetails(DeviceTypeMetaDetails deviceTypeMetaDetails) {
         this.deviceTypeMetaDetails = deviceTypeMetaDetails;
+    }
+
+    /**
+     * Gets the value of the operationTimeoutConfig property.
+     * @return possible object is {@link OperationTimeoutConfig }
+     */
+    public OperationTimeoutConfig getOperationTimeoutConfig() {
+        return operationTimeoutConfig;
+    }
+
+    /**
+     * Sets the value of the operationTimeoutConfig property.
+     * @param operationTimeoutConfig allowed object is {@link OperationTimeoutConfig }
+     */
+    public void setOperationTimeoutConfig(OperationTimeoutConfig operationTimeoutConfig) {
+        this.operationTimeoutConfig = operationTimeoutConfig;
     }
 }
