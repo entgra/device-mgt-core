@@ -61,6 +61,13 @@
         <Enabled>false</Enabled>
         {% endif %}
     </PullNotificationConfiguration>
+    <UIRequestConfiguration>
+        {% if device_mgt_conf.ui_request_conf is defined %}
+        <SSETimeout>{{device_mgt_conf.ui_request_conf.sse_timeout}}</SSETimeout>
+        {% else %}
+        <SSETimeout>0</SSETimeout>
+        {% endif %}
+    </UIRequestConfiguration>
     <IdentityConfiguration>
         {% if device_mgt_conf.identity_conf is defined %}
         <ServerUrl>{{device_mgt_conf.identity_conf.server_url}}</ServerUrl>

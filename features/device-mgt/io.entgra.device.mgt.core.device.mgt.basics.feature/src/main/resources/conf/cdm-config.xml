@@ -40,6 +40,9 @@
     <PullNotificationConfiguration>
         <Enabled>false</Enabled>
     </PullNotificationConfiguration>
+    <UIRequestConfiguration>
+        <SSETimeout>0</SSETimeout>
+    </UIRequestConfiguration>
     <IdentityConfiguration>
         <ServerUrl>https://localhost:9443</ServerUrl>
         <AdminUsername>${admin.username}</AdminUsername>
