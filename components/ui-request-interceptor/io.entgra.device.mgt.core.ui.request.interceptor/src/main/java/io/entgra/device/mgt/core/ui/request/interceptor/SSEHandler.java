@@ -23,6 +23,9 @@ import io.entgra.device.mgt.core.notification.mgt.core.util.NotificationEventBro
 import io.entgra.device.mgt.core.notification.mgt.core.util.NotificationListener;
 import io.entgra.device.mgt.core.notification.mgt.core.dao.NotificationManagementDAO;
 import io.entgra.device.mgt.core.notification.mgt.core.dao.factory.NotificationManagementDAOFactory;
+import io.entgra.device.mgt.core.device.mgt.core.config.DeviceConfigurationManager;
+import io.entgra.device.mgt.core.device.mgt.core.config.DeviceManagementConfig;
+import io.entgra.device.mgt.core.device.mgt.core.config.ui.request.UIRequestConfiguration;
 import io.entgra.device.mgt.core.ui.request.interceptor.beans.AuthData;
 import io.entgra.device.mgt.core.ui.request.interceptor.util.HandlerConstants;
 import org.apache.commons.logging.Log;
@@ -32,8 +35,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.servlet.AsyncContext;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
@@ -54,6 +59,7 @@ public class SSEHandler extends HttpServlet implements NotificationListener {
     private static final Map<String, List<AsyncContext>> userStreams = new ConcurrentHashMap<>();
     private final NotificationManagementDAO notificationDAO =
             NotificationManagementDAOFactory.getNotificationManagementDAO();
+    private long sseTimeout;
 
     /**
      * initializes the servlet and registers this instance as a notification listener.
@@ -62,6 +68,18 @@ public class SSEHandler extends HttpServlet implements NotificationListener {
      */
     @Override
     public void init(ServletConfig config) {
+        try {
+            DeviceManagementConfig deviceManagementConfig = DeviceConfigurationManager.getInstance()
+                    .getDeviceManagementConfig();
+            if (deviceManagementConfig != null) {
+                UIRequestConfiguration uiRequestConfig = deviceManagementConfig.getUiRequestConfiguration();
+                if (uiRequestConfig != null) {
+                    this.sseTimeout = uiRequestConfig.getSseTimeout();
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error occurred while reading UIRequestConfiguration. Using default timeout.", e);
+        }
         // register as a notification listener
         NotificationEventBroker.registerListener(this);
     }
@@ -143,23 +161,39 @@ public class SSEHandler extends HttpServlet implements NotificationListener {
         res.setContentType("text/event-stream");
         res.setCharacterEncoding("UTF-8");
         final AsyncContext ac = req.startAsync();
-        ac.setTimeout(0);
+        ac.setTimeout(sseTimeout);
         userStreams.computeIfAbsent(notificationUsername, k -> new CopyOnWriteArrayList<>()).add(ac);
         if (!notificationUsername.equals(sessionUsername)) {
             userStreams.computeIfAbsent(sessionUsername, k -> new CopyOnWriteArrayList<>()).add(ac);
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("Opened SSE connection for user: " + sessionUsername + ". Active connections: "
+                    + getActiveConnectionCount());
         }
         ac.addListener(new AsyncListener() {
             @Override
             public void onComplete(AsyncEvent event) {
                 removeContext(ac);
+                if (log.isDebugEnabled()) {
+                    log.debug("Completed SSE connection for user: " + sessionUsername + ". Active connections: "
+                            + getActiveConnectionCount());
+                }
             }
             @Override
             public void onTimeout(AsyncEvent event) {
                 removeContext(ac);
+                if (log.isDebugEnabled()) {
+                    log.debug("SSE connection timed out for user: " + sessionUsername + ". Active connections: "
+                            + getActiveConnectionCount());
+                }
             }
             @Override
             public void onError(AsyncEvent event) {
                 removeContext(ac);
+                if (log.isDebugEnabled()) {
+                    log.debug("SSE connection errored for user: " + sessionUsername + ". Active connections: "
+                            + getActiveConnectionCount());
+                }
             }
             @Override
             public void onStartAsync(AsyncEvent event) {
@@ -229,12 +263,30 @@ public class SSEHandler extends HttpServlet implements NotificationListener {
     }
 
     /**
+     * Returns the number of unique active SSE connections. A connection can be associated with
+     * multiple username keys, so counting the stream lists directly would over-count it.
+     *
+     * @return number of active SSE connections
+     */
+    private int getActiveConnectionCount() {
+        Set<AsyncContext> activeContexts = new HashSet<>();
+        for (List<AsyncContext> contexts : userStreams.values()) {
+            activeContexts.addAll(contexts);
+        }
+        return activeContexts.size();
+    }
+
+    /**
      * closes an SSE connection safely and removes it from tracking.
      * prevents resource leaks (open sockets/threads) when the client disconnects or an error occurs.
      * @param username the authenticated username associated with this stream
      * @param ac the async context to complete
      */
     private void closeStream(String username, AsyncContext ac) {
+        if (log.isDebugEnabled()) {
+            log.debug("Closing SSE connection for user: " + username + ". Active connections: "
+                    + getActiveConnectionCount());
+        }
         removeContext(username, ac);
         removeContext(ac);
         try {

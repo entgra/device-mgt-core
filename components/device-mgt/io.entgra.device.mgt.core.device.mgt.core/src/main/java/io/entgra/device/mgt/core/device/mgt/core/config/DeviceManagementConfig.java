@@ -41,6 +41,7 @@ import io.entgra.device.mgt.core.device.mgt.core.config.status.task.DeviceStatus
 import io.entgra.device.mgt.core.device.mgt.core.config.task.TaskConfiguration;
 import io.entgra.device.mgt.core.device.mgt.core.event.config.EventOperationTaskConfiguration;
 import io.entgra.device.mgt.core.device.mgt.core.config.permission.DefaultPermissions;
+import io.entgra.device.mgt.core.device.mgt.core.config.ui.request.UIRequestConfiguration;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -78,6 +79,7 @@ public final class DeviceManagementConfig {
     private EnrollmentGuideConfiguration enrollmentGuideConfiguration;
     private MQTTConfiguration mqttConfiguration;
     private DefaultPermissions defaultPermissions;
+    private UIRequestConfiguration uiRequestConfiguration;
 
     @XmlElement(name = "ManagementRepository", required = true)
     public DeviceManagementConfigRepository getDeviceManagementConfigRepository() {
@@ -308,6 +310,15 @@ public final class DeviceManagementConfig {
 
     public void setMqttConfiguration(MQTTConfiguration mqttConfiguration) {
         this.mqttConfiguration = mqttConfiguration;
+    }
+
+    @XmlElement(name = "UIRequestConfiguration", required = false)
+    public UIRequestConfiguration getUiRequestConfiguration() {
+        return uiRequestConfiguration;
+    }
+
+    public void setUiRequestConfiguration(UIRequestConfiguration uiRequestConfiguration) {
+        this.uiRequestConfiguration = uiRequestConfiguration;
     }
 
 }
