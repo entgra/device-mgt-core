@@ -43,4 +43,9 @@ public interface KeyManagerService {
                                  @FormParam("username") String username,
                                  @FormParam("password") String password,
                                  @FormParam("validityPeriod") int validityPeriod);
+
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/scopes/sync")
+    Response syncScopes();
 }
