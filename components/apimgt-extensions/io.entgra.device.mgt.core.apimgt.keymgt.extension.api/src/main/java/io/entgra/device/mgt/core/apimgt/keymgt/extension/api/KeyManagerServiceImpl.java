@@ -29,6 +29,8 @@ import io.entgra.device.mgt.core.apimgt.keymgt.extension.service.KeyMgtServiceIm
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.APIPublisherService;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.exception.APIManagerPublisherException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.UnAuthorizedException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 
 import javax.ws.rs.*;
@@ -38,6 +40,7 @@ import java.util.Base64;
 
 public class KeyManagerServiceImpl implements KeyManagerService {
 
+    private static final Log log = LogFactory.getLog(KeyManagerServiceImpl.class);
     Gson gson = new Gson();
 
     @Override
@@ -101,13 +104,17 @@ public class KeyManagerServiceImpl implements KeyManagerService {
             APIPublisherService apiPublisherService = (APIPublisherService) PrivilegedCarbonContext
                     .getThreadLocalCarbonContext().getOSGiService(APIPublisherService.class, null);
             if (apiPublisherService == null) {
-                throw new IllegalStateException("API publisher service is unavailable");
+                String msg = "API publisher service is unavailable";
+                log.error(msg);
+                throw new IllegalStateException(msg);
             }
             apiPublisherService.updateScopeRoleMapping();
             String msg = "Scope role mappings synchronized successfully";
             return Response.status(Response.Status.OK).entity(msg).build();
         } catch (APIManagerPublisherException | IllegalStateException e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+            String msg = "Error occurred while synchronizing scope role mappings";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
     }
 }
