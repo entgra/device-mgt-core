@@ -26,6 +26,8 @@ import io.entgra.device.mgt.core.apimgt.keymgt.extension.exception.BadRequestExc
 import io.entgra.device.mgt.core.apimgt.keymgt.extension.exception.KeyMgtException;
 import io.entgra.device.mgt.core.apimgt.keymgt.extension.service.KeyMgtService;
 import io.entgra.device.mgt.core.apimgt.keymgt.extension.service.KeyMgtServiceImpl;
+import io.entgra.device.mgt.core.apimgt.webapp.publisher.APIPublisherService;
+import io.entgra.device.mgt.core.apimgt.webapp.publisher.exception.APIManagerPublisherException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.UnAuthorizedException;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 
@@ -87,6 +89,25 @@ public class KeyManagerServiceImpl implements KeyManagerService {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         } catch (UnAuthorizedException e) {
             return Response.status(Response.Status.UNAUTHORIZED).entity(e.getMessage()).build();
+        }
+    }
+
+    @Override
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/scopes/sync")
+    public Response syncScopes() {
+        try {
+            APIPublisherService apiPublisherService = (APIPublisherService) PrivilegedCarbonContext
+                    .getThreadLocalCarbonContext().getOSGiService(APIPublisherService.class, null);
+            if (apiPublisherService == null) {
+                throw new IllegalStateException("API publisher service is unavailable");
+            }
+            apiPublisherService.updateScopeRoleMapping();
+            String msg = "Scope role mappings synchronized successfully";
+            return Response.status(Response.Status.OK).entity(msg).build();
+        } catch (APIManagerPublisherException | IllegalStateException e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         }
     }
 }
