@@ -531,8 +531,14 @@ public class APIPublisherServiceImpl implements APIPublisherService {
                                 if (relatedScope.getName().equals(scopeMapping[2].toString())) {
                                     scope.setId(relatedScope.getId());
                                     scope.setUsageCount(relatedScope.getUsageCount());
-                                    //Including already existing roles
-                                    rolesList.addAll(relatedScope.getBindings());
+                                    if (relatedScope.getBindings() != null) {
+                                        for (String existingScopeBinding : relatedScope.getBindings()) {
+                                            if (!roles.containsValue(existingScopeBinding)
+                                                    && !rolesList.contains(existingScopeBinding)) {
+                                                rolesList.add(existingScopeBinding);
+                                            }
+                                        }
+                                    }
                                 }
                             }
                             scope.setBindings(rolesList);
