@@ -524,6 +524,11 @@ public class APIPublisherServiceImpl implements APIPublisherService {
                                     }
                                 }
                             }
+
+                            // Preserve admin access regardless of the CSV role mapping.
+                            if (!rolesList.contains(ADMIN_ROLE_KEY)) {
+                                rolesList.add(ADMIN_ROLE_KEY);
+                            }
                             //Set scope details which related to the scope key
                             Scope[] scopes = publisherRESTAPIServices.getScopes();
                             for (int i = 0; i < scopes.length; i++) {
