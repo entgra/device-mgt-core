@@ -112,10 +112,13 @@ public class HandlerUtil {
                 }
                 if (responseEntity == null) {
                     log.error("Received null response for http request : " + httpRequest.getMethod() + " " + httpRequest.getRequestUri());
-                    handlerResponse.setCode(HandlerConstants.INTERNAL_ERROR_CODE);
+                    int errorCode = statusCode == HttpStatus.SC_UNAUTHORIZED
+                            ? HttpStatus.SC_UNAUTHORIZED
+                            : HandlerConstants.INTERNAL_ERROR_CODE;
+                    handlerResponse.setCode(errorCode);
                     handlerResponse.setStatus(ProxyResponse.Status.ERROR);
                     handlerResponse.setExecutorResponse(HandlerConstants.EXECUTOR_EXCEPTION_PREFIX + getStatusKey(
-                            HandlerConstants.INTERNAL_ERROR_CODE));
+                            errorCode));
                     return handlerResponse;
                 }
                 JsonNode responseData = getResponseDataAsJsonNode(responseEntity);
@@ -156,7 +159,7 @@ public class HandlerUtil {
     }
 
     public static boolean isTokenExpired(JsonNode jsonBody) {
-        if (jsonBody.isNull() || StringUtils.isBlank(jsonBody.textValue())) {
+        if (jsonBody == null || jsonBody.isNull() || StringUtils.isBlank(jsonBody.textValue())) {
             return false;
         }
         return jsonBody.textValue().contains("Access token expired") || jsonBody.textValue()
