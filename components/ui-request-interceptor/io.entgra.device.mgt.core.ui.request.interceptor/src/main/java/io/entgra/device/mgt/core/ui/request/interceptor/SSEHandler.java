@@ -51,6 +51,9 @@ import javax.servlet.http.HttpSession;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @WebServlet(urlPatterns = {"/ConnectSSE"}, asyncSupported = true)
 public class SSEHandler extends HttpServlet implements NotificationListener {
@@ -60,6 +63,8 @@ public class SSEHandler extends HttpServlet implements NotificationListener {
     private final NotificationManagementDAO notificationDAO =
             NotificationManagementDAOFactory.getNotificationManagementDAO();
     private long sseTimeout;
+    private int sseKeepAliveInterval;
+    private ScheduledExecutorService keepAliveScheduler;
 
     /**
      * initializes the servlet and registers this instance as a notification listener.
@@ -75,6 +80,7 @@ public class SSEHandler extends HttpServlet implements NotificationListener {
                 UIRequestConfiguration uiRequestConfig = deviceManagementConfig.getUiRequestConfiguration();
                 if (uiRequestConfig != null) {
                     this.sseTimeout = uiRequestConfig.getSseTimeout();
+                    this.sseKeepAliveInterval = uiRequestConfig.getSseKeepAliveInterval();
                 }
             }
         } catch (Exception e) {
@@ -82,6 +88,41 @@ public class SSEHandler extends HttpServlet implements NotificationListener {
         }
         // register as a notification listener
         NotificationEventBroker.registerListener(this);
+        
+        if (this.sseKeepAliveInterval > 0) {
+            this.keepAliveScheduler = Executors.newSingleThreadScheduledExecutor();
+            this.keepAliveScheduler.scheduleAtFixedRate(() -> {
+                for (Map.Entry<String, List<AsyncContext>> entry : userStreams.entrySet()) {
+                    String username = entry.getKey();
+                    for (AsyncContext ac : entry.getValue()) {
+                        try {
+                            PrintWriter out = ac.getResponse().getWriter();
+                            out.write(": keep-alive\n\n");
+                            out.flush();
+                            if (out.checkError()) {
+                                closeStream(username, ac);
+                            }
+                        } catch (Exception e) {
+                            closeStream(username, ac);
+                            if (log.isDebugEnabled()) {
+                                log.debug("Error writing SSE keep-alive ping. Removing stream.", e);
+                            }
+                        }
+                    }
+                }
+            }, this.sseKeepAliveInterval, this.sseKeepAliveInterval, TimeUnit.MILLISECONDS);
+            if (log.isDebugEnabled()) {
+                log.debug("SSE Keep-Alive task scheduled every " + this.sseKeepAliveInterval + " milliseconds.");
+            }
+        }
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        if (this.keepAliveScheduler != null && !this.keepAliveScheduler.isShutdown()) {
+            this.keepAliveScheduler.shutdownNow();
+        }
     }
 
     /**

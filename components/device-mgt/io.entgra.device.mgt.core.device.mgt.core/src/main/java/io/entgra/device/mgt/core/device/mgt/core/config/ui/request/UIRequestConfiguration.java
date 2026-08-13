@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class UIRequestConfiguration {
 
     private int sseTimeout;
+    private int sseKeepAliveInterval;
 
     @XmlElement(name = "SSETimeout")
     public int getSseTimeout() {
@@ -35,5 +36,14 @@ public class UIRequestConfiguration {
 
     public void setSseTimeout(int sseTimeout) {
         this.sseTimeout = sseTimeout;
+    }
+
+    @XmlElement(name = "SSEKeepAliveInterval")
+    public int getSseKeepAliveInterval() {
+        return sseKeepAliveInterval;
+    }
+
+    public void setSseKeepAliveInterval(int sseKeepAliveInterval) {
+        this.sseKeepAliveInterval = sseKeepAliveInterval;
     }
 }
