@@ -42,6 +42,7 @@
     </PullNotificationConfiguration>
     <UIRequestConfiguration>
         <SSETimeout>0</SSETimeout>
+        <SSEKeepAliveInterval>0</SSEKeepAliveInterval>
     </UIRequestConfiguration>
     <IdentityConfiguration>
         <ServerUrl>https://localhost:9443</ServerUrl>
