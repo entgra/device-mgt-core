@@ -135,7 +135,7 @@ public class HandlerUtil {
                         handlerResponse.setStatus(ProxyResponse.Status.ERROR);
                         handlerResponse.setExecutorResponse(HandlerConstants.TOKEN_IS_EXPIRED);
                     } else {
-                        String responseMessage = responseData == null ? "null" : responseData.textValue();
+                        String responseMessage = responseData == null ? "No response body" : responseData.textValue();
                         log.error(
                                 "Received " + statusCode + " response for http request : " + httpRequest.getMethod()
                                         + " " + httpRequest.getRequestUri() + ". Error message: " + responseMessage);
@@ -147,7 +147,7 @@ public class HandlerUtil {
                     }
                     return handlerResponse;
                 }
-                String responseMessage = responseData == null ? "null" : responseData.textValue();
+                String responseMessage = responseData == null ? "No response body" : responseData.textValue();
                 log.error("Received " + statusCode + " response for http request : " + httpRequest.getMethod()
                         + " " + httpRequest.getRequestUri() + ". Error message: " + responseMessage);
                 handlerResponse.setCode(statusCode);
