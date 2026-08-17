@@ -472,111 +472,152 @@ public class APIPublisherServiceImpl implements APIPublisherService {
                         return;
                     }
                     if (Files.exists(Paths.get(fileName))) {
-                        BufferedReader br = new BufferedReader(new FileReader(fileName));
-                        int lineNumber = 0;
-                        Map<Integer, String> roles = new HashMap<>();
-                        Map<String, List<String>> rolePermissions = new HashMap<>();
-                        String line;
-                        String splitBy = ",";
-                        while ((line = br.readLine()) != null) {  //returns a Boolean value
-                            lineNumber++;
-                            String[] scopeMapping = line.split(splitBy);    // use comma as separator
-                            String role;
-                            if (lineNumber == 1) { // skip titles
-                                for (int i = 4; i < scopeMapping.length; i++) {
-                                    role = scopeMapping[i];
-                                    roles.put(i, role); // add roles to the map
-                                    if (!"admin".equals(role)) {
-                                        try {
-                                            if (!userStoreManager.isExistingRole(role)) {
-                                                try {
-                                                    addRole(role);
-                                                } catch (UserStoreException e) {
-                                                    log.error("Error occurred when adding new role: " + role, e);
-                                                }
-                                            }
-                                        } catch (UserStoreException e) {
-                                            log.error("Error occurred when checking the existence of role: " + role, e);
-                                        }
-                                        rolePermissions.put(role, new ArrayList<>());
-                                    }
-                                }
-                                continue;
-                            }
-
-                            Scope scope = new Scope();
-                            scope.setDisplayName(
-                                    scopeMapping[0] != null ? StringUtils.trim(scopeMapping[0]) : StringUtils.EMPTY);
-                            scope.setDescription(
-                                    scopeMapping[1] != null ? StringUtils.trim(scopeMapping[1]) : StringUtils.EMPTY);
-                            scope.setName(
-                                    scopeMapping[2] != null ? StringUtils.trim(scopeMapping[2]) : StringUtils.EMPTY);
-                            //                        scope.setPermissions(
-                            //                                scopeMapping[3] != null ? StringUtils.trim(scopeMapping[3]) : StringUtils.EMPTY);
-                            String permission = scopeMapping[3] != null ? StringUtils.trim(scopeMapping[3]) : StringUtils.EMPTY;
-
-                            List<String> rolesList = new ArrayList<>();
-                            for (int i = 4; i < scopeMapping.length; i++) {
-                                if (scopeMapping[i] != null && StringUtils.trim(scopeMapping[i]).equals("Yes")) {
-                                    rolesList.add(roles.get(i));
-                                    if (rolePermissions.containsKey(roles.get(i)) && StringUtils.isNotEmpty(permission)) {
-                                        rolePermissions.get(roles.get(i)).add(permission);
-                                    }
-                                }
-                            }
-                            //Set scope details which related to the scope key
-                            Scope[] scopes = publisherRESTAPIServices.getScopes();
-                            for (int i = 0; i < scopes.length; i++) {
-                                Scope relatedScope = scopes[i];
-                                if (relatedScope.getName().equals(scopeMapping[2].toString())) {
-                                    scope.setId(relatedScope.getId());
-                                    scope.setUsageCount(relatedScope.getUsageCount());
-                                    //Including already existing roles
-                                    rolesList.addAll(relatedScope.getBindings());
-                                }
-                            }
-                            scope.setBindings(rolesList);
-
-                            if (publisherRESTAPIServices.isSharedScopeNameExists(scope.getName())) {
-                                publisherRESTAPIServices.updateSharedScope(scope);
-                                // todo: permission changed in update path, is not handled yet.
-                            } else {
-                                // This scope doesn't have an api attached.
-                                log.warn(scope.getName() + " not available as shared, add as new scope");
-                                publisherRESTAPIServices.addNewSharedScope(scope);
-                                // add permission if not exist
-                                try {
-                                    PermissionUtils.putPermission(permission);
-                                } catch (PermissionManagementException e) {
-                                    log.error("Error when adding permission ", e);
-                                }
-                            }
-                        }
-                        for (String role : rolePermissions.keySet()) {
-                            updatePermissions(role, rolePermissions.get(role));
-                        }
+                        readScopeMappings(fileName, userStoreManager, publisherRESTAPIServices);
                     }
                 } catch (IOException | DirectoryIteratorException e) {
                     String errorMsg = "Failed to read scopes from file: '" + fileName + "'.";
                     log.error(errorMsg, e);
                     throw new APIManagerPublisherException(e);
                 }
-            } catch (APIServicesException e) {
-                String errorMsg = "Error while processing Publisher REST API response";
-                log.error(errorMsg, e);
-                throw new APIManagerPublisherException(e);
-            } catch (BadRequestException e) {
-                String errorMsg = "Error while calling Publisher REST APIs";
-                log.error(errorMsg, e);
-                throw new APIManagerPublisherException(e);
-            } catch (UnexpectedResponseException e) {
-                String errorMsg = "Unexpected response from the server";
-                log.error(errorMsg, e);
-                throw new APIManagerPublisherException(e);
             } finally {
                 APIPublisherUtils.removeScopePublishUserIfExists(tenantDomain);
                 PrivilegedCarbonContext.endTenantFlow();
             }
+        }
+    }
+
+    /**
+     * Reads scope mappings from the tenant configuration file.
+     *
+     * @param fileName the scope mapping file name
+     * @param userStoreManager the user store manager
+     * @param publisherRESTAPIServices the publisher REST API services
+     * @throws IOException if an error occurs while reading the scope mapping file
+     * @throws APIManagerPublisherException if an error occurs while updating a scope
+     */
+    private void readScopeMappings(String fileName, UserStoreManager userStoreManager,
+                                   PublisherRESTAPIServices publisherRESTAPIServices)
+            throws IOException, APIManagerPublisherException {
+        BufferedReader br = new BufferedReader(new FileReader(fileName));
+        int lineNumber = 0;
+        Map<Integer, String> roles = new HashMap<>();
+        Map<String, List<String>> rolePermissions = new HashMap<>();
+        String line;
+        String splitBy = ",";
+        while ((line = br.readLine()) != null) {  //returns a Boolean value
+            lineNumber++;
+            String[] scopeMapping = line.split(splitBy);    // use comma as separator
+            if (lineNumber == 1) { // skip titles
+                readRoles(scopeMapping, roles, rolePermissions, userStoreManager);
+                continue;
+            }
+            updateScope(scopeMapping, roles, rolePermissions, publisherRESTAPIServices);
+        }
+        for (String role : rolePermissions.keySet()) {
+            updatePermissions(role, rolePermissions.get(role));
+        }
+    }
+
+    /**
+     * Reads roles from the scope mapping header and creates missing roles.
+     *
+     * @param scopeMapping the scope mapping header values
+     * @param roles the roles mapped by column index
+     * @param rolePermissions the permissions mapped by role
+     * @param userStoreManager the user store manager
+     */
+    private void readRoles(String[] scopeMapping, Map<Integer, String> roles,
+                           Map<String, List<String>> rolePermissions, UserStoreManager userStoreManager) {
+        for (int i = 4; i < scopeMapping.length; i++) {
+            String role = scopeMapping[i];
+            roles.put(i, role); // add roles to the map
+            if (!"admin".equals(role)) {
+                try {
+                    if (!userStoreManager.isExistingRole(role)) {
+                        try {
+                            addRole(role);
+                        } catch (UserStoreException e) {
+                            log.error("Error occurred when adding new role: " + role, e);
+                        }
+                    }
+                } catch (UserStoreException e) {
+                    log.error("Error occurred when checking the existence of role: " + role, e);
+                }
+                rolePermissions.put(role, new ArrayList<>());
+            }
+        }
+    }
+
+    /**
+     * Updates a shared scope using a scope mapping entry.
+     *
+     * @param scopeMapping the scope mapping values
+     * @param roles the roles mapped by column index
+     * @param rolePermissions the permissions mapped by role
+     * @param publisherRESTAPIServices the publisher REST API services
+     * @throws APIManagerPublisherException if an error occurs while updating the shared scope
+     */
+    private void updateScope(String[] scopeMapping, Map<Integer, String> roles,
+                             Map<String, List<String>> rolePermissions,
+                             PublisherRESTAPIServices publisherRESTAPIServices)
+            throws APIManagerPublisherException {
+        Scope scope = new Scope();
+        scope.setDisplayName(scopeMapping[0] != null ? StringUtils.trim(scopeMapping[0]) : StringUtils.EMPTY);
+        scope.setDescription(scopeMapping[1] != null ? StringUtils.trim(scopeMapping[1]) : StringUtils.EMPTY);
+        scope.setName(scopeMapping[2] != null ? StringUtils.trim(scopeMapping[2]) : StringUtils.EMPTY);
+        // scope.setPermissions(scopeMapping[3] != null ? StringUtils.trim(scopeMapping[3]) : StringUtils.EMPTY);
+        String permission = scopeMapping[3] != null ? StringUtils.trim(scopeMapping[3]) : StringUtils.EMPTY;
+
+        List<String> rolesList = new ArrayList<>();
+        for (int i = 4; i < scopeMapping.length; i++) {
+            if (scopeMapping[i] != null && StringUtils.trim(scopeMapping[i]).equals("Yes")) {
+                rolesList.add(roles.get(i));
+                if (rolePermissions.containsKey(roles.get(i)) && StringUtils.isNotEmpty(permission)) {
+                    rolePermissions.get(roles.get(i)).add(permission);
+                }
+            }
+        }
+
+        try {
+            //Set scope details which related to the scope key
+            Scope[] scopes = publisherRESTAPIServices.getScopes();
+            for (int i = 0; i < scopes.length; i++) {
+                Scope relatedScope = scopes[i];
+                if (relatedScope.getName().equals(scopeMapping[2].toString())) {
+                    scope.setId(relatedScope.getId());
+                    scope.setUsageCount(relatedScope.getUsageCount());
+                    //Including already existing roles
+                    rolesList.addAll(relatedScope.getBindings());
+                }
+            }
+            scope.setBindings(rolesList);
+
+            if (publisherRESTAPIServices.isSharedScopeNameExists(scope.getName())) {
+                publisherRESTAPIServices.updateSharedScope(scope);
+                // todo: permission changed in update path, is not handled yet.
+            } else {
+                // This scope doesn't have an api attached.
+                log.warn(scope.getName() + " not available as shared, add as new scope");
+                publisherRESTAPIServices.addNewSharedScope(scope);
+                // add permission if not exist
+                try {
+                    PermissionUtils.putPermission(permission);
+                } catch (PermissionManagementException e) {
+                    log.error("Error when adding permission ", e);
+                }
+            }
+        } catch (APIServicesException e) {
+            String errorMsg = "Error while processing Publisher REST API response";
+            log.error(errorMsg, e);
+            throw new APIManagerPublisherException(e);
+        } catch (BadRequestException e) {
+            String errorMsg = "Error while calling Publisher REST APIs";
+            log.error(errorMsg, e);
+            throw new APIManagerPublisherException(e);
+        } catch (UnexpectedResponseException e) {
+            String errorMsg = "Unexpected response from the server";
+            log.error(errorMsg, e);
+            throw new APIManagerPublisherException(e);
         }
     }
 
