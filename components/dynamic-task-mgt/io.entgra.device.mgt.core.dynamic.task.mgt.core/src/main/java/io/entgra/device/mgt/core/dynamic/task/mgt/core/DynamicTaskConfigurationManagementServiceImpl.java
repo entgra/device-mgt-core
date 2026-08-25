@@ -71,6 +71,7 @@ public class DynamicTaskConfigurationManagementServiceImpl implements DynamicTas
                     existingCategorizedDynamicTask.setEnable(updatedCategorizedDynamicTask.isEnable());
                     existingCategorizedDynamicTask.setFrequency(updatedCategorizedDynamicTask.getFrequency());
                     existingCategorizedDynamicTask.setDeviceTypes(updatedCategorizedDynamicTask.getDeviceTypes());
+                    existingCategorizedDynamicTask.setOperationCodes(updatedCategorizedDynamicTask.getOperationCodes());
                 }
             }
             return new DynamicTaskPlatformConfigurations(new HashSet<>(existingCategorizedDynamicTasks));
