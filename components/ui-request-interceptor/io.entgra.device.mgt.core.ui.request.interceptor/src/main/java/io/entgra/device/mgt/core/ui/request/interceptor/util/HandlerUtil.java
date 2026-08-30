@@ -714,12 +714,14 @@ public class HandlerUtil {
                 ProxyResponse refreshResponse = getTokenResult(currentAuthData, apiEndpoint);
                 if (!isResponseSuccessful(refreshResponse)) {
                     log.error("Error occurred while refreshing access token.");
-                    return refreshResponse;
+                    session.removeAttribute(authDataKey);
+                    return constructProxyResponseByErrorCode(HttpStatus.SC_UNAUTHORIZED);
                 }
                 JsonNode tokenResponse = refreshResponse.getData();
                 if (tokenResponse == null || !tokenResponse.hasNonNull("access_token")) {
                     log.error("Access token was not returned by the token renewal endpoint.");
-                    return constructProxyResponseByErrorCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+                    session.removeAttribute(authDataKey);
+                    return constructProxyResponseByErrorCode(HttpStatus.SC_UNAUTHORIZED);
                 }
                 AuthData refreshedAuthData = constructAuthDataFromTokenResult(tokenResponse, currentAuthData);
                 setNewAuthData(refreshedAuthData, session, isDefaultAuthToken, isTenantContext);
