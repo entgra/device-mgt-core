@@ -1658,7 +1658,9 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 List<ApplicationReleaseDTO> applicationReleaseEntities = new ArrayList<>();
                 if (applicationReleaseDTO != null) {
                     String lifeCycleState = lifecycleStateManager.getInitialState();
-                    String[] publishStates = {"IN-REVIEW", "APPROVED", "PUBLISHED"};
+                    String[] publishStates = ApplicationType.CUSTOM.toString().equals(applicationDTO.getType())
+                            ? new String[]{"IN-REVIEW", "APPROVED", "RELEASED"}
+                            : new String[]{"IN-REVIEW", "APPROVED", "PUBLISHED"};
 
                     applicationReleaseDTO.setCurrentState(lifeCycleState);
                     applicationReleaseDTO = this.applicationReleaseDAO.createRelease(applicationReleaseDTO, appId, tenantId);
