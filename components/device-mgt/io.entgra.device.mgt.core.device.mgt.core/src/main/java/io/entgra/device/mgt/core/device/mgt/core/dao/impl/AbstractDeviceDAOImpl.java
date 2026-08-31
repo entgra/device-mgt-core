@@ -3395,9 +3395,9 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 "e.DATE_OF_LAST_UPDATE, e.IS_TRANSFERRED, e.STATUS, d.DEVICE_NAME, d.DESCRIPTION, " +
                 "d.LAST_UPDATED_TIMESTAMP, e.DEVICE_TYPE, " +
                 "e.DEVICE_IDENTIFICATION " +
-                "FROM DM_ENROLMENT e, (SELECT d1.ID, d1.DESCRIPTION, d1.NAME AS DEVICE_NAME FROM DM_DEVICE d1 " +
+                "FROM DM_ENROLMENT e, (SELECT d1.ID, d1.DESCRIPTION, d1.NAME AS DEVICE_NAME, d1.LAST_UPDATED_TIMESTAMP FROM DM_DEVICE d1 " +
                 "WHERE d1.TENANT_ID = ?) d WHERE e.STATUS NOT IN ('DELETED', 'REMOVED') " +
-                "AND e.DATE_OF_ENROLMENT > ? AND e.TENANT_ID = ?";
+                "AND e.DEVICE_ID = d.ID AND e.DATE_OF_ENROLMENT > ? AND e.TENANT_ID = ?";
         try {
             Connection connection = DeviceManagementDAOFactory.getConnection();
             try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
@@ -3426,9 +3426,9 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         String query = "SELECT e.ID AS ENROLMENT_ID, e.DEVICE_ID, e.OWNER, e.OWNERSHIP, e.DATE_OF_ENROLMENT, " +
                 "e.DATE_OF_LAST_UPDATE, e.IS_TRANSFERRED, e.STATUS, d.DEVICE_NAME, d.DESCRIPTION, " +
                 "d.LAST_UPDATED_TIMESTAMP, e.DEVICE_TYPE, e.DEVICE_IDENTIFICATION " +
-                "FROM DM_ENROLMENT e, (SELECT d1.ID, d1.DESCRIPTION, d1.NAME AS DEVICE_NAME FROM DM_DEVICE d1 " +
+                "FROM DM_ENROLMENT e, (SELECT d1.ID, d1.DESCRIPTION, d1.NAME AS DEVICE_NAME, d1.LAST_UPDATED_TIMESTAMP FROM DM_DEVICE d1 " +
                 "WHERE d1.TENANT_ID = ?) d WHERE e.STATUS NOT IN ('DELETED', 'REMOVED') " +
-                "AND e.DATE_OF_ENROLMENT < ? AND e.TENANT_ID = ?";
+                "AND e.DEVICE_ID = d.ID AND e.DATE_OF_ENROLMENT < ? AND e.TENANT_ID = ?";
         try {
             Connection connection = DeviceManagementDAOFactory.getConnection();
             try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
