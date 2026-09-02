@@ -123,7 +123,8 @@ public class GrafanaRequestHandlerUtil {
     }
 
     public static GrafanaPanelIdentifier getPanelIdentifier(HttpHeaders headers) throws RefererNotValid, GrafanaManagementException {
-        String referer = headers.getHeaderString(GrafanaConstants.REFERER_HEADER);
+        List<String> refererHeaders = headers.getRequestHeader(GrafanaConstants.REFERER_HEADER);
+        String referer = refererHeaders == null || refererHeaders.isEmpty() ? null : refererHeaders.get(0);
         if (referer == null) {
             String errMsg = "Request does not contain Referer header";
             log.error(errMsg);
