@@ -25,12 +25,14 @@ import io.entgra.device.mgt.core.dynamic.task.mgt.common.DynamicTaskConfiguratio
 import io.entgra.device.mgt.core.dynamic.task.mgt.common.bean.CategorizedDynamicTask;
 import io.entgra.device.mgt.core.dynamic.task.mgt.common.bean.DynamicTaskPlatformConfigurations;
 import io.entgra.device.mgt.core.dynamic.task.mgt.common.exception.DynamicTaskManagementException;
+import io.entgra.device.mgt.core.dynamic.task.mgt.common.exception.DynamicTaskScheduleException;
 import io.entgra.device.mgt.core.dynamic.task.mgt.common.exception.api.NotFoundException;
 import io.entgra.device.mgt.core.dynamic.task.mgt.core.constant.Constants;
 import io.entgra.device.mgt.core.dynamic.task.mgt.core.internal.DynamicTaskManagementExtensionServiceDataHolder;
 import io.entgra.device.mgt.core.dynamic.task.mgt.core.util.DynamicTaskContextPatchExecutor;
 import io.entgra.device.mgt.core.dynamic.task.mgt.core.util.DynamicTaskManagementUtil;
 import io.entgra.device.mgt.core.dynamic.task.mgt.core.util.DynamicTaskPatch;
+import io.entgra.device.mgt.core.dynamic.task.mgt.core.util.DynamicTaskSchedulerUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
@@ -71,6 +73,7 @@ public class DynamicTaskConfigurationManagementServiceImpl implements DynamicTas
                     existingCategorizedDynamicTask.setEnable(updatedCategorizedDynamicTask.isEnable());
                     existingCategorizedDynamicTask.setFrequency(updatedCategorizedDynamicTask.getFrequency());
                     existingCategorizedDynamicTask.setDeviceTypes(updatedCategorizedDynamicTask.getDeviceTypes());
+                    existingCategorizedDynamicTask.setOperationCodes(updatedCategorizedDynamicTask.getOperationCodes());
                 }
             }
             return new DynamicTaskPlatformConfigurations(new HashSet<>(existingCategorizedDynamicTasks));
@@ -135,6 +138,75 @@ public class DynamicTaskConfigurationManagementServiceImpl implements DynamicTas
         DynamicTaskContextPatchExecutor.getInstance().patch(new DynamicTaskPatch(tenantDomain,
                 updatedCategorizedDynamicTasks));
         return effectiveDynamicTaskPlatformConfigurations;
+    }
+
+    @Override
+    public DynamicTaskPlatformConfigurations addCategorizedDynamicTask(String tenantDomain,
+                                                                       CategorizedDynamicTask newCategorizedDynamicTask)
+            throws DynamicTaskManagementException {
+        List<CategorizedDynamicTask> existingCategorizedDynamicTasks;
+        try {
+            existingCategorizedDynamicTasks =
+                    new ArrayList<>(DynamicTaskManagementUtil.getDynamicTaskPlatformConfigurations(tenantDomain)
+                            .getCategorizedDynamicTasks());
+        } catch (NotFoundException e) {
+            String msg =
+                    "Failed to locate categorized dynamic task configuration for tenant domain [" + tenantDomain + "].";
+            log.error(msg, e);
+            throw new DynamicTaskManagementException(msg, e);
+        }
+
+        if (existingCategorizedDynamicTasks.contains(newCategorizedDynamicTask)) {
+            String msg =
+                    "Categorized dynamic task [" + newCategorizedDynamicTask.getCategoryCode() + "] already exists " +
+                            "for tenant domain [" + tenantDomain + "].";
+            log.error(msg);
+            throw new DynamicTaskManagementException(msg);
+        }
+
+        existingCategorizedDynamicTasks.add(newCategorizedDynamicTask);
+        DynamicTaskPlatformConfigurations updatedDynamicTaskPlatformConfigurations =
+                new DynamicTaskPlatformConfigurations(new HashSet<>(existingCategorizedDynamicTasks));
+        DynamicTaskManagementUtil.populateConfigurableDeviceTypes(updatedDynamicTaskPlatformConfigurations);
+
+        updateMetaRegistry(tenantDomain, updatedDynamicTaskPlatformConfigurations);
+        scheduleNewCategorizedDynamicTask(tenantDomain, newCategorizedDynamicTask);
+
+        return updatedDynamicTaskPlatformConfigurations;
+    }
+
+    /**
+     * Schedule a newly added categorized dynamic task for the first time.
+     * <p>
+     * Unlike {@link DynamicTaskContextPatchExecutor}, which patches already-scheduled tasks asynchronously on a
+     * background thread, this runs synchronously so that a scheduling failure for a brand-new category is reported
+     * back to the caller instead of being silently logged. This mirrors how {@code TenantCreateObserver} schedules
+     * a tenant's initial set of categorized dynamic tasks.
+     *
+     * @param tenantDomain           Tenant domain that owns the new categorized dynamic task.
+     * @param categorizedDynamicTask New {@link CategorizedDynamicTask} to schedule.
+     * @throws DynamicTaskManagementException Throws when error encountered while scheduling the new categorized
+     *                                        dynamic task. The metadata registry has already been updated to
+     *                                        include this category by the time this can be thrown.
+     */
+    private void scheduleNewCategorizedDynamicTask(String tenantDomain, CategorizedDynamicTask categorizedDynamicTask)
+            throws DynamicTaskManagementException {
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(tenantDomain, true);
+            int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+            DynamicTaskSchedulerUtil.scheduleDynamicTask(categorizedDynamicTask, tenantId, tenantDomain);
+        } catch (DynamicTaskScheduleException e) {
+            String msg =
+                    "Failed to schedule the newly added categorized dynamic task [" +
+                            categorizedDynamicTask.getCategoryCode() + "] for tenant domain [" + tenantDomain +
+                            "]. The metadata registry has already been updated to include this category; manual " +
+                            "reconciliation may be required.";
+            log.error(msg, e);
+            throw new DynamicTaskManagementException(msg, e);
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
     }
 
     @Override
