@@ -68,9 +68,11 @@ public class TenantManagerAdminServiceImpl implements TenantManagerAdminService 
     }
 
     @Override
-    public void updateTenantScopeBindings(String tenantDomain, String roleName, java.util.List<String> scopeNames) throws TenantMgtException {
+    public void updateTenantScopeBindings(String tenantDomain, String roleName, java.util.List<String> addedScopeNames,
+                                          java.util.List<String> removedScopeNames) throws TenantMgtException {
         try {
-            TenantMgtDataHolder.getInstance().getTenantManager().updateTenantScopeBindings(tenantDomain, roleName, scopeNames);
+            TenantMgtDataHolder.getInstance().getTenantManager()
+                    .updateTenantScopeBindings(tenantDomain, roleName, addedScopeNames, removedScopeNames);
         } catch (TenantMgtException e) {
             String msg = "Error occurred while updating scope bindings for tenant: " + tenantDomain;
             log.error(msg, e);
