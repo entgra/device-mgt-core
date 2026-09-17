@@ -107,8 +107,21 @@ public class JWTAuthenticator implements WebappAuthenticator {
             username = jwsObject.getJWTClaimsSet().getStringClaim(SIGNED_JWT_AUTH_USERNAME);
             tenantDomain = MultitenantUtils.getTenantDomain(username);
             tenantId = Integer.parseInt(jwsObject.getJWTClaimsSet().getStringClaim(SIGNED_JWT_AUTH_TENANT_ID));
+            String subject = jwsObject.getJWTClaimsSet().getSubject();
+            if (subject != null && !subject.isEmpty()) {
+                String subjectTenantDomain = MultitenantUtils.getTenantDomain(subject);
+                if (!MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(subjectTenantDomain)) {
+                    // A SaaS application can belong to the super tenant while its access token belongs to a tenant
+                    // user. APIM derives the backend JWT's enduser tenant from the application owner in that case,
+                    // but preserves the authenticated user's tenant-qualified name in the subject.
+                    username = subject;
+                    tenantDomain = subjectTenantDomain;
+                    tenantId = AuthenticatorFrameworkDataHolder.getInstance().getRealmService().getTenantManager()
+                            .getTenantId(tenantDomain);
+                }
+            }
             issuer = jwsObject.getJWTClaimsSet().getIssuer();
-        } catch (ParseException e) {
+        } catch (ParseException | UserStoreException e) {
             log.error("Error occurred while parsing JWT header.", e);
             authenticationInfo.setMessage("Error occurred while parsing JWT header");
             return authenticationInfo;
@@ -121,30 +134,26 @@ public class JWTAuthenticator implements WebappAuthenticator {
             IssuerAlias issuerAlias = new IssuerAlias(issuer, tenantDomain);
             PublicKey publicKey =  publicKeyHolder.get(issuerAlias);
             if (publicKey == null) {
-                loadTenantRegistry(tenantId);
-                KeyStoreManager keyStoreManager = KeyStoreManager.getInstance(tenantId);
-                if (MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
-                    String alias = properties == null ?  null : properties.getProperty(issuer);
-                    if (alias != null && !alias.isEmpty()) {
-                        ServerConfiguration serverConfig = CarbonUtils.getServerConfiguration();
-                        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-                        String trustStorePath = serverConfig.getFirstProperty(DEFAULT_TRUST_STORE_LOCATION);
-                        String trustStorePassword = serverConfig.getFirstProperty(
-                                DEFAULT_TRUST_STORE_PASSWORD);
-                        keyStore.load(new FileInputStream(trustStorePath), trustStorePassword.toCharArray());
-                        java.security.cert.Certificate certificate = keyStore.getCertificate(alias);
-                        publicKey = certificate == null ? null : certificate.getPublicKey();
-                    } else {
-                        authenticationInfo.setStatus(Status.FAILURE);
-                        return  authenticationInfo;
-                    }
+                String alias = properties == null ? null : properties.getProperty(issuer);
+                if (alias != null && !alias.isEmpty()) {
+                    ServerConfiguration serverConfig = CarbonUtils.getServerConfiguration();
+                    KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+                    String trustStorePath = serverConfig.getFirstProperty(DEFAULT_TRUST_STORE_LOCATION);
+                    String trustStorePassword = serverConfig.getFirstProperty(DEFAULT_TRUST_STORE_PASSWORD);
+                    keyStore.load(new FileInputStream(trustStorePath), trustStorePassword.toCharArray());
+                    java.security.cert.Certificate certificate = keyStore.getCertificate(alias);
+                    publicKey = certificate == null ? null : certificate.getPublicKey();
+                } else if (MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
+                    authenticationInfo.setStatus(Status.FAILURE);
+                    return authenticationInfo;
                 } else {
+                    loadTenantRegistry(tenantId);
+                    KeyStoreManager keyStoreManager = KeyStoreManager.getInstance(tenantId);
                     String ksName = tenantDomain.trim().replace('.', '-');
                     String jksName = ksName + ".jks";
                     publicKey = keyStoreManager.getKeyStore(jksName).getCertificate(tenantDomain).getPublicKey();
                 }
                 if (publicKey != null) {
-                    issuerAlias = new IssuerAlias(tenantDomain);
                     publicKeyHolder.put(issuerAlias, publicKey);
                 }
             }

@@ -1309,12 +1309,12 @@
 
             <dependency>
                 <groupId>org.wso2.orbit.org.bouncycastle</groupId>
-                <artifactId>bcprov-jdk15on</artifactId>
+                <artifactId>bcprov-jdk18on</artifactId>
                 <version>${bcprov.wso2.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.wso2.orbit.org.bouncycastle</groupId>
-                <artifactId>bcpkix-jdk15on</artifactId>
+                <artifactId>bcpkix-jdk18on</artifactId>
                 <version>${bcpkix.wso2.version}</version>
             </dependency>
             <dependency>
@@ -2180,9 +2180,9 @@
         <fasterxml.jackson.version>2.4.5</fasterxml.jackson.version>
 
         <!-- BouncyCastle -->
-        <bcprov.wso2.version>1.70.0.wso2v1</bcprov.wso2.version>
-        <bcpkix.wso2.version>1.70.0.wso2v1</bcpkix.wso2.version>
-        <bcprov.wso2.version.range>[1.52.0,1.80.0)</bcprov.wso2.version.range>
+        <bcprov.wso2.version>1.78.1.wso2v1</bcprov.wso2.version>
+        <bcpkix.wso2.version>1.78.1.wso2v1</bcpkix.wso2.version>
+        <bcprov.wso2.version.range>[1.78.1,2.0.0)</bcprov.wso2.version.range>
 
         <!-- JSCEP -->
         <jscep.version>2.5.7</jscep.version>
