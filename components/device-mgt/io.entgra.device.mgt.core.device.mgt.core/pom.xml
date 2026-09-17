@@ -74,9 +74,8 @@
                         <Private-Package>io.entgra.device.mgt.core.device.mgt.core.internal</Private-Package>
                         <Import-Package>
                             com.fasterxml.jackson.databind;version="${fasterxml.jackson.databind.version}",
-                            org.wso2.orbit.com.fasterxml.jackson.core.annotation;version="${jackson-annotations.version}"
-                            com.google.common.collect;version="[32.1,33)";resolution:=optional,
-                            com.google.common.reflect;version="[32.1,33)";resolution:=optional,
+                            com.google.common.collect;version="[33.0,34.0)";resolution:=optional,
+                            com.google.common.reflect;version="[33.0,34.0)";resolution:=optional,
                             com.google.gson;version="[2.9,3)",
                             com.google.gson.reflect;version="[2.9,3)",
                             io.entgra.device.mgt.core.apimgt.annotations;version="${io.entgra.device.mgt.core.version.range}",
@@ -163,7 +162,6 @@
                             org.apache.http.impl.conn;version="[4.3,5)",
                             org.apache.http.protocol;version="[4.4,5)",
                             org.apache.http.util;version="[4.4,5)",
-                            org.apache.solr.common;version="[8.11,9)",
                             org.json;version="[3.0,4)",
                             org.osgi.framework.*;version="${imp.package.version.osgi.framework}",
                             org.osgi.service.*;version="${imp.package.version.osgi.service}",
@@ -461,11 +459,6 @@
         <dependency>
             <groupId>io.entgra.device.mgt.core</groupId>
             <artifactId>io.entgra.device.mgt.core.apimgt.extension.rest.api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.orbit.com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-            <version>${jackson-annotations.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
