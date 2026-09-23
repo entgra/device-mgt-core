@@ -121,9 +121,13 @@ public class JWTAuthenticator implements WebappAuthenticator {
                 }
             }
             issuer = jwsObject.getJWTClaimsSet().getIssuer();
-        } catch (ParseException | UserStoreException e) {
+        } catch (ParseException e) {
             log.error("Error occurred while parsing JWT header.", e);
             authenticationInfo.setMessage("Error occurred while parsing JWT header");
+            return authenticationInfo;
+        } catch (UserStoreException e) {
+            log.error("Error occurred while resolving the tenant ID.", e);
+            authenticationInfo.setMessage("Error occurred while resolving the tenant ID");
             return authenticationInfo;
         }
         try {
