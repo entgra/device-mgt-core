@@ -33,6 +33,7 @@ import io.entgra.device.mgt.core.dynamic.task.mgt.core.util.DynamicTaskContextPa
 import io.entgra.device.mgt.core.dynamic.task.mgt.core.util.DynamicTaskManagementUtil;
 import io.entgra.device.mgt.core.dynamic.task.mgt.core.util.DynamicTaskPatch;
 import io.entgra.device.mgt.core.dynamic.task.mgt.core.util.DynamicTaskSchedulerUtil;
+import io.entgra.device.mgt.core.task.mgt.common.bean.DynamicTask;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
@@ -43,15 +44,22 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DynamicTaskConfigurationManagementServiceImpl implements DynamicTaskConfigurationManagementService {
     private static final Log log = LogFactory.getLog(DynamicTaskConfigurationManagementServiceImpl.class);
+
+    private final ConcurrentHashMap<String, Object> tenantConfigurationLocks = new ConcurrentHashMap<>();
 
     private DynamicTaskConfigurationManagementServiceImpl() {
     }
 
     public static DynamicTaskConfigurationManagementService getInstance() {
         return ReferenceHolder.INSTANCE;
+    }
+
+    private Object getTenantConfigurationLock(String tenantDomain) {
+        return tenantConfigurationLocks.computeIfAbsent(tenantDomain, key -> new Object());
     }
 
     /**
@@ -76,7 +84,10 @@ public class DynamicTaskConfigurationManagementServiceImpl implements DynamicTas
                     existingCategorizedDynamicTask.setOperationCodes(updatedCategorizedDynamicTask.getOperationCodes());
                 }
             }
-            return new DynamicTaskPlatformConfigurations(new HashSet<>(existingCategorizedDynamicTasks));
+            DynamicTaskPlatformConfigurations effectiveDynamicTaskPlatformConfigurations =
+                    new DynamicTaskPlatformConfigurations(new HashSet<>(existingCategorizedDynamicTasks));
+            DynamicTaskManagementUtil.populateConfigurableDeviceTypes(effectiveDynamicTaskPlatformConfigurations);
+            return effectiveDynamicTaskPlatformConfigurations;
         } catch (NotFoundException e) {
             String msg =
                     "Failed to locate categorized dynamic task configuration for tenant domain [" + tenantDomain + "].";
@@ -132,47 +143,68 @@ public class DynamicTaskConfigurationManagementServiceImpl implements DynamicTas
     @Override
     public DynamicTaskPlatformConfigurations updateCategorizedDynamicTasks(String tenantDomain,
                                                                            Set<CategorizedDynamicTask> updatedCategorizedDynamicTasks) throws DynamicTaskManagementException {
-        DynamicTaskPlatformConfigurations effectiveDynamicTaskPlatformConfigurations =
-                getEffectiveDynamicTaskPlatformConfigurations(tenantDomain, updatedCategorizedDynamicTasks);
-        updateMetaRegistry(tenantDomain, effectiveDynamicTaskPlatformConfigurations);
-        DynamicTaskContextPatchExecutor.getInstance().patch(new DynamicTaskPatch(tenantDomain,
-                updatedCategorizedDynamicTasks));
-        return effectiveDynamicTaskPlatformConfigurations;
+        synchronized (getTenantConfigurationLock(tenantDomain)) {
+            DynamicTaskPlatformConfigurations effectiveDynamicTaskPlatformConfigurations =
+                    getEffectiveDynamicTaskPlatformConfigurations(tenantDomain, updatedCategorizedDynamicTasks);
+            updateMetaRegistry(tenantDomain, effectiveDynamicTaskPlatformConfigurations);
+            DynamicTaskContextPatchExecutor.getInstance().patch(new DynamicTaskPatch(tenantDomain,
+                    updatedCategorizedDynamicTasks));
+            return effectiveDynamicTaskPlatformConfigurations;
+        }
     }
 
     @Override
     public DynamicTaskPlatformConfigurations addCategorizedDynamicTask(String tenantDomain,
                                                                        CategorizedDynamicTask newCategorizedDynamicTask)
             throws DynamicTaskManagementException {
-        List<CategorizedDynamicTask> existingCategorizedDynamicTasks;
-        try {
-            existingCategorizedDynamicTasks =
-                    new ArrayList<>(DynamicTaskManagementUtil.getDynamicTaskPlatformConfigurations(tenantDomain)
-                            .getCategorizedDynamicTasks());
-        } catch (NotFoundException e) {
-            String msg =
-                    "Failed to locate categorized dynamic task configuration for tenant domain [" + tenantDomain + "].";
-            log.error(msg, e);
-            throw new DynamicTaskManagementException(msg, e);
+        synchronized (getTenantConfigurationLock(tenantDomain)) {
+            List<CategorizedDynamicTask> existingCategorizedDynamicTasks;
+            try {
+                existingCategorizedDynamicTasks =
+                        new ArrayList<>(DynamicTaskManagementUtil.getDynamicTaskPlatformConfigurations(tenantDomain)
+                                .getCategorizedDynamicTasks());
+            } catch (NotFoundException e) {
+                String msg =
+                        "Failed to locate categorized dynamic task configuration for tenant domain [" + tenantDomain +
+                                "].";
+                log.error(msg, e);
+                throw new DynamicTaskManagementException(msg, e);
+            }
+
+            if (existingCategorizedDynamicTasks.contains(newCategorizedDynamicTask)) {
+                String msg =
+                        "Categorized dynamic task [" + newCategorizedDynamicTask.getCategoryCode() +
+                                "] already exists " +
+                                "for tenant domain [" + tenantDomain + "].";
+                log.error(msg);
+                throw new DynamicTaskManagementException(msg);
+            }
+
+            existingCategorizedDynamicTasks.add(newCategorizedDynamicTask);
+            DynamicTaskPlatformConfigurations updatedDynamicTaskPlatformConfigurations =
+                    new DynamicTaskPlatformConfigurations(new HashSet<>(existingCategorizedDynamicTasks));
+            DynamicTaskManagementUtil.populateConfigurableDeviceTypes(updatedDynamicTaskPlatformConfigurations);
+
+            DynamicTask scheduledDynamicTask = scheduleNewCategorizedDynamicTask(tenantDomain,
+                    newCategorizedDynamicTask);
+            try {
+                updateMetaRegistry(tenantDomain, updatedDynamicTaskPlatformConfigurations);
+            } catch (DynamicTaskManagementException e) {
+                // Roll back the scheduled task, otherwise it keeps running without a metadata entry and a retry
+                // would schedule a duplicate task for the same category.
+                try {
+                    DynamicTaskSchedulerUtil.deleteDynamicTask(scheduledDynamicTask.getDynamicTaskId());
+                } catch (DynamicTaskScheduleException ex) {
+                    log.error("Failed to roll back the scheduled task of categorized dynamic task [" +
+                            newCategorizedDynamicTask.getCategoryCode() + "] for tenant domain [" + tenantDomain +
+                            "]. Manual removal of dynamic task [" + scheduledDynamicTask.getDynamicTaskId() +
+                            "] is required.", ex);
+                }
+                throw e;
+            }
+
+            return updatedDynamicTaskPlatformConfigurations;
         }
-
-        if (existingCategorizedDynamicTasks.contains(newCategorizedDynamicTask)) {
-            String msg =
-                    "Categorized dynamic task [" + newCategorizedDynamicTask.getCategoryCode() + "] already exists " +
-                            "for tenant domain [" + tenantDomain + "].";
-            log.error(msg);
-            throw new DynamicTaskManagementException(msg);
-        }
-
-        existingCategorizedDynamicTasks.add(newCategorizedDynamicTask);
-        DynamicTaskPlatformConfigurations updatedDynamicTaskPlatformConfigurations =
-                new DynamicTaskPlatformConfigurations(new HashSet<>(existingCategorizedDynamicTasks));
-        DynamicTaskManagementUtil.populateConfigurableDeviceTypes(updatedDynamicTaskPlatformConfigurations);
-
-        updateMetaRegistry(tenantDomain, updatedDynamicTaskPlatformConfigurations);
-        scheduleNewCategorizedDynamicTask(tenantDomain, newCategorizedDynamicTask);
-
-        return updatedDynamicTaskPlatformConfigurations;
     }
 
     /**
@@ -185,23 +217,24 @@ public class DynamicTaskConfigurationManagementServiceImpl implements DynamicTas
      *
      * @param tenantDomain           Tenant domain that owns the new categorized dynamic task.
      * @param categorizedDynamicTask New {@link CategorizedDynamicTask} to schedule.
+     * @return Scheduled {@link DynamicTask}, used by the caller to roll back the task if the metadata registry
+     * update fails.
      * @throws DynamicTaskManagementException Throws when error encountered while scheduling the new categorized
-     *                                        dynamic task. The metadata registry has already been updated to
-     *                                        include this category by the time this can be thrown.
+     *                                        dynamic task. The metadata registry is only updated by the caller
+     *                                        after this call succeeds, so no rollback is needed on this failure.
      */
-    private void scheduleNewCategorizedDynamicTask(String tenantDomain, CategorizedDynamicTask categorizedDynamicTask)
+    private DynamicTask scheduleNewCategorizedDynamicTask(String tenantDomain,
+                                                          CategorizedDynamicTask categorizedDynamicTask)
             throws DynamicTaskManagementException {
         try {
             PrivilegedCarbonContext.startTenantFlow();
             PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(tenantDomain, true);
             int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
-            DynamicTaskSchedulerUtil.scheduleDynamicTask(categorizedDynamicTask, tenantId, tenantDomain);
+            return DynamicTaskSchedulerUtil.scheduleDynamicTask(categorizedDynamicTask, tenantId, tenantDomain);
         } catch (DynamicTaskScheduleException e) {
             String msg =
                     "Failed to schedule the newly added categorized dynamic task [" +
-                            categorizedDynamicTask.getCategoryCode() + "] for tenant domain [" + tenantDomain +
-                            "]. The metadata registry has already been updated to include this category; manual " +
-                            "reconciliation may be required.";
+                            categorizedDynamicTask.getCategoryCode() + "] for tenant domain [" + tenantDomain + "].";
             log.error(msg, e);
             throw new DynamicTaskManagementException(msg, e);
         } finally {

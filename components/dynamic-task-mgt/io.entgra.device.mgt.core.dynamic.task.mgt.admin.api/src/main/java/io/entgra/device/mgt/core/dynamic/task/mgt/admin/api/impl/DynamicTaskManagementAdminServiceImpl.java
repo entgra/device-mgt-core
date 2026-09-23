@@ -51,7 +51,8 @@ public class DynamicTaskManagementAdminServiceImpl implements DynamicTaskManagem
      * @throws BadRequestException Throws when contains any invalid configuration settings.
      */
     private static void validatePayload(List<CategorizedDynamicTask> incomingConfigurations,
-                                        List<CategorizedDynamicTask> existingConfigurations) throws BadRequestException {
+                                        List<CategorizedDynamicTask> existingConfigurations)
+            throws BadRequestException {
         for (CategorizedDynamicTask incomingCategorizedDynamicTask : incomingConfigurations) {
 
             if (StringUtils.isBlank(incomingCategorizedDynamicTask.getCategoryCode())) {
@@ -62,27 +63,31 @@ public class DynamicTaskManagementAdminServiceImpl implements DynamicTaskManagem
             }
 
             if (existingConfigurations.contains(incomingCategorizedDynamicTask)) {
-                if (incomingCategorizedDynamicTask.getDeviceTypes() == null) {
+                if (incomingCategorizedDynamicTask.getFrequency() <= 0) {
                     String msg = "Encountered an invalid setting for categorized dynamic task frequency. " +
-                            "deviceTypes can not be [" + incomingCategorizedDynamicTask.getFrequency() + "].";
-                    log.error(msg);
-                    throw new BadRequestException(msg);
-                }
-
-                if (incomingCategorizedDynamicTask.getFrequency() < 0) {
-                    String msg = "Encountered an invalid setting for categorized dynamic task frequency. " +
-                            "Frequency can not be [" + incomingCategorizedDynamicTask.getFrequency() + "].";
+                            "Frequency must be a positive value, but was [" +
+                            incomingCategorizedDynamicTask.getFrequency() + "].";
                     log.error(msg);
                     throw new BadRequestException(msg);
                 }
 
                 Set<String> configurableDeviceTypes =
-                        existingConfigurations.get(existingConfigurations.indexOf(incomingCategorizedDynamicTask)).getConfigurableDeviceTypes();
+                        validateOperationCodesAndGetConfigurableDeviceTypes(incomingCategorizedDynamicTask);
+
+                if (incomingCategorizedDynamicTask.getDeviceTypes() == null ||
+                        incomingCategorizedDynamicTask.getDeviceTypes().isEmpty()) {
+                    String msg = "Encountered an invalid setting for categorized dynamic task [" +
+                            incomingCategorizedDynamicTask.getCategoryCode() + "]. deviceTypes can not be null or " +
+                            "empty.";
+                    log.error(msg);
+                    throw new BadRequestException(msg);
+                }
                 for (String incomingDeviceType : incomingCategorizedDynamicTask.getDeviceTypes()) {
                     if (!configurableDeviceTypes.contains(incomingDeviceType)) {
                         String msg =
                                 "Encountered an invalid device type [" + incomingDeviceType + "] in " +
-                                        "categorized dynamic task [" + incomingCategorizedDynamicTask.getCategoryCode() + "].";
+                                        "categorized dynamic task [" +
+                                        incomingCategorizedDynamicTask.getCategoryCode() + "].";
                         log.error(msg);
                         throw new BadRequestException(msg);
                     }
@@ -90,13 +95,62 @@ public class DynamicTaskManagementAdminServiceImpl implements DynamicTaskManagem
 
             } else {
                 String msg =
-                        "Encountered an invalid categorized dynamic task [" + incomingCategorizedDynamicTask.getCategoryCode() +
+                        "Encountered an invalid categorized dynamic task [" +
+                                incomingCategorizedDynamicTask.getCategoryCode() +
                                 "].";
                 log.error(msg);
                 throw new BadRequestException(msg);
 
             }
         }
+    }
+
+    /**
+     * Validate the operation codes of a categorized dynamic task and derive the set of device types they
+     * collectively support. Used to validate both newly added and updated categorized dynamic tasks, since a
+     * malformed operation code (missing code, negative recurrentTime, or empty supportingDeviceTypes) makes the
+     * scheduled task fail on every execution once persisted.
+     *
+     * @param categorizedDynamicTask {@link CategorizedDynamicTask} whose operation codes are being validated.
+     * @return Set of device types supported by the validated operation codes.
+     * @throws BadRequestException Throws when operationCodes is missing, empty, or contains a malformed entry.
+     */
+    private static Set<String> validateOperationCodesAndGetConfigurableDeviceTypes(
+            CategorizedDynamicTask categorizedDynamicTask) throws BadRequestException {
+        if (categorizedDynamicTask.getOperationCodes() == null ||
+                categorizedDynamicTask.getOperationCodes().isEmpty()) {
+            String msg = "Encountered an invalid setting for categorized dynamic task [" +
+                    categorizedDynamicTask.getCategoryCode() + "]. operationCodes can not be null or empty.";
+            log.error(msg);
+            throw new BadRequestException(msg);
+        }
+
+        Set<String> configurableDeviceTypes = new HashSet<>();
+        for (OperationCode operationCode : categorizedDynamicTask.getOperationCodes()) {
+            if (StringUtils.isBlank(operationCode.getOperationCode())) {
+                String msg = "Encountered an invalid operation code entry in categorized dynamic task [" +
+                        categorizedDynamicTask.getCategoryCode() + "]. operationCode can not be blank.";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+            if (operationCode.getRecurrentTime() < 0) {
+                String msg = "Encountered an invalid recurrentTime [" + operationCode.getRecurrentTime() + "] for " +
+                        "operation code [" + operationCode.getOperationCode() + "] in categorized dynamic task [" +
+                        categorizedDynamicTask.getCategoryCode() + "].";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+            if (operationCode.getSupportingDeviceTypes() == null ||
+                    operationCode.getSupportingDeviceTypes().isEmpty()) {
+                String msg = "Encountered an invalid setting for operation code [" + operationCode.getOperationCode() +
+                        "] in categorized dynamic task [" + categorizedDynamicTask.getCategoryCode() + "]. " +
+                        "supportingDeviceTypes can not be null or empty.";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+            configurableDeviceTypes.addAll(operationCode.getSupportingDeviceTypes());
+        }
+        return configurableDeviceTypes;
     }
 
     /**
@@ -131,46 +185,15 @@ public class DynamicTaskManagementAdminServiceImpl implements DynamicTaskManagem
             throw new BadRequestException(msg);
         }
 
-        if (incomingCategorizedDynamicTask.getFrequency() < 0) {
-            String msg = "Encountered an invalid setting for categorized dynamic task frequency. Frequency can " +
-                    "not be [" + incomingCategorizedDynamicTask.getFrequency() + "].";
+        if (incomingCategorizedDynamicTask.getFrequency() <= 0) {
+            String msg = "Encountered an invalid setting for categorized dynamic task frequency. Frequency must " +
+                    "be a positive value, but was [" + incomingCategorizedDynamicTask.getFrequency() + "].";
             log.error(msg);
             throw new BadRequestException(msg);
         }
 
-        if (incomingCategorizedDynamicTask.getOperationCodes() == null ||
-                incomingCategorizedDynamicTask.getOperationCodes().isEmpty()) {
-            String msg = "Encountered an invalid setting for categorized dynamic task [" +
-                    incomingCategorizedDynamicTask.getCategoryCode() + "]. operationCodes can not be null or empty.";
-            log.error(msg);
-            throw new BadRequestException(msg);
-        }
-
-        Set<String> configurableDeviceTypes = new HashSet<>();
-        for (OperationCode operationCode : incomingCategorizedDynamicTask.getOperationCodes()) {
-            if (StringUtils.isBlank(operationCode.getOperationCode())) {
-                String msg = "Encountered an invalid operation code entry in categorized dynamic task [" +
-                        incomingCategorizedDynamicTask.getCategoryCode() + "]. operationCode can not be blank.";
-                log.error(msg);
-                throw new BadRequestException(msg);
-            }
-            if (operationCode.getRecurrentTime() < 0) {
-                String msg = "Encountered an invalid recurrentTime [" + operationCode.getRecurrentTime() + "] for " +
-                        "operation code [" + operationCode.getOperationCode() + "] in categorized dynamic task [" +
-                        incomingCategorizedDynamicTask.getCategoryCode() + "].";
-                log.error(msg);
-                throw new BadRequestException(msg);
-            }
-            if (operationCode.getSupportingDeviceTypes() == null ||
-                    operationCode.getSupportingDeviceTypes().isEmpty()) {
-                String msg = "Encountered an invalid setting for operation code [" + operationCode.getOperationCode() +
-                        "] in categorized dynamic task [" + incomingCategorizedDynamicTask.getCategoryCode() + "]. " +
-                        "supportingDeviceTypes can not be null or empty.";
-                log.error(msg);
-                throw new BadRequestException(msg);
-            }
-            configurableDeviceTypes.addAll(operationCode.getSupportingDeviceTypes());
-        }
+        Set<String> configurableDeviceTypes =
+                validateOperationCodesAndGetConfigurableDeviceTypes(incomingCategorizedDynamicTask);
 
         if (incomingCategorizedDynamicTask.getDeviceTypes() == null ||
                 incomingCategorizedDynamicTask.getDeviceTypes().isEmpty()) {
