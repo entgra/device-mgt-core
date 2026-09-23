@@ -67,8 +67,8 @@ public class MetadataManagementDAOFactory {
 
     public static void init(DataSourceConfig config) {
         dataSource = resolveDataSource(config);
-        try {
-            databaseEngine = dataSource.getConnection().getMetaData().getDatabaseProductName();
+        try (Connection connection = dataSource.getConnection()) {
+            databaseEngine = connection.getMetaData().getDatabaseProductName();
         } catch (SQLException e) {
             log.error("Error occurred while retrieving config.datasource connection", e);
         }
@@ -76,8 +76,8 @@ public class MetadataManagementDAOFactory {
 
     public static void init(DataSource dtSource) {
         dataSource = dtSource;
-        try {
-            databaseEngine = dataSource.getConnection().getMetaData().getDatabaseProductName();
+        try (Connection connection = dataSource.getConnection()) {
+            databaseEngine = connection.getMetaData().getDatabaseProductName();
         } catch (SQLException e) {
             log.error("Error occurred while retrieving config.datasource connection", e);
         }
@@ -96,6 +96,13 @@ public class MetadataManagementDAOFactory {
             conn.setAutoCommit(false);
             currentConnection.set(conn);
         } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException closeError) {
+                    e.addSuppressed(closeError);
+                }
+            }
             throw new TransactionManagementException("Error occurred while retrieving config.datasource connection", e);
         }
     }

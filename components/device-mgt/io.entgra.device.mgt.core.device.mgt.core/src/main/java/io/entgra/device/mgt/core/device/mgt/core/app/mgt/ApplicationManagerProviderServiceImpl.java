@@ -42,10 +42,6 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOExceptio
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementDataHolder;
 import io.entgra.device.mgt.core.device.mgt.core.util.HttpReportingUtil;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.context.CarbonContext;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
