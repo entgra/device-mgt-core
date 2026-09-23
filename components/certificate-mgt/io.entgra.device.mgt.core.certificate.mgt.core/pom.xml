@@ -179,7 +179,7 @@
         </dependency>
         <dependency>
             <groupId>org.wso2.orbit.com.h2database</groupId>
-            <artifactId>h2</artifactId>
+            <artifactId>h2-engine</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -204,12 +204,12 @@
         </dependency>
         <dependency>
             <groupId>org.wso2.orbit.org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
+            <artifactId>bcprov-jdk18on</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.wso2.orbit.org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk15on</artifactId>
+            <artifactId>bcpkix-jdk18on</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -263,4 +263,3 @@
         </dependency>
     </dependencies>
 </project>
-

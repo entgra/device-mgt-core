@@ -46,7 +46,7 @@
                         <Private-Package>io.entgra.device.mgt.core.subtype.mgt.internal</Private-Package>
                         <Import-Package>
                             com.fasterxml.jackson.core;version="[2.14,3)",
-                            com.google.common.cache;version="[32.1,33)";resolution:=optional,
+                            com.google.common.cache;version="[33.0,34.0)";resolution:=optional,
                             io.entgra.device.mgt.core.device.mgt.common.exceptions;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.device.mgt.core.config;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.device.mgt.core.config.datasource;version="${io.entgra.device.mgt.core.version.range}",
@@ -351,7 +351,7 @@
         </dependency>
         <dependency>
             <groupId>org.wso2.orbit.com.h2database</groupId>
-            <artifactId>h2</artifactId>
+            <artifactId>h2-engine</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
