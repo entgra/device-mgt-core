@@ -3620,15 +3620,23 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         List<Integer> filteredDeviceIds = new ArrayList<>();
         try {
             Connection connection = getConnection();
-            String sql = "SELECT ID AS DEVICE_ID FROM DM_DEVICE WHERE TENANT_ID = ?";
+            String sql = "SELECT DISTINCT D.ID AS DEVICE_ID FROM DM_DEVICE D " +
+                    "LEFT JOIN (SELECT DEVICE_ID, MAX(ID) AS ENROLMENT_ID FROM DM_ENROLMENT GROUP BY DEVICE_ID) CE " +
+                    "ON CE.DEVICE_ID = D.ID " +
+                    "LEFT JOIN DM_ENROLMENT E ON E.ID = CE.ENROLMENT_ID " +
+                    "WHERE D.TENANT_ID = ? " +
+                    "AND (E.STATUS IS NULL OR E.STATUS NOT IN (?, ?, ?))";
 
             if (deviceIds != null && !deviceIds.isEmpty()) {
-                sql += " AND ID NOT IN ( " + deviceIds.stream().map(id -> "?").collect(Collectors.joining(",")) + ")";
+                sql += " AND D.ID NOT IN ( " + deviceIds.stream().map(id -> "?").collect(Collectors.joining(",")) + ")";
             }
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 int paraIdx = 1;
                 preparedStatement.setInt(paraIdx++, tenantId);
+                preparedStatement.setString(paraIdx++, String.valueOf(Status.DISENROLLMENT_REQUESTED));
+                preparedStatement.setString(paraIdx++, String.valueOf(Status.REMOVED));
+                preparedStatement.setString(paraIdx++, String.valueOf(Status.DELETED));
 
                 if (deviceIds != null && !deviceIds.isEmpty()) {
                     for (Integer deviceId : deviceIds) {
@@ -3829,6 +3837,45 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             }
         } catch (SQLException e) {
             String msg = "Error occurred while running SQL to get device IDs by status.";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        }
+    }
+
+    @Override
+    public List<Integer> getDeviceIdsNotInEnrolmentStatus(List<String> excludedStatuses) throws DeviceManagementException {
+        StringBuilder statusFilters = new StringBuilder();
+        for (int i = 0; i < excludedStatuses.size(); i++) {
+            statusFilters.append("?");
+            if (i < excludedStatuses.size() - 1) {
+                statusFilters.append(",");
+            }
+        }
+
+        try {
+            Connection conn = getConnection();
+            String sql = "SELECT D.ID AS DEVICE_ID " +
+                    "FROM DM_DEVICE D " +
+                    "LEFT JOIN (SELECT DEVICE_ID, MAX(ID) AS ENROLMENT_ID FROM DM_ENROLMENT GROUP BY DEVICE_ID) CE " +
+                    "ON CE.DEVICE_ID = D.ID " +
+                    "LEFT JOIN DM_ENROLMENT E ON E.ID = CE.ENROLMENT_ID " +
+                    "WHERE (E.STATUS IS NULL OR E.STATUS NOT IN (" + statusFilters.toString() + "))";
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                for (int i = 0; i < excludedStatuses.size(); i++) {
+                    ps.setString(i + 1, excludedStatuses.get(i));
+                }
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    List<Integer> deviceIds = new ArrayList<>();
+                    while (rs.next()) {
+                        deviceIds.add(rs.getInt("DEVICE_ID"));
+                    }
+                    return deviceIds;
+                }
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while running SQL to get device IDs not in enrolment status.";
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
         }
