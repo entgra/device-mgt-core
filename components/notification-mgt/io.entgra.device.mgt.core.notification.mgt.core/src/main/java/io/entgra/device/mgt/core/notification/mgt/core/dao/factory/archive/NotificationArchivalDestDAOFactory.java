@@ -53,8 +53,8 @@ public class NotificationArchivalDestDAOFactory {
         if (dataSource == null) {
             throw new IllegalStateException("Datasource is not initialized properly");
         }
-        try {
-            productName = dataSource.getConnection().getMetaData().getDatabaseProductName();
+        try (Connection connection = dataSource.getConnection()) {
+            productName = connection.getMetaData().getDatabaseProductName();
         } catch (SQLException e) {
             log.error("Error occurred while initializing database product name", e);
         }
@@ -132,6 +132,13 @@ public class NotificationArchivalDestDAOFactory {
             conn.setAutoCommit(false);
             currentConnection.set(conn);
         } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException closeError) {
+                    e.addSuppressed(closeError);
+                }
+            }
             throw new TransactionManagementException("Error occurred while retrieving config.datasource connection", e);
         }
     }

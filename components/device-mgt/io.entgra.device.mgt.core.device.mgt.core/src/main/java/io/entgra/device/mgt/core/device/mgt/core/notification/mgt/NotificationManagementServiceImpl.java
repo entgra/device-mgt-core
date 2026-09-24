@@ -164,27 +164,35 @@ public class NotificationManagementServiceImpl implements NotificationManagement
 
     @Override
     public List<Notification> getAllNotifications() throws NotificationManagementException {
+        boolean connectionOpened = false;
         try {
             NotificationManagementDAOFactory.openConnection();
+            connectionOpened = true;
             return notificationDAO.getAllNotifications(NotificationDAOUtil.getTenantId());
         } catch (SQLException e) {
             throw new NotificationManagementException("Error occurred while opening a connection to" +
                     " the data source", e);
         } finally {
-            NotificationManagementDAOFactory.closeConnection();
+            if (connectionOpened) {
+                NotificationManagementDAOFactory.closeConnection();
+            }
         }
     }
 
     @Override
     public Notification getNotification(int notificationId) throws NotificationManagementException {
+        boolean connectionOpened = false;
         try {
             NotificationManagementDAOFactory.openConnection();
+            connectionOpened = true;
             return notificationDAO.getNotification(NotificationDAOUtil.getTenantId(), notificationId);
         } catch (SQLException e) {
             throw new NotificationManagementException("Error occurred while opening a connection to" +
                     " the data source", e);
         } finally {
-            NotificationManagementDAOFactory.closeConnection();
+            if (connectionOpened) {
+                NotificationManagementDAOFactory.closeConnection();
+            }
         }
     }
 
@@ -194,8 +202,10 @@ public class NotificationManagementServiceImpl implements NotificationManagement
         List<Notification> notifications = new ArrayList<>();
         request = DeviceManagerUtil.validateNotificationListPageSize(request);
         int count =0;
+        boolean connectionOpened = false;
         try {
             NotificationManagementDAOFactory.openConnection();
+            connectionOpened = true;
             notifications = notificationDAO.getAllNotifications(request, NotificationDAOUtil.getTenantId());
             count = notificationDAO.getNotificationCount(NotificationDAOUtil.getTenantId());
             paginationResult.setData(notifications);
@@ -206,7 +216,9 @@ public class NotificationManagementServiceImpl implements NotificationManagement
             throw new NotificationManagementException("Error occurred while opening a connection to" +
                     " the data source", e);
         } finally {
-            NotificationManagementDAOFactory.closeConnection();
+            if (connectionOpened) {
+                NotificationManagementDAOFactory.closeConnection();
+            }
         }
     }
 
@@ -217,8 +229,10 @@ public class NotificationManagementServiceImpl implements NotificationManagement
         List<Notification> notifications = new ArrayList<>();
         request = DeviceManagerUtil.validateNotificationListPageSize(request);
         int count =0;
+        boolean connectionOpened = false;
         try {
             NotificationManagementDAOFactory.openConnection();
+            connectionOpened = true;
             notifications = notificationDAO.getNotificationsByStatus(request, status, NotificationDAOUtil.getTenantId());
             count = notificationDAO.getNotificationCountByStatus(status, NotificationDAOUtil.getTenantId());
             paginationResult.setData(notifications);
@@ -229,21 +243,27 @@ public class NotificationManagementServiceImpl implements NotificationManagement
             throw new NotificationManagementException("Error occurred while opening a connection " +
                     "to the data source", e);
         } finally {
-            NotificationManagementDAOFactory.closeConnection();
+            if (connectionOpened) {
+                NotificationManagementDAOFactory.closeConnection();
+            }
         }
     }
 
     @Override
     public List<Notification> getNotificationsByStatus(Notification.Status status)
             throws NotificationManagementException {
+        boolean connectionOpened = false;
         try {
             NotificationManagementDAOFactory.openConnection();
+            connectionOpened = true;
             return notificationDAO.getNotificationsByStatus(status, NotificationDAOUtil.getTenantId());
         } catch (SQLException e) {
             throw new NotificationManagementException("Error occurred while opening a connection " +
                     "to the data source", e);
         } finally {
-            NotificationManagementDAOFactory.closeConnection();
+            if (connectionOpened) {
+                NotificationManagementDAOFactory.closeConnection();
+            }
         }
     }
 }

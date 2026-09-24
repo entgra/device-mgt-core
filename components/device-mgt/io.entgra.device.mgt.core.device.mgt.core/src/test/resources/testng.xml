@@ -26,6 +26,8 @@
     <test name="DAO Unit Tests" preserve-order="true">
         <parameter name="dbType" value="MySql"/>
         <classes>
+            <class name="io.entgra.device.mgt.core.device.mgt.core.dao.TransactionSetupTest"/>
+            <class name="io.entgra.device.mgt.core.device.mgt.core.notification.mgt.NotificationConnectionOwnershipTest"/>
             <class name="io.entgra.device.mgt.core.device.mgt.core.common.BaseDeviceManagementTest"/>
             <class name="io.entgra.device.mgt.core.device.mgt.core.dao.DevicePersistTests"/>
             <class name="io.entgra.device.mgt.core.device.mgt.core.DeviceManagementRepositoryTests"/>
