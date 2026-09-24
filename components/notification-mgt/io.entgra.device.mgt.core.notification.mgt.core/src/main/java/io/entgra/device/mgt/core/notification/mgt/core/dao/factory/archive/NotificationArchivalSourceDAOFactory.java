@@ -121,7 +121,12 @@ public class NotificationArchivalSourceDAOFactory {
     }
 
     public static void beginTransaction() throws TransactionManagementException {
-        Connection conn = null;
+        Connection conn = currentConnection.get();
+        if (conn != null) {
+            throw new IllegalTransactionStateException("A transaction is already active within the context of "
+                    + "this particular thread. Therefore, calling 'beginTransaction/openConnection' while another "
+                    + "transaction is already active is a sign of improper transaction handling");
+        }
         try {
             conn = dataSource.getConnection();
             conn.setAutoCommit(false);
