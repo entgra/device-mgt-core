@@ -44,6 +44,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class PolicyManagerServiceImpl implements PolicyManagerService {
 
@@ -205,6 +206,11 @@ public class PolicyManagerServiceImpl implements PolicyManagerService {
     @Override
     public Policy getAppliedPolicyToDevice(Device device) throws PolicyManagementException {
         return policyManager.getAppliedPolicyToDevice(device);
+    }
+
+    @Override
+    public Map<Integer, Policy> getAppliedPolicies(List<Device> devices) throws PolicyManagementException {
+        return policyManager.getAppliedPolicies(devices);
     }
 
     @Override

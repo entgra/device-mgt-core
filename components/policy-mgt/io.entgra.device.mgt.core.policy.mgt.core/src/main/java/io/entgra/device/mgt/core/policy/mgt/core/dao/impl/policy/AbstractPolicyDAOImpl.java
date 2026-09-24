@@ -47,9 +47,12 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * Abstract implementation of PolicyDAO which holds generic SQL queries.
@@ -571,22 +574,32 @@ public abstract class AbstractPolicyDAOImpl implements PolicyDAO {
     }
 
     @Override
-    public HashMap<Integer, Integer> getUpdatedPolicyIdandDeviceTypeId() throws PolicyManagerDAOException {
+    public Map<Integer, String> getChangedPolicyDeviceTypes(Set<Integer> policyIds)
+            throws PolicyManagerDAOException {
 
         Connection conn;
         PreparedStatement stmt = null;
         ResultSet resultSet = null;
-        HashMap<Integer, Integer> map = new HashMap<>();
+        Map<Integer, String> map = new HashMap<>();
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        if (policyIds == null || policyIds.isEmpty()) {
+            return map;
+        }
         try {
             conn = this.getConnection();
-            String query = "SELECT * FROM DM_POLICY_CHANGE_MGT WHERE TENANT_ID = ?";
+            String placeholders = String.join(",", Collections.nCopies(policyIds.size(), "?"));
+            String query = "SELECT POLICY_ID, DEVICE_TYPE FROM DM_POLICY_CHANGE_MGT WHERE TENANT_ID = ? " +
+                    "AND POLICY_ID IN (" + placeholders + ")";
             stmt = conn.prepareStatement(query);
             stmt.setInt(1, tenantId);
+            int index = 2;
+            for (Integer policyId : policyIds) {
+                stmt.setInt(index++, policyId);
+            }
             resultSet = stmt.executeQuery();
 
             while (resultSet.next()) {
-                map.put(resultSet.getInt("POLICY_ID"), resultSet.getInt("DEVICE_TYPE_ID"));
+                map.put(resultSet.getInt("POLICY_ID"), resultSet.getString("DEVICE_TYPE"));
             }
 
         } catch (SQLException e) {
@@ -982,16 +995,25 @@ public abstract class AbstractPolicyDAOImpl implements PolicyDAO {
     }
 
     @Override
-    public void removeRecordsAboutUpdatedPolicies() throws PolicyManagerDAOException {
+    public void removeRecordsAboutUpdatedPolicies(Set<Integer> policyIds) throws PolicyManagerDAOException {
 
         Connection conn;
         PreparedStatement stmt = null;
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        if (policyIds == null || policyIds.isEmpty()) {
+            return;
+        }
         try {
             conn = this.getConnection();
-            String query = "DELETE FROM DM_POLICY_CHANGE_MGT WHERE TENANT_ID = ? ";
+            String placeholders = String.join(",", Collections.nCopies(policyIds.size(), "?"));
+            String query = "DELETE FROM DM_POLICY_CHANGE_MGT WHERE TENANT_ID = ? AND POLICY_ID IN (" +
+                    placeholders + ")";
             stmt = conn.prepareStatement(query);
             stmt.setInt(1, tenantId);
+            int index = 2;
+            for (Integer policyId : policyIds) {
+                stmt.setInt(index++, policyId);
+            }
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw new PolicyManagerDAOException("Error occurred while deleting the policy changes in the database for" +
@@ -1704,6 +1726,10 @@ public abstract class AbstractPolicyDAOImpl implements PolicyDAO {
             while (resultSet.next()) {
                 String contentString = resultSet.getString("POLICY_CONTENT");
                 policy = gson.fromJson(contentString, Policy.class);
+                if (policy == null) {
+                    policy = new Policy();
+                }
+                policy.setId(resultSet.getInt("POLICY_ID"));
             }
 
         } catch (SQLException e) {
@@ -1712,6 +1738,45 @@ public abstract class AbstractPolicyDAOImpl implements PolicyDAO {
             PolicyManagementDAOUtil.cleanupResources(stmt, resultSet);
         }
         return policy;
+    }
+
+    @Override
+    public Map<Integer, Policy> getAppliedPolicies(List<Device> devices) throws PolicyManagerDAOException {
+        Map<Integer, Policy> policies = new HashMap<>();
+        if (devices == null || devices.isEmpty()) {
+            return policies;
+        }
+        Connection conn;
+        PreparedStatement stmt = null;
+        ResultSet resultSet = null;
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        try {
+            conn = this.getConnection();
+            String query = "SELECT ENROLMENT_ID, POLICY_ID, POLICY_CONTENT FROM DM_DEVICE_POLICY_APPLIED " +
+                    "WHERE TENANT_ID = ? AND (" + String.join(" OR ",
+                    Collections.nCopies(devices.size(), "(DEVICE_ID = ? AND ENROLMENT_ID = ?)")) + ")";
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, tenantId);
+            int index = 2;
+            for (Device device : devices) {
+                stmt.setInt(index++, device.getId());
+                stmt.setInt(index++, device.getEnrolmentInfo().getId());
+            }
+            resultSet = stmt.executeQuery();
+            while (resultSet.next()) {
+                Policy policy = gson.fromJson(resultSet.getString("POLICY_CONTENT"), Policy.class);
+                if (policy == null) {
+                    policy = new Policy();
+                }
+                policy.setId(resultSet.getInt("POLICY_ID"));
+                policies.put(resultSet.getInt("ENROLMENT_ID"), policy);
+            }
+        } catch (SQLException e) {
+            throw new PolicyManagerDAOException("Error occurred while getting applied policies for enrolments", e);
+        } finally {
+            PolicyManagementDAOUtil.cleanupResources(stmt, resultSet);
+        }
+        return policies;
     }
 
     @Override

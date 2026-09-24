@@ -37,6 +37,7 @@ import io.entgra.device.mgt.core.device.mgt.common.policy.mgt.Policy;
 import io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementDataHolder;
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManagerServiceImpl;
 import io.entgra.device.mgt.core.policy.mgt.common.PolicyAdministratorPoint;
+import io.entgra.device.mgt.core.policy.mgt.common.InvalidPolicySelectionException;
 import io.entgra.device.mgt.core.policy.mgt.common.PolicyManagementException;
 import io.entgra.device.mgt.core.policy.mgt.core.PolicyManagerService;
 import org.apache.commons.logging.Log;
@@ -59,6 +60,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Path("/policies")
 @Produces(MediaType.APPLICATION_JSON)
@@ -362,11 +364,20 @@ public class PolicyManagementServiceImpl implements PolicyManagementService {
     @PUT
     @Produces("application/json")
     @Path("apply-changes")
-    public Response applyChanges() {
+    public Response applyChanges(Set<Integer> policyIds) {
+        if (policyIds == null || policyIds.isEmpty() || policyIds.contains(null) ||
+                policyIds.stream().anyMatch(policyId -> policyId <= 0)) {
+            String msg = "A non-empty set of positive policy IDs is required.";
+            return Response.status(Response.Status.BAD_REQUEST).entity(
+                    new ErrorResponse.ErrorResponseBuilder().setCode(400L).setMessage(msg).build()).build();
+        }
         try {
             PolicyManagerService policyManagementService = DeviceMgtAPIUtils.getPolicyManagementService();
             PolicyAdministratorPoint pap = policyManagementService.getPAP();
-            pap.publishChanges();
+            pap.publishChanges(policyIds);
+        } catch (InvalidPolicySelectionException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(
+                    new ErrorResponse.ErrorResponseBuilder().setCode(400L).setMessage(e.getMessage()).build()).build();
         } catch (PolicyManagementException e) {
             String msg = "Exception in applying changes.";
             log.error(msg, e);

@@ -23,6 +23,7 @@ import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.GroupManagemen
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.DeviceMgtAPIUtils;
 import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
+import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo;
 import io.entgra.device.mgt.core.device.mgt.common.GroupPaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceNotFoundException;
@@ -31,6 +32,8 @@ import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProvide
 import io.entgra.device.mgt.core.device.mgt.core.service.GroupManagementProviderService;
 import io.entgra.device.mgt.core.policy.mgt.common.PolicyAdministratorPoint;
 import io.entgra.device.mgt.core.policy.mgt.common.PolicyManagementException;
+import io.entgra.device.mgt.core.policy.mgt.common.PolicySelectionEvaluationPoint;
+import io.entgra.device.mgt.core.device.mgt.common.policy.mgt.Policy;
 import io.entgra.device.mgt.core.policy.mgt.core.PolicyManagerService;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
@@ -48,7 +51,12 @@ import org.wso2.carbon.context.PrivilegedCarbonContext;
 
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * This is a test case for {@link GroupManagementServiceImpl}.
@@ -311,13 +319,14 @@ public class GroupManagementServiceImplTest {
     }
 
     @Test(description = "This method tests the addDevicesToGroup method under various conditions.")
-    public void testAddDevicesToGroup() throws GroupManagementException, DeviceNotFoundException {
+    public void testAddDevicesToGroup() throws Exception {
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getGroupManagementProviderService"))
                 .toReturn(groupManagementProviderService);
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getPolicyManagementService"))
                 .toReturn(policyManagerService);
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getDeviceManagementService"))
                 .toReturn(deviceManagementProviderService);
+        mockSimpleEvaluationPoint();
         CarbonContext carbonContext = Mockito.mock(CarbonContext.class, Mockito.RETURNS_MOCKS);
         PowerMockito.stub(PowerMockito.method(CarbonContext.class, "getThreadLocalCarbonContext"))
                 .toReturn(carbonContext);
@@ -342,13 +351,14 @@ public class GroupManagementServiceImplTest {
     }
 
     @Test(description = "This method tests the removeDevicesFromGroup method under various conditions.")
-    public void testRemoveDevicesFromGroup() throws GroupManagementException, DeviceNotFoundException {
+    public void testRemoveDevicesFromGroup() throws Exception {
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getGroupManagementProviderService"))
                 .toReturn(groupManagementProviderService);
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getPolicyManagementService"))
                 .toReturn(policyManagerService);
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getDeviceManagementService"))
                 .toReturn(deviceManagementProviderService);
+        mockSimpleEvaluationPoint();
         List<DeviceIdentifier> deviceIdentifiers = new ArrayList<>();
         Mockito.doNothing().when(groupManagementProviderService).removeDevice(1, deviceIdentifiers);
         Mockito.doThrow(new GroupManagementException()).when(groupManagementProviderService).removeDevice(2,
@@ -384,7 +394,7 @@ public class GroupManagementServiceImplTest {
     }
 
     @Test(description = "This method tests updateDeviceAssigningToGroups under different conditions.")
-    public void testUpdateDeviceAssigningToGroups() throws GroupManagementException, DeviceNotFoundException, PolicyManagementException {
+    public void testUpdateDeviceAssigningToGroups() throws Exception {
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getGroupManagementProviderService"))
                 .toReturn(groupManagementProviderService);
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getPolicyManagementService"))
@@ -423,9 +433,25 @@ public class GroupManagementServiceImplTest {
         // Mock PolicyAdministratorPoint interactions
         PolicyAdministratorPoint pap = Mockito.mock(PolicyAdministratorPoint.class);
         Mockito.doReturn(pap).when(policyManagerService).getPAP();
-        Mockito.doNothing().when(pap).removePolicyUsed(Mockito.any());
-        Mockito.doReturn(null).when(policyManagerService).getEffectivePolicy(Mockito.any());
-        Mockito.doNothing().when(pap).publishChanges();
+        Device device = new Device();
+        EnrolmentInfo enrolmentInfo = new EnrolmentInfo();
+        enrolmentInfo.setId(10);
+        enrolmentInfo.setStatus(EnrolmentInfo.Status.ACTIVE);
+        device.setEnrolmentInfo(enrolmentInfo);
+        Mockito.doReturn(device).when(deviceManagementProviderService)
+                .getDevice(Mockito.any(DeviceIdentifier.class), Mockito.eq(false));
+        Policy appliedPolicy = new Policy();
+        appliedPolicy.setId(1);
+        Map<Integer, Policy> appliedPolicies = new HashMap<>();
+        appliedPolicies.put(10, appliedPolicy);
+        Mockito.doReturn(appliedPolicies).when(policyManagerService).getAppliedPolicies(Mockito.anyList());
+        PolicySelectionEvaluationPoint pep = Mockito.mock(PolicySelectionEvaluationPoint.class);
+        Mockito.doReturn(pep).when(policyManagerService).getPEP();
+        Mockito.doReturn("Simple").when(pep).getName();
+        Policy newEffectivePolicy = new Policy();
+        newEffectivePolicy.setId(2);
+        Mockito.doReturn(newEffectivePolicy).when(pep).getEffectivePolicy(Mockito.any());
+        Mockito.doNothing().when(pap).publishChanges(Mockito.anySet());
 
         // Execute and verify successful case
         Response response = groupManagementService.updateDeviceAssigningToGroups(deviceToGroupsAssignment);
@@ -433,7 +459,10 @@ public class GroupManagementServiceImplTest {
                 "updateDeviceAssigningToGroups request failed with valid parameters");
 
         // Verify that publishChanges() is called once
-        Mockito.verify(pap, Mockito.times(1)).publishChanges();
+        Set<Integer> expectedPolicyIds = new HashSet<>();
+        expectedPolicyIds.add(1);
+        expectedPolicyIds.add(2);
+        Mockito.verify(pap, Mockito.times(1)).publishChanges(expectedPolicyIds);
 
         // Verify addDevices() is only called for valid groups
         Mockito.verify(groupManagementProviderService, Mockito.times(1)).addDevices(Mockito.eq(4), Mockito.any());
@@ -452,5 +481,12 @@ public class GroupManagementServiceImplTest {
         response = groupManagementService.updateDeviceAssigningToGroups(deviceToGroupsAssignment);
         Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                 "updateDeviceAssigningToGroups request succeeded with invalid parameters");
+    }
+
+    private PolicySelectionEvaluationPoint mockSimpleEvaluationPoint() throws PolicyManagementException {
+        PolicySelectionEvaluationPoint evaluationPoint = Mockito.mock(PolicySelectionEvaluationPoint.class);
+        Mockito.doReturn("Simple").when(evaluationPoint).getName();
+        Mockito.doReturn(evaluationPoint).when(policyManagerService).getPEP();
+        return evaluationPoint;
     }
 }

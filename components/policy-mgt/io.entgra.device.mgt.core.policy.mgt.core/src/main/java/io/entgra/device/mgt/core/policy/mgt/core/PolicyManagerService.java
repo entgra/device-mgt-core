@@ -31,6 +31,7 @@ import io.entgra.device.mgt.core.policy.mgt.common.*;
 import io.entgra.device.mgt.core.policy.mgt.core.task.TaskScheduleService;
 
 import java.util.List;
+import java.util.Map;
 
 public interface PolicyManagerService {
 
@@ -68,6 +69,8 @@ public interface PolicyManagerService {
     Policy getAppliedPolicyToDevice(DeviceIdentifier deviceIdentifier) throws PolicyManagementException;
 
     Policy getAppliedPolicyToDevice(Device device) throws PolicyManagementException;
+
+    Map<Integer, Policy> getAppliedPolicies(List<Device> devices) throws PolicyManagementException;
 
     @Deprecated
     List<ComplianceFeature> checkPolicyCompliance(DeviceIdentifier deviceIdentifier, Object
