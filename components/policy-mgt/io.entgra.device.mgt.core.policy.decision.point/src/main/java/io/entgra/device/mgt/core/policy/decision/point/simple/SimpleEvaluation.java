@@ -23,10 +23,15 @@ import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
 import io.entgra.device.mgt.core.device.mgt.common.policy.mgt.Policy;
 import io.entgra.device.mgt.core.policy.mgt.common.PolicyEvaluationException;
 
+import java.util.Set;
+
 public interface SimpleEvaluation  {
 
     void sortPolicies() throws PolicyEvaluationException;
 
     Policy getEffectivePolicy(DeviceIdentifier deviceIdentifier)  throws PolicyEvaluationException;
+
+    Policy getEffectivePolicy(DeviceIdentifier deviceIdentifier, Set<Integer> policyIds)
+            throws PolicyEvaluationException;
 
 }

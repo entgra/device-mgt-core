@@ -32,7 +32,10 @@ import io.entgra.device.mgt.core.device.mgt.common.policy.mgt.Profile;
 import io.entgra.device.mgt.core.device.mgt.core.config.DeviceConfigurationManager;
 import io.entgra.device.mgt.core.device.mgt.core.config.policy.PolicyConfiguration;
 import io.entgra.device.mgt.core.policy.mgt.common.PolicyAdministratorPoint;
+import io.entgra.device.mgt.core.policy.mgt.common.InvalidPolicySelectionException;
+import io.entgra.device.mgt.core.policy.mgt.common.PolicyEvaluationPoint;
 import io.entgra.device.mgt.core.policy.mgt.common.PolicyManagementException;
+import io.entgra.device.mgt.core.policy.mgt.common.PolicySelectionEvaluationPoint;
 import io.entgra.device.mgt.core.policy.mgt.common.ProfileManagementException;
 import io.entgra.device.mgt.core.policy.mgt.core.cache.PolicyCacheManager;
 import io.entgra.device.mgt.core.policy.mgt.core.cache.impl.PolicyCacheManagerImpl;
@@ -54,6 +57,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 public class PolicyAdministratorPointImpl implements PolicyAdministratorPoint {
 
@@ -135,9 +140,22 @@ public class PolicyAdministratorPointImpl implements PolicyAdministratorPoint {
     }
 
     @Override
-    public void publishChanges() throws PolicyManagementException {
+    public void publishChanges(Set<Integer> policyIds) throws PolicyManagementException {
 
         try {
+            if (policyIds == null || policyIds.isEmpty()) {
+                throw new InvalidPolicySelectionException("At least one policy ID is required");
+            }
+            Set<Integer> normalizedPolicyIds = new TreeSet<>();
+            for (Integer policyId : policyIds) {
+                if (policyId == null || policyId <= 0) {
+                    throw new InvalidPolicySelectionException("Policy IDs must be positive integers");
+                }
+                normalizedPolicyIds.add(policyId);
+            }
+            // Validate tenant ownership or a tenant-owned deletion tombstone before scheduling.
+            policyManager.applyChangesMadeToPolicies(normalizedPolicyIds);
+
             int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
             String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
             String userName = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
@@ -152,6 +170,8 @@ public class PolicyAdministratorPointImpl implements PolicyAdministratorPoint {
             triggerInfo.setRepeatCount(0);
             Map<String, String> properties = new HashMap<>();
             properties.put(PolicyManagementConstants.TENANT_ID, String.valueOf(tenantId));
+            properties.put(PolicyManagementConstants.POLICY_IDS, normalizedPolicyIds.stream()
+                    .map(String::valueOf).collect(Collectors.joining(",")));
             String taskName = PolicyManagementConstants.DELEGATION_TASK_NAME + "_" + String.valueOf(tenantId);
 
             Set<String> registeredTaskTypes = taskService.getRegisteredTaskTypes();
@@ -183,6 +203,10 @@ public class PolicyAdministratorPointImpl implements PolicyAdministratorPoint {
                     if (!taskManager.isTaskScheduled(taskName)) {
                         TaskInfo taskInfo = new TaskInfo(taskName, PolicyManagementConstants.DELEGATION_TASK_CLAZZ,
                                 properties, triggerInfo);
+                        // nTask does not refresh an existing task's property map on schedule. Re-register the
+                        // idle task so a previous request's policy IDs can never be reused.
+                        taskManager.deleteTask(taskName);
+                        taskManager.registerTask(taskInfo);
                         taskManager.scheduleTask(taskInfo.getName());
                         log.info("Apply changes to device", policyLogContextBuilder.setActionTag("PUBLISH_CHANGES").setUserName(userName).setTenantID(String.valueOf(tenantId)).setTenantDomain(tenantDomain).build());
                     } else {

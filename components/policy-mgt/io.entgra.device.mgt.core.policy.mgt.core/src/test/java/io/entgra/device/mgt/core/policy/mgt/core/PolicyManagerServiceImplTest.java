@@ -64,7 +64,9 @@ import org.wso2.carbon.context.PrivilegedCarbonContext;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class  PolicyManagerServiceImplTest extends BasePolicyManagementDAOTest {
 
@@ -228,7 +230,7 @@ public class  PolicyManagerServiceImplTest extends BasePolicyManagementDAOTest {
 
     @Test(dependsOnMethods = "activatePolicy")
     public void applyPolicy() throws PolicyManagementException, OperationManagementException {
-        new DelegationTask().execute();
+        executeDelegationTask(policy1.getId());
         Policy appliedPolicy = policyManagerService.getAppliedPolicyToDevice(new DeviceIdentifier(DEVICE1, DEVICE_TYPE_A));
         Assert.assertEquals(appliedPolicy.getPolicyName(), POLICY1, POLICY1 + " was not applied on " + DEVICE1);
 
@@ -333,7 +335,7 @@ public class  PolicyManagerServiceImplTest extends BasePolicyManagementDAOTest {
     @Test(dependsOnMethods = "checkNonCompliance")
     public void inactivatePolicy() throws PolicyManagementException {
         policyManagerService.getPAP().inactivatePolicy(policy1.getId());
-        new DelegationTask().execute();
+        executeDelegationTask(policy1.getId());
         Policy effectivePolicy = policyManagerService.getEffectivePolicy(new DeviceIdentifier(DEVICE1, DEVICE_TYPE_A));
         Assert.assertNull(effectivePolicy, POLICY1 + " (after inactivation) is still applied for " + DEVICE1);
     }
@@ -435,5 +437,13 @@ public class  PolicyManagerServiceImplTest extends BasePolicyManagementDAOTest {
         Assert.assertNotNull(profile);
         Assert.assertNotNull(currentProfile.getProfileFeaturesList().get(0).getFeatureCode(),
                 updatedProfile.getProfileFeaturesList().get(0).getFeatureCode());
+    }
+
+    private void executeDelegationTask(int policyId) {
+        DelegationTask task = new DelegationTask();
+        Map<String, String> properties = new HashMap<>();
+        properties.put(PolicyManagementConstants.POLICY_IDS, String.valueOf(policyId));
+        task.setProperties(properties);
+        task.execute();
     }
 }

@@ -29,6 +29,8 @@ import io.entgra.device.mgt.core.policy.mgt.common.Criterion;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public interface PolicyDAO {
 
@@ -118,7 +120,7 @@ public interface PolicyDAO {
 
     void inactivatePolicy(int policyId) throws PolicyManagerDAOException;
 
-    HashMap<Integer, Integer> getUpdatedPolicyIdandDeviceTypeId() throws PolicyManagerDAOException;
+    Map<Integer, String> getChangedPolicyDeviceTypes(Set<Integer> policyIds) throws PolicyManagerDAOException;
 
     Criterion addCriterion(Criterion criteria) throws PolicyManagerDAOException;
 
@@ -146,7 +148,7 @@ public interface PolicyDAO {
 
     void recordUpdatedPolicies(List<Policy> policies) throws PolicyManagerDAOException;
 
-    void removeRecordsAboutUpdatedPolicies() throws PolicyManagerDAOException;
+    void removeRecordsAboutUpdatedPolicies(Set<Integer> policyIds) throws PolicyManagerDAOException;
 
     Policy getPolicy(int policyId) throws PolicyManagerDAOException;
 
@@ -193,6 +195,8 @@ public interface PolicyDAO {
     int getAppliedPolicyId(int deviceId, int enrollmentId) throws PolicyManagerDAOException;
 
     Policy getAppliedPolicy(int deviceId, int enrollmentId) throws PolicyManagerDAOException;
+
+    Map<Integer, Policy> getAppliedPolicies(List<Device> devices) throws PolicyManagerDAOException;
 
     HashMap<Integer, Integer> getAppliedPolicyIds() throws PolicyManagerDAOException;
 
