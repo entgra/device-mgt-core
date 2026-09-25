@@ -1968,6 +1968,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         List<GeoCluster> geoClusters = new ArrayList<>();
+        boolean noClusters = geoQuery.isNoClusters();
         try {
             conn = this.getConnection();
             String sql = "SELECT AVG(DEVICE_LOCATION.LATITUDE) AS LATITUDE, " +
@@ -1976,7 +1977,9 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                     "MAX(DEVICE_LOCATION.LATITUDE) AS MAX_LATITUDE, " +
                     "MIN(DEVICE_LOCATION.LONGITUDE) AS MIN_LONGITUDE, " +
                     "MAX(DEVICE_LOCATION.LONGITUDE) AS MAX_LONGITUDE, " +
-                    "SUBSTRING(DEVICE_LOCATION.GEO_HASH,1,?) AS GEOHASH_PREFIX,  " +
+                    (noClusters
+                            ? "MIN(DEVICE_LOCATION.GEO_HASH) AS GEOHASH_PREFIX,  "
+                            : "SUBSTRING(DEVICE_LOCATION.GEO_HASH,1,?) AS GEOHASH_PREFIX,  ") +
                     "COUNT(DEVICE_LOCATION.ID) AS COUNT, " +
                     "MIN(DEVICE.ID) AS DEVICE_ID, " +
                     "MIN(DEVICE.NAME) AS DEVICE_NAME, " +
@@ -2035,11 +2038,14 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             }
             sql += "AND DEVICE.ID = DEVICE_LOCATION.DEVICE_ID " +
                     "AND DEVICE.ID = ENROLMENT.DEVICE_ID " +
-                    "AND DEVICE.TENANT_ID = ? AND DEVICE.TENANT_ID = ENROLMENT.TENANT_ID GROUP BY GEOHASH_PREFIX";
+                    "AND DEVICE.TENANT_ID = ? AND DEVICE.TENANT_ID = ENROLMENT.TENANT_ID " +
+                    (noClusters ? "GROUP BY DEVICE.ID" : "GROUP BY GEOHASH_PREFIX");
             stmt = conn.prepareStatement(sql);
 
             int index = 1;
-            stmt.setInt(index++, geoQuery.getGeohashLength());
+            if (!noClusters) {
+                stmt.setInt(index++, geoQuery.getGeohashLength());
+            }
             stmt.setDouble(index++, geoQuery.getSouthWest().getLatitude());
             stmt.setDouble(index++, geoQuery.getNorthEast().getLatitude());
             stmt.setDouble(index++, geoQuery.getSouthWest().getLongitude());
@@ -2108,8 +2114,10 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                 maxLongitude = rs.getDouble("MAX_LONGITUDE");
                 count = rs.getLong("COUNT");
                 geohashPrefix = rs.getString("GEOHASH_PREFIX");
-                if (count == 1) {
+                if (noClusters || count == 1) {
                     device = DeviceManagementDAOUtil.loadDevice(rs);
+                    // Each noClusters row is one device pin within the viewport.
+                    count = 1;
                 } else {
                     device = null;
                 }
