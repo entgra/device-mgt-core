@@ -31,7 +31,6 @@ import io.entgra.device.mgt.core.device.mgt.extensions.logger.spi.EntgraLogger;
 import io.entgra.device.mgt.core.notification.logger.GroupMgtLogContext;
 import io.entgra.device.mgt.core.notification.logger.impl.EntgraGroupMgtLoggerImpl;
 import io.entgra.device.mgt.core.policy.mgt.core.PolicyManagerService;
-import org.wso2.carbon.CarbonConstants;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceGroupList;
@@ -482,21 +481,23 @@ public class GroupManagementServiceImpl implements GroupManagementService {
             GroupManagementProviderService groupManagementProviderService = DeviceMgtAPIUtils.getGroupManagementProviderService();
             List<DeviceGroup> deviceGroups = groupManagementProviderService.getGroups(deviceToGroupsAssignment.getDeviceIdentifier(), false);
 
-            List<Integer> newGroupAssignments = new ArrayList<>();
-
+            List<Integer> currentGroupIds = new ArrayList<>();
             for (DeviceGroup group : deviceGroups) {
-                if (!deviceToGroupsAssignment.getDeviceGroupIds().contains(group.getGroupId())) {
-                    DeviceGroup incomingGroup = groupManagementProviderService.getGroup(group.getGroupId(), false);
-                    if (incomingGroup == null) {
-                        String msg = "Group " + group.getName() + " does not exist.";
-                        log.error(msg);
-                        return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
-                    }
+                currentGroupIds.add(group.getGroupId());
+            }
 
-                    if (!CarbonConstants.REGISTRY_SYSTEM_USERNAME.equals(incomingGroup.getOwner())) {
-                        newGroupAssignments.add(group.getGroupId());
-                    }
+            List<Integer> newGroupAssignments = new ArrayList<>();
+            for (Integer groupId : deviceToGroupsAssignment.getDeviceGroupIds()) {
+                if (currentGroupIds.contains(groupId)) {
+                    continue;
                 }
+                DeviceGroup groupToAssign = groupManagementProviderService.getGroup(groupId, false);
+                if (groupToAssign == null) {
+                    String msg = "Group " + groupId + " does not exist.";
+                    log.error(msg);
+                    return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+                }
+                newGroupAssignments.add(groupId);
             }
 
             if (!newGroupAssignments.isEmpty()) {
