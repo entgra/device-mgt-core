@@ -42,7 +42,6 @@ import org.testng.IObjectFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.ObjectFactory;
 import org.testng.annotations.Test;
-import org.wso2.carbon.CarbonConstants;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 
@@ -384,7 +383,8 @@ public class GroupManagementServiceImplTest {
     }
 
     @Test(description = "This method tests updateDeviceAssigningToGroups under different conditions.")
-    public void testUpdateDeviceAssigningToGroups() throws GroupManagementException, DeviceNotFoundException, PolicyManagementException {
+    public void testUpdateDeviceAssigningToGroups() throws GroupManagementException, DeviceNotFoundException,
+            PolicyManagementException, GroupNotExistException {
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getGroupManagementProviderService"))
                 .toReturn(groupManagementProviderService);
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getPolicyManagementService"))
@@ -400,34 +400,12 @@ public class GroupManagementServiceImplTest {
         groupIds.add(5);
         deviceToGroupsAssignment.setDeviceGroupIds(groupIds);
         deviceToGroupsAssignment.setDeviceIdentifier(new DeviceIdentifier("test", "android"));
-        List<DeviceGroup> deviceGroups = new ArrayList<>();
-        DeviceGroup deviceGroup = new DeviceGroup();
-        deviceGroup.setGroupId(1);
-        deviceGroups.add(deviceGroup);
-        deviceGroup = new DeviceGroup();
-        deviceGroup.setGroupId(3);
-        deviceGroup.setOwner(CarbonConstants.REGISTRY_SYSTEM_USERNAME);
-        deviceGroups.add(deviceGroup);
-        deviceGroup = new DeviceGroup();
-        deviceGroup.setGroupId(4);
-        deviceGroup.setOwner("test");
-        deviceGroups.add(deviceGroup);
-        Mockito.doReturn(deviceGroups).when(groupManagementProviderService)
-                .getGroups(Mockito.any(DeviceIdentifier.class), Mockito.anyBoolean());
 
-        DeviceGroup groupToAdd = new DeviceGroup();
-        groupToAdd.setGroupId(2);
-        groupToAdd.setOwner("test");
-        Mockito.doReturn(groupToAdd).when(groupManagementProviderService).getGroup(Mockito.eq(2), Mockito.anyBoolean());
-
-        DeviceGroup systemGroupToAdd = new DeviceGroup();
-        systemGroupToAdd.setGroupId(5);
-        systemGroupToAdd.setOwner(CarbonConstants.REGISTRY_SYSTEM_USERNAME);
-        Mockito.doReturn(systemGroupToAdd).when(groupManagementProviderService)
-                .getGroup(Mockito.eq(5), Mockito.anyBoolean());
-
-        Mockito.doNothing().when(groupManagementProviderService).addDevices(Mockito.anyInt(), Mockito.any());
-        Mockito.doNothing().when(groupManagementProviderService).removeDevice(Mockito.anyInt(), Mockito.any());
+        List<Integer> newlyAssignedGroupIds = new ArrayList<>();
+        newlyAssignedGroupIds.add(2);
+        newlyAssignedGroupIds.add(5);
+        Mockito.doReturn(newlyAssignedGroupIds).when(groupManagementProviderService)
+                .updateDeviceAssigningToGroups(Mockito.any(DeviceIdentifier.class), Mockito.anyList());
 
         // Mock PolicyAdministratorPoint interactions
         PolicyAdministratorPoint pap = Mockito.mock(PolicyAdministratorPoint.class);
@@ -443,25 +421,20 @@ public class GroupManagementServiceImplTest {
 
         // Verify that publishChanges() is called once
         Mockito.verify(pap, Mockito.times(1)).publishChanges();
+        Mockito.verify(groupManagementProviderService, Mockito.times(1))
+                .updateDeviceAssigningToGroups(Mockito.any(DeviceIdentifier.class), Mockito.anyList());
 
-        // Add only newly requested groups (2 and 5); keep existing memberships (1, 3, 4)
-        Mockito.verify(groupManagementProviderService, Mockito.times(1)).addDevices(Mockito.eq(2), Mockito.any());
-        Mockito.verify(groupManagementProviderService, Mockito.times(1)).addDevices(Mockito.eq(5), Mockito.any());
-        Mockito.verify(groupManagementProviderService, Mockito.never()).addDevices(Mockito.eq(1), Mockito.any());
-        Mockito.verify(groupManagementProviderService, Mockito.never()).addDevices(Mockito.eq(4), Mockito.any());
-        Mockito.verify(groupManagementProviderService, Mockito.never()).removeDevice(Mockito.anyInt(), Mockito.any());
-
-        // Simulate error when adding devices
+        // Simulate error when assigning devices
         Mockito.doThrow(new DeviceNotFoundException()).when(groupManagementProviderService)
-                .addDevices(Mockito.anyInt(), Mockito.any());
+                .updateDeviceAssigningToGroups(Mockito.any(DeviceIdentifier.class), Mockito.anyList());
 
         response = groupManagementService.updateDeviceAssigningToGroups(deviceToGroupsAssignment);
         Assert.assertEquals(response.getStatus(), Response.Status.BAD_REQUEST.getStatusCode(),
                 "updateDeviceAssigningToGroups request succeeded with invalid parameters");
 
-        // Simulate group retrieval failure
+        // Simulate group management failure
         Mockito.doThrow(new GroupManagementException()).when(groupManagementProviderService)
-                .getGroups(Mockito.any(DeviceIdentifier.class), Mockito.anyBoolean());
+                .updateDeviceAssigningToGroups(Mockito.any(DeviceIdentifier.class), Mockito.anyList());
         response = groupManagementService.updateDeviceAssigningToGroups(deviceToGroupsAssignment);
         Assert.assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                 "updateDeviceAssigningToGroups request succeeded with invalid parameters");

@@ -476,43 +476,32 @@ public class GroupManagementServiceImpl implements GroupManagementService {
     @Override
     public Response updateDeviceAssigningToGroups(DeviceToGroupsAssignment deviceToGroupsAssignment) {
         try {
-            List<DeviceIdentifier> deviceIdentifiers = new ArrayList<>();
-            deviceIdentifiers.add(deviceToGroupsAssignment.getDeviceIdentifier());
-            GroupManagementProviderService groupManagementProviderService = DeviceMgtAPIUtils.getGroupManagementProviderService();
-            List<DeviceGroup> deviceGroups = groupManagementProviderService.getGroups(deviceToGroupsAssignment.getDeviceIdentifier(), false);
-
-            List<Integer> currentGroupIds = new ArrayList<>();
-            for (DeviceGroup group : deviceGroups) {
-                currentGroupIds.add(group.getGroupId());
+            GroupManagementProviderService groupManagementProviderService =
+                    DeviceMgtAPIUtils.getGroupManagementProviderService();
+            if (groupManagementProviderService == null) {
+                String msg = "Group Management service has not initialized.";
+                log.error(msg);
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
             }
-
-            List<Integer> newGroupAssignments = new ArrayList<>();
-            for (Integer groupId : deviceToGroupsAssignment.getDeviceGroupIds()) {
-                if (currentGroupIds.contains(groupId)) {
-                    continue;
-                }
-                DeviceGroup groupToAssign = groupManagementProviderService.getGroup(groupId, false);
-                if (groupToAssign == null) {
-                    String msg = "Group " + groupId + " does not exist.";
-                    log.error(msg);
-                    return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
-                }
-                newGroupAssignments.add(groupId);
-            }
-
-            if (!newGroupAssignments.isEmpty()) {
+            List<Integer> newGroupAssignments = groupManagementProviderService.updateDeviceAssigningToGroups(
+                    deviceToGroupsAssignment.getDeviceIdentifier(),
+                    deviceToGroupsAssignment.getDeviceGroupIds());
+            if (newGroupAssignments != null && !newGroupAssignments.isEmpty()) {
                 PolicyManagerService policyManagerService = DeviceMgtAPIUtils.getPolicyManagementService();
-                PolicyAdministratorPoint pap = policyManagerService.getPAP();
-                for (int groupId : newGroupAssignments) {
-                    groupManagementProviderService.addDevices(groupId, deviceIdentifiers);
-                    for (DeviceIdentifier deviceIdentifier : deviceIdentifiers) {
-                        pap.removePolicyUsed(deviceIdentifier);
-                        policyManagerService.getEffectivePolicy(deviceIdentifier);
-                    }
+                if (policyManagerService == null) {
+                    String msg = "Policy Management service has not initialized.";
+                    log.error(msg);
+                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
                 }
+                PolicyAdministratorPoint pap = policyManagerService.getPAP();
+                DeviceIdentifier deviceIdentifier = deviceToGroupsAssignment.getDeviceIdentifier();
+                pap.removePolicyUsed(deviceIdentifier);
+                policyManagerService.getEffectivePolicy(deviceIdentifier);
                 pap.publishChanges();
             }
             return Response.status(Response.Status.OK).build();
+        } catch (GroupNotExistException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         } catch (GroupManagementException e) {
             String msg = "Error occurred while assigning device to groups.";
             log.error(msg, e);
