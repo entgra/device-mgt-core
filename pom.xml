@@ -658,7 +658,7 @@
                 <exclusions>
                     <exclusion>
                         <groupId>org.bouncycastle.wso2</groupId>
-                        <artifactId>bcprov-jdk15on</artifactId>
+                        <artifactId>bcprov-jdk18on</artifactId>
                     </exclusion>
                     <exclusion>
                         <groupId>org.wso2.carbon</groupId>
@@ -757,7 +757,7 @@
                     </exclusion>
                     <exclusion>
                         <groupId>org.bouncycastle.wso2</groupId>
-                        <artifactId>bcprov-jdk15on</artifactId>
+                        <artifactId>bcprov-jdk18on</artifactId>
                     </exclusion>
                     <exclusion>
                         <groupId>org.apache.axis2.wso2</groupId>
@@ -1305,12 +1305,12 @@
 
             <dependency>
                 <groupId>org.wso2.orbit.org.bouncycastle</groupId>
-                <artifactId>bcprov-jdk15on</artifactId>
+                <artifactId>bcprov-jdk18on</artifactId>
                 <version>${bcprov.wso2.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.wso2.orbit.org.bouncycastle</groupId>
-                <artifactId>bcpkix-jdk15on</artifactId>
+                <artifactId>bcpkix-jdk18on</artifactId>
                 <version>${bcpkix.wso2.version}</version>
             </dependency>
             <dependency>
@@ -2095,7 +2095,7 @@
     <properties>
         <servelet.jsp.version>2.2.1</servelet.jsp.version>
         <testng.version>7.4.0</testng.version>
-        <carbon.kernel.version>4.8.1</carbon.kernel.version>
+        <carbon.kernel.version>4.9.28</carbon.kernel.version>
         <carbon.kernel.version.range>[4.8.0, 5.0.0)</carbon.kernel.version.range>
         <carbon.p2.plugin.version>5.2.74</carbon.p2.plugin.version>
 
@@ -2175,8 +2175,8 @@
         <fasterxml.jackson.version>2.4.5</fasterxml.jackson.version>
 
         <!-- BouncyCastle -->
-        <bcprov.wso2.version>1.70.0.wso2v1</bcprov.wso2.version>
-        <bcpkix.wso2.version>1.70.0.wso2v1</bcpkix.wso2.version>
+        <bcprov.wso2.version>1.78.1.wso2v1</bcprov.wso2.version>
+        <bcpkix.wso2.version>1.78.1.wso2v1</bcpkix.wso2.version>
         <bcprov.wso2.version.range>[1.52.0,1.80.0)</bcprov.wso2.version.range>
 
         <!-- JSCEP -->
@@ -2319,7 +2319,7 @@
         <commons-fileupload.version>1.2.2.wso2v1</commons-fileupload.version>
         <catalina.version.range>[9.0,10)</catalina.version.range>
         <apache.felix.scr.ds.annotations.version>1.2.4</apache.felix.scr.ds.annotations.version>
-        <carbon.platform.package.import.version.range>[4.7.0, 4.9.0)</carbon.platform.package.import.version.range>
+        <carbon.platform.package.import.version.range>[4.5.0, 5.0.0)</carbon.platform.package.import.version.range>
         <carbon.registry.imp.pkg.version>[1.0.1, 2.0.0)</carbon.registry.imp.pkg.version>
         <carbon.registry.package.import.version.range>[4.7.0, 5.0.0)</carbon.registry.package.import.version.range>
         <fasterxml.jackson.databind.version>2.14.1</fasterxml.jackson.databind.version>

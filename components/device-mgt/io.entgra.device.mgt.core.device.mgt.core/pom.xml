@@ -163,7 +163,6 @@
                             org.apache.http.impl.conn;version="[4.3,5)",
                             org.apache.http.protocol;version="[4.4,5)",
                             org.apache.http.util;version="[4.4,5)",
-                            org.apache.solr.common;version="[8.11,9)",
                             org.json;version="[3.0,4)",
                             org.osgi.framework.*;version="${imp.package.version.osgi.framework}",
                             org.osgi.service.*;version="${imp.package.version.osgi.service}",
