@@ -119,7 +119,6 @@
                             org.wso2.carbon.base;version="[1.0,2)",
                             org.wso2.carbon.core;version="4.6",
                             org.wso2.carbon.core.util;version="4.6",
-                            org.apache.commons.ssl,
                             org.wso2.carbon.apimgt.api.model,
                             okhttp3.*,
                             org.wso2.carbon.apimgt.impl;version="${carbon.api.mgt.version.range}",

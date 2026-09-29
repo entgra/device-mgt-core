@@ -43,10 +43,11 @@ import okhttp3.RequestBody;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.ssl.Base64;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 
 public class PublisherRESTAPIServicesImpl implements PublisherRESTAPIServices {
@@ -82,8 +83,8 @@ public class PublisherRESTAPIServicesImpl implements PublisherRESTAPIServices {
     @Override
     public boolean isSharedScopeNameExists(String key) throws APIServicesException, BadRequestException,
             UnexpectedResponseException {
-        String keyValue = new String(Base64.encodeBase64((key).getBytes())).replace(Constants.QUERY_KEY_VALUE_SEPARATOR,
-                Constants.EMPTY_STRING);
+        String keyValue = Base64.getEncoder().encodeToString(key.getBytes(StandardCharsets.UTF_8))
+                .replace(Constants.QUERY_KEY_VALUE_SEPARATOR, Constants.EMPTY_STRING);
         String getScopeUrl = endPointPrefix + Constants.SCOPE_API_ENDPOINT + keyValue;
 
         Request request = new Request.Builder()

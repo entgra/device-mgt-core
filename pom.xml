@@ -2151,7 +2151,7 @@
         <commons-lang.wso2.osgi.version.range>[2.6.0,3.0.0)</commons-lang.wso2.osgi.version.range>
 
         <!-- Carbon API Management -->
-        <carbon.api.mgt.version>9.28.116</carbon.api.mgt.version>
+        <carbon.api.mgt.version>9.31.86</carbon.api.mgt.version>
         <carbon.api.mgt.version.range>[9.0.0, 10.0.0)</carbon.api.mgt.version.range>
 
         <!-- Carbon Analytics -->

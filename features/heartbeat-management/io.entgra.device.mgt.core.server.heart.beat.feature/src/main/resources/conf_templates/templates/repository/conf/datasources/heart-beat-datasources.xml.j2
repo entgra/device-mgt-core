@@ -39,7 +39,7 @@
                                         <{{property_name}}>{{property_value}}</{{property_name}}>
                                         {% endfor %}
                                 {% else %}
-					<url>jdbc:h2:./repository/database/HEART_BEAT_DB;AUTO_SERVER=TRUE;DB_CLOSE_ON_EXIT=FALSE</url>
+					<url>jdbc:h2:./repository/database/HEART_BEAT_DB;DB_CLOSE_ON_EXIT=FALSE</url>
                     <username>wso2carbon</username>
                     <password>wso2carbon</password>
                     <driverClassName>org.h2.Driver</driverClassName>
@@ -54,4 +54,3 @@
 		</datasource>
 	</datasources>
 </datasources-configuration>
-

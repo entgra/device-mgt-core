@@ -18,6 +18,7 @@
 
 package io.entgra.device.mgt.core.device.mgt.extensions.internal;
 
+import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.spi.DeviceTypeGeneratorService;
 import io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.DeviceTypeGeneratorServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.DeviceTypePluginExtensionServiceImpl;
@@ -93,5 +94,22 @@ public class DeviceTypeExtensionServiceComponent {
 
     protected void unsetDataSourceService(DataSourceService dataSourceService) {
         //do nothing
+    }
+
+    @Reference(
+            name = "metadata.management.service",
+            service = MetadataManagementService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetMetadataManagementService")
+    protected void setMetadataManagementService(MetadataManagementService metadataManagementService) {
+        if (log.isDebugEnabled()) {
+            log.debug("MetadataManagementService acquired");
+        }
+        DeviceTypeExtensionDataHolder.getInstance().setMetadataManagementService(metadataManagementService);
+    }
+
+    protected void unsetMetadataManagementService(MetadataManagementService metadataManagementService) {
+        DeviceTypeExtensionDataHolder.getInstance().setMetadataManagementService(null);
     }
 }
