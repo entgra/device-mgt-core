@@ -31,7 +31,6 @@ import io.entgra.device.mgt.core.device.mgt.extensions.logger.spi.EntgraLogger;
 import io.entgra.device.mgt.core.notification.logger.GroupMgtLogContext;
 import io.entgra.device.mgt.core.notification.logger.impl.EntgraGroupMgtLoggerImpl;
 import io.entgra.device.mgt.core.policy.mgt.core.PolicyManagerService;
-import org.wso2.carbon.CarbonConstants;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceGroupList;
@@ -477,41 +476,32 @@ public class GroupManagementServiceImpl implements GroupManagementService {
     @Override
     public Response updateDeviceAssigningToGroups(DeviceToGroupsAssignment deviceToGroupsAssignment) {
         try {
-            List<DeviceIdentifier> deviceIdentifiers = new ArrayList<>();
-            deviceIdentifiers.add(deviceToGroupsAssignment.getDeviceIdentifier());
-            GroupManagementProviderService groupManagementProviderService = DeviceMgtAPIUtils.getGroupManagementProviderService();
-            List<DeviceGroup> deviceGroups = groupManagementProviderService.getGroups(deviceToGroupsAssignment.getDeviceIdentifier(), false);
-
-            List<Integer> newGroupAssignments = new ArrayList<>();
-
-            for (DeviceGroup group : deviceGroups) {
-                if (!deviceToGroupsAssignment.getDeviceGroupIds().contains(group.getGroupId())) {
-                    DeviceGroup incomingGroup = groupManagementProviderService.getGroup(group.getGroupId(), false);
-                    if (incomingGroup == null) {
-                        String msg = "Group " + group.getName() + " does not exist.";
-                        log.error(msg);
-                        return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
-                    }
-
-                    if (!CarbonConstants.REGISTRY_SYSTEM_USERNAME.equals(incomingGroup.getOwner())) {
-                        newGroupAssignments.add(group.getGroupId());
-                    }
-                }
+            GroupManagementProviderService groupManagementProviderService =
+                    DeviceMgtAPIUtils.getGroupManagementProviderService();
+            if (groupManagementProviderService == null) {
+                String msg = "Group Management service has not initialized.";
+                log.error(msg);
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
             }
-
-            if (!newGroupAssignments.isEmpty()) {
+            List<Integer> newGroupAssignments = groupManagementProviderService.updateDeviceAssigningToGroups(
+                    deviceToGroupsAssignment.getDeviceIdentifier(),
+                    deviceToGroupsAssignment.getDeviceGroupIds());
+            if (newGroupAssignments != null && !newGroupAssignments.isEmpty()) {
                 PolicyManagerService policyManagerService = DeviceMgtAPIUtils.getPolicyManagementService();
-                PolicyAdministratorPoint pap = policyManagerService.getPAP();
-                for (int groupId : newGroupAssignments) {
-                    groupManagementProviderService.addDevices(groupId, deviceIdentifiers);
-                    for (DeviceIdentifier deviceIdentifier : deviceIdentifiers) {
-                        pap.removePolicyUsed(deviceIdentifier);
-                        policyManagerService.getEffectivePolicy(deviceIdentifier);
-                    }
+                if (policyManagerService == null) {
+                    String msg = "Policy Management service has not initialized.";
+                    log.error(msg);
+                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
                 }
+                PolicyAdministratorPoint pap = policyManagerService.getPAP();
+                DeviceIdentifier deviceIdentifier = deviceToGroupsAssignment.getDeviceIdentifier();
+                pap.removePolicyUsed(deviceIdentifier);
+                policyManagerService.getEffectivePolicy(deviceIdentifier);
                 pap.publishChanges();
             }
             return Response.status(Response.Status.OK).build();
+        } catch (GroupNotExistException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         } catch (GroupManagementException e) {
             String msg = "Error occurred while assigning device to groups.";
             log.error(msg, e);

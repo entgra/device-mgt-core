@@ -731,9 +731,10 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
 
         if (device.getEnrolmentInfo().getStatus().equals(EnrolmentInfo.Status.DISENROLLMENT_REQUESTED)) {
             if (log.isDebugEnabled()) {
-                log.debug("Device has already requested disenrollment : " + deviceId.getId() + "'");
+                log.debug("Device already in DISENROLLMENT_REQUESTED; forcing remove: "
+                        + deviceId.getId());
             }
-            return true;
+            return removeDevice(deviceId);
         }
 
         try {
