@@ -1393,6 +1393,8 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         boolean isSinceProvided = false;
         List<String> tagList = request.getTags();
         boolean isTagsProvided = false;
+        String serial = request.getSerialNumber();
+        boolean isSerialProvided = false;
 
         try {
             Connection conn = getConnection();
@@ -1405,6 +1407,16 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                     "FROM " +
                     "DM_DEVICE d " +
                     "WHERE 1=1 ";
+
+            if (serial != null && !serial.isEmpty()) {
+                sql += "AND EXISTS (" +
+                        "SELECT VALUE_FIELD " +
+                        "FROM DM_DEVICE_INFO di " +
+                        "WHERE di.DEVICE_ID = d.ID " +
+                        "AND LOWER(di.KEY_FIELD) = 'serial' " +
+                        "AND di.VALUE_FIELD LIKE ? ) ";
+                isSerialProvided = true;
+            }
 
             if (request.getCustomProperty() != null && !request.getCustomProperty().isEmpty()) {
                 sql = sql + "AND ";
@@ -1468,6 +1480,9 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
 
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 int paramIdx = 1;
+                if (isSerialProvided) {
+                    stmt.setString(paramIdx++, "%" + serial + "%");
+                }
                 if (request.getCustomProperty() != null && !request.getCustomProperty().isEmpty()) {
                     for (Map.Entry<String, String> entry : request.getCustomProperty().entrySet()) {
                         stmt.setString(paramIdx++, "%" + entry.getValue() + "%");
