@@ -46,7 +46,6 @@ import io.entgra.device.mgt.core.device.mgt.common.policy.mgt.monitor.Compliance
 import io.entgra.device.mgt.core.device.mgt.common.policy.mgt.monitor.PolicyComplianceException;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import io.entgra.device.mgt.core.identity.jwt.client.extension.exception.JWTClientException;
-import io.entgra.device.mgt.core.policy.mgt.common.PolicyAdministratorPoint;
 import io.entgra.device.mgt.core.policy.mgt.common.PolicyManagementException;
 import org.apache.axis2.AxisFault;
 import org.apache.commons.logging.Log;
@@ -94,10 +93,8 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
             device.getEnrolmentInfo().setDateOfEnrolment(System.currentTimeMillis());
             device.getEnrolmentInfo().setDateOfLastUpdate(System.currentTimeMillis());
             boolean status = dms.enrollDevice(device);
-            PolicyAdministratorPoint pap = DeviceMgtAPIUtils.getPolicyManagementService().getPAP();
             DeviceIdentifier deviceId = new DeviceIdentifier(device.getDeviceIdentifier(), device.getType());
             DeviceMgtAPIUtils.getPolicyManagementService().getEffectivePolicy(deviceId);
-            pap.publishChanges();
             return Response.status(Response.Status.OK).entity(status).build();
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while enrolling the device, which carries the id '" +

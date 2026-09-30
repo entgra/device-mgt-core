@@ -24,6 +24,7 @@ public class PolicyPaginationRequest {
     private String name;
     private String type;
     private String status;
+    private boolean includeUpdated;
     private String deviceType;
 
     public PolicyPaginationRequest(int start, int rowCount) {
@@ -69,6 +70,14 @@ public class PolicyPaginationRequest {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public boolean isIncludeUpdated() {
+        return includeUpdated;
+    }
+
+    public void setIncludeUpdated(boolean includeUpdated) {
+        this.includeUpdated = includeUpdated;
     }
 
     public String getDeviceType() {

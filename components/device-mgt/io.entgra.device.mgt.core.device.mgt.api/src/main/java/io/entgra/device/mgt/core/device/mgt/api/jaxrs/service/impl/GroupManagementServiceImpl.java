@@ -49,8 +49,11 @@ import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementEx
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceNotFoundException;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.service.GroupManagementProviderService;
-import io.entgra.device.mgt.core.policy.mgt.common.PolicyAdministratorPoint;
+import io.entgra.device.mgt.core.policy.mgt.common.PolicyEvaluationException;
+import io.entgra.device.mgt.core.policy.mgt.common.PolicyEvaluationPoint;
 import io.entgra.device.mgt.core.policy.mgt.common.PolicyManagementException;
+import io.entgra.device.mgt.core.policy.mgt.common.PolicySelectionEvaluationPoint;
+import io.entgra.device.mgt.core.device.mgt.common.policy.mgt.Policy;
 import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.api.UserStoreException;
 
@@ -62,7 +65,10 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class GroupManagementServiceImpl implements GroupManagementService {
 
@@ -394,17 +400,14 @@ public class GroupManagementServiceImpl implements GroupManagementService {
             String tenantId = String.valueOf(CarbonContext.getThreadLocalCarbonContext().getTenantId());
             String tenantDomain = String.valueOf(CarbonContext.getThreadLocalCarbonContext().getTenantDomain());
             String username = CarbonContext.getThreadLocalCarbonContext().getUsername();
-            DeviceMgtAPIUtils.getGroupManagementProviderService().addDevices(groupId, deviceIdentifiers);
-            PolicyAdministratorPoint pap = DeviceMgtAPIUtils.getPolicyManagementService().getPAP();
             DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
-            for(DeviceIdentifier deviceIdentifier : deviceIdentifiers) {
-                Device device = dms.getDevice(deviceIdentifier, false);
-                if(!device.getEnrolmentInfo().getStatus().equals(EnrolmentInfo.Status.REMOVED)) {
-                    pap.removePolicyUsed(deviceIdentifier);
-                    DeviceMgtAPIUtils.getPolicyManagementService().getEffectivePolicy(deviceIdentifier);
-                }
-            }
-            pap.publishChanges();
+            PolicyManagerService policyManagerService = DeviceMgtAPIUtils.getPolicyManagementService();
+            PolicyEvaluationPoint evaluationPoint = getSimpleEvaluationPoint(policyManagerService);
+            List<Device> affectedDevices = getDevices(deviceIdentifiers, dms);
+            Set<Integer> policyIds = getAppliedPolicyIds(policyManagerService, affectedDevices);
+            DeviceMgtAPIUtils.getGroupManagementProviderService().addDevices(groupId, deviceIdentifiers);
+            policyIds.addAll(getNewEffectivePolicyIds(evaluationPoint, deviceIdentifiers, dms));
+            publishPolicyChanges(policyManagerService, policyIds);
             int deviceCount = DeviceMgtAPIUtils.getGroupManagementProviderService().getDeviceCount(groupId);
             List<String> deviceIdentifiersList = new ArrayList<>();
             for(DeviceIdentifier deviceIdentifier : deviceIdentifiers) {
@@ -433,10 +436,7 @@ public class GroupManagementServiceImpl implements GroupManagementService {
         } catch (PolicyManagementException e) {
             log.error("Error occurred while adding policies against device(s).", e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-//        } catch (PolicyEvaluationException e) {
-//            log.error("Error occurred while retrieving policies against device(s).", e);
-//            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-        } catch (DeviceManagementException e) {
+        } catch (DeviceManagementException | PolicyEvaluationException e) {
             log.error("Error occurred while retrieving device information.", e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
@@ -445,18 +445,14 @@ public class GroupManagementServiceImpl implements GroupManagementService {
     @Override
     public Response removeDevicesFromGroup(int groupId, List<DeviceIdentifier> deviceIdentifiers) {
         try {
-            DeviceMgtAPIUtils.getGroupManagementProviderService().removeDevice(groupId, deviceIdentifiers);
-            PolicyAdministratorPoint pap = DeviceMgtAPIUtils.getPolicyManagementService().getPAP();
             DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
-            for(DeviceIdentifier deviceIdentifier : deviceIdentifiers) {
-                Device device = dms.getDevice(deviceIdentifier, false);
-                dms.sendPolicyRevokeOperation(deviceIdentifier);
-                if(!device.getEnrolmentInfo().getStatus().equals(EnrolmentInfo.Status.REMOVED)) {
-                    pap.removePolicyUsed(deviceIdentifier);
-                    DeviceMgtAPIUtils.getPolicyManagementService().getEffectivePolicy(deviceIdentifier);
-                }
-            }
-            pap.publishChanges();
+            PolicyManagerService policyManagerService = DeviceMgtAPIUtils.getPolicyManagementService();
+            PolicyEvaluationPoint evaluationPoint = getSimpleEvaluationPoint(policyManagerService);
+            List<Device> affectedDevices = getDevices(deviceIdentifiers, dms);
+            Set<Integer> policyIds = getAppliedPolicyIds(policyManagerService, affectedDevices);
+            DeviceMgtAPIUtils.getGroupManagementProviderService().removeDevice(groupId, deviceIdentifiers);
+            policyIds.addAll(getNewEffectivePolicyIds(evaluationPoint, deviceIdentifiers, dms));
+            publishPolicyChanges(policyManagerService, policyIds);
             return Response.status(Response.Status.OK).build();
         } catch (GroupManagementException e) {
             String msg = "Error occurred while removing devices from group.";
@@ -467,7 +463,7 @@ public class GroupManagementServiceImpl implements GroupManagementService {
         }catch (PolicyManagementException e) {
             log.error("Error occurred while adding policies against device(s).", e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-        }catch (DeviceManagementException e) {
+        }catch (DeviceManagementException | PolicyEvaluationException e) {
             log.error("Error occurred while retrieving device information.", e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
@@ -483,21 +479,30 @@ public class GroupManagementServiceImpl implements GroupManagementService {
                 log.error(msg);
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
             }
+            PolicyManagerService policyManagerService = DeviceMgtAPIUtils.getPolicyManagementService();
+            if (policyManagerService == null) {
+                String msg = "Policy Management service has not initialized.";
+                log.error(msg);
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+            }
+            DeviceManagementProviderService dms = DeviceMgtAPIUtils.getDeviceManagementService();
+            if (dms == null) {
+                String msg = "Device Management service has not initialized.";
+                log.error(msg);
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+            }
+            PolicyEvaluationPoint evaluationPoint = getSimpleEvaluationPoint(policyManagerService);
+            List<DeviceIdentifier> deviceIdentifiers = new ArrayList<>();
+            deviceIdentifiers.add(deviceToGroupsAssignment.getDeviceIdentifier());
+            List<Device> affectedDevices = getDevices(deviceIdentifiers, dms);
+            Set<Integer> policyIds = getAppliedPolicyIds(policyManagerService, affectedDevices);
+
             List<Integer> newGroupAssignments = groupManagementProviderService.updateDeviceAssigningToGroups(
                     deviceToGroupsAssignment.getDeviceIdentifier(),
                     deviceToGroupsAssignment.getDeviceGroupIds());
             if (newGroupAssignments != null && !newGroupAssignments.isEmpty()) {
-                PolicyManagerService policyManagerService = DeviceMgtAPIUtils.getPolicyManagementService();
-                if (policyManagerService == null) {
-                    String msg = "Policy Management service has not initialized.";
-                    log.error(msg);
-                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
-                }
-                PolicyAdministratorPoint pap = policyManagerService.getPAP();
-                DeviceIdentifier deviceIdentifier = deviceToGroupsAssignment.getDeviceIdentifier();
-                pap.removePolicyUsed(deviceIdentifier);
-                policyManagerService.getEffectivePolicy(deviceIdentifier);
-                pap.publishChanges();
+                policyIds.addAll(getNewEffectivePolicyIds(evaluationPoint, deviceIdentifiers, dms));
+                publishPolicyChanges(policyManagerService, policyIds);
             }
             return Response.status(Response.Status.OK).build();
         } catch (GroupNotExistException e) {
@@ -511,6 +516,69 @@ public class GroupManagementServiceImpl implements GroupManagementService {
         } catch (PolicyManagementException e) {
             log.error("Failed to add policies for device assigned to group.", e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        } catch (DeviceManagementException | PolicyEvaluationException e) {
+            log.error("Failed to calculate policies for device assigned to group.", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    private List<Device> getDevices(List<DeviceIdentifier> deviceIdentifiers,
+                                    DeviceManagementProviderService dms) throws DeviceManagementException {
+        List<Device> devices = new ArrayList<>();
+        for (DeviceIdentifier deviceIdentifier : deviceIdentifiers) {
+            Device device = dms.getDevice(deviceIdentifier, false);
+            if (device != null) {
+                devices.add(device);
+            }
+        }
+        return devices;
+    }
+
+    private Set<Integer> getAppliedPolicyIds(PolicyManagerService policyManagerService, List<Device> devices)
+            throws PolicyManagementException {
+        Set<Integer> policyIds = new HashSet<>();
+        Map<Integer, Policy> appliedPolicies = policyManagerService.getAppliedPolicies(devices);
+        for (Policy policy : appliedPolicies.values()) {
+            if (policy != null && policy.getId() > 0) {
+                policyIds.add(policy.getId());
+            }
+        }
+        return policyIds;
+    }
+
+    private PolicyEvaluationPoint getSimpleEvaluationPoint(PolicyManagerService policyManagerService)
+            throws PolicyManagementException {
+        PolicyEvaluationPoint evaluationPoint = policyManagerService.getPEP();
+        if (!(evaluationPoint instanceof PolicySelectionEvaluationPoint) ||
+                !"Simple".equalsIgnoreCase(evaluationPoint.getName())) {
+            throw new PolicyManagementException(
+                    "Selective policy application is supported only by the Simple evaluation point");
+        }
+        return evaluationPoint;
+    }
+
+    private Set<Integer> getNewEffectivePolicyIds(PolicyEvaluationPoint evaluationPoint,
+                                                   List<DeviceIdentifier> deviceIdentifiers,
+                                                   DeviceManagementProviderService dms)
+            throws DeviceManagementException, PolicyManagementException, PolicyEvaluationException {
+        Set<Integer> policyIds = new HashSet<>();
+        for (DeviceIdentifier deviceIdentifier : deviceIdentifiers) {
+            Device device = dms.getDevice(deviceIdentifier, false);
+            if (device != null && device.getEnrolmentInfo() != null &&
+                    device.getEnrolmentInfo().getStatus() != EnrolmentInfo.Status.REMOVED) {
+                Policy policy = evaluationPoint.getEffectivePolicy(deviceIdentifier);
+                if (policy != null && policy.getId() > 0) {
+                    policyIds.add(policy.getId());
+                }
+            }
+        }
+        return policyIds;
+    }
+
+    private void publishPolicyChanges(PolicyManagerService policyManagerService, Set<Integer> policyIds)
+            throws PolicyManagementException {
+        if (!policyIds.isEmpty()) {
+            policyManagerService.getPAP().publishChanges(policyIds);
         }
     }
 
