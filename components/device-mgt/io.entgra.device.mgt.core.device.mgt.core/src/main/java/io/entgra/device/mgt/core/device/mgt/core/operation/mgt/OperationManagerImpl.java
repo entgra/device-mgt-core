@@ -985,13 +985,11 @@ public class OperationManagerImpl implements OperationManager {
             if (!isOperationUpdated) {
                 log.warn("Operation " + operationId + "'s status is not updated");
             }
+            OperationResponseMeta responseMeta = null;
             if (isOperationUpdated && operation.getOperationResponse() != null) {
                 if (shouldSkipResponsePersistence(operationId, operation, deviceId)) {
                     return;
                 }
-            }
-            OperationResponseMeta responseMeta = null;
-            if (isOperationUpdated && operation.getOperationResponse() != null) {
                 responseMeta = updateOperationResponse(enrolmentId, operationId, operation, deviceId);
             }
             if (responseMeta != null && responseMeta.isLargeResponse() && responseMeta.getId() > 0) {
