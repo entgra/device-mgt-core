@@ -979,162 +979,24 @@ public class OperationManagerImpl implements OperationManager {
         try {
             OperationManagementDAOFactory.beginTransaction();
             if (operation.getStatus() != null) {
-                int failAttempts = 0;
-                while (true) {
-                    try {
-                        isOperationUpdated = operationDAO.updateOperationStatus(enrolmentId, operationId,
-                                io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.
-                                        Operation.Status.valueOf(operation.getStatus().toString()));
-                        OperationManagementDAOFactory.commitTransaction();
-                        try {
-                            DeviceOperationDetails previousDeviceOperationDetails =
-                                    operationDAO.getDeviceOperationDetails(enrolmentId, operationId);
-                            if (isOperationUpdated && previousDeviceOperationDetails != null) {
-                                String operationCode = operation.getCode();
-                                String operationStatus = operation.getStatus().toString();
-                                String deviceType = previousDeviceOperationDetails.getDeviceType();
-                                int notifiedDeviceId = previousDeviceOperationDetails.getDeviceId();
-                                DeviceManagementDataHolder.getInstance()
-                                        .getNotificationManagementService()
-                                        .handleOperationNotificationIfApplicable(
-                                                operationCode,
-                                                operationStatus,
-                                                deviceType,
-                                                Collections.singletonList(notifiedDeviceId),
-                                                tenantId,
-                                                "postSync"
-                                        );
-                            }
-                        } catch (Exception e) {
-                            String msg = "An error occurred while retrieving DeviceOperationDetails. " +
-                                    "Operation ID: " + operationId + ", Enrolment ID: " + enrolmentId +
-                                    ", Device ID: " + deviceId;
-                            log.error(msg, e);
-                        }
-                        break;
-                    } catch (OperationManagementDAOException e) {
-                        OperationManagementDAOFactory.rollbackTransaction();
-                        if (++failAttempts > 3) {
-                            String msg = "Error occurred while updating operation status. Operation ID: " +
-                                    operationId + ", Enrollment ID: " + enrolmentId + ", Device ID:" + deviceId;
-                            log.error(msg, e);
-                            throw new OperationManagementException(msg, e);
-                        }
-                        log.warn("Unable to update operation status. Operation ID: " + operationId +
-                                ", Enrollment ID: " + enrolmentId + ", Device ID:" + deviceId + ", Attempt: " + failAttempts +
-                                ", Error: " + e.getMessage());
-                        try {
-                            Thread.sleep(2000);
-                        } catch (InterruptedException ignore) {
-                            break;
-                        }
-                    }
-                }
-                if (DeviceManagementConstants.AuthorizationSkippedOperationCodes.POLICY_REVOKE_OPERATION_CODE
-                        .equals(operation.getCode()) && Operation.Status.COMPLETED.equals(operation.getStatus())) {
-                    if (this.getDevice(deviceId).getEnrolmentInfo().getStatus().equals(EnrolmentInfo.Status.DISENROLLMENT_REQUESTED)) {
-                        DeviceManagementProviderService deviceManagementProviderService = DeviceManagementDataHolder.getInstance()
-                                .getDeviceManagementProvider();
-                        deviceManagementProviderService.removeDevice(deviceId);
-                    }
-                }
+                isOperationUpdated = updateOperationStatus(enrolmentId, operationId, operation, deviceId, tenantId);
+                handleDisenrollmentCompletion(operation, deviceId);
             }
             if (!isOperationUpdated) {
                 log.warn("Operation " + operationId + "'s status is not updated");
             }
             if (isOperationUpdated && operation.getOperationResponse() != null) {
-                OperationMonitoringTaskConfig operationMonitoringTaskConfig = DeviceManagementDataHolder
-                        .getInstance().getDeviceManagementProvider().getDeviceMonitoringConfig(deviceId.getType());
-                List<MonitoringOperation> monitoringOperations = operationMonitoringTaskConfig.getMonitoringOperation();
-                MonitoringOperation currentMonitoringOperation = null;
-                for (MonitoringOperation monitoringOperation : monitoringOperations) {
-                    if (monitoringOperation.getTaskName().equals(operation.getCode())) {
-                        currentMonitoringOperation = monitoringOperation;
-                        break;
-                    }
-                }
-                if (currentMonitoringOperation != null && !currentMonitoringOperation.hasResponsePersistence()) {
-                    String initiatedBy = operationsInitBy.get(operationId);
-                    if (initiatedBy == null) {
-                        try {
-                            io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation operationDto =
-                                    operationDAO.getOperation(operationId);
-                            operation.setInitiatedBy(operationDto.getInitiatedBy());
-                            if (operationsInitBy.size() > maxOperationCacheSize) {
-                                Integer obsoleteOperationId = (Integer) operationsInitBy.keySet().toArray()[0];
-                                operationsInitBy.remove(obsoleteOperationId);
-                            }
-                            operationsInitBy.put(operationId, operation.getInitiatedBy());
-                        } catch (OperationManagementDAOException e) {
-                            log.warn("Unable to get operationDTO for Operation ID: " + operationId +
-                                    ", Error: " + e.getErrorMessage());
-                        }
-                    } else {
-                        operation.setInitiatedBy(initiatedBy);
-                    }
-                    if (SYSTEM.equals(operation.getInitiatedBy())) {
-                        return;
-                    }
+                if (shouldSkipResponsePersistence(operationId, operation, deviceId)) {
+                    return;
                 }
             }
             OperationResponseMeta responseMeta = null;
             if (isOperationUpdated && operation.getOperationResponse() != null) {
-                int failAttempts = 0;
-                while (true) {
-                    try {
-                        responseMeta = operationDAO.addOperationResponse(enrolmentId, operation, deviceId.getId());
-                        OperationManagementDAOFactory.commitTransaction();
-                        break;
-                    } catch (OperationManagementDAOException e) {
-                        OperationManagementDAOFactory.rollbackTransaction();
-                        if (++failAttempts > 3) {
-                            String msg = "Error occurred while updating operation response. Operation ID: " +
-                                    operationId + ", Enrollment ID: " + enrolmentId + ", Device ID:" + deviceId;
-                            log.error(msg, e);
-                            throw new OperationManagementException(msg, e);
-                        }
-                        log.warn("Unable to update operation response. Operation ID: " + operationId +
-                                ", Enrollment ID: " + enrolmentId + ", Device ID:" + deviceId + " Attempt: " + failAttempts +
-                                ", Error: " + e.getErrorMessage());
-                        try {
-                            Thread.sleep(2000);
-                        } catch (InterruptedException ignore) {
-                            break;
-                        }
-                    }
-                }
+                responseMeta = updateOperationResponse(enrolmentId, operationId, operation, deviceId);
             }
             if (responseMeta != null && responseMeta.isLargeResponse() && responseMeta.getId() > 0) {
-                int failAttempts = 0;
-                while (true) {
-                    try {
-                        operationDAO.addOperationResponseLarge(responseMeta, operation, deviceId.getId());
-                        OperationManagementDAOFactory.commitTransaction();
-                        break;
-                    } catch (OperationManagementDAOException e) {
-                        OperationManagementDAOFactory.rollbackTransaction();
-                        if (++failAttempts > 3) {
-                            String msg = "Error occurred while updating large operation response. " +
-                                    "Enrollment Mapping ID: " + responseMeta.getOperationMappingId() +
-                                    ", Response ID: " + responseMeta.getId() + ", Operation ID: " + operationId +
-                                    ", Enrollment ID: " + enrolmentId + ", Device ID:" + deviceId;
-                            log.error(msg, e);
-                            throw new OperationManagementException(msg, e);
-                        }
-                        log.warn("Unable to update large operation response. " +
-                                "Enrollment Mapping ID: " + responseMeta.getOperationMappingId() +
-                                ", Response ID: " + responseMeta.getId() + ", Operation ID: " + operationId +
-                                ", Enrollment ID: " + enrolmentId + ", Device ID:" + deviceId +
-                                ", Attempt: " + failAttempts + ", Error: " + e.getMessage());
-                        try {
-                            Thread.sleep(2000);
-                        } catch (InterruptedException ignore) {
-                            break;
-                        }
-                    }
-                }
+                updateLargeOperationResponse(enrolmentId, operationId, operation, deviceId, responseMeta);
             }
-
         } catch (TransactionManagementException e) {
             throw new OperationManagementException("Error occurred while initiating a transaction", e);
         } catch (DeviceManagementException e) {
@@ -1144,6 +1006,183 @@ public class OperationManagerImpl implements OperationManager {
             throw new OperationManagementException(msg, e);
         } finally {
             OperationManagementDAOFactory.closeConnection();
+        }
+    }
+
+    private boolean updateOperationStatus(int enrolmentId, int operationId, Operation operation,
+                                           DeviceIdentifier deviceId, int tenantId)
+            throws OperationManagementException {
+        boolean isOperationUpdated = false;
+        int failAttempts = 0;
+        while (true) {
+            try {
+                isOperationUpdated = operationDAO.updateOperationStatus(enrolmentId, operationId,
+                        io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.
+                                Operation.Status.valueOf(operation.getStatus().toString()));
+                OperationManagementDAOFactory.commitTransaction();
+                notifyOperationStatusChange(enrolmentId, operationId, operation, deviceId, tenantId, isOperationUpdated);
+                break;
+            } catch (OperationManagementDAOException e) {
+                OperationManagementDAOFactory.rollbackTransaction();
+                if (++failAttempts > 3) {
+                    String msg = "Error occurred while updating operation status. Operation ID: " +
+                            operationId + ", Enrollment ID: " + enrolmentId + ", Device ID:" + deviceId;
+                    log.error(msg, e);
+                    throw new OperationManagementException(msg, e);
+                }
+                log.warn("Unable to update operation status. Operation ID: " + operationId +
+                        ", Enrollment ID: " + enrolmentId + ", Device ID:" + deviceId + ", Attempt: " + failAttempts +
+                        ", Error: " + e.getMessage());
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException ignore) {
+                    break;
+                }
+            }
+        }
+        return isOperationUpdated;
+    }
+
+    private void notifyOperationStatusChange(int enrolmentId, int operationId, Operation operation,
+                                              DeviceIdentifier deviceId, int tenantId, boolean isOperationUpdated) {
+        try {
+            DeviceOperationDetails previousDeviceOperationDetails =
+                    operationDAO.getDeviceOperationDetails(enrolmentId, operationId);
+            if (isOperationUpdated && previousDeviceOperationDetails != null) {
+                String operationCode = operation.getCode();
+                String operationStatus = operation.getStatus().toString();
+                String deviceType = previousDeviceOperationDetails.getDeviceType();
+                int notifiedDeviceId = previousDeviceOperationDetails.getDeviceId();
+                DeviceManagementDataHolder.getInstance()
+                        .getNotificationManagementService()
+                        .handleOperationNotificationIfApplicable(
+                                operationCode,
+                                operationStatus,
+                                deviceType,
+                                Collections.singletonList(notifiedDeviceId),
+                                tenantId,
+                                "postSync"
+                        );
+            }
+        } catch (Exception e) {
+            String msg = "An error occurred while retrieving DeviceOperationDetails. " +
+                    "Operation ID: " + operationId + ", Enrolment ID: " + enrolmentId +
+                    ", Device ID: " + deviceId;
+            log.error(msg, e);
+        }
+    }
+
+    private void handleDisenrollmentCompletion(Operation operation, DeviceIdentifier deviceId)
+            throws OperationManagementException, DeviceManagementException {
+        if (DeviceManagementConstants.AuthorizationSkippedOperationCodes.POLICY_REVOKE_OPERATION_CODE
+                .equals(operation.getCode()) && Operation.Status.COMPLETED.equals(operation.getStatus())) {
+            if (this.getDevice(deviceId).getEnrolmentInfo().getStatus().equals(EnrolmentInfo.Status.DISENROLLMENT_REQUESTED)) {
+                DeviceManagementProviderService deviceManagementProviderService = DeviceManagementDataHolder.getInstance()
+                        .getDeviceManagementProvider();
+                deviceManagementProviderService.removeDevice(deviceId);
+            }
+        }
+    }
+
+    private boolean shouldSkipResponsePersistence(int operationId, Operation operation, DeviceIdentifier deviceId)
+            throws OperationManagementException {
+        OperationMonitoringTaskConfig operationMonitoringTaskConfig = DeviceManagementDataHolder
+                .getInstance().getDeviceManagementProvider().getDeviceMonitoringConfig(deviceId.getType());
+        List<MonitoringOperation> monitoringOperations = operationMonitoringTaskConfig.getMonitoringOperation();
+        MonitoringOperation currentMonitoringOperation = null;
+        for (MonitoringOperation monitoringOperation : monitoringOperations) {
+            if (monitoringOperation.getTaskName().equals(operation.getCode())) {
+                currentMonitoringOperation = monitoringOperation;
+                break;
+            }
+        }
+        if (currentMonitoringOperation != null && !currentMonitoringOperation.hasResponsePersistence()) {
+            String initiatedBy = operationsInitBy.get(operationId);
+            if (initiatedBy == null) {
+                try {
+                    io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation operationDto =
+                            operationDAO.getOperation(operationId);
+                    operation.setInitiatedBy(operationDto.getInitiatedBy());
+                    if (operationsInitBy.size() > maxOperationCacheSize) {
+                        Integer obsoleteOperationId = (Integer) operationsInitBy.keySet().toArray()[0];
+                        operationsInitBy.remove(obsoleteOperationId);
+                    }
+                    operationsInitBy.put(operationId, operation.getInitiatedBy());
+                } catch (OperationManagementDAOException e) {
+                    log.warn("Unable to get operationDTO for Operation ID: " + operationId +
+                            ", Error: " + e.getErrorMessage());
+                }
+            } else {
+                operation.setInitiatedBy(initiatedBy);
+            }
+            if (SYSTEM.equals(operation.getInitiatedBy())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private OperationResponseMeta updateOperationResponse(int enrolmentId, int operationId, Operation operation,
+                                                            DeviceIdentifier deviceId)
+            throws OperationManagementException {
+        OperationResponseMeta responseMeta = null;
+        int failAttempts = 0;
+        while (true) {
+            try {
+                responseMeta = operationDAO.addOperationResponse(enrolmentId, operation, deviceId.getId());
+                OperationManagementDAOFactory.commitTransaction();
+                break;
+            } catch (OperationManagementDAOException e) {
+                OperationManagementDAOFactory.rollbackTransaction();
+                if (++failAttempts > 3) {
+                    String msg = "Error occurred while updating operation response. Operation ID: " +
+                            operationId + ", Enrollment ID: " + enrolmentId + ", Device ID:" + deviceId;
+                    log.error(msg, e);
+                    throw new OperationManagementException(msg, e);
+                }
+                log.warn("Unable to update operation response. Operation ID: " + operationId +
+                        ", Enrollment ID: " + enrolmentId + ", Device ID:" + deviceId + " Attempt: " + failAttempts +
+                        ", Error: " + e.getErrorMessage());
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException ignore) {
+                    break;
+                }
+            }
+        }
+        return responseMeta;
+    }
+
+    private void updateLargeOperationResponse(int enrolmentId, int operationId, Operation operation,
+                                               DeviceIdentifier deviceId, OperationResponseMeta responseMeta)
+            throws OperationManagementException {
+        int failAttempts = 0;
+        while (true) {
+            try {
+                operationDAO.addOperationResponseLarge(responseMeta, operation, deviceId.getId());
+                OperationManagementDAOFactory.commitTransaction();
+                break;
+            } catch (OperationManagementDAOException e) {
+                OperationManagementDAOFactory.rollbackTransaction();
+                if (++failAttempts > 3) {
+                    String msg = "Error occurred while updating large operation response. " +
+                            "Enrollment Mapping ID: " + responseMeta.getOperationMappingId() +
+                            ", Response ID: " + responseMeta.getId() + ", Operation ID: " + operationId +
+                            ", Enrollment ID: " + enrolmentId + ", Device ID:" + deviceId;
+                    log.error(msg, e);
+                    throw new OperationManagementException(msg, e);
+                }
+                log.warn("Unable to update large operation response. " +
+                        "Enrollment Mapping ID: " + responseMeta.getOperationMappingId() +
+                        ", Response ID: " + responseMeta.getId() + ", Operation ID: " + operationId +
+                        ", Enrollment ID: " + enrolmentId + ", Device ID:" + deviceId +
+                        ", Attempt: " + failAttempts + ", Error: " + e.getMessage());
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException ignore) {
+                    break;
+                }
+            }
         }
     }
 
