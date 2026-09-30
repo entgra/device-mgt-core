@@ -825,11 +825,9 @@ public class ApplicationManagerImpl implements ApplicationManager {
             List<ApplicationReleaseDTO> exitingPubAppReleases = applicationReleaseDAO
                     .getReleaseByPackages(Collections.singletonList(packageName), tenantId);
             if (!exitingPubAppReleases.isEmpty()) {
-                String msg = "Public app release exists for package name " + packageName
-                        + ". Hence you can't add new public app for package name "
-                        + packageName;
+                String msg = "An application with the same package name already exists: " + packageName;
                 log.error(msg);
-                throw new BadRequestException(msg);
+                throw new ConflictException(msg);
             }
         } catch (ApplicationManagementDAOException e) {
             String msg = "Error Occurred when fetching release: " + packageName;
@@ -889,7 +887,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             if (this.applicationReleaseDAO.verifyReleaseExistenceByHash(hash, tenantId)) {
                 String msg = "Application release already exists";
                 log.error(msg);
-                throw new BadRequestException(msg);
+                throw new ConflictException(msg);
             }
         } catch (ApplicationManagementDAOException e) {
             String msg = "Error occurred while checking if release already exists";
@@ -1021,12 +1019,9 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 if (!isNewRelease && applicationReleaseDAO
                         .isActiveReleaseExisitForPackageName(packageName, tenantId,
                                 lifecycleStateManager.getEndState())) {
-                    String msg = "Application release is already exist for the package name: " + packageName
-                            + ". Either you can delete all application releases for package " + packageName + " or "
-                            + "you can add this app release as an new application release, under the existing "
-                            + "application.";
+                    String msg = "An application with the same package name already exists: " + packageName;
                     log.error(msg);
-                    throw new BadRequestException(msg);
+                    throw new ConflictException(msg);
                 }
                 String md5OfApp = applicationStorageManager.
                         getMD5(Files.newInputStream(Paths.get(applicationArtifact.getInstallerPath())));
@@ -1040,7 +1035,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     String msg =
                             "Application release exists for the uploaded binary file. Device Type: " + deviceType;
                     log.error(msg);
-                    throw new BadRequestException(msg);
+                    throw new ConflictException(msg);
                 }
                 applicationReleaseDTO.setAppHashValue(md5OfApp);
                 if (DeviceTypes.WINDOWS.name().equalsIgnoreCase(deviceType) && applicationArtifact.getInstallerName()
@@ -1115,7 +1110,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                         String msg = "Same binary file is in the server. Hence you can't add same file into the "
                                 + "server. Device Type: " + deviceType + " and package name: " + packageName;
                         log.error(msg);
-                        throw new BadRequestException(msg);
+                        throw new ConflictException(msg);
                     }
                     if (applicationReleaseDTO.getPackageName() == null) {
                         String msg = "Found null value for application release package name for application "
@@ -3842,7 +3837,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                                                 + " and package name: " + applicationDTO.getApplicationReleaseDTOs()
                                                 .get(0).getPackageName();
                                 log.error(msg);
-                                throw new BadRequestException(msg);
+                                throw new ConflictException(msg);
                             }
 
                             applicationReleaseDTO.get().setInstallerName(applicationArtifact.getInstallerName());
