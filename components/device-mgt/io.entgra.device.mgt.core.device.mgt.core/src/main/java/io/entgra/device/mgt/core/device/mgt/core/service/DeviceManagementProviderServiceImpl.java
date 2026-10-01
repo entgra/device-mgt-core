@@ -6096,12 +6096,15 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             log.error(msg);
             throw new DeviceNotFoundException(msg);
         }
-        if (persistedDevice.getName().equals(device.getName())) {
+        String trimmedName = device.getName() != null ? device.getName().trim() : null;
+        device.setName(trimmedName);
+        if (persistedDevice.getName() != null
+                && persistedDevice.getName().equals(trimmedName)) {
             String msg = "Device names are the same.";
             log.info(msg);
             throw new ConflictException(msg);
         }
-        persistedDevice.setName(device.getName());
+        persistedDevice.setName(trimmedName);
         if (log.isDebugEnabled()) {
             log.debug("Rename Device name of: " + persistedDevice.getId() + " of type '" + persistedDevice.getType() + "'");
         }

@@ -136,9 +136,9 @@ public class DeviceInformationManagerImpl implements DeviceInformationManager {
                     StringUtils.isNotEmpty(deviceInfo.getDeviceDetailsMap()
                             .get(DeviceManagementConstants.Payload.DEVICE_INFO_DEVICE_NAME))
                     && !device.getName().equals(deviceInfo.getDeviceDetailsMap()
-                    .get(DeviceManagementConstants.Payload.DEVICE_INFO_DEVICE_NAME))) {
+                    .get(DeviceManagementConstants.Payload.DEVICE_INFO_DEVICE_NAME).trim())) {
                 String name = deviceInfo.getDeviceDetailsMap()
-                        .get(DeviceManagementConstants.Payload.DEVICE_INFO_DEVICE_NAME);
+                        .get(DeviceManagementConstants.Payload.DEVICE_INFO_DEVICE_NAME).trim();
                 log.info("Device identifier " + device.getDeviceIdentifier() + ", Device name " +
                         "changed by user from " + device.getName() + " to " + name);
                 device.setName(name);
