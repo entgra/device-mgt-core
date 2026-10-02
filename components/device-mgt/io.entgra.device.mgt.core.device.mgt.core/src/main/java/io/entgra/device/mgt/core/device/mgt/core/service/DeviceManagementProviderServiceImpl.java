@@ -4320,17 +4320,17 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     /**
-     * Returns all the available information (device-info, location, applications and plugin-db data)
-     * of the given device list.
+     * Enrich a paginated device list with device-info (and plugin properties) for table views.
+     * Does not load installed applications or features — those are large, fetched on demand
+     * for single-device views, and are not used by the All Devices table.
      */
     private List<Device> populateAllDeviceInfo(List<Device> allDevices) throws DeviceManagementException {
         if (log.isDebugEnabled()) {
-            log.debug("Get all device info of devices, num of devices: " + allDevices.size());
+            log.debug("Get listing device info of devices, num of devices: " + allDevices.size());
         }
         List<Device> devices = new ArrayList<>();
         for (Device device : allDevices) {
             device.setDeviceInfo(this.getDeviceInfo(device));
-            device.setApplications(this.getInstalledApplications(device));
             DeviceManager deviceManager = this.getDeviceManager(device.getType());
             if (deviceManager == null) {
                 if (log.isDebugEnabled()) {
@@ -4343,7 +4343,6 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             Device dmsDevice =
                     deviceManager.getDevice(new DeviceIdentifier(device.getDeviceIdentifier(), device.getType()));
             if (dmsDevice != null) {
-                device.setFeatures(dmsDevice.getFeatures());
                 device.setProperties(dmsDevice.getProperties());
             }
             devices.add(device);
