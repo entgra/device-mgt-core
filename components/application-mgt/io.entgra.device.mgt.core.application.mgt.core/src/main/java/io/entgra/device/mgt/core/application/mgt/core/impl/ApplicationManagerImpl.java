@@ -2236,6 +2236,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             if (ApplicationType.CUSTOM.toString().equalsIgnoreCase(applicationDTO.getType())) {
                 this.applicationDAO.deleteDeviceFirmwareModelMapping(applicationDTO.getId(), tenantId);
             }
+            this.applicationDAO.deleteAppFavouritesByAppId(applicationDTO.getId(), tenantId);
             this.applicationDAO.deleteApplication(applicationDTO.getId(), tenantId);
             APIUtil.getApplicationStorageManager().deleteAllApplicationReleaseArtifacts(deletingAppHashVals, tenantId);
             ConnectionManagerUtil.commitDBTransaction();
@@ -2363,6 +2364,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     }
                     lifecycleStateDAO.deleteLifecycleStateByReleaseId(applicationReleaseDTO.getId());
                     applicationReleaseDAO.deleteRelease(applicationReleaseDTO.getId());
+                    applicationDAO.deleteAppFavouritesByAppId(applicationDTO.getId(), tenantId);
                     applicationStorageManager.deleteAllApplicationReleaseArtifacts(
                             Collections.singletonList(applicationReleaseDTO.getAppHashValue()), tenantId);
                     ConnectionManagerUtil.commitDBTransaction();

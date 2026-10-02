@@ -241,6 +241,15 @@ public interface ApplicationDAO {
     void deleteApplication(int appId, int tenantId) throws ApplicationManagementDAOException;
 
     /**
+     * Delete all favourite entries for a given application (all users of the tenant).
+     *
+     * @param appId Application id
+     * @param tenantId Tenant ID
+     * @throws ApplicationManagementDAOException thrown if an error occurs while deleting data
+     */
+    void deleteAppFavouritesByAppId(int appId, int tenantId) throws ApplicationManagementDAOException;
+
+    /**
      * Delete favourite applications of tenant
      *
      * @param tenantId Tenant ID

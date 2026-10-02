@@ -26,6 +26,12 @@ correct behaviour looks like in the core services and Publisher API layer.
 | Web clip / web app creation | [create-applications/app-creation-web.md](create-applications/app-creation-web.md) |
 | Custom (firmware) app creation | [create-applications/app-creation-custom.md](create-applications/app-creation-custom.md) |
 
+### Favourites
+
+| Feature | Spec |
+| --- | --- |
+| Favourites cleanup on release / app delete | [favourites/release-delete-cleanup.md](favourites/release-delete-cleanup.md) |
+
 ## Planned feature areas (add specs when touched)
 
 - App list / search / filters
@@ -36,6 +42,7 @@ correct behaviour looks like in the core services and Publisher API layer.
 - Categories and tags
 - Firmware model mapping (beyond create)
 - Reviews / ratings
+- Favourites (add / remove / list beyond delete cleanup)
 
 ## Writing rules
 
