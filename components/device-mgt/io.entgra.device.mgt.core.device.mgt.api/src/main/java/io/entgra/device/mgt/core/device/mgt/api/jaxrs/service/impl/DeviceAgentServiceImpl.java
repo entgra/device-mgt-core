@@ -89,7 +89,17 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
                 String errorMessage = "An active enrolment exists";
                 return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
             }
-            device.getEnrolmentInfo().setOwner(DeviceMgtAPIUtils.getAuthenticatedUser());
+            String authenticatedUser = DeviceMgtAPIUtils.getAuthenticatedUser();
+            if (existingDevice != null && existingDevice.getEnrolmentInfo() != null
+                    && existingDevice.getEnrolmentInfo().getStatus() != EnrolmentInfo.Status.REMOVED
+                    && !authenticatedUser.equals(existingDevice.getEnrolmentInfo().getOwner())) {
+                log.warn("User '" + authenticatedUser + "' attempted to enroll device '" +
+                        device.getDeviceIdentifier() + "' which is owned by '" +
+                        existingDevice.getEnrolmentInfo().getOwner() + "'");
+                String errorMessage = "The device is owned by a different user";
+                return Response.status(Response.Status.FORBIDDEN).entity(errorMessage).build();
+            }
+            device.getEnrolmentInfo().setOwner(authenticatedUser);
             device.getEnrolmentInfo().setDateOfEnrolment(System.currentTimeMillis());
             device.getEnrolmentInfo().setDateOfLastUpdate(System.currentTimeMillis());
             boolean status = dms.enrollDevice(device);
