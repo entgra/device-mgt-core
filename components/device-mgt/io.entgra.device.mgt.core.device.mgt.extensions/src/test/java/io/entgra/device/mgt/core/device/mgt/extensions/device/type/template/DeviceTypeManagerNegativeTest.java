@@ -33,6 +33,7 @@ import io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.exce
 import io.entgra.device.mgt.core.device.mgt.extensions.utils.Utils;
 import org.h2.jdbcx.JdbcDataSource;
 import org.mockito.Mockito;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.wso2.carbon.base.MultitenantConstants;
@@ -128,6 +129,14 @@ public class DeviceTypeManagerNegativeTest {
         property.setValue(Utils.TEST_STRING);
         deviceProperties.add(property);
         sampleDevice.setProperties(deviceProperties);
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void closeTestConnection() {
+        // Direct DAO failure tests must not leave connections behind for the next service test.
+        if (deviceTypeDAOHandler != null) {
+            deviceTypeDAOHandler.closeConnection();
+        }
     }
 
     @Test(description = "This test case tests the behaviour of the DeviceTypeManager creation without defining the "

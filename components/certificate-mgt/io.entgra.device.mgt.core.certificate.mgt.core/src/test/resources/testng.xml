@@ -21,6 +21,7 @@
 
     <test name="Operatoin Bean validation tests" preserve-order="true">
         <classes>
+            <class name="io.entgra.device.mgt.core.certificate.mgt.core.dao.CertificateManagementDAOFactoryTest"/>
             <class name="io.entgra.device.mgt.core.certificate.mgt.core.common.BaseDeviceManagementCertificateTest"/>
             <class name="io.entgra.device.mgt.core.certificate.mgt.core.common.DataSourceConfig"/>
             <class name="io.entgra.device.mgt.core.certificate.mgt.core.impl.CertificateManagementServiceImplTests"/>
@@ -35,4 +36,3 @@
         </classes>
     </test>
 </suite>
-

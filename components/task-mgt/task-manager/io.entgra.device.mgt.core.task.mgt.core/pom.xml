@@ -21,7 +21,7 @@
     <parent>
         <groupId>io.entgra.device.mgt.core</groupId>
         <artifactId>task-manager</artifactId>
-        <version>7.0.8-SNAPSHOT</version>
+        <version>7.0.9-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -88,6 +88,16 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.ds-annotations</artifactId>

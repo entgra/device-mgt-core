@@ -114,6 +114,14 @@ public class Application {
             example = "true or false")
     private boolean isExternalAppStoreApp;
 
+    @ApiModelProperty(name = "firmwareModelIds",
+            value = "IDs of the firmware models")
+    private List<Integer> firmwareModelIds;
+
+    @ApiModelProperty(name = "firmwareModelIds",
+            value = "IDs of the firmware models")
+    private List<String> firmwareModels;
+
     public String getPackageName() {
         return packageName;
     }
@@ -207,5 +215,21 @@ public class Application {
 
     public void setExternalAppStoreApp(boolean externalAppStoreApp) {
         isExternalAppStoreApp = externalAppStoreApp;
+    }
+
+    public List<Integer> getFirmwareModelIds() {
+        return firmwareModelIds;
+    }
+
+    public void setFirmwareModelIds(List<Integer> firmwareModelIds) {
+        this.firmwareModelIds = firmwareModelIds;
+    }
+
+    public List<String> getFirmwareModels() {
+        return firmwareModels;
+    }
+
+    public void setFirmwareModels(List<String> firmwareModels) {
+        this.firmwareModels = firmwareModels;
     }
 }

@@ -19,6 +19,8 @@ package io.entgra.device.mgt.core.application.mgt.core.util;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import io.entgra.device.mgt.core.application.mgt.common.AppReleaseType;
+import io.entgra.device.mgt.core.application.mgt.common.dto.*;
 import io.entgra.device.mgt.core.application.mgt.common.ExecutionStatus;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionType;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationDTO;
@@ -99,7 +101,7 @@ public class DAOUtil {
                 if (application != null && application.getApplicationReleaseDTOs() != null) {
                     ApplicationReleaseDTO releaseDTO = constructAppReleaseDTO(rs);
                     if (releaseDTO != null) {
-                        application.getApplicationReleaseDTOs().add(constructAppReleaseDTO(rs));
+                        application.getApplicationReleaseDTOs().add(releaseDTO);
                     }
                 }
             }
@@ -154,7 +156,7 @@ public class DAOUtil {
             appRelease.setId(rs.getInt("RELEASE_ID"));
             appRelease.setDescription(rs.getString("RELEASE_DESCRIPTION"));
             appRelease.setUuid(rs.getString("RELEASE_UUID"));
-            appRelease.setReleaseType(rs.getString("RELEASE_TYPE"));
+            appRelease.setReleaseType(AppReleaseType.valueOf(rs.getString("RELEASE_TYPE")));
             appRelease.setVersion(rs.getString("RELEASE_VERSION"));
             appRelease.setInstallerName(rs.getString("AP_RELEASE_STORED_LOC"));
             appRelease.setIconName(rs.getString("AP_RELEASE_ICON_LOC"));
@@ -247,6 +249,36 @@ public class DAOUtil {
         return applicationDTOs.get(0);
     }
 
+    public static ApplicationDTO loadApplicationWithoutReleases(ResultSet rs) throws SQLException, UnexpectedServerErrorException {
+        List<ApplicationDTO> applicationDTOS = new ArrayList<>();
+        ApplicationDTO applicationDTO;
+        while (rs.next()) {
+            applicationDTO = new ApplicationDTO();
+            applicationDTO.setId( rs.getInt("APP_ID"));
+            applicationDTO.setName(rs.getString("APP_NAME"));
+            applicationDTO.setDescription(rs.getString("APP_DESCRIPTION"));
+            applicationDTO.setType(rs.getString("APP_TYPE"));
+            applicationDTO.setSubType(rs.getString("APP_SUB_TYPE"));
+            applicationDTO.setPaymentCurrency(rs.getString("APP_CURRENCY"));
+            applicationDTO.setStatus(rs.getString("APP_STATUS"));
+            applicationDTO.setAppRating(rs.getDouble("APP_RATING"));
+            applicationDTO.setDeviceTypeId(rs.getInt("APP_DEVICE_TYPE_ID"));
+            applicationDTOS.add(applicationDTO);
+        }
+
+        if (applicationDTOS.isEmpty()) {
+            return null;
+        }
+
+        if (applicationDTOS.size() > 1) {
+            String msg = "Internal server error. Found more than one application for requested application ID";
+            log.error(msg);
+            throw new UnexpectedServerErrorException(msg);
+        }
+
+        return applicationDTOS.get(0);
+    }
+
     public static ApplicationDTO loadDeviceApp(ResultSet rs) throws SQLException {
         ApplicationDTO application = new ApplicationDTO();
         application.setId(rs.getInt("APP_ID"));
@@ -279,7 +311,7 @@ public class DAOUtil {
         applicationRelease.setId(resultSet.getInt("RELEASE_ID"));
         applicationRelease.setVersion(resultSet.getString("RELEASE_VERSION"));
         applicationRelease.setUuid(resultSet.getString("UUID"));
-        applicationRelease.setReleaseType(resultSet.getString("RELEASE_TYPE"));
+        applicationRelease.setReleaseType(AppReleaseType.valueOf(resultSet.getString("RELEASE_TYPE")));
         applicationRelease.setPackageName(resultSet.getString("PACKAGE_NAME"));
         applicationRelease.setPrice(resultSet.getDouble("APP_PRICE"));
         applicationRelease.setInstallerName(resultSet.getString("STORED_LOCATION"));

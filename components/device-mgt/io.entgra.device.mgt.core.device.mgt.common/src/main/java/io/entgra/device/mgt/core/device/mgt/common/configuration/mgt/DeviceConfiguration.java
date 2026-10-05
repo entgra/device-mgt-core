@@ -43,6 +43,9 @@ public class DeviceConfiguration {
     @ApiModelProperty(name = "configurationEntries", value = "Platform Configurations", required = true)
     private List<ConfigurationEntry> configurationEntries;
 
+    @ApiModelProperty(name = "propertyValidationResult", value = "Validation result of the properties provided")
+    private List<PropertyValidationInfo> propertyValidationResult;
+
     @ApiModelProperty(name = "accessToken", value = "Token that can be use to communicate with the server")
     private String accessToken;
 
@@ -140,5 +143,13 @@ public class DeviceConfiguration {
 
     public void setHttpGateway(String httpGateway) {
         this.httpGateway = httpGateway;
+    }
+
+    public List<PropertyValidationInfo> getPropertyValidationResult() {
+        return propertyValidationResult;
+    }
+
+    public void setPropertyValidationResult(List<PropertyValidationInfo> propertyValidationResult) {
+        this.propertyValidationResult = propertyValidationResult;
     }
 }

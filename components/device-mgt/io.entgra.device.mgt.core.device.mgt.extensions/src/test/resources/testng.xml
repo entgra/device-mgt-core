@@ -21,6 +21,7 @@
 <suite name="DeviceManagementExtensions">
     <test name="DeviceType Manager Service Test Cases" parallel="none">
         <classes>
+            <class name="io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.dao.DeviceTypeDAOHandlerTransactionTest"/>
             <class name="io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.BaseExtensionsTest"/>
             <class name="io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.DeviceTypeManagerServiceTest"/>
             <class name="io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.DeviceTypeManagerTest"/>

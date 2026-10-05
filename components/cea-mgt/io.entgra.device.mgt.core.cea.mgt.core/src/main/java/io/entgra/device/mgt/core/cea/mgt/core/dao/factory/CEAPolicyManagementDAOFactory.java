@@ -49,8 +49,8 @@ public class CEAPolicyManagementDAOFactory {
         if (dataSource == null) {
             throw new IllegalStateException("Datasource is not initialized properly");
         }
-        try {
-            productName = dataSource.getConnection().getMetaData().getDatabaseProductName();
+        try (Connection connection = dataSource.getConnection()) {
+            productName = connection.getMetaData().getDatabaseProductName();
         } catch (SQLException e) {
             log.error("Error occurred while initializing database product name");
         }
@@ -158,16 +158,24 @@ public class CEAPolicyManagementDAOFactory {
 
     public static void beginTransaction() throws CEAPolicyManagementDAOException {
         Connection connection = currentConnection.get();
-        if (connection == null) {
+        if (connection != null) {
             throw new IllegalTransactionStateException("A transaction is already active within the context of " +
                     "this particular thread. Therefore, calling 'beginTransaction/openConnection' while another " +
                     "transaction is already active is a sign of improper transaction handling");
         }
+        Connection borrowedConnection = null;
         try {
-            connection = dataSource.getConnection();
-            connection.setAutoCommit(false);
-            currentConnection.set(connection);
+            borrowedConnection = dataSource.getConnection();
+            borrowedConnection.setAutoCommit(false);
+            currentConnection.set(borrowedConnection);
         } catch (SQLException e) {
+            if (borrowedConnection != null) {
+                try {
+                    borrowedConnection.close();
+                } catch (SQLException closeError) {
+                    e.addSuppressed(closeError);
+                }
+            }
             String msg = "Error encountered while acquiring connection from the datasource";
             log.error(msg, e);
             throw new CEAPolicyManagementDAOException(msg, e);

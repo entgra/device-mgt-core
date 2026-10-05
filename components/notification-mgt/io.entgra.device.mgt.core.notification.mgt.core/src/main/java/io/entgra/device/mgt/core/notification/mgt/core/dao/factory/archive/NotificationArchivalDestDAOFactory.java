@@ -53,8 +53,8 @@ public class NotificationArchivalDestDAOFactory {
         if (dataSource == null) {
             throw new IllegalStateException("Datasource is not initialized properly");
         }
-        try {
-            productName = dataSource.getConnection().getMetaData().getDatabaseProductName();
+        try (Connection connection = dataSource.getConnection()) {
+            productName = connection.getMetaData().getDatabaseProductName();
         } catch (SQLException e) {
             log.error("Error occurred while initializing database product name", e);
         }
@@ -121,17 +121,37 @@ public class NotificationArchivalDestDAOFactory {
     }
 
     public static void beginTransaction() throws TransactionManagementException {
+        Connection conn = currentConnection.get();
+        if (conn != null) {
+            throw new IllegalTransactionStateException("A transaction is already active within the context of " +
+                    "this particular thread. Therefore, calling 'beginTransaction/openConnection' while another " +
+                    "transaction is already active is a sign of improper transaction handling");
+        }
         try {
-            Connection conn = dataSource.getConnection();
+            conn = dataSource.getConnection();
             conn.setAutoCommit(false);
             currentConnection.set(conn);
         } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException closeError) {
+                    e.addSuppressed(closeError);
+                }
+            }
             throw new TransactionManagementException("Error occurred while retrieving config.datasource connection", e);
         }
     }
 
     public static void openConnection() throws SQLException {
-        currentConnection.set(dataSource.getConnection());
+        Connection conn = currentConnection.get();
+        if (conn != null) {
+            throw new IllegalTransactionStateException("A transaction is already active within the context of " +
+                    "this particular thread. Therefore, calling 'beginTransaction/openConnection' while another " +
+                    "transaction is already active is a sign of improper transaction handling");
+        }
+        conn = dataSource.getConnection();
+        currentConnection.set(conn);
     }
 
     public static Connection getConnection() {

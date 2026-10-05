@@ -55,7 +55,7 @@ public class PostgreNotificationManagementDAOImpl extends AbstractNotificationMa
                         notification.setNotificationId(resultSet.getInt("NOTIFICATION_ID"));
                         notification.setNotificationConfigId(resultSet.getInt("NOTIFICATION_CONFIG_ID"));
                         notification.setTenantId(resultSet.getInt("TENANT_ID"));
-                        notification.setDescription(resultSet.getString("DESCRIPTION"));
+                        notification.setDescription(resultSet.getString("NOTIFICATION_CONTEXT"));
                         notification.setCreatedTimestamp(resultSet.getTimestamp("CREATED_TIMESTAMP"));
                         notifications.add(notification);
                     }
@@ -70,13 +70,13 @@ public class PostgreNotificationManagementDAOImpl extends AbstractNotificationMa
     }
 
     @Override
-    public int insertNotification(int tenantId, int notificationConfigId, String type, String description)
+    public int insertNotification(int tenantId, int notificationConfigId, String type, String notificationContext)
             throws NotificationManagementDAOException {
         String sql =
                 "INSERT INTO DM_NOTIFICATION " +
                         "(NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
-                        "DESCRIPTION, " +
+                        "NOTIFICATION_CONTEXT, " +
                         "TYPE) " +
                         "VALUES (?, ?, ?, ?) " +
                         "RETURNING NOTIFICATION_ID";
@@ -84,7 +84,7 @@ public class PostgreNotificationManagementDAOImpl extends AbstractNotificationMa
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, notificationConfigId);
             stmt.setInt(2, tenantId);
-            stmt.setString(3, description);
+            stmt.setString(3, notificationContext);
             stmt.setString(4, type);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {

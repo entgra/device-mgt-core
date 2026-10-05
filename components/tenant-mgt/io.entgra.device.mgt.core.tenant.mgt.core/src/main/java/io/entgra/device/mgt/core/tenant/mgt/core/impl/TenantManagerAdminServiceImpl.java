@@ -20,6 +20,7 @@ package io.entgra.device.mgt.core.tenant.mgt.core.impl;
 
 import io.entgra.device.mgt.core.tenant.mgt.common.exception.TenantMgtException;
 import io.entgra.device.mgt.core.tenant.mgt.common.spi.TenantManagerAdminService;
+import io.entgra.device.mgt.core.tenant.mgt.core.internal.TenantMgtDataHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.stratos.common.exception.StratosException;
@@ -50,6 +51,28 @@ public class TenantManagerAdminServiceImpl implements TenantManagerAdminService 
             return tenantMgtAdminService.getTenant(tenantDomain).getTenantId();
         } catch (Exception e){
             String msg = "Error occurred while getting tenant ID of domain: " + tenantDomain;
+            log.error(msg, e);
+            throw new TenantMgtException(msg, e);
+        }
+    }
+
+    @Override
+    public void publishScopesToTenant(String tenantDomain) throws TenantMgtException {
+        try {
+            TenantMgtDataHolder.getInstance().getTenantManager().publishScopesToTenant(tenantDomain);
+        } catch (TenantMgtException e) {
+            String msg = "Error occurred while publishing scopes to tenant: " + tenantDomain;
+            log.error(msg, e);
+            throw new TenantMgtException(msg, e);
+        }
+    }
+
+    @Override
+    public void updateTenantScopeBindings(String tenantDomain, String roleName, java.util.List<String> scopeNames) throws TenantMgtException {
+        try {
+            TenantMgtDataHolder.getInstance().getTenantManager().updateTenantScopeBindings(tenantDomain, roleName, scopeNames);
+        } catch (TenantMgtException e) {
+            String msg = "Error occurred while updating scope bindings for tenant: " + tenantDomain;
             log.error(msg, e);
             throw new TenantMgtException(msg, e);
         }

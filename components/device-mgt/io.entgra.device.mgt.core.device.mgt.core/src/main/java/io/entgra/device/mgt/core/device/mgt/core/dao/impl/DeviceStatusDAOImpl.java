@@ -25,19 +25,25 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceStatusDAO;
 import io.entgra.device.mgt.core.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 public class DeviceStatusDAOImpl implements DeviceStatusDAO {
 
-  private List<DeviceStatus> getStatus(int id, Date fromDate, Date toDate, boolean isDeviceId, boolean billingStatus) throws DeviceManagementDAOException {
+  private List<DeviceStatus> getStatus(int id, Date fromDate, Date toDate, boolean isDeviceId, boolean billingStatus,
+                                       Set<EnrolmentInfo.Status> statuses) throws DeviceManagementDAOException {
     List<DeviceStatus> result = new ArrayList<>();
     Connection conn;
     PreparedStatement stmt = null;
     ResultSet rs = null;
-    EnrolmentInfo.Status status = null;
     try {
       conn = this.getConnection();
       // either we list all status values for the device using the device id or only get status values for the given enrolment id
@@ -45,15 +51,22 @@ public class DeviceStatusDAOImpl implements DeviceStatusDAO {
       String sql = "SELECT ENROLMENT_ID, DEVICE_ID, UPDATE_TIME, STATUS, CHANGED_BY FROM DM_DEVICE_STATUS WHERE " + idType + " = ?";
 
       // filter the data based on a date range if specified
-      if (fromDate != null){
+      if (fromDate != null) {
         sql += " AND UPDATE_TIME >= ?";
       }
-      if (toDate != null){
+      if (toDate != null) {
         sql += " AND UPDATE_TIME <= ?";
       }
-
+      if (statuses != null && !statuses.isEmpty()) {
+        if (statuses.size() == 1) {
+          sql += " AND STATUS = ?";
+        } else {
+          String statusParams = String.join(",", Collections.nCopies(statuses.size(), "?"));
+          sql += " AND STATUS IN (" + statusParams + ")";
+        }
+      }
       if (billingStatus) {
-        sql += " ORDER BY ID DESC";
+        sql += " ORDER BY UPDATE_TIME DESC";
       }
 
       stmt = conn.prepareStatement(sql);
@@ -67,6 +80,15 @@ public class DeviceStatusDAOImpl implements DeviceStatusDAO {
       if (toDate != null){
         Timestamp toTime = new Timestamp(toDate.getTime());
         stmt.setTimestamp(i++, toTime);
+      }
+      if (statuses != null && !statuses.isEmpty()) {
+        if (statuses.size() == 1) {
+          stmt.setString(i++, statuses.iterator().next().toString());
+        } else {
+          for (EnrolmentInfo.Status status : statuses) {
+            stmt.setString(i++, status.toString());
+          }
+        }
       }
       rs = stmt.executeQuery();
 
@@ -86,7 +108,7 @@ public class DeviceStatusDAOImpl implements DeviceStatusDAO {
 
   @Override
   public List<DeviceStatus> getStatus(int enrolmentId, Date fromDate, Date toDate) throws DeviceManagementDAOException {
-    return getStatus(enrolmentId, fromDate, toDate, false, false);
+    return getStatus(enrolmentId, fromDate, toDate, false, false, null);
   }
 
   @Override
@@ -96,7 +118,7 @@ public class DeviceStatusDAOImpl implements DeviceStatusDAO {
 
   @Override
   public List<DeviceStatus> getStatus(int deviceId, int tenantId, Date fromDate, Date toDate, boolean billingStatus) throws DeviceManagementDAOException {
-    return getStatus(deviceId, fromDate, toDate, true, billingStatus);
+    return getStatus(deviceId, fromDate, toDate, true, billingStatus, null);
   }
 
   @Override
@@ -104,6 +126,17 @@ public class DeviceStatusDAOImpl implements DeviceStatusDAO {
     return getStatus(enrolmentId, null, null);
   }
 
+  @Override
+  public List<DeviceStatus> getDeviceStatusHistoryByStatus(int deviceId, Date fromDate, Date toDate, boolean billingStatus,
+                                      EnrolmentInfo.Status status) throws DeviceManagementDAOException {
+    return getStatus(deviceId, fromDate, toDate, true, billingStatus, Collections.singleton(status));
+  }
+
+  @Override
+  public List<DeviceStatus> getDeviceStatusHistoryByMultipleStatus(int deviceId, Date fromDate, Date toDate,
+                                                                   boolean billingStatus, Set<EnrolmentInfo.Status> statuses) throws DeviceManagementDAOException {
+    return getStatus(deviceId, fromDate, toDate, true, billingStatus, statuses);
+  }
 
   private Connection getConnection() throws SQLException {
     return DeviceManagementDAOFactory.getConnection();

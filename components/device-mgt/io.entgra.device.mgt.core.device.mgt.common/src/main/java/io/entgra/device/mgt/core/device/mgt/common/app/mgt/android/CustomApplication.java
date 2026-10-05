@@ -30,6 +30,9 @@ public class CustomApplication implements Serializable {
     private String type;
     private String url;
     private String appIdentifier;
+    private String version;
+    private String firmwareVariant;
+    private String firmwarePackageName;
 
     public String getAppIdentifier() {
         return appIdentifier;
@@ -53,6 +56,30 @@ public class CustomApplication implements Serializable {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getFirmwareVariant() {
+        return firmwareVariant;
+    }
+
+    public void setFirmwareVariant(String firmwareVariant) {
+        this.firmwareVariant = firmwareVariant;
+    }
+
+    public String getFirmwarePackageName() {
+        return firmwarePackageName;
+    }
+
+    public void setFirmwarePackageName(String firmwarePackageName) {
+        this.firmwarePackageName = firmwarePackageName;
     }
 
     public String toJSON() {

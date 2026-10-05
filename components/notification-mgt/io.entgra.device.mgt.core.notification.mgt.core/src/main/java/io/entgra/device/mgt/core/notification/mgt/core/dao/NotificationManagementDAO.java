@@ -77,6 +77,17 @@ public interface NotificationManagementDAO {
             throws NotificationManagementDAOException;
 
     /**
+     * Updates the action type (e.g., READ or UNREAD) for all notifications
+     * for the given user.
+     *
+     * @param username    Username for whom the actions are to be updated.
+     * @param isRead      Action type to set (e.g., "READ", "UNREAD").
+     * @throws NotificationManagementDAOException If an error occurs while updating the notifications.
+     */
+    void updateAllNotificationAction(String username, boolean isRead)
+            throws NotificationManagementDAOException;
+
+    /**
      * Retrieves all notification actions performed by all users.
      *
      * @return a list of {@link UserNotificationAction} objects representing actions taken by users
@@ -103,11 +114,26 @@ public interface NotificationManagementDAO {
      * @param tenantId         The ID of the tenant for whom the notification is being created.
      * @param notificationConfigId The ID of the notification configuration to associate with the notification.
      * @param type             The type of the notification.
-     * @param description      A description providing details of the notification.
+     * @param notificationContext JSON payload stored in {@code NOTIFICATION_CONTEXT}.
      * @return The ID of the newly inserted notification.
      * @throws NotificationManagementDAOException If an error occurs while inserting the notification.
      */
-    int insertNotification(int tenantId, int notificationConfigId, String type, String description)
+    int insertNotification(int tenantId, int notificationConfigId, String type, String notificationContext)
+            throws NotificationManagementDAOException;
+
+    /**
+     * Links a notification to one or more devices.
+     *
+     * @param notificationId notification id
+     * @param deviceIds      {@link io.entgra.device.mgt.core.device.mgt.common.Device} primary keys
+     */
+    void insertNotificationDeviceMappings(int notificationId, List<Integer> deviceIds)
+            throws NotificationManagementDAOException;
+
+    /**
+     * Removes device links and deletes notifications that no longer reference any device.
+     */
+    void purgeNotificationsForDevices(List<Integer> deviceIds, int tenantId)
             throws NotificationManagementDAOException;
 
     /**
@@ -144,11 +170,13 @@ public interface NotificationManagementDAO {
 
     /**
      * Deletes all notifications for the given user from the active user notification table.
+     * Optionally filters by read/unread status.
      *
      * @param username the username whose notifications should be deleted.
+     * @param isRead   filter by read/unread status; if null, both read and unread notifications are deleted
      * @throws NotificationManagementDAOException if an error occurs during the deletion process.
      */
-    void deleteAllUserNotifications(String username) throws NotificationManagementDAOException;
+    void deleteAllUserNotifications(String username, Boolean isRead) throws NotificationManagementDAOException;
 
     /**
      * Retrieves a paginated list of user notifications along with their read/unread status.

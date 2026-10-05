@@ -107,7 +107,7 @@ public class SQLServerDeviceDAOImpl extends GenericDeviceDAOImpl {
                             "SELECT VALUE_FIELD " +
                             "FROM DM_DEVICE_INFO di " +
                             "WHERE di.DEVICE_ID = d.ID " +
-                            "AND di.KEY_FIELD = 'serial' " +
+                            "AND LOWER(di.KEY_FIELD) = 'serial' " +
                             "AND di.VALUE_FIELD LIKE ? ) ";
                     isSerialProvided = true;
                 }
@@ -582,7 +582,7 @@ public class SQLServerDeviceDAOImpl extends GenericDeviceDAOImpl {
                             "SELECT VALUE_FIELD " +
                             "FROM DM_DEVICE_INFO di " +
                             "WHERE di.DEVICE_ID = d1.DEVICE_ID " +
-                            "AND di.KEY_FIELD = 'serial' " +
+                            "AND LOWER(di.KEY_FIELD) = 'serial' " +
                             "AND di.VALUE_FIELD LIKE ?) ";
                     isSerialProvided = true;
                 }

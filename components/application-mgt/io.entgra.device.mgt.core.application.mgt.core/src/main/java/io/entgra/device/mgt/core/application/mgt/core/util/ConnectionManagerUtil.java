@@ -308,8 +308,8 @@ public class ConnectionManagerUtil {
 
 
     public static String getDatabaseType() {
-        try {
-            return dataSource.getConnection().getMetaData().getDatabaseProductName();
+        try (Connection connection = dataSource.getConnection()) {
+            return connection.getMetaData().getDatabaseProductName();
         } catch (SQLException e) {
             log.error("Error occurred while retrieving config.datasource connection", e);
         }
@@ -322,8 +322,8 @@ public class ConnectionManagerUtil {
      * @return true if batch query is supported, otherwise false.
      */
     public static boolean isBatchQuerySupported() {
-        try {
-            return dataSource.getConnection().getMetaData().supportsBatchUpdates();
+        try (Connection connection = dataSource.getConnection()) {
+            return connection.getMetaData().supportsBatchUpdates();
         } catch (SQLException e) {
             log.error("Error occurred while checking whether database supports batch updates", e);
         }

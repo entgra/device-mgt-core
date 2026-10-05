@@ -1293,6 +1293,53 @@ public class GroupManagementProviderServiceImpl implements GroupManagementProvid
      * {@inheritDoc}
      */
     @Override
+    public List<Integer> updateDeviceAssigningToGroups(DeviceIdentifier deviceIdentifier,
+                                                       List<Integer> deviceGroupIds)
+            throws GroupManagementException, DeviceNotFoundException, GroupNotExistException {
+        if (deviceIdentifier == null) {
+            String msg = "Device identifier is required to update device group assignments.";
+            log.error(msg);
+            throw new GroupManagementException(msg);
+        }
+        if (deviceGroupIds == null) {
+            String msg = "Device group ids are required to update device group assignments.";
+            log.error(msg);
+            throw new GroupManagementException(msg);
+        }
+        List<DeviceGroup> currentGroups = getGroups(deviceIdentifier, false);
+        List<Integer> currentGroupIds = new ArrayList<>();
+        if (currentGroups != null) {
+            for (DeviceGroup group : currentGroups) {
+                currentGroupIds.add(group.getGroupId());
+            }
+        }
+        List<Integer> newGroupAssignments = new ArrayList<>();
+        for (Integer groupId : deviceGroupIds) {
+            if (groupId == null || currentGroupIds.contains(groupId)) {
+                continue;
+            }
+            DeviceGroup groupToAssign = getGroup(groupId, false);
+            if (groupToAssign == null) {
+                String msg = "Group " + groupId + " does not exist.";
+                log.error(msg);
+                throw new GroupNotExistException(msg);
+            }
+            newGroupAssignments.add(groupId);
+        }
+        if (!newGroupAssignments.isEmpty()) {
+            List<DeviceIdentifier> deviceIdentifiers = new ArrayList<>();
+            deviceIdentifiers.add(deviceIdentifier);
+            for (int groupId : newGroupAssignments) {
+                addDevices(groupId, deviceIdentifiers);
+            }
+        }
+        return newGroupAssignments;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void addDevices(int groupId, List<DeviceIdentifier> deviceIdentifiers)
             throws GroupManagementException {
         if (log.isDebugEnabled()) {

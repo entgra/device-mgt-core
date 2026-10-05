@@ -61,6 +61,23 @@
         <Enabled>false</Enabled>
         {% endif %}
     </PullNotificationConfiguration>
+    <UIRequestConfiguration>
+        {% if device_mgt_conf.ui_request_conf is defined %}
+            {% if device_mgt_conf.ui_request_conf.sse_timeout %}
+            <SSETimeout>{{device_mgt_conf.ui_request_conf.sse_timeout}}</SSETimeout>
+            {% else %}
+            <SSETimeout>0</SSETimeout>
+            {% endif %}
+            {% if device_mgt_conf.ui_request_conf.sse_keep_alive_interval is defined %}
+            <SSEKeepAliveInterval>{{device_mgt_conf.ui_request_conf.sse_keep_alive_interval}}</SSEKeepAliveInterval>
+            {% else %}
+            <SSEKeepAliveInterval>0</SSEKeepAliveInterval>
+            {% endif %}
+        {% else %}
+            <SSETimeout>0</SSETimeout>
+            <SSEKeepAliveInterval>0</SSEKeepAliveInterval>
+        {% endif %}
+    </UIRequestConfiguration>
     <IdentityConfiguration>
         {% if device_mgt_conf.identity_conf is defined %}
         <ServerUrl>{{device_mgt_conf.identity_conf.server_url}}</ServerUrl>
@@ -392,7 +409,7 @@
         </CompressionLevel>
         {% else %}
         <CompressionThresholdKb>4</CompressionThresholdKb>
-        <CompressionLevel>1</CompressionLevel>
+        <CompressionLevel>0</CompressionLevel>
         {% endif %}
     </MQTTConfigurations>
     <EnrollmentGuideConfiguration>

@@ -41,6 +41,8 @@ public class LifecycleState {
     private boolean isDeletableState;
     private ScopeMapping scopeMapping;
 
+    private List<String> applicableTypes;  // New field
+
     @XmlElement(name = "MappedScopeDetails", required = true)
     public ScopeMapping getScopeMapping() {
         return scopeMapping;
@@ -118,4 +120,19 @@ public class LifecycleState {
     public boolean isDeletableState() { return isDeletableState; }
 
     public void setDeletableState(boolean deletableState) { isDeletableState = deletableState; }
+
+    @XmlElementWrapper(name = "ApplicableTypes")
+    @XmlElement(name = "Type")
+    public List<String> getApplicableTypes() { return applicableTypes; }
+
+    public void setApplicableTypes(List<String> applicableTypes) { this.applicableTypes = applicableTypes; }
+
+    public boolean isApplicableFor(String applicationType) {
+        // If no applicable types specified, state is available for all types
+        if (applicableTypes == null || applicableTypes.isEmpty()) {
+            return true;
+        }
+        return applicableTypes.stream()
+                .anyMatch(type -> type.equalsIgnoreCase(applicationType));
+    }
 }

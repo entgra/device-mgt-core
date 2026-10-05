@@ -25,6 +25,8 @@ import io.entgra.device.mgt.core.application.mgt.common.SubscriptionResponse;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionStatistics;
 import io.entgra.device.mgt.core.application.mgt.common.SubscriptionType;
 import io.entgra.device.mgt.core.application.mgt.common.dto.CategorizedSubscriptionCountsDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.ScheduledSubscriptionDTO;
+import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceOperationDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceOperationDTO;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ScheduledSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException;

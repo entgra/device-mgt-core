@@ -22,6 +22,6 @@ package io.entgra.device.mgt.core.application.mgt.common;
  * States of the Application.
  */
 public enum AppLifecycleState {
-    CREATED, IN_REVIEW, PUBLISHED, APPROVED, BLOCKED, REJECTED, DEPRECATED, RETIRED
+    CREATED, IN_REVIEW, PUBLISHED, APPROVED, RELEASE_READY, BLOCKED, REJECTED, DEPRECATED, RETIRED
 }
 

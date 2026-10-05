@@ -40,4 +40,5 @@ public class NotificationManagementApiUtil {
         }
         return notificationManagementService;
     }
+
 }

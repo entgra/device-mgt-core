@@ -99,9 +99,11 @@ public class TaskManagementServiceImpl implements TaskManagementService {
         int serverHashIdx;
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         final TaskManager taskManager = getTaskManager();
+        boolean connectionOpened = false;
         try {
             // add into the dynamic task tables
             TaskManagementDAOFactory.beginTransaction();
+            connectionOpened = true;
             dynamicTaskId = dynamicTaskDAO.addTask(dynamicTask, tenantId);
             dynamicTask.setDynamicTaskId(dynamicTaskId);
             dynamicTaskPropDAO.addTaskProperties(dynamicTaskId, dynamicTask.getProperties(), tenantId);
@@ -136,7 +138,9 @@ public class TaskManagementServiceImpl implements TaskManagementService {
 
             TaskManagementDAOFactory.commitTransaction();
         } catch (TaskManagementDAOException e) {
-            TaskManagementDAOFactory.rollbackTransaction();
+            if (connectionOpened) {
+                TaskManagementDAOFactory.rollbackTransaction();
+            }
             String msg = "Failed to add dynamic task " + dynamicTask.getName();
             log.error(msg, e);
             throw new TaskManagementException(msg, e);
@@ -145,12 +149,16 @@ public class TaskManagementServiceImpl implements TaskManagementService {
             log.error(msg, e);
             throw new TaskManagementException(msg, e);
         } catch (TaskException e) {
-            TaskManagementDAOFactory.rollbackTransaction();
+            if (connectionOpened) {
+                TaskManagementDAOFactory.rollbackTransaction();
+            }
             String msg = "Error occurred while scheduling task '" + dynamicTask.getName() + "'";
             log.error(msg, e);
             throw new TaskManagementException(msg, e);
         } finally {
-            TaskManagementDAOFactory.closeConnection();
+            if (connectionOpened) {
+                TaskManagementDAOFactory.closeConnection();
+            }
         }
     }
 
@@ -159,9 +167,11 @@ public class TaskManagementServiceImpl implements TaskManagementService {
             throws TaskManagementException, TaskNotFoundException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         final TaskManager taskManager = getTaskManager();
+        boolean connectionOpened = false;
         try {
             //Update dynamic task table
             TaskManagementDAOFactory.beginTransaction();
+            connectionOpened = true;
             DynamicTask existingTask = dynamicTaskDAO.getDynamicTask(dynamicTaskId, tenantId);
 
             if (existingTask != null) {
@@ -182,7 +192,9 @@ public class TaskManagementServiceImpl implements TaskManagementService {
             updateNTask(existingTask.getDynamicTaskId(), dynamicTask);
             TaskManagementDAOFactory.commitTransaction();
         } catch (TaskManagementDAOException e) {
-            TaskManagementDAOFactory.rollbackTransaction();
+            if (connectionOpened) {
+                TaskManagementDAOFactory.rollbackTransaction();
+            }
             String msg = "Failed to update dynamic task " + dynamicTask.getDynamicTaskId();
             log.error(msg, e);
             throw new TaskManagementException(msg, e);
@@ -191,12 +203,16 @@ public class TaskManagementServiceImpl implements TaskManagementService {
             log.error(msg, e);
             throw new TaskManagementException(msg, e);
         } catch (TaskManagementNTaskException e) {
-            TaskManagementDAOFactory.rollbackTransaction();
+            if (connectionOpened) {
+                TaskManagementDAOFactory.rollbackTransaction();
+            }
             String msg = "Error occurred while updating task '" + dynamicTask.getDynamicTaskId() + "'";
             log.error(msg);
             throw new TaskManagementException(msg, e);
         } finally {
-            TaskManagementDAOFactory.closeConnection();
+            if (connectionOpened) {
+                TaskManagementDAOFactory.closeConnection();
+            }
         }
     }
 
@@ -206,9 +222,11 @@ public class TaskManagementServiceImpl implements TaskManagementService {
 
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         final TaskManager taskManager = getTaskManager();
+        boolean connectionOpened = false;
         try {
             //update dynamic task table
             TaskManagementDAOFactory.beginTransaction();
+            connectionOpened = true;
             DynamicTask existingTask = dynamicTaskDAO.getDynamicTask(dynamicTaskId, tenantId);
             if (existingTask != null) {
                 existingTask.setEnabled(isEnabled);
@@ -234,7 +252,9 @@ public class TaskManagementServiceImpl implements TaskManagementService {
             }
             TaskManagementDAOFactory.commitTransaction();
         } catch (TaskManagementDAOException e) {
-            TaskManagementDAOFactory.rollbackTransaction();
+            if (connectionOpened) {
+                TaskManagementDAOFactory.rollbackTransaction();
+            }
             String msg = "Failed to toggle dynamic task " + dynamicTaskId;
             log.error(msg, e);
             throw new TaskManagementException(msg, e);
@@ -247,7 +267,9 @@ public class TaskManagementServiceImpl implements TaskManagementService {
             log.error(msg);
             throw new TaskManagementException(msg, e);
         } finally {
-            TaskManagementDAOFactory.closeConnection();
+            if (connectionOpened) {
+                TaskManagementDAOFactory.closeConnection();
+            }
         }
     }
 
@@ -255,8 +277,10 @@ public class TaskManagementServiceImpl implements TaskManagementService {
     public void deleteTask(int dynamicTaskId) throws TaskManagementException, TaskNotFoundException {
         // delete task from dynamic task table
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        boolean connectionOpened = false;
         try {
             TaskManagementDAOFactory.beginTransaction();
+            connectionOpened = true;
             DynamicTask existingTask = dynamicTaskDAO.getDynamicTask(dynamicTaskId, tenantId);
             if (existingTask != null) {
                 dynamicTaskDAO.deleteDynamicTask(dynamicTaskId, tenantId);
@@ -276,7 +300,9 @@ public class TaskManagementServiceImpl implements TaskManagementService {
             }
             TaskManagementDAOFactory.commitTransaction();
         } catch (TaskManagementDAOException e) {
-            TaskManagementDAOFactory.rollbackTransaction();
+            if (connectionOpened) {
+                TaskManagementDAOFactory.rollbackTransaction();
+            }
             String msg = "Failed to update dynamic task " + dynamicTaskId;
             log.error(msg, e);
             throw new TaskManagementException(msg, e);
@@ -285,12 +311,16 @@ public class TaskManagementServiceImpl implements TaskManagementService {
             log.error(msg, e);
             throw new TaskManagementException(msg, e);
         } catch (TaskException e) {
-            TaskManagementDAOFactory.rollbackTransaction();
+            if (connectionOpened) {
+                TaskManagementDAOFactory.rollbackTransaction();
+            }
             String msg = "Error occurred while retrieving task manager to delete task '" + dynamicTaskId + "'";
             log.error(msg);
             throw new TaskManagementException(msg, e);
         } finally {
-            TaskManagementDAOFactory.closeConnection();
+            if (connectionOpened) {
+                TaskManagementDAOFactory.closeConnection();
+            }
         }
     }
 
@@ -298,11 +328,13 @@ public class TaskManagementServiceImpl implements TaskManagementService {
     public List<DynamicTask> getAllDynamicTasks() throws TaskManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         List<DynamicTask> dynamicTasks;
+        boolean connectionOpened = false;
         try {
             if (log.isTraceEnabled()) {
                 log.trace("Fetching the details of all dynamic tasks");
             }
             TaskManagementDAOFactory.openConnection();
+            connectionOpened = true;
             dynamicTasks = dynamicTaskDAO.getAllDynamicTasks(tenantId);
             if (dynamicTasks != null) {
                 for (DynamicTask dynamicTask : dynamicTasks) {
@@ -319,7 +351,9 @@ public class TaskManagementServiceImpl implements TaskManagementService {
             log.error(msg, e);
             throw new TaskManagementException(msg, e);
         } finally {
-            TaskManagementDAOFactory.closeConnection();
+            if (connectionOpened) {
+                TaskManagementDAOFactory.closeConnection();
+            }
         }
         return dynamicTasks;
     }
@@ -327,11 +361,13 @@ public class TaskManagementServiceImpl implements TaskManagementService {
     @Override
     public Map<Integer, List<DynamicTask>> getDynamicTasksForAllTenants() throws TaskManagementException {
         List<DynamicTask> dynamicTasks;
+        boolean connectionOpened = false;
         try {
             if (log.isTraceEnabled()) {
                 log.trace("Fetching the details of dynamic tasks for all tenants");
             }
             TaskManagementDAOFactory.openConnection();
+            connectionOpened = true;
             dynamicTasks = dynamicTaskDAO.getAllDynamicTasks();
             if (dynamicTasks != null) {
                 for (DynamicTask dynamicTask : dynamicTasks) {
@@ -348,7 +384,9 @@ public class TaskManagementServiceImpl implements TaskManagementService {
             log.error(msg, e);
             throw new TaskManagementException(msg, e);
         } finally {
-            TaskManagementDAOFactory.closeConnection();
+            if (connectionOpened) {
+                TaskManagementDAOFactory.closeConnection();
+            }
         }
         Map<Integer, List<DynamicTask>> tenantedDynamicTasks = new HashMap<>();
         List<DynamicTask> dts;
@@ -370,11 +408,13 @@ public class TaskManagementServiceImpl implements TaskManagementService {
     public DynamicTask getDynamicTask(int dynamicTaskId) throws TaskManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         DynamicTask dynamicTask;
+        boolean connectionOpened = false;
         try {
             if (log.isDebugEnabled()) {
                 log.debug("Fetching the details of dynamic task '" + dynamicTaskId + "'");
             }
             TaskManagementDAOFactory.openConnection();
+            connectionOpened = true;
             dynamicTask = dynamicTaskDAO.getDynamicTask(dynamicTaskId, tenantId);
             if (dynamicTask != null) {
                 dynamicTask.setProperties(dynamicTaskPropDAO.getDynamicTaskProps(dynamicTask.getDynamicTaskId(),
@@ -389,7 +429,9 @@ public class TaskManagementServiceImpl implements TaskManagementService {
             log.error(msg, e);
             throw new TaskManagementException(msg, e);
         } finally {
-            TaskManagementDAOFactory.closeConnection();
+            if (connectionOpened) {
+                TaskManagementDAOFactory.closeConnection();
+            }
         }
         return dynamicTask;
     }
@@ -398,11 +440,13 @@ public class TaskManagementServiceImpl implements TaskManagementService {
     public List<DynamicTask> getActiveDynamicTasks() throws TaskManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         List<DynamicTask> dynamicTasks;
+        boolean connectionOpened = false;
         try {
             if (log.isDebugEnabled()) {
                 log.debug("Fetching the details of all active dynamic tasks");
             }
             TaskManagementDAOFactory.openConnection();
+            connectionOpened = true;
             dynamicTasks = dynamicTaskDAO.getActiveDynamicTasks(tenantId);
             if (dynamicTasks != null) {
                 for (DynamicTask dynamicTask : dynamicTasks) {
@@ -419,7 +463,9 @@ public class TaskManagementServiceImpl implements TaskManagementService {
             log.error(msg, e);
             throw new TaskManagementException(msg, e);
         } finally {
-            TaskManagementDAOFactory.closeConnection();
+            if (connectionOpened) {
+                TaskManagementDAOFactory.closeConnection();
+            }
         }
         return dynamicTasks;
     }

@@ -27,7 +27,11 @@ import java.util.Map;
 
 public interface AppmDataHandler {
 
+    @Deprecated
     Map<String, LifecycleState> getLifecycleConfiguration() throws LifecycleManagementException;
+
+    Map<String, LifecycleState> getLifecycleConfiguration(String applicationType)
+            throws LifecycleManagementException;
 
     /**
      * Get the Input Stream of the Artifact

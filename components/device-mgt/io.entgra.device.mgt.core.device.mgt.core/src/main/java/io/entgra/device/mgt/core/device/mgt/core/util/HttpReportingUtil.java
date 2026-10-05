@@ -21,6 +21,7 @@ package io.entgra.device.mgt.core.device.mgt.core.util;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.EventPublishingException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.ReportManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
@@ -51,7 +52,7 @@ public class HttpReportingUtil {
     private static final String TRACKER_CONFIG = "locationPublishing";
 
     public static String getReportingHost() {
-        return System.getProperty(DeviceManagementConstants.Report.REPORTING_EVENT_HOST);
+       return System.getProperty(DeviceManagementConstants.Report.REPORTING_EVENT_HOST);
     }
 
     public static String getBirtReportHost() throws ReportManagementException {
@@ -62,18 +63,6 @@ public class HttpReportingUtil {
             throw new ReportManagementException(msg);
         }
         return host;
-    }
-
-    public static String getReportType(String designFile) {
-        if (designFile != null && !designFile.isEmpty()) {
-            switch (designFile) {
-                case Constants.BirtReporting.APP_USAGE:
-                case Constants.BirtReporting.DEVICE_INFO:
-                case Constants.BirtReporting.LOCATION_INFO:
-                    return designFile += Constants.BirtReporting.BIRT_RPT_DESIGN_EXT;
-            }
-        }
-        return Constants.BirtReporting.UNSUPPORTED_REPORT_TYPE;
     }
 
     public static boolean isPublishingEnabledForTenant() {

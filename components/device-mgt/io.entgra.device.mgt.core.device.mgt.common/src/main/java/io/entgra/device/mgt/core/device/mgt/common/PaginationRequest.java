@@ -306,4 +306,5 @@ public class PaginationRequest {
     public void setDeviceTypeId(int deviceTypeId) {
         this.deviceTypeId = deviceTypeId;
     }
+
 }

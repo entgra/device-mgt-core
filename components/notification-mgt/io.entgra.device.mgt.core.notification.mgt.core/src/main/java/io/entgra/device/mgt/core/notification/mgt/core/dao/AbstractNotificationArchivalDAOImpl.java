@@ -60,7 +60,7 @@ public class AbstractNotificationArchivalDAOImpl implements NotificationArchival
                 "SELECT NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
-                        "DESCRIPTION, " +
+                        "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP " +
                         "FROM " + SOURCE_DB + ".DM_NOTIFICATION " +
@@ -71,7 +71,7 @@ public class AbstractNotificationArchivalDAOImpl implements NotificationArchival
                         "(NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
-                        "DESCRIPTION, " +
+                        "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP) " +
                         "VALUES (?, ?, ?, ?, ?, ?)";
@@ -90,7 +90,7 @@ public class AbstractNotificationArchivalDAOImpl implements NotificationArchival
                         insertStmt.setInt(1, id);
                         insertStmt.setInt(2, rs.getInt("NOTIFICATION_CONFIG_ID"));
                         insertStmt.setInt(3, rs.getInt("TENANT_ID"));
-                        insertStmt.setString(4, rs.getString("DESCRIPTION"));
+                        insertStmt.setString(4, rs.getString("NOTIFICATION_CONTEXT"));
                         insertStmt.setString(5, rs.getString("TYPE"));
                         insertStmt.setTimestamp(6, rs.getTimestamp("CREATED_TIMESTAMP"));
                         insertStmt.addBatch();
@@ -183,14 +183,14 @@ public class AbstractNotificationArchivalDAOImpl implements NotificationArchival
                         "(NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
-                        "DESCRIPTION, " +
+                        "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP) " +
                         "SELECT " +
                         "NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
-                        "DESCRIPTION, " +
+                        "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP " +
                         "FROM " + SOURCE_DB + ".DM_NOTIFICATION " +
@@ -250,14 +250,14 @@ public class AbstractNotificationArchivalDAOImpl implements NotificationArchival
                         "(NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
-                        "DESCRIPTION, " +
+                        "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP) " +
                         "SELECT " +
                         "NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
-                        "DESCRIPTION, " +
+                        "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP " +
                         "FROM " + SOURCE_DB + ".DM_NOTIFICATION " +

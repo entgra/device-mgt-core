@@ -40,6 +40,10 @@
     <PullNotificationConfiguration>
         <Enabled>false</Enabled>
     </PullNotificationConfiguration>
+    <UIRequestConfiguration>
+        <SSETimeout>0</SSETimeout>
+        <SSEKeepAliveInterval>0</SSEKeepAliveInterval>
+    </UIRequestConfiguration>
     <IdentityConfiguration>
         <ServerUrl>https://localhost:9443</ServerUrl>
         <AdminUsername>${admin.username}</AdminUsername>
@@ -210,7 +214,7 @@
     </OperationTimeoutConfigurations>
     <MQTTConfigurations>
         <CompressionThresholdKb>4</CompressionThresholdKb>
-        <CompressionLevel>1</CompressionLevel>
+        <CompressionLevel>0</CompressionLevel>
     </MQTTConfigurations>
     <EnrollmentGuideConfiguration>
         <Enable>false</Enable>

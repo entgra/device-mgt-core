@@ -41,7 +41,7 @@ public class AppOperation {
     }
 
     public enum InstallState {
-        PENDING, INPROGRESS, INSTALLED, UNINSTALLED, ERROR
+        PENDING, IN_PROGRESS, INSTALLED, UNINSTALLED, ERROR
     }
 
     public int getAppReleaseId() {

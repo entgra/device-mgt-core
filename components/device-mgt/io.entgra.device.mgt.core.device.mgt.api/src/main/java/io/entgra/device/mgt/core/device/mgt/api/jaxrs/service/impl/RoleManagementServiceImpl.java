@@ -610,8 +610,7 @@ public class RoleManagementServiceImpl implements RoleManagementService {
             }
 
             if (roleInfo.getPermissions() != null) {
-                String[] roleDetails = roleName.split("/");
-                updatePermissions(roleDetails[roleDetails.length - 1], roleInfo, userRealm);
+                updatePermissions(roleName, roleInfo, userRealm);
             }
             String stringUsers = new Gson().toJson(stringUserList);
 
@@ -816,22 +815,31 @@ public class RoleManagementServiceImpl implements RoleManagementService {
      */
     private void updatePermissions(String roleName, RoleInfo roleInfo, UserRealm userRealm) {
         String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain(true);
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    PrivilegedCarbonContext.startTenantFlow();
-                    PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(tenantDomain, true);
-                    DeviceMgtAPIUtils.getApiPublisher().updateScopeRoleMapping(roleName,
-                            RoleManagementServiceImpl.this.getPlatformUIPermissions(roleName, userRealm,
-                                    roleInfo.getPermissions()),
-                            RoleManagementServiceImpl.this.getPlatformUIPermissions(roleName, userRealm,
-                                    roleInfo.getRemovedPermissions()));
-                } catch (APIManagerPublisherException | UserAdminException e) {
-                    log.error("Error Occurred while updating role scope mapping. ", e);
-                } finally {
-                    PrivilegedCarbonContext.endTenantFlow();
+        Thread thread = new Thread(() -> {
+            try {
+                PrivilegedCarbonContext.startTenantFlow();
+                PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(tenantDomain, true);
+                AuthorizationManager authManager = userRealm.getAuthorizationManager();
+                authManager.clearRoleAuthorization(roleName);
+                if (roleInfo.getPermissions() != null) {
+                    for (String permission : roleInfo.getPermissions()) {
+                        authManager.authorizeRole(roleName, permission, CarbonConstants.UI_PERMISSION_ACTION);
+                    }
                 }
+                if (roleInfo.getRemovedPermissions() != null) {
+                    for (String permission : roleInfo.getRemovedPermissions()) {
+                        authManager.denyRole(roleName, permission, CarbonConstants.UI_PERMISSION_ACTION);
+                    }
+                }
+                DeviceMgtAPIUtils.getApiPublisher().updateScopeRoleMapping(
+                        roleName,
+                        RoleManagementServiceImpl.this.getPlatformUIPermissions(roleName, userRealm, roleInfo.getPermissions()),
+                        RoleManagementServiceImpl.this.getPlatformUIPermissions(roleName, userRealm, roleInfo.getRemovedPermissions())
+                );
+            } catch (APIManagerPublisherException | UserAdminException | UserStoreException e) {
+                log.error("Error occurred while updating role permissions.", e);
+            } finally {
+                PrivilegedCarbonContext.endTenantFlow();
             }
         });
         thread.start();

@@ -17,31 +17,26 @@
  */
 package io.entgra.device.mgt.core.application.mgt.common.services;
 
-import io.entgra.device.mgt.core.application.mgt.common.ApplicationType;
-import io.entgra.device.mgt.core.application.mgt.common.ReleaseVersionInfo;
+import io.entgra.device.mgt.core.application.mgt.common.*;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException;
 import io.entgra.device.mgt.core.application.mgt.common.exception.RequestValidatingException;
 import io.entgra.device.mgt.core.application.mgt.common.exception.ResourceManagementException;
-import io.entgra.device.mgt.core.application.mgt.common.response.Application;
-import io.entgra.device.mgt.core.application.mgt.common.response.ApplicationRelease;
-import io.entgra.device.mgt.core.application.mgt.common.response.Category;
-import io.entgra.device.mgt.core.application.mgt.common.response.Tag;
+import io.entgra.device.mgt.core.application.mgt.common.response.*;
 import io.entgra.device.mgt.core.device.mgt.common.Base64File;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationDTO;
+import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
+import io.entgra.device.mgt.core.device.mgt.common.app.mgt.DeviceFirmwareModel;
+import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareResult;
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
-import io.entgra.device.mgt.core.application.mgt.common.ApplicationArtifact;
-import io.entgra.device.mgt.core.application.mgt.common.LifecycleChanger;
-import io.entgra.device.mgt.core.application.mgt.common.ApplicationList;
 import io.entgra.device.mgt.core.application.mgt.common.dto.ApplicationReleaseDTO;
-import io.entgra.device.mgt.core.application.mgt.common.Filter;
-import io.entgra.device.mgt.core.application.mgt.common.LifecycleState;
 import io.entgra.device.mgt.core.application.mgt.common.wrapper.CustomAppReleaseWrapper;
 import io.entgra.device.mgt.core.application.mgt.common.wrapper.EntAppReleaseWrapper;
 import io.entgra.device.mgt.core.application.mgt.common.wrapper.ApplicationUpdateWrapper;
 import io.entgra.device.mgt.core.application.mgt.common.wrapper.PublicAppReleaseWrapper;
 import io.entgra.device.mgt.core.application.mgt.common.wrapper.WebAppReleaseWrapper;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This interface manages the application creation, deletion and editing of the application.
@@ -333,16 +328,18 @@ public interface ApplicationManager {
      */
     ApplicationRelease changeLifecycleState(String releaseUuid, LifecycleChanger lifecycleChanger)
             throws ApplicationManagementException;
-    
+
     /**
-     * To get all the releases of a particular ApplicationDTO.
+     * Changes the lifecycle state of a given application release.
      *
-     * @param applicationReleaseDTO  of the ApplicationDTO Release.
-     * @param lifecycleChanger Lifecycle changer that contains the action and the reason for the change.
-     * @throws ApplicationManagementException ApplicationDTO Management Exception.
-     * @return
+     * @param applicationReleaseDTO The application release for which the lifecycle state needs to be changed.
+     * @param lifecycleChanger      The lifecycle changer object containing the desired action and the reason for the
+     *                              change.
+     * @param applicationType       The type of the application (e.g., ENTERPRISE, PUBLIC etc).
+     * @return The updated {@link ApplicationRelease} after the lifecycle state change.
+     * @throws ApplicationManagementException If an error occurs while performing the lifecycle state change.
      */
-    ApplicationRelease changeLifecycleState(ApplicationReleaseDTO applicationReleaseDTO, LifecycleChanger lifecycleChanger)
+    ApplicationRelease changeLifecycleState(ApplicationReleaseDTO applicationReleaseDTO, LifecycleChanger lifecycleChanger, String applicationType)
             throws ApplicationManagementException;
     
     /**
@@ -504,7 +501,35 @@ public interface ApplicationManager {
 
     void updateCategory(String oldCategoryName, String newCategoryName) throws ApplicationManagementException;
 
-    String getInstallableLifecycleState() throws ApplicationManagementException;
+    /**
+     * Retrieves the installable lifecycle state for a given application type.
+     *
+     * <p>This method validates whether the provided application type is supported and then
+     * returns the corresponding lifecycle state marked as installable for that type.
+     * If no such state exists or multiple installable states are found, an exception is thrown.
+     *
+     * @param applicationType the type of the application (e.g., ENTERPRISE, CUSTOM, etc.)
+     * @return the name of the installable lifecycle state for the specified application type
+     * @throws ApplicationManagementException if the application type is invalid,
+     *                                        or no or multiple installable states are configured
+     */
+    String getInstallableLifecycleState(String applicationType) throws ApplicationManagementException;
+
+    /**
+     * Retrieves installable lifecycle states for different application categories, such as apps and firmware.
+     *
+     * <p>This method loads all lifecycle states configured as installable and validates them against
+     * defined application type groups (e.g., device apps and firmware). It ensures that:
+     * <ul>
+     *     <li>Exactly one installable state is configured for each supported category.</li>
+     *     <li>Misconfigurations like overlapping or missing types are detected and reported.</li>
+     * </ul>
+     *
+     * @return a map with category keys (e.g., "apps", "firmware") mapped to their corresponding installable lifecycle state names
+     * @throws ApplicationManagementException if the configuration is invalid, ambiguous, or incomplete
+     */
+    Map<String, String> getInstallableLifecycleStates() throws ApplicationManagementException;
+
 
     /**
      * Check if there are subscription devices for operations
@@ -570,4 +595,64 @@ public interface ApplicationManager {
      * @throws ApplicationManagementException throws when error encountered while retrieving data
      */
     List<ReleaseVersionInfo> getApplicationReleaseVersions(String uuid) throws ApplicationManagementException;
+
+    /**
+     * Retrieves a list of available firmware releases applicable to the given device,
+     * excluding any versions that are equal to or lower than the device's current firmware version.
+     * <p>
+     * The method performs the following:
+     * <ul>
+     *     <li>Retrieves device details using the given device ID.</li>
+     *     <li>Determines the associated firmware model and application data.</li>
+     *     <li>Filters firmware releases that are strictly newer than the currently installed version.</li>
+     *     <li>If pending firmware installation operations exist for the device, these are attached to the relevant firmware entries,
+     *         provided that the target version is newer than the current version.</li>
+     *     <li>Any pending operations pointing to the same or a lower version are marked as {@code COMPLETED} or {@code CONFIRMED}
+     *         and removed from the result.</li>
+     * </ul>
+     *
+     * @param deviceId        the unique identifier of the device
+     * @param currentVersion  the version currently installed on the device (optional; if null, will be looked up)
+     * @return a list of {@link Firmware} objects representing firmware versions that are newer and available for installation
+     * @throws ApplicationManagementException if an error occurs during device lookup, application resolution, or firmware retrieval
+     */
+    List<Firmware> getAvailableFirmwaresForDevice(String deviceId, String currentVersion) throws ApplicationManagementException;
+
+    /**
+     * Retrieves a list of devices that match the specified firmware criteria for the given application release UUID.
+     *
+     * @param uuid      The UUID of the application release used to determine the firmware version.
+     * @param matchType The firmware match type that determines which devices to retrieve:
+     * @param groupId   The group ID to filter devices. Provide the group ID to filter devices within that group.
+     *                  To retrieve devices from the entire device fleet without group filtering, use -1.
+     *                  <ul>
+     *                      <li>{@code APPLICABLE} - Devices with firmware versions lower than the specified release.</li>
+     *                      <li>{@code NON_APPLICABLE} - Devices with firmware versions higher than or equal to the specified release.</li>
+     *                      <li>{@code UNMANAGED} - Devices with any firmware version that is either lower, higher, or equal to the specified release.</li>
+     *                  </ul>
+     * @param paginationRequest Pagination request
+     * @return A list of {@link Device} objects that match the firmware criteria.
+     * @throws ApplicationManagementException If an error occurs while retrieving the devices or application release data.
+     */
+    DeviceFirmwareResult getDevicesByFirmwareMatchType(String uuid, FirmwareMatchType matchType, int groupId
+            , io.entgra.device.mgt.core.application.mgt.common.PaginationRequest paginationRequest)
+            throws ApplicationManagementException;
+
+    /**
+     * Retrieve available device firmware models, which can be used to create new firmware variant.
+     * @param deviceType Device type
+     * @return List of {@link DeviceFirmwareModel}
+     * @throws ApplicationManagementException Throws when error encountered while getting available device firmware models.
+     */
+    List<DeviceFirmwareModel> getAvailableDeviceFirmwareModels(String deviceType) throws ApplicationManagementException;
+
+    /**
+     * Search applications releases based on the release search filter criteria.
+     *
+     * @param appId               Application ID
+     * @param releaseSearchFilter {@link ReleaseSearchFilter}
+     * @return List of application releases
+     * @throws ApplicationManagementException Throws when error encountered while searching application releases.
+     */
+    ReleaseList getApplicationReleases(int appId, ReleaseSearchFilter releaseSearchFilter) throws ApplicationManagementException;
 }

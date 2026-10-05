@@ -27,6 +27,10 @@ import io.entgra.device.mgt.core.device.mgt.core.config.datasource.JNDILookupDef
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.ApplicationDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.DeviceStatusDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.DeviceTypeDAOImpl;
+import io.entgra.device.mgt.core.device.mgt.core.dao.impl.DeviceTypeEventDAOImpl;
+import io.entgra.device.mgt.core.device.mgt.core.dao.impl.TagDAOImpl;
+import io.entgra.device.mgt.core.device.mgt.core.dao.impl.TenantDAOImpl;
+import io.entgra.device.mgt.core.device.mgt.core.dao.impl.FirmwareDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.TagDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.TenantDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.device.GenericDeviceDAOImpl;
@@ -126,6 +130,10 @@ public class DeviceManagementDAOFactory {
         return new DeviceTypeDAOImpl();
     }
 
+    public static DeviceTypeEventDAO getDeviceTypeEventDAO() {
+        return new DeviceTypeEventDAOImpl();
+    }
+
     public static EnrollmentDAO getEnrollmentDAO() {
         if (databaseEngine != null) {
             switch (databaseEngine) {
@@ -191,6 +199,22 @@ public class DeviceManagementDAOFactory {
         throw new IllegalStateException("Database engine has not initialized properly.");
     }
 
+    public static FirmwareDAO getFirmwareDAO() {
+        if (databaseEngine != null) {
+            switch (databaseEngine) {
+                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_POSTGRESQL:
+                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_ORACLE:
+                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_MSSQL:
+                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_H2:
+                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_MYSQL:
+                    return new FirmwareDAOImpl();
+                default:
+                    throw new UnsupportedDatabaseEngineException("Unsupported database engine : " + databaseEngine);
+            }
+        }
+        throw new IllegalStateException("Database engine has not initialized properly.");
+    }
+
     public static DeviceStatusDAO getDeviceStatusDAO() {
         return new DeviceStatusDAOImpl();
     }
@@ -221,8 +245,8 @@ public class DeviceManagementDAOFactory {
 
     public static void init(DataSourceConfig config) {
         dataSource = resolveDataSource(config);
-        try {
-            databaseEngine = dataSource.getConnection().getMetaData().getDatabaseProductName();
+        try (Connection connection = dataSource.getConnection()) {
+            databaseEngine = connection.getMetaData().getDatabaseProductName();
         } catch (SQLException e) {
             log.error("Error occurred while retrieving config.datasource connection", e);
         }
@@ -230,8 +254,8 @@ public class DeviceManagementDAOFactory {
 
     public static void init(DataSource dtSource) {
         dataSource = dtSource;
-        try {
-            databaseEngine = dataSource.getConnection().getMetaData().getDatabaseProductName();
+        try (Connection connection = dataSource.getConnection()) {
+            databaseEngine = connection.getMetaData().getDatabaseProductName();
         } catch (SQLException e) {
             log.error("Error occurred while retrieving config.datasource connection", e);
         }
@@ -249,6 +273,13 @@ public class DeviceManagementDAOFactory {
             conn.setAutoCommit(false);
             currentConnection.set(conn);
         } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException closeError) {
+                    e.addSuppressed(closeError);
+                }
+            }
             throw new TransactionManagementException("Error occurred while retrieving config.datasource connection", e);
         }
     }

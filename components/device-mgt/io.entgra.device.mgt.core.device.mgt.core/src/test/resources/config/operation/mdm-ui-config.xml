@@ -301,6 +301,7 @@
         <Scope>um:users:update</Scope>
         <Scope>um:users:invite</Scope>
         <Scope>um:admin:users:view</Scope>
+        <Scope>um:admin:users:modify</Scope>
         <Scope>dm:admin:enrollment:update</Scope>
         <Scope>gm:devices:view</Scope>
         <Scope>gm:groups:update</Scope>
@@ -455,6 +456,10 @@
         <Scope>am:admin:lc:app:block</Scope>
         <Scope>am:admin:lc:app:deprecate</Scope>
         <Scope>am:admin:lc:app:retire</Scope>
+        <Scope>dm:admin:device-firmware-models:create</Scope>
+        <Scope>dm:device-firmware-models:view</Scope>
+        <Scope>am:pub:device-firmware-models:view</Scope>
+        <Scope>am:store:firmware:view</Scope>
         <Scope>dm:remote:connect</Scope>
         <Scope>win:ops:unlock-devices</Scope>
     </Scopes>

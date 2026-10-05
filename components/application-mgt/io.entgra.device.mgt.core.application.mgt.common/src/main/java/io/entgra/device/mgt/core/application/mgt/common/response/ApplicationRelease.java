@@ -17,6 +17,7 @@
  */
 package io.entgra.device.mgt.core.application.mgt.common.response;
 
+import io.entgra.device.mgt.core.application.mgt.common.AppReleaseType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -57,7 +58,7 @@ public class ApplicationRelease {
             value = "Release type of the application release",
             required = true,
             example = "alpha, beta etc")
-    private String releaseType;
+    private AppReleaseType releaseType;
 
     @ApiModelProperty(name = "currentStatus",
             value = "CurrentStatus of the Application Release.",
@@ -92,11 +93,11 @@ public class ApplicationRelease {
             value = "package name of the application")
     private String packageName;
 
-    public String getReleaseType() {
+    public AppReleaseType getReleaseType() {
         return releaseType;
     }
 
-    public void setReleaseType(String releaseType) {
+    public void setReleaseType(AppReleaseType releaseType) {
         this.releaseType = releaseType;
     }
 

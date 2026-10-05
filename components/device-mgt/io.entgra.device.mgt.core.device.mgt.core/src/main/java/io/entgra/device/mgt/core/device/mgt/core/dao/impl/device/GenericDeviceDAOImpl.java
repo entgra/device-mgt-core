@@ -108,7 +108,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                             "SELECT VALUE_FIELD " +
                             "FROM DM_DEVICE_INFO di " +
                             "WHERE di.DEVICE_ID = d.ID " +
-                            "AND di.KEY_FIELD = 'serial' " +
+                            "AND LOWER(di.KEY_FIELD) = 'serial' " +
                             "AND di.VALUE_FIELD LIKE ? ) ";
                     isSerialProvided = true;
                 }
@@ -144,6 +144,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                 sql = sql + " AND d.NAME LIKE ?";
                 isDeviceNameProvided = true;
             }
+
             sql = sql + ") d1 WHERE d1.ID = e.DEVICE_ID AND TENANT_ID = ?";
             //Add the query for device-type
             if (deviceType != null && !deviceType.isEmpty()) {
@@ -772,7 +773,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                             "SELECT VALUE_FIELD " +
                             "FROM DM_DEVICE_INFO di " +
                             "WHERE di.DEVICE_ID = d1.DEVICE_ID " +
-                            "AND di.KEY_FIELD = 'serial' " +
+                            "AND LOWER(di.KEY_FIELD) = 'serial' " +
                             "AND di.VALUE_FIELD LIKE ?) ";
                     isSerialProvided = true;
                 }
@@ -1343,7 +1344,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
             if (null != serial && !serial.isEmpty()) { // Only if serial is provided, join with device info table
                 query = query.concat("INNER JOIN DM_DEVICE_INFO i ON "
                         + "DM_DEVICE.ID = i.DEVICE_ID "
-                        + "AND i.KEY_FIELD = 'serial' ");
+                        + "AND LOWER(i.KEY_FIELD) = 'serial' ");
                 isSerialProvided = true;
             }
             query = query.concat("WHERE DM_DEVICE.ID IN (");
@@ -1834,7 +1835,7 @@ public class GenericDeviceDAOImpl extends AbstractDeviceDAOImpl {
                             "SELECT VALUE_FIELD " +
                             "FROM DM_DEVICE_INFO di " +
                             "WHERE di.DEVICE_ID = d1.DEVICE_ID " +
-                            "AND di.KEY_FIELD = 'serial' " +
+                            "AND LOWER(di.KEY_FIELD) = 'serial' " +
                             "AND di.VALUE_FIELD LIKE ?) ";
                     isSerialProvided = true;
                 }

@@ -19,6 +19,7 @@ package io.entgra.device.mgt.core.application.mgt.core.util;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import io.entgra.device.mgt.core.application.mgt.common.*;
 import io.entgra.device.mgt.core.application.mgt.common.ApplicationArtifact;
 import io.entgra.device.mgt.core.application.mgt.common.FileDataHolder;
 import io.entgra.device.mgt.core.application.mgt.common.FileDescriptor;
@@ -32,6 +33,7 @@ import io.entgra.device.mgt.core.application.mgt.common.exception.InvalidConfigu
 import io.entgra.device.mgt.core.application.mgt.common.exception.RequestValidatingException;
 import io.entgra.device.mgt.core.application.mgt.common.response.Application;
 import io.entgra.device.mgt.core.application.mgt.common.response.Category;
+import io.entgra.device.mgt.core.application.mgt.common.response.Firmware;
 import io.entgra.device.mgt.core.application.mgt.common.services.ApplicationManager;
 import io.entgra.device.mgt.core.application.mgt.common.services.ApplicationStorageManager;
 import io.entgra.device.mgt.core.application.mgt.common.services.ReviewManager;
@@ -87,7 +89,7 @@ import java.util.TreeMap;
  */
 public class ApplicationManagementUtil {
 
-    private static Log log = LogFactory.getLog(ApplicationManagementUtil.class);
+    private final static Log log = LogFactory.getLog(ApplicationManagementUtil.class);
 
     /**
      * Construct ApplicationArtifact from given base64 artifact files
@@ -388,7 +390,7 @@ public class ApplicationManagementUtil {
                     }
 
                     publicAppReleaseWrapper.setDescription(product.getDescription());
-                    publicAppReleaseWrapper.setReleaseType("ga");
+                    publicAppReleaseWrapper.setReleaseType(AppReleaseType.PRODUCTION);
                     publicAppReleaseWrapper.setVersion(product.getVersion());
                     publicAppReleaseWrapper.setSupportedOsVersions("4.0-12.3");
                     applicationManager.updatePubAppRelease(app.getApplicationReleases().get(0).getUuid(),
@@ -422,7 +424,7 @@ public class ApplicationManagementUtil {
     private static PublicAppReleaseWrapper generatePublicAppReleaseWrapper(ItuneAppDTO product) {
         PublicAppReleaseWrapper publicAppReleaseWrapper = new PublicAppReleaseWrapper();
         publicAppReleaseWrapper.setDescription(product.getDescription());
-        publicAppReleaseWrapper.setReleaseType("ga");
+        publicAppReleaseWrapper.setReleaseType(AppReleaseType.PRODUCTION);
         publicAppReleaseWrapper.setVersion(product.getVersion());
         publicAppReleaseWrapper.setPackageName(product.getPackageName());
         publicAppReleaseWrapper.setSupportedOsVersions("4.0-12.3");

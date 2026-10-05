@@ -17,6 +17,7 @@
  */
 package io.entgra.device.mgt.core.application.mgt.common.wrapper;
 
+import io.entgra.device.mgt.core.application.mgt.common.AppReleaseType;
 import io.entgra.device.mgt.core.device.mgt.common.Base64File;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -35,9 +36,9 @@ public class WebAppReleaseWrapper {
     @ApiModelProperty(name = "releaseType",
             value = "Release type of the web clip release",
             required = true,
-            example = "alpha, beta etc")
+            example = "TEST, PRODUCTION")
     @NotNull
-    private String releaseType;
+    private AppReleaseType releaseType;
 
     @ApiModelProperty(name = "price",
             value = "Price of the web clip release",
@@ -114,11 +115,9 @@ public class WebAppReleaseWrapper {
         this.bannerLink = bannerLink;
     }
 
-    public String getReleaseType() {
-        return releaseType;
-    }
+    public AppReleaseType getReleaseType() { return releaseType; }
 
-    public void setReleaseType(String releaseType) {
+    public void setReleaseType(AppReleaseType releaseType) {
         this.releaseType = releaseType;
     }
 

@@ -62,7 +62,7 @@ public class OracleNotificationManagementDAOImpl extends AbstractNotificationMan
                         notification.setNotificationId(resultSet.getInt("NOTIFICATION_ID"));
                         notification.setNotificationConfigId(resultSet.getInt("NOTIFICATION_CONFIG_ID"));
                         notification.setTenantId(resultSet.getInt("TENANT_ID"));
-                        notification.setDescription(resultSet.getString("DESCRIPTION"));
+                        notification.setDescription(resultSet.getString("NOTIFICATION_CONTEXT"));
                         notification.setCreatedTimestamp(resultSet.getTimestamp("CREATED_TIMESTAMP"));
                         notifications.add(notification);
                     }
@@ -84,7 +84,7 @@ public class OracleNotificationManagementDAOImpl extends AbstractNotificationMan
             return notifications;
         }
         StringBuilder query = new StringBuilder(
-                "SELECT NOTIFICATION_ID, DESCRIPTION, TYPE, CREATED_TIMESTAMP " +
+                "SELECT NOTIFICATION_ID, NOTIFICATION_CONTEXT, TYPE, CREATED_TIMESTAMP " +
                         "FROM DM_NOTIFICATION " +
                         "WHERE TENANT_ID = ? AND NOTIFICATION_ID IN (");
         for (int i = 0; i < notificationIds.size(); i++) {
@@ -106,7 +106,7 @@ public class OracleNotificationManagementDAOImpl extends AbstractNotificationMan
                 while (rs.next()) {
                     Notification notification = new Notification();
                     notification.setNotificationId(rs.getInt("NOTIFICATION_ID"));
-                    notification.setDescription(rs.getString("DESCRIPTION"));
+                    notification.setDescription(rs.getString("NOTIFICATION_CONTEXT"));
                     notification.setType(rs.getString("TYPE"));
                     notification.setCreatedTimestamp(rs.getTimestamp("CREATED_TIMESTAMP"));
                     notifications.add(notification);
@@ -243,13 +243,13 @@ public class OracleNotificationManagementDAOImpl extends AbstractNotificationMan
     }
 
     @Override
-    public int insertNotification(int tenantId, int notificationConfigId, String type, String description)
+    public int insertNotification(int tenantId, int notificationConfigId, String type, String notificationContext)
             throws NotificationManagementDAOException {
         String sql =
                 "INSERT INTO DM_NOTIFICATION " +
                         "(NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
-                        "DESCRIPTION, " +
+                        "NOTIFICATION_CONTEXT, " +
                         "TYPE) " +
                         "VALUES (?, ?, ?, ?) " +
                         "RETURNING NOTIFICATION_ID INTO ?";
@@ -257,11 +257,11 @@ public class OracleNotificationManagementDAOImpl extends AbstractNotificationMan
              CallableStatement stmt = conn.prepareCall(sql)) {
             stmt.setInt(1, notificationConfigId);
             stmt.setInt(2, tenantId);
-            stmt.setString(3, description);
+            stmt.setString(3, notificationContext);
             stmt.setString(4, type);
-            stmt.registerOutParameter(6, java.sql.Types.INTEGER);
+            stmt.registerOutParameter(5, java.sql.Types.INTEGER);
             stmt.executeUpdate();
-            return stmt.getInt(6);
+            return stmt.getInt(5);
         } catch (SQLException e) {
             String msg = "Error inserting notification";
             log.error(msg, e);
@@ -297,73 +297,4 @@ public class OracleNotificationManagementDAOImpl extends AbstractNotificationMan
         }
     }
 
-    @Override
-    public PaginatedUserNotificationResponse getUserNotificationsWithStatus(
-            String username, int limit, int offset, Boolean isRead) throws NotificationManagementDAOException {
-        List<UserNotificationPayload> result = new ArrayList<>();
-        int totalCount = 0;
-        try (Connection connection = NotificationManagementDAOFactory.getConnection()) {
-            StringBuilder countQuery = new StringBuilder(
-                    "SELECT COUNT(*) " +
-                            "FROM DM_NOTIFICATION_USER_ACTION ua " +
-                            "JOIN DM_NOTIFICATION n " +
-                            "ON ua.NOTIFICATION_ID = n.NOTIFICATION_ID " +
-                            "WHERE ua.USERNAME = ? " +
-                            "AND n.TENANT_ID = ? "
-            );
-            if (isRead != null) countQuery.append("AND ua.IS_READ = ? ");
-            try (PreparedStatement ps = connection.prepareStatement(countQuery.toString())) {
-                int idx = 1;
-                ps.setString(idx++, username);
-                ps.setInt(idx++, PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId());
-                if (isRead != null) ps.setBoolean(idx++, isRead);
-
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) totalCount = rs.getInt(1);
-                }
-            }
-            StringBuilder query = new StringBuilder(
-                    "SELECT " +
-                            "ua.NOTIFICATION_ID, " +
-                            "ua.IS_READ, " +
-                            "ua.ACTION_TIMESTAMP, " +
-                            "n.DESCRIPTION, " +
-                            "n.TYPE, " +
-                            "n.CREATED_TIMESTAMP " +
-                            "FROM DM_NOTIFICATION_USER_ACTION ua " +
-                            "JOIN DM_NOTIFICATION n " +
-                            "ON ua.NOTIFICATION_ID = n.NOTIFICATION_ID " +
-                            "WHERE ua.USERNAME = ? " +
-                            "AND n.TENANT_ID = ? "
-            );
-            if (isRead != null) query.append("AND ua.IS_READ = ? ");
-            query.append("ORDER BY ua.ACTION_TIMESTAMP DESC ");
-            if (offset > 0) query.append("OFFSET ? ROWS ");
-            if (limit > 0) query.append("FETCH NEXT ? ROWS ONLY ");
-            try (PreparedStatement ps = connection.prepareStatement(query.toString())) {
-                int idx = 1;
-                ps.setString(idx++, username);
-                ps.setInt(idx++, PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId());
-                if (isRead != null) ps.setBoolean(idx++, isRead);
-                if (offset > 0) ps.setInt(idx++, offset);
-                if (limit > 0) ps.setInt(idx++, limit);
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        boolean readStatus = rs.getBoolean("IS_READ");
-                        result.add(new UserNotificationPayload(
-                                rs.getInt("NOTIFICATION_ID"),
-                                rs.getString("DESCRIPTION"),
-                                rs.getString("TYPE"),
-                                readStatus ? "READ" : "UNREAD",
-                                username,
-                                rs.getTimestamp("CREATED_TIMESTAMP")
-                        ));
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            throw new NotificationManagementDAOException("Error in Oracle getUserNotificationsWithStatus", e);
-        }
-        return new PaginatedUserNotificationResponse(result, totalCount);
-    }
 }

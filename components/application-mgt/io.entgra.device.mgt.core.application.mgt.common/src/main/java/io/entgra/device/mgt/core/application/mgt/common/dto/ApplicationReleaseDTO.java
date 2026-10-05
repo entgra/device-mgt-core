@@ -17,6 +17,7 @@
  */
 package io.entgra.device.mgt.core.application.mgt.common.dto;
 
+import io.entgra.device.mgt.core.application.mgt.common.AppReleaseType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -66,10 +67,10 @@ public class ApplicationReleaseDTO {
     private String screenshotName3;
 
     @ApiModelProperty(name = "releaseType",
-            value = "Release type of the application release",
+            value = "Type of the firmware (TEST/PRODUCTION etc.)",
             required = true,
-            example = "alpha, beta etc")
-    private String releaseType;
+            example = "TEST, PRODUCTION")
+    private AppReleaseType releaseType;
 
     @ApiModelProperty(name = "price",
             value = "Price of the application release",
@@ -81,7 +82,7 @@ public class ApplicationReleaseDTO {
     private String appHashValue;
 
     @ApiModelProperty(name = "isSharedWithAllTenants",
-            value = "If application release is shared with all tenants it is eqal to 1 otherwise 0",
+            value = "If application release is shared with all tenants it is equal to 1 otherwise 0",
             required = true)
     private boolean isSharedWithAllTenants;
 
@@ -114,8 +115,7 @@ public class ApplicationReleaseDTO {
             value = "ApplicationDTO bundle identifier")
     private String packageName;
 
-    public ApplicationReleaseDTO() {
-    }
+    public ApplicationReleaseDTO() {}
 
     public int getRatedUsers() {
         return ratedUsers;
@@ -149,11 +149,9 @@ public class ApplicationReleaseDTO {
         this.uuid = uuid;
     }
 
-    public String getReleaseType() {
-        return releaseType;
-    }
+    public AppReleaseType getReleaseType() { return releaseType; }
 
-    public void setReleaseType(String releaseType) {
+    public void setReleaseType(AppReleaseType releaseType) {
         this.releaseType = releaseType;
     }
 
@@ -162,8 +160,7 @@ public class ApplicationReleaseDTO {
     }
 
     public void setIsSharedWithAllTenants(boolean isSharedWithAllTenants) {
-        this.isSharedWithAllTenants = isSharedWithAllTenants;
-    }
+        this.isSharedWithAllTenants = isSharedWithAllTenants; }
 
     public void setMetaData(String metaData) {
         this.metaData = metaData;
@@ -191,73 +188,39 @@ public class ApplicationReleaseDTO {
 
     public boolean getIsSharedWithAllTenants() { return isSharedWithAllTenants; }
 
-    public String getMetaData() {
-        return metaData;
-    }
+    public String getMetaData() { return metaData; }
 
-    public String getInstallerName() {
-        return installerName;
-    }
+    public String getInstallerName() { return installerName; }
 
-    public void setInstallerName(String installerName) {
-        this.installerName = installerName;
-    }
+    public void setInstallerName(String installerName) { this.installerName = installerName; }
 
-    public String getBannerName() {
-        return bannerName;
-    }
+    public String getBannerName() { return bannerName; }
 
-    public void setBannerName(String bannerName) {
-        this.bannerName = bannerName;
-    }
+    public void setBannerName(String bannerName) { this.bannerName = bannerName; }
 
-    public String getScreenshotName1() {
-        return screenshotName1;
-    }
+    public String getScreenshotName1() { return screenshotName1; }
 
-    public void setScreenshotName1(String screenshotName1) {
-        this.screenshotName1 = screenshotName1;
-    }
+    public void setScreenshotName1(String screenshotName1) { this.screenshotName1 = screenshotName1; }
 
-    public String getScreenshotName2() {
-        return screenshotName2;
-    }
+    public String getScreenshotName2() { return screenshotName2; }
 
-    public void setScreenshotName2(String screenshotName2) {
-        this.screenshotName2 = screenshotName2;
-    }
+    public void setScreenshotName2(String screenshotName2) { this.screenshotName2 = screenshotName2; }
 
-    public String getScreenshotName3() {
-        return screenshotName3;
-    }
+    public String getScreenshotName3() { return screenshotName3; }
 
-    public void setScreenshotName3(String screenshotName3) {
-        this.screenshotName3 = screenshotName3;
-    }
+    public void setScreenshotName3(String screenshotName3) { this.screenshotName3 = screenshotName3; }
 
-    public String getIconName() {
-        return iconName;
-    }
+    public String getIconName() { return iconName; }
 
-    public void setIconName(String iconName) {
-        this.iconName = iconName;
-    }
+    public void setIconName(String iconName) { this.iconName = iconName; }
 
-    public String getUrl() {
-        return url;
-    }
+    public String getUrl() { return url; }
 
-    public void setUrl(String url) {
-        this.url = url;
-    }
+    public void setUrl(String url) { this.url = url; }
 
-    public void setPackageName(String packageName) {
-        this.packageName = packageName;
-    }
+    public void setPackageName(String packageName) { this.packageName = packageName; }
 
-    public String getPackageName() {
-        return packageName;
-    }
+    public String getPackageName() { return packageName; }
 
     public String getDescription() { return description; }
 

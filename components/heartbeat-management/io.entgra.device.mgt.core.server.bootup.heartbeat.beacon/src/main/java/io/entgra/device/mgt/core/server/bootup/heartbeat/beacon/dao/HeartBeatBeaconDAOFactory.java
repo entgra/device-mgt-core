@@ -75,6 +75,13 @@ public class HeartBeatBeaconDAOFactory {
             conn.setAutoCommit(false);
             currentConnection.set(conn);
         } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException closeError) {
+                    e.addSuppressed(closeError);
+                }
+            }
             throw new TransactionManagementException("Error occurred while retrieving config.datasource connection", e);
         }
     }

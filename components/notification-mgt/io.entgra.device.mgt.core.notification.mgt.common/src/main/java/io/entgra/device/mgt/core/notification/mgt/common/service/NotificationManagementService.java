@@ -64,6 +64,17 @@ public interface NotificationManagementService {
             throws NotificationManagementException;
 
     /**
+     * Updates the action type (e.g., READ or UNREAD) for all notifications
+     * for a specific user and pushes the updated unread count.
+     *
+     * @param username Username for whom the actions are to be updated.
+     * @param isRead   Action type to set (e.g., "READ", "UNREAD").
+     * @throws NotificationManagementException If an error occurs while processing the update.
+     */
+    void updateAllNotificationActionForUser(String username, boolean isRead)
+            throws NotificationManagementException;
+
+    /**
      * Retrieves the total number of user notification actions for a specific user,
      * optionally filtered by notification status.
      *
@@ -103,11 +114,13 @@ public interface NotificationManagementService {
 
     /**
      * Deletes all notifications for the given user from the active user notification table.
+     * Optionally filters by read/unread status.
      *
      * @param username the username whose notifications should be deleted.
+     * @param isRead   filter by read/unread status; if null, both read and unread notifications are deleted
      * @throws NotificationManagementException if an error occurs during the deletion process.
      */
-    void deleteAllUserNotifications(String username) throws NotificationManagementException;
+    void deleteAllUserNotifications(String username, Boolean isRead) throws NotificationManagementException;
 
     /**
      * Archives all notifications for the given user by moving them from the active
@@ -128,7 +141,7 @@ public interface NotificationManagementService {
      * @param operationCode The unique code representing the operation (e.g., "POLICY_REVOKE").
      * @param operationStatus The current status of the operation (e.g., "COMPLETED", "PENDING").
      * @param deviceType The type of the device associated with the operation (e.g., "android").
-     * @param deviceEnrollmentIDs deviceEnrollmentID The unique identifier for the device enrollment.
+     * @param deviceIds {@link io.entgra.device.mgt.core.device.mgt.common.Device} primary keys ({@code DM_DEVICE.ID}).
      * @param tenantId The tenant ID representing the specific tenant context for which notifications
      *                 are being sent.
      * @param notificationTriggerPoint The point in the process at which the notification should be triggered
@@ -138,7 +151,7 @@ public interface NotificationManagementService {
      *                                        (e.g., issues with inserting notifications, user retrieval).
      */
     void handleOperationNotificationIfApplicable(String operationCode, String operationStatus,
-                                                 String deviceType, List<Integer> deviceEnrollmentIDs,
+                                                 String deviceType, List<Integer> deviceIds,
                                                  int tenantId, String notificationTriggerPoint)
             throws NotificationManagementException;
 
@@ -170,5 +183,15 @@ public interface NotificationManagementService {
      * @throws NotificationManagementException If an error occurs while handling the notification.
      */
     void handleTaskNotificationIfApplicable(int tenantId, String message)
+            throws NotificationManagementException;
+
+    /**
+     * Removes device associations from notifications and deletes notifications that no longer
+     * reference any device. Task notifications without device mappings are not affected.
+     *
+     * @param deviceIds device primary keys ({@code DM_DEVICE.ID})
+     * @param tenantId  tenant id
+     */
+    void purgeNotificationsForDevices(List<Integer> deviceIds, int tenantId)
             throws NotificationManagementException;
 }

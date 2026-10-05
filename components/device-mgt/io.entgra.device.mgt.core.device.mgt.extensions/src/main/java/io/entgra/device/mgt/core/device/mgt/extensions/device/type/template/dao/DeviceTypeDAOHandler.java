@@ -73,11 +73,24 @@ public class DeviceTypeDAOHandler {
     }
 
     public void beginTransaction() throws DeviceTypeMgtPluginException {
+        Connection conn = currentConnection.get();
+        if (conn != null) {
+            throw new IllegalTransactionStateException("A transaction is already active within the context of "
+                    + "this particular thread. Therefore, calling 'beginTransaction/openConnection' while another "
+                    + "transaction is already active is a sign of improper transaction handling");
+        }
         try {
-            Connection conn = dataSource.getConnection();
+            conn = dataSource.getConnection();
             conn.setAutoCommit(false);
             currentConnection.set(conn);
         } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException closeError) {
+                    e.addSuppressed(closeError);
+                }
+            }
             String msg = "Error occurred while retrieving datasource connection";
             log.error(msg, e);
             throw new DeviceTypeMgtPluginException(msg, e);

@@ -36,6 +36,7 @@ import javax.validation.constraints.Size;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -141,4 +142,65 @@ public class UserManagementAdminServiceImpl implements UserManagementAdminServic
         }
     }
 
+    @POST
+    @Path("/domain/{tenantDomain}/scopes")
+    @Override
+    public Response publishScopesToTenant(@PathParam("tenantDomain") String tenantDomain) {
+        try {
+            if (CarbonContext.getThreadLocalCarbonContext().getTenantId() != MultitenantConstants.SUPER_TENANT_ID){
+                String msg = "Only super tenants are allowed to publish scopes to tenants.";
+                log.error(msg);
+                return Response.status(Response.Status.UNAUTHORIZED).entity(msg).build();
+            }
+            if (MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
+                String msg = "You are not allowed to publish scopes to the super tenant.";
+                log.error(msg);
+                return Response.status(Response.Status.UNAUTHORIZED).entity(msg).build();
+            }
+
+            if (log.isDebugEnabled()) {
+                log.debug("Scope publishing process has been initiated for tenant:" + tenantDomain);
+            }
+
+            TenantManagerAdminService tenantManagerAdminService = DeviceMgtAPIUtils.getTenantManagerAdminService();
+            tenantManagerAdminService.publishScopesToTenant(tenantDomain);
+
+            return Response.status(Response.Status.OK).entity("Scope publishing process has been completed " +
+                    "successfully for tenant: " + tenantDomain).build();
+        } catch (TenantMgtException e) {
+            String msg = "Error occurred while publishing scopes to tenant: " + tenantDomain;
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
+    @PUT
+    @Path("/domain/{tenantDomain}/scopes/{roleName}")
+    @Override
+    public Response updateTenantScopeBindings(@PathParam("tenantDomain") String tenantDomain,
+                                              @PathParam("roleName") String roleName,
+                                              java.util.List<String> scopeNames) {
+        try {
+            if (MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
+                String msg = "You are not allowed to update scope bindings for the super tenant.";
+                log.error(msg);
+                return Response.status(Response.Status.UNAUTHORIZED).entity(msg).build();
+            }
+
+            if (log.isDebugEnabled()) {
+                log.debug("Scope bindings update process has been initiated for tenant: " + tenantDomain
+                        + " and role: " + roleName);
+            }
+
+            TenantManagerAdminService tenantManagerAdminService = DeviceMgtAPIUtils.getTenantManagerAdminService();
+            tenantManagerAdminService.updateTenantScopeBindings(tenantDomain, roleName, scopeNames);
+
+            return Response.status(Response.Status.OK).entity("Scope bindings update process has been completed " +
+                    "successfully for tenant: " + tenantDomain).build();
+        } catch (TenantMgtException e) {
+            String msg = "Error occurred while updating scope bindings for tenant: " + tenantDomain;
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
 }

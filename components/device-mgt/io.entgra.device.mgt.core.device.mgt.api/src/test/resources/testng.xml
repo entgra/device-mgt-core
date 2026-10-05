@@ -32,6 +32,7 @@
             <class name="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.NotificationManagementServiceImplTest"/>
             <class name="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.ConfigurationServiceImplTest"/>
             <class name="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.GroupManagementServiceImplTest"/>
+            <class name="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.PolicyManagementServiceUpdatedFilterTest"/>
         </classes>
     </test>
 </suite>

@@ -323,6 +323,8 @@ public class TenantInvokerHandler extends HttpServlet {
             } else {
                 HandlerUtil.copyRequestHeaders(req, classicHttpRequest, false);
             }
+            classicHttpRequest.removeHeaders(HttpHeaders.HOST);
+            classicHttpRequest.setHeader(HttpHeaders.HOST, System.getProperty(HandlerConstants.IOT_GW_HOST_ENV_VAR));
 
             if (StringUtils.isNotBlank(tenantDomain)) {
                 classicHttpRequest.setHeader(HttpHeaders.AUTHORIZATION, HandlerConstants.BEARER +

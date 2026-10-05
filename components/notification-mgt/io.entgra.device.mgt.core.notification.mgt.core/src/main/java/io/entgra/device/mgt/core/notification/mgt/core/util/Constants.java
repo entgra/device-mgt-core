@@ -32,6 +32,7 @@ public class Constants {
     public static final String NOTIFICATION_CONFIG_META_KEY = "notification-config" ;
     public static final String ADMIN = "admin" ;
     public static final String OPERATION = "operation" ;
+    public static final String TASK = "task" ;
     public static final String SUPER_TENANT_DOMAIN = "carbon.super";
     public static final int SUPER_TENANT_ID = -1234;
 

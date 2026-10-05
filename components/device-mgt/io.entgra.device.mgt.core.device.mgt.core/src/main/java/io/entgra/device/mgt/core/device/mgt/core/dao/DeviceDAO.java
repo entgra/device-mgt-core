@@ -179,6 +179,17 @@ public interface DeviceDAO {
                                                                                             DeviceManagementDAOException;
 
     /**
+     * This method is used to retrieve list of devices filtered based on device properties and group id.
+     * @param deviceProps properties by which devices need to be filtered
+     * @param tenantId tenant id
+     * @param groupId group id
+     * @return list of devices with properties
+     * @throws DeviceManagementDAOException
+     */
+    List<Device> queryDeviceIDsBasedDeviceProperties(Map<String, String> deviceProps, int tenantId, int groupId)
+            throws DeviceManagementDAOException;
+
+    /**
      * Retrieves a list of devices based on a given criteria of properties
      * @param deviceProps properties by which devices need to be filtered
      * @param tenantId tenant id
@@ -643,7 +654,8 @@ public interface DeviceDAO {
      * @param enrollmentIds list of enrollment ids.
      * @throws DeviceManagementDAOException when no enrolments are found for the given device.
      */
-    void deleteDevices(List<String> deviceIdentifiers, List<Integer> deviceIds, List<Integer> enrollmentIds, List<Device> validDevices) throws DeviceManagementDAOException;
+    void deleteDevices(List<String> deviceIdentifiers, List<Integer> deviceIds, List<Integer> enrollmentIds,
+                       List<Device> validDevices, int tenantId) throws DeviceManagementDAOException;
 
     boolean transferDevice(String deviceType, String deviceId, String owner, int destinationTenantId)
             throws DeviceManagementDAOException, SQLException;
@@ -915,4 +927,15 @@ public interface DeviceDAO {
      * @throws DeviceManagementException
      */
     List<Integer> getDeviceIdsByStatus(List<String> statuses) throws DeviceManagementException;
+
+    /**
+     * This method is used to check whether a device property value exists in the system.
+     *
+     * @param propertyName name of the device property.
+     * @param propertyValue value of the device property.
+     * @param tenantId tenant id.
+     * @return true if the property value exists, false otherwise.
+     * @throws DeviceManagementException if an error occurs while checking the property value.
+     */
+    boolean isDevicePropertyValueExists(String propertyName, String propertyValue, int tenantId) throws DeviceManagementException;
 }
