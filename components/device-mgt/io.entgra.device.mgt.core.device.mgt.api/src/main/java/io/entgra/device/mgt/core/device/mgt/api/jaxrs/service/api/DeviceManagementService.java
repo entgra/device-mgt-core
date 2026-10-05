@@ -2858,6 +2858,58 @@ public interface DeviceManagementService {
             @PathParam("id") String deviceId,
             OperationStatusBean operationStatusBean);
 
+    @PUT
+    @Path("/{deviceType}/{id}/operations/status")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "PUT",
+            value = "Update status of multiple operations",
+            notes = "Updates the status of multiple operations of a given device in Entgra IoT Server.",
+            tags = "Device Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:devices:ops:status:update")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully updated the operation statuses.",
+                            responseHeaders = {
+                                    @ResponseHeader(
+                                            name = "Content-Type",
+                                            description = "The content type of the body"),
+                                    @ResponseHeader(
+                                            name = "ETag",
+                                            description = "Entity Tag of the response resource.\n" +
+                                                    "Used by caches, or in conditional requests."),
+                                    @ResponseHeader(
+                                            name = "Last-Modified",
+                                            description = "Date and time the resource was last modified.\n" +
+                                                    "Used by caches, or in conditional requests."),
+                            }),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. \n Invalid request or validation error.",
+                            response = ErrorResponse.class),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Error occurred while updating operation statuses.",
+                            response = ErrorResponse.class)
+            })
+    Response updateBulkOperationStatus(
+            @ApiParam(
+                    name = "deviceType",
+                    value = "The device type, such as ios, android, or windows.")
+            @PathParam("deviceType") String deviceType,
+            @ApiParam(
+                    name = "id",
+                    value = "The device identifier")
+            @PathParam("id") String deviceId,
+            BulkOperationStatusBean bulkOperationStatusBean);
+
     @GET
     @Path("/filters")
     @ApiOperation(
