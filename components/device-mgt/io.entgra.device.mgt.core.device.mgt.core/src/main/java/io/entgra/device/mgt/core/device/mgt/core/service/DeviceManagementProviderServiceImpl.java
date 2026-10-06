@@ -109,6 +109,7 @@ import io.entgra.device.mgt.core.device.mgt.common.exceptions.InvalidDeviceExcep
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.TransactionManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.UnauthorizedDeviceAccessException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.UserNotFoundException;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.MetadataKeyNotFoundException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.MetadataManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.geo.service.GeoQuery;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.DeviceGroup;
@@ -3921,8 +3922,20 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     private void addDeviceStatus(DeviceStatusManagementService deviceStatusManagementService, int tenantId,
                                  int updatedRows,EnrolmentInfo enrolmentInfo,String type)
             throws MetadataManagementException, DeviceManagementDAOException {
-        boolean isEnableDeviceStatusCheck = deviceStatusManagementService.getDeviceStatusCheck(tenantId);
-        boolean isValidState = deviceStatusManagementService.isDeviceStatusValid(type, enrolmentInfo.getStatus().name(), tenantId);
+        boolean isEnableDeviceStatusCheck;
+        boolean isValidState;
+        try {
+            isEnableDeviceStatusCheck = deviceStatusManagementService.getDeviceStatusCheck(tenantId);
+            isValidState = deviceStatusManagementService.isDeviceStatusValid(type, enrolmentInfo.getStatus().name(), tenantId);
+        } catch (MetadataKeyNotFoundException e) {
+            // Device status filter metadata has not been provisioned for this tenant yet, treat as disabled
+            if (log.isDebugEnabled()) {
+                log.debug("Device status filter metadata not found for tenant: " + tenantId
+                        + ", treating device status check as disabled", e);
+            }
+            isEnableDeviceStatusCheck = false;
+            isValidState = true;
+        }
         if (updatedRows == 1 && (!isEnableDeviceStatusCheck || isValidState)) {
             enrollmentDAO.addDeviceStatus(enrolmentInfo.getId(), enrolmentInfo.getStatus());
         }

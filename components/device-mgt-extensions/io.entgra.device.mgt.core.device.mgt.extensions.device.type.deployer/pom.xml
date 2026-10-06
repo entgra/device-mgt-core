@@ -148,6 +148,7 @@
                             io.entgra.device.mgt.core.device.mgt.extensions.device.type.template;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.config;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.config.exception;version="${io.entgra.device.mgt.core.version.range}",
+                            io.entgra.device.mgt.core.device.mgt.extensions.device.type.template.util;version="${io.entgra.device.mgt.core.version.range}",
                             javax.xml.bind;version="[0.0,1)",
                             javax.xml.parsers;version="${javax.xml.parsers.import.pkg.version}",
                             org.apache.axis2.context;version="[1.6,2)",
