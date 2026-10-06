@@ -2324,7 +2324,7 @@
         <commons-fileupload.version>1.2.2.wso2v1</commons-fileupload.version>
         <catalina.version.range>[9.0,10)</catalina.version.range>
         <apache.felix.scr.ds.annotations.version>1.2.4</apache.felix.scr.ds.annotations.version>
-        <carbon.platform.package.import.version.range>[4.5.0, 5.0.0)</carbon.platform.package.import.version.range>
+        <carbon.platform.package.import.version.range>[4.7.0, 5.0.0)</carbon.platform.package.import.version.range>
         <carbon.registry.imp.pkg.version>[1.0.1, 2.0.0)</carbon.registry.imp.pkg.version>
         <carbon.registry.package.import.version.range>[4.7.0, 5.0.0)</carbon.registry.package.import.version.range>
         <fasterxml.jackson.databind.version>2.14.1</fasterxml.jackson.databind.version>
