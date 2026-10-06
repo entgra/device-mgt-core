@@ -22,6 +22,14 @@ correct behaviour looks like in the core services and Device Management API.
 | --- | --- |
 | Device name and description persistence | [device-name-description.md](device-name-description.md) |
 
+### Operations
+
+| Feature | Spec |
+| --- | --- |
+| Operation status update (single + bulk) | [operation-status-update.md](operation-status-update.md) |
+| Device Management API contract | [io.entgra.device.mgt.core.device.mgt.api/Specs/device_management_api_contract.md](../io.entgra.device.mgt.core.device.mgt.api/Specs/device_management_api_contract.md) |
+| Device type OS version labels | [device-type-os-version-labels.md](device-type-os-version-labels.md) |
+
 ## Planned feature areas (add specs when touched)
 
 - Device enrollment
