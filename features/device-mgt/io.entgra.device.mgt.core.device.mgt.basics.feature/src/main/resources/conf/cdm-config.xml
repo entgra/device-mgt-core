@@ -30,6 +30,29 @@
         <SchedulerBatchDelayMills>60000</SchedulerBatchDelayMills>
         <SchedulerTaskInitialDelay>60000</SchedulerTaskInitialDelay>
         <SchedulerTaskEnabled>true</SchedulerTaskEnabled>
+        <FCMConfiguration>
+            <!-- Period (seconds) during which duplicate FCM wake-up calls to the same device
+                 are suppressed after a call is sent. User initiated calls bypass this. -->
+            <DeviceCooldownSeconds>120</DeviceCooldownSeconds>
+            <!-- Dedicated thread pool for user initiated (high priority) wake-up calls. -->
+            <UserPoolSize>50</UserPoolSize>
+            <UserQueueCapacity>10000</UserQueueCapacity>
+            <!-- Throttled thread pool for task initiated (low priority) wake-up calls. -->
+            <TaskPoolSize>10</TaskPoolSize>
+            <TaskQueueCapacity>20000</TaskQueueCapacity>
+            <!-- OkHttp client tuning for FCM requests. FCM is a single host, so
+                 HttpMaxRequestsPerHost is the effective concurrency limit and should stay above
+                 the combined pool size; OkHttp's default of 5 causes queued calls to time out
+                 under load. Timeouts are in seconds (0 = no timeout). -->
+            <HttpMaxRequests>200</HttpMaxRequests>
+            <HttpMaxRequestsPerHost>200</HttpMaxRequestsPerHost>
+            <HttpConnectTimeoutSeconds>10</HttpConnectTimeoutSeconds>
+            <HttpWriteTimeoutSeconds>15</HttpWriteTimeoutSeconds>
+            <HttpReadTimeoutSeconds>30</HttpReadTimeoutSeconds>
+            <HttpCallTimeoutSeconds>60</HttpCallTimeoutSeconds>
+            <HttpConnectionPoolMaxIdle>25</HttpConnectionPoolMaxIdle>
+            <HttpConnectionKeepAliveMinutes>1</HttpConnectionKeepAliveMinutes>
+        </FCMConfiguration>
         <PushNotificationProviders>
             <Provider>io.entgra.device.mgt.core.device.mgt.extensions.push.notification.provider.fcm.FCMBasedPushNotificationProvider</Provider>
             <Provider>io.entgra.device.mgt.core.device.mgt.extensions.push.notification.provider.mqtt.MQTTBasedPushNotificationProvider</Provider>
