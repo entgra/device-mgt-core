@@ -1233,6 +1233,15 @@ public interface DeviceManagementProviderService {
     List<Integer> getDeviceIdsByStatus(List<String> statuses) throws DeviceManagementException;
 
     /**
+     * This method is to get the IDs of devices whose current (most recently created) enrolment
+     * status is not in the given list of excluded statuses.
+     * @param excludedStatuses Enrolment statuses to be excluded.
+     * @return deviceIds
+     * @throws DeviceManagementException if any service level or DAO level error occurs.
+     */
+    List<Integer> getDeviceIdsNotInEnrolmentStatus(List<String> excludedStatuses) throws DeviceManagementException;
+
+    /**
      * Retrieves the current device management configuration.
      *
      * @return an instance of {@link DeviceManagementConfig} containing the configuration details

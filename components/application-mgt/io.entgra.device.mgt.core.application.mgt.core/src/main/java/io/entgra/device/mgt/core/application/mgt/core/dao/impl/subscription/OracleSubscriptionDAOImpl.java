@@ -22,6 +22,10 @@ import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.DBConnectionException;
 import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManagementDAOException;
+import io.entgra.device.mgt.core.application.mgt.core.util.HelperUtil;
+import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -490,6 +494,26 @@ public class OracleSubscriptionDAOImpl extends GenericSubscriptionDAOImpl {
         if (log.isDebugEnabled()) {
             log.debug("Getting device subscriptions for the application release id " + appReleaseId + " from the database");
         }
+
+        List<String> excludedEnrolmentStatuses = new ArrayList<>();
+        excludedEnrolmentStatuses.add(EnrolmentInfo.Status.DISENROLLMENT_REQUESTED.toString());
+        excludedEnrolmentStatuses.add(EnrolmentInfo.Status.REMOVED.toString());
+        excludedEnrolmentStatuses.add(EnrolmentInfo.Status.DELETED.toString());
+
+        DeviceManagementProviderService deviceManagementProviderService = HelperUtil.getDeviceManagementProviderService();
+        List<Integer> allowedDeviceIds;
+        try {
+            allowedDeviceIds = deviceManagementProviderService.getDeviceIdsNotInEnrolmentStatus(excludedEnrolmentStatuses);
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred while retrieving device enrolment statuses for application release id "
+                    + appReleaseId;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+        if (allowedDeviceIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
         String subscriptionStatusTime = unsubscribe ? "DS.UNSUBSCRIBED_TIMESTAMP" : "DS.SUBSCRIBED_TIMESTAMP";
         String actionTriggeredColumn = unsubscribe ? "DS.UNSUBSCRIBED_BY" : "DS.SUBSCRIBED_BY";
         StringBuilder sql = new StringBuilder("SELECT "
@@ -505,7 +529,9 @@ public class OracleSubscriptionDAOImpl extends GenericSubscriptionDAOImpl {
                 + "FROM AP_DEVICE_SUBSCRIPTION DS "
                 + "WHERE DS.AP_APP_RELEASE_ID = ? "
                 + "AND DS.UNSUBSCRIBED = ? "
-                + "AND DS.TENANT_ID = ? ");
+                + "AND DS.TENANT_ID = ? "
+                + "AND DS.DM_DEVICE_ID IN ("
+                + allowedDeviceIds.stream().map(id -> "?").collect(Collectors.joining(",")) + ") ");
         if (actionStatus != null && !actionStatus.isEmpty()) {
             sql.append(" AND DS.STATUS IN (")
                     .append(actionStatus.stream().map(status -> "?").collect(Collectors.joining(","))).append(") ");
@@ -527,6 +553,9 @@ public class OracleSubscriptionDAOImpl extends GenericSubscriptionDAOImpl {
                 ps.setInt(paramIdx++, appReleaseId);
                 ps.setBoolean(paramIdx++, unsubscribe);
                 ps.setInt(paramIdx++, tenantId);
+                for (Integer deviceId : allowedDeviceIds) {
+                    ps.setInt(paramIdx++, deviceId);
+                }
                 if (actionStatus != null && !actionStatus.isEmpty()) {
                     for (String status : actionStatus) {
                         ps.setString(paramIdx++, status);
