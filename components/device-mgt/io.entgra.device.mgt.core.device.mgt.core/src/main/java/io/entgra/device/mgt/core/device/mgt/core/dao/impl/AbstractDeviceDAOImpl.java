@@ -34,6 +34,7 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOExceptio
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
+import io.entgra.device.mgt.core.device.mgt.core.util.DeviceManagerUtil;
 import org.apache.commons.collections.map.SingletonMap;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
@@ -70,6 +71,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
             String sql = "INSERT INTO DM_DEVICE(DESCRIPTION, NAME, DEVICE_TYPE_ID, DEVICE_IDENTIFICATION, " +
                     "LAST_UPDATED_TIMESTAMP, TENANT_ID) " +
                     "VALUES (?, ?, ?, ?, ?, ?)";
+            DeviceManagerUtil.trimDeviceNameAndDescription(device);
             stmt = conn.prepareStatement(sql, new String[]{"id"});
             stmt.setString(1, device.getDescription());
             stmt.setString(2, device.getName());
@@ -103,6 +105,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
                     "WHERE DEVICE_TYPE_ID = (SELECT ID FROM DM_DEVICE_TYPE " +
                     "WHERE NAME = ? AND (PROVIDER_TENANT_ID = ? OR SHARED_WITH_ALL_TENANTS = ?)) " +
                     "AND DEVICE_IDENTIFICATION = ? AND TENANT_ID = ?";
+            DeviceManagerUtil.trimDeviceNameAndDescription(device);
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, device.getName());
             stmt.setString(2, device.getDescription());
