@@ -116,7 +116,8 @@ Exact checks are documented per type.
 | App name availability | `GET` | `/applications/device-type/{deviceType}/app-name?appName={name}` |
 | Add release to existing app | `POST` | Type-specific `.../{deviceType}/.../{appId}` or `/web-app/{appId}` |
 
-Add-release behaviour should get its own specs when that feature is touched.
+Add-release binary-hash uniqueness and pre-check:
+[../add-release/release-binary-hash.md](../add-release/release-binary-hash.md).
 
 ## Acceptance Criteria (Shared)
 

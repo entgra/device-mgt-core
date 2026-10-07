@@ -26,6 +26,13 @@ correct behaviour looks like in the core services and Publisher API layer.
 | Web clip / web app creation | [create-applications/app-creation-web.md](create-applications/app-creation-web.md) |
 | Custom (firmware) app creation | [create-applications/app-creation-custom.md](create-applications/app-creation-custom.md) |
 
+### Add release
+
+| Feature | Spec |
+| --- | --- |
+| Release binary hash uniqueness (tenant-wide + pre-check) | [add-release/release-binary-hash.md](add-release/release-binary-hash.md) |
+| Single installable (PUBLISHED) release | [add-release/single-installable-release.md](add-release/single-installable-release.md) |
+
 ### Favourites
 
 | Feature | Spec |
@@ -35,7 +42,7 @@ correct behaviour looks like in the core services and Publisher API layer.
 ## Planned feature areas (add specs when touched)
 
 - App list / search / filters
-- Add release to an existing application
+- Add release (beyond binary-hash uniqueness)
 - Publish and lifecycle transitions
 - Artifact upload links / storage
 - Subscriptions and installs

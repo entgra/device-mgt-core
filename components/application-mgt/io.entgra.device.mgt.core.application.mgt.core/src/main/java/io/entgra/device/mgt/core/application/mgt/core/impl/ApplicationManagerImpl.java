@@ -341,6 +341,16 @@ public class ApplicationManagerImpl implements ApplicationManager {
             releaseDTO = uploadEntAppReleaseArtifacts(releaseDTO, artifact, deviceType.getName(), true);
             try {
                 return createRelease(applicationDTO, releaseDTO, ApplicationType.ENTERPRISE, isPublished);
+            } catch (ForbiddenException e) {
+                String msg = "Error occurred while creating ent app release for application with the name: " + applicationDTO.getName();
+                log.error(msg, e);
+                deleteApplicationArtifacts(Collections.singletonList(releaseDTO.getAppHashValue()));
+                throw e;
+            } catch (BadRequestException e) {
+                String msg = "Error occurred while creating ent app release for application with the name: " + applicationDTO.getName();
+                log.error(msg, e);
+                deleteApplicationArtifacts(Collections.singletonList(releaseDTO.getAppHashValue()));
+                throw e;
             } catch (ApplicationManagementException e) {
                 String msg = "Error occurred while creating ent app release for application with the name: " + applicationDTO.getName();
                 log.error(msg, e);
@@ -457,6 +467,11 @@ public class ApplicationManagerImpl implements ApplicationManager {
             releaseDTO = uploadCustomAppReleaseArtifacts(releaseDTO, artifact, deviceType.getName());
             try {
                 return createRelease(applicationDTO, releaseDTO, ApplicationType.CUSTOM, isPublished);
+            } catch (BadRequestException e) {
+                String msg = "Error occurred while creating custom app release for application with the name: " + applicationDTO.getName();
+                log.error(msg, e);
+                deleteApplicationArtifacts(Collections.singletonList(releaseDTO.getAppHashValue()));
+                throw e;
             } catch (ApplicationManagementException e) {
                 String msg = "Error occurred while creating custom app release for application with the name: " + applicationDTO.getName();
                 log.error(msg, e);
@@ -879,6 +894,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
         return addImageArtifacts(releaseDTO, applicationArtifact, tenantId);
     }
 
+    @Override
     public void validateReleaseBinaryFileHash(String hash)
             throws ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
@@ -1776,6 +1792,12 @@ public class ApplicationManagerImpl implements ApplicationManager {
             ApplicationRelease applicationRelease = APIUtil.releaseDtoToRelease(applicationReleaseDTO);
             ConnectionManagerUtil.commitDBTransaction();
             return applicationRelease;
+        } catch (ForbiddenException e) {
+            ConnectionManagerUtil.rollbackDBTransaction();
+            String msg = "Error occurred while creating application release for application Id: "
+                    + applicationDTO.getId();
+            log.error(msg, e);
+            throw e;
         } catch (TransactionManagementException e) {
             String msg = "Error occurred while staring application release creating transaction for application Id: "
                     + applicationDTO.getId();
