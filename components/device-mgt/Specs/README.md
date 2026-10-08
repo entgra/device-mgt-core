@@ -42,7 +42,7 @@ correct behaviour looks like in the core services and Device Management API.
 - Device enrollment
 - Device list / search / filters
 - Device details / properties
-- Operations and notifications
+- Operations and notifications (partial: status update covered above)
 - Device access authorization
 
 ## Writing rules

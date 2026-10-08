@@ -2883,6 +2883,66 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
+    public Device updateOperationStatus(DeviceIdentifier deviceIdentifier, Operation operation)
+            throws DeviceManagementException, OperationManagementException {
+        try {
+            int tenantId = this.getTenantId();
+            DeviceType deviceTypeObj = DeviceManagerUtil.getDeviceType(deviceIdentifier.getType(), tenantId);
+            if (deviceTypeObj == null) {
+                String msg = "Device of type: " + deviceIdentifier.getType() + " does not exist";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+            Device device = this.getDevice(deviceIdentifier, false);
+            this.updateOperation(device, operation);
+            return device;
+        } catch (BadRequestException e) {
+            String msg = "Invalid request while updating operation status for device " + deviceIdentifier;
+            log.error(msg, e);
+            throw e;
+        } catch (OperationManagementException e) {
+            String msg = "Error occurred when updating operation of device " + deviceIdentifier;
+            log.error(msg, e);
+            throw e;
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred when fetching device " + deviceIdentifier;
+            log.error(msg, e);
+            throw e;
+        }
+    }
+
+    @Override
+    public Device updateOperationStatuses(DeviceIdentifier deviceIdentifier, List<Operation> operations)
+            throws DeviceManagementException, OperationManagementException {
+        try {
+            int tenantId = this.getTenantId();
+            DeviceType deviceTypeObj = DeviceManagerUtil.getDeviceType(deviceIdentifier.getType(), tenantId);
+            if (deviceTypeObj == null) {
+                String msg = "Device of type: " + deviceIdentifier.getType() + " does not exist";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+            Device device = this.getDevice(deviceIdentifier, false);
+            for (Operation operation : operations) {
+                this.updateOperation(device, operation);
+            }
+            return device;
+        } catch (BadRequestException e) {
+            String msg = "Invalid request while updating operation statuses for device " + deviceIdentifier;
+            log.error(msg, e);
+            throw e;
+        } catch (OperationManagementException e) {
+            String msg = "Error occurred when updating operations of device " + deviceIdentifier;
+            log.error(msg, e);
+            throw e;
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred when fetching device " + deviceIdentifier;
+            log.error(msg, e);
+            throw e;
+        }
+    }
+
+    @Override
     public void updateOperation(Device device, Operation operation) throws OperationManagementException {
         try {
             EnrolmentInfo enrolmentInfo = device.getEnrolmentInfo();
