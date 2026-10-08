@@ -28,6 +28,8 @@ Paths below are relative to the base path.
 | JAX-RS impl | `device.mgt.api/.../service/impl/DeviceManagementServiceImpl.java` |
 | Request beans | `device.mgt.api/.../jaxrs/beans/` |
 | Disenroll body | `.../service/impl/util/DisenrollRequest.java` |
+| Operation status service | `device.mgt.core/.../service/DeviceManagementProviderService` (`updateOperationStatus`, `updateOperationStatuses`) |
+| Subscription sync (API util) | `device.mgt.api/.../jaxrs/util/DeviceMgtAPIUtils.updateApplicationSubscriptionStatusIfRequired` |
 
 ## Scopes And Permissions
 
@@ -732,8 +734,23 @@ Update status of a single operation on a device.
 | `deviceType` | string | Device type |
 | `id` | string | Device identifier |
 
-Also updates application subscription status when the operation code is an
-install/uninstall opcode (Android / Windows).
+**Flow**
+
+1. JAX-RS validates the payload and builds an `Operation` (`validateOperationStatusBean`).
+2. Core service `DeviceManagementProviderService.updateOperationStatus` validates the
+   device type, loads the device, and updates the operation.
+3. API util `updateApplicationSubscriptionStatusIfRequired` syncs application
+   subscription status when the operation code is an install/uninstall opcode
+   (Android / Windows). Kept in the API util because `ApplicationManager` cannot
+   be depended on from `device-mgt.core` without a circular dependency.
+
+| Failure | HTTP |
+| --- | --- |
+| Missing / invalid payload or status | `400` |
+| Device type does not exist / bad request | `400` |
+| Device retrieval failure | `500` |
+| Operation update failure | `500` |
+| Subscription status update failure | `500` |
 
 ---
 
@@ -754,8 +771,11 @@ Update status of multiple operations on a device in one request.
 | `deviceType` | string | Device type |
 | `id` | string | Device identifier |
 
-Shared `status` is applied to every item in `operations`. Same install/uninstall
-subscription side effects as the single-operation update.
+Shared `status` is applied to every item in `operations`. JAX-RS builds the
+operation list, then calls core `updateOperationStatuses`, then runs the same
+install/uninstall subscription sync per operation as the single-operation update.
+
+Same HTTP failure mapping as `PUT /{deviceType}/{id}/operation`.
 
 ---
 

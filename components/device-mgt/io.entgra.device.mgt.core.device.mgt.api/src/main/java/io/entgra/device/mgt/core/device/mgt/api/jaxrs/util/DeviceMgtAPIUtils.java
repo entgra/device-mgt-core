@@ -24,6 +24,7 @@ import io.entgra.device.mgt.core.apimgt.extension.rest.api.ConsumerRESTAPIServic
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.APIPublisherService;
 import io.entgra.device.mgt.core.application.mgt.common.services.ApplicationManager;
 import io.entgra.device.mgt.core.application.mgt.common.services.SubscriptionManager;
+import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceTypeVersionWrapper;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.OperationStatusBean;
@@ -33,6 +34,7 @@ import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.RequestV
 import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
 import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo;
+import io.entgra.device.mgt.core.device.mgt.common.MDMAppConstants;
 import io.entgra.device.mgt.core.device.mgt.common.MonitoringOperation;
 import io.entgra.device.mgt.core.device.mgt.common.OperationMonitoringTaskConfig;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
@@ -1253,6 +1255,37 @@ public class DeviceMgtAPIUtils {
             throw new BadRequestException(msg);
         }
         return operation;
+    }
+
+    /**
+     * Syncs application subscription status when the operation is an install/uninstall opcode.
+     * Kept in the API util because {@code ApplicationManager} lives in application-mgt and cannot
+     * be depended on from device-mgt.core without introducing a circular dependency
+     * (application-mgt.common already depends on device-mgt.core).
+     *
+     * @param device    device whose subscription may need updating
+     * @param operation updated operation
+     * @throws ApplicationManagementException if subscription status update fails
+     */
+    public static void updateApplicationSubscriptionStatusIfRequired(Device device, Operation operation)
+            throws ApplicationManagementException {
+        try {
+            if (MDMAppConstants.AndroidConstants.OPCODE_INSTALL_APPLICATION.equals(operation.getCode()) ||
+                    MDMAppConstants.AndroidConstants.OPCODE_UNINSTALL_APPLICATION.equals(operation.getCode()) ||
+                    MDMAppConstants.WindowsConstants.INSTALL_ENTERPRISE_APPLICATION.equals(operation.getCode()) ||
+                    MDMAppConstants.WindowsConstants.UNINSTALL_ENTERPRISE_APPLICATION.equals(operation.getCode()) ||
+                    MDMAppConstants.WindowsConstants.INSTALL_STORE_APPLICATION.equals(operation.getCode()) ||
+                    MDMAppConstants.WindowsConstants.UNINSTALL_STORE_APPLICATION.equals(operation.getCode())) {
+                getApplicationManager().updateSubsStatus(
+                        device.getId(), operation.getId(), operation.getStatus().toString()
+                );
+            }
+        } catch (ApplicationManagementException e) {
+            String msg = "Error occurred when updating the application subscription status of the operation. " +
+                    "The device identifier is: " + device.getDeviceIdentifier();
+            log.error(msg, e);
+            throw e;
+        }
     }
 
     /**
