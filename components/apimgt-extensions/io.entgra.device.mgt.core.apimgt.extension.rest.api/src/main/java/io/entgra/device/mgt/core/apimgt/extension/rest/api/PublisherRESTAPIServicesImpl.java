@@ -54,8 +54,10 @@ public class PublisherRESTAPIServicesImpl implements PublisherRESTAPIServices {
     private static final Log log = LogFactory.getLog(PublisherRESTAPIServicesImpl.class);
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private static final Gson gson = new Gson();
-    private static final String host = System.getProperty(Constants.IOT_CORE_HOST);
-    private static final String port = System.getProperty(Constants.IOT_CORE_HTTPS_PORT);
+    private static final String host = System.getProperty(
+            "iot.apim.host", System.getProperty(Constants.IOT_CORE_HOST));
+    private static final String port = System.getProperty(
+            "iot.apim.https.port", System.getProperty(Constants.IOT_CORE_HTTPS_PORT));
     private static final String endPointPrefix = Constants.HTTPS_PROTOCOL + Constants.SCHEME_SEPARATOR + host
             + Constants.COLON + port;
     private static final IOAuthClientService client =
