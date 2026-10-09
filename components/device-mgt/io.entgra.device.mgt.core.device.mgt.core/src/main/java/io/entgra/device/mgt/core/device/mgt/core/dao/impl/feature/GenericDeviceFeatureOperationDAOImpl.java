@@ -57,7 +57,9 @@ public class GenericDeviceFeatureOperationDAOImpl implements DeviceFeatureOperat
                         "OPERATION_DESCRIPTION, " +
                         "DEVICE_TYPE) " +
                 "VALUES (?, ?, ?, ?)";
-        try (Connection connection = DeviceFeatureOperationsDAOFactory.getConnection()) {
+        try {
+            // The service owns the transaction and closes this connection after commit/rollback.
+            Connection connection = DeviceFeatureOperationsDAOFactory.getConnection();
             // fetch existing code + deviceType pairs
             Set<String> existingKeys = new HashSet<>();
             try (PreparedStatement selectStmt = connection.prepareStatement(selectQuery);

@@ -46,6 +46,7 @@
                         <Bundle-Description>Application Management Core Bundle</Bundle-Description>
                         <Private-Package>io.entgra.device.mgt.core.application.mgt.core.internal</Private-Package>
                         <Import-Package>
+                            okhttp3;version="[4.12,5)",
                             com.dd.plist;version="[1.21,2)",
                             com.google.gson;version="[2.9,3)",
                             com.google.gson.reflect;version="[2.9,3)",
@@ -76,6 +77,7 @@
                             io.entgra.device.mgt.core.application.mgt.core.exception,
                             io.entgra.device.mgt.core.application.mgt.core.serviceprovider,
                             io.entgra.device.mgt.core.device.mgt.common;version="${io.entgra.device.mgt.core.version.range}",
+                            io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.device.mgt.common.app.mgt;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.device.mgt.common.app.mgt.android;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.device.mgt.common.exceptions;version="${io.entgra.device.mgt.core.version.range}",
@@ -121,7 +123,11 @@
                             org.apache.http;version="[4.4,5)",
                             org.apache.http.client;version="[4.3,5)",
                             org.apache.http.client.methods;version="[4.3,5)",
+                            org.apache.http.conn.socket;version="[4.3,5)",
+                            org.apache.http.conn.ssl;version="[4.3,5)",
+                            org.apache.http.entity;version="[4.4,5)",
                             org.apache.http.impl.client;version="[4.3,5)",
+                            org.apache.http.ssl;version="[4.4,5)",
                             org.bouncycastle.cert,
                             org.bouncycastle.cert.jcajce,
                             org.bouncycastle.cms,

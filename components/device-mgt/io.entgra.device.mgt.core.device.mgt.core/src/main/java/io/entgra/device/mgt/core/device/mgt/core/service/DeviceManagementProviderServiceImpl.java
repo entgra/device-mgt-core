@@ -3677,7 +3677,22 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         if (log.isDebugEnabled()) {
             log.debug("Unregister a device management service");
         }
+        boolean tenantFlowStarted = false;
         try {
+            // OSGi shutdown callbacks can run without a tenant context. Preserve an existing
+            // caller context; otherwise use the tenant that owns the provider.
+            if (PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId() == -1) {
+                String tenantDomain = MultitenantConstants.SUPER_TENANT_DOMAIN_NAME;
+                if (!deviceManagementService.getProvisioningConfig().isSharedWithAllTenants()) {
+                    tenantDomain = deviceManagementService.getProvisioningConfig().getProviderTenantDomain();
+                }
+                int tenantId = DeviceManagerUtil.getTenantId(tenantDomain);
+                PrivilegedCarbonContext.startTenantFlow();
+                tenantFlowStarted = true;
+                PrivilegedCarbonContext context = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+                context.setTenantId(tenantId);
+                context.setTenantDomain(tenantDomain);
+            }
             pluginRepository.removeDeviceManagementProvider(deviceManagementService);
         } catch (DeviceManagementException e) {
             log.error("Error occurred while un-registering device management plugin '" +
@@ -3685,6 +3700,10 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         } catch (Exception e) {
             String msg = "Error occurred in unregisterDeviceManagementService";
             log.error(msg, e);
+        } finally {
+            if (tenantFlowStarted) {
+                PrivilegedCarbonContext.endTenantFlow();
+            }
         }
     }
 
