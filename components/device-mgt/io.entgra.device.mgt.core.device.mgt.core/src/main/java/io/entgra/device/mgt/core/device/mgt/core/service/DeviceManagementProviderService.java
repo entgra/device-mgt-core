@@ -1232,6 +1232,8 @@ public interface DeviceManagementProviderService {
      */
     List<Integer> getDeviceIdsByStatus(List<String> statuses) throws DeviceManagementException;
 
+    PaginationResult getDevicesNotInTag(PaginationRequest request, boolean requireDeviceInfo) throws DeviceManagementException;
+
     /**
      * Retrieves the current device management configuration.
      *

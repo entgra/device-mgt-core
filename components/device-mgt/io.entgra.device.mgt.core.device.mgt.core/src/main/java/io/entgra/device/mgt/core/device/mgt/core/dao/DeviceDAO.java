@@ -928,6 +928,10 @@ public interface DeviceDAO {
      */
     List<Integer> getDeviceIdsByStatus(List<String> statuses) throws DeviceManagementException;
 
+    List<Device> searchDevicesNotInTag(PaginationRequest request, int tenantId) throws DeviceManagementDAOException;
+
+    int getCountOfDevicesNotInTag(PaginationRequest request, int tenantId) throws DeviceManagementDAOException;
+
     /**
      * This method is used to check whether a device property value exists in the system.
      *
