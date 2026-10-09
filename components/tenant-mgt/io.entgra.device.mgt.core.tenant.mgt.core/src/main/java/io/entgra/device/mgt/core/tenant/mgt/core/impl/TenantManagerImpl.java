@@ -501,12 +501,23 @@ public class TenantManagerImpl implements TenantManager {
             endTenantFlow();
         }
     }
+
     @Override
-    public void updateTenantScopeBindings(String tenantDomain, String roleName, List<String> scopeNames) throws TenantMgtException {
+    public void updateTenantScopeBindings(String tenantDomain, String roleName, List<String> addedScopeNames,
+                                          List<String> removedScopeNames) throws TenantMgtException {
         if (MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
             String msg = "Updating scope bindings for super tenant is not allowed via this operation.";
             log.error(msg);
             throw new TenantMgtException(msg);
+        }
+        boolean hasAdditions = addedScopeNames != null && !addedScopeNames.isEmpty();
+        boolean hasRemovals = removedScopeNames != null && !removedScopeNames.isEmpty();
+        if (!hasAdditions && !hasRemovals) {
+            if (log.isDebugEnabled()) {
+                log.debug("No scope binding changes requested for role '" + roleName + "' in tenant '"
+                        + tenantDomain + "'. Skipping.");
+            }
+            return;
         }
         try {
             PrivilegedCarbonContext.startTenantFlow();
@@ -523,17 +534,24 @@ public class TenantManagerImpl implements TenantManager {
                 scopeMap.put(scope.getName(), scope);
             }
 
-            for (String scopeName : scopeNames) {
-                Scope targetScope = scopeMap.get(scopeName);
-                if (targetScope == null) {
-                    log.warn("Scope '" + scopeName + "' not found in tenant '" + tenantDomain + "'. Skipping.");
-                    continue;
-                }
-                List<String> bindings = targetScope.getBindings();
-                if (bindings == null) {
-                    bindings = new ArrayList<>();
-                }
-                if (!bindings.contains(roleName)) {
+            if (hasAdditions) {
+                for (String scopeName : addedScopeNames) {
+                    Scope targetScope = scopeMap.get(scopeName);
+                    if (targetScope == null) {
+                        log.warn("Scope '" + scopeName + "' not found in tenant '" + tenantDomain + "'. Skipping.");
+                        continue;
+                    }
+                    List<String> bindings = targetScope.getBindings();
+                    if (bindings == null) {
+                        bindings = new ArrayList<>();
+                    }
+                    if (bindings.contains(roleName)) {
+                        if (log.isDebugEnabled()) {
+                            log.debug("Role '" + roleName + "' already present in bindings of scope '" + scopeName
+                                    + "' in tenant '" + tenantDomain + "'. Skipping.");
+                        }
+                        continue;
+                    }
                     bindings.add(roleName);
                     targetScope.setBindings(bindings);
                     publisherRESTAPIServices.updateSharedScope(targetScope);
@@ -541,10 +559,30 @@ public class TenantManagerImpl implements TenantManager {
                         log.debug("Added role '" + roleName + "' to bindings of scope '" + scopeName
                                 + "' in tenant '" + tenantDomain + "'.");
                     }
-                } else {
+                }
+            }
+
+            if (hasRemovals) {
+                for (String scopeName : removedScopeNames) {
+                    Scope targetScope = scopeMap.get(scopeName);
+                    if (targetScope == null) {
+                        log.warn("Scope '" + scopeName + "' not found in tenant '" + tenantDomain + "'. Skipping.");
+                        continue;
+                    }
+                    List<String> bindings = targetScope.getBindings();
+                    if (bindings == null || !bindings.contains(roleName)) {
+                        if (log.isDebugEnabled()) {
+                            log.debug("Role '" + roleName + "' not present in bindings of scope '" + scopeName
+                                    + "' in tenant '" + tenantDomain + "'. Skipping.");
+                        }
+                        continue;
+                    }
+                    bindings.remove(roleName);
+                    targetScope.setBindings(bindings);
+                    publisherRESTAPIServices.updateSharedScope(targetScope);
                     if (log.isDebugEnabled()) {
-                        log.debug("Role '" + roleName + "' already present in bindings of scope '" + scopeName
-                                + "' in tenant '" + tenantDomain + "'. Skipping.");
+                        log.debug("Removed role '" + roleName + "' from bindings of scope '" + scopeName
+                                + "' in tenant '" + tenantDomain + "'.");
                     }
                 }
             }
