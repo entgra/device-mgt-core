@@ -22,12 +22,19 @@ correct behaviour looks like in the core services and Device Management API.
 | --- | --- |
 | Device name and description persistence | [device-name-description.md](device-name-description.md) |
 
+### Operations
+
+| Feature | Spec |
+| --- | --- |
+| Operation status update (single + bulk) | [operation-status-update.md](operation-status-update.md) |
+| Device Management API contract | [io.entgra.device.mgt.core.device.mgt.api/Specs/device_management_api_contract.md](../io.entgra.device.mgt.core.device.mgt.api/Specs/device_management_api_contract.md) |
+
 ## Planned feature areas (add specs when touched)
 
 - Device enrollment
 - Device list / search / filters
 - Device details / properties
-- Operations and notifications
+- Operations and notifications (partial: status update covered above)
 - Device access authorization
 
 ## Writing rules

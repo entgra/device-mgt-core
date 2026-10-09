@@ -93,7 +93,6 @@ import io.entgra.device.mgt.core.device.mgt.core.search.mgt.SearchManagerService
 import io.entgra.device.mgt.core.device.mgt.core.search.mgt.SearchMgtException;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.service.GroupManagementProviderService;
-import io.entgra.device.mgt.core.device.mgt.core.util.DeviceManagerUtil;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.*;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.DeviceManagementService;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.InputValidationException;
@@ -1769,33 +1768,13 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
         }
         DeviceIdentifier deviceIdentifier = new DeviceIdentifier(deviceId, deviceType);
-        int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
         try {
-            Device device = DeviceMgtAPIUtils.getDeviceManagementService()
-                    .getDevice(deviceIdentifier, false);
-            DeviceType deviceTypeObj = DeviceManagerUtil.getDeviceType(
-                    deviceType, tenantId);
-            if (deviceTypeObj == null) {
-                String msg = "Device of type: " + deviceType + " does not exist";
-                log.error(msg);
-                return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
-            }
-
             Operation operation = DeviceMgtAPIUtils.validateOperationStatusBean(operationStatusBean);
             operation.setId(operationStatusBean.getOperationId());
             operation.setCode(operationStatusBean.getOperationCode());
-            DeviceMgtAPIUtils.getDeviceManagementService().updateOperation(device, operation);
-
-            if (MDMAppConstants.AndroidConstants.OPCODE_INSTALL_APPLICATION.equals(operation.getCode()) ||
-                    MDMAppConstants.AndroidConstants.OPCODE_UNINSTALL_APPLICATION.equals(operation.getCode()) ||
-                    MDMAppConstants.WindowsConstants.INSTALL_ENTERPRISE_APPLICATION.equals(operation.getCode()) ||
-                    MDMAppConstants.WindowsConstants.UNINSTALL_ENTERPRISE_APPLICATION.equals(operation.getCode()) ||
-                    MDMAppConstants.WindowsConstants.INSTALL_STORE_APPLICATION.equals(operation.getCode()) ||
-                    MDMAppConstants.WindowsConstants.UNINSTALL_STORE_APPLICATION.equals(operation.getCode())){
-                DeviceMgtAPIUtils.getApplicationManager().updateSubsStatus(
-                        device.getId(), operation.getId(), operation.getStatus().toString()
-                );
-            }
+            Device device = DeviceMgtAPIUtils.getDeviceManagementService()
+                    .updateOperationStatus(deviceIdentifier, operation);
+            DeviceMgtAPIUtils.updateApplicationSubscriptionStatusIfRequired(device, operation);
             return Response.status(Response.Status.OK).entity("OperationStatus updated successfully.").build();
         } catch (BadRequestException e) {
             String msg = "Error occurred due to invalid request";
@@ -1811,6 +1790,50 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         } catch (io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException e) {
             String msg = "Error occurred when updating the application subscription status of the operation. " +
+                    "The device identifier is: " + deviceIdentifier;
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
+    @PUT
+    @Path("/{deviceType}/{id}/operations/status/{status}")
+    @Override
+    public Response updateBulkOperationStatus(
+            @PathParam("deviceType") String deviceType,
+            @PathParam("id") String deviceId,
+            @PathParam("status") String status,
+            List<Operation> operations) {
+        if (operations == null || operations.isEmpty()) {
+            String errorMessage = "Request does not contain the required payload.";
+            log.error(errorMessage);
+            return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
+        }
+        DeviceIdentifier deviceIdentifier = new DeviceIdentifier(deviceId, deviceType);
+        try {
+            Operation.Status operationStatus = DeviceMgtAPIUtils.validateOperationStatus(status);
+            Device device = DeviceMgtAPIUtils.getDeviceManagementService()
+                    .updateOperationStatuses(deviceIdentifier, operations, operationStatus);
+            DeviceMgtAPIUtils.updateApplicationSubscriptionStatusIfRequired(device, operations, operationStatus);
+            return Response.status(Response.Status.OK).entity("Operation statuses updated successfully.").build();
+        } catch (BadRequestException e) {
+            String msg = "Error occurred due to invalid request";
+            log.error(msg, e);
+            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+        } catch (DeviceNotFoundException e) {
+            String msg = "No enrolled device found for " + deviceIdentifier;
+            log.error(msg, e);
+            return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred when fetching device " + deviceIdentifier.toString();
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (OperationManagementException e) {
+            String msg = "Error occurred when updating operations of device " + deviceIdentifier;
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        } catch (io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException e) {
+            String msg = "Error occurred when updating the application subscription status of the operations. " +
                     "The device identifier is: " + deviceIdentifier;
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();

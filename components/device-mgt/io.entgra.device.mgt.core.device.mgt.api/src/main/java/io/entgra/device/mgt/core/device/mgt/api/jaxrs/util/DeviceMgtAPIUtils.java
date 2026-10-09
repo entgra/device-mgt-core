@@ -24,6 +24,7 @@ import io.entgra.device.mgt.core.apimgt.extension.rest.api.ConsumerRESTAPIServic
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.APIPublisherService;
 import io.entgra.device.mgt.core.application.mgt.common.services.ApplicationManager;
 import io.entgra.device.mgt.core.application.mgt.common.services.SubscriptionManager;
+import io.entgra.device.mgt.core.application.mgt.common.exception.ApplicationManagementException;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.DeviceTypeVersionWrapper;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.OperationStatusBean;
@@ -33,6 +34,7 @@ import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.util.RequestV
 import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
 import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo;
+import io.entgra.device.mgt.core.device.mgt.common.MDMAppConstants;
 import io.entgra.device.mgt.core.device.mgt.common.MonitoringOperation;
 import io.entgra.device.mgt.core.device.mgt.common.OperationMonitoringTaskConfig;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
@@ -1215,44 +1217,119 @@ public class DeviceMgtAPIUtils {
     public static Operation validateOperationStatusBean(OperationStatusBean operationStatusBean)
             throws BadRequestException {
         Operation operation = new Operation();
-        if (operationStatusBean.getStatus() != null) {
-            switch (operationStatusBean.getStatus().toLowerCase()) {
-                case Constants.OperationStatus.COMPLETED:
-                    operation.setStatus(Operation.Status.COMPLETED);
-                    break;
-                case Constants.OperationStatus.ERROR:
-                    operation.setStatus(Operation.Status.ERROR);
-                    break;
-                case Constants.OperationStatus.IN_PROGRESS:
-                    operation.setStatus(Operation.Status.IN_PROGRESS);
-                    break;
-                case Constants.OperationStatus.PENDING:
-                    operation.setStatus(Operation.Status.PENDING);
-                    break;
-                case Constants.OperationStatus.NOTNOW:
-                    operation.setStatus(Operation.Status.NOTNOW);
-                    break;
-                case Constants.OperationStatus.REPEATED:
-                    operation.setStatus(Operation.Status.REPEATED);
-                    break;
-                case Constants.OperationStatus.REQUIRED_CONFIRMATION:
-                    operation.setStatus(Operation.Status.REQUIRED_CONFIRMATION);
-                    break;
-                case Constants.OperationStatus.CONFIRMED:
-                    operation.setStatus(Operation.Status.CONFIRMED);
-                    break;
-                default:
-                    String msg = "Invalid operation status. Valid operations: " +
-                            "[IN_PROGRESS, PENDING, COMPLETED, ERROR, REPEATED, NOTNOW, REQUIRED_CONFIRMATION, CONFIRMED]";
-                    log.error(msg);
-                    throw new BadRequestException(msg);
-            }
-        } else {
+        operation.setStatus(validateOperationStatus(operationStatusBean.getStatus()));
+        return operation;
+    }
+
+    /**
+     * This method validates the given operation status value
+     *
+     * @param status Operation status value (case-insensitive)
+     * @return {@link Operation.Status} matching the given value
+     * @throws BadRequestException If the status is missing or invalid
+     */
+    public static Operation.Status validateOperationStatus(String status) throws BadRequestException {
+        if (status == null) {
             String msg = "Payload does not contain status value";
             log.error(msg);
             throw new BadRequestException(msg);
         }
-        return operation;
+        switch (status.toLowerCase()) {
+            case Constants.OperationStatus.COMPLETED:
+                return Operation.Status.COMPLETED;
+            case Constants.OperationStatus.ERROR:
+                return Operation.Status.ERROR;
+            case Constants.OperationStatus.IN_PROGRESS:
+                return Operation.Status.IN_PROGRESS;
+            case Constants.OperationStatus.PENDING:
+                return Operation.Status.PENDING;
+            case Constants.OperationStatus.NOTNOW:
+                return Operation.Status.NOTNOW;
+            case Constants.OperationStatus.REPEATED:
+                return Operation.Status.REPEATED;
+            case Constants.OperationStatus.REQUIRED_CONFIRMATION:
+                return Operation.Status.REQUIRED_CONFIRMATION;
+            case Constants.OperationStatus.CONFIRMED:
+                return Operation.Status.CONFIRMED;
+            default:
+                String msg = "Invalid operation status. Valid operations: " +
+                        "[IN_PROGRESS, PENDING, COMPLETED, ERROR, REPEATED, NOTNOW, REQUIRED_CONFIRMATION, CONFIRMED]";
+                log.error(msg);
+                throw new BadRequestException(msg);
+        }
+    }
+
+    /**
+     * Syncs application subscription status when the operation is an install/uninstall opcode.
+     * Kept in the API util because {@code ApplicationManager} lives in application-mgt and cannot
+     * be depended on from device-mgt.core without introducing a circular dependency
+     * (application-mgt.common already depends on device-mgt.core).
+     *
+     * @param device    device whose subscription may need updating
+     * @param operation updated operation
+     * @throws ApplicationManagementException if subscription status update fails
+     */
+    public static void updateApplicationSubscriptionStatusIfRequired(Device device, Operation operation)
+            throws ApplicationManagementException {
+        try {
+            if (isAppSubscriptionOperation(operation.getCode())) {
+                getApplicationManager().updateSubsStatus(
+                        device.getId(), operation.getId(), operation.getStatus().toString()
+                );
+            }
+        } catch (ApplicationManagementException e) {
+            String msg = "Error occurred when updating the application subscription status of the operation. " +
+                    "The device identifier is: " + device.getDeviceIdentifier();
+            log.error(msg, e);
+            throw e;
+        }
+    }
+
+    /**
+     * Syncs application subscription status for the install/uninstall operations among the given operations,
+     * in a single application-mgt transaction.
+     *
+     * @param device     device whose subscriptions may need updating
+     * @param operations updated operations
+     * @param status     status applied to the operations
+     * @throws ApplicationManagementException if subscription status update fails
+     */
+    public static void updateApplicationSubscriptionStatusIfRequired(Device device, List<Operation> operations,
+                                                                     Operation.Status status)
+            throws ApplicationManagementException {
+        List<Integer> appOperationIds = new ArrayList<>();
+        for (Operation operation : operations) {
+            if (isAppSubscriptionOperation(operation.getCode())) {
+                appOperationIds.add(operation.getId());
+            }
+        }
+        if (appOperationIds.isEmpty()) {
+            return;
+        }
+        try {
+            getApplicationManager().updateSubStatus(device.getId(), appOperationIds, status.toString());
+        } catch (ApplicationManagementException e) {
+            String msg = "Error occurred when updating the application subscription status of the operations. " +
+                    "The device identifier is: " + device.getDeviceIdentifier();
+            log.error(msg, e);
+            throw e;
+        }
+    }
+
+    /**
+     * Checks whether the operation code is an application install/uninstall opcode (Android or Windows)
+     * whose status change must be synced to the application subscription.
+     *
+     * @param operationCode operation code to check
+     * @return {@code true} if the code is an application install/uninstall opcode, {@code false} otherwise
+     */
+    private static boolean isAppSubscriptionOperation(String operationCode) {
+        return MDMAppConstants.AndroidConstants.OPCODE_INSTALL_APPLICATION.equals(operationCode) ||
+                MDMAppConstants.AndroidConstants.OPCODE_UNINSTALL_APPLICATION.equals(operationCode) ||
+                MDMAppConstants.WindowsConstants.INSTALL_ENTERPRISE_APPLICATION.equals(operationCode) ||
+                MDMAppConstants.WindowsConstants.UNINSTALL_ENTERPRISE_APPLICATION.equals(operationCode) ||
+                MDMAppConstants.WindowsConstants.INSTALL_STORE_APPLICATION.equals(operationCode) ||
+                MDMAppConstants.WindowsConstants.UNINSTALL_STORE_APPLICATION.equals(operationCode);
     }
 
     /**
