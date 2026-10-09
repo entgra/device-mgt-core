@@ -159,22 +159,21 @@ Other `Device` fields may be present; rename validates `name`.
 | `status` | string | yes | See operation status values |
 | `operationCode` | string | no | Needed for install/uninstall subscription side effects |
 
-### `BulkOperationStatusBean`
+### Bulk operation status body (`List<Operation>`)
+
+Body of `PUT /{deviceType}/{id}/operations/status/{status}`; the status comes from the path.
 
 ```json
-{
-  "status": "ERROR",
-  "operations": [
-    { "operationId": 123, "operationCode": "DEVICE_MUTE" },
-    { "operationId": 124, "operationCode": "DEVICE_RING" }
-  ]
-}
+[
+  { "id": 123, "code": "DEVICE_MUTE" },
+  { "id": 124, "code": "DEVICE_RING" }
+]
 ```
 
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `status` | string | yes | Applied to every listed operation |
-| `operations` | `OperationStatusBean[]` | yes | Each item needs `operationId`; `operationCode` optional |
+| `id` | int | yes | Operation id |
+| `code` | string | no | Needed for install/uninstall subscription side effects |
 
 ---
 
@@ -754,7 +753,7 @@ Update status of a single operation on a device.
 
 ---
 
-#### `PUT /{deviceType}/{id}/operations/status`
+#### `PUT /{deviceType}/{id}/operations/status/{status}`
 
 Update status of multiple operations on a device in one request.
 
@@ -763,19 +762,32 @@ Update status of multiple operations on a device in one request.
 | Method | `updateBulkOperationStatus` |
 | Scope | `dm:devices:ops:status:update` |
 | Permission | `/device-mgt/devices/operations/status-update` |
-| Body | `BulkOperationStatusBean` |
+| Body | `List<Operation>` — each item needs `id`; `code` is needed for install/uninstall subscription sync |
 | Success | `200` message |
 
 | Path | Type | Description |
 | --- | --- | --- |
 | `deviceType` | string | Device type |
 | `id` | string | Device identifier |
+| `status` | string | Status applied to every listed operation (case-insensitive, e.g. `ERROR`) |
 
-Shared `status` is applied to every item in `operations`. JAX-RS builds the
-operation list, then calls core `updateOperationStatuses`, then runs the same
-install/uninstall subscription sync per operation as the single-operation update.
+**Flow**
 
-Same HTTP failure mapping as `PUT /{deviceType}/{id}/operation`.
+1. JAX-RS rejects an empty body and validates `{status}` (`validateOperationStatus`).
+2. Core service `updateOperationStatuses(deviceIdentifier, operations, status)` validates
+   the device type, loads the device, and updates all operations in one transaction
+   with a single DAO statement (`OperationDAO.updateOperationStatuses`).
+3. API util `updateApplicationSubscriptionStatusIfRequired` syncs the install/uninstall
+   operations in one call to `ApplicationManager.updateSubStatus`.
+
+| Failure | HTTP |
+| --- | --- |
+| Empty body / missing or invalid status | `400` |
+| Device type does not exist / bad request | `400` |
+| No enrolled device for the identifier | `404` |
+| Device retrieval failure | `500` |
+| Operation update failure | `500` |
+| Subscription status update failure | `500` |
 
 ---
 
@@ -1042,7 +1054,7 @@ Obtain a default access token for enrollment using client credentials.
 | GET | `/{type}/{id}/operations` | `getDeviceOperations` | `dm:devices:ops:view` |
 | POST | `/{type}/operations` | `addOperation` | `dm:devices:ops:view` |
 | PUT | `/{deviceType}/{id}/operation` | `updateOperationStatus` | `dm:devices:ops:status:update` |
-| PUT | `/{deviceType}/{id}/operations/status` | `updateBulkOperationStatus` | `dm:devices:ops:status:update` |
+| PUT | `/{deviceType}/{id}/operations/status/{status}` | `updateBulkOperationStatus` | `dm:devices:ops:status:update` |
 | GET | `/{type}/{id}/effective-policy` | `getEffectivePolicyOfDevice` | `dm:devices:policy:view` |
 | GET | `/{type}/{id}/compliance-data` | `getComplianceDataOfDevice` | `dm:devices:compliance:view` |
 | GET | `/compliance/{complianceStatus}` | `getPolicyCompliance` | `dm:devices:compliance:view` |

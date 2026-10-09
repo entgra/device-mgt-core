@@ -1797,40 +1797,33 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
     }
 
     @PUT
-    @Path("/{deviceType}/{id}/operations/status")
+    @Path("/{deviceType}/{id}/operations/status/{status}")
     @Override
     public Response updateBulkOperationStatus(
             @PathParam("deviceType") String deviceType,
             @PathParam("id") String deviceId,
-            BulkOperationStatusBean bulkOperationStatusBean) {
-        if (bulkOperationStatusBean == null
-                || StringUtils.isBlank(bulkOperationStatusBean.getStatus())
-                || bulkOperationStatusBean.getOperations() == null
-                || bulkOperationStatusBean.getOperations().isEmpty()) {
+            @PathParam("status") String status,
+            List<Operation> operations) {
+        if (operations == null || operations.isEmpty()) {
             String errorMessage = "Request does not contain the required payload.";
             log.error(errorMessage);
             return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
         }
         DeviceIdentifier deviceIdentifier = new DeviceIdentifier(deviceId, deviceType);
         try {
-            List<Operation> operations = new ArrayList<>();
-            for (OperationStatusBean operationStatusBean : bulkOperationStatusBean.getOperations()) {
-                operationStatusBean.setStatus(bulkOperationStatusBean.getStatus());
-                Operation operation = DeviceMgtAPIUtils.validateOperationStatusBean(operationStatusBean);
-                operation.setId(operationStatusBean.getOperationId());
-                operation.setCode(operationStatusBean.getOperationCode());
-                operations.add(operation);
-            }
+            Operation.Status operationStatus = DeviceMgtAPIUtils.validateOperationStatus(status);
             Device device = DeviceMgtAPIUtils.getDeviceManagementService()
-                    .updateOperationStatuses(deviceIdentifier, operations);
-            for (Operation operation : operations) {
-                DeviceMgtAPIUtils.updateApplicationSubscriptionStatusIfRequired(device, operation);
-            }
+                    .updateOperationStatuses(deviceIdentifier, operations, operationStatus);
+            DeviceMgtAPIUtils.updateApplicationSubscriptionStatusIfRequired(device, operations, operationStatus);
             return Response.status(Response.Status.OK).entity("Operation statuses updated successfully.").build();
         } catch (BadRequestException e) {
             String msg = "Error occurred due to invalid request";
             log.error(msg, e);
             return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+        } catch (DeviceNotFoundException e) {
+            String msg = "No enrolled device found for " + deviceIdentifier;
+            log.error(msg, e);
+            return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
         } catch (DeviceManagementException e) {
             String msg = "Error occurred when fetching device " + deviceIdentifier.toString();
             log.error(msg, e);

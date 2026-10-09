@@ -2859,12 +2859,12 @@ public interface DeviceManagementService {
             OperationStatusBean operationStatusBean);
 
     @PUT
-    @Path("/{deviceType}/{id}/operations/status")
+    @Path("/{deviceType}/{id}/operations/status/{status}")
     @ApiOperation(
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "PUT",
             value = "Update status of multiple operations",
-            notes = "Updates the status of multiple operations of a given device in Entgra IoT Server.",
+            notes = "Applies the given status to the listed operations of a given device in Entgra IoT Server.",
             tags = "Device Management",
             extensions = {
                     @Extension(properties = {
@@ -2895,6 +2895,10 @@ public interface DeviceManagementService {
                             message = "Bad Request. \n Invalid request or validation error.",
                             response = ErrorResponse.class),
                     @ApiResponse(
+                            code = 404,
+                            message = "Not Found. \n No enrolled device found for the given identifier.",
+                            response = ErrorResponse.class),
+                    @ApiResponse(
                             code = 500,
                             message = "Error occurred while updating operation statuses.",
                             response = ErrorResponse.class)
@@ -2908,7 +2912,17 @@ public interface DeviceManagementService {
                     name = "id",
                     value = "The device identifier")
             @PathParam("id") String deviceId,
-            BulkOperationStatusBean bulkOperationStatusBean);
+            @ApiParam(
+                    name = "status",
+                    value = "Status to apply to all listed operations, such as ERROR or COMPLETED.",
+                    required = true)
+            @PathParam("status") String status,
+            @ApiParam(
+                    name = "operations",
+                    value = "Operations to update. Each item needs id; code is needed for application " +
+                            "install/uninstall subscription sync.",
+                    required = true)
+            List<Operation> operations);
 
     @GET
     @Path("/filters")

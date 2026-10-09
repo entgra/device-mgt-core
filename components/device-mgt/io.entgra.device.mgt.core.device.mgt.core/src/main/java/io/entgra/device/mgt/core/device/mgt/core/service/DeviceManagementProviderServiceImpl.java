@@ -2912,8 +2912,9 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public Device updateOperationStatuses(DeviceIdentifier deviceIdentifier, List<Operation> operations)
-            throws DeviceManagementException, OperationManagementException {
+    public Device updateOperationStatuses(DeviceIdentifier deviceIdentifier, List<Operation> operations,
+                                          Operation.Status status)
+            throws DeviceManagementException, DeviceNotFoundException, OperationManagementException {
         try {
             int tenantId = this.getTenantId();
             DeviceType deviceTypeObj = DeviceManagerUtil.getDeviceType(deviceIdentifier.getType(), tenantId);
@@ -2923,9 +2924,13 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                 throw new BadRequestException(msg);
             }
             Device device = this.getDevice(deviceIdentifier, false);
-            for (Operation operation : operations) {
-                this.updateOperation(device, operation);
+            if (device == null || device.getEnrolmentInfo() == null) {
+                String msg = "No enrolled device found for " + deviceIdentifier;
+                log.error(msg);
+                throw new DeviceNotFoundException(msg);
             }
+            pluginRepository.getOperationManager(device.getType(), tenantId)
+                    .updateOperationStatuses(device, operations, status);
             return device;
         } catch (BadRequestException e) {
             String msg = "Invalid request while updating operation statuses for device " + deviceIdentifier;
