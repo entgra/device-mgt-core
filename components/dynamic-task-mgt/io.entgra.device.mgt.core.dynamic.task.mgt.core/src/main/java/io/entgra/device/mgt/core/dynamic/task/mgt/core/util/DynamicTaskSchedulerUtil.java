@@ -20,6 +20,7 @@ package io.entgra.device.mgt.core.dynamic.task.mgt.core.util;
 
 import io.entgra.device.mgt.core.task.mgt.common.bean.DynamicTask;
 import io.entgra.device.mgt.core.task.mgt.common.exception.TaskManagementException;
+import io.entgra.device.mgt.core.task.mgt.common.exception.TaskNotFoundException;
 import io.entgra.device.mgt.core.dynamic.task.mgt.common.bean.CategorizedDynamicTask;
 import io.entgra.device.mgt.core.dynamic.task.mgt.common.exception.DynamicTaskManagementException;
 import io.entgra.device.mgt.core.dynamic.task.mgt.common.exception.DynamicTaskScheduleException;
@@ -64,10 +65,12 @@ public class DynamicTaskSchedulerUtil {
      *
      * @param categorizedDynamicTask {@link CategorizedDynamicTask}
      * @param taskOwnTenantId Tenant ID of the task owner
+     * @return Scheduled {@link DynamicTask}, carrying the dynamic task ID assigned by the task management service.
      * @throws DynamicTaskScheduleException Throws when error encountered while scheduling the task.
      */
-    public static void scheduleDynamicTask(CategorizedDynamicTask categorizedDynamicTask, int taskOwnTenantId,
-                                           String taskOwnTenantDomain) throws DynamicTaskScheduleException {
+    public static DynamicTask scheduleDynamicTask(CategorizedDynamicTask categorizedDynamicTask, int taskOwnTenantId,
+                                                  String taskOwnTenantDomain) throws DynamicTaskScheduleException {
+        DynamicTask dynamicTask = getDynamicTask(categorizedDynamicTask, taskOwnTenantId, taskOwnTenantDomain);
         try {
             if (!Objects.equals(PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain(),
                     MultitenantConstants.SUPER_TENANT_DOMAIN_NAME)) {
@@ -75,19 +78,41 @@ public class DynamicTaskSchedulerUtil {
                     PrivilegedCarbonContext.startTenantFlow();
                     PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(MultitenantConstants.SUPER_TENANT_DOMAIN_NAME, true);
                     DynamicTaskManagementExtensionServiceDataHolder.getInstance().getTaskManagementService()
-                            .createTask(getDynamicTask(categorizedDynamicTask, taskOwnTenantId, taskOwnTenantDomain));
+                            .createTask(dynamicTask);
                 } finally {
                     PrivilegedCarbonContext.endTenantFlow();
                 }
             } else {
                 DynamicTaskManagementExtensionServiceDataHolder.getInstance().getTaskManagementService()
-                        .createTask(getDynamicTask(categorizedDynamicTask, taskOwnTenantId, taskOwnTenantDomain));
+                        .createTask(dynamicTask);
             }
         } catch (TaskManagementException e) {
             String msg =
                     "Failed to create the dynamic task for categorized dynamic task [" + categorizedDynamicTask.getCategoryCode() + "]";
             log.error(msg);
             throw new DynamicTaskScheduleException(msg, e);
+        }
+        return dynamicTask;
+    }
+
+    /**
+     * Delete a scheduled dynamic task from super tenant space.
+     *
+     * @param dynamicTaskId ID of the dynamic task to delete.
+     * @throws DynamicTaskScheduleException Throws when error encountered while deleting the task.
+     */
+    public static void deleteDynamicTask(int dynamicTaskId) throws DynamicTaskScheduleException {
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(MultitenantConstants.SUPER_TENANT_DOMAIN_NAME, true);
+            DynamicTaskManagementExtensionServiceDataHolder.getInstance().getTaskManagementService()
+                    .deleteTask(dynamicTaskId);
+        } catch (TaskManagementException | TaskNotFoundException e) {
+            String msg = "Failed to delete the dynamic task [" + dynamicTaskId + "]";
+            log.error(msg, e);
+            throw new DynamicTaskScheduleException(msg, e);
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
         }
     }
 

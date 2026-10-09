@@ -88,7 +88,8 @@ public class CategorizedDynamicTask {
 
     public boolean isContentEquals(CategorizedDynamicTask categorizedDynamicTask) {
         return enable == categorizedDynamicTask.enable && frequency == categorizedDynamicTask.frequency && Objects.equals(categoryCode,
-                categorizedDynamicTask.categoryCode) && Objects.equals(deviceTypes, categorizedDynamicTask.deviceTypes);
+                categorizedDynamicTask.categoryCode) && Objects.equals(deviceTypes, categorizedDynamicTask.deviceTypes)
+                && Objects.equals(operationCodes, categorizedDynamicTask.operationCodes);
     }
 
     @Override
