@@ -28,6 +28,7 @@ public class PaginationRequest {
     private int startIndex;
     private int rowCount;
     private int groupId;
+    private int tagId;
     private String owner;
     private String ownerPattern;
     private String deviceType;
@@ -84,6 +85,14 @@ public class PaginationRequest {
 
     public void setGroupId(int groupId) {
         this.groupId = groupId;
+    }
+
+    public int getTagId() {
+        return tagId;
+    }
+
+    public void setTagId(int tagId) {
+        this.tagId = tagId;
     }
 
     public String getOwner() {
