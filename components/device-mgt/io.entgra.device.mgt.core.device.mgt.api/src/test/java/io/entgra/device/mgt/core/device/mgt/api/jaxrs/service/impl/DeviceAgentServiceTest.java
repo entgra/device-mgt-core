@@ -178,6 +178,48 @@ public class DeviceAgentServiceTest {
         Mockito.reset(this.deviceManagementProviderService);
     }
 
+    @Test(description = "Test re-enrollment by the existing owner of a non-active device succeeds.")
+    public void testEnrollDeviceByExistingOwnerSuccess() throws DeviceManagementException {
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getDeviceManagementService"))
+                .toReturn(this.deviceManagementProviderService);
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getAuthenticatedUser"))
+                .toReturn(AUTHENTICATED_USER);
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getPolicyManagementService"))
+                .toReturn(policyManagerService);
+        Device device = DeviceMgtAPITestHelper.generateDummyDevice(TEST_DEVICE_TYPE, TEST_DEVICE_IDENTIFIER);
+        device.getEnrolmentInfo().setOwner(AUTHENTICATED_USER);
+        device.getEnrolmentInfo().setStatus(EnrolmentInfo.Status.CREATED);
+        Mockito.when(this.deviceManagementProviderService
+                .getDevice(Mockito.any(DeviceIdentifier.class), Mockito.any(Boolean.class))).thenReturn(device);
+        Response response = this.deviceAgentService.enrollDevice(device);
+        Assert.assertNotNull(response, "Response should not be null");
+        Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode(),
+                "The response status should be 200");
+        Mockito.verify(this.deviceManagementProviderService, Mockito.times(1)).enrollDevice(Mockito.any());
+        Mockito.reset(this.deviceManagementProviderService);
+    }
+
+    @Test(description = "Test enrolling a non-active device owned by a different user is forbidden.")
+    public void testEnrollDeviceOwnedByDifferentUserForbidden() throws DeviceManagementException {
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getDeviceManagementService"))
+                .toReturn(this.deviceManagementProviderService);
+        PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getAuthenticatedUser"))
+                .toReturn("user2");
+        Device existingDevice = DeviceMgtAPITestHelper.generateDummyDevice(TEST_DEVICE_TYPE, TEST_DEVICE_IDENTIFIER);
+        existingDevice.getEnrolmentInfo().setOwner(AUTHENTICATED_USER);
+        existingDevice.getEnrolmentInfo().setStatus(EnrolmentInfo.Status.CREATED);
+        Mockito.when(this.deviceManagementProviderService
+                .getDevice(Mockito.any(DeviceIdentifier.class), Mockito.any(Boolean.class)))
+                .thenReturn(existingDevice);
+        Device device = DeviceMgtAPITestHelper.generateDummyDevice(TEST_DEVICE_TYPE, TEST_DEVICE_IDENTIFIER);
+        Response response = this.deviceAgentService.enrollDevice(device);
+        Assert.assertNotNull(response, "Response should not be null");
+        Assert.assertEquals(response.getStatus(), Response.Status.FORBIDDEN.getStatusCode(),
+                "The response status should be 403");
+        Mockito.verify(this.deviceManagementProviderService, Mockito.never()).enrollDevice(Mockito.any());
+        Mockito.reset(this.deviceManagementProviderService);
+    }
+
     @Test(description = "Test the device enrollment with device management exception.")
     public void testEnrollDeviceWithDeviceManagementException() throws DeviceManagementException {
         PowerMockito.stub(PowerMockito.method(DeviceMgtAPIUtils.class, "getDeviceManagementService"))
