@@ -31,6 +31,18 @@ public interface PluginDAO {
 
     boolean updateDevice(Device device) throws DeviceTypeMgtPluginException;
 
+    /**
+     * Updates only the properties present in {@code device.getProperties()} whose value is
+     * non-null, leaving every other column/property untouched. Unlike {@link #updateDevice(Device)},
+     * which replaces the full row (and so nulls out any column not present in the given list),
+     * this performs a targeted update of just the supplied, non-null properties. A property whose
+     * name is not a known, declared property for this device type is ignored.
+     *
+     * @param device device identifier plus the (possibly partial) properties to write
+     * @return true if at least one property was written, false if there was nothing to update
+     */
+    boolean partialUpdateDevice(Device device) throws DeviceTypeMgtPluginException;
+
     List<Device> getAllDevices() throws DeviceTypeMgtPluginException;
 
     boolean deleteDevices(List<String> deviceIdentifiers) throws DeviceTypeMgtPluginException;

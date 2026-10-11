@@ -806,6 +806,20 @@ public interface DeviceManagementProviderService {
 
     boolean updateProperties(DeviceIdentifier deviceId, List<Device.Property> properties) throws DeviceManagementException;
 
+    /**
+     * Updates only the given, non-null device properties, leaving every other property
+     * untouched. Unlike {@link #updateProperties(DeviceIdentifier, List)}, which replaces the
+     * full property set for the device (nulling out anything not present in {@code properties}),
+     * this writes only the supplied properties whose value is non-null.
+     *
+     * @param deviceId   identifier of the device to update
+     * @param properties properties to write; entries with a null value are skipped entirely
+     * @return true if at least one property was written
+     * @throws DeviceManagementException if the update could not be performed
+     */
+    boolean partialUpdateDeviceProperties(DeviceIdentifier deviceId, List<Device.Property> properties)
+            throws DeviceManagementException;
+
     Operation getOperationByDeviceAndOperationId(DeviceIdentifier deviceId, int operationId)
             throws OperationManagementException;
 

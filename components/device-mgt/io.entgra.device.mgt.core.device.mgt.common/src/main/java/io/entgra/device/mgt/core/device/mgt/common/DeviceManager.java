@@ -147,6 +147,22 @@ public interface DeviceManager {
     boolean updateDeviceProperties(DeviceIdentifier deviceId,  List<Device.Property> list) throws DeviceManagementException;
 
     /**
+     * Method to update a device's properties without overwriting properties that are not present
+     * in the given list. Unlike {@link #updateDeviceProperties(DeviceIdentifier, List)}, which
+     * replaces every known property (nulling out any not present in the given list), this method
+     * only writes the properties present in {@code list} whose value is non-null; all other
+     * properties are left untouched. A property with a null value is skipped entirely, not
+     * persisted as null.
+     *
+     * @param deviceId identifier to identify the device
+     * @param list      device properties to write; entries with a null value are ignored
+     * @return A boolean indicating whether any property was actually written.
+     * @throws DeviceManagementException If some unusual behaviour is observed while updating the device properties
+     */
+    boolean partialUpdateDeviceProperties(DeviceIdentifier deviceId, List<Device.Property> list)
+            throws DeviceManagementException;
+
+    /**
      * Method to update device information.
      *
      * @param deviceIdentifier identifier to identify the device
