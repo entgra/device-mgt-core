@@ -30,6 +30,13 @@ correct behaviour looks like in the core services and Device Management API.
 | Device Management API contract | [io.entgra.device.mgt.core.device.mgt.api/Specs/device_management_api_contract.md](../io.entgra.device.mgt.core.device.mgt.api/Specs/device_management_api_contract.md) |
 | Device type OS version labels | [device-type-os-version-labels.md](device-type-os-version-labels.md) |
 
+### Policies
+
+| Feature | Spec |
+| --- | --- |
+| Policy management (assignment, lifecycle, evaluation, list filters incl. `groupId`) | [policy-mgt.md](policy-mgt.md) |
+| Policy Management REST API contract | [policy_management_api_contract.md](../io.entgra.device.mgt.core.device.mgt.api/Specs/policy_management_api_contract.md) |
+
 ## Planned feature areas (add specs when touched)
 
 - Device enrollment

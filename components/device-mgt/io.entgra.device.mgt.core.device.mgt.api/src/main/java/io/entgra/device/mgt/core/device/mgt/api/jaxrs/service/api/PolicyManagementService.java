@@ -939,6 +939,12 @@ public interface PolicyManagementService {
             @QueryParam("deviceType")
             String deviceType,
             @ApiParam(
+                    name = "groupId",
+                    value = "When provided, returns only the policies assigned to the device group with this id.",
+                    required = false)
+            @QueryParam("groupId")
+            int groupId,
+            @ApiParam(
                     name = "If-Modified-Since",
                     value = "Checks if the requested variant was modified, since the specified date-time. \n" +
                             "Provide the value in the following format: EEE, d MMM yyyy HH:mm:ss Z.\n" +

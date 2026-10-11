@@ -509,6 +509,7 @@ public class PolicyManagementServiceImpl implements PolicyManagementService {
             @QueryParam("status") String status,
             @DefaultValue("false") @QueryParam("updated") boolean includeUpdated,
             @QueryParam("deviceType") String deviceType,
+            @QueryParam("groupId") int groupId,
             @HeaderParam("If-Modified-Since") String ifModifiedSince,
             @QueryParam("offset") int offset,
             @QueryParam("limit") int limit) {
@@ -529,6 +530,9 @@ public class PolicyManagementServiceImpl implements PolicyManagementService {
         request.setIncludeUpdated(includeUpdated);
         if (deviceType != null) {
             request.setDeviceType(deviceType);
+        }
+        if (groupId > 0) {
+            request.setGroupId(groupId);
         }
         try {
             PolicyAdministratorPoint policyAdministratorPoint = policyManagementService.getPAP();
