@@ -249,15 +249,6 @@ public class FCMUtil {
         if (TENANT_CREDENTIALS_MAP.containsKey(tenantId)) {
             return TENANT_CREDENTIALS_MAP.get(tenantId);
         }
-        // DIAGNOSTIC (temporary): this fallback is silent by design, but a tenant that is expected
-        // to have its own service-account.json falling back to the default/super-tenant project is
-        // the most likely cause of a tenant-scoped "device never gets notified" symptom (the send
-        // succeeds, but against the wrong Firebase project, so FCM returns 404 for a token that is
-        // actually valid under the tenant's own project).
-        log.warn("[FCM-DIAG] No tenant-specific FCM credentials found for tenantId=" + tenantId
-                + ". Falling back to default/super-tenant credentials (projectId="
-                + (TENANT_CREDENTIALS_MAP.get(SUPER_TENANT_ID) != null
-                   ? TENANT_CREDENTIALS_MAP.get(SUPER_TENANT_ID).getProjectId() : "null") + ").");
         return TENANT_CREDENTIALS_MAP.get(SUPER_TENANT_ID);
     }
 

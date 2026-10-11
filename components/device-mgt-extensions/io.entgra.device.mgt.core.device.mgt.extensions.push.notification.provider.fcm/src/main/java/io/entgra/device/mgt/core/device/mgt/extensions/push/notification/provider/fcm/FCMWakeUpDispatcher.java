@@ -29,7 +29,6 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -112,16 +111,9 @@ public class FCMWakeUpDispatcher {
                 return t;
             }
         };
-        // DIAGNOSTIC (temporary): DiscardOldestPolicy silently drops the oldest queued-but-not-yet-
-        // started wake-up call when the queue is full, with no log output and no reschedule callback.
-        // Wrap it so a queue-full discard is at least visible in production logs.
-        RejectedExecutionHandler loggingDiscardOldest = (r, executor) -> {
-            log.warn("[FCM-DIAG] " + name + " queue is full (capacity=" + queueCapacity
-                    + "); discarding the oldest queued FCM wake-up call without rescheduling it.");
-            new ThreadPoolExecutor.DiscardOldestPolicy().rejectedExecution(r, executor);
-        };
         return new ThreadPoolExecutor(poolSize, poolSize, 60L, TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(queueCapacity), threadFactory, loggingDiscardOldest);
+                new ArrayBlockingQueue<>(queueCapacity), threadFactory,
+                new ThreadPoolExecutor.DiscardOldestPolicy());
     }
 
     /**

@@ -79,17 +79,6 @@ public class FCMNotificationStrategy implements NotificationStrategy {
                     String registrationId = getFCMToken(device.getProperties());
                     String deviceIdentifier = device.getDeviceIdentifier();
                     FCMCredentials credentials = FCMUtil.getInstance().getFCMCredentials(tenantId);
-                    // DIAGNOSTIC (temporary): surface which FCM project a send actually resolves to,
-                    // so a tenant-credential fallback/mismatch shows up without enabling full debug.
-                    if (credentials != null) {
-                        log.info("[FCM-DIAG] device=" + deviceIdentifier + " requestedTenantId=" + tenantId
-                                + " resolvedCredentialTenantId=" + credentials.getTenantId()
-                                + " projectId=" + credentials.getProjectId()
-                                + " fallbackToDefault=" + (credentials.getTenantId() != tenantId));
-                    } else {
-                        log.warn("[FCM-DIAG] device=" + deviceIdentifier + " tenantId=" + tenantId
-                                + " resolved FCMCredentials is null - no default or tenant credentials loaded");
-                    }
 
                     Operation operation = ctx.getOperation();
                     // Task initiated operations are persisted with initiatedBy = SYSTEM; user
@@ -112,20 +101,12 @@ public class FCMNotificationStrategy implements NotificationStrategy {
                             .build();
 
                     FCMWakeUpDispatcher.getInstance().dispatch(request);
-                } else {
-                    // DIAGNOSTIC (temporary): this branch previously produced NO log output at any
-                    // level, so a device silently skipped here was indistinguishable from one that
-                    // was never asked to be notified at all.
-                    log.warn("[FCM-DIAG] Skipping FCM wake-up for device " + device.getDeviceIdentifier()
-                            + " tenantId=" + tenantId + " propertiesNull=" + (device.getProperties() == null)
-                            + " fcmTokenNull=" + (device.getProperties() != null
-                            && getFCMToken(device.getProperties()) == null));
                 }
             } else {
-                // DIAGNOSTIC (temporary): elevated from debug-only so a tenant whose platform
-                // notifier type isn't FCM is visible without enabling full debug logging.
-                log.warn("[FCM-DIAG] Not using FCM notifier for device " + ctx.getDeviceId().getId()
-                        + " as notifier type is set to " + config.getType() + " in Platform Configurations.");
+                if (log.isDebugEnabled()) {
+                    log.debug("Not using FCM notifier as notifier type is set to " + config.getType() +
+                            " in Platform Configurations.");
+                }
             }
         } catch (DeviceManagementException e) {
             throw new PushNotificationExecutionFailedException("Error occurred while retrieving device information", e);
@@ -173,19 +154,17 @@ public class FCMNotificationStrategy implements NotificationStrategy {
                 .addHeader("Authorization", "Bearer " + accessToken)
                 .build();
         try (Response response = FCMUtil.getInstance().getHttpClient().newCall(request).execute()) {
-            // DIAGNOSTIC (temporary): elevated from debug-only so the actual FCM response code and
-            // the project the request was sent against are visible in production logs.
-            log.info("[FCM-DIAG] FCM response for device " + deviceIdentifier + " projectId="
-                    + fcmCredentials.getProjectId() + " responseCode=" + response.code()
-                    + " responseMessage=" + response.message());
+            if (log.isDebugEnabled()) {
+                log.debug("FCM message sent to the FCM server. Response code: " + response.code()
+                        + " Response message : " + response.message());
+            }
             if(!response.isSuccessful()) {
                 if (response.code() == HTTP_STATUS_CODE_NOT_FOUND) {
-                    // DIAGNOSTIC (temporary): a 404 here almost always means the registration ID
-                    // belongs to a different Firebase project than fcmCredentials.getProjectId() -
-                    // elevated from debug-only since this was previously silent at default log levels.
-                    log.warn("The device " + deviceIdentifier + " with FCM registration ID: "
-                            + registrationId + " was not registered in Google FCM servers under project "
-                            + fcmCredentials.getProjectId() + ", or the registration ID is expired");
+                    if (log.isDebugEnabled()) {
+                        log.debug("The device " + deviceIdentifier + "with FCM registration ID: "
+                                + registrationId + " was not registered in Google FCM servers, Or " +
+                                "the registration ID is expired");
+                    }
                     return;
                 }
                 String msg = "Received FCM Response [Status: " + response.code() + ", Response Message: "
