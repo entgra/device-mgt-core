@@ -377,6 +377,10 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
             devices.setList((List<Device>) result.getData());
             devices.setCount(result.getRecordsTotal());
             return Response.status(Response.Status.OK).entity(devices).build();
+        } catch (BadRequestException e) {
+            log.error(e.getMessage(), e);
+            return Response.status(Response.Status.BAD_REQUEST).entity(
+                    new ErrorResponse.ErrorResponseBuilder().setMessage(e.getMessage()).build()).build();
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while fetching all enrolled devices";
             log.error(msg, e);

@@ -6092,7 +6092,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         if (request == null) {
             String msg = "Received incomplete pagination request for method getDevicesNotInTag";
             log.error(msg);
-            throw new DeviceManagementException(msg);
+            throw new BadRequestException(msg);
         }
         if (log.isDebugEnabled()) {
             log.debug("Get devices not in tag with pagination " + request.toString() +
