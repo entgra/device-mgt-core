@@ -4838,8 +4838,48 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             } finally {
                 DeviceManagementDAOFactory.closeConnection();
             }
+            enrichDeviceTypeVersionLabels(typeName, versions);
         }
         return versions;
+    }
+
+    /**
+     * Attach optional display labels from the device-type XML onto persisted version rows.
+     * VersionName remains the stored/API value used for range validation.
+     */
+    private void enrichDeviceTypeVersionLabels(String typeName, List<DeviceTypeVersion> versions) {
+        if (versions == null || versions.isEmpty()) {
+            return;
+        }
+        try {
+            DeviceManagementService deviceManagementService =
+                    pluginRepository.getDeviceManagementService(typeName, this.getTenantId());
+            if (deviceManagementService == null) {
+                return;
+            }
+            DeviceTypePlatformDetails platformDetails =
+                    deviceManagementService.getDeviceTypePlatformDetails();
+            if (platformDetails == null || platformDetails.getDeviceTypePlatformVersion() == null) {
+                return;
+            }
+            Map<String, String> versionLabels = new HashMap<>();
+            for (DeviceTypePlatformVersion platformVersion :
+                    platformDetails.getDeviceTypePlatformVersion()) {
+                if (StringUtils.isNotEmpty(platformVersion.getVersionsName())
+                        && StringUtils.isNotEmpty(platformVersion.getVersionLabel())) {
+                    versionLabels.put(platformVersion.getVersionsName(),
+                            platformVersion.getVersionLabel());
+                }
+            }
+            for (DeviceTypeVersion version : versions) {
+                String label = versionLabels.get(version.getVersionName());
+                if (StringUtils.isNotEmpty(label)) {
+                    version.setVersionLabel(label);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Unable to enrich OS version labels for device type: " + typeName, e);
+        }
     }
 
     @Override

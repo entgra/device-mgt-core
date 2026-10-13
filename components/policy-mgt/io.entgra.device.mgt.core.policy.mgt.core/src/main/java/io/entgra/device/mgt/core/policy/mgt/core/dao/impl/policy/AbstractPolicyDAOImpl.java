@@ -1688,6 +1688,7 @@ public abstract class AbstractPolicyDAOImpl implements PolicyDAO {
         String status = request.getStatus();
         boolean includeUpdated = request.isIncludeUpdated();
         String deviceType = request.getDeviceType();
+        int groupId = request.getGroupId();
         int statusValue = "ACTIVE".equals(status) ? 1 : 0;
 
         StringBuilder query = new StringBuilder("SELECT COUNT(P.ID) AS POLICY_COUNT " +
@@ -1707,6 +1708,12 @@ public abstract class AbstractPolicyDAOImpl implements PolicyDAO {
         if (deviceType != null && !deviceType.isEmpty()) {
             query.append("AND PR.DEVICE_TYPE = ? ");
         }
+        if (groupId > 0) {
+            query.append("AND EXISTS " +
+                    "(SELECT 1 FROM DM_DEVICE_GROUP_POLICY GP " +
+                    "WHERE GP.POLICY_ID = P.ID " +
+                    "AND GP.DEVICE_GROUP_ID = ?) ");
+        }
 
         try (PreparedStatement stmt = this.getConnection().prepareStatement(query.toString())) {
             int paramIdx = 1;
@@ -1724,7 +1731,10 @@ public abstract class AbstractPolicyDAOImpl implements PolicyDAO {
                 stmt.setInt(paramIdx++, 1);
             }
             if (deviceType != null && !deviceType.isEmpty()) {
-                stmt.setString(paramIdx, deviceType);
+                stmt.setString(paramIdx++, deviceType);
+            }
+            if (groupId > 0) {
+                stmt.setInt(paramIdx, groupId);
             }
             try (ResultSet resultSet = stmt.executeQuery()) {
                 return resultSet.next() ? resultSet.getInt("POLICY_COUNT") : 0;

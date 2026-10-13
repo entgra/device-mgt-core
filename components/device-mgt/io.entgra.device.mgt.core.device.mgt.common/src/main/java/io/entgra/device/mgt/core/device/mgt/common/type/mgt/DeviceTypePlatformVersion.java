@@ -24,12 +24,16 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "DeviceTypePlatformVersion", propOrder = {
-        "versionsName"
+        "versionsName",
+        "versionLabel"
 })
 public class DeviceTypePlatformVersion {
 
     @XmlElement(name = "VersionName", required = true)
     private String versionsName;
+
+    @XmlElement(name = "VersionLabel", required = false)
+    private String versionLabel;
 
     public String getVersionsName() {
         return versionsName;
@@ -37,6 +41,14 @@ public class DeviceTypePlatformVersion {
 
     public void setVersionsName(String versionsName) {
         this.versionsName = versionsName;
+    }
+
+    public String getVersionLabel() {
+        return versionLabel;
+    }
+
+    public void setVersionLabel(String versionLabel) {
+        this.versionLabel = versionLabel;
     }
 }
 
