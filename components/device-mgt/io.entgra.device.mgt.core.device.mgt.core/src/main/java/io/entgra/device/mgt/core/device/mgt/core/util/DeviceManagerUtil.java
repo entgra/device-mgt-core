@@ -1303,4 +1303,17 @@ public final class DeviceManagerUtil {
             device.setDescription(device.getDescription().trim());
         }
     }
+
+    /**
+     * Publishes an admin notification for device delete/disenroll outcomes.
+     * Failures are logged only so notification errors do not fail the device operation.
+     */
+    public static void publishDeviceNotification(int tenantId, String message) {
+        try {
+            DeviceManagementDataHolder.getInstance().getNotificationManagementService()
+                    .handleTaskNotificationIfApplicable(tenantId, message);
+        } catch (io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementException e) {
+            log.error("Error occurred while publishing device notification: " + message, e);
+        }
+    }
 }

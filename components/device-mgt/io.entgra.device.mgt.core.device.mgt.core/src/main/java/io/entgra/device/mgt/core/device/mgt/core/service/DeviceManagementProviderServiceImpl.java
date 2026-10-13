@@ -766,19 +766,31 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                             .setTenantID(String.valueOf(tenantId))
                             .setTenantDomain(tenantDomain)
                             .setUserName(userName).build());
+            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+                    "Device '%s' (%s) was disenrolled successfully.",
+                    deviceId.getId(), deviceId.getType()));
         } catch (DeviceManagementDAOException e) {
             DeviceManagementDAOFactory.rollbackTransaction();
             String msg = "Error occurred while dis-enrolling '" + deviceId.getType() +
                     "' device with the identifier '" + deviceId.getId() + "'";
             log.error(msg, e);
+            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+                    "Failed to disenroll device '%s' (%s).",
+                    deviceId.getId(), deviceId.getType()));
             throw new DeviceManagementException(msg, e);
         } catch (TransactionManagementException e) {
             String msg = "Error occurred while initiating transaction";
             log.error(msg, e);
+            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+                    "Failed to disenroll device '%s' (%s).",
+                    deviceId.getId(), deviceId.getType()));
             throw new DeviceManagementException(msg, e);
         } catch (Exception e) {
             String msg = "Error occurred while dis-enrolling device: " + deviceId.getId();
             log.error(msg, e);
+            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+                    "Failed to disenroll device '%s' (%s).",
+                    deviceId.getId(), deviceId.getType()));
             throw new DeviceManagementException(msg, e);
         } finally {
             DeviceManagementDAOFactory.closeConnection();
@@ -831,19 +843,32 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             addDeviceStatus(deviceStatusManagementService, tenantId, updatedRows, device.getEnrolmentInfo(), device.getType());
             DeviceManagementDAOFactory.commitTransaction();
             this.removeDeviceFromCache(deviceId);
+            log.info("Device removed successfully: " + deviceId.getId() + " of type '" + deviceId.getType() + "'");
+            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+                    "Device '%s' (%s) was removed successfully.",
+                    deviceId.getId(), deviceId.getType()));
         } catch (DeviceManagementDAOException e) {
             DeviceManagementDAOFactory.rollbackTransaction();
             String msg = "Error occurred while removing '" + deviceId.getType() +
                     "' device with the identifier '" + deviceId.getId() + "'";
             log.error(msg, e);
+            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+                    "Failed to remove device '%s' (%s).",
+                    deviceId.getId(), deviceId.getType()));
             throw new DeviceManagementException(msg, e);
         } catch (TransactionManagementException e) {
             String msg = "Error occurred while initiating transaction";
             log.error(msg, e);
+            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+                    "Failed to remove device '%s' (%s).",
+                    deviceId.getId(), deviceId.getType()));
             throw new DeviceManagementException(msg, e);
         } catch (Exception e) {
             String msg = "Error occurred while removing device: " + deviceId.getId();
             log.error(msg, e);
+            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+                    "Failed to remove device '%s' (%s).",
+                    deviceId.getId(), deviceId.getType()));
             throw new DeviceManagementException(msg, e);
         } finally {
             DeviceManagementDAOFactory.closeConnection();
@@ -947,9 +972,9 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             }
             DeviceManagementDAOFactory.commitTransaction();
             this.removeDevicesFromCache(deviceCacheKeyList);
-            if (log.isDebugEnabled()) {
-                log.debug("Successfully permanently deleted the details of devices : " + validDeviceIdentifiers);
-            }
+            log.info("Successfully permanently deleted the details of devices : " + validDeviceIdentifiers);
+            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+                    "Device(s) %s were permanently deleted successfully.", validDeviceIdentifiers));
             if (HttpReportingUtil.isTrackerEnabled()) {
                 for (int enrollmentId : enrollmentIds) {
                     DeviceManagementDataHolder.getInstance().getTraccarManagementService().removeDevice(enrollmentId);
@@ -963,12 +988,16 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         } catch (TransactionManagementException e) {
             String msg = "Error occurred while initiating transaction";
             log.error(msg, e);
+            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+                    "Failed to permanently delete device(s) %s.", deviceIdentifiers));
             throw new DeviceManagementException(msg, e);
         } catch (DeviceManagementDAOException e) {
             DeviceManagementDAOFactory.rollbackTransaction();
             String msg = "Error occurred while permanently deleting '" + deviceIdentifiers +
                     "' devices";
             log.error(msg, e);
+            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+                    "Failed to permanently delete device(s) %s.", deviceIdentifiers));
             throw new DeviceManagementException(msg, e);
         } finally {
             DeviceManagementDAOFactory.closeConnection();
