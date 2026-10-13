@@ -21,6 +21,7 @@ correct behaviour looks like in the core services and Device Management API.
 | Feature | Spec |
 | --- | --- |
 | Device name and description persistence | [device-name-description.md](device-name-description.md) |
+| Console delete / disenroll task notifications | [device-delete-notifications.md](device-delete-notifications.md) |
 
 ### Operations
 
@@ -42,7 +43,7 @@ correct behaviour looks like in the core services and Device Management API.
 - Device enrollment
 - Device list / search / filters
 - Device details / properties
-- Operations and notifications (partial: status update covered above)
+- Operations and notifications (partial: status update + delete/disenroll task notifications covered above)
 - Device access authorization
 
 ## Writing rules
