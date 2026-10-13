@@ -595,6 +595,92 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
         }
     }
 
+    @GET
+    @Path("/supported-devices/{deviceType}/{comModuleSubTypeId}")
+    @Override
+    public Response getSupportedDeviceTypesByModule(@PathParam("deviceType") String deviceType,
+                                                    @PathParam("comModuleSubTypeId") String comModuleSubTypeId) {
+        int moduleId;
+        try {
+            moduleId = Integer.parseInt(comModuleSubTypeId);
+        } catch (NumberFormatException e) {
+            String errorMessage = "Communication module subtype ID must be a valid integer.";
+            log.error(errorMessage);
+            return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
+        }
+        if (moduleId < 1 || deviceType == null || deviceType.trim().isEmpty()) {
+            String errorMessage = "Communication module subtype ID must be positive and device type cannot be empty.";
+            log.error(errorMessage);
+            return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
+        }
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        try {
+            List<DeviceSubType> deviceSubTypes = DeviceMgtAPIUtils.getDeviceSubTypeService()
+                    .getDeviceSubTypesByModule(moduleId, tenantId, deviceType);
+            List<SupportedDeviceTypeInfo> response = new ArrayList<>(deviceSubTypes.size());
+            for (DeviceSubType deviceSubType : deviceSubTypes) {
+                response.add(new SupportedDeviceTypeInfo(deviceSubType.getSubTypeId(),
+                        deviceSubType.getDeviceType(), deviceSubType.getSubTypeName()));
+            }
+            return Response.status(Response.Status.OK).entity(response).build();
+        } catch (SubTypeMgtPluginException e) {
+            String errorMessage = "Error occurred while retrieving device types supported by communication module " +
+                    "subtype ID: " + comModuleSubTypeId;
+            log.error(errorMessage, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(errorMessage).build();
+        }
+    }
+
+    @GET
+    @Path("/subtype-definition/{deviceType}/{subTypeId}")
+    @Override
+    public Response getDeviceTypeDefinition(@PathParam("deviceType") String deviceType,
+                                            @PathParam("subTypeId") String subTypeId) {
+        if (deviceType == null || deviceType.trim().isEmpty() || subTypeId == null || subTypeId.trim().isEmpty()) {
+            String errorMessage = "Device type and subtype ID cannot be empty.";
+            log.error(errorMessage);
+            return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
+        }
+        try {
+            int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+            DeviceTypeDefinition definition = DeviceMgtAPIUtils.getDeviceSubTypeService()
+                    .getDeviceTypeDefinition(subTypeId, tenantId, deviceType);
+            return Response.status(Response.Status.OK).entity(definition).build();
+        } catch (SubTypeMgtPluginException e) {
+            String errorMessage = "Error occurred while retrieving the type definition for subtype ID: " +
+                    subTypeId + " and device type: " + deviceType;
+            log.error(errorMessage, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(errorMessage).build();
+        }
+    }
+
+    @GET
+    @Path("/grn-list/{operationCode}/{deviceType}/{subTypeId}")
+    @Override
+    public Response getOperationRegisters(@PathParam("operationCode") String operationCode,
+                                          @PathParam("deviceType") String deviceType,
+                                          @PathParam("subTypeId") String subTypeId) {
+        if (deviceType == null || deviceType.trim().isEmpty() || subTypeId == null || subTypeId.trim().isEmpty() ||
+                operationCode == null || operationCode.trim().isEmpty()) {
+            String errorMessage = "Device type, subtype ID, and operation code cannot be empty.";
+            log.error(errorMessage);
+            return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
+        }
+        try {
+            List<String> registers = DeviceMgtAPIUtils.getOperationTemplateService()
+                    .getOperationRegisters(deviceType, subTypeId, operationCode);
+            if (registers == null) {
+                String errorMessage = "Operation template was not found.";
+                return Response.status(Response.Status.NOT_FOUND).entity(errorMessage).build();
+            }
+            return Response.status(Response.Status.OK).entity(registers).build();
+        } catch (OperationTemplateMgtPluginException e) {
+            String errorMessage = "Error occurred while retrieving registers for operation code: " + operationCode;
+            log.error(errorMessage, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(errorMessage).build();
+        }
+    }
+
     private static List<ComplianceFeature> getComplianceFeatures(Object compliancePayload) throws
                                                                                            PolicyComplianceException {
         String compliancePayloadString = new Gson().toJson(compliancePayload);

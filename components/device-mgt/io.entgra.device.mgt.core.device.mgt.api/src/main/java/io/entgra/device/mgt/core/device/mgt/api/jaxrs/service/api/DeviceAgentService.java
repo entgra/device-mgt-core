@@ -21,10 +21,12 @@ import io.entgra.device.mgt.core.apimgt.annotations.Scope;
 import io.entgra.device.mgt.core.apimgt.annotations.Scopes;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.OperationList;
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.SupportedDeviceTypeInfo;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.Constants;
 import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Operation;
 import io.swagger.annotations.*;
+import io.entgra.device.mgt.core.subtype.mgt.dto.DeviceTypeDefinition;
 
 import javax.validation.Valid;
 import javax.ws.rs.*;
@@ -88,6 +90,27 @@ import java.util.Map;
                         key = "dm:devices:ops:view",
                         roles = {"Internal/devicemgt-user"},
                         permissions = {"/device-mgt/devices/owning-device/operations/view"}
+                ),
+                @Scope(
+                        name = "View Module Supported Device Types",
+                        description = "View device types supported by a module",
+                        key = "dm:devices:modules:device-types:view",
+                        roles = {"Internal/devicemgt-user"},
+                        permissions = {"/device-mgt/devices/modules/device-types/view"}
+                ),
+                @Scope(
+                        name = "View Device Type Definition",
+                        description = "View the register mapping and supported operations for a device subtype",
+                        key = "dm:devices:type-definition:view",
+                        roles = {"Internal/devicemgt-user"},
+                        permissions = {"/device-mgt/devices/type-definition/view"}
+                ),
+                @Scope(
+                        name = "View Device Operation Registers",
+                        description = "View registers configured for a device subtype operation",
+                        key = "dm:devices:operations:registers:view",
+                        roles = {"Internal/devicemgt-user"},
+                        permissions = {"/device-mgt/devices/operations/registers/view"}
                 )
         }
 )
@@ -660,5 +683,102 @@ public interface DeviceAgentService {
                                             @PathParam("id") String deviceId,
                                             @ApiParam(name = "status", value = "status of the operation.", required = true)
                                             @QueryParam("status")Operation.Status status);
+
+    @GET
+    @Path("/supported-devices/{deviceType}/{comModuleSubTypeId}")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Getting Module Supported Device Types",
+            notes = "Retrieves the supported device types for the specified communication module subtype, " +
+                    "filtered by the requested device type.",
+            tags = "Device Agent Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE,
+                                    value = "dm:devices:modules:device-types:view")
+                    })
+            })
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK. Successfully retrieved the supported device types.",
+                    response = SupportedDeviceTypeInfo.class, responseContainer = "List"),
+            @ApiResponse(code = 400, message = "Bad Request. Invalid communication module subtype ID or device type.",
+                    response = ErrorResponse.class),
+            @ApiResponse(code = 404,
+                    message = "Not Found. The communication module subtype or requested device type was not found.",
+                    response = ErrorResponse.class),
+            @ApiResponse(code = 500,
+                    message = "Internal Server Error. Error occurred while retrieving supported device types.",
+                    response = ErrorResponse.class)
+    })
+    Response getSupportedDeviceTypesByModule(
+            @ApiParam(name = "deviceType", value = "The requested device type, such as meter/inverter/...",
+                    required = true)
+            @PathParam("deviceType") String deviceType,
+            @ApiParam(name = "comModuleSubTypeId", value = "The communication module subtype ID.", required = true)
+            @PathParam("comModuleSubTypeId") String comModuleSubTypeId);
+
+    @GET
+    @Path("/subtype-definition/{deviceType}/{subTypeId}")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Getting Device Subtype Definition",
+            notes = "Retrieves the register mapping and supported operations for the specified device subtype.",
+            tags = "Device Agent Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE,
+                                    value = "dm:devices:type-definition:view")
+                    })
+            })
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK. Successfully retrieved the device subtype definition.",
+                    response = DeviceTypeDefinition.class),
+            @ApiResponse(code = 400, message = "Bad Request. Invalid device type or subtype ID.",
+                    response = ErrorResponse.class),
+            @ApiResponse(code = 500, message = "Internal Server Error. Error occurred while retrieving the " +
+                    "device subtype definition.",
+                    response = ErrorResponse.class)
+    })
+    Response getDeviceTypeDefinition(
+            @ApiParam(name = "deviceType", value = "The device type, such as inverter or power-meter.",
+                    required = true)
+            @PathParam("deviceType") String deviceType,
+            @ApiParam(name = "subTypeId", value = "The device subtype ID.", required = true)
+            @PathParam("subTypeId") String subTypeId);
+
+    @GET
+    @Path("/grn-list/{operationCode}/{deviceType}/{subTypeId}")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Getting Device Operation GRN List",
+            notes = "Retrieves the GRN list configured for the specified operation, device type, and subtype.",
+            tags = "Device Agent Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE,
+                                    value = "dm:devices:operations:registers:view")
+                    })
+            })
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK. Successfully retrieved the operation GRN list.",
+                    response = String.class, responseContainer = "List"),
+            @ApiResponse(code = 400, message = "Bad Request. Invalid device type, subtype ID, or operation code.",
+                    response = ErrorResponse.class),
+            @ApiResponse(code = 404, message = "Not Found. The specified operation template was not found.",
+                    response = ErrorResponse.class),
+            @ApiResponse(code = 500, message = "Internal Server Error. Error occurred while retrieving the operation " +
+                    "GRN list.", response = ErrorResponse.class)
+    })
+    Response getOperationRegisters(
+            @ApiParam(name = "operationCode", value = "The operation code, such as REMOTE_RELAY_ON.", required = true)
+            @PathParam("operationCode") String operationCode,
+            @ApiParam(name = "deviceType", value = "The device type, such as inverter or power-meter.",
+                    required = true)
+            @PathParam("deviceType") String deviceType,
+            @ApiParam(name = "subTypeId", value = "The device subtype ID.", required = true)
+            @PathParam("subTypeId") String subTypeId);
 
 }

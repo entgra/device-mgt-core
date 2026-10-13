@@ -179,6 +179,23 @@ public class OperationTemplateServiceImpl implements OperationTemplateService {
         }
     }
 
+    @Override
+    public List<String> getOperationRegisters(String deviceType, String subTypeId, String operationCode)
+            throws OperationTemplateMgtPluginException {
+        validateGetOperationTemplate(subTypeId, deviceType, operationCode);
+        try {
+            ConnectionManagerUtils.openDBConnection();
+            return operationTemplateDAO.getOperationRegisters(deviceType, subTypeId, operationCode);
+        } catch (DBConnectionException | OperationTemplateManagementDAOException e) {
+            String msg = "Error occurred while retrieving registers for subtype ID: " + subTypeId +
+                    ", device type: " + deviceType + " and operation code: " + operationCode;
+            log.error(msg, e);
+            throw new OperationTemplateMgtPluginException(msg, e);
+        } finally {
+            ConnectionManagerUtils.closeDBConnection();
+        }
+    }
+
     /**
      * @param subTypeId
      * @param deviceType

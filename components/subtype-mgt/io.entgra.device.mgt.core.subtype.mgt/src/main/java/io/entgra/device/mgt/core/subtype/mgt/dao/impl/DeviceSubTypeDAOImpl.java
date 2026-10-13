@@ -18,10 +18,15 @@
 
 package io.entgra.device.mgt.core.subtype.mgt.dao.impl;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import io.entgra.device.mgt.core.subtype.mgt.dao.DeviceSubTypeDAO;
 import io.entgra.device.mgt.core.subtype.mgt.dao.util.ConnectionManagerUtil;
 import io.entgra.device.mgt.core.subtype.mgt.dao.util.DAOUtil;
 import io.entgra.device.mgt.core.subtype.mgt.dto.DeviceSubType;
+import io.entgra.device.mgt.core.subtype.mgt.dto.DeviceTypeDefinition;
 import io.entgra.device.mgt.core.subtype.mgt.exception.DBConnectionException;
 import io.entgra.device.mgt.core.subtype.mgt.exception.SubTypeMgtDAOException;
 import org.apache.commons.logging.Log;
@@ -31,11 +36,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 
 public class DeviceSubTypeDAOImpl implements DeviceSubTypeDAO {
     private static final Log log = LogFactory.getLog(DeviceSubTypeDAOImpl.class);
+    private static final String COMPATIBLE_COM_MODULE_IDS = "compatibleComModulesIds";
 
     @Override
     public boolean addDeviceSubType(DeviceSubType deviceSubType) throws SubTypeMgtDAOException {
@@ -131,6 +138,46 @@ public class DeviceSubTypeDAOImpl implements DeviceSubTypeDAO {
     }
 
     @Override
+    public DeviceTypeDefinition getDeviceTypeDefinition(String subTypeId, int tenantId, String deviceType)
+            throws SubTypeMgtDAOException {
+        try {
+            String sql = "SELECT TYPE_DEFINITION FROM DM_DEVICE_SUB_TYPE WHERE SUB_TYPE_ID = ? AND TENANT_ID = ? " +
+                    "AND DEVICE_TYPE = ?";
+            Connection conn = ConnectionManagerUtil.getDBConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, subTypeId);
+                stmt.setInt(2, tenantId);
+                stmt.setString(3, deviceType);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (!rs.next()) {
+                        return null;
+                    }
+                    String typeDefinitionJson = rs.getString("TYPE_DEFINITION");
+                    JsonObject typeDefinition = typeDefinitionJson == null ? new JsonObject() :
+                            new JsonParser().parse(typeDefinitionJson).getAsJsonObject();
+                    DeviceTypeDefinition response = new DeviceTypeDefinition();
+                    JsonElement registerMapping = typeDefinition.get("registerMapping");
+                    JsonElement supportedOperations = typeDefinition.get("supportedOperations");
+                    response.setRegisterMapping(registerMapping == null ? JsonNull.INSTANCE : registerMapping);
+                    response.setSupportedOperations(supportedOperations == null ? JsonNull.INSTANCE :
+                            supportedOperations);
+                    return response;
+                }
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining DB connection to retrieve the type definition for " +
+                    "subtype ID: " + subTypeId + " and device type: " + deviceType;
+            log.error(msg, e);
+            throw new SubTypeMgtDAOException(msg, e);
+        } catch (SQLException | RuntimeException e) {
+            String msg = "Error occurred while retrieving the type definition for subtype ID: " + subTypeId +
+                    " and device type: " + deviceType;
+            log.error(msg, e);
+            throw new SubTypeMgtDAOException(msg, e);
+        }
+    }
+
+    @Override
     public List<DeviceSubType> getAllDeviceSubTypes(int tenantId, String deviceType)
             throws SubTypeMgtDAOException {
         try {
@@ -156,6 +203,46 @@ public class DeviceSubTypeDAOImpl implements DeviceSubTypeDAO {
             String msg = "Error occurred while processing SQL to retrieve all device sub types for " + deviceType + " "
                     + "subtypes";
             log.error(msg);
+            throw new SubTypeMgtDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public List<DeviceSubType> getDeviceSubTypesByModule(int moduleId, int tenantId, String deviceType)
+            throws SubTypeMgtDAOException {
+        try {
+            List<DeviceSubType> supportedDeviceSubTypes = new ArrayList<>();
+            String sql = "SELECT * FROM DM_DEVICE_SUB_TYPE WHERE TENANT_ID = ? AND DEVICE_TYPE = ? ORDER BY SUB_TYPE_ID";
+            Connection conn = ConnectionManagerUtil.getDBConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, tenantId);
+                stmt.setString(2, deviceType);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        JsonElement compatibleModuleIds = new JsonParser()
+                                .parse(rs.getString("TYPE_DEFINITION"))
+                                .getAsJsonObject().get(COMPATIBLE_COM_MODULE_IDS);
+                        if (compatibleModuleIds == null || !compatibleModuleIds.isJsonArray()) {
+                            continue;
+                        }
+                        for (JsonElement compatibleModuleId : compatibleModuleIds.getAsJsonArray()) {
+                            if (String.valueOf(moduleId).equals(compatibleModuleId.getAsString())) {
+                                supportedDeviceSubTypes.add(DAOUtil.loadDeviceSubType(rs));
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            return supportedDeviceSubTypes;
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining DB connection to retrieve device sub types supported by " +
+                    "module ID: " + moduleId;
+            log.error(msg, e);
+            throw new SubTypeMgtDAOException(msg, e);
+        } catch (SQLException | RuntimeException e) {
+            String msg = "Error occurred while retrieving device sub types supported by module ID: " + moduleId;
+            log.error(msg, e);
             throw new SubTypeMgtDAOException(msg, e);
         }
     }

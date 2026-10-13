@@ -20,6 +20,7 @@ package io.entgra.device.mgt.core.subtype.mgt.spi;
 
 import io.entgra.device.mgt.core.subtype.mgt.dto.DeviceSubType;
 import io.entgra.device.mgt.core.subtype.mgt.exception.SubTypeMgtPluginException;
+import io.entgra.device.mgt.core.subtype.mgt.dto.DeviceTypeDefinition;
 
 import java.util.List;
 
@@ -33,7 +34,31 @@ public interface DeviceSubTypeService {
     DeviceSubType getDeviceSubType(String subTypeId, int tenantId, String deviceType)
             throws SubTypeMgtPluginException;
 
+    /**
+     * Retrieves the device type definition for the specified device subtype and tenant.
+     *
+     * @param subTypeId the identifier of the device subtype
+     * @param tenantId the identifier of the tenant
+     * @param deviceType the type of the device
+     * @return the device type definition
+     * @throws SubTypeMgtPluginException if an error occurs while retrieving the device type definition
+     */
+    DeviceTypeDefinition getDeviceTypeDefinition(String subTypeId, int tenantId, String deviceType)
+            throws SubTypeMgtPluginException;
+
     List<DeviceSubType> getAllDeviceSubTypes(int tenantId, String deviceType)
+            throws SubTypeMgtPluginException;
+
+    /**
+     * Retrieves the device subtypes associated with the specified module, tenant, and device type.
+     *
+     * @param moduleId the identifier of the module
+     * @param tenantId the identifier of the tenant
+     * @param deviceType the type of the device
+     * @return a list of matching device subtypes
+     * @throws SubTypeMgtPluginException if an error occurs while retrieving the device subtypes
+     */
+    List<DeviceSubType> getDeviceSubTypesByModule(int moduleId, int tenantId, String deviceType)
             throws SubTypeMgtPluginException;
 
     int getDeviceSubTypeCount(String deviceType) throws SubTypeMgtPluginException;
