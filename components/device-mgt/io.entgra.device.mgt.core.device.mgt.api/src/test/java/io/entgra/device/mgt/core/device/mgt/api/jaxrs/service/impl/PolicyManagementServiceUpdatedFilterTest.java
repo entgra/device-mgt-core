@@ -20,7 +20,7 @@ public class PolicyManagementServiceUpdatedFilterTest {
     @Test
     public void testUpdatedQueryParameterContract() throws Exception {
         Method method = PolicyManagementService.class.getMethod("getPolicyList", String.class, String.class,
-                String.class, boolean.class, String.class, String.class, int.class, int.class);
+                String.class, boolean.class, String.class, int.class, String.class, int.class, int.class);
         Annotation[] updatedAnnotations = method.getParameterAnnotations()[3];
 
         QueryParam queryParam = findAnnotation(updatedAnnotations, QueryParam.class);
