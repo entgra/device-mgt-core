@@ -130,6 +130,34 @@ public class GenericOperationDAOImpl implements OperationDAO {
     }
 
     @Override
+    public int updateOperationStatuses(int enrolmentId, List<Integer> operationIds, Operation.Status status)
+            throws OperationManagementDAOException {
+        String query = "UPDATE DM_ENROLMENT_OP_MAPPING " +
+                "SET STATUS = ?, " +
+                "UPDATED_TIMESTAMP = ? " +
+                "WHERE ENROLMENT_ID = ? " +
+                "AND OPERATION_ID IN (" +
+                operationIds.stream().map(ignored -> "?").collect(Collectors.joining(",")) + ")";
+        try {
+            Connection connection = OperationManagementDAOFactory.getConnection();
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                int index = 1;
+                stmt.setString(index++, status.toString());
+                stmt.setLong(index++, DeviceManagementDAOUtil.getCurrentUTCTime());
+                stmt.setInt(index++, enrolmentId);
+                for (Integer operationId : operationIds) {
+                    stmt.setInt(index++, operationId);
+                }
+                return stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while updating operation statuses of enrolment " + enrolmentId;
+            log.error(msg, e);
+            throw new OperationManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
     public DeviceOperationDetails getDeviceOperationDetails(int enrolmentId, int operationId)
             throws OperationManagementDAOException {
         DeviceOperationDetails deviceOperationDetails = null;

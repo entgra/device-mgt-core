@@ -763,6 +763,34 @@ public interface DeviceManagementProviderService {
 
     void updateOperation(Device device, Operation operation) throws OperationManagementException;
 
+    /**
+     * Validates that the device type exists, loads the device, and updates a single operation status.
+     *
+     * @param deviceIdentifier device type and identifier
+     * @param operation        operation with id, code, and status set
+     * @return the loaded device (for callers that need post-update side effects)
+     * @throws DeviceManagementException    if the device type is invalid or device retrieval fails
+     * @throws OperationManagementException if updating the operation fails
+     */
+    Device updateOperationStatus(DeviceIdentifier deviceIdentifier, Operation operation)
+            throws DeviceManagementException, OperationManagementException;
+
+    /**
+     * Validates that the device type exists, loads the device, and updates the status of multiple
+     * operations of that device in a single transaction.
+     *
+     * @param deviceIdentifier device type and identifier
+     * @param operations       operations with id and code set
+     * @param status           status to apply to all given operations
+     * @return the loaded device (for callers that need post-update side effects)
+     * @throws DeviceManagementException    if the device type is invalid or device retrieval fails
+     * @throws DeviceNotFoundException      if no device exists for the given identifier
+     * @throws OperationManagementException if updating the operation statuses fails
+     */
+    Device updateOperationStatuses(DeviceIdentifier deviceIdentifier, List<Operation> operations,
+                                   Operation.Status status)
+            throws DeviceManagementException, DeviceNotFoundException, OperationManagementException;
+
     boolean updateProperties(DeviceIdentifier deviceId, List<Device.Property> properties) throws DeviceManagementException;
 
     Operation getOperationByDeviceAndOperationId(DeviceIdentifier deviceId, int operationId)

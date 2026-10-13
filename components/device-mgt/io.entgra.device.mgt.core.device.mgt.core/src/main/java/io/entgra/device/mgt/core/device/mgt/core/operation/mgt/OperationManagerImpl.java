@@ -1148,6 +1148,65 @@ public class OperationManagerImpl implements OperationManager {
     }
 
     @Override
+    public void updateOperationStatuses(Device device, List<Operation> operations, Operation.Status status)
+            throws OperationManagementException {
+        int enrolmentId = device.getEnrolmentInfo().getId();
+        List<Integer> operationIds = new ArrayList<>();
+        for (Operation operation : operations) {
+            operationIds.add(operation.getId());
+        }
+        try {
+            OperationManagementDAOFactory.beginTransaction();
+            int updatedCount = operationDAO.updateOperationStatuses(enrolmentId, operationIds,
+                    io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation.Status
+                            .valueOf(status.toString()));
+            OperationManagementDAOFactory.commitTransaction();
+            if (updatedCount < operationIds.size()) {
+                log.warn("Updated " + updatedCount + " of " + operationIds.size() +
+                        " operation statuses for enrolment " + enrolmentId);
+            }
+        } catch (OperationManagementDAOException e) {
+            OperationManagementDAOFactory.rollbackTransaction();
+            String msg = "Error occurred while updating operation statuses of enrolment " + enrolmentId;
+            log.error(msg, e);
+            throw new OperationManagementException(msg, e);
+        } catch (TransactionManagementException e) {
+            String msg = "Error occurred while initiating a transaction to update operation statuses of enrolment "
+                    + enrolmentId;
+            log.error(msg, e);
+            throw new OperationManagementException(msg, e);
+        } finally {
+            OperationManagementDAOFactory.closeConnection();
+        }
+        int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
+        for (Operation operation : operations) {
+            try {
+                DeviceManagementDataHolder.getInstance().getNotificationManagementService()
+                        .handleOperationNotificationIfApplicable(operation.getCode(), status.toString(),
+                                device.getType(), Collections.singletonList(device.getId()), tenantId, "postSync");
+            } catch (NotificationManagementException e) {
+                log.error("Error occurred while handling notification for operation " + operation.getId() +
+                        " of enrolment " + enrolmentId, e);
+            }
+        }
+        boolean isPolicyRevokeCompleted = Operation.Status.COMPLETED.equals(status) && operations.stream()
+                .anyMatch(operation -> DeviceManagementConstants.AuthorizationSkippedOperationCodes
+                        .POLICY_REVOKE_OPERATION_CODE.equals(operation.getCode()));
+        if (isPolicyRevokeCompleted &&
+                EnrolmentInfo.Status.DISENROLLMENT_REQUESTED.equals(device.getEnrolmentInfo().getStatus())) {
+            try {
+                DeviceManagementDataHolder.getInstance().getDeviceManagementProvider()
+                        .removeDevice(new DeviceIdentifier(device.getDeviceIdentifier(), device.getType()));
+            } catch (DeviceManagementException e) {
+                String msg = "Error occurred while removing device " + device.getDeviceIdentifier() +
+                        " after policy revoke completion";
+                log.error(msg, e);
+                throw new OperationManagementException(msg, e);
+            }
+        }
+    }
+
+    @Override
     public Operation getOperationByDeviceAndOperationId(DeviceIdentifier deviceId, int operationId)
             throws OperationManagementException {
         Operation operation;
