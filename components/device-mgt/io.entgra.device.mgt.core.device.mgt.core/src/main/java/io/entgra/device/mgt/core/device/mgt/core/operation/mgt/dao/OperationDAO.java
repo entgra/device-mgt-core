@@ -74,6 +74,18 @@ public interface OperationDAO {
             throws OperationManagementDAOException;
 
     /**
+     * Updates the status of multiple operations of an enrolment in a single statement.
+     *
+     * @param enrolmentId  The enrolment ID of the device.
+     * @param operationIds IDs of the operations to update.
+     * @param status       The status to apply to all given operations.
+     * @return Number of enrolment operation mappings updated.
+     * @throws OperationManagementDAOException If an error occurs while updating the operation statuses.
+     */
+    int updateOperationStatuses(int enrolmentId, List<Integer> operationIds, Operation.Status status)
+            throws OperationManagementDAOException;
+
+    /**
      * Retrieves the details of a device operation for a given enrolment ID and operation ID.
      *
      * @param enrolmentId The enrolment ID of the device.

@@ -26,6 +26,7 @@ public class PolicyPaginationRequest {
     private String status;
     private boolean includeUpdated;
     private String deviceType;
+    private int groupId;
 
     public PolicyPaginationRequest(int start, int rowCount) {
         this.startIndex = start;
@@ -86,6 +87,14 @@ public class PolicyPaginationRequest {
 
     public void setDeviceType(String deviceType) {
         this.deviceType = deviceType;
+    }
+
+    public int getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(int groupId) {
+        this.groupId = groupId;
     }
 
     @Override

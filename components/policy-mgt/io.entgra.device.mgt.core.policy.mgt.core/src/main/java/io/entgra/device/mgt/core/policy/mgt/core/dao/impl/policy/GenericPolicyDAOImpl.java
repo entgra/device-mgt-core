@@ -50,12 +50,14 @@ public class GenericPolicyDAOImpl extends AbstractPolicyDAOImpl {
         String status = request.getStatus();
         boolean includeUpdated = request.isIncludeUpdated();
         String deviceType = request.getDeviceType();
+        int groupId = request.getGroupId();
         int statusValue = 0;
         boolean isPolicyNameProvided = false;
         boolean isPolicyTypeProvided = false;
         boolean isPolicyStatusProvided = false;
         boolean isPolicyUpdatedProvided = false;
         boolean isDeviceTypeProvided = false;
+        boolean isGroupIdProvided = false;
 
         try {
             conn = this.getConnection();
@@ -91,6 +93,14 @@ public class GenericPolicyDAOImpl extends AbstractPolicyDAOImpl {
                 isDeviceTypeProvided = true;
             }
 
+            if (groupId > 0) {
+                query += "AND EXISTS " +
+                        "(SELECT 1 FROM DM_DEVICE_GROUP_POLICY GP " +
+                        "WHERE GP.POLICY_ID = P.ID " +
+                        "AND GP.DEVICE_GROUP_ID = ?) ";
+                isGroupIdProvided = true;
+            }
+
             query += "ORDER BY P.PRIORITY ASC, P.ID LIMIT ?,?";
 
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -110,6 +120,9 @@ public class GenericPolicyDAOImpl extends AbstractPolicyDAOImpl {
                 }
                 if (isDeviceTypeProvided) {
                     stmt.setString(paramIdx++, deviceType);
+                }
+                if (isGroupIdProvided) {
+                    stmt.setInt(paramIdx++, groupId);
                 }
                 stmt.setInt(paramIdx++, request.getStartIndex());
                 stmt.setInt(paramIdx++, request.getRowCount());

@@ -229,7 +229,10 @@ public class ArchivalDAOImpl implements ArchivalDAO {
             Connection conn = ArchivalDestinationDAOFactory.getConnection();
 
             StringBuilder sql = new StringBuilder("INSERT INTO " + DESTINATION_DB + ".DM_DEVICE_OPERATION_RESPONSE_ARCH " +
-                    "SELECT OPR.ID, OPR.ENROLMENT_ID, OPR.OPERATION_ID, OPR.OPERATION_RESPONSE, OPR.RECEIVED_TIMESTAMP, NOW(), OPR.IS_LARGE_RESPONSE " +
+                    "(ID, ENROLMENT_ID, OPERATION_ID, EN_OP_MAP_ID, OPERATION_RESPONSE, RECEIVED_TIMESTAMP, " +
+                    "ARCHIVED_AT, IS_LARGE_RESPONSE" + ") " +
+                    "SELECT OPR.ID, OPR.ENROLMENT_ID, OPR.OPERATION_ID, OPR.EN_OP_MAP_ID, OPR.OPERATION_RESPONSE, " +
+                    "OPR.RECEIVED_TIMESTAMP, NOW(), OPR.IS_LARGE_RESPONSE " +
                     "FROM " + SOURCE_DB + ".DM_DEVICE_OPERATION_RESPONSE OPR " +
                     "WHERE OPR.RECEIVED_TIMESTAMP < ( DATE_SUB( ? , INTERVAL ? DAY))");
             if (nonRemovableMappings.size() > 0) {
@@ -278,7 +281,10 @@ public class ArchivalDAOImpl implements ArchivalDAO {
             Connection conn = ArchivalDestinationDAOFactory.getConnection();
 
             StringBuilder sql = new StringBuilder("INSERT INTO " + DESTINATION_DB + ".DM_DEVICE_OPERATION_RESPONSE_LARGE_ARCH " +
-                    "SELECT OPR.ID, OPR.OPERATION_RESPONSE, NOW() " +
+                    "(ID, OPERATION_RESPONSE, OPERATION_ID, EN_OP_MAP_ID, RECEIVED_TIMESTAMP, " +
+                    "DEVICE_IDENTIFICATION, ARCHIVED_AT) " +
+                    "SELECT OPR.ID, OPR.OPERATION_RESPONSE, OPR.OPERATION_ID, OPR.EN_OP_MAP_ID, " +
+                    "OPR.RECEIVED_TIMESTAMP, OPR.DEVICE_IDENTIFICATION, NOW() " +
                     "FROM " + SOURCE_DB + ".DM_DEVICE_OPERATION_RESPONSE_LARGE OPR " +
                     "WHERE OPR.RECEIVED_TIMESTAMP < ( DATE_SUB( ? , INTERVAL ? DAY))");
             if (nonRemovableMappings.size() > 0) {
@@ -466,7 +472,12 @@ public class ArchivalDAOImpl implements ArchivalDAO {
             Connection conn = ArchivalDestinationDAOFactory.getConnection();
 
             String sql = "INSERT INTO " + DESTINATION_DB + ".DM_ENROLMENT_OP_MAPPING_ARCH " +
-                    "SELECT OPR.ID, OPR.ENROLMENT_ID, OPR.OPERATION_ID, OPR.STATUS, OPR.CREATED_TIMESTAMP, OPR.UPDATED_TIMESTAMP, NOW() " +
+                    "(ID, ENROLMENT_ID, OPERATION_ID, STATUS, PUSH_NOTIFICATION_STATUS, CREATED_TIMESTAMP, " +
+                    "UPDATED_TIMESTAMP, OPERATION_CODE, INITIATED_BY, TYPE, DEVICE_ID, DEVICE_TYPE, " +
+                    "DEVICE_IDENTIFICATION, TENANT_ID, ARCHIVED_AT) " +
+                    "SELECT OPR.ID, OPR.ENROLMENT_ID, OPR.OPERATION_ID, OPR.STATUS, OPR.PUSH_NOTIFICATION_STATUS, " +
+                    "OPR.CREATED_TIMESTAMP, OPR.UPDATED_TIMESTAMP, OPR.OPERATION_CODE, OPR.INITIATED_BY, " +
+                    "OPR.TYPE, OPR.DEVICE_ID, OPR.DEVICE_TYPE, OPR.DEVICE_IDENTIFICATION, OPR.TENANT_ID, NOW() " +
                     "FROM " + SOURCE_DB + ".DM_ENROLMENT_OP_MAPPING OPR " +
                     "WHERE OPR.UPDATED_TIMESTAMP < UNIX_TIMESTAMP( DATE_SUB( ? , INTERVAL ? DAY)) " +
                     "AND (STATUS = 'COMPLETED' OR STATUS = 'ERROR') " +
@@ -537,9 +548,11 @@ public class ArchivalDAOImpl implements ArchivalDAO {
             stmt = conn.createStatement();
 
             String sql = "INSERT INTO " + DESTINATION_DB + ".DM_OPERATION_ARCH " +
+                    "(ID, TYPE, CREATED_TIMESTAMP, RECEIVED_TIMESTAMP, OPERATION_CODE, INITIATED_BY, " +
+                    "OPERATION_DETAILS, OPERATION_PROPERTIES, ENABLED, TENANT_ID, ARCHIVED_AT) " +
                     "SELECT OPR.ID, OPR.TYPE, OPR.CREATED_TIMESTAMP, OPR.RECEIVED_TIMESTAMP, " +
                     "OPR.OPERATION_CODE, OPR.INITIATED_BY, OPR.OPERATION_DETAILS, OPR.OPERATION_PROPERTIES, " +
-                    "OPR.ENABLED, NOW() " +
+                    "OPR.ENABLED, OPR.TENANT_ID, NOW() " +
                     "FROM " + SOURCE_DB + ".DM_OPERATION OPR " +
                     "WHERE OPR.ID NOT IN (SELECT DISTINCT OPERATION_ID FROM " + SOURCE_DB + ".DM_ENROLMENT_OP_MAPPING)";
 

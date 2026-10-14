@@ -84,10 +84,14 @@ Checked while adding release artifacts (`isNewRelease = false` on first create):
 | Condition | Exception | HTTP |
 | --- | --- | --- |
 | An active release already exists for the package name | `ConflictException` | **409** |
-| A release with the same binary MD5 already exists | `ConflictException` | **409** |
+| A release with the same binary MD5 already exists (tenant-wide) | `ConflictException` | **409** |
 
 Server log / entity text may still mention device type for the binary case; clients should
 treat **409** as the contract, not parse message text for control flow.
+
+Early UI pre-check (same core method): Publisher
+`GET /applications/release-hash/{hash}`. Details:
+[../add-release/release-binary-hash.md](../add-release/release-binary-hash.md).
 
 ## Lifecycle (`is-published`)
 
