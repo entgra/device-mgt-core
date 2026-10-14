@@ -53,12 +53,10 @@ public class SimpleEvaluationImpl implements SimpleEvaluation {
                 policyInformationPoint = policyManagerService.getPIP();
                 PIPDevice pipDevice = policyInformationPoint.getDeviceData(deviceIdentifier);
                 List<Policy> applicablePolicies = policyInformationPoint.getRelatedPolicies(pipDevice);
-                policyList = new ArrayList<>();
-                for (Policy policy : applicablePolicies) {
-                    if (policyIds == null || policyIds.contains(policy.getId())) {
-                        policyList.add(policy);
-                    }
-                }
+                // Policy IDs submitted to apply-changes identify the change being processed. They must not
+                // limit Simple evaluation: priority is evaluated across every applicable policy, as it is
+                // during ordinary policy enforcement.
+                policyList = new ArrayList<>(applicablePolicies);
                 sortPolicies();
                 return policyList.isEmpty() ? null : policyList.get(0);
             }

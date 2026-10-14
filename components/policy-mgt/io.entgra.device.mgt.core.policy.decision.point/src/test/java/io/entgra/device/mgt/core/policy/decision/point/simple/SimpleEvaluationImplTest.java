@@ -29,31 +29,31 @@ public class SimpleEvaluationImplTest {
     }
 
     @Test
-    public void testOnlySelectedPoliciesCompeteByPriority() throws Exception {
+    public void testAllApplicablePoliciesCompeteByPriorityWhenPoliciesAreSelectedForApplyChanges() throws Exception {
         PolicyManagerService policyManagerService = Mockito.mock(PolicyManagerService.class);
         PolicyInformationPoint policyInformationPoint = Mockito.mock(PolicyInformationPoint.class);
         PIPDevice pipDevice = new PIPDevice();
         DeviceIdentifier identifier = new DeviceIdentifier("device-1", "android");
 
         Policy unselectedHighestPriority = policy(1, 1);
-        Policy selectedWinner = policy(2, 2);
-        Policy selectedLowerPriority = policy(3, 3);
+        Policy selectedLowerPriority = policy(2, 2);
+        Policy anotherSelectedLowerPriority = policy(3, 3);
 
         Mockito.when(policyManagerService.getPIP()).thenReturn(policyInformationPoint);
         Mockito.when(policyInformationPoint.getDeviceData(identifier)).thenReturn(pipDevice);
         Mockito.when(policyInformationPoint.getRelatedPolicies(pipDevice)).thenReturn(
-                Arrays.asList(unselectedHighestPriority, selectedLowerPriority, selectedWinner));
+                Arrays.asList(unselectedHighestPriority, selectedLowerPriority, anotherSelectedLowerPriority));
         PolicyDecisionPointDataHolder.getInstance().setPolicyManagerService(policyManagerService);
 
         Policy result = new SimpleEvaluationImpl().getEffectivePolicy(identifier,
                 new HashSet<>(Arrays.asList(2, 3)));
 
-        Assert.assertEquals(result.getId(), 2);
+        Assert.assertEquals(result.getId(), 1);
         Mockito.verify(policyManagerService, Mockito.never()).getPAP();
     }
 
     @Test
-    public void testNoSelectedApplicablePolicyReturnsNull() throws Exception {
+    public void testSelectionDoesNotExcludeApplicablePolicies() throws Exception {
         PolicyManagerService policyManagerService = Mockito.mock(PolicyManagerService.class);
         PolicyInformationPoint policyInformationPoint = Mockito.mock(PolicyInformationPoint.class);
         PIPDevice pipDevice = new PIPDevice();
@@ -65,8 +65,9 @@ public class SimpleEvaluationImplTest {
                 Collections.singletonList(policy(1, 1)));
         PolicyDecisionPointDataHolder.getInstance().setPolicyManagerService(policyManagerService);
 
-        Assert.assertNull(new SimpleEvaluationImpl().getEffectivePolicy(identifier,
-                Collections.singleton(2)));
+        Policy result = new SimpleEvaluationImpl().getEffectivePolicy(identifier, Collections.singleton(2));
+
+        Assert.assertEquals(result.getId(), 1);
     }
 
     private Policy policy(int id, int priority) {
