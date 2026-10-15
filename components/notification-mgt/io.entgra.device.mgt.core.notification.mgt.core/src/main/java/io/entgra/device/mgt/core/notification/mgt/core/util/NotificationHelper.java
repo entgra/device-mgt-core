@@ -322,9 +322,9 @@ public class NotificationHelper {
     }
 
     /**
-     * resolves the tenant domain
-     * if the tenant domain cannot be resolved from the thread-local carbon context, this falls back to
-     * {@code carbon.super} when the tenant context is confirmed to be the super. for non-super tenants, fail fast.
+     * Resolves the tenant domain for the current thread-local Carbon context.
+     * Falls back to {@code carbon.super} for the super tenant when domain is blank.
+     *
      * @return tenant domain (never blank)
      */
     private static String getTenantDomain() {
@@ -343,21 +343,25 @@ public class NotificationHelper {
     }
 
     /**
-     * converts a username into a tenant-aware username for notification storage or publishing,
-     * with validation to ensure the tenant domain is correct.
-     * - for the super tenant, usernames are stored/published without the suffix {@code @carbon.super}.
-     * - for sub-tenants, usernames are ensured to be tenant-aware:
-     * -- if the username already contains {@code @} and the domain matches {@code tenantDomain}, it is returned as-is.
-     * -- if the username contains {@code @} but the domain does not match {@code tenantDomain},
-     *    the domain is replaced with {@code tenantDomain}.
-     * -- if the username does not contain {@code @}, {@code @tenantDomain} is appended.
-     * - if the username is {@code null}, {@code null} is returned.
-     * - if the username is empty or only whitespace, it is trimmed and returned as an empty string.
-     * @param username the raw username
-     * @param tenantDomain the tenant domain to validate against
-     * @return a tenant-aware username with the correct tenant domain
+     * Converts usernames to tenant-aware form (e.g. {@code admin@test.com}) for storage and SSE.
+     * Uses the thread-local Carbon tenant domain (same as the rest of device-mgt).
      */
-    private static String toTenantAwareUsername(String username, String tenantDomain) {
+    public static List<String> toTenantAwareUsernames(List<String> usernames, int tenantId) {
+        if (usernames == null || usernames.isEmpty()) {
+            return new ArrayList<>();
+        }
+        String tenantDomain = getTenantDomain();
+        Set<String> tenantAware = new HashSet<>();
+        for (String username : usernames) {
+            String converted = toTenantAwareUsername(username, tenantDomain);
+            if (converted != null && !converted.trim().isEmpty()) {
+                tenantAware.add(converted);
+            }
+        }
+        return new ArrayList<>(tenantAware);
+    }
+
+    public static String toTenantAwareUsername(String username, String tenantDomain) {
         if (username == null) {
             return null;
         }

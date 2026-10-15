@@ -463,36 +463,45 @@ public class NotificationManagementServiceImpl implements NotificationManagement
             UserStoreManager userStoreManager = NotificationManagementDataHolder.getInstance()
                     .getRealmService().getTenantUserRealm(tenantId).getUserStoreManager();
             String[] adminUsers = userStoreManager.getUserListOfRole(Constants.ADMIN);
-            List<String> usernames = Arrays.asList(adminUsers);
-            if (!usernames.isEmpty()) {
-                NotificationContext context = new NotificationContext();
-                context.setMessage(message);
-                try {
-                    NotificationManagementDAOFactory.beginTransaction();
-                    int notificationId = notificationDAO.insertNotification(
-                            tenantId, 0, Constants.TASK, NotificationMessageRenderer.toJson(context));
-                    notificationDAO.insertNotificationUserActions(notificationId, usernames);
-                    String description = NotificationMessageRenderer.render(
-                            context, Collections.emptyList(), Constants.TASK);
-                    for (String username : usernames) {
-                        int count = notificationDAO.getUnreadNotificationCountForUser(username);
-                        NotificationEventBroker.pushMessage(
-                                NotificationEventPayloadBuilder.buildMessagePayload(description, count),
-                                Collections.singletonList(username));
-                    }
-                    NotificationManagementDAOFactory.commitTransaction();
-                } catch (NotificationManagementDAOException e) {
-                    NotificationManagementDAOFactory.rollbackTransaction();
-                    String msg = "Error occurred while handling notification transaction for the task.";
-                    log.error(msg, e);
-                    throw new NotificationManagementException(msg, e);
-                } catch (TransactionManagementException e) {
-                    String msg = "Error occurred while handling notification transaction for the task.";
-                    log.error(msg, e);
-                    throw new NotificationManagementException(msg, e);
-                } finally {
-                    NotificationManagementDAOFactory.closeConnection();
+            if (adminUsers == null || adminUsers.length == 0) {
+                log.warn("No users found with role '" + Constants.ADMIN + "' for tenantId: " + tenantId
+                        + ". Skipping task notification.");
+                return;
+            }
+            List<String> usernames = NotificationHelper.toTenantAwareUsernames(
+                    Arrays.asList(adminUsers), tenantId);
+            if (usernames.isEmpty()) {
+                log.warn("No tenant-aware admin usernames resolved for tenantId: " + tenantId
+                        + ". Skipping task notification.");
+                return;
+            }
+            NotificationContext context = new NotificationContext();
+            context.setMessage(message);
+            try {
+                NotificationManagementDAOFactory.beginTransaction();
+                int notificationId = notificationDAO.insertNotification(
+                        tenantId, 0, Constants.TASK, NotificationMessageRenderer.toJson(context));
+                notificationDAO.insertNotificationUserActions(notificationId, usernames);
+                String description = NotificationMessageRenderer.render(
+                        context, Collections.emptyList(), Constants.TASK);
+                for (String username : usernames) {
+                    int count = notificationDAO.getUnreadNotificationCountForUser(username);
+                    NotificationEventBroker.pushMessage(
+                            NotificationEventPayloadBuilder.buildMessagePayload(description, count),
+                            Collections.singletonList(username));
                 }
+                NotificationManagementDAOFactory.commitTransaction();
+            } catch (NotificationManagementDAOException e) {
+                NotificationManagementDAOFactory.rollbackTransaction();
+                String msg = "Error occurred while handling notification transaction for the task.";
+                log.error(msg, e);
+                throw new NotificationManagementException(msg, e);
+            } catch (TransactionManagementException e) {
+                String msg = "Error occurred while handling notification transaction for the task.";
+                log.error(msg, e);
+                throw new NotificationManagementException(msg, e);
+            } finally {
+                NotificationManagementDAOFactory.closeConnection();
             }
         } catch (UserStoreException e) {
             String msg = "Error retrieving users with role 'admin'";
