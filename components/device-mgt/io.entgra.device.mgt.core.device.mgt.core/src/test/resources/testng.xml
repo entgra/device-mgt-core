@@ -49,6 +49,7 @@
             <class name="io.entgra.device.mgt.core.device.mgt.core.service.TagManagementProviderServiceTest"/>
             <class name="io.entgra.device.mgt.core.device.mgt.core.operation.OperationManagementTests"/>
             <class name="io.entgra.device.mgt.core.device.mgt.core.operation.OperationManagementNoDBSchemaTests"/>
+            <class name="io.entgra.device.mgt.core.device.mgt.core.operation.OperationManagerImplUpdateOperationCharacterizationTest"/>
             <class name="io.entgra.device.mgt.core.device.mgt.core.operation.OperationManagementNegativeDBOperationTest"/>
             <class name="io.entgra.device.mgt.core.device.mgt.core.geo.service.GeoLocationProviderServiceTest"/>
             <class name="io.entgra.device.mgt.core.device.mgt.core.operation.ScheduledTaskOperationTests"/>
