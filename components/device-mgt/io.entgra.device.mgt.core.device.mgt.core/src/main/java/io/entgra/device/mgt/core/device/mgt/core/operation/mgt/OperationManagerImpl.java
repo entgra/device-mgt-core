@@ -1007,6 +1007,18 @@ public class OperationManagerImpl implements OperationManager {
         }
     }
 
+    /**
+     * Updates the status of an operation, retrying up to 3 times on transient DAO failures, and
+     * triggers a notification once the status change is persisted.
+     *
+     * @param enrolmentId enrolment id the operation belongs to
+     * @param operationId id of the operation to update
+     * @param operation   operation carrying the new status
+     * @param deviceId    identifier of the device the operation was issued to
+     * @param tenantId    tenant id to notify the status change under
+     * @return {@code true} if the operation status was updated, {@code false} otherwise
+     * @throws OperationManagementException if updating fails after the maximum number of attempts
+     */
     private boolean updateOperationStatus(int enrolmentId, int operationId, Operation operation,
                                            DeviceIdentifier deviceId, int tenantId)
             throws OperationManagementException {
@@ -1041,6 +1053,18 @@ public class OperationManagerImpl implements OperationManager {
         return isOperationUpdated;
     }
 
+    /**
+     * Sends an operation status notification for the previous device operation details, if the
+     * operation was updated and such details exist. Any failure while retrieving the previous
+     * device operation details is logged rather than propagated.
+     *
+     * @param enrolmentId        enrolment id the operation belongs to
+     * @param operationId        id of the operation whose status changed
+     * @param operation          operation carrying the updated status
+     * @param deviceId           identifier of the device the operation was issued to
+     * @param tenantId           tenant id to notify the status change under
+     * @param isOperationUpdated whether the operation status update actually succeeded
+     */
     private void notifyOperationStatusChange(int enrolmentId, int operationId, Operation operation,
                                               DeviceIdentifier deviceId, int tenantId, boolean isOperationUpdated) {
         try {
@@ -1070,6 +1094,15 @@ public class OperationManagerImpl implements OperationManager {
         }
     }
 
+    /**
+     * Completes a pending disenrollment when the given operation is a completed policy-revoke
+     * operation and the device is currently awaiting disenrollment.
+     *
+     * @param operation operation to check for completed policy-revoke status
+     * @param deviceId  identifier of the device to disenroll if applicable
+     * @throws OperationManagementException if retrieving or removing the device fails
+     * @throws DeviceManagementException    if retrieving the device fails
+     */
     private void handleDisenrollmentCompletion(Operation operation, DeviceIdentifier deviceId)
             throws OperationManagementException, DeviceManagementException {
         if (DeviceManagementConstants.AuthorizationSkippedOperationCodes.POLICY_REVOKE_OPERATION_CODE
@@ -1082,6 +1115,19 @@ public class OperationManagerImpl implements OperationManager {
         }
     }
 
+    /**
+     * Determines whether persisting the operation response should be skipped, which is the case
+     * when the operation's monitoring task is configured without response persistence and the
+     * operation was initiated by the system. As a side effect, resolves and caches
+     * {@code operation}'s {@code initiatedBy} value when it is not already cached.
+     *
+     * @param operationId id of the operation being processed
+     * @param operation   operation whose response persistence is being evaluated
+     * @param deviceId    identifier of the device the operation was issued to, used to resolve
+     *                    the monitoring configuration
+     * @return {@code true} if response persistence should be skipped, {@code false} otherwise
+     * @throws OperationManagementException if the device monitoring configuration cannot be resolved
+     */
     private boolean shouldSkipResponsePersistence(int operationId, Operation operation, DeviceIdentifier deviceId)
             throws OperationManagementException {
         OperationMonitoringTaskConfig operationMonitoringTaskConfig = DeviceManagementDataHolder
@@ -1120,6 +1166,17 @@ public class OperationManagerImpl implements OperationManager {
         return false;
     }
 
+    /**
+     * Persists the operation response, retrying up to 3 times on transient DAO failures.
+     *
+     * @param enrolmentId enrolment id the operation belongs to
+     * @param operationId id of the operation the response belongs to
+     * @param operation   operation carrying the response to persist
+     * @param deviceId    identifier of the device the operation was issued to
+     * @return metadata describing the persisted response, or {@code null} if persistence did not
+     *         complete
+     * @throws OperationManagementException if persisting fails after the maximum number of attempts
+     */
     private OperationResponseMeta updateOperationResponse(int enrolmentId, int operationId, Operation operation,
                                                             DeviceIdentifier deviceId)
             throws OperationManagementException {
@@ -1151,6 +1208,18 @@ public class OperationManagerImpl implements OperationManager {
         return responseMeta;
     }
 
+    /**
+     * Persists the large-response payload of an operation response, retrying up to 3 times on
+     * transient DAO failures.
+     *
+     * @param enrolmentId enrolment id the operation belongs to
+     * @param operationId id of the operation the response belongs to
+     * @param operation   operation carrying the large response to persist
+     * @param deviceId    identifier of the device the operation was issued to
+     * @param responseMeta metadata of the already-persisted response that the large payload
+     *                      is associated with
+     * @throws OperationManagementException if persisting fails after the maximum number of attempts
+     */
     private void updateLargeOperationResponse(int enrolmentId, int operationId, Operation operation,
                                                DeviceIdentifier deviceId, OperationResponseMeta responseMeta)
             throws OperationManagementException {
