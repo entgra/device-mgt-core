@@ -74,6 +74,10 @@ import io.entgra.device.mgt.core.device.mgt.core.task.DeviceTaskManager;
 import io.entgra.device.mgt.core.device.mgt.core.task.impl.DeviceTaskManagerImpl;
 import io.entgra.device.mgt.core.device.mgt.core.util.DeviceManagerUtil;
 
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -227,10 +231,11 @@ public class OperationManagerImpl implements OperationManager {
                     Map<Integer, Integer> pendingOperationIDs = operationDAO
                             .getExistingNotExecutedOperationIDs(enrolments.keySet().toArray(new Integer[0]), operationCode);
                     for (Integer enrolmentId : pendingOperationIDs.keySet()) {
-                        operation.setId(pendingOperationIDs.get(enrolmentId));
+                        int operationId = pendingOperationIDs.get(enrolmentId);
+                        Operation notificationOperation = createNotificationOperation(operation, operationId);
                         device = enrolments.get(enrolmentId);
                         if (!shouldSkipImmediateNotification(operation)) {
-                            this.sendNotification(operation, device);
+                            this.sendNotification(notificationOperation, device);
                         }
                         //No need to keep this enrollment as it has a pending operation
                         enrolments.remove(enrolmentId);
@@ -304,10 +309,11 @@ public class OperationManagerImpl implements OperationManager {
                         .getExistingNotExecutedOperationIDs(enrolments.keySet().toArray(new Integer[0]), operationCode);
                 Device device;
                 for (Integer enrolmentId : pendingOperationIDs.keySet()) {
-                    operation.setId(pendingOperationIDs.get(enrolmentId));
+                    Operation notificationOperation = createNotificationOperation(operation,
+                            pendingOperationIDs.get(enrolmentId));
                     device = enrolments.get(enrolmentId);
                     if (!shouldSkipImmediateNotification(operation)) {
-                        this.sendNotification(operation, device);
+                        this.sendNotification(notificationOperation, device);
                     }
                     //No need to keep this enrollment as it has a pending operation
                     enrolments.remove(enrolmentId);
@@ -380,10 +386,11 @@ public class OperationManagerImpl implements OperationManager {
                             .getExistingNotExecutedOperationIDs(enrolments.keySet().toArray(new Integer[0]), operationCode);
                     Device device;
                     for (Integer enrolmentId : pendingOperationIDs.keySet()) {
-                        operation.setId(pendingOperationIDs.get(enrolmentId));
+                        Operation notificationOperation = createNotificationOperation(operation,
+                                pendingOperationIDs.get(enrolmentId));
                         device = enrolments.get(enrolmentId);
                         if (!shouldSkipImmediateNotification(operation)) {
-                            this.sendNotification(operation, device);
+                            this.sendNotification(notificationOperation, device);
                         }
                         //No need to keep this enrollment as it has a pending operation
                         enrolments.remove(enrolmentId);
@@ -495,6 +502,29 @@ public class OperationManagerImpl implements OperationManager {
         }
         return Boolean.parseBoolean(
                 operation.getProperties().getProperty(SKIP_IMMEDIATE_NOTIFICATION_PROPERTY, Boolean.FALSE.toString()));
+    }
+
+    /**
+     * Creates a separate operation instance so an asynchronous notification retains the operation ID assigned to
+     * its device. Other property values are intentionally shared because they are read-only in this flow.
+     */
+    private Operation createNotificationOperation(Operation operation, int operationId) {
+        try {
+            Operation notificationOperation = operation.getClass().asSubclass(Operation.class)
+                    .getDeclaredConstructor().newInstance();
+            BeanInfo beanInfo = Introspector.getBeanInfo(operation.getClass(), Object.class);
+            for (PropertyDescriptor property : beanInfo.getPropertyDescriptors()) {
+                if (property.getReadMethod() != null && property.getWriteMethod() != null) {
+                    property.getWriteMethod().invoke(notificationOperation,
+                            property.getReadMethod().invoke(operation));
+                }
+            }
+            notificationOperation.setId(operationId);
+            return notificationOperation;
+        } catch (IntrospectionException | ReflectiveOperationException e) {
+            throw new IllegalStateException("Unable to create notification operation of type "
+                    + operation.getClass().getName(), e);
+        }
     }
 
     private void sendNotification(Operation operation, Device device) {
