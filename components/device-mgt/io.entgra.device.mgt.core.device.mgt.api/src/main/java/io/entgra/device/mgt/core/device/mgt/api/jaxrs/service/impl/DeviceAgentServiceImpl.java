@@ -22,6 +22,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.OperationList;
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.SupportedDeviceTypeInfo;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.analytics.Attribute;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.analytics.AttributeType;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.analytics.EventAttributeList;
@@ -29,6 +30,10 @@ import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.DeviceAgentSer
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.Constants;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.DeviceMgtAPIUtils;
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManagerServiceImpl;
+import io.entgra.device.mgt.core.operation.template.exception.OperationTemplateMgtPluginException;
+import io.entgra.device.mgt.core.subtype.mgt.dto.DeviceSubType;
+import io.entgra.device.mgt.core.subtype.mgt.dto.DeviceTypeDefinition;
+import io.entgra.device.mgt.core.subtype.mgt.exception.SubTypeMgtPluginException;
 import org.apache.axis2.AxisFault;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

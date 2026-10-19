@@ -27,6 +27,7 @@ import io.entgra.device.mgt.core.subtype.mgt.dao.DeviceSubTypeDAOFactory;
 import io.entgra.device.mgt.core.subtype.mgt.dao.util.ConnectionManagerUtil;
 import io.entgra.device.mgt.core.subtype.mgt.dto.DeviceSubType;
 import io.entgra.device.mgt.core.subtype.mgt.dto.DeviceSubTypeCacheKey;
+import io.entgra.device.mgt.core.subtype.mgt.dto.DeviceTypeDefinition;
 import io.entgra.device.mgt.core.subtype.mgt.exception.BadRequestException;
 import io.entgra.device.mgt.core.subtype.mgt.exception.DBConnectionException;
 import io.entgra.device.mgt.core.subtype.mgt.exception.SubTypeMgtDAOException;
