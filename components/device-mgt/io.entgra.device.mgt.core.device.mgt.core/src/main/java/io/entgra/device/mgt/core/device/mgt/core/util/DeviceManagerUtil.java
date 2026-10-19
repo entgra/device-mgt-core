@@ -1284,4 +1284,23 @@ public final class DeviceManagerUtil {
         WhiteLabelConfiguration whiteLabelConfig = deviceManagementConfig.getMetaDataConfiguration().getWhiteLabelConfiguration();
         return whiteLabelConfig.getDocUrl();
     }
+
+    /**
+     * Trim leading and trailing whitespace from device name and description.
+     * Internal spaces between words are kept. Null values stay null; trimmed
+     * values are written back onto the device.
+     *
+     * @param device device whose name/description should be normalized
+     */
+    public static void trimDeviceNameAndDescription(Device device) {
+        if (device == null) {
+            return;
+        }
+        if (device.getName() != null) {
+            device.setName(device.getName().trim());
+        }
+        if (device.getDescription() != null) {
+            device.setDescription(device.getDescription().trim());
+        }
+    }
 }

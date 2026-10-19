@@ -53,7 +53,6 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class NotificationManagementServiceImpl implements NotificationManagementService {
     private static final Log log = LogFactory.getLog(NotificationManagementServiceImpl.class);
@@ -203,37 +202,37 @@ public class NotificationManagementServiceImpl implements NotificationManagement
         if (notificationIds == null || notificationIds.isEmpty()) {
             return Map.of("archived", Collections.emptyList(), "invalid", Collections.emptyList());
         }
+        Map<String, List<Integer>> result;
+        boolean destinationOpened = false;
+        boolean sourceOpened = false;
         try {
             NotificationArchivalDestDAOFactory.beginTransaction();
+            destinationOpened = true;
             NotificationArchivalSourceDAOFactory.beginTransaction();
-            Map<String, List<Integer>> result =
-                    notificationArchiveDAO.archiveUserNotifications(notificationIds, username);
+            sourceOpened = true;
+            result = notificationArchiveDAO.archiveUserNotifications(notificationIds, username);
             NotificationArchivalDestDAOFactory.commitTransaction();
             NotificationArchivalSourceDAOFactory.commitTransaction();
-            try {
-                NotificationManagementDAOFactory.openConnection();
-                int unreadCount = notificationDAO.getUnreadNotificationCountForUser(username);
-                NotificationEventBroker.pushMessage(
-                        NotificationEventPayloadBuilder.buildUnreadCountPayload(unreadCount),
-                        Collections.singletonList(username));
-            } catch (SQLException | NotificationManagementDAOException e) {
-                String msg = "Error occurred while retrieving unread notification count for user: " + username;
-                log.error(msg, e);
-                throw new NotificationArchivalException(msg, e);
-            } finally {
-                NotificationManagementDAOFactory.closeConnection();
+        } catch (TransactionManagementException | RuntimeException e) {
+            if (destinationOpened) {
+                NotificationArchivalDestDAOFactory.rollbackTransaction();
             }
-            return result;
-        } catch (TransactionManagementException e) {
-            NotificationArchivalDestDAOFactory.rollbackTransaction();
-            NotificationArchivalSourceDAOFactory.rollbackTransaction();
+            if (sourceOpened) {
+                NotificationArchivalSourceDAOFactory.rollbackTransaction();
+            }
             String msg = "Error occurred while archiving notifications for user: " + username;
             log.error(msg, e);
             throw new NotificationArchivalException(msg, e);
         } finally {
-            NotificationArchivalDestDAOFactory.closeConnection();
-            NotificationArchivalSourceDAOFactory.closeConnection();
+            if (destinationOpened) {
+                NotificationArchivalDestDAOFactory.closeConnection();
+            }
+            if (sourceOpened) {
+                NotificationArchivalSourceDAOFactory.closeConnection();
+            }
         }
+        refreshUnreadCountAfterArchival(username);
+        return result;
     }
 
     @Override
@@ -262,32 +261,65 @@ public class NotificationManagementServiceImpl implements NotificationManagement
 
     @Override
     public void archiveAllUserNotifications(String username) throws NotificationArchivalException {
+        boolean destinationOpened = false;
+        boolean sourceOpened = false;
         try {
             NotificationArchivalDestDAOFactory.beginTransaction();
+            destinationOpened = true;
             NotificationArchivalSourceDAOFactory.beginTransaction();
+            sourceOpened = true;
             notificationArchiveDAO.archiveAllUserNotifications(username);
             NotificationArchivalDestDAOFactory.commitTransaction();
             NotificationArchivalSourceDAOFactory.commitTransaction();
-            try {
-                NotificationManagementDAOFactory.openConnection();
-                int unreadCount = notificationDAO.getUnreadNotificationCountForUser(username);
-                NotificationEventBroker.pushMessage(
-                        NotificationEventPayloadBuilder.buildUnreadCountPayload(unreadCount),
-                        Collections.singletonList(username));
-            } catch (SQLException | NotificationManagementDAOException e) {
-                String msg = "Error occurred while retrieving unread notification count for user: " + username;
-                log.error(msg, e);
-                throw new NotificationArchivalException(msg, e);
-            } finally {
-                NotificationManagementDAOFactory.closeConnection();
+        } catch (TransactionManagementException | RuntimeException e) {
+            if (destinationOpened) {
+                NotificationArchivalDestDAOFactory.rollbackTransaction();
             }
-        } catch (TransactionManagementException e) {
+            if (sourceOpened) {
+                NotificationArchivalSourceDAOFactory.rollbackTransaction();
+            }
             String msg = "Error occurred while archiving all notifications for user: " + username;
             log.error(msg, e);
             throw new NotificationArchivalException(msg, e);
         } finally {
-            NotificationArchivalDestDAOFactory.closeConnection();
-            NotificationArchivalSourceDAOFactory.closeConnection();
+            if (destinationOpened) {
+                NotificationArchivalDestDAOFactory.closeConnection();
+            }
+            if (sourceOpened) {
+                NotificationArchivalSourceDAOFactory.closeConnection();
+            }
+        }
+        refreshUnreadCountAfterArchival(username);
+    }
+
+    /**
+     * Retrieves and publishes the user's unread notification count after archival has completed.
+     * Releases the count-query connection before delivering the update. Retrieval and delivery
+     * failures are logged without failing the completed archival operation.
+     *
+     * @param username user whose unread notification count should be refreshed
+     */
+    private void refreshUnreadCountAfterArchival(String username) {
+        int unreadCount;
+        boolean connectionOpened = false;
+        try {
+            NotificationManagementDAOFactory.openConnection();
+            connectionOpened = true;
+            unreadCount = notificationDAO.getUnreadNotificationCountForUser(username);
+        } catch (SQLException | NotificationManagementDAOException | RuntimeException e) {
+            log.warn("Notifications were archived, but the unread count could not be retrieved for user: "
+                    + username, e);
+            return;
+        } finally {
+            if (connectionOpened) {
+                NotificationManagementDAOFactory.closeConnection();
+            }
+        }
+        try {
+            pushUnreadCount(username, unreadCount);
+        } catch (RuntimeException e) {
+            log.warn("Notifications were archived, but the unread count update could not be delivered for user: "
+                    + username, e);
         }
     }
 

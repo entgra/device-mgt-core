@@ -22,6 +22,11 @@ public class DeviceTypeVersion {
     int deviceTypeId;
     String deviceTypeName;
     String versionName;
+    /**
+     * Optional user-facing label sourced from device-type XML (e.g. "Android 8.0").
+     * Not persisted; populated when returning versions from the API.
+     */
+    String versionLabel;
     String versionStatus;
 
     public int getId() {
@@ -54,6 +59,14 @@ public class DeviceTypeVersion {
 
     public void setVersionName(String versionName) {
         this.versionName = versionName;
+    }
+
+    public String getVersionLabel() {
+        return versionLabel;
+    }
+
+    public void setVersionLabel(String versionLabel) {
+        this.versionLabel = versionLabel;
     }
 
     public String getVersionStatus() {

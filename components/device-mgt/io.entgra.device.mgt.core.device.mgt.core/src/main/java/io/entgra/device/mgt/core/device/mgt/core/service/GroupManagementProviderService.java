@@ -309,6 +309,20 @@ public interface GroupManagementProviderService {
             throws GroupManagementException, DeviceNotFoundException;
 
     /**
+     * Assign a device to the given groups that it is not already a member of.
+     * Existing memberships are left unchanged. Groups that do not exist are rejected.
+     *
+     * @param deviceIdentifier device to assign
+     * @param deviceGroupIds   target group ids
+     * @return ids of groups the device was newly assigned to (empty if none)
+     * @throws GroupManagementException on group management failures
+     * @throws DeviceNotFoundException  if the device cannot be found when assigning
+     * @throws GroupNotExistException   if a requested group id does not exist
+     */
+    List<Integer> updateDeviceAssigningToGroups(DeviceIdentifier deviceIdentifier, List<Integer> deviceGroupIds)
+            throws GroupManagementException, DeviceNotFoundException, GroupNotExistException;
+
+    /**
      * Remove device from device group.
      *
      * @param groupId   of the group.

@@ -31,11 +31,14 @@ import io.entgra.device.mgt.core.policy.mgt.core.internal.PolicyManagementDataHo
 import io.entgra.device.mgt.core.policy.mgt.core.mgt.PolicyManager;
 import io.entgra.device.mgt.core.policy.mgt.core.mgt.bean.UpdatedPolicyDeviceListBean;
 import io.entgra.device.mgt.core.policy.mgt.core.mgt.impl.PolicyManagerImpl;
+import io.entgra.device.mgt.core.policy.mgt.core.util.PolicyManagementConstants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public class DelegationTask extends DynamicPartitionedScheduleTask {
 
@@ -46,8 +49,10 @@ public class DelegationTask extends DynamicPartitionedScheduleTask {
     @Override
     public void executeDynamicTask() {
         try {
+            Set<Integer> policyIds = getSelectedPolicyIds();
             PolicyManager policyManager = new PolicyManagerImpl();
-            UpdatedPolicyDeviceListBean updatedPolicyDeviceList = policyManager.applyChangesMadeToPolicies();
+            UpdatedPolicyDeviceListBean updatedPolicyDeviceList =
+                    policyManager.applyChangesMadeToPolicies(policyIds);
             List<String> deviceTypes = updatedPolicyDeviceList.getChangedDeviceTypes();
             if (policyConfiguration.getCacheEnable()) {
                 PolicyCacheManagerImpl.getInstance().rePopulateCache();
@@ -82,7 +87,7 @@ public class DelegationTask extends DynamicPartitionedScheduleTask {
                         }
                         if (!toBeNotified.isEmpty()) {
                             PolicyEnforcementDelegator enforcementDelegator = new PolicyEnforcementDelegatorImpl(
-                                    toBeNotified, updatedPolicyDeviceList.getUpdatedPolicyIds());
+                                    toBeNotified, policyIds);
                             enforcementDelegator.delegate();
                         }
                     } catch (DeviceManagementException e) {
@@ -93,9 +98,33 @@ public class DelegationTask extends DynamicPartitionedScheduleTask {
                     }
                 }
             }
+            policyManager.completePolicyChanges(policyIds);
+            if (policyConfiguration.getCacheEnable()) {
+                PolicyCacheManagerImpl.getInstance().rePopulateCache();
+            }
         } catch (PolicyManagementException e) {
             log.error("Error occurred while getting the policies applied to devices.", e);
         }
+    }
+
+    private Set<Integer> getSelectedPolicyIds() throws PolicyManagementException {
+        String serializedPolicyIds = getProperty(PolicyManagementConstants.POLICY_IDS);
+        if (serializedPolicyIds == null || serializedPolicyIds.trim().isEmpty()) {
+            throw new PolicyManagementException("Delegation task does not contain selected policy IDs");
+        }
+        Set<Integer> policyIds = new LinkedHashSet<>();
+        try {
+            for (String policyId : serializedPolicyIds.split(",")) {
+                int parsedPolicyId = Integer.parseInt(policyId.trim());
+                if (parsedPolicyId <= 0) {
+                    throw new NumberFormatException("Non-positive policy ID");
+                }
+                policyIds.add(parsedPolicyId);
+            }
+        } catch (NumberFormatException e) {
+            throw new PolicyManagementException("Delegation task contains invalid selected policy IDs", e);
+        }
+        return policyIds;
     }
 
     @Override

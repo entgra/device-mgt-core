@@ -341,6 +341,16 @@ public class ApplicationManagerImpl implements ApplicationManager {
             releaseDTO = uploadEntAppReleaseArtifacts(releaseDTO, artifact, deviceType.getName(), true);
             try {
                 return createRelease(applicationDTO, releaseDTO, ApplicationType.ENTERPRISE, isPublished);
+            } catch (ForbiddenException e) {
+                String msg = "Error occurred while creating ent app release for application with the name: " + applicationDTO.getName();
+                log.error(msg, e);
+                deleteApplicationArtifacts(Collections.singletonList(releaseDTO.getAppHashValue()));
+                throw e;
+            } catch (BadRequestException e) {
+                String msg = "Error occurred while creating ent app release for application with the name: " + applicationDTO.getName();
+                log.error(msg, e);
+                deleteApplicationArtifacts(Collections.singletonList(releaseDTO.getAppHashValue()));
+                throw e;
             } catch (ApplicationManagementException e) {
                 String msg = "Error occurred while creating ent app release for application with the name: " + applicationDTO.getName();
                 log.error(msg, e);
@@ -457,6 +467,11 @@ public class ApplicationManagerImpl implements ApplicationManager {
             releaseDTO = uploadCustomAppReleaseArtifacts(releaseDTO, artifact, deviceType.getName());
             try {
                 return createRelease(applicationDTO, releaseDTO, ApplicationType.CUSTOM, isPublished);
+            } catch (BadRequestException e) {
+                String msg = "Error occurred while creating custom app release for application with the name: " + applicationDTO.getName();
+                log.error(msg, e);
+                deleteApplicationArtifacts(Collections.singletonList(releaseDTO.getAppHashValue()));
+                throw e;
             } catch (ApplicationManagementException e) {
                 String msg = "Error occurred while creating custom app release for application with the name: " + applicationDTO.getName();
                 log.error(msg, e);
@@ -825,11 +840,9 @@ public class ApplicationManagerImpl implements ApplicationManager {
             List<ApplicationReleaseDTO> exitingPubAppReleases = applicationReleaseDAO
                     .getReleaseByPackages(Collections.singletonList(packageName), tenantId);
             if (!exitingPubAppReleases.isEmpty()) {
-                String msg = "Public app release exists for package name " + packageName
-                        + ". Hence you can't add new public app for package name "
-                        + packageName;
+                String msg = "An application with the same package name already exists: " + packageName;
                 log.error(msg);
-                throw new BadRequestException(msg);
+                throw new ConflictException(msg);
             }
         } catch (ApplicationManagementDAOException e) {
             String msg = "Error Occurred when fetching release: " + packageName;
@@ -881,6 +894,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
         return addImageArtifacts(releaseDTO, applicationArtifact, tenantId);
     }
 
+    @Override
     public void validateReleaseBinaryFileHash(String hash)
             throws ApplicationManagementException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
@@ -889,7 +903,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             if (this.applicationReleaseDAO.verifyReleaseExistenceByHash(hash, tenantId)) {
                 String msg = "Application release already exists";
                 log.error(msg);
-                throw new BadRequestException(msg);
+                throw new ConflictException(msg);
             }
         } catch (ApplicationManagementDAOException e) {
             String msg = "Error occurred while checking if release already exists";
@@ -1021,12 +1035,9 @@ public class ApplicationManagerImpl implements ApplicationManager {
                 if (!isNewRelease && applicationReleaseDAO
                         .isActiveReleaseExisitForPackageName(packageName, tenantId,
                                 lifecycleStateManager.getEndState())) {
-                    String msg = "Application release is already exist for the package name: " + packageName
-                            + ". Either you can delete all application releases for package " + packageName + " or "
-                            + "you can add this app release as an new application release, under the existing "
-                            + "application.";
+                    String msg = "An application with the same package name already exists: " + packageName;
                     log.error(msg);
-                    throw new BadRequestException(msg);
+                    throw new ConflictException(msg);
                 }
                 String md5OfApp = applicationStorageManager.
                         getMD5(Files.newInputStream(Paths.get(applicationArtifact.getInstallerPath())));
@@ -1040,7 +1051,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     String msg =
                             "Application release exists for the uploaded binary file. Device Type: " + deviceType;
                     log.error(msg);
-                    throw new BadRequestException(msg);
+                    throw new ConflictException(msg);
                 }
                 applicationReleaseDTO.setAppHashValue(md5OfApp);
                 if (DeviceTypes.WINDOWS.name().equalsIgnoreCase(deviceType) && applicationArtifact.getInstallerName()
@@ -1115,7 +1126,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                         String msg = "Same binary file is in the server. Hence you can't add same file into the "
                                 + "server. Device Type: " + deviceType + " and package name: " + packageName;
                         log.error(msg);
-                        throw new BadRequestException(msg);
+                        throw new ConflictException(msg);
                     }
                     if (applicationReleaseDTO.getPackageName() == null) {
                         String msg = "Found null value for application release package name for application "
@@ -1781,6 +1792,12 @@ public class ApplicationManagerImpl implements ApplicationManager {
             ApplicationRelease applicationRelease = APIUtil.releaseDtoToRelease(applicationReleaseDTO);
             ConnectionManagerUtil.commitDBTransaction();
             return applicationRelease;
+        } catch (ForbiddenException e) {
+            ConnectionManagerUtil.rollbackDBTransaction();
+            String msg = "Error occurred while creating application release for application Id: "
+                    + applicationDTO.getId();
+            log.error(msg, e);
+            throw e;
         } catch (TransactionManagementException e) {
             String msg = "Error occurred while staring application release creating transaction for application Id: "
                     + applicationDTO.getId();
@@ -2241,6 +2258,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
             if (ApplicationType.CUSTOM.toString().equalsIgnoreCase(applicationDTO.getType())) {
                 this.applicationDAO.deleteDeviceFirmwareModelMapping(applicationDTO.getId(), tenantId);
             }
+            this.applicationDAO.deleteAppFavouritesByAppId(applicationDTO.getId(), tenantId);
             this.applicationDAO.deleteApplication(applicationDTO.getId(), tenantId);
             APIUtil.getApplicationStorageManager().deleteAllApplicationReleaseArtifacts(deletingAppHashVals, tenantId);
             ConnectionManagerUtil.commitDBTransaction();
@@ -2368,6 +2386,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                     }
                     lifecycleStateDAO.deleteLifecycleStateByReleaseId(applicationReleaseDTO.getId());
                     applicationReleaseDAO.deleteRelease(applicationReleaseDTO.getId());
+                    applicationDAO.deleteAppFavouritesByAppId(applicationDTO.getId(), tenantId);
                     applicationStorageManager.deleteAllApplicationReleaseArtifacts(
                             Collections.singletonList(applicationReleaseDTO.getAppHashValue()), tenantId);
                     ConnectionManagerUtil.commitDBTransaction();
@@ -3842,7 +3861,7 @@ public class ApplicationManagerImpl implements ApplicationManager {
                                                 + " and package name: " + applicationDTO.getApplicationReleaseDTOs()
                                                 .get(0).getPackageName();
                                 log.error(msg);
-                                throw new BadRequestException(msg);
+                                throw new ConflictException(msg);
                             }
 
                             applicationReleaseDTO.get().setInstallerName(applicationArtifact.getInstallerName());

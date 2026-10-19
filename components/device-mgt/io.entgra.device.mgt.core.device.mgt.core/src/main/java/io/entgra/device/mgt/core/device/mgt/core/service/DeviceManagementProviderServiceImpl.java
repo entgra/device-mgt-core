@@ -731,9 +731,10 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
 
         if (device.getEnrolmentInfo().getStatus().equals(EnrolmentInfo.Status.DISENROLLMENT_REQUESTED)) {
             if (log.isDebugEnabled()) {
-                log.debug("Device has already requested disenrollment : " + deviceId.getId() + "'");
+                log.debug("Device already in DISENROLLMENT_REQUESTED; forcing remove: "
+                        + deviceId.getId());
             }
-            return true;
+            return removeDevice(deviceId);
         }
 
         try {
@@ -2882,6 +2883,71 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
+    public Device updateOperationStatus(DeviceIdentifier deviceIdentifier, Operation operation)
+            throws DeviceManagementException, OperationManagementException {
+        try {
+            int tenantId = this.getTenantId();
+            DeviceType deviceTypeObj = DeviceManagerUtil.getDeviceType(deviceIdentifier.getType(), tenantId);
+            if (deviceTypeObj == null) {
+                String msg = "Device of type: " + deviceIdentifier.getType() + " does not exist";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+            Device device = this.getDevice(deviceIdentifier, false);
+            this.updateOperation(device, operation);
+            return device;
+        } catch (BadRequestException e) {
+            String msg = "Invalid request while updating operation status for device " + deviceIdentifier;
+            log.error(msg, e);
+            throw e;
+        } catch (OperationManagementException e) {
+            String msg = "Error occurred when updating operation of device " + deviceIdentifier;
+            log.error(msg, e);
+            throw e;
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred when fetching device " + deviceIdentifier;
+            log.error(msg, e);
+            throw e;
+        }
+    }
+
+    @Override
+    public Device updateOperationStatuses(DeviceIdentifier deviceIdentifier, List<Operation> operations,
+                                          Operation.Status status)
+            throws DeviceManagementException, DeviceNotFoundException, OperationManagementException {
+        try {
+            int tenantId = this.getTenantId();
+            DeviceType deviceTypeObj = DeviceManagerUtil.getDeviceType(deviceIdentifier.getType(), tenantId);
+            if (deviceTypeObj == null) {
+                String msg = "Device of type: " + deviceIdentifier.getType() + " does not exist";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
+            Device device = this.getDevice(deviceIdentifier, false);
+            if (device == null || device.getEnrolmentInfo() == null) {
+                String msg = "No enrolled device found for " + deviceIdentifier;
+                log.error(msg);
+                throw new DeviceNotFoundException(msg);
+            }
+            pluginRepository.getOperationManager(device.getType(), tenantId)
+                    .updateOperationStatuses(device, operations, status);
+            return device;
+        } catch (BadRequestException e) {
+            String msg = "Invalid request while updating operation statuses for device " + deviceIdentifier;
+            log.error(msg, e);
+            throw e;
+        } catch (OperationManagementException e) {
+            String msg = "Error occurred when updating operations of device " + deviceIdentifier;
+            log.error(msg, e);
+            throw e;
+        } catch (DeviceManagementException e) {
+            String msg = "Error occurred when fetching device " + deviceIdentifier;
+            log.error(msg, e);
+            throw e;
+        }
+    }
+
+    @Override
     public void updateOperation(Device device, Operation operation) throws OperationManagementException {
         try {
             EnrolmentInfo enrolmentInfo = device.getEnrolmentInfo();
@@ -4319,17 +4385,17 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     /**
-     * Returns all the available information (device-info, location, applications and plugin-db data)
-     * of the given device list.
+     * Enrich a paginated device list with device-info (and plugin properties) for table views.
+     * Does not load installed applications or features — those are large, fetched on demand
+     * for single-device views, and are not used by the All Devices table.
      */
     private List<Device> populateAllDeviceInfo(List<Device> allDevices) throws DeviceManagementException {
         if (log.isDebugEnabled()) {
-            log.debug("Get all device info of devices, num of devices: " + allDevices.size());
+            log.debug("Get listing device info of devices, num of devices: " + allDevices.size());
         }
         List<Device> devices = new ArrayList<>();
         for (Device device : allDevices) {
             device.setDeviceInfo(this.getDeviceInfo(device));
-            device.setApplications(this.getInstalledApplications(device));
             DeviceManager deviceManager = this.getDeviceManager(device.getType());
             if (deviceManager == null) {
                 if (log.isDebugEnabled()) {
@@ -4342,7 +4408,6 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             Device dmsDevice =
                     deviceManager.getDevice(new DeviceIdentifier(device.getDeviceIdentifier(), device.getType()));
             if (dmsDevice != null) {
-                device.setFeatures(dmsDevice.getFeatures());
                 device.setProperties(dmsDevice.getProperties());
             }
             devices.add(device);
@@ -4838,8 +4903,48 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             } finally {
                 DeviceManagementDAOFactory.closeConnection();
             }
+            enrichDeviceTypeVersionLabels(typeName, versions);
         }
         return versions;
+    }
+
+    /**
+     * Attach optional display labels from the device-type XML onto persisted version rows.
+     * VersionName remains the stored/API value used for range validation.
+     */
+    private void enrichDeviceTypeVersionLabels(String typeName, List<DeviceTypeVersion> versions) {
+        if (versions == null || versions.isEmpty()) {
+            return;
+        }
+        try {
+            DeviceManagementService deviceManagementService =
+                    pluginRepository.getDeviceManagementService(typeName, this.getTenantId());
+            if (deviceManagementService == null) {
+                return;
+            }
+            DeviceTypePlatformDetails platformDetails =
+                    deviceManagementService.getDeviceTypePlatformDetails();
+            if (platformDetails == null || platformDetails.getDeviceTypePlatformVersion() == null) {
+                return;
+            }
+            Map<String, String> versionLabels = new HashMap<>();
+            for (DeviceTypePlatformVersion platformVersion :
+                    platformDetails.getDeviceTypePlatformVersion()) {
+                if (StringUtils.isNotEmpty(platformVersion.getVersionsName())
+                        && StringUtils.isNotEmpty(platformVersion.getVersionLabel())) {
+                    versionLabels.put(platformVersion.getVersionsName(),
+                            platformVersion.getVersionLabel());
+                }
+            }
+            for (DeviceTypeVersion version : versions) {
+                String label = versionLabels.get(version.getVersionName());
+                if (StringUtils.isNotEmpty(label)) {
+                    version.setVersionLabel(label);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Unable to enrich OS version labels for device type: " + typeName, e);
+        }
     }
 
     @Override
@@ -6087,6 +6192,63 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
+    public PaginationResult getDevicesNotInTag(PaginationRequest request, boolean requireDeviceInfo)
+            throws DeviceManagementException {
+        if (request == null) {
+            String msg = "Received incomplete pagination request for method getDevicesNotInTag";
+            log.error(msg);
+            throw new BadRequestException(msg);
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("Get devices not in tag with pagination " + request.toString() +
+                    " and requiredDeviceInfo: " + requireDeviceInfo);
+        }
+        PaginationResult paginationResult = new PaginationResult();
+        List<Device> devicesNotInTag = null;
+        int count = 0;
+        int tenantId = this.getTenantId();
+        DeviceManagerUtil.validateDeviceListPageSize(request);
+
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            if (request.getTagId() != 0) {
+                devicesNotInTag = deviceDAO.searchDevicesNotInTag(request, tenantId);
+                count = deviceDAO.getCountOfDevicesNotInTag(request, tenantId);
+            } else {
+                String msg = "Tag ID is not provided for method getDevicesNotInTag";
+                log.error(msg);
+                throw new DeviceManagementException(msg);
+            }
+        } catch (DeviceManagementDAOException e) {
+            String msg = "Error occurred while retrieving device list that are not in the specified Tag for the current tenant";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (Exception e) {
+            String msg = "Error occurred in getDevicesNotInTag";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+
+        if (devicesNotInTag != null && !devicesNotInTag.isEmpty()) {
+            if (requireDeviceInfo) {
+                paginationResult.setData(populateAllDeviceInfo(devicesNotInTag));
+            } else {
+                paginationResult.setData(devicesNotInTag);
+            }
+        }
+
+        paginationResult.setRecordsFiltered(count);
+        paginationResult.setRecordsTotal(count);
+        return paginationResult;
+    }
+
+    @Override
     public Device updateDeviceName(Device device, String deviceType, String deviceId)
             throws DeviceManagementException, DeviceNotFoundException, ConflictException {
         Device persistedDevice = this.getDevice(new DeviceIdentifier(deviceId, deviceType), true);
@@ -6095,12 +6257,15 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             log.error(msg);
             throw new DeviceNotFoundException(msg);
         }
-        if (persistedDevice.getName().equals(device.getName())) {
+        String trimmedName = device.getName() != null ? device.getName().trim() : null;
+        device.setName(trimmedName);
+        if (persistedDevice.getName() != null
+                && persistedDevice.getName().equals(trimmedName)) {
             String msg = "Device names are the same.";
             log.info(msg);
             throw new ConflictException(msg);
         }
-        persistedDevice.setName(device.getName());
+        persistedDevice.setName(trimmedName);
         if (log.isDebugEnabled()) {
             log.debug("Rename Device name of: " + persistedDevice.getId() + " of type '" + persistedDevice.getType() + "'");
         }
