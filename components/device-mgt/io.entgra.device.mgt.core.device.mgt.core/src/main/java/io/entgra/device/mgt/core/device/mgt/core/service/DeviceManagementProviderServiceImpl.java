@@ -6274,18 +6274,19 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
-    public List<Integer> getDeviceIdsNotInEnrolmentStatus(List<String> excludedStatuses) throws DeviceManagementException {
-        if (excludedStatuses == null || excludedStatuses.isEmpty()) {
-            String msg = "Received null or empty list for excluded statuses";
+    public List<Integer> getDeviceIdsInEnrolmentStatus(List<Integer> deviceIds, List<String> statuses, int tenantId)
+            throws DeviceManagementException {
+        if (statuses == null || statuses.isEmpty()) {
+            String msg = "Received null or empty list for statuses";
             log.error(msg);
             throw new DeviceManagementException(msg);
         }
 
         try {
             DeviceManagementDAOFactory.openConnection();
-            return deviceDAO.getDeviceIdsNotInEnrolmentStatus(excludedStatuses);
+            return deviceDAO.getDeviceIdsInEnrolmentStatus(deviceIds, statuses, tenantId);
         } catch (DeviceManagementException e) {
-            String msg = "Error encountered while getting device IDs not in enrolment statuses: " + excludedStatuses;
+            String msg = "Error encountered while getting device IDs in enrolment statuses: " + statuses;
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
         } catch (SQLException e) {

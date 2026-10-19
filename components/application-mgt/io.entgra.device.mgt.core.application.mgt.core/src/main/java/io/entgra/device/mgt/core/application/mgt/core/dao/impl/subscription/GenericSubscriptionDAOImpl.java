@@ -50,8 +50,10 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -2315,25 +2317,6 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                     + " from the database");
         }
 
-        List<String> excludedEnrolmentStatuses = new ArrayList<>();
-        excludedEnrolmentStatuses.add(EnrolmentInfo.Status.DISENROLLMENT_REQUESTED.toString());
-        excludedEnrolmentStatuses.add(EnrolmentInfo.Status.REMOVED.toString());
-        excludedEnrolmentStatuses.add(EnrolmentInfo.Status.DELETED.toString());
-
-        DeviceManagementProviderService deviceManagementProviderService = HelperUtil.getDeviceManagementProviderService();
-        List<Integer> allowedDeviceIds;
-        try {
-            allowedDeviceIds = deviceManagementProviderService.getDeviceIdsNotInEnrolmentStatus(excludedEnrolmentStatuses);
-        } catch (DeviceManagementException e) {
-            String msg = "Error occurred while retrieving device enrolment statuses for application release id "
-                    + appReleaseId;
-            log.error(msg, e);
-            throw new ApplicationManagementDAOException(msg, e);
-        }
-        if (allowedDeviceIds.isEmpty()) {
-            return new ArrayList<>();
-        }
-
         String subscriptionStatusTime = unsubscribe ? "DS.UNSUBSCRIBED_TIMESTAMP" : "DS.SUBSCRIBED_TIMESTAMP";
         String actionTriggeredColumn = unsubscribe ? "DS.UNSUBSCRIBED_BY" : "DS.SUBSCRIBED_BY";
         StringBuilder sql = new StringBuilder("SELECT "
@@ -2349,9 +2332,7 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                 + "FROM AP_DEVICE_SUBSCRIPTION DS "
                 + "WHERE DS.AP_APP_RELEASE_ID = ? "
                 + "AND DS.UNSUBSCRIBED = ? "
-                + "AND DS.TENANT_ID = ? "
-                + "AND DS.DM_DEVICE_ID IN ("
-                + allowedDeviceIds.stream().map(id -> "?").collect(Collectors.joining(",")) + ") ");
+                + "AND DS.TENANT_ID = ? ");
 
         if (actionStatus != null && !actionStatus.isEmpty()) {
             sql.append(" AND DS.STATUS IN (").
@@ -2378,9 +2359,6 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                 ps.setInt(paramIdx++, appReleaseId);
                 ps.setBoolean(paramIdx++, unsubscribe);
                 ps.setInt(paramIdx++, tenantId);
-                for (Integer deviceId : allowedDeviceIds) {
-                    ps.setInt(paramIdx++, deviceId);
-                }
 
                 if (actionStatus != null && !actionStatus.isEmpty()) {
                     for (String status : actionStatus) {
@@ -2421,6 +2399,30 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                         subscription.setDeviceId(rs.getInt("DEVICE_ID"));
 
                         deviceSubscriptions.add(subscription);
+                    }
+
+                    if (!deviceSubscriptions.isEmpty()) {
+                        List<String> excludedEnrolmentStatuses = new ArrayList<>();
+                        excludedEnrolmentStatuses.add(EnrolmentInfo.Status.DISENROLLMENT_REQUESTED.toString());
+                        excludedEnrolmentStatuses.add(EnrolmentInfo.Status.REMOVED.toString());
+                        excludedEnrolmentStatuses.add(EnrolmentInfo.Status.DELETED.toString());
+
+                        List<Integer> candidateDeviceIds = deviceSubscriptions.stream()
+                                .map(DeviceSubscriptionDTO::getDeviceId).distinct().collect(Collectors.toList());
+
+                        DeviceManagementProviderService deviceManagementProviderService =
+                                HelperUtil.getDeviceManagementProviderService();
+                        Set<Integer> disenrolledDeviceIds;
+                        try {
+                            disenrolledDeviceIds = new HashSet<>(deviceManagementProviderService
+                                    .getDeviceIdsInEnrolmentStatus(candidateDeviceIds, excludedEnrolmentStatuses, tenantId));
+                        } catch (DeviceManagementException e) {
+                            String msg = "Error occurred while retrieving device enrolment statuses for application release id "
+                                    + appReleaseId;
+                            log.error(msg, e);
+                            throw new ApplicationManagementDAOException(msg, e);
+                        }
+                        deviceSubscriptions.removeIf(dto -> disenrolledDeviceIds.contains(dto.getDeviceId()));
                     }
                     return deviceSubscriptions;
                 }

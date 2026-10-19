@@ -34,6 +34,7 @@ import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOExceptio
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
+import com.google.common.collect.Lists;
 import org.apache.commons.collections.map.SingletonMap;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
@@ -3842,40 +3843,54 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         }
     }
 
+    /**
+     * Maximum number of device IDs bound in a single "IN (...)" clause. Oracle rejects more than
+     * 1000 bind parameters in one IN list (ORA-01795), so candidate device IDs are chunked to this size.
+     */
+    private static final int MAX_DEVICE_ID_CHUNK_SIZE = 1000;
+
     @Override
-    public List<Integer> getDeviceIdsNotInEnrolmentStatus(List<String> excludedStatuses) throws DeviceManagementException {
-        StringBuilder statusFilters = new StringBuilder();
-        for (int i = 0; i < excludedStatuses.size(); i++) {
-            statusFilters.append("?");
-            if (i < excludedStatuses.size() - 1) {
-                statusFilters.append(",");
-            }
+    public List<Integer> getDeviceIdsInEnrolmentStatus(List<Integer> deviceIds, List<String> statuses, int tenantId)
+            throws DeviceManagementException {
+        if (deviceIds == null || deviceIds.isEmpty() || statuses == null || statuses.isEmpty()) {
+            return new ArrayList<>();
         }
 
+        String statusFilters = statuses.stream().map(status -> "?").collect(Collectors.joining(","));
+        List<Integer> matchedDeviceIds = new ArrayList<>();
         try {
             Connection conn = getConnection();
-            String sql = "SELECT D.ID AS DEVICE_ID " +
-                    "FROM DM_DEVICE D " +
-                    "LEFT JOIN (SELECT DEVICE_ID, MAX(ID) AS ENROLMENT_ID FROM DM_ENROLMENT GROUP BY DEVICE_ID) CE " +
-                    "ON CE.DEVICE_ID = D.ID " +
-                    "LEFT JOIN DM_ENROLMENT E ON E.ID = CE.ENROLMENT_ID " +
-                    "WHERE (E.STATUS IS NULL OR E.STATUS NOT IN (" + statusFilters.toString() + "))";
+            for (List<Integer> chunk : Lists.partition(deviceIds, MAX_DEVICE_ID_CHUNK_SIZE)) {
+                String deviceIdFilters = chunk.stream().map(id -> "?").collect(Collectors.joining(","));
+                String sql = "SELECT D.ID AS DEVICE_ID " +
+                        "FROM DM_DEVICE D " +
+                        "LEFT JOIN (SELECT DEVICE_ID, MAX(ID) AS ENROLMENT_ID FROM DM_ENROLMENT GROUP BY DEVICE_ID) CE " +
+                        "ON CE.DEVICE_ID = D.ID " +
+                        "LEFT JOIN DM_ENROLMENT E ON E.ID = CE.ENROLMENT_ID " +
+                        "WHERE D.TENANT_ID = ? " +
+                        "AND D.ID IN (" + deviceIdFilters + ") " +
+                        "AND E.STATUS IN (" + statusFilters + ")";
 
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                for (int i = 0; i < excludedStatuses.size(); i++) {
-                    ps.setString(i + 1, excludedStatuses.get(i));
-                }
-
-                try (ResultSet rs = ps.executeQuery()) {
-                    List<Integer> deviceIds = new ArrayList<>();
-                    while (rs.next()) {
-                        deviceIds.add(rs.getInt("DEVICE_ID"));
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    int paramIdx = 1;
+                    ps.setInt(paramIdx++, tenantId);
+                    for (Integer deviceId : chunk) {
+                        ps.setInt(paramIdx++, deviceId);
                     }
-                    return deviceIds;
+                    for (String status : statuses) {
+                        ps.setString(paramIdx++, status);
+                    }
+
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            matchedDeviceIds.add(rs.getInt("DEVICE_ID"));
+                        }
+                    }
                 }
             }
+            return matchedDeviceIds;
         } catch (SQLException e) {
-            String msg = "Error occurred while running SQL to get device IDs not in enrolment status.";
+            String msg = "Error occurred while running SQL to get device IDs in enrolment status.";
             log.error(msg, e);
             throw new DeviceManagementException(msg, e);
         }

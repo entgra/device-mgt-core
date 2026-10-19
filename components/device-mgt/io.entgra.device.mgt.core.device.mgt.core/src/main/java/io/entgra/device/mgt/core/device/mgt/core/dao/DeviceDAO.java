@@ -929,14 +929,17 @@ public interface DeviceDAO {
     List<Integer> getDeviceIdsByStatus(List<String> statuses) throws DeviceManagementException;
 
     /**
-     * This method is used to get the IDs of devices whose current (most recently created) enrolment
-     * status is not in the given list of excluded statuses.
+     * This method is used to get the subset of the given device IDs whose current (most recently
+     * created) enrolment status is in the given list of statuses.
      *
-     * @param excludedStatuses Enrolment statuses to be excluded
-     * @return deviceIds
+     * @param deviceIds candidate device IDs to check
+     * @param statuses Enrolment statuses to match
+     * @param tenantId id of the tenant the devices belong to
+     * @return deviceIds matching the given statuses
      * @throws DeviceManagementException
      */
-    List<Integer> getDeviceIdsNotInEnrolmentStatus(List<String> excludedStatuses) throws DeviceManagementException;
+    List<Integer> getDeviceIdsInEnrolmentStatus(List<Integer> deviceIds, List<String> statuses, int tenantId)
+            throws DeviceManagementException;
 
     /**
      * This method is used to check whether a device property value exists in the system.
