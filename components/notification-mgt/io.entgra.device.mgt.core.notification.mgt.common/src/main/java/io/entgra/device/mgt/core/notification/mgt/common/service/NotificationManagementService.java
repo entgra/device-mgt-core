@@ -141,7 +141,7 @@ public interface NotificationManagementService {
      * @param operationCode The unique code representing the operation (e.g., "POLICY_REVOKE").
      * @param operationStatus The current status of the operation (e.g., "COMPLETED", "PENDING").
      * @param deviceType The type of the device associated with the operation (e.g., "android").
-     * @param deviceIds {@link io.entgra.device.mgt.core.device.mgt.common.Device} primary keys ({@code DM_DEVICE.ID}).
+     * @param deviceIds primary keys ({@code DM_DEVICE.ID}).
      * @param tenantId The tenant ID representing the specific tenant context for which notifications
      *                 are being sent.
      * @param notificationTriggerPoint The point in the process at which the notification should be triggered
@@ -175,14 +175,15 @@ public interface NotificationManagementService {
             throws NotificationManagementException, TransactionManagementException, UserStoreException;
 
     /**
-     * Handles task-based notifications if a notification configuration exists for the given task code.
-     * If no configuration is found, the method simply exits without performing any notification actions.
+     * Handles task-based notifications if an enabled notification configuration exists for the given task code.
+     * If no configuration is found or it is disabled, the method exits without sending a notification.
      *
      * @param tenantId The tenant ID under which the task is being executed.
-     * @param message The message to be sent with the notification, which can be task-specific.
+     * @param taskCode Task feature code (e.g. REMOVE_DEVICE, DELETE_DEVICE).
+     * @param message  The message to be sent with the notification.
      * @throws NotificationManagementException If an error occurs while handling the notification.
      */
-    void handleTaskNotificationIfApplicable(int tenantId, String message)
+    void handleTaskNotificationIfApplicable(int tenantId, String taskCode, String message)
             throws NotificationManagementException;
 
     /**

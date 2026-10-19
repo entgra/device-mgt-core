@@ -122,15 +122,19 @@ public class NotificationHelper {
                 }
                 return null;
             }
+            NotificationConfig matched = null;
             for (NotificationConfig config : configList.getNotificationConfigurations()) {
-                if (config.getCode().equalsIgnoreCase(code)) {
-                    return config;
+                if (config.getCode() != null && config.getCode().equalsIgnoreCase(code)) {
+                    // Prefer highest id when duplicates exist (e.g. seed + user-created).
+                    if (matched == null || config.getId() > matched.getId()) {
+                        matched = config;
+                    }
                 }
             }
-            if (log.isDebugEnabled()) {
+            if (matched == null && log.isDebugEnabled()) {
                 log.debug("No configuration found matching code: " + code);
             }
-            return null;
+            return matched;
         } catch (NullPointerException e) {
             String message = "Meta value doesn't exist for meta key.";
             log.error(message, e);

@@ -117,4 +117,12 @@ public interface NotificationConfigService {
      * @throws NotificationConfigurationServiceException if an error occurs while checking the configuration.
      */
     boolean configExists(String deviceType, String code) throws NotificationConfigurationServiceException;
+
+    /**
+     * Ensures default task notification configurations exist for the current tenant
+     * (enabled, recipient user admin). Missing task configs are added; existing ones are left unchanged.
+     *
+     * @throws NotificationConfigurationServiceException if metadata cannot be updated
+     */
+    void ensureDefaultTaskNotificationConfigs() throws NotificationConfigurationServiceException;
 }

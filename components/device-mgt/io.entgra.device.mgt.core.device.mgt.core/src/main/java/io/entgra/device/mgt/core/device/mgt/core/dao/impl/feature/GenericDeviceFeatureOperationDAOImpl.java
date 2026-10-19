@@ -38,40 +38,66 @@ import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.stream.Collectors;
 
 public class GenericDeviceFeatureOperationDAOImpl implements DeviceFeatureOperationDAO {
     private static final Log log = LogFactory.getLog(GenericDeviceFeatureOperationDAOImpl.class);
+    private static final String DEFAULT_FEATURE_TYPE = "operation";
+    private static final String FEATURE_TYPE_TASK = "task";
 
     @Override
     public void updateDeviceFeatureDetails(List<DeviceFeatureInfo> featureList)
             throws DeviceFeatureOperationsDAOException {
         String selectQuery =
                 "SELECT OPERATION_CODE, " +
-                        "DEVICE_TYPE " +
-                        "FROM DM_OPERATION_DETAILS";
+                        "DEVICE_TYPE, " +
+                        "TYPE " +
+                        "FROM DM_FEATURE_DETAILS";
         String insertQuery =
-                "INSERT INTO DM_OPERATION_DETAILS " +
+                "INSERT INTO DM_FEATURE_DETAILS " +
                 "(OPERATION_CODE, " +
                         "OPERATION_NAME, " +
                         "OPERATION_DESCRIPTION, " +
-                        "DEVICE_TYPE) " +
-                "VALUES (?, ?, ?, ?)";
+                        "DEVICE_TYPE, " +
+                        "TYPE) " +
+                "VALUES (?, ?, ?, ?, ?)";
+        // Task features are one row per code; sync DEVICE_TYPE when catalog changes (e.g. ALL → NONE).
+        String syncTaskDeviceTypeQuery =
+                "UPDATE DM_FEATURE_DETAILS " +
+                        "SET DEVICE_TYPE = ?, " +
+                        "OPERATION_NAME = ?, " +
+                        "OPERATION_DESCRIPTION = ? " +
+                "WHERE OPERATION_CODE = ? " +
+                        "AND TYPE = ?";
         try (Connection connection = DeviceFeatureOperationsDAOFactory.getConnection()) {
-            // fetch existing code + deviceType pairs
             Set<String> existingKeys = new HashSet<>();
+            Set<String> existingTaskCodeKeys = new HashSet<>();
             try (PreparedStatement selectStmt = connection.prepareStatement(selectQuery);
                  ResultSet rs = selectStmt.executeQuery()) {
                 while (rs.next()) {
-                    String key = rs.getString("OPERATION_CODE") + "|" + rs.getString("DEVICE_TYPE");
-                    existingKeys.add(key);
+                    String code = rs.getString("OPERATION_CODE");
+                    String deviceType = rs.getString("DEVICE_TYPE");
+                    String type = rs.getString("TYPE");
+                    existingKeys.add(code + "|" + deviceType + "|" + type);
+                    if (FEATURE_TYPE_TASK.equalsIgnoreCase(type)) {
+                        existingTaskCodeKeys.add(code + "|" + FEATURE_TYPE_TASK);
+                    }
                 }
             }
-            // filter out already existing records
-            List<DeviceFeatureInfo> toInsert = featureList.stream()
-                    .filter(f -> !existingKeys.contains(f.getOperationCode()
-                            + "|" + f.getDeviceType()))
-                    .collect(Collectors.toList());
+            List<DeviceFeatureInfo> toInsert = new ArrayList<>();
+            List<DeviceFeatureInfo> tasksToSync = new ArrayList<>();
+            for (DeviceFeatureInfo featureInfo : featureList) {
+                String featureType = resolveFeatureType(featureInfo.getType());
+                if (FEATURE_TYPE_TASK.equalsIgnoreCase(featureType)) {
+                    if (existingTaskCodeKeys.contains(featureInfo.getOperationCode() + "|" + FEATURE_TYPE_TASK)) {
+                        tasksToSync.add(featureInfo);
+                    } else {
+                        toInsert.add(featureInfo);
+                    }
+                } else if (!existingKeys.contains(featureInfo.getOperationCode()
+                        + "|" + featureInfo.getDeviceType() + "|" + featureType)) {
+                    toInsert.add(featureInfo);
+                }
+            }
             if (!toInsert.isEmpty()) {
                 try (PreparedStatement insertStmt = connection.prepareStatement(insertQuery)) {
                     for (DeviceFeatureInfo featureInfo : toInsert) {
@@ -79,9 +105,23 @@ public class GenericDeviceFeatureOperationDAOImpl implements DeviceFeatureOperat
                         insertStmt.setString(2, featureInfo.getName());
                         insertStmt.setString(3, featureInfo.getDescription());
                         insertStmt.setString(4, featureInfo.getDeviceType());
+                        insertStmt.setString(5, resolveFeatureType(featureInfo.getType()));
                         insertStmt.addBatch();
                     }
                     insertStmt.executeBatch();
+                }
+            }
+            if (!tasksToSync.isEmpty()) {
+                try (PreparedStatement syncStmt = connection.prepareStatement(syncTaskDeviceTypeQuery)) {
+                    for (DeviceFeatureInfo featureInfo : tasksToSync) {
+                        syncStmt.setString(1, featureInfo.getDeviceType());
+                        syncStmt.setString(2, featureInfo.getName());
+                        syncStmt.setString(3, featureInfo.getDescription());
+                        syncStmt.setString(4, featureInfo.getOperationCode());
+                        syncStmt.setString(5, FEATURE_TYPE_TASK);
+                        syncStmt.addBatch();
+                    }
+                    syncStmt.executeBatch();
                 }
             }
         } catch (SQLException e) {
@@ -92,8 +132,8 @@ public class GenericDeviceFeatureOperationDAOImpl implements DeviceFeatureOperat
     }
 
     @Override
-    public List<DeviceFeatureInfo> getOperationDetails(String code, String name, String type,
-                                                       boolean removeDeduplicateCode)
+    public List<DeviceFeatureInfo> getOperationDetails(String code, String name, String deviceType,
+                                                       String featureType, boolean removeDeduplicateCode)
             throws DeviceFeatureOperationsDAOException {
         List<DeviceFeatureInfo> operationList = new ArrayList<>();
         StringBuilder query = new StringBuilder(
@@ -101,27 +141,40 @@ public class GenericDeviceFeatureOperationDAOImpl implements DeviceFeatureOperat
                         "ID, " +
                         "OPERATION_CODE, " +
                         "OPERATION_NAME, " +
-                        "OPERATION_DESCRIPTION");
+                        "OPERATION_DESCRIPTION, " +
+                        "TYPE");
         if (!removeDeduplicateCode) {
             query.append(", DEVICE_TYPE");
         }
-        query.append(" FROM DM_OPERATION_DETAILS WHERE 1=1");
+        query.append(" FROM DM_FEATURE_DETAILS WHERE 1=1");
         if (code != null && !code.isBlank()) {
             query.append(" AND OPERATION_CODE LIKE ?");
         }
         if (name != null) {
             query.append(" AND OPERATION_NAME LIKE ?");
         }
-        if (type != null) {
+        if (deviceType != null) {
             query.append(" AND DEVICE_TYPE = ?");
+        }
+        if (featureType != null && !featureType.isBlank()) {
+            query.append(" AND TYPE = ?");
         }
         try {
             Connection connection = DeviceFeatureOperationsDAOFactory.getConnection();
             try (PreparedStatement stmt = connection.prepareStatement(query.toString())) {
                 int index = 1;
-                if (code != null && !code.isBlank()) stmt.setString(index++, "%" + code + "%");
-                if (name != null) stmt.setString(index++, "%" + name + "%");
-                if (type != null) stmt.setString(index++, type);
+                if (code != null && !code.isBlank()) {
+                    stmt.setString(index++, "%" + code + "%");
+                }
+                if (name != null) {
+                    stmt.setString(index++, "%" + name + "%");
+                }
+                if (deviceType != null) {
+                    stmt.setString(index++, deviceType);
+                }
+                if (featureType != null && !featureType.isBlank()) {
+                    stmt.setString(index++, featureType);
+                }
                 try (ResultSet rs = stmt.executeQuery()) {
                     Map<String, DeviceFeatureInfo> dedupedMap = new LinkedHashMap<>();
                     while (rs.next()) {
@@ -134,6 +187,7 @@ public class GenericDeviceFeatureOperationDAOImpl implements DeviceFeatureOperat
                         info.setOperationCode(operationCode);
                         info.setName(rs.getString("OPERATION_NAME"));
                         info.setDescription(rs.getString("OPERATION_DESCRIPTION"));
+                        info.setType(rs.getString("TYPE"));
                         if (!removeDeduplicateCode) {
                             info.setDeviceType(rs.getString("DEVICE_TYPE"));
                         }
@@ -149,7 +203,7 @@ public class GenericDeviceFeatureOperationDAOImpl implements DeviceFeatureOperat
                 }
             }
         } catch (SQLException e) {
-            String msg = "Error retrieving filtered operation details from DB.";
+            String msg = "Error retrieving filtered feature details from DB.";
             log.error(msg, e);
             throw new DeviceFeatureOperationsDAOException(msg, e);
         }
@@ -157,34 +211,47 @@ public class GenericDeviceFeatureOperationDAOImpl implements DeviceFeatureOperat
     }
 
     @Override
-    public Map<String, Boolean> operationCodesExist(List<String> codes) throws DeviceFeatureOperationsDAOException {
+    public Map<String, Boolean> featureCodesExist(List<String> codes, String featureType)
+            throws DeviceFeatureOperationsDAOException {
         Map<String, Boolean> result = new HashMap<>();
-        if (codes == null || codes.isEmpty()) return result;
+        if (codes == null || codes.isEmpty()) {
+            return result;
+        }
         String placeholders = String.join(",", Collections.nCopies(codes.size(), "?"));
-        String query =
+        StringBuilder query = new StringBuilder(
                 "SELECT OPERATION_CODE " +
-                        "FROM DM_OPERATION_DETAILS " +
+                        "FROM DM_FEATURE_DETAILS " +
                         "WHERE OPERATION_CODE " +
-                        "IN (" + placeholders + ")";
+                        "IN (" + placeholders + ")");
+        if (featureType != null && !featureType.isBlank()) {
+            query.append(" AND TYPE = ?");
+        }
         try {
             Connection connection = DeviceFeatureOperationsDAOFactory.getConnection();
             try (PreparedStatement stmt = connection.prepareStatement(query.toString())) {
-                for (int i = 0; i < codes.size(); i++) {
-                    stmt.setString(i + 1, codes.get(i));
-                    result.put(codes.get(i), false);
+                int index = 1;
+                for (String code : codes) {
+                    stmt.setString(index++, code);
+                    result.put(code, false);
+                }
+                if (featureType != null && !featureType.isBlank()) {
+                    stmt.setString(index, featureType);
                 }
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
-                        String code = rs.getString("OPERATION_CODE");
-                        result.put(code, true);
+                        result.put(rs.getString("OPERATION_CODE"), true);
                     }
                 }
             }
         } catch (SQLException e) {
-            String msg = "Error checking existence of operation codes.";
+            String msg = "Error checking existence of feature codes.";
             log.error(msg, e);
             throw new DeviceFeatureOperationsDAOException(msg, e);
         }
         return result;
+    }
+
+    private static String resolveFeatureType(String type) {
+        return (type == null || type.isBlank()) ? DEFAULT_FEATURE_TYPE : type;
     }
 }

@@ -766,7 +766,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                             .setTenantID(String.valueOf(tenantId))
                             .setTenantDomain(tenantDomain)
                             .setUserName(userName).build());
-            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+            DeviceManagerUtil.publishDeviceNotification(tenantId, "DISENROLL_DEVICE", String.format(
                     "Device '%s' (%s) was disenrolled successfully.",
                     deviceId.getId(), deviceId.getType()));
         } catch (DeviceManagementDAOException e) {
@@ -774,21 +774,21 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             String msg = "Error occurred while dis-enrolling '" + deviceId.getType() +
                     "' device with the identifier '" + deviceId.getId() + "'";
             log.error(msg, e);
-            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+            DeviceManagerUtil.publishDeviceNotification(tenantId, "DISENROLL_DEVICE", String.format(
                     "Failed to disenroll device '%s' (%s).",
                     deviceId.getId(), deviceId.getType()));
             throw new DeviceManagementException(msg, e);
         } catch (TransactionManagementException e) {
             String msg = "Error occurred while initiating transaction";
             log.error(msg, e);
-            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+            DeviceManagerUtil.publishDeviceNotification(tenantId, "DISENROLL_DEVICE", String.format(
                     "Failed to disenroll device '%s' (%s).",
                     deviceId.getId(), deviceId.getType()));
             throw new DeviceManagementException(msg, e);
         } catch (Exception e) {
             String msg = "Error occurred while dis-enrolling device: " + deviceId.getId();
             log.error(msg, e);
-            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+            DeviceManagerUtil.publishDeviceNotification(tenantId, "DISENROLL_DEVICE", String.format(
                     "Failed to disenroll device '%s' (%s).",
                     deviceId.getId(), deviceId.getType()));
             throw new DeviceManagementException(msg, e);
@@ -844,7 +844,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             DeviceManagementDAOFactory.commitTransaction();
             this.removeDeviceFromCache(deviceId);
             log.info("Device removed successfully: " + deviceId.getId() + " of type '" + deviceId.getType() + "'");
-            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+            DeviceManagerUtil.publishDeviceNotification(tenantId, "REMOVE_DEVICE", String.format(
                     "Device '%s' (%s) was removed successfully.",
                     deviceId.getId(), deviceId.getType()));
         } catch (DeviceManagementDAOException e) {
@@ -852,21 +852,21 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             String msg = "Error occurred while removing '" + deviceId.getType() +
                     "' device with the identifier '" + deviceId.getId() + "'";
             log.error(msg, e);
-            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+            DeviceManagerUtil.publishDeviceNotification(tenantId, "REMOVE_DEVICE", String.format(
                     "Failed to remove device '%s' (%s).",
                     deviceId.getId(), deviceId.getType()));
             throw new DeviceManagementException(msg, e);
         } catch (TransactionManagementException e) {
             String msg = "Error occurred while initiating transaction";
             log.error(msg, e);
-            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+            DeviceManagerUtil.publishDeviceNotification(tenantId, "REMOVE_DEVICE", String.format(
                     "Failed to remove device '%s' (%s).",
                     deviceId.getId(), deviceId.getType()));
             throw new DeviceManagementException(msg, e);
         } catch (Exception e) {
             String msg = "Error occurred while removing device: " + deviceId.getId();
             log.error(msg, e);
-            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+            DeviceManagerUtil.publishDeviceNotification(tenantId, "REMOVE_DEVICE", String.format(
                     "Failed to remove device '%s' (%s).",
                     deviceId.getId(), deviceId.getType()));
             throw new DeviceManagementException(msg, e);
@@ -973,7 +973,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             DeviceManagementDAOFactory.commitTransaction();
             this.removeDevicesFromCache(deviceCacheKeyList);
             log.info("Successfully permanently deleted the details of devices : " + validDeviceIdentifiers);
-            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+            DeviceManagerUtil.publishDeviceNotification(tenantId, "DELETE_DEVICE", String.format(
                     "Device(s) %s were permanently deleted successfully.", validDeviceIdentifiers));
             if (HttpReportingUtil.isTrackerEnabled()) {
                 for (int enrollmentId : enrollmentIds) {
@@ -988,7 +988,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         } catch (TransactionManagementException e) {
             String msg = "Error occurred while initiating transaction";
             log.error(msg, e);
-            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+            DeviceManagerUtil.publishDeviceNotification(tenantId, "DELETE_DEVICE", String.format(
                     "Failed to permanently delete device(s) %s.", deviceIdentifiers));
             throw new DeviceManagementException(msg, e);
         } catch (DeviceManagementDAOException e) {
@@ -996,7 +996,7 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             String msg = "Error occurred while permanently deleting '" + deviceIdentifiers +
                     "' devices";
             log.error(msg, e);
-            DeviceManagerUtil.publishDeviceNotification(tenantId, String.format(
+            DeviceManagerUtil.publishDeviceNotification(tenantId, "DELETE_DEVICE", String.format(
                     "Failed to permanently delete device(s) %s.", deviceIdentifiers));
             throw new DeviceManagementException(msg, e);
         } finally {

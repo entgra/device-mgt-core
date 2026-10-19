@@ -457,21 +457,25 @@ public class NotificationManagementServiceImpl implements NotificationManagement
     }
 
     @Override
-    public void handleTaskNotificationIfApplicable(int tenantId, String message)
+    public void handleTaskNotificationIfApplicable(int tenantId, String taskCode, String message)
             throws NotificationManagementException {
-        try {
-            UserStoreManager userStoreManager = NotificationManagementDataHolder.getInstance()
-                    .getRealmService().getTenantUserRealm(tenantId).getUserStoreManager();
-            String[] adminUsers = userStoreManager.getUserListOfRole(Constants.ADMIN);
-            if (adminUsers == null || adminUsers.length == 0) {
-                log.warn("No users found with role '" + Constants.ADMIN + "' for tenantId: " + tenantId
-                        + ". Skipping task notification.");
-                return;
+        if (taskCode == null || taskCode.isBlank()) {
+            log.warn("Task code is empty. Skipping task notification.");
+            return;
+        }
+        NotificationConfig config = NotificationHelper.getNotificationConfigurationByCode(taskCode);
+        if (config == null || !config.isEnabled()
+                || !Constants.TASK.equalsIgnoreCase(config.getType())) {
+            if (log.isDebugEnabled()) {
+                log.debug("No enabled task notification config for code: " + taskCode);
             }
-            List<String> usernames = NotificationHelper.toTenantAwareUsernames(
-                    Arrays.asList(adminUsers), tenantId);
-            if (usernames.isEmpty()) {
-                log.warn("No tenant-aware admin usernames resolved for tenantId: " + tenantId
+            return;
+        }
+        try {
+            List<String> usernames = NotificationHelper.extractUsernamesFromRecipients(
+                    config.getRecipients(), tenantId);
+            if (usernames == null || usernames.isEmpty()) {
+                log.warn("No recipients resolved for task notification config: " + taskCode
                         + ". Skipping task notification.");
                 return;
             }
@@ -480,7 +484,8 @@ public class NotificationManagementServiceImpl implements NotificationManagement
             try {
                 NotificationManagementDAOFactory.beginTransaction();
                 int notificationId = notificationDAO.insertNotification(
-                        tenantId, 0, Constants.TASK, NotificationMessageRenderer.toJson(context));
+                        tenantId, config.getId(), Constants.TASK,
+                        NotificationMessageRenderer.toJson(context));
                 notificationDAO.insertNotificationUserActions(notificationId, usernames);
                 String description = NotificationMessageRenderer.render(
                         context, Collections.emptyList(), Constants.TASK);
@@ -504,7 +509,7 @@ public class NotificationManagementServiceImpl implements NotificationManagement
                 NotificationManagementDAOFactory.closeConnection();
             }
         } catch (UserStoreException e) {
-            String msg = "Error retrieving users with role 'admin'";
+            String msg = "Error resolving recipients for task notification: " + taskCode;
             log.error(msg, e);
             throw new NotificationManagementException(msg, e);
         }

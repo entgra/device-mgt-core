@@ -22,6 +22,8 @@ correct behaviour looks like in the core services and Device Management API.
 | --- | --- |
 | Device name and description persistence | [device-name-description.md](device-name-description.md) |
 | Console delete / disenroll task notifications | [device-delete-notifications.md](device-delete-notifications.md) |
+| Task notification configs + `DM_FEATURE_DETAILS` | [task-notification-configs.md](task-notification-configs.md) |
+| Notification-mgt module (API, DAO, SSE, archival) | [../../notification-mgt/Specs/README.md](../../notification-mgt/Specs/README.md) |
 
 ### Operations
 
@@ -43,7 +45,7 @@ correct behaviour looks like in the core services and Device Management API.
 - Device enrollment
 - Device list / search / filters
 - Device details / properties
-- Operations and notifications (partial: status update + delete/disenroll task notifications covered above)
+- Operations and notifications (partial: status update, delete/disenroll task notifications, and task notification configs covered above)
 - Device access authorization
 
 ## Writing rules

@@ -492,6 +492,7 @@ public class TenantManagerImpl implements TenantManager {
             notificationConfigService.setDefaultNotificationArchiveMetadata(
                     TenantConstants.DEFAULT_NOTIFICATION_ARCHIVE_TYPE,
                     TenantConstants.DEFAULT_NOTIFICATION_ARCHIVE_PERIOD);
+            notificationConfigService.ensureDefaultTaskNotificationConfigs();
         } catch (NotificationConfigurationServiceException e) {
             String msg = "Error occurred while setting default notification archival metadata for tenant " +
                     tenantInfoBean.getTenantId();

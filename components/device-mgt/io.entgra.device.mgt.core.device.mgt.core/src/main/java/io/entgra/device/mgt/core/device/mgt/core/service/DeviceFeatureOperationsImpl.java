@@ -26,6 +26,10 @@ import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceFeatureOpera
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceTypeNotFoundException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.TransactionManagementException;
+import io.entgra.device.mgt.core.device.mgt.core.config.ui.NotificationTaskFeature;
+import io.entgra.device.mgt.core.device.mgt.core.config.ui.NotificationTaskFeatures;
+import io.entgra.device.mgt.core.device.mgt.core.config.ui.UIConfiguration;
+import io.entgra.device.mgt.core.device.mgt.core.config.ui.UIConfigurationManager;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceFeatureOperationsDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceFeatureOperationsDAOException;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceFeatureOperationDAO;
@@ -44,11 +48,13 @@ public class DeviceFeatureOperationsImpl implements DeviceFeatureOperations {
     private static final Log log = LogFactory.getLog(DeviceFeatureOperationsImpl.class);
     private final DeviceFeatureOperationDAO deviceFeatureOperationDAO;
 
+    public static final String FEATURE_TYPE_OPERATION = "operation";
+    public static final String FEATURE_TYPE_TASK = "task";
+    public static final String TASK_DEVICE_TYPE = "ALL";
+
     public DeviceFeatureOperationsImpl() {
         this.deviceFeatureOperationDAO = DeviceFeatureOperationsDAOFactory.getDeviceFeatureOperationDAO();
     }
-
-    public static final String FEATURE_TYPE_OPERATION = "operation";
 
     @Override
     public List<DeviceFeatureInfo> getDeviceFeatureOperations() throws DeviceFeatureOperationException {
@@ -59,29 +65,31 @@ public class DeviceFeatureOperationsImpl implements DeviceFeatureOperations {
             List<DeviceType> deviceTypes = deviceManagementProvider.getDeviceTypes();
             if (deviceTypes == null || deviceTypes.isEmpty()) {
                 log.warn("No device types available.");
-                return featureList;
-            }
-            for (DeviceType deviceType : deviceTypes) {
-                String deviceTypeName = deviceType.getName();
-                try {
-                    FeatureManager featureManager = deviceManagementProvider.getFeatureManager(deviceTypeName);
-                    List<Feature> features = featureManager.getFeatures(FEATURE_TYPE_OPERATION);
-                    if (features == null || features.isEmpty()) {
-                        log.warn("No device features available for device type: " + deviceTypeName);
-                        continue;
+            } else {
+                for (DeviceType deviceType : deviceTypes) {
+                    String deviceTypeName = deviceType.getName();
+                    try {
+                        FeatureManager featureManager = deviceManagementProvider.getFeatureManager(deviceTypeName);
+                        List<Feature> features = featureManager.getFeatures(FEATURE_TYPE_OPERATION);
+                        if (features == null || features.isEmpty()) {
+                            log.warn("No device features available for device type: " + deviceTypeName);
+                            continue;
+                        }
+                        for (Feature feature : features) {
+                            DeviceFeatureInfo featureInfo = new DeviceFeatureInfo();
+                            featureInfo.setOperationCode(feature.getCode());
+                            featureInfo.setName(feature.getName());
+                            featureInfo.setDescription(feature.getDescription());
+                            featureInfo.setDeviceType(deviceTypeName);
+                            featureInfo.setType(FEATURE_TYPE_OPERATION);
+                            featureList.add(featureInfo);
+                        }
+                    } catch (DeviceTypeNotFoundException e) {
+                        log.error("Feature manager not found for device type: " + deviceTypeName, e);
                     }
-                    for (Feature feature : features) {
-                        DeviceFeatureInfo featureInfo = new DeviceFeatureInfo();
-                        featureInfo.setOperationCode(feature.getCode());
-                        featureInfo.setName(feature.getName());
-                        featureInfo.setDescription(feature.getDescription());
-                        featureInfo.setDeviceType(deviceTypeName);
-                        featureList.add(featureInfo);
-                    }
-                } catch (DeviceTypeNotFoundException e) {
-                    log.error("Feature manager not found for device type: " + deviceTypeName, e);
                 }
             }
+            featureList.addAll(loadNotificationTaskFeatures());
             try {
                 DeviceFeatureOperationsDAOFactory.beginTransaction();
                 deviceFeatureOperationDAO.updateDeviceFeatureDetails(featureList);
@@ -93,7 +101,7 @@ public class DeviceFeatureOperationsImpl implements DeviceFeatureOperations {
             }
         } catch (DeviceFeatureOperationsDAOException e) {
             DeviceFeatureOperationsDAOFactory.rollbackTransaction();
-            String msg = "An error occurred while retrieving device types.";
+            String msg = "An error occurred while updating feature details.";
             log.error(msg, e);
             throw new DeviceFeatureOperationException(msg, e);
         } catch (DeviceManagementException e) {
@@ -106,20 +114,59 @@ public class DeviceFeatureOperationsImpl implements DeviceFeatureOperations {
         return featureList;
     }
 
+    private List<DeviceFeatureInfo> loadNotificationTaskFeatures() {
+        List<DeviceFeatureInfo> taskFeatures = new ArrayList<>();
+        UIConfiguration uiConfiguration = UIConfigurationManager.getInstance().getUIConfig();
+        if (uiConfiguration == null) {
+            return taskFeatures;
+        }
+        NotificationTaskFeatures notificationTaskFeatures = uiConfiguration.getNotificationTaskFeatures();
+        if (notificationTaskFeatures == null || notificationTaskFeatures.getFeatures() == null) {
+            return taskFeatures;
+        }
+        for (NotificationTaskFeature taskFeature : notificationTaskFeatures.getFeatures()) {
+            if (taskFeature == null || taskFeature.getCode() == null || taskFeature.getCode().isBlank()) {
+                continue;
+            }
+            DeviceFeatureInfo featureInfo = new DeviceFeatureInfo();
+            featureInfo.setOperationCode(taskFeature.getCode());
+            featureInfo.setName(taskFeature.getName());
+            featureInfo.setDescription(taskFeature.getDescription());
+            featureInfo.setDeviceType(resolveTaskDeviceType(taskFeature.getCode(), taskFeature.getDeviceType()));
+            featureInfo.setType(FEATURE_TYPE_TASK);
+            taskFeatures.add(featureInfo);
+        }
+        return taskFeatures;
+    }
+
+    /**
+     * Role-scoped tasks use {@code NONE}; otherwise XML {@code deviceType} or {@link #TASK_DEVICE_TYPE}.
+     */
+    private static String resolveTaskDeviceType(String code, String deviceType) {
+        if ("ROLE_PERMISSION_UPDATE".equals(code)) {
+            return "NONE";
+        }
+        if (deviceType == null || deviceType.isBlank()) {
+            return TASK_DEVICE_TYPE;
+        }
+        return deviceType.trim();
+    }
+
     @Override
-    public List<DeviceFeatureInfo> getOperationDetails(String code, String name, String type,
-                                                       boolean removeDeduplicateCode)
+    public List<DeviceFeatureInfo> getOperationDetails(String code, String name, String deviceType,
+                                                       String featureType, boolean removeDeduplicateCode)
             throws DeviceFeatureOperationException {
         List<DeviceFeatureInfo> operationList;
         try {
             DeviceFeatureOperationsDAOFactory.openConnection();
-            operationList = deviceFeatureOperationDAO.getOperationDetails(code, name, type, removeDeduplicateCode);
+            operationList = deviceFeatureOperationDAO.getOperationDetails(
+                    code, name, deviceType, featureType, removeDeduplicateCode);
         } catch (SQLException e) {
-            String msg = "Error retrieving operation details from DB table.";
+            String msg = "Error retrieving feature details from DB table.";
             log.error(msg, e);
             throw new DeviceFeatureOperationException(msg, e);
         } catch (DeviceFeatureOperationsDAOException e) {
-            String msg = "Error retrieving operation details.";
+            String msg = "Error retrieving feature details.";
             log.error(msg, e);
             throw new DeviceFeatureOperationException(msg, e);
         } finally {
@@ -129,17 +176,17 @@ public class DeviceFeatureOperationsImpl implements DeviceFeatureOperations {
     }
 
     @Override
-    public Map<String, Boolean> validateOperationCodes(List<String> codes)
+    public Map<String, Boolean> validateFeatureCodes(List<String> codes, String featureType)
             throws DeviceFeatureOperationException {
         try {
             DeviceFeatureOperationsDAOFactory.openConnection();
-            return deviceFeatureOperationDAO.operationCodesExist(codes);
+            return deviceFeatureOperationDAO.featureCodesExist(codes, featureType);
         } catch (DeviceFeatureOperationsDAOException e) {
-            String msg = "Error validating operation codes: " + codes;
+            String msg = "Error validating feature codes: " + codes;
             log.error(msg, e);
             throw new DeviceFeatureOperationException(msg, e);
         } catch (SQLException e) {
-            String msg = "Error retrieving operation details from DB table.";
+            String msg = "Error retrieving feature details from DB table.";
             log.error(msg, e);
             throw new DeviceFeatureOperationException(msg, e);
         } finally {

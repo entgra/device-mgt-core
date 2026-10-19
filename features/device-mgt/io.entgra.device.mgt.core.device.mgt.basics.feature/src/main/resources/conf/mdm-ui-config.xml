@@ -532,5 +532,24 @@
     <SSOConfiguration>
         <Issuer>device-mgt</Issuer>
     </SSOConfiguration>
+    <!-- Task catalog for notification configurations (platform-agnostic console tasks) -->
+    <NotificationTaskFeatures>
+        <Feature code="REMOVE_DEVICE">
+            <Name>Remove Device</Name>
+            <Description>Notify when a device is soft-removed (status set to REMOVED) from the console.</Description>
+        </Feature>
+        <Feature code="DELETE_DEVICE">
+            <Name>Delete Device</Name>
+            <Description>Notify when a device is permanently deleted from the console.</Description>
+        </Feature>
+        <Feature code="DISENROLL_DEVICE">
+            <Name>Disenroll Device</Name>
+            <Description>Notify when a device is disenrolled from the console.</Description>
+        </Feature>
+        <Feature code="ROLE_PERMISSION_UPDATE" deviceType="NONE">
+            <Name>Role Permission Update</Name>
+            <Description>Notify when role UI permissions are updated.</Description>
+        </Feature>
+    </NotificationTaskFeatures>
 </UIConfiguration>
 
