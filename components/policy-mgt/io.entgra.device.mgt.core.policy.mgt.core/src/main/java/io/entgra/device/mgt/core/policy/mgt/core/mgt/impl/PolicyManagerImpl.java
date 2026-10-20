@@ -1407,12 +1407,19 @@ public class PolicyManagerImpl implements PolicyManager {
             throws GroupManagementException {
         GroupManagementProviderService groupManagementService = PolicyManagementDataHolder
                 .getInstance().getGroupManagementService();
+        List<DeviceGroupWrapper> resolvedGroups = new ArrayList<>();
         for (DeviceGroupWrapper wrapper : groupWrappers) {
             DeviceGroup deviceGroup = groupManagementService.getGroup(wrapper.getId(), false);
+            if (deviceGroup == null) {
+                log.warn("Skipping missing device group id " + wrapper.getId()
+                        + " while resolving policy group assignments.");
+                continue;
+            }
             wrapper.setName(deviceGroup.getName());
             wrapper.setOwner(deviceGroup.getOwner());
+            resolvedGroups.add(wrapper);
         }
-        return groupWrappers;
+        return resolvedGroups;
     }
 
     private List<DeviceIdentifier> convertDevices(List<Device> devices) {
