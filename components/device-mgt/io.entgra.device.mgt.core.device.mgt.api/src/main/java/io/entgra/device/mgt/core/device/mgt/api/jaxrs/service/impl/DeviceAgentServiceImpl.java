@@ -693,19 +693,38 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
     }
 
     /**
-     * Validates that the device type and subtype ID are not null or empty.
+     * Validates that the device type is not empty and the subtype ID is a positive integer.
      *
      * @param deviceType device type to validate
      * @param subTypeId device subtype ID to validate
      * @return a bad request response if validation fails, otherwise null
      */
     private Response validateDeviceTypeAndSubTypeId(String deviceType, String subTypeId) {
-        if (deviceType == null || deviceType.trim().isEmpty() || subTypeId == null || subTypeId.trim().isEmpty()) {
-            String errorMessage = "Device type and subtype ID cannot be empty.";
-            log.error(errorMessage);
-            return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
+        if (deviceType == null || deviceType.trim().isEmpty()
+                || subTypeId == null || subTypeId.trim().isEmpty()) {
+            return badRequest("Device type and subtype ID cannot be empty.");
+        }
+        try {
+            if (Integer.parseInt(subTypeId) <= 0) {
+                return badRequest("Subtype ID must be a positive integer.");
+            }
+        } catch (NumberFormatException e) {
+            return badRequest("Subtype ID must be a positive integer.");
         }
         return null;
+    }
+
+    /**
+     * Creates a bad request response with the specified error message.
+     *
+     * @param message error message to include in the response
+     * @return a bad request response containing the error message
+     */
+    private Response badRequest(String message) {
+        log.error(message);
+        return Response.status(Response.Status.BAD_REQUEST)
+                .entity(message)
+                .build();
     }
 
     private static List<ComplianceFeature> getComplianceFeatures(Object compliancePayload) throws
