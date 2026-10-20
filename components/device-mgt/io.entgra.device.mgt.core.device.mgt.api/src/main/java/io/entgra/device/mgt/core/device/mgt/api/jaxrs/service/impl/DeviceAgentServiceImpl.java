@@ -605,6 +605,10 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
     @Override
     public Response getSupportedDeviceTypesByModule(@PathParam("deviceType") String deviceType,
                                                     @PathParam("comModuleSubTypeId") String comModuleSubTypeId) {
+        Response validationResponse = validateDeviceTypeAndSubTypeId(deviceType, comModuleSubTypeId);
+        if (validationResponse != null) {
+            return validationResponse;
+        }
         int moduleId;
         try {
             moduleId = Integer.parseInt(comModuleSubTypeId);
@@ -613,8 +617,8 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
             log.error(errorMessage);
             return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
         }
-        if (moduleId < 1 || deviceType == null || deviceType.trim().isEmpty()) {
-            String errorMessage = "Communication module subtype ID must be positive and device type cannot be empty.";
+        if (moduleId < 1) {
+            String errorMessage = "Communication module subtype ID must be positive.";
             log.error(errorMessage);
             return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
         }
@@ -641,10 +645,9 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
     @Override
     public Response getDeviceTypeDefinition(@PathParam("deviceType") String deviceType,
                                             @PathParam("subTypeId") String subTypeId) {
-        if (deviceType == null || deviceType.trim().isEmpty() || subTypeId == null || subTypeId.trim().isEmpty()) {
-            String errorMessage = "Device type and subtype ID cannot be empty.";
-            log.error(errorMessage);
-            return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
+        Response validationResponse = validateDeviceTypeAndSubTypeId(deviceType, subTypeId);
+        if (validationResponse != null) {
+            return validationResponse;
         }
         try {
             int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
@@ -665,9 +668,12 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
     public Response getOperationRegisters(@PathParam("operationCode") String operationCode,
                                           @PathParam("deviceType") String deviceType,
                                           @PathParam("subTypeId") String subTypeId) {
-        if (deviceType == null || deviceType.trim().isEmpty() || subTypeId == null || subTypeId.trim().isEmpty() ||
-                operationCode == null || operationCode.trim().isEmpty()) {
-            String errorMessage = "Device type, subtype ID, and operation code cannot be empty.";
+        Response validationResponse = validateDeviceTypeAndSubTypeId(deviceType, subTypeId);
+        if (validationResponse != null) {
+            return validationResponse;
+        }
+        if (operationCode == null || operationCode.trim().isEmpty()) {
+            String errorMessage = "Operation code cannot be empty.";
             log.error(errorMessage);
             return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
         }
@@ -684,6 +690,22 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
             log.error(errorMessage, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(errorMessage).build();
         }
+    }
+
+    /**
+     * Validates that the device type and subtype ID are not null or empty.
+     *
+     * @param deviceType device type to validate
+     * @param subTypeId device subtype ID to validate
+     * @return a bad request response if validation fails, otherwise null
+     */
+    private Response validateDeviceTypeAndSubTypeId(String deviceType, String subTypeId) {
+        if (deviceType == null || deviceType.trim().isEmpty() || subTypeId == null || subTypeId.trim().isEmpty()) {
+            String errorMessage = "Device type and subtype ID cannot be empty.";
+            log.error(errorMessage);
+            return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
+        }
+        return null;
     }
 
     private static List<ComplianceFeature> getComplianceFeatures(Object compliancePayload) throws
