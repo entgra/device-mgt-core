@@ -242,14 +242,15 @@ public class OperationManagerImpl implements OperationManager {
                     }
                     if (enrolments.size() == 0) {
                         //No operations to be add. All are repeated.
+                        int existingOperationId = pendingOperationIDs.values().iterator().next();
                         if (log.isDebugEnabled()) {
                             log.debug("All the devices contain a pending operation for the Operation Code: "
                                     + operationCode);
                         }
                         Activity activity = new Activity();
                         activity.setActivityId(DeviceManagementConstants.OperationAttributes.ACTIVITY +
-                                operation.getId());
-                        activity.setOperationId(operation.getId());
+                                existingOperationId);
+                        activity.setOperationId(existingOperationId);
                         activity.setActivityStatus(
                                 this.getActivityStatus(deviceValidationResult, deviceAuthorizationResult));
                         return activity;
