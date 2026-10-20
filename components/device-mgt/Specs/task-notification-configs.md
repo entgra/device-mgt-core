@@ -14,7 +14,7 @@ On Device Task Manager startup,
 1. Loads per-device-type **operation** features (`TYPE = operation`).
 2. Loads **notification task** features from
    `mdm-ui-config.xml` → `<NotificationTaskFeatures>`
-   (`TYPE = task`). Optional XML attribute `deviceType` defaults to `ALL`.
+   (`TYPE = task`). Each feature requires `<DeviceType>` (e.g. `ALL`, `NONE`).
 3. Inserts missing task rows into `DM_FEATURE_DETAILS` (one row per task
    code). Existing task rows sync `DEVICE_TYPE` / name / description when
    the catalog changes.
@@ -22,27 +22,25 @@ On Device Task Manager startup,
 Task codes used for console device lifecycle (see also
 [device-delete-notifications.md](device-delete-notifications.md)):
 
-| Code | `DEVICE_TYPE` | Meaning |
+| Code | `DEVICE_TYPE` (XML) | Meaning |
 | --- | --- | --- |
 | `REMOVE_DEVICE` | `ALL` | Soft-remove (status `REMOVED`) |
 | `DELETE_DEVICE` | `ALL` | Permanent delete |
 | `DISENROLL_DEVICE` | `ALL` | Disenroll |
 | `ROLE_PERMISSION_UPDATE` | `NONE` | Role UI permission update (not device-scoped) |
 
-## Tenant defaults and existing-tenant backfill
+## Tenant defaults
 
 | Path | Behaviour |
 | --- | --- |
-| New tenant | `DeviceMgtTenantListener` → `ensureDefaultTaskNotificationConfigs()` after archive defaults |
-| Existing tenants | On notification-mgt activate: refresh feature catalog, then seed defaults for carbon.super and every active tenant |
+| New tenant | `DeviceMgtTenantListener` → `TenantManagerImpl.addDefaultNotificationArchivalMetadata` → archive defaults + `ensureDefaultTaskNotificationConfigs()` |
+| Existing tenants | Migration SQL sample in `product-uem/.../cdm-migration-mysql.sql` (not activate-time Java backfill) |
 
-Default task configs: `enabled=true`, recipient user `admin`,
-`deviceType` taken from the catalog (`ALL` for device tasks,
-`NONE` for `ROLE_PERMISSION_UPDATE`). Existing tenant configs sync catalog
-`deviceType`; duplicate task configs for the same code are collapsed to the
-highest id (user-created wins over seed).
-`ROLE_PERMISSION_UPDATE` is forced to `NONE` in catalog load even if XML
-omits `deviceType`.
+`ensureDefaultTaskNotificationConfigs` loads task features from the catalog
+(`mdm-ui-config.xml` `<NotificationTaskFeatures>` / `DM_FEATURE_DETAILS`),
+and for each missing task code adds an enabled config with catalog
+`deviceType`, recipient user `admin`, and default archive settings.
+Idempotent (skips codes that already exist).
 
 ## DB migration
 
@@ -52,7 +50,6 @@ omits `deviceType`.
   `DM_METADATA` (`METADATA_KEY = notification-config`) for existing tenants:
   commented sample INSERT at the end of that same `cdm-migration-mysql.sql`
   (replace placeholder tenant IDs; skips tenants that already have the key).
-  Prefer runtime `ensureDefaultTaskNotificationConfigs()` when the server can start.
 
 Code search for the UI uses
 `GET .../device-operations?featureType=operation|task`.

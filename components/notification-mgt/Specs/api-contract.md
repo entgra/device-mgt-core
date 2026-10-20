@@ -21,80 +21,84 @@ notification APIs comes from the authenticated session
 
 ### Notifications (`NotificationService`)
 
-| Scope | Permission |
+| Scope | Used by |
 | --- | --- |
-| `dm:notifications:view` | view notifications |
+| `dm:notifications:view` | list / user-notifications |
 | `dm:notif:mark-checked` | mark read/unread |
 | `dm:notif:delete` | delete user notifications |
 | `dm:notif:archive` | archive user notifications |
 
 ### Configurations (`NotificationConfigurationService`)
 
-| Scope | Permission path |
+| Scope | Used by |
 | --- | --- |
-| `dm:notificationConfig:view` | `/device-mgt/notifications/notification-configurations/view` |
-| `dm:notificationConfig:create` | `/device-mgt/notifications/notification-configurations/create` |
-| `dm:notificationConfig:update` | `/device-mgt/notifications/notification-configurations/update` |
-| `dm:notificationConfig:delete` | `/device-mgt/notifications/notification-configurations/delete` |
+| `dm:notificationConfig:view` | list / get / check |
+| `dm:notificationConfig:create` | create |
+| `dm:notificationConfig:update` | update / defaults |
+| `dm:notificationConfig:delete` | delete one / delete all |
 
 ---
 
 ## Notifications — `/notifications`
+
+Statuses below are those returned by the current API impls.
 
 ### `GET /notifications`
 
 | | |
 | --- | --- |
 | Scope | `dm:notifications:view` |
-| Query | `offset` (default 0), `limit` (default 5) |
-| Success | **200** list of notifications for tenant |
-| Error | **500** |
+| Query | `offset`, `limit` |
+| **200** | List of notifications (empty list if none) |
+| **500** | `NotificationManagementException` |
 
 ### `POST /notifications/user-notifications`
 
 | | |
 | --- | --- |
 | Scope | `dm:notifications:view` |
-| Body | `UserNotificationsRequest`: `username`, `isRead`, `limit`, `offset` |
-| Notes | `username` in body is ignored; uses authenticated user |
-| Success | **200** `PaginatedUserNotificationResponse` |
-| Error | **400** null body; **500** |
+| Body | `UserNotificationsRequest` (`isRead`, `limit`, `offset`; `username` ignored) |
+| **200** | `PaginatedUserNotificationResponse` |
+| **400** | Missing request body |
+| **500** | Service / retrieval failure |
 
 ### `PUT /notifications/action`
 
 | | |
 | --- | --- |
 | Scope | `dm:notif:mark-checked` |
-| Body | `NotificationActionRequest`: `notificationIds`, `isRead` (`username` ignored) |
-| Success | **200**; pushes unread-count SSE update |
-| Error | **400**; **500** |
+| Body | `NotificationActionRequest` (`notificationIds`, `isRead`) |
+| **200** | Marked as READ/UNREAD |
+| **400** | Missing request body |
+| **500** | Update failure |
 
 ### `PUT /notifications/action/all`
 
 | | |
 | --- | --- |
 | Scope | `dm:notif:mark-checked` |
-| Query | `read` (boolean, required) |
-| Success | **200**; pushes unread-count SSE update |
-| Error | **500** |
+| Query | `read` (boolean) |
+| **200** | All marked as READ/UNREAD |
+| **500** | Update failure |
 
 ### `DELETE /notifications/user-notifications`
 
 | | |
 | --- | --- |
 | Scope | `dm:notif:delete` |
-| Body | `UsernameWithNotificationIdsRequest`: `notificationIds` |
-| Success | **200** map `{ "deleted": [...], "invalid": [...] }` |
-| Error | **400**; **500** |
+| Body | `UsernameWithNotificationIdsRequest` (`notificationIds`) |
+| **200** | Map `{ deleted, invalid }` |
+| **400** | Missing request body |
+| **500** | Delete failure |
 
 ### `DELETE /notifications/user-notifications/all`
 
 | | |
 | --- | --- |
 | Scope | `dm:notif:delete` |
-| Query | `read` (`Boolean`, optional — omit to delete all) |
-| Success | **200** |
-| Error | **500** |
+| Query | `read` (`Boolean`, optional) |
+| **200** | Delete confirmation message |
+| **500** | Delete failure |
 
 ### `POST /notifications/archive-selected`
 
@@ -102,17 +106,17 @@ notification APIs comes from the authenticated session
 | --- | --- |
 | Scope | `dm:notif:archive` |
 | Body | `UsernameWithNotificationIdsRequest` |
-| Success | **200** map `{ "archived": [...], "invalid": [...] }` |
-| Error | **400**; **500** |
+| **200** | Map `{ archived, invalid }` |
+| **400** | Missing request body |
+| **500** | Archival failure or auth user resolution failure |
 
 ### `POST /notifications/archive-all`
 
 | | |
 | --- | --- |
 | Scope | `dm:notif:archive` |
-| Body | none |
-| Success | **200** |
-| Error | **500** |
+| **200** | Archive confirmation message |
+| **500** | Archival failure or auth user resolution failure |
 
 ---
 
@@ -124,10 +128,9 @@ notification APIs comes from the authenticated session
 | --- | --- |
 | Scope | `dm:notificationConfig:view` |
 | Query | `offset`, `limit`, `name`, `type`, `deviceType`, `code` |
-| Success | **200** `NotificationConfigurationList` |
-| Error | **404** none for tenant; **500** |
-
-`type` filter: `operation` | `task` (and any other stored type values).
+| **200** | `NotificationConfigurationList` |
+| **404** | No configurations for tenant (`NotificationConfigurationNotFoundException`) |
+| **500** | Unexpected service error |
 
 ### `POST /notification-configuration`
 
@@ -135,51 +138,58 @@ notification APIs comes from the authenticated session
 | --- | --- |
 | Scope | `dm:notificationConfig:create` |
 | Body | `NotificationConfigurationList` |
-| Success | **201** |
-| Error | **400**; **500** |
+| **201** | Created list |
+| **400** | Invalid / empty / duplicate config (`InvalidNotificationConfigurationException`) |
+| **500** | Persist failure |
 
 ### `PUT /notification-configuration`
 
 | | |
 | --- | --- |
 | Scope | `dm:notificationConfig:update` |
-| Body | `NotificationConfig` |
-| Success | **200** |
-| Error | **400**; **404**; **500** |
+| Body | `NotificationConfig` (must include `id`) |
+| **200** | Updated config |
+| **400** | Invalid request / id |
+| **404** | Config id not found |
+| **500** | Update failure |
 
 ### `GET /notification-configuration/{configId}`
 
 | | |
 | --- | --- |
 | Scope | `dm:notificationConfig:view` |
-| Success | **200** |
-| Error | **400**; **404**; **500** |
+| **200** | `NotificationConfig` |
+| **400** | Invalid id |
+| **404** | Not found |
+| **500** | Unexpected error |
 
 ### `DELETE /notification-configuration/{configId}`
 
 | | |
 | --- | --- |
 | Scope | `dm:notificationConfig:delete` |
-| Success | **200** |
-| Error | **400**; **404**; **500** |
+| **200** | Deleted successfully |
+| **400** | Invalid id |
+| **404** | Not found |
+| **500** | Delete failure |
 
 ### `DELETE /notification-configuration`
 
 | | |
 | --- | --- |
 | Scope | `dm:notificationConfig:delete` |
-| Notes | Deletes all configs for tenant (keeps / resets archive defaults per impl) |
-| Success | **204** |
-| Error | **404** |
+| **204** | All configs cleared |
+| **404** | No configuration found for tenant |
 
 ### `PUT /notification-configuration/defaults`
 
 | | |
 | --- | --- |
 | Scope | `dm:notificationConfig:update` |
-| Body | `NotificationConfigurationList` with `defaultArchiveType`, `defaultArchiveAfter` |
-| Success | **200** |
-| Error | **400**; **500** |
+| Body | `defaultArchiveType`, `defaultArchiveAfter` |
+| **200** | Updated defaults |
+| **400** | Empty / invalid archive type or period |
+| **500** | Persist failure |
 
 ### `GET /notification-configuration/check`
 
@@ -187,55 +197,22 @@ notification APIs comes from the authenticated session
 | --- | --- |
 | Scope | `dm:notificationConfig:view` |
 | Query | `deviceType`, `code` |
-| Exists | **409** |
-| Not exists | **204** |
-| Error | **400**; **404**; **500** |
+| **409** | Config already exists for `(deviceType, code)` |
+| **204** | Does not exist |
+| **400** | Invalid deviceType / code |
+| **404** | Tenant has no notification-config metadata |
+| **500** | Unexpected error |
 
 ---
 
-## Payload shapes (summary)
+## Payload notes
 
-### `NotificationConfig` (config entry)
-
-Typical fields: `id`, `name`, `code`, `type` (`operation`|`task`),
-`deviceType`, `enabled`, `description`, `recipients` (users/roles),
-`notificationTriggerPoints` (e.g. `immediate`, `postSync`),
-`criticalCriteria`, `batchNotifications`, archive settings
-(`archiveType`, `archiveAfter`).
-
-### `NotificationConfigurationList`
-
-`notificationConfigurations[]`, `defaultArchiveType`,
-`defaultArchiveAfter` (`{value, unit}`), `totalCount`.
-
-### User notification list item
-
-Includes notification id, type, created timestamp, rendered/description
-context, `isRead`, and related device info when present.
-
-### SSE payloads (not REST)
-
-See [sse.md](sse.md): `{ message, unreadCount }` or `{ unreadCount }`.
-
----
-
-## Exception → HTTP (impl conventions)
-
-| Situation | HTTP |
-| --- | --- |
-| Validation / null body | **400** |
-| Config / resource missing | **404** |
-| Config already exists (check) | **409** |
-| Create config success | **201** |
-| Delete all configs success | **204** |
-| Check: config not present | **204** |
-| Unhandled service errors | **500** |
-
----
+- Config `type`: `operation` \| `task`
+- Task device types come from catalog (`ALL` / `NONE`); operations use platform types
+- SSE payloads (not REST): see [sse.md](sse.md)
 
 ## Acceptance criteria
 
-- [ ] All endpoints above require the listed scopes.
-- [ ] User notification mutating APIs act on the authenticated user only.
-- [ ] List/filter configs by `type=task|operation` returns only matching entries.
-- [ ] Check endpoint returns **409** when a config for `(deviceType, code)` exists, else **204**.
+- [ ] Documented statuses match API impl exception mapping
+- [ ] User mutation APIs ignore body username and use authenticated user
+- [ ] Check endpoint returns **409** / **204** only (not 200 for “exists”)

@@ -50,7 +50,6 @@ public class DeviceFeatureOperationsImpl implements DeviceFeatureOperations {
 
     public static final String FEATURE_TYPE_OPERATION = "operation";
     public static final String FEATURE_TYPE_TASK = "task";
-    public static final String TASK_DEVICE_TYPE = "ALL";
 
     public DeviceFeatureOperationsImpl() {
         this.deviceFeatureOperationDAO = DeviceFeatureOperationsDAOFactory.getDeviceFeatureOperationDAO();
@@ -114,6 +113,15 @@ public class DeviceFeatureOperationsImpl implements DeviceFeatureOperations {
         return featureList;
     }
 
+    /**
+     * Loads task catalog entries from {@code mdm-ui-config.xml}
+     * ({@code UIConfiguration/NotificationTaskFeatures}).
+     * Each feature must declare {@code code}, {@code Name}, and {@code DeviceType}
+     * (e.g. {@code ALL} for device tasks, {@code NONE} for role-scoped tasks).
+     * Incomplete entries are skipped with a warning.
+     *
+     * @return task features ready for {@code DM_FEATURE_DETAILS} upsert; never {@code null}
+     */
     private List<DeviceFeatureInfo> loadNotificationTaskFeatures() {
         List<DeviceFeatureInfo> taskFeatures = new ArrayList<>();
         UIConfiguration uiConfiguration = UIConfigurationManager.getInstance().getUIConfig();
@@ -126,30 +134,24 @@ public class DeviceFeatureOperationsImpl implements DeviceFeatureOperations {
         }
         for (NotificationTaskFeature taskFeature : notificationTaskFeatures.getFeatures()) {
             if (taskFeature == null || taskFeature.getCode() == null || taskFeature.getCode().isBlank()) {
+                log.warn("Skipping notification task feature with empty code.");
+                continue;
+            }
+            String deviceType = taskFeature.getDeviceType();
+            if (deviceType == null || deviceType.isBlank()) {
+                log.warn("Skipping notification task feature '" + taskFeature.getCode()
+                        + "': DeviceType is required in mdm-ui-config.xml.");
                 continue;
             }
             DeviceFeatureInfo featureInfo = new DeviceFeatureInfo();
-            featureInfo.setOperationCode(taskFeature.getCode());
+            featureInfo.setOperationCode(taskFeature.getCode().trim());
             featureInfo.setName(taskFeature.getName());
             featureInfo.setDescription(taskFeature.getDescription());
-            featureInfo.setDeviceType(resolveTaskDeviceType(taskFeature.getCode(), taskFeature.getDeviceType()));
+            featureInfo.setDeviceType(deviceType.trim());
             featureInfo.setType(FEATURE_TYPE_TASK);
             taskFeatures.add(featureInfo);
         }
         return taskFeatures;
-    }
-
-    /**
-     * Role-scoped tasks use {@code NONE}; otherwise XML {@code deviceType} or {@link #TASK_DEVICE_TYPE}.
-     */
-    private static String resolveTaskDeviceType(String code, String deviceType) {
-        if ("ROLE_PERMISSION_UPDATE".equals(code)) {
-            return "NONE";
-        }
-        if (deviceType == null || deviceType.isBlank()) {
-            return TASK_DEVICE_TYPE;
-        }
-        return deviceType.trim();
     }
 
     @Override

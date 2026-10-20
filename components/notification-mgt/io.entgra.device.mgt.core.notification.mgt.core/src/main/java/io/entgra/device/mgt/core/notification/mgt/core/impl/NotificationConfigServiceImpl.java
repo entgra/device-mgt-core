@@ -46,7 +46,6 @@ import java.lang.reflect.Type;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Map;
 import java.util.ListIterator;
 import java.util.List;
@@ -154,6 +153,108 @@ public class NotificationConfigServiceImpl implements NotificationConfigService 
             log.error(msg, e);
             throw new NotificationConfigurationServiceException(msg, e);
         }
+    }
+
+    @Override
+    public void ensureDefaultTaskNotificationConfigs() throws NotificationConfigurationServiceException {
+        if (featureService == null) {
+            log.warn("DeviceFeatureOperations is unavailable. Skipping default task notification configs.");
+            return;
+        }
+        List<DeviceFeatureInfo> taskFeatures;
+        try {
+            featureService.getDeviceFeatureOperations();
+            taskFeatures = featureService.getOperationDetails(
+                    null, null, null, Constants.TASK, true);
+        } catch (DeviceFeatureOperationException e) {
+            String msg = "Failed to load task features for default notification configs.";
+            log.error(msg, e);
+            throw new NotificationConfigurationServiceException(msg, e);
+        }
+        if (taskFeatures == null || taskFeatures.isEmpty()) {
+            log.warn("No task features found in catalog. Skipping default task notification configs.");
+            return;
+        }
+        try {
+            Metadata existingMetadata = getExistingMetadata(false);
+            NotificationConfigurationList configList;
+            if (existingMetadata != null && existingMetadata.getMetaValue() != null) {
+                configList = gson.fromJson(existingMetadata.getMetaValue(), NOTIFICATION_CONFIG_LIST_TYPE);
+            } else {
+                configList = new NotificationConfigurationList();
+            }
+            if (configList.getNotificationConfigurations() == null) {
+                configList.setNotificationConfigurations(new ArrayList<>());
+            }
+            NotificationHelper.setDefaultArchivalValuesIfAbsent(configList);
+            List<NotificationConfig> configs = configList.getNotificationConfigurations();
+            boolean changed = false;
+            for (DeviceFeatureInfo taskFeature : taskFeatures) {
+                if (taskFeature == null || taskFeature.getOperationCode() == null
+                        || taskFeature.getOperationCode().isBlank()) {
+                    continue;
+                }
+                String taskCode = taskFeature.getOperationCode().trim();
+                String catalogDeviceType = taskFeature.getDeviceType();
+                if (catalogDeviceType == null || catalogDeviceType.isBlank()) {
+                    log.warn("Skipping default task config for '" + taskCode
+                            + "': catalog DeviceType is missing.");
+                    continue;
+                }
+                boolean alreadyPresent = configs.stream()
+                        .anyMatch(config -> Constants.TASK.equalsIgnoreCase(config.getType())
+                                && taskCode.equalsIgnoreCase(config.getCode()));
+                if (alreadyPresent) {
+                    continue;
+                }
+                configs.add(buildDefaultTaskConfig(taskFeature, generateNextId(configs)));
+                changed = true;
+            }
+            if (!changed) {
+                return;
+            }
+            configList.setNotificationConfigurations(configs);
+            if (existingMetadata != null) {
+                existingMetadata.setMetaValue(gson.toJson(configList));
+                metaDataService.updateMetadata(existingMetadata);
+            } else {
+                Metadata metadata = new Metadata();
+                metadata.setMetaKey(Constants.NOTIFICATION_CONFIG_META_KEY);
+                metadata.setMetaValue(gson.toJson(configList));
+                metaDataService.createMetadata(metadata);
+            }
+        } catch (MetadataManagementException e) {
+            String msg = "Failed to persist default task notification configs.";
+            log.error(msg, e);
+            throw new NotificationConfigurationServiceException(msg, e);
+        }
+    }
+
+    /**
+     * Builds an enabled default task config from a catalog feature, with recipient user {@code admin}.
+     */
+    private NotificationConfig buildDefaultTaskConfig(DeviceFeatureInfo taskFeature, int id) {
+        NotificationConfig config = new NotificationConfig();
+        config.setId(id);
+        config.setName(taskFeature.getName());
+        config.setDescription(taskFeature.getDescription());
+        config.setType(Constants.TASK);
+        config.setCode(taskFeature.getOperationCode().trim());
+        config.setDeviceType(taskFeature.getDeviceType().trim());
+        config.setEnabled(true);
+        NotificationConfigRecipients recipients = new NotificationConfigRecipients();
+        recipients.setUsers(new ArrayList<>(Collections.singletonList(Constants.ADMIN)));
+        recipients.setRoles(new ArrayList<>());
+        config.setRecipients(recipients);
+        NotificationConfig.ConfiguredBy configuredBy = new NotificationConfig.ConfiguredBy();
+        configuredBy.setUser(Constants.ADMIN);
+        configuredBy.setLastModifiedAt(Instant.now().toString());
+        config.setConfiguredBy(configuredBy);
+        NotificationConfigurationSettings settings = new NotificationConfigurationSettings();
+        settings.setArchiveType(Constants.DEFAULT_ARCHIVE_TYPE);
+        settings.setArchiveAfter(Constants.DEFAULT_ARCHIVE_PERIOD);
+        config.setNotificationSettings(settings);
+        return config;
     }
 
     /**
@@ -582,116 +683,5 @@ public class NotificationConfigServiceImpl implements NotificationConfigService 
                         deviceType.equalsIgnoreCase(config.getDeviceType()) &&
                                 code.equalsIgnoreCase(config.getCode())
                 );
-    }
-
-    @Override
-    public void ensureDefaultTaskNotificationConfigs() throws NotificationConfigurationServiceException {
-        if (featureService == null) {
-            log.warn("DeviceFeatureOperations is unavailable. Skipping default task notification configs.");
-            return;
-        }
-        setDefaultNotificationArchiveMetadata(Constants.DEFAULT_ARCHIVE_TYPE, Constants.DEFAULT_ARCHIVE_PERIOD);
-        List<DeviceFeatureInfo> taskFeatures;
-        try {
-            taskFeatures = featureService.getOperationDetails(
-                    null, null, null, Constants.TASK, true);
-        } catch (DeviceFeatureOperationException e) {
-            String msg = "Failed to load task features for default notification configs.";
-            log.error(msg, e);
-            throw new NotificationConfigurationServiceException(msg, e);
-        }
-        if (taskFeatures == null || taskFeatures.isEmpty()) {
-            log.warn("No task features found in catalog. Skipping default task notification configs.");
-            return;
-        }
-        try {
-            Metadata existingMetadata = getExistingMetadata(false);
-            NotificationConfigurationList configList;
-            if (existingMetadata != null && existingMetadata.getMetaValue() != null) {
-                configList = gson.fromJson(existingMetadata.getMetaValue(), NOTIFICATION_CONFIG_LIST_TYPE);
-            } else {
-                configList = new NotificationConfigurationList();
-            }
-            if (configList.getNotificationConfigurations() == null) {
-                configList.setNotificationConfigurations(new ArrayList<>());
-            }
-            NotificationHelper.setDefaultArchivalValuesIfAbsent(configList);
-            List<NotificationConfig> configs = configList.getNotificationConfigurations();
-            boolean changed = false;
-            for (DeviceFeatureInfo taskFeature : taskFeatures) {
-                String catalogDeviceType = taskFeature.getDeviceType() != null
-                        && !taskFeature.getDeviceType().isBlank()
-                        ? taskFeature.getDeviceType()
-                        : Constants.TASK_DEVICE_TYPE;
-                String taskCode = taskFeature.getOperationCode();
-                List<NotificationConfig> matching = configs.stream()
-                        .filter(config -> Constants.TASK.equalsIgnoreCase(config.getType())
-                                && taskCode.equalsIgnoreCase(config.getCode()))
-                        .collect(Collectors.toList());
-                if (!matching.isEmpty()) {
-                    // One task config per code; keep highest id (user-created wins over seed).
-                    NotificationConfig keep = matching.stream()
-                            .max(Comparator.comparingInt(NotificationConfig::getId))
-                            .orElse(matching.get(0));
-                    if (!catalogDeviceType.equalsIgnoreCase(keep.getDeviceType())) {
-                        keep.setDeviceType(catalogDeviceType);
-                        changed = true;
-                    }
-                    if (matching.size() > 1) {
-                        configs.removeIf(config -> Constants.TASK.equalsIgnoreCase(config.getType())
-                                && taskCode.equalsIgnoreCase(config.getCode())
-                                && config.getId() != keep.getId());
-                        changed = true;
-                    }
-                    continue;
-                }
-                configs.add(buildDefaultTaskConfig(taskFeature, generateNextId(configs)));
-                changed = true;
-            }
-            if (!changed) {
-                return;
-            }
-            configList.setNotificationConfigurations(configs);
-            if (existingMetadata != null) {
-                existingMetadata.setMetaValue(gson.toJson(configList));
-                metaDataService.updateMetadata(existingMetadata);
-            } else {
-                Metadata metadata = new Metadata();
-                metadata.setMetaKey(Constants.NOTIFICATION_CONFIG_META_KEY);
-                metadata.setMetaValue(gson.toJson(configList));
-                metaDataService.createMetadata(metadata);
-            }
-        } catch (MetadataManagementException e) {
-            String msg = "Failed to persist default task notification configs.";
-            log.error(msg, e);
-            throw new NotificationConfigurationServiceException(msg, e);
-        }
-    }
-
-    private NotificationConfig buildDefaultTaskConfig(DeviceFeatureInfo taskFeature, int id) {
-        NotificationConfig config = new NotificationConfig();
-        config.setId(id);
-        config.setName(taskFeature.getName());
-        config.setDescription(taskFeature.getDescription());
-        config.setType(Constants.TASK);
-        config.setCode(taskFeature.getOperationCode());
-        String deviceType = taskFeature.getDeviceType();
-        config.setDeviceType(deviceType != null && !deviceType.isBlank()
-                ? deviceType
-                : Constants.TASK_DEVICE_TYPE);
-        config.setEnabled(true);
-        NotificationConfigRecipients recipients = new NotificationConfigRecipients();
-        recipients.setUsers(new ArrayList<>(Collections.singletonList(Constants.ADMIN)));
-        recipients.setRoles(new ArrayList<>());
-        config.setRecipients(recipients);
-        NotificationConfig.ConfiguredBy configuredBy = new NotificationConfig.ConfiguredBy();
-        configuredBy.setUser(Constants.ADMIN);
-        configuredBy.setLastModifiedAt(Instant.now().toString());
-        config.setConfiguredBy(configuredBy);
-        NotificationConfigurationSettings settings = new NotificationConfigurationSettings();
-        settings.setArchiveType(Constants.DEFAULT_ARCHIVE_TYPE);
-        settings.setArchiveAfter(Constants.DEFAULT_ARCHIVE_PERIOD);
-        config.setNotificationSettings(settings);
-        return config;
     }
 }

@@ -502,6 +502,7 @@ public class TenantManagerImpl implements TenantManager {
             endTenantFlow();
         }
     }
+
     @Override
     public void updateTenantScopeBindings(String tenantDomain, String roleName, List<String> scopeNames) throws TenantMgtException {
         if (MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {

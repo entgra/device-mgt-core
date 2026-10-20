@@ -40,6 +40,19 @@ public interface NotificationConfigService {
             throws NotificationConfigurationServiceException;
 
     /**
+     * Seeds default {@code type=task} notification configs for the current tenant from the
+     * task feature catalog ({@code mdm-ui-config.xml} → {@code DM_FEATURE_DETAILS}).
+     * Idempotent: only adds missing task codes. Each seeded config is enabled with
+     * recipient user {@code admin} and catalog {@code deviceType}.
+     * <p>
+     * Intended for new-tenant setup (e.g. {@code TenantManagerImpl.addDefaultNotificationArchivalMetadata}).
+     * Existing tenants should use the migration SQL sample instead of activate-time backfill.
+     *
+     * @throws NotificationConfigurationServiceException if catalog load or persistence fails
+     */
+    void ensureDefaultTaskNotificationConfigs() throws NotificationConfigurationServiceException;
+
+    /**
      * Retrieve the  notification configurations for a tenant.
      *
      * @return {@link NotificationConfigurationList addNotificationConfigContext}
@@ -117,12 +130,4 @@ public interface NotificationConfigService {
      * @throws NotificationConfigurationServiceException if an error occurs while checking the configuration.
      */
     boolean configExists(String deviceType, String code) throws NotificationConfigurationServiceException;
-
-    /**
-     * Ensures default task notification configurations exist for the current tenant
-     * (enabled, recipient user admin). Missing task configs are added; existing ones are left unchanged.
-     *
-     * @throws NotificationConfigurationServiceException if metadata cannot be updated
-     */
-    void ensureDefaultTaskNotificationConfigs() throws NotificationConfigurationServiceException;
 }

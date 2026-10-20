@@ -41,19 +41,6 @@ public class NotificationTaskFeature {
         this.code = code;
     }
 
-    /**
-     * Optional catalog device type. Defaults to {@code ALL} when omitted.
-     * Use {@code NONE} for role/platform tasks that are not device-scoped.
-     */
-    @XmlAttribute(name = "deviceType")
-    public String getDeviceType() {
-        return deviceType;
-    }
-
-    public void setDeviceType(String deviceType) {
-        this.deviceType = deviceType;
-    }
-
     @XmlElement(name = "Name", required = true)
     public String getName() {
         return name;
@@ -70,5 +57,18 @@ public class NotificationTaskFeature {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    /**
+     * Catalog device type for this task (e.g. {@code ALL} for device tasks,
+     * {@code NONE} for role-scoped tasks).
+     */
+    @XmlElement(name = "DeviceType", required = true)
+    public String getDeviceType() {
+        return deviceType;
+    }
+
+    public void setDeviceType(String deviceType) {
+        this.deviceType = deviceType;
     }
 }

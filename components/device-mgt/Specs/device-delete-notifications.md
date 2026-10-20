@@ -42,14 +42,17 @@ task catalog, `DM_FEATURE_DETAILS` migration, and config API details.
 
 ## Correct Behaviour
 
+Device labels use `DeviceManagerUtil.formatDeviceNotificationLabel(name, identifier)`
+→ `'Name' (identifier)`.
+
 | Action | Status | Notification message |
 | --- | --- | --- |
-| Disenroll | Success | `Device '{id}' ({type}) was disenrolled successfully.` |
-| Disenroll | Failure | `Failed to disenroll device '{id}' ({type}).` |
-| Remove (`REMOVED`) | Success | `Device '{id}' ({type}) was removed successfully.` |
-| Remove | Failure | `Failed to remove device '{id}' ({type}).` |
-| Permanent delete | Success | `Device(s) {identifiers} were permanently deleted successfully.` |
-| Permanent delete | Failure | `Failed to permanently delete device(s) {identifiers}.` |
+| Disenroll | Success | `Device 'Name' (identifier) of type {type} was disenrolled successfully.` |
+| Disenroll | Failure | `Failed to disenroll device 'Name' (identifier) of type {type}.` |
+| Remove (`REMOVED`) | Success | `Device 'Name' (identifier) of type {type} was removed successfully.` |
+| Remove | Failure | `Failed to remove device 'Name' (identifier) of type {type}.` |
+| Permanent delete | Success | `Device(s) ['Name' (id), ...] were permanently deleted successfully.` |
+| Permanent delete | Failure | `Failed to permanently delete device(s) ['Name' (id), ...].` |
 
 Permanent delete success is logged at INFO.
 

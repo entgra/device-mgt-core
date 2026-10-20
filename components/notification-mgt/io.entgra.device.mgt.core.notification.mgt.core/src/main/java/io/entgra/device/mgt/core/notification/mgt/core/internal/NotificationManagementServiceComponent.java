@@ -20,7 +20,6 @@ package io.entgra.device.mgt.core.notification.mgt.core.internal;
 
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceFeatureOperations;
-import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationConfigurationServiceException;
 import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationConfigService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationManagementService;
@@ -34,7 +33,6 @@ import io.entgra.device.mgt.core.notification.mgt.core.impl.NotificationConfigSe
 import io.entgra.device.mgt.core.notification.mgt.core.impl.NotificationManagementServiceImpl;
 import io.entgra.device.mgt.core.notification.mgt.core.task.NotificationArchivalTaskManager;
 import io.entgra.device.mgt.core.notification.mgt.core.task.NotificationArchivalTaskManagerImpl;
-import io.entgra.device.mgt.core.notification.mgt.core.util.Constants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.BundleContext;
@@ -45,10 +43,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
-import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.ntask.core.service.TaskService;
-import org.wso2.carbon.user.api.Tenant;
-import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.core.service.RealmService;
 
 @Component(
@@ -77,24 +72,6 @@ public class NotificationManagementServiceComponent {
             NotificationConfigService notificationConfigurationService = new NotificationConfigServiceImpl();
             bundleContext.registerService(NotificationConfigService.class.getName(),
                     notificationConfigurationService, null);
-            try {
-                DeviceFeatureOperations featureOperations =
-                        NotificationManagementDataHolder.getInstance().getDeviceFeatureOperations();
-                if (featureOperations != null) {
-                    featureOperations.getDeviceFeatureOperations();
-                }
-            } catch (Exception e) {
-                log.warn("Unable to refresh feature catalog before seeding task notification configs.", e);
-            }
-            try {
-                notificationConfigurationService.setDefaultNotificationArchiveMetadata(
-                                Constants.DEFAULT_ARCHIVE_TYPE,
-                                Constants.DEFAULT_ARCHIVE_PERIOD);
-                notificationConfigurationService.ensureDefaultTaskNotificationConfigs();
-            } catch (NotificationConfigurationServiceException e) {
-                log.error("Failed to set default notification archive metadata", e);
-            }
-            ensureDefaultTaskConfigsForAllTenants(notificationConfigurationService);
             NotificationArchivalTaskManager archivalTaskManager = new NotificationArchivalTaskManagerImpl();
             try {
                 archivalTaskManager.startTask();
@@ -111,50 +88,6 @@ public class NotificationManagementServiceComponent {
             log.error(msg, e);
         }
     }
-
-    /**
-     * Seeds default task notification configs for every tenant (existing-tenant migration path).
-     */
-    private void ensureDefaultTaskConfigsForAllTenants(NotificationConfigService notificationConfigService) {
-        RealmService realmService = NotificationManagementDataHolder.getInstance().getRealmService();
-        if (realmService == null || notificationConfigService == null) {
-            log.warn("RealmService or NotificationConfigService unavailable. Skipping tenant task config backfill.");
-            return;
-        }
-        try {
-            Tenant[] tenants = realmService.getTenantManager().getAllTenants();
-            if (tenants != null) {
-                for (Tenant tenant : tenants) {
-                    if (tenant == null || !tenant.isActive()) {
-                        continue;
-                    }
-                    seedTaskConfigsForTenant(notificationConfigService, tenant.getId(), tenant.getDomain());
-                }
-            }
-        } catch (UserStoreException e) {
-            log.error("Failed to list tenants while seeding default task notification configs.", e);
-        }
-        // Super tenant (also covered by activate context, but ensure explicitly)
-        seedTaskConfigsForTenant(notificationConfigService, Constants.SUPER_TENANT_ID, Constants.SUPER_TENANT_DOMAIN);
-    }
-
-    private void seedTaskConfigsForTenant(NotificationConfigService notificationConfigService,
-                                          int tenantId, String tenantDomain) {
-        try {
-            PrivilegedCarbonContext.startTenantFlow();
-            PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
-            ctx.setTenantId(tenantId, true);
-            if (tenantDomain != null) {
-                ctx.setTenantDomain(tenantDomain, true);
-            }
-            notificationConfigService.ensureDefaultTaskNotificationConfigs();
-        } catch (NotificationConfigurationServiceException e) {
-            log.error("Failed to seed default task notification configs for tenant: " + tenantId, e);
-        } finally {
-            PrivilegedCarbonContext.endTenantFlow();
-        }
-    }
-
     @SuppressWarnings("unused")
     @Deactivate
     protected void deactivate(ComponentContext componentContext) {

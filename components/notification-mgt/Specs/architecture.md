@@ -77,8 +77,9 @@ Each config entry includes: id, name, code, type (`operation` | `task`),
 deviceType, enabled, description, recipients, trigger points (operations),
 critical criteria, batch settings, and per-config archive settings.
 
-On activate / new tenant: archive defaults are ensured; task default configs
-are seeded (see device-mgt
+On activate: archival task starts. New tenants get archive defaults and
+default task configs (`ensureDefaultTaskNotificationConfigs`) from tenant
+creation; existing tenants use migration SQL (see device-mgt
 [task-notification-configs.md](../../device-mgt/Specs/task-notification-configs.md)).
 
 ## End-to-end flows
@@ -94,10 +95,11 @@ are seeded (see device-mgt
 3. If batch notifications are enabled →
    `handleBatchOperationNotificationIfApplicable`; else per publish.
 4. `publishNotification`:
+   - Resolve `deviceLabels` (`'Name' (identifier)`) into context
    - Insert `DM_NOTIFICATION` (`TYPE` from config, usually `operation`)
    - Insert `DM_NOTIFICATION_DEVICE` mappings
    - Resolve recipients → insert `DM_NOTIFICATION_USER_ACTION` (`IS_READ=false`)
-   - Render description → `NotificationEventBroker.pushMessage` per user
+   - Render description from context labels → `NotificationEventBroker.pushMessage` per user
 5. `SSEHandler.onMessage` writes `data: {...}\n\n` to that user’s open streams.
 
 **Primary callers:** `OperationManagerImpl` (`persistsOperation` → immediate;

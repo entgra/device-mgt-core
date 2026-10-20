@@ -11,11 +11,17 @@ external callers.
 
 1. Init config / archival config managers and DAO factories.
 2. Register `NotificationManagementService`, `NotificationConfigService`.
-3. Ensure default archive metadata for carbon.super / active tenants as needed.
-4. Refresh feature catalog path used for task defaults; seed default task
-   notification configs (`ensureDefaultTaskNotificationConfigs`).
-5. Start per-tenant `NotificationArchivalTask` via
+3. Start per-tenant `NotificationArchivalTask` via
    `NotificationArchivalTaskManagerImpl`.
+
+New tenants (`TenantManagerImpl.addDefaultNotificationArchivalMetadata`):
+
+1. `setDefaultNotificationArchiveMetadata`
+2. `ensureDefaultTaskNotificationConfigs` — seed task configs from catalog
+   with recipient `admin`
+
+Existing tenants: use migration SQL under
+`product-uem/.../cdm-migration-mysql.sql` (no activate-time all-tenant backfill).
 
 Data holder: `NotificationManagementDataHolder` (device-mgt, metadata,
 realm, task service, feature operations).
@@ -29,6 +35,7 @@ Impl: `NotificationConfigServiceImpl`
 | Method | Behaviour |
 | --- | --- |
 | `setDefaultNotificationArchiveMetadata` | Ensures `defaultArchiveType` / `defaultArchiveAfter` on meta |
+| `ensureDefaultTaskNotificationConfigs` | Idempotent seed of missing task configs from catalog (`admin` recipient) |
 | `addNotificationConfigContext` | Append configs; assign ids; persist meta |
 | `updateNotificationConfigContext` | Replace one config by id |
 | `deleteNotificationConfigContext` | Remove one by id |
@@ -37,7 +44,6 @@ Impl: `NotificationConfigServiceImpl`
 | `getNotificationConfigByID` | Single config |
 | `getFilteredNotificationConfigurations` | Filter by name/type/deviceType/code + pagination |
 | `configExists` | Exists for `(deviceType, code)` |
-| `ensureDefaultTaskNotificationConfigs` | Idempotent seed of default task configs |
 
 All persistence goes through metadata key `notification-config`.
 
@@ -80,11 +86,12 @@ Then either:
 
 `publishNotification`:
 
-1. `insertNotification(tenantId, configId, type, contextJson)`
-2. `insertNotificationDeviceMappings`
-3. Resolve recipients (`NotificationHelper.extractUsernamesFromRecipients`)
-4. `insertNotificationUserActions`
-5. Render description; for each user push
+1. Resolve `deviceLabels` (`'Name' (identifier)`) into context
+2. `insertNotification(tenantId, configId, type, contextJson)`
+3. `insertNotificationDeviceMappings`
+4. Resolve recipients (`NotificationHelper.extractUsernamesFromRecipients`)
+5. `insertNotificationUserActions`
+6. Render description from context `deviceLabels`; for each user push
    `buildMessagePayload(description, unreadCount)`
 
 Context built via `buildOperationContext` (operation fields, not free-form

@@ -28,6 +28,7 @@ import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationM
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementDataHolder;
 import io.entgra.device.mgt.core.device.mgt.core.privacy.PrivacyComplianceProvider;
+import io.entgra.device.mgt.core.device.mgt.core.util.DeviceManagerUtil;
 import io.entgra.device.mgt.core.device.mgt.core.privacy.dao.PrivacyComplianceDAO;
 import io.entgra.device.mgt.core.device.mgt.core.privacy.dao.PrivacyComplianceDAOException;
 import org.apache.commons.logging.Log;
@@ -64,6 +65,7 @@ public class PrivacyComplianceProviderImpl implements PrivacyComplianceProvider 
                 return;
             }
             Map<Integer, List<Integer>> deviceMap = new HashMap<>();
+            Map<Integer, DeviceIdentifier> deviceIdentifiersById = new HashMap<>();
             int x = -1;
             for (DeviceEnrollmentMapping m : enrollmentMappings) {
                 if (m.getDeviceId() != x) {
@@ -71,6 +73,9 @@ public class PrivacyComplianceProviderImpl implements PrivacyComplianceProvider 
                     List<Integer> enrolments = new ArrayList<>();
                     enrolments.add(m.getEnrolmentId());
                     deviceMap.put(m.getDeviceId(), enrolments);
+                    if (m.getDeviceIdentifier() != null) {
+                        deviceIdentifiersById.put(m.getDeviceId(), m.getDeviceIdentifier());
+                    }
                 } else {
                     deviceMap.get(m.getDeviceId()).add(m.getEnrolmentId());
                 }
@@ -87,8 +92,13 @@ public class PrivacyComplianceProviderImpl implements PrivacyComplianceProvider 
                     complianceDAO.deleteDeviceEnrollments(deviceId, tenantId);
                 }
                 complianceDAO.deleteDevice(deviceId, tenantId);
-                String message = String.format("Task Delete Device executed for user %s, and device %d was deleted.",
-                        username, deviceId);
+                DeviceIdentifier identifier = deviceIdentifiersById.get(deviceId);
+                String deviceLabel = DeviceManagerUtil.formatDeviceNotificationLabel(
+                        null,
+                        identifier != null ? identifier.getId() : String.valueOf(deviceId));
+                String message = String.format(
+                        "Device %s was permanently deleted for user %s.",
+                        deviceLabel, username);
                 DeviceManagementDataHolder.getInstance().getNotificationManagementService()
                         .handleTaskNotificationIfApplicable(tenantId, "DELETE_DEVICE", message);
             }
@@ -130,7 +140,9 @@ public class PrivacyComplianceProviderImpl implements PrivacyComplianceProvider 
             complianceDAO.deleteDeviceLocation(device.getId(), device.getEnrolmentInfo().getId());
             complianceDAO.deleteDeviceEnrollments(device.getId(), tenantId);
             complianceDAO.deleteDevice(device.getId(), tenantId);
-            String message = String.format("Task Delete Device executed for device %d.", device.getId());
+            String message = String.format("Device %s was permanently deleted.",
+                    DeviceManagerUtil.formatDeviceNotificationLabel(
+                            device.getName(), device.getDeviceIdentifier()));
             DeviceManagementDataHolder.getInstance().getNotificationManagementService()
                     .handleTaskNotificationIfApplicable(tenantId, "DELETE_DEVICE", message);
             DeviceManagementDAOFactory.commitTransaction();

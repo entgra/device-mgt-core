@@ -1305,6 +1305,15 @@ public final class DeviceManagerUtil {
     }
 
     /**
+     * User-facing device label for task/operation notifications: {@code 'Name' (identifier)}.
+     */
+    public static String formatDeviceNotificationLabel(String name, String identifier) {
+        String deviceName = name != null && !name.isBlank() ? name.trim() : "Unknown";
+        String deviceId = identifier != null && !identifier.isBlank() ? identifier.trim() : "unknown";
+        return "'" + deviceName + "' (" + deviceId + ")";
+    }
+
+    /**
      * Publishes a task notification for device delete/disenroll outcomes.
      * Failures are logged only so notification errors do not fail the device operation.
      */
