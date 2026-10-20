@@ -27,6 +27,7 @@ import io.entgra.device.mgt.core.subtype.mgt.dao.DeviceSubTypeDAOFactory;
 import io.entgra.device.mgt.core.subtype.mgt.dao.util.ConnectionManagerUtil;
 import io.entgra.device.mgt.core.subtype.mgt.dto.DeviceSubType;
 import io.entgra.device.mgt.core.subtype.mgt.dto.DeviceSubTypeCacheKey;
+import io.entgra.device.mgt.core.subtype.mgt.dto.DeviceTypeDefinition;
 import io.entgra.device.mgt.core.subtype.mgt.exception.BadRequestException;
 import io.entgra.device.mgt.core.subtype.mgt.exception.DBConnectionException;
 import io.entgra.device.mgt.core.subtype.mgt.exception.SubTypeMgtDAOException;
@@ -162,6 +163,22 @@ public class DeviceSubTypeServiceImpl implements DeviceSubTypeService {
     }
 
     @Override
+    public DeviceTypeDefinition getDeviceTypeDefinition(String subTypeId, int tenantId, String deviceType)
+            throws SubTypeMgtPluginException {
+        try {
+            ConnectionManagerUtil.openDBConnection();
+            return deviceSubTypeDAO.getDeviceTypeDefinition(subTypeId, tenantId, deviceType);
+        } catch (DBConnectionException | SubTypeMgtDAOException e) {
+            String msg = "Error occurred while retrieving the type definition for subtype ID: " + subTypeId +
+                    " and device type: " + deviceType;
+            log.error(msg, e);
+            throw new SubTypeMgtPluginException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+    }
+
+    @Override
     public List<DeviceSubType> getAllDeviceSubTypes(int tenantId, String deviceType)
             throws SubTypeMgtPluginException {
         try {
@@ -182,6 +199,27 @@ public class DeviceSubTypeServiceImpl implements DeviceSubTypeService {
             String msg = "Error occurred in the database level while retrieving all device subtype for " + deviceType
                     + " subtypes";
             log.error(msg);
+            throw new SubTypeMgtPluginException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+    }
+
+    @Override
+    public List<DeviceSubType> getDeviceSubTypesByModule(int moduleId, int tenantId, String deviceType)
+            throws SubTypeMgtPluginException {
+        try {
+            ConnectionManagerUtil.openDBConnection();
+            return deviceSubTypeDAO.getDeviceSubTypesByModule(moduleId, tenantId, deviceType);
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the database connection to retrieve device sub types " +
+                    "supported by module ID: " + moduleId;
+            log.error(msg, e);
+            throw new SubTypeMgtPluginException(msg, e);
+        } catch (SubTypeMgtDAOException e) {
+            String msg = "Error occurred in the database level while retrieving device sub types supported by " +
+                    "module ID: " + moduleId;
+            log.error(msg, e);
             throw new SubTypeMgtPluginException(msg, e);
         } finally {
             ConnectionManagerUtil.closeDBConnection();
@@ -233,4 +271,16 @@ public class DeviceSubTypeServiceImpl implements DeviceSubTypeService {
         }
     }
 
+    @Override
+    public String getSubTypeNames(String imeiNumber) throws SubTypeMgtPluginException {
+        try {
+            return deviceSubTypeDAO.getSubTypeNames(imeiNumber);
+        } catch (SubTypeMgtDAOException e) {
+            String msg = "Error occurred while retrieving subtype names for device with IMEI: " + imeiNumber;
+            log.error(msg);
+            throw new SubTypeMgtPluginException(msg, e);
+        } finally {
+            ConnectionManagerUtil.closeDBConnection();
+        }
+    }
 }

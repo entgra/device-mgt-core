@@ -91,6 +91,8 @@ import io.entgra.device.mgt.core.policy.mgt.common.PolicyMonitoringTaskException
 import io.entgra.device.mgt.core.policy.mgt.core.PolicyManagerService;
 import io.entgra.device.mgt.core.policy.mgt.core.task.TaskScheduleService;
 import io.entgra.device.mgt.core.tenant.mgt.common.spi.TenantManagerAdminService;
+import io.entgra.device.mgt.core.subtype.mgt.spi.DeviceSubTypeService;
+import io.entgra.device.mgt.core.operation.template.spi.OperationTemplateService;
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.client.Options;
 import org.apache.axis2.java.security.SSLProtocolSocketFactory;
@@ -335,6 +337,30 @@ public class DeviceMgtAPIUtils {
             throw new IllegalStateException(msg);
         }
         return deviceTypeGeneratorService;
+    }
+
+    public static DeviceSubTypeService getDeviceSubTypeService() {
+        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        DeviceSubTypeService deviceSubTypeService =
+                (DeviceSubTypeService) ctx.getOSGiService(DeviceSubTypeService.class, null);
+        if (deviceSubTypeService == null) {
+            String msg = "Device subtype management service has not initialized.";
+            log.error(msg);
+            throw new IllegalStateException(msg);
+        }
+        return deviceSubTypeService;
+    }
+
+    public static OperationTemplateService getOperationTemplateService() {
+        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        OperationTemplateService operationTemplateService =
+                (OperationTemplateService) ctx.getOSGiService(OperationTemplateService.class, null);
+        if (operationTemplateService == null) {
+            String msg = "Operation template service has not initialized.";
+            log.error(msg);
+            throw new IllegalStateException(msg);
+        }
+        return operationTemplateService;
     }
 
     public static boolean isValidDeviceIdentifier(DeviceIdentifier deviceIdentifier) throws DeviceManagementException {
