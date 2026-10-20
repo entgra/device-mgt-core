@@ -54,21 +54,20 @@ import java.io.IOException;
 public class InvokerHandler extends HttpServlet {
     private static final Log log = LogFactory.getLog(InvokerHandler.class);
     private static final long serialVersionUID = -6508020875358160165L;
-    private static AuthData authData;
-    private static String apiEndpoint;
-    private static String kmManagerUrl;
-
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
         try {
-            if (validateRequest(req, resp)) {
-                ClassicHttpRequest postRequest = ClassicRequestBuilder.post(HandlerUtil.generateBackendRequestURL(req, apiEndpoint)).build();
+            RequestContext context = validateRequest(req, resp);
+            if (context != null) {
+                ClassicHttpRequest postRequest = ClassicRequestBuilder.post(
+                        HandlerUtil.generateBackendRequestURL(req, context.apiEndpoint)).build();
                 HandlerUtil.generateRequestEntity(req, postRequest);
-                postRequest.setHeader(HttpHeaders.AUTHORIZATION, HandlerConstants.BEARER + authData.getAccessToken());
+                postRequest.setHeader(HttpHeaders.AUTHORIZATION,
+                        HandlerConstants.BEARER + context.authData.getAccessToken());
                 ProxyResponse proxyResponse = HandlerUtil.execute(postRequest);
 
-                if (HandlerConstants.TOKEN_IS_EXPIRED.equals(proxyResponse.getExecutorResponse())) {
-                    proxyResponse = HandlerUtil.retryRequestWithRefreshedToken(req, postRequest, kmManagerUrl);
+                if (HandlerUtil.isTokenRefreshRequired(proxyResponse)) {
+                    proxyResponse = HandlerUtil.retryRequestWithRefreshedToken(req, postRequest, context.kmManagerUrl);
                     if (!HandlerUtil.isResponseSuccessful(proxyResponse)) {
                         HandlerUtil.handleError(resp, proxyResponse);
                         return;
@@ -91,31 +90,25 @@ public class InvokerHandler extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
         try {
-            if (validateRequest(req, resp)) {
+            RequestContext context = validateRequest(req, resp);
+            if (context != null) {
                 ClassicHttpRequest getRequest = ClassicRequestBuilder.get(HandlerUtil.generateBackendRequestURL(req,
-                        apiEndpoint)).build();
+                        context.apiEndpoint)).build();
                 HandlerUtil.copyRequestHeaders(req, getRequest, false);
-                getRequest.setHeader(HttpHeaders.AUTHORIZATION, HandlerConstants.BEARER + authData.getAccessToken());
+                getRequest.setHeader(HttpHeaders.AUTHORIZATION,
+                        HandlerConstants.BEARER + context.authData.getAccessToken());
                 ProxyResponse proxyResponse = HandlerUtil.execute(getRequest);
-                if (HandlerConstants.TOKEN_IS_EXPIRED.equals(proxyResponse.getExecutorResponse())) {
-                    proxyResponse = HandlerUtil.retryRequestWithRefreshedToken(req, getRequest, kmManagerUrl);
+                if (HandlerUtil.isTokenRefreshRequired(proxyResponse)) {
+                    proxyResponse = HandlerUtil.retryRequestWithRefreshedToken(req, getRequest, context.kmManagerUrl);
                     if (!HandlerUtil.isResponseSuccessful(proxyResponse)) {
                         HandlerUtil.handleError(resp, proxyResponse);
                         return;
                     }
                 }
                 if (proxyResponse.getExecutorResponse().contains(HandlerConstants.EXECUTOR_EXCEPTION_PREFIX)) {
-                    if (proxyResponse.getCode() == HttpStatus.SC_UNAUTHORIZED) {
-                        proxyResponse = HandlerUtil.retryRequestWithRefreshedToken(req, getRequest, kmManagerUrl);
-                        if (!HandlerUtil.isResponseSuccessful(proxyResponse)) {
-                            HandlerUtil.handleError(resp, proxyResponse);
-                            return;
-                        }
-                    } else {
-                        log.error("Error occurred while invoking the GET API endpoint.");
-                        HandlerUtil.handleError(resp, proxyResponse);
-                        return;
-                    }
+                    log.error("Error occurred while invoking the GET API endpoint.");
+                    HandlerUtil.handleError(resp, proxyResponse);
+                    return;
                 }
                 HandlerUtil.handleSuccess(resp, proxyResponse);
             }
@@ -127,14 +120,16 @@ public class InvokerHandler extends HttpServlet {
     @Override
     protected void doHead(HttpServletRequest req, HttpServletResponse resp) {
         try {
-            if (validateRequest(req, resp)) {
+            RequestContext context = validateRequest(req, resp);
+            if (context != null) {
                 ClassicHttpRequest headRequest = ClassicRequestBuilder.head(HandlerUtil.generateBackendRequestURL(req,
-                        apiEndpoint)).build();
+                        context.apiEndpoint)).build();
                 HandlerUtil.copyRequestHeaders(req, headRequest, false);
-                headRequest.setHeader(HttpHeaders.AUTHORIZATION, HandlerConstants.BEARER + authData.getAccessToken());
+                headRequest.setHeader(HttpHeaders.AUTHORIZATION,
+                        HandlerConstants.BEARER + context.authData.getAccessToken());
                 ProxyResponse proxyResponse = HandlerUtil.execute(headRequest);
-                if (HandlerConstants.TOKEN_IS_EXPIRED.equals(proxyResponse.getExecutorResponse())) {
-                    proxyResponse = HandlerUtil.retryRequestWithRefreshedToken(req, headRequest, kmManagerUrl);
+                if (HandlerUtil.isTokenRefreshRequired(proxyResponse)) {
+                    proxyResponse = HandlerUtil.retryRequestWithRefreshedToken(req, headRequest, context.kmManagerUrl);
                     if (!HandlerUtil.isResponseSuccessful(proxyResponse)) {
                         HandlerUtil.handleError(resp, proxyResponse);
                         return;
@@ -155,15 +150,17 @@ public class InvokerHandler extends HttpServlet {
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) {
         try {
-            if (validateRequest(req, resp)) {
+            RequestContext context = validateRequest(req, resp);
+            if (context != null) {
                 ClassicHttpRequest putRequest = ClassicRequestBuilder.put(HandlerUtil.generateBackendRequestURL(req,
-                        apiEndpoint)).build();
+                        context.apiEndpoint)).build();
                 HandlerUtil.generateRequestEntity(req, putRequest);
-                putRequest.setHeader(HttpHeaders.AUTHORIZATION, HandlerConstants.BEARER + authData.getAccessToken());
+                putRequest.setHeader(HttpHeaders.AUTHORIZATION,
+                        HandlerConstants.BEARER + context.authData.getAccessToken());
                 ProxyResponse proxyResponse = HandlerUtil.execute(putRequest);
 
-                if (HandlerConstants.TOKEN_IS_EXPIRED.equals(proxyResponse.getExecutorResponse())) {
-                    proxyResponse = HandlerUtil.retryRequestWithRefreshedToken(req, putRequest, kmManagerUrl);
+                if (HandlerUtil.isTokenRefreshRequired(proxyResponse)) {
+                    proxyResponse = HandlerUtil.retryRequestWithRefreshedToken(req, putRequest, context.kmManagerUrl);
                     if (!HandlerUtil.isResponseSuccessful(proxyResponse)) {
                         HandlerUtil.handleError(resp, proxyResponse);
                         return;
@@ -197,18 +194,21 @@ public class InvokerHandler extends HttpServlet {
                 }
                 jsonPayload = jsonBuilder.toString();
             }
-            if (validateRequest(req, resp)) {
+            RequestContext context = validateRequest(req, resp);
+            if (context != null) {
                 ClassicHttpRequest deleteRequest = ClassicRequestBuilder.delete(HandlerUtil.generateBackendRequestURL(req,
-                        apiEndpoint)).build();
+                        context.apiEndpoint)).build();
                 if (jsonPayload != null && !jsonPayload.isEmpty()) {
                     StringEntity entity = new StringEntity(jsonPayload, ContentType.APPLICATION_JSON);
                     deleteRequest.setEntity(entity);
                 }
                 HandlerUtil.copyRequestHeaders(req, deleteRequest, false);
-                deleteRequest.setHeader(HttpHeaders.AUTHORIZATION, HandlerConstants.BEARER + authData.getAccessToken());
+                deleteRequest.setHeader(HttpHeaders.AUTHORIZATION,
+                        HandlerConstants.BEARER + context.authData.getAccessToken());
                 ProxyResponse proxyResponse = HandlerUtil.execute(deleteRequest);
-                if (HandlerConstants.TOKEN_IS_EXPIRED.equals(proxyResponse.getExecutorResponse())) {
-                    proxyResponse = HandlerUtil.retryRequestWithRefreshedToken(req, deleteRequest, kmManagerUrl);
+                if (HandlerUtil.isTokenRefreshRequired(proxyResponse)) {
+                    proxyResponse = HandlerUtil.retryRequestWithRefreshedToken(req, deleteRequest,
+                            context.kmManagerUrl);
                     if (!HandlerUtil.isResponseSuccessful(proxyResponse)) {
                         HandlerUtil.handleError(resp, proxyResponse);
                         return;
@@ -234,19 +234,20 @@ public class InvokerHandler extends HttpServlet {
      * @return If request is a valid one, returns TRUE, otherwise return FALSE
      * @throws IOException If and error occurs while witting error response to client side
      */
-    private static boolean validateRequest(HttpServletRequest req, HttpServletResponse resp)
+    private static RequestContext validateRequest(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
-        apiEndpoint = req.getScheme() + HandlerConstants.SCHEME_SEPARATOR + System.getProperty(HandlerConstants.IOT_GW_HOST_ENV_VAR)
+        String apiEndpoint = req.getScheme() + HandlerConstants.SCHEME_SEPARATOR
+                + System.getProperty(HandlerConstants.IOT_GW_HOST_ENV_VAR)
                 + HandlerConstants.COLON + HandlerUtil.getGatewayPort(req.getScheme());
 
-        kmManagerUrl = HandlerUtil.getKeyManagerUrl(req.getScheme());
+        String kmManagerUrl = HandlerUtil.getKeyManagerUrl(req.getScheme());
 
         if (HandlerConstants.REPORTS.equalsIgnoreCase(req.getHeader(HandlerConstants.APP_NAME))){
             apiEndpoint = System.getProperty("iot.reporting.webapp.host");
             if (StringUtils.isBlank(apiEndpoint)){
                 log.error("Reporting Endpoint is not defined in the iot-server.sh properly.");
                 HandlerUtil.handleError(resp, HttpStatus.SC_INTERNAL_SERVER_ERROR);
-                return false;
+                return null;
             }
         }
 
@@ -254,22 +255,34 @@ public class InvokerHandler extends HttpServlet {
         if (session == null) {
             log.error("Unauthorized, You are not logged in. Please log in to the portal");
             HandlerUtil.handleError(resp, HttpStatus.SC_UNAUTHORIZED);
-            return false;
+            return null;
         }
 
-        authData = (AuthData) session.getAttribute(HandlerConstants.SESSION_AUTH_DATA_KEY);
+        AuthData authData = (AuthData) session.getAttribute(HandlerConstants.SESSION_AUTH_DATA_KEY);
         if (authData == null) {
             log.error("Unauthorized, Access token not found in the current session");
             HandlerUtil.handleError(resp, HttpStatus.SC_UNAUTHORIZED);
-            return false;
+            return null;
         }
 
         if (req.getMethod() == null) {
             log.error("Bad Request, Request method is empty");
             HandlerUtil.handleError(resp, HttpStatus.SC_BAD_REQUEST);
-            return false;
+            return null;
         }
-        return true;
+        return new RequestContext(authData, apiEndpoint, kmManagerUrl);
+    }
+
+    private static final class RequestContext {
+        private final AuthData authData;
+        private final String apiEndpoint;
+        private final String kmManagerUrl;
+
+        private RequestContext(AuthData authData, String apiEndpoint, String kmManagerUrl) {
+            this.authData = authData;
+            this.apiEndpoint = apiEndpoint;
+            this.kmManagerUrl = kmManagerUrl;
+        }
     }
 
 }
