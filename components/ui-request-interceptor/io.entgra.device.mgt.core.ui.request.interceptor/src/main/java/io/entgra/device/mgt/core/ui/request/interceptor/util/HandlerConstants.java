@@ -30,6 +30,14 @@ public class HandlerConstants {
     public static final String IDENTITY_APP_MGT_ENDPOINT = "/services/IdentityApplicationManagementService.IdentityApplicationManagementServiceHttpsSoap11Endpoint";
     public static final String LOGIN_PAGE = "/login";
     public static final String SSO_LOGIN_CALLBACK = "/ssoLoginCallback";
+    public static final String BACK_CHANNEL_LOGOUT = "/backchannelLogout";
+    public static final String OIDC_LOGOUT_ENDPOINT = "/oidc/logout";
+    public static final String OIDC_LOGOUT_ENDPOINT_KEY = "oidcLogoutEndpoint";
+    public static final String LOGOUT_TOKEN = "logout_token";
+    public static final String ID_TOKEN_KEY = "id_token";
+    public static final String OIDC_MAPPED_SESSION = "oidcMappedSession";
+    public static final String BACKCHANNEL_LOGOUT_URI_KEY = "backchannelLogoutUri";
+    public static final String BACKCHANNEL_LOGOUT_SESSION_REQUIRED_KEY = "backchannelLogoutSessionRequired";
     public static final String BASIC = "Basic ";
     public static final String BEARER = "Bearer ";
     public static final String X_FRAME_OPTIONS = "X-Frame-Options";

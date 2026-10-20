@@ -27,6 +27,7 @@ public class AuthData implements java.io.Serializable {
 
     private String accessToken;
     private String refreshToken;
+    private String idToken;
     private String username;
     private String clientId;
     private String clientSecret;
@@ -47,6 +48,14 @@ public class AuthData implements java.io.Serializable {
 
     public void setRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
+    }
+
+    public String getIdToken() {
+        return idToken;
+    }
+
+    public void setIdToken(String idToken) {
+        this.idToken = idToken;
     }
 
     public String getUsername() {
