@@ -74,10 +74,6 @@ import io.entgra.device.mgt.core.device.mgt.core.task.DeviceTaskManager;
 import io.entgra.device.mgt.core.device.mgt.core.task.impl.DeviceTaskManagerImpl;
 import io.entgra.device.mgt.core.device.mgt.core.util.DeviceManagerUtil;
 
-import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -510,22 +506,22 @@ public class OperationManagerImpl implements OperationManager {
      * its device. Other property values are intentionally shared because they are read-only in this flow.
      */
     private Operation createNotificationOperation(Operation operation, int operationId) {
-        try {
-            Operation notificationOperation = operation.getClass().asSubclass(Operation.class)
-                    .getDeclaredConstructor().newInstance();
-            BeanInfo beanInfo = Introspector.getBeanInfo(operation.getClass(), Object.class);
-            for (PropertyDescriptor property : beanInfo.getPropertyDescriptors()) {
-                if (property.getReadMethod() != null && property.getWriteMethod() != null) {
-                    property.getWriteMethod().invoke(notificationOperation,
-                            property.getReadMethod().invoke(operation));
-                }
-            }
-            notificationOperation.setId(operationId);
-            return notificationOperation;
-        } catch (IntrospectionException | ReflectiveOperationException e) {
-            throw new IllegalStateException("Unable to create notification operation of type "
-                    + operation.getClass().getName(), e);
-        }
+        Operation notificationOperation = new Operation();
+        notificationOperation.setCode(operation.getCode());
+        notificationOperation.setProperties(operation.getProperties());
+        notificationOperation.setType(operation.getType());
+        notificationOperation.setStatus(operation.getStatus());
+        notificationOperation.setControl(operation.getControl());
+        notificationOperation.setReceivedTimeStamp(operation.getReceivedTimeStamp());
+        notificationOperation.setCreatedTimeStamp(operation.getCreatedTimeStamp());
+        notificationOperation.setEnabled(operation.isEnabled());
+        notificationOperation.setPayLoad(operation.getPayLoad());
+        notificationOperation.setOperationResponse(operation.getOperationResponse());
+        notificationOperation.setActivityId(operation.getActivityId());
+        notificationOperation.setInitiatedBy(operation.getInitiatedBy());
+        notificationOperation.setResponses(operation.getResponses());
+        notificationOperation.setId(operationId);
+        return notificationOperation;
     }
 
     private void sendNotification(Operation operation, Device device) {
