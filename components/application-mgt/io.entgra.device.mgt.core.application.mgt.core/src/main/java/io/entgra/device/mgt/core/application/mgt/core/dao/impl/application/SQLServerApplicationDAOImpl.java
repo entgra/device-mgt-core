@@ -90,11 +90,11 @@ public class SQLServerApplicationDAOImpl extends GenericApplicationDAOImpl {
         }
         sql += "LEFT JOIN AP_APP_RELEASE ON "
                 + "AP_APP.ID = AP_APP_RELEASE.AP_APP_ID "
+                + "INNER JOIN (SELECT AP_APP.ID FROM AP_APP "
                 + "LEFT JOIN AP_APP_CATEGORY_MAPPING ON "
                 + "AP_APP.ID = AP_APP_CATEGORY_MAPPING.AP_APP_ID "
                 + "LEFT JOIN AP_APP_CATEGORY ON "
-                + "AP_APP_CATEGORY_MAPPING.AP_APP_CATEGORY_ID = AP_APP_CATEGORY.ID "
-                + "INNER JOIN (SELECT AP_APP.ID FROM AP_APP ";
+                + "AP_APP_CATEGORY_MAPPING.AP_APP_CATEGORY_ID = AP_APP_CATEGORY.ID ";
         if (StringUtils.isNotEmpty(filter.getVersion())
                 || StringUtils.isNotEmpty(filter.getAppReleaseState())
                 || StringUtils.isNotEmpty(filter.getAppReleaseType())) {

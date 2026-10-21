@@ -33,6 +33,12 @@ correct behaviour looks like in the core services and Publisher API layer.
 | Release binary hash uniqueness (tenant-wide + pre-check) | [add-release/release-binary-hash.md](add-release/release-binary-hash.md) |
 | Single installable (PUBLISHED) release | [add-release/single-installable-release.md](add-release/single-installable-release.md) |
 
+### List applications
+
+| Feature | Spec |
+| --- | --- |
+| Releases must not multiply by category count | [list-applications/releases-vs-categories.md](list-applications/releases-vs-categories.md) |
+
 ### Favourites
 
 | Feature | Spec |
