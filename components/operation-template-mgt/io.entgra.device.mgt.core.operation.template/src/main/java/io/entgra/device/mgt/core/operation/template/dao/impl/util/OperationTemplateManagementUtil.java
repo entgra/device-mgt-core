@@ -19,6 +19,8 @@
 package io.entgra.device.mgt.core.operation.template.dao.impl.util;
 
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import io.entgra.device.mgt.core.operation.template.dto.OperationTemplateCacheKey;
 import org.w3c.dom.Document;
 
@@ -26,10 +28,30 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class OperationTemplateManagementUtil {
 
     private OperationTemplateManagementUtil() {
+    }
+
+    /**
+     * Converts a JSON array of register names into a list of strings.
+     *
+     * @param registers JSON array containing register names; may be {@code null} or JSON null
+     * @return list of register names, or an empty list when {@code registers} is null
+     */
+    public static List<String> getRegisterList(JsonElement registers) {
+        List<String> registerList = new ArrayList<>();
+        if (registers == null || registers.isJsonNull()) {
+            return registerList;
+        }
+        JsonArray registerArray = registers.getAsJsonArray();
+        for (JsonElement register : registerArray) {
+            registerList.add(register.getAsString());
+        }
+        return registerList;
     }
 
     /**
