@@ -554,6 +554,11 @@
             <Description>Notify when role UI permissions are updated.</Description>
             <DeviceType>NONE</DeviceType>
         </Feature>
+        <Feature code="REQUEST_CHAT">
+            <Name>Chat Request</Name>
+            <Description>Notify when an enrolled device requests a chat session.</Description>
+            <DeviceType>android</DeviceType>
+        </Feature>
     </NotificationTaskFeatures>
 </UIConfiguration>
 

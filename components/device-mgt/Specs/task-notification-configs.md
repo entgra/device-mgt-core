@@ -28,6 +28,7 @@ Task codes used for console device lifecycle (see also
 | `DELETE_DEVICE` | `ALL` | Permanent delete |
 | `DISENROLL_DEVICE` | `ALL` | Disenroll |
 | `ROLE_PERMISSION_UPDATE` | `NONE` | Role UI permission update (not device-scoped) |
+| `REQUEST_CHAT` | `android` | Android device requests a chat session (`POST .../request-chat`) |
 
 ## Tenant defaults
 
@@ -71,3 +72,4 @@ Code search for the UI uses
 - [ ] `ROLE_PERMISSION_UPDATE` is stored with `DEVICE_TYPE=NONE` (and existing `ALL` rows are synced).
 - [ ] Endpoint Manager can create/list task configs separately from operation configs.
 - [ ] Console delete / remove / disenroll publish only when a matching enabled task config exists.
+- [ ] Android `REQUEST_CHAT` publishes only when an enabled task config for that code exists.
