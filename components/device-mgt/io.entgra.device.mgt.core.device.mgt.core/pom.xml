@@ -103,7 +103,6 @@
                             io.entgra.device.mgt.core.device.mgt.common.invitation.mgt;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.device.mgt.common.license.mgt;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.device.mgt.common.metadata.mgt;version="${io.entgra.device.mgt.core.version.range}",
-                            io.entgra.device.mgt.core.device.mgt.common.notification.mgt;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.device.mgt.common.operation.mgt;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.device.mgt.common.otp.mgt;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.device.mgt.common.otp.mgt.dto;version="${io.entgra.device.mgt.core.version.range}",
