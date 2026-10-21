@@ -165,7 +165,7 @@ public class NotificationConfigServiceImpl implements NotificationConfigService 
         try {
             featureService.getDeviceFeatureOperations();
             taskFeatures = featureService.getOperationDetails(
-                    null, null, null, Constants.TASK, true);
+                    null, null, null, Constants.TASK, false);
         } catch (DeviceFeatureOperationException e) {
             String msg = "Failed to load task features for default notification configs.";
             log.error(msg, e);

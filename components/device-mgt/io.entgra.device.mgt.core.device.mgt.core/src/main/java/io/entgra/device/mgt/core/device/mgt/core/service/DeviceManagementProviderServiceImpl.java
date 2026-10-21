@@ -766,10 +766,6 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
                             .setTenantID(String.valueOf(tenantId))
                             .setTenantDomain(tenantDomain)
                             .setUserName(userName).build());
-            DeviceManagerUtil.publishDeviceNotification(tenantId, "DISENROLL_DEVICE", String.format(
-                    "Device %s of type %s was disenrolled successfully.",
-                    DeviceManagerUtil.formatDeviceNotificationLabel(device.getName(), deviceId.getId()),
-                    deviceId.getType()));
         } catch (DeviceManagementDAOException e) {
             DeviceManagementDAOFactory.rollbackTransaction();
             String msg = "Error occurred while dis-enrolling '" + deviceId.getType() +
@@ -802,7 +798,19 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         } finally {
             DeviceManagementDAOFactory.closeConnection();
         }
-        return deviceManager.disenrollDevice(deviceId);
+        boolean disenrolled = deviceManager.disenrollDevice(deviceId);
+        if (disenrolled) {
+            DeviceManagerUtil.publishDeviceNotification(tenantId, "DISENROLL_DEVICE", String.format(
+                    "Device %s of type %s was disenrolled successfully.",
+                    DeviceManagerUtil.formatDeviceNotificationLabel(device.getName(), deviceId.getId()),
+                    deviceId.getType()));
+        } else {
+            DeviceManagerUtil.publishDeviceNotification(tenantId, "DISENROLL_DEVICE", String.format(
+                    "Failed to disenroll device %s of type %s.",
+                    DeviceManagerUtil.formatDeviceNotificationLabel(device.getName(), deviceId.getId()),
+                    deviceId.getType()));
+        }
+        return disenrolled;
     }
 
     @Override
@@ -851,10 +859,6 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             DeviceManagementDAOFactory.commitTransaction();
             this.removeDeviceFromCache(deviceId);
             log.info("Device removed successfully: " + deviceId.getId() + " of type '" + deviceId.getType() + "'");
-            DeviceManagerUtil.publishDeviceNotification(tenantId, "REMOVE_DEVICE", String.format(
-                    "Device %s of type %s was removed successfully.",
-                    DeviceManagerUtil.formatDeviceNotificationLabel(device.getName(), deviceId.getId()),
-                    deviceId.getType()));
         } catch (DeviceManagementDAOException e) {
             DeviceManagementDAOFactory.rollbackTransaction();
             String msg = "Error occurred while removing '" + deviceId.getType() +
@@ -884,7 +888,19 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         } finally {
             DeviceManagementDAOFactory.closeConnection();
         }
-        return deviceManager.removeDevice(deviceId);
+        boolean removed = deviceManager.removeDevice(deviceId);
+        if (removed) {
+            DeviceManagerUtil.publishDeviceNotification(tenantId, "REMOVE_DEVICE", String.format(
+                    "Device %s of type %s was removed successfully.",
+                    DeviceManagerUtil.formatDeviceNotificationLabel(device.getName(), deviceId.getId()),
+                    deviceId.getType()));
+        } else {
+            DeviceManagerUtil.publishDeviceNotification(tenantId, "REMOVE_DEVICE", String.format(
+                    "Failed to remove device %s of type %s.",
+                    DeviceManagerUtil.formatDeviceNotificationLabel(device.getName(), deviceId.getId()),
+                    deviceId.getType()));
+        }
+        return removed;
     }
 
     @Override

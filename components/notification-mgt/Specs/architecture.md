@@ -95,7 +95,8 @@ creation; existing tenants use migration SQL (see device-mgt
 3. If batch notifications are enabled →
    `handleBatchOperationNotificationIfApplicable`; else per publish.
 4. `publishNotification`:
-   - Resolve `deviceLabels` (`'Name' (identifier)`) into context
+   - Resolve `deviceLabels` only when `includeDeviceList`; omit if JSON would
+     exceed `VARCHAR(1000)`
    - Insert `DM_NOTIFICATION` (`TYPE` from config, usually `operation`)
    - Insert `DM_NOTIFICATION_DEVICE` mappings
    - Resolve recipients → insert `DM_NOTIFICATION_USER_ACTION` (`IS_READ=false`)

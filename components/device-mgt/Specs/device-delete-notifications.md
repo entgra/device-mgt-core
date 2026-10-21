@@ -30,6 +30,9 @@ task catalog, `DM_FEATURE_DETAILS` migration, and config API details.
   (`getTenantDomain`) so SSE (`ConnectSSE` / `NotificationEventBroker`) matches the UI session.
   Do not use `TenantManager` here — this OSGi bundle does not import that class.
 - Notification publish failure is logged only; it must not fail the device operation
+  (`publishDeviceNotification` catches `Exception`)
+- Disenroll / remove: success (or plugin-false failure) is published **after**
+  `deviceManager.disenrollDevice` / `removeDevice` returns
 
 ## Source Files
 

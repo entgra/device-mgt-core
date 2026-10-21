@@ -68,7 +68,8 @@ public class GenericDeviceFeatureOperationDAOImpl implements DeviceFeatureOperat
                         "OPERATION_DESCRIPTION = ? " +
                 "WHERE OPERATION_CODE = ? " +
                         "AND TYPE = ?";
-        try (Connection connection = DeviceFeatureOperationsDAOFactory.getConnection()) {
+        try {
+            Connection connection = DeviceFeatureOperationsDAOFactory.getConnection();
             Set<String> existingKeys = new HashSet<>();
             Set<String> existingTaskCodeKeys = new HashSet<>();
             try (PreparedStatement selectStmt = connection.prepareStatement(selectQuery);

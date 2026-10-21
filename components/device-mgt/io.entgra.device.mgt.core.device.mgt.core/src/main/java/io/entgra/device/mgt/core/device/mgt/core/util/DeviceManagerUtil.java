@@ -1323,6 +1323,8 @@ public final class DeviceManagerUtil {
                     .handleTaskNotificationIfApplicable(tenantId, taskCode, message);
         } catch (io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementException e) {
             log.error("Error occurred while publishing device notification [" + taskCode + "]: " + message, e);
+        } catch (Exception e) {
+            log.error("Unexpected error while publishing device notification [" + taskCode + "]: " + message, e);
         }
     }
 }

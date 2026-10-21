@@ -86,7 +86,8 @@ Then either:
 
 `publishNotification`:
 
-1. Resolve `deviceLabels` (`'Name' (identifier)`) into context
+1. Resolve `deviceLabels` only when `includeDeviceList` is true; omit them if
+   context JSON would exceed `VARCHAR(1000)` (`NOTIFICATION_CONTEXT`)
 2. `insertNotification(tenantId, configId, type, contextJson)`
 3. `insertNotificationDeviceMappings`
 4. Resolve recipients (`NotificationHelper.extractUsernamesFromRecipients`)

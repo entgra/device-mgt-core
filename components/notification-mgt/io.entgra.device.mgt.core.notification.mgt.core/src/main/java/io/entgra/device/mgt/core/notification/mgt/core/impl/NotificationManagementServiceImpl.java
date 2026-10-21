@@ -60,6 +60,8 @@ import java.util.Map;
 
 public class NotificationManagementServiceImpl implements NotificationManagementService {
     private static final Log log = LogFactory.getLog(NotificationManagementServiceImpl.class);
+    /** Matches {@code DM_NOTIFICATION.NOTIFICATION_CONTEXT} / archive column size in CDM scripts. */
+    private static final int MAX_NOTIFICATION_CONTEXT_LENGTH = 1000;
     private final NotificationManagementDAO notificationDAO;
     private final NotificationArchivalDAO notificationArchiveDAO;
 
@@ -528,10 +530,19 @@ public class NotificationManagementServiceImpl implements NotificationManagement
             throw new NotificationManagementException("Notification context must not be null");
         }
         List<Integer> resolvedDeviceIds = deviceIds != null ? deviceIds : Collections.emptyList();
-        if (context.getDeviceLabels() == null || context.getDeviceLabels().isEmpty()) {
+        // resolve labels only when needed; omit them if JSON would exceed VARCHAR(1000).
+        if (Boolean.TRUE.equals(context.getIncludeDeviceList())
+                && (context.getDeviceLabels() == null || context.getDeviceLabels().isEmpty())) {
             context.setDeviceLabels(resolveDeviceLabels(resolvedDeviceIds));
         }
         String contextJson = NotificationMessageRenderer.toJson(context);
+        if (contextJson != null && contextJson.length() > MAX_NOTIFICATION_CONTEXT_LENGTH) {
+            context.setDeviceLabels(Collections.emptyList());
+            context.setIncludeDeviceList(false);
+            contextJson = NotificationMessageRenderer.toJson(context);
+            log.warn("Omitted deviceLabels from notification context to fit VARCHAR("
+                    + MAX_NOTIFICATION_CONTEXT_LENGTH + ") limit.");
+        }
         try {
             int notificationId = notificationDAO.insertNotification(
                     tenantId, config.getId(), config.getType(), contextJson);

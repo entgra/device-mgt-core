@@ -38,10 +38,11 @@ Task codes used for console device lifecycle (see also
 | Existing tenants | Migration SQL sample in `product-uem/.../cdm-migration-mysql.sql` (not activate-time Java backfill) |
 
 `ensureDefaultTaskNotificationConfigs` loads task features from the catalog
-(`mdm-ui-config.xml` `<NotificationTaskFeatures>` / `DM_FEATURE_DETAILS`),
-and for each missing task code adds an enabled config with catalog
-`deviceType`, recipient user `admin`, and default archive settings.
-Idempotent (skips codes that already exist).
+(`mdm-ui-config.xml` `<NotificationTaskFeatures>` / `DM_FEATURE_DETAILS`)
+with `removeDeduplicateCode=false` so `DEVICE_TYPE` is returned, and for each
+missing task code adds an enabled config with catalog `deviceType`, recipient
+user `admin`, and default archive settings. Idempotent (skips codes that
+already exist).
 
 ## DB migration
 
