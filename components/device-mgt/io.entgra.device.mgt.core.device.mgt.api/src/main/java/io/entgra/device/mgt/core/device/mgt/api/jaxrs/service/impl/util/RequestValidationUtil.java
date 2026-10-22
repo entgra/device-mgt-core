@@ -35,7 +35,6 @@ import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceTypeNotFound
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.Metadata;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.WhiteLabelImageRequestPayload;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.WhiteLabelThemeCreateRequest;
-import io.entgra.device.mgt.core.device.mgt.common.notification.mgt.Notification;
 import io.entgra.device.mgt.core.device.mgt.core.common.util.HttpUtil;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
@@ -197,39 +196,6 @@ public class RequestValidationUtil {
                                 "Invalid ownership type received. " +
                                         "Valid ownership types are BYOD | COPE " +
                                         "WORK_PROFILE | GOOGLE_ENTERPRISE | COSU | FULLY_MANAGED | DEDICATED_DEVICE").build());
-        }
-    }
-
-    public static void validateNotificationStatus(String status) {
-        if (status == null) {
-            throw new InputValidationException(
-                    new ErrorResponse.ErrorResponseBuilder().setCode(400l).setMessage(
-                            "Notification status type cannot be null").build());
-        }
-        switch (status) {
-            case "NEW":
-            case "CHECKED":
-                return;
-            default:
-                throw new InputValidationException(
-                        new ErrorResponse.ErrorResponseBuilder().setCode(400l).setMessage("Invalid notification status type " +
-                                "received. Valid status types are NEW | CHECKED").build());
-        }
-    }
-
-    public static void validateNotificationId(int id) {
-        if (id <= 0) {
-            throw new InputValidationException(
-                    new ErrorResponse.ErrorResponseBuilder().setCode(400l).setMessage("Invalid notification id. " +
-                            "Only positive integers are accepted as valid notification Ids").build());
-        }
-    }
-
-    public static void validateNotification(Notification notification) {
-        if (notification == null) {
-            throw new InputValidationException(
-                    new ErrorResponse.ErrorResponseBuilder().setCode(400l).setMessage("Notification content " +
-                            "cannot be null").build());
         }
     }
 

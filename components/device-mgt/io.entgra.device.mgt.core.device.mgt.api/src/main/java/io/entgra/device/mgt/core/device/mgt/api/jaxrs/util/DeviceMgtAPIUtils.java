@@ -62,7 +62,6 @@ import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupManagementExce
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.WhiteLabelManagementService;
-import io.entgra.device.mgt.core.device.mgt.common.notification.mgt.NotificationManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Operation;
 import io.entgra.device.mgt.core.device.mgt.common.report.mgt.ReportManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.spi.DeviceTypeGeneratorService;
@@ -91,6 +90,8 @@ import io.entgra.device.mgt.core.policy.mgt.common.PolicyMonitoringTaskException
 import io.entgra.device.mgt.core.policy.mgt.core.PolicyManagerService;
 import io.entgra.device.mgt.core.policy.mgt.core.task.TaskScheduleService;
 import io.entgra.device.mgt.core.tenant.mgt.common.spi.TenantManagerAdminService;
+import io.entgra.device.mgt.core.subtype.mgt.spi.DeviceSubTypeService;
+import io.entgra.device.mgt.core.operation.template.spi.OperationTemplateService;
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.client.Options;
 import org.apache.axis2.java.security.SSLProtocolSocketFactory;
@@ -335,6 +336,30 @@ public class DeviceMgtAPIUtils {
             throw new IllegalStateException(msg);
         }
         return deviceTypeGeneratorService;
+    }
+
+    public static DeviceSubTypeService getDeviceSubTypeService() {
+        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        DeviceSubTypeService deviceSubTypeService =
+                (DeviceSubTypeService) ctx.getOSGiService(DeviceSubTypeService.class, null);
+        if (deviceSubTypeService == null) {
+            String msg = "Device subtype management service has not initialized.";
+            log.error(msg);
+            throw new IllegalStateException(msg);
+        }
+        return deviceSubTypeService;
+    }
+
+    public static OperationTemplateService getOperationTemplateService() {
+        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        OperationTemplateService operationTemplateService =
+                (OperationTemplateService) ctx.getOSGiService(OperationTemplateService.class, null);
+        if (operationTemplateService == null) {
+            String msg = "Operation template service has not initialized.";
+            log.error(msg);
+            throw new IllegalStateException(msg);
+        }
+        return operationTemplateService;
     }
 
     public static boolean isValidDeviceIdentifier(DeviceIdentifier deviceIdentifier) throws DeviceManagementException {
@@ -676,17 +701,6 @@ public class DeviceMgtAPIUtils {
             throw new IllegalStateException("Tenant configuration Management service not initialized.");
         }
         return tenantConfigurationManagementService;
-    }
-
-    public static NotificationManagementService getNotificationManagementService() {
-        NotificationManagementService notificationManagementService;
-        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
-        notificationManagementService = (NotificationManagementService) ctx.getOSGiService(
-                NotificationManagementService.class, null);
-        if (notificationManagementService == null) {
-            throw new IllegalStateException("Notification Management service not initialized.");
-        }
-        return notificationManagementService;
     }
 
     /**

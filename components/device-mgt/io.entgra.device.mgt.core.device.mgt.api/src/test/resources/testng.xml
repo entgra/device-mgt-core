@@ -29,7 +29,6 @@
             <class name="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.DeviceTypeManagementAdminServiceTest"/>
             <class name="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.DeviceAgentServiceTest"/>
             <class name="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.UserManagementServiceImplTest"/>
-            <class name="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.NotificationManagementServiceImplTest"/>
             <class name="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.ConfigurationServiceImplTest"/>
             <class name="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.GroupManagementServiceImplTest"/>
             <class name="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.PolicyManagementServiceUpdatedFilterTest"/>
