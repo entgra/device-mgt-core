@@ -141,10 +141,6 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
         }
         sql += "LEFT JOIN AP_APP_RELEASE ON "
                 + "AP_APP.ID = AP_APP_RELEASE.AP_APP_ID ";
-        sql += "LEFT JOIN AP_APP_CATEGORY_MAPPING ON "
-                + "AP_APP.ID = AP_APP_CATEGORY_MAPPING.AP_APP_ID "
-                + "LEFT JOIN AP_APP_CATEGORY ON "
-                + "AP_APP_CATEGORY_MAPPING.AP_APP_CATEGORY_ID = AP_APP_CATEGORY.ID ";
         sql += "INNER JOIN (SELECT AP_APP.ID FROM AP_APP "
                 + "LEFT JOIN AP_APP_CATEGORY_MAPPING ON "
                 + "AP_APP.ID = AP_APP_CATEGORY_MAPPING.AP_APP_ID "

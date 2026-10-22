@@ -20,13 +20,12 @@ package io.entgra.device.mgt.core.notification.mgt.core.util;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import io.entgra.device.mgt.core.notification.mgt.core.util.Constants;
 import io.entgra.device.mgt.core.notification.mgt.common.dto.NotificationContext;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * Builds user-visible notification descriptions from persisted context JSON and linked device ids.
+ * Builds user-visible notification descriptions from persisted context JSON.
  */
 public final class NotificationMessageRenderer {
 
@@ -57,10 +56,9 @@ public final class NotificationMessageRenderer {
 
     /**
      * @param context          persisted notification context
-     * @param deviceIds        device primary keys from {@code DM_NOTIFICATION_DEVICE}
      * @param notificationType notification type (e.g. operation, task)
      */
-    public static String render(NotificationContext context, List<Integer> deviceIds, String notificationType) {
+    public static String render(NotificationContext context, String notificationType) {
         if (context == null) {
             return "";
         }
@@ -70,29 +68,34 @@ public final class NotificationMessageRenderer {
         if (isNotBlank(context.getMessage()) && !isNotBlank(context.getOperationCode())) {
             return context.getMessage();
         }
-        return renderOperationNotification(context, deviceIds);
+        return renderOperationNotification(context);
     }
 
-    public static String renderOperationNotification(NotificationContext context, List<Integer> deviceIds) {
+    /**
+     * Renders an operation notification from context fields and {@code deviceLabels}.
+     * Device names/identifiers must already be present on the context when the list
+     * should be shown; raw device primary keys are never used in the message.
+     */
+    public static String renderOperationNotification(NotificationContext context) {
         if (context == null) {
             return "";
         }
-        List<Integer> ids = deviceIds != null ? deviceIds : Collections.emptyList();
         String code = context.getOperationCode() != null ? context.getOperationCode() : "";
         String configDescription = context.getConfigDescription() != null ? context.getConfigDescription() : "";
         String deviceType = context.getDeviceType() != null ? context.getDeviceType() : "";
         String status = context.getOperationStatus() != null ? context.getOperationStatus() : "";
         boolean includeDeviceList = context.getIncludeDeviceList() == null || context.getIncludeDeviceList();
-        if (!includeDeviceList || ids.isEmpty()) {
+        List<String> labels = context.getDeviceLabels() != null ? context.getDeviceLabels() : Collections.emptyList();
+        if (!includeDeviceList || labels.isEmpty()) {
             return String.format("The operation %s (%s) for devices of type %s is %s.",
                     code, configDescription, deviceType, status);
         }
-        if (ids.size() == 1) {
-            return String.format("The operation %s (%s) for device with id %d of type %s is %s.",
-                    code, configDescription, ids.get(0), deviceType, status);
+        if (labels.size() == 1) {
+            return String.format("The operation %s (%s) for device %s of type %s is %s.",
+                    code, configDescription, labels.get(0), deviceType, status);
         }
-        return String.format("The operation %s (%s) for device with ids %s of type %s is %s.",
-                code, configDescription, ids.toString(), deviceType, status);
+        return String.format("The operation %s (%s) for devices %s of type %s is %s.",
+                code, configDescription, labels, deviceType, status);
     }
 
     private static boolean isNotBlank(String value) {

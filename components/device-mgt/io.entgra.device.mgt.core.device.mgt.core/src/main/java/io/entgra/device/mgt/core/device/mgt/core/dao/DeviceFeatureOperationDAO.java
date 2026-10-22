@@ -26,7 +26,7 @@ import java.util.Map;
 
 public interface DeviceFeatureOperationDAO {
     /**
-     * Updates or inserts device feature details into the DM_OPERATION_DETAILS table.
+     * Updates or inserts feature details into the DM_FEATURE_DETAILS table.
      * @param deviceFeatureInfoList A list of {@link DeviceFeatureInfo} to be updated or inserted.
      * @throws DeviceFeatureOperationsDAOException If any error occurs while processing the update.
      */
@@ -34,25 +34,15 @@ public interface DeviceFeatureOperationDAO {
             throws DeviceFeatureOperationsDAOException;
 
     /**
-     * Retrieves a list of device operation details filtered by operation code, operation name, and/or device type.
-     * If any of the provided parameters are {@code null} or empty, they will be ignored in the filtering process.
-     * This allows for partial filtering or fetching all records when no filters are provided.
-     * @param code the operation code to filter by (optional).
-     * @param name the operation name to filter by (optional).
-     * @param type the device type to filter by (optional).
-     * @param removeDeduplicateCode whether to get duplicate operations code from device types or not (optional).
-     * @return a list of {@link DeviceFeatureInfo} objects that match the provided filters.
-     * @throws DeviceFeatureOperationsDAOException if an error occurs while accessing the database.
+     * Retrieves feature details filtered by code, name, device type, and feature type (operation/task).
      */
-    List<DeviceFeatureInfo> getOperationDetails(String code, String name, String type, boolean removeDeduplicateCode)
+    List<DeviceFeatureInfo> getOperationDetails(String code, String name, String deviceType,
+                                                String featureType, boolean removeDeduplicateCode)
             throws DeviceFeatureOperationsDAOException;
 
     /**
-     * Checks whether the given operation codes exist in the DM_OPERATION_DETAILS table.
-     *
-     * @param codes Single or multiple operation codes to validate.
-     * @return Map of operation code to boolean indicating whether it exists.
-     * @throws DeviceFeatureOperationsDAOException if there is an error accessing the database.
+     * Checks whether the given codes exist for the given feature type ({@code operation} or {@code task}).
      */
-    Map<String, Boolean> operationCodesExist(List<String> codes) throws DeviceFeatureOperationsDAOException;
+    Map<String, Boolean> featureCodesExist(List<String> codes, String featureType)
+            throws DeviceFeatureOperationsDAOException;
 }

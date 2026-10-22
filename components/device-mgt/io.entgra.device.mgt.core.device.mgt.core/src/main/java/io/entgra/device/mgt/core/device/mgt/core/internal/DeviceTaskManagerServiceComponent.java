@@ -77,7 +77,7 @@ public class DeviceTaskManagerServiceComponent {
             if (deviceManagementConfig != null && deviceManagementConfig.getOperationTimeoutConfiguration() != null) {
                 startOperationTimeoutTask(componentContext.getBundleContext());
             }
-            //Retrieve device type operations and insert them into the DM_OPERATION_DETAILS table.
+            //Retrieve device type operations + notification tasks and insert them into DM_FEATURE_DETAILS.
             DeviceFeatureOperations ops = DeviceManagementDataHolder.getInstance().getDeviceFeatureOperations();
             if (ops != null) {
                 ops.getDeviceFeatureOperations();

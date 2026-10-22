@@ -1286,4 +1286,28 @@ public final class DeviceManagerUtil {
             device.setDescription(device.getDescription().trim());
         }
     }
+
+    /**
+     * User-facing device label for task/operation notifications: {@code 'Name' (identifier)}.
+     */
+    public static String formatDeviceNotificationLabel(String name, String identifier) {
+        String deviceName = name != null && !name.isBlank() ? name.trim() : "Unknown";
+        String deviceId = identifier != null && !identifier.isBlank() ? identifier.trim() : "unknown";
+        return "'" + deviceName + "' (" + deviceId + ")";
+    }
+
+    /**
+     * Publishes a task notification for device delete/disenroll outcomes.
+     * Failures are logged only so notification errors do not fail the device operation.
+     */
+    public static void publishDeviceNotification(int tenantId, String taskCode, String message) {
+        try {
+            DeviceManagementDataHolder.getInstance().getNotificationManagementService()
+                    .handleTaskNotificationIfApplicable(tenantId, taskCode, message);
+        } catch (io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementException e) {
+            log.error("Error occurred while publishing device notification [" + taskCode + "]: " + message, e);
+        } catch (Exception e) {
+            log.error("Unexpected error while publishing device notification [" + taskCode + "]: " + message, e);
+        }
+    }
 }

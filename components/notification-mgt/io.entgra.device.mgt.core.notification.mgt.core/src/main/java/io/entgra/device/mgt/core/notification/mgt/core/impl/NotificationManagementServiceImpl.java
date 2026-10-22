@@ -41,6 +41,10 @@ import io.entgra.device.mgt.core.notification.mgt.core.util.NotificationEventBro
 import io.entgra.device.mgt.core.notification.mgt.core.util.NotificationHelper;
 import io.entgra.device.mgt.core.notification.mgt.core.util.NotificationMessageRenderer;
 import io.entgra.device.mgt.core.notification.mgt.core.util.NotificationEventPayloadBuilder;
+import io.entgra.device.mgt.core.device.mgt.common.Device;
+import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.user.api.UserStoreException;
@@ -56,6 +60,8 @@ import java.util.Map;
 
 public class NotificationManagementServiceImpl implements NotificationManagementService {
     private static final Log log = LogFactory.getLog(NotificationManagementServiceImpl.class);
+    /** Matches {@code DM_NOTIFICATION.NOTIFICATION_CONTEXT} / archive column size in CDM scripts. */
+    private static final int MAX_NOTIFICATION_CONTEXT_LENGTH = 1000;
     private final NotificationManagementDAO notificationDAO;
     private final NotificationArchivalDAO notificationArchiveDAO;
 
@@ -457,45 +463,58 @@ public class NotificationManagementServiceImpl implements NotificationManagement
     }
 
     @Override
-    public void handleTaskNotificationIfApplicable(int tenantId, String message)
+    public void handleTaskNotificationIfApplicable(int tenantId, String taskCode, String message)
             throws NotificationManagementException {
+        if (taskCode == null || taskCode.isBlank()) {
+            log.warn("Task code is empty. Skipping task notification.");
+            return;
+        }
+        NotificationConfig config = NotificationHelper.getNotificationConfigurationByCode(taskCode);
+        if (config == null || !config.isEnabled()
+                || !Constants.TASK.equalsIgnoreCase(config.getType())) {
+            if (log.isDebugEnabled()) {
+                log.debug("No enabled task notification config for code: " + taskCode);
+            }
+            return;
+        }
         try {
-            UserStoreManager userStoreManager = NotificationManagementDataHolder.getInstance()
-                    .getRealmService().getTenantUserRealm(tenantId).getUserStoreManager();
-            String[] adminUsers = userStoreManager.getUserListOfRole(Constants.ADMIN);
-            List<String> usernames = Arrays.asList(adminUsers);
-            if (!usernames.isEmpty()) {
-                NotificationContext context = new NotificationContext();
-                context.setMessage(message);
-                try {
-                    NotificationManagementDAOFactory.beginTransaction();
-                    int notificationId = notificationDAO.insertNotification(
-                            tenantId, 0, Constants.TASK, NotificationMessageRenderer.toJson(context));
-                    notificationDAO.insertNotificationUserActions(notificationId, usernames);
-                    String description = NotificationMessageRenderer.render(
-                            context, Collections.emptyList(), Constants.TASK);
-                    for (String username : usernames) {
-                        int count = notificationDAO.getUnreadNotificationCountForUser(username);
-                        NotificationEventBroker.pushMessage(
-                                NotificationEventPayloadBuilder.buildMessagePayload(description, count),
-                                Collections.singletonList(username));
-                    }
-                    NotificationManagementDAOFactory.commitTransaction();
-                } catch (NotificationManagementDAOException e) {
-                    NotificationManagementDAOFactory.rollbackTransaction();
-                    String msg = "Error occurred while handling notification transaction for the task.";
-                    log.error(msg, e);
-                    throw new NotificationManagementException(msg, e);
-                } catch (TransactionManagementException e) {
-                    String msg = "Error occurred while handling notification transaction for the task.";
-                    log.error(msg, e);
-                    throw new NotificationManagementException(msg, e);
-                } finally {
-                    NotificationManagementDAOFactory.closeConnection();
+            List<String> usernames = NotificationHelper.extractUsernamesFromRecipients(
+                    config.getRecipients(), tenantId);
+            if (usernames == null || usernames.isEmpty()) {
+                log.warn("No recipients resolved for task notification config: " + taskCode
+                        + ". Skipping task notification.");
+                return;
+            }
+            NotificationContext context = new NotificationContext();
+            context.setMessage(message);
+            try {
+                NotificationManagementDAOFactory.beginTransaction();
+                int notificationId = notificationDAO.insertNotification(
+                        tenantId, config.getId(), Constants.TASK,
+                        NotificationMessageRenderer.toJson(context));
+                notificationDAO.insertNotificationUserActions(notificationId, usernames);
+                String description = NotificationMessageRenderer.render(context, Constants.TASK);
+                for (String username : usernames) {
+                    int count = notificationDAO.getUnreadNotificationCountForUser(username);
+                    NotificationEventBroker.pushMessage(
+                            NotificationEventPayloadBuilder.buildMessagePayload(description, count),
+                            Collections.singletonList(username));
                 }
+                NotificationManagementDAOFactory.commitTransaction();
+            } catch (NotificationManagementDAOException e) {
+                NotificationManagementDAOFactory.rollbackTransaction();
+                String msg = "Error occurred while handling notification transaction for the task.";
+                log.error(msg, e);
+                throw new NotificationManagementException(msg, e);
+            } catch (TransactionManagementException e) {
+                String msg = "Error occurred while handling notification transaction for the task.";
+                log.error(msg, e);
+                throw new NotificationManagementException(msg, e);
+            } finally {
+                NotificationManagementDAOFactory.closeConnection();
             }
         } catch (UserStoreException e) {
-            String msg = "Error retrieving users with role 'admin'";
+            String msg = "Error resolving recipients for task notification: " + taskCode;
             log.error(msg, e);
             throw new NotificationManagementException(msg, e);
         }
@@ -511,7 +530,19 @@ public class NotificationManagementServiceImpl implements NotificationManagement
             throw new NotificationManagementException("Notification context must not be null");
         }
         List<Integer> resolvedDeviceIds = deviceIds != null ? deviceIds : Collections.emptyList();
+        // resolve labels only when needed; omit them if JSON would exceed VARCHAR(1000).
+        if (Boolean.TRUE.equals(context.getIncludeDeviceList())
+                && (context.getDeviceLabels() == null || context.getDeviceLabels().isEmpty())) {
+            context.setDeviceLabels(resolveDeviceLabels(resolvedDeviceIds));
+        }
         String contextJson = NotificationMessageRenderer.toJson(context);
+        if (contextJson != null && contextJson.length() > MAX_NOTIFICATION_CONTEXT_LENGTH) {
+            context.setDeviceLabels(Collections.emptyList());
+            context.setIncludeDeviceList(false);
+            contextJson = NotificationMessageRenderer.toJson(context);
+            log.warn("Omitted deviceLabels from notification context to fit VARCHAR("
+                    + MAX_NOTIFICATION_CONTEXT_LENGTH + ") limit.");
+        }
         try {
             int notificationId = notificationDAO.insertNotification(
                     tenantId, config.getId(), config.getType(), contextJson);
@@ -522,7 +553,7 @@ public class NotificationManagementServiceImpl implements NotificationManagement
                 return;
             }
             notificationDAO.insertNotificationUserActions(notificationId, usernames);
-            String description = NotificationMessageRenderer.render(context, resolvedDeviceIds, config.getType());
+            String description = NotificationMessageRenderer.render(context, config.getType());
             for (String username : usernames) {
                 int count = notificationDAO.getUnreadNotificationCountForUser(username);
                 NotificationEventBroker.pushMessage(
@@ -534,6 +565,53 @@ public class NotificationManagementServiceImpl implements NotificationManagement
             log.error(msg, e);
             throw new NotificationManagementException(msg, e);
         }
+    }
+
+    /**
+     * Builds user-facing device labels ({@code 'Name' (identifier)}) for operation
+     * notification messages from internal {@code DM_DEVICE.ID} values.
+     * <p>
+     * Returns an empty list when ids are missing, the device service is unavailable,
+     * lookup fails, or no devices are found — callers then omit the device list.
+     *
+     * @param deviceIds internal device primary keys; may be {@code null} or empty
+     * @return label strings for each resolved device; never {@code null}
+     */
+    private List<String> resolveDeviceLabels(List<Integer> deviceIds) {
+        if (deviceIds == null || deviceIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        DeviceManagementProviderService deviceService =
+                NotificationManagementDataHolder.getInstance().getDeviceManagementProviderService();
+        if (deviceService == null) {
+            return Collections.emptyList();
+        }
+        try {
+            PaginationRequest request = new PaginationRequest(0, deviceIds.size());
+            List<Device> devices = deviceService.getDevicesByDeviceIds(request, deviceIds);
+            if (devices == null || devices.isEmpty()) {
+                return Collections.emptyList();
+            }
+            List<String> labels = new ArrayList<>();
+            for (Device device : devices) {
+                labels.add(formatDeviceNotificationLabel(
+                        device.getName(), device.getDeviceIdentifier()));
+            }
+            return labels;
+        } catch (DeviceManagementException e) {
+            log.warn("Unable to resolve device names/identifiers for notification message.", e);
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Formats a device as {@code 'Name' (identifier)} for notification text.
+     * Kept local so notification-mgt does not depend on device.mgt.core.util.
+     */
+    private static String formatDeviceNotificationLabel(String name, String identifier) {
+        String deviceName = name != null && !name.isBlank() ? name.trim() : "Unknown";
+        String deviceId = identifier != null && !identifier.isBlank() ? identifier.trim() : "unknown";
+        return "'" + deviceName + "' (" + deviceId + ")";
     }
 
     private NotificationContext buildOperationContext(NotificationConfig config, String operationStatus,

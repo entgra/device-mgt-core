@@ -56,4 +56,12 @@ public interface APIPublisherService {
      */
     void updateScopeRoleMapping(String roleName, String[] permissions, String[] removedPermissions) throws APIManagerPublisherException;
 
+    /**
+     * Publishes a ROLE_PERMISSION_UPDATE task notification for the current tenant.
+     *
+     * @param roleName role that was updated
+     * @param success  whether the update succeeded
+     */
+    void notifyRolePermissionUpdate(String roleName, boolean success);
+
 }
