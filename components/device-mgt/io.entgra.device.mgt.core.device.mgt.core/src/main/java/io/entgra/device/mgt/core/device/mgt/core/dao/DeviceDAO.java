@@ -933,6 +933,19 @@ public interface DeviceDAO {
     int getCountOfDevicesNotInTag(PaginationRequest request, int tenantId) throws DeviceManagementDAOException;
 
     /**
+     * This method is used to get the subset of the given device IDs whose current (most recently
+     * created) enrolment status is in the given list of statuses.
+     *
+     * @param deviceIds candidate device IDs to check
+     * @param statuses Enrolment statuses to match
+     * @param tenantId id of the tenant the devices belong to
+     * @return deviceIds matching the given statuses
+     * @throws DeviceManagementException
+     */
+    List<Integer> getDeviceIdsInEnrolmentStatus(List<Integer> deviceIds, List<String> statuses, int tenantId)
+            throws DeviceManagementException;
+
+    /**
      * This method is used to check whether a device property value exists in the system.
      *
      * @param propertyName name of the device property.

@@ -50,8 +50,10 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -2397,6 +2399,30 @@ public class GenericSubscriptionDAOImpl extends AbstractDAOImpl implements Subsc
                         subscription.setDeviceId(rs.getInt("DEVICE_ID"));
 
                         deviceSubscriptions.add(subscription);
+                    }
+
+                    if (!deviceSubscriptions.isEmpty()) {
+                        List<String> excludedEnrolmentStatuses = new ArrayList<>();
+                        excludedEnrolmentStatuses.add(EnrolmentInfo.Status.DISENROLLMENT_REQUESTED.toString());
+                        excludedEnrolmentStatuses.add(EnrolmentInfo.Status.REMOVED.toString());
+                        excludedEnrolmentStatuses.add(EnrolmentInfo.Status.DELETED.toString());
+
+                        List<Integer> candidateDeviceIds = deviceSubscriptions.stream()
+                                .map(DeviceSubscriptionDTO::getDeviceId).distinct().collect(Collectors.toList());
+
+                        DeviceManagementProviderService deviceManagementProviderService =
+                                HelperUtil.getDeviceManagementProviderService();
+                        Set<Integer> disenrolledDeviceIds;
+                        try {
+                            disenrolledDeviceIds = new HashSet<>(deviceManagementProviderService
+                                    .getDeviceIdsInEnrolmentStatus(candidateDeviceIds, excludedEnrolmentStatuses, tenantId));
+                        } catch (DeviceManagementException e) {
+                            String msg = "Error occurred while retrieving device enrolment statuses for application release id "
+                                    + appReleaseId;
+                            log.error(msg, e);
+                            throw new ApplicationManagementDAOException(msg, e);
+                        }
+                        deviceSubscriptions.removeIf(dto -> disenrolledDeviceIds.contains(dto.getDeviceId()));
                     }
                     return deviceSubscriptions;
                 }

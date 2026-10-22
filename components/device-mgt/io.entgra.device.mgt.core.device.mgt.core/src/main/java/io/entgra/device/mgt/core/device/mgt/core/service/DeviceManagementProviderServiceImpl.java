@@ -6500,6 +6500,31 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
+    public List<Integer> getDeviceIdsInEnrolmentStatus(List<Integer> deviceIds, List<String> statuses, int tenantId)
+            throws DeviceManagementException {
+        if (statuses == null || statuses.isEmpty()) {
+            String msg = "Received null or empty list for statuses";
+            log.error(msg);
+            throw new DeviceManagementException(msg);
+        }
+
+        try {
+            DeviceManagementDAOFactory.openConnection();
+            return deviceDAO.getDeviceIdsInEnrolmentStatus(deviceIds, statuses, tenantId);
+        } catch (DeviceManagementException e) {
+            String msg = "Error encountered while getting device IDs in enrolment statuses: " + statuses;
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error encountered while getting the database connection";
+            log.error(msg, e);
+            throw new DeviceManagementException(msg, e);
+        } finally {
+            DeviceManagementDAOFactory.closeConnection();
+        }
+    }
+
+    @Override
     public DeviceManagementConfig getDeviceManagementConfig() {
         return DeviceConfigurationManager.getInstance().getDeviceManagementConfig();
     }

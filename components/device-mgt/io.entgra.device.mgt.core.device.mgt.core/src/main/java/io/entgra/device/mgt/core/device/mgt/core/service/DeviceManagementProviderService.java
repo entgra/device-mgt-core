@@ -1263,6 +1263,18 @@ public interface DeviceManagementProviderService {
     PaginationResult getDevicesNotInTag(PaginationRequest request, boolean requireDeviceInfo) throws DeviceManagementException;
 
     /**
+     * This method is to get the subset of the given device IDs whose current (most recently
+     * created) enrolment status is in the given list of statuses.
+     * @param deviceIds candidate device IDs to check.
+     * @param statuses Enrolment statuses to match.
+     * @param tenantId id of the tenant the devices belong to.
+     * @return deviceIds matching the given statuses.
+     * @throws DeviceManagementException if any service level or DAO level error occurs.
+     */
+    List<Integer> getDeviceIdsInEnrolmentStatus(List<Integer> deviceIds, List<String> statuses, int tenantId)
+            throws DeviceManagementException;
+
+    /**
      * Retrieves the current device management configuration.
      *
      * @return an instance of {@link DeviceManagementConfig} containing the configuration details

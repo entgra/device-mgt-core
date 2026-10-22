@@ -22,6 +22,10 @@ import io.entgra.device.mgt.core.application.mgt.common.SubscriptionEntity;
 import io.entgra.device.mgt.core.application.mgt.common.dto.DeviceSubscriptionDTO;
 import io.entgra.device.mgt.core.application.mgt.common.exception.DBConnectionException;
 import io.entgra.device.mgt.core.application.mgt.core.exception.ApplicationManagementDAOException;
+import io.entgra.device.mgt.core.application.mgt.core.util.HelperUtil;
+import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo;
+import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
+import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -31,7 +35,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -490,6 +496,7 @@ public class OracleSubscriptionDAOImpl extends GenericSubscriptionDAOImpl {
         if (log.isDebugEnabled()) {
             log.debug("Getting device subscriptions for the application release id " + appReleaseId + " from the database");
         }
+
         String subscriptionStatusTime = unsubscribe ? "DS.UNSUBSCRIBED_TIMESTAMP" : "DS.SUBSCRIBED_TIMESTAMP";
         String actionTriggeredColumn = unsubscribe ? "DS.UNSUBSCRIBED_BY" : "DS.SUBSCRIBED_BY";
         StringBuilder sql = new StringBuilder("SELECT "
@@ -561,6 +568,30 @@ public class OracleSubscriptionDAOImpl extends GenericSubscriptionDAOImpl {
                         subscription.setDeviceId(rs.getInt("DEVICE_ID"));
 
                         deviceSubscriptions.add(subscription);
+                    }
+
+                    if (!deviceSubscriptions.isEmpty()) {
+                        List<String> excludedEnrolmentStatuses = new ArrayList<>();
+                        excludedEnrolmentStatuses.add(EnrolmentInfo.Status.DISENROLLMENT_REQUESTED.toString());
+                        excludedEnrolmentStatuses.add(EnrolmentInfo.Status.REMOVED.toString());
+                        excludedEnrolmentStatuses.add(EnrolmentInfo.Status.DELETED.toString());
+
+                        List<Integer> candidateDeviceIds = deviceSubscriptions.stream()
+                                .map(DeviceSubscriptionDTO::getDeviceId).distinct().collect(Collectors.toList());
+
+                        DeviceManagementProviderService deviceManagementProviderService =
+                                HelperUtil.getDeviceManagementProviderService();
+                        Set<Integer> disenrolledDeviceIds;
+                        try {
+                            disenrolledDeviceIds = new HashSet<>(deviceManagementProviderService
+                                    .getDeviceIdsInEnrolmentStatus(candidateDeviceIds, excludedEnrolmentStatuses, tenantId));
+                        } catch (DeviceManagementException e) {
+                            String msg = "Error occurred while retrieving device enrolment statuses for application release id "
+                                    + appReleaseId;
+                            log.error(msg, e);
+                            throw new ApplicationManagementDAOException(msg, e);
+                        }
+                        deviceSubscriptions.removeIf(dto -> disenrolledDeviceIds.contains(dto.getDeviceId()));
                     }
                     return deviceSubscriptions;
                 }
