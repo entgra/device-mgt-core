@@ -182,4 +182,15 @@ public interface GeofenceDAO {
      * @throws DeviceManagementDAOException
      */
     int getGeofenceCount(int tenantId) throws DeviceManagementDAOException;
+
+    /**
+     * Count geofences of a tenant whose name matches the search text.
+     * Matching uses the same partial comparison as the geofence list query.
+     *
+     * @param tenantId tenant id
+     * @param fenceName partial fence name to match
+     * @return number of matching geofences
+     * @throws DeviceManagementDAOException error occurs while reading the count
+     */
+    int getGeofenceCount(int tenantId, String fenceName) throws DeviceManagementDAOException;
 }
