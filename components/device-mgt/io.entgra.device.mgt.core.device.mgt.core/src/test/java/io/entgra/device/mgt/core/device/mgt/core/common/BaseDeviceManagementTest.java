@@ -27,7 +27,6 @@ import io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementDataHo
 import io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementServiceComponent;
 import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.dao.MetadataManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.mock.MockDataSource;
-import io.entgra.device.mgt.core.device.mgt.core.notification.mgt.dao.NotificationManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.dao.OperationManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderServiceImpl;
@@ -87,7 +86,6 @@ public abstract class BaseDeviceManagementTest {
         DeviceManagementDAOFactory.init(dataSource);
         GroupManagementDAOFactory.init(dataSource);
         OperationManagementDAOFactory.init(dataSource);
-        NotificationManagementDAOFactory.init(dataSource);
         MetadataManagementDAOFactory.init(dataSource);
     }
 
