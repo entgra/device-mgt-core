@@ -64,7 +64,15 @@ public class TagManagementServiceImpl implements TagManagementService {
         RequestValidationUtil.validateTagListDetails(tagInfoList);
         try {
             List<Tag> tags = new ArrayList<>();
+            String tagExistsMsg = "A tag with this name already exists. Please use a different tag name.";
+
             for (TagInfo tagInfo : tagInfoList) {
+                if (tagNameExists(tagInfo.getName())) {
+                    log.error(tagExistsMsg);
+                    return Response.status(Response.Status.BAD_REQUEST).entity(
+                            new ErrorResponse.ErrorResponseBuilder().setMessage(tagExistsMsg).build())
+                            .build();
+                }
                 Tag tag = new Tag(tagInfo.getName(), tagInfo.getDescription());
                 tags.add(tag);
             }
@@ -82,6 +90,14 @@ public class TagManagementServiceImpl implements TagManagementService {
             }
             return Response.status(Response.Status.BAD_REQUEST).entity(
                     new ErrorResponse.ErrorResponseBuilder().setMessage(e.getMessage()).build()).build();
+        }
+    }
+
+    private boolean tagNameExists(String tagName) throws TagManagementException, BadRequestException {
+        try {
+            return DeviceMgtAPIUtils.getTagManagementService().getTagByName(tagName) != null;
+        } catch (TagNotFoundException e) {
+            return false;
         }
     }
 

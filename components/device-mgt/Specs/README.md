@@ -37,6 +37,18 @@ correct behaviour looks like in the core services and Device Management API.
 | Policy management (assignment, lifecycle, evaluation, list filters incl. `groupId`) | [policy-mgt.md](policy-mgt.md) |
 | Policy Management REST API contract | [policy_management_api_contract.md](../io.entgra.device.mgt.core.device.mgt.api/Specs/policy_management_api_contract.md) |
 
+### Geo
+
+| Feature | Spec |
+| --- | --- |
+| Geo fences (storage, device push, list pagination) | [geo-fence-list.md](geo-fence-list.md) |
+
+### Tags
+
+| Feature | Spec |
+| --- | --- |
+| Tag create, rename, delete, and device mapping | [tag-management.md](tag-management.md) |
+
 ## Planned feature areas (add specs when touched)
 
 - Device enrollment
