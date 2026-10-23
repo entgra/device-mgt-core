@@ -50,7 +50,7 @@ public class PolicyEnforcementDelegatorImplTest {
     }
 
     @Test
-    public void testDifferentSelectedWinnerRevokesAndReplacesAppliedPolicy() throws Exception {
+    public void testDifferentGlobalWinnerRevokesAndReplacesAppliedPolicy() throws Exception {
         RecordingDelegator delegator = new RecordingDelegator(policy(7), policy(8), 8);
         delegator.delegate();
 
@@ -61,8 +61,8 @@ public class PolicyEnforcementDelegatorImplTest {
     }
 
     @Test
-    public void testUnrelatedAppliedPolicyIsPreservedWhenNoSelectedPolicyApplies() throws Exception {
-        RecordingDelegator delegator = new RecordingDelegator(policy(9), null, 7);
+    public void testUnchangedUnselectedGlobalWinnerIsNotReapplied() throws Exception {
+        RecordingDelegator delegator = new RecordingDelegator(policy(9), policy(9), 7);
         delegator.delegate();
 
         Assert.assertFalse(delegator.revokeQueued);
@@ -71,8 +71,8 @@ public class PolicyEnforcementDelegatorImplTest {
     }
 
     @Test
-    public void testSelectedAppliedPolicyIsRevokedWhenNoSelectedPolicyApplies() throws Exception {
-        RecordingDelegator delegator = new RecordingDelegator(policy(7), null, 7);
+    public void testAppliedPolicyIsRevokedWhenNoGlobalPolicyApplies() throws Exception {
+        RecordingDelegator delegator = new RecordingDelegator(policy(7), null, 8);
         delegator.delegate();
 
         Assert.assertTrue(delegator.revokeQueued);
