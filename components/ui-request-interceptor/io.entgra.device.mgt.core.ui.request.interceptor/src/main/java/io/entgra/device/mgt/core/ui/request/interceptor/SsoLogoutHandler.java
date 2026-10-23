@@ -18,44 +18,70 @@
 
 package io.entgra.device.mgt.core.ui.request.interceptor;
 
-import io.entgra.device.mgt.core.ui.request.interceptor.beans.ProxyResponse;
+import io.entgra.device.mgt.core.ui.request.interceptor.beans.AuthData;
 import io.entgra.device.mgt.core.ui.request.interceptor.util.HandlerConstants;
-import io.entgra.device.mgt.core.ui.request.interceptor.util.HandlerUtil;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.hc.core5.http.HttpStatus;
 
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @MultipartConfig
 @WebServlet("/ssoLogout")
 public class SsoLogoutHandler extends HttpServlet {
-    private static final Log log = LogFactory.getLog(SsoLogoutHandler.class);
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        HttpSession session = req.getSession(false);
+        if (session == null) {
+            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "No active SSO session is available");
+            return;
+        }
 
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
+        AuthData authData = (AuthData) session.getAttribute(HandlerConstants.SESSION_AUTH_DATA_KEY);
+        String logoutEndpoint = (String) session.getAttribute(HandlerConstants.OIDC_LOGOUT_ENDPOINT_KEY);
+        String postLogoutRedirectUri = req.getParameter("post_logout_redirect_uri");
+        String logoutUrl = buildLogoutUrl(logoutEndpoint, authData, postLogoutRedirectUri);
+        if (logoutUrl == null) {
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "OIDC logout endpoint and client session information are required");
+            return;
+        }
+
         for (String path : HandlerConstants.SSO_LOGOUT_COOKIE_PATHS) {
             removeCookie(HandlerConstants.JSESSIONID_KEY, path, resp);
         }
-        removeCookie(HandlerConstants.COMMON_AUTH_ID_KEY, "/", resp);
-        ProxyResponse proxyResponse = new ProxyResponse();
-        proxyResponse.setStatus(ProxyResponse.Status.SUCCESS);
-        proxyResponse.setCode(HttpStatus.SC_OK);
-
-        HttpSession session = req.getSession(false);
-        if (session != null) {
-            session.invalidate();
-        }
-        try {
-            HandlerUtil.handleSuccess(resp, proxyResponse);
-        } catch (IOException e) {
-            log.error("Error occurred when processing logout request.", e);
-        }
+        session.invalidate();
+        resp.sendRedirect(logoutUrl);
     }
 
-    private static void removeCookie(String cookieName,String path, HttpServletResponse response) {
+    static String buildLogoutUrl(String logoutEndpoint, AuthData authData, String postLogoutRedirectUri) {
+        if (isBlank(logoutEndpoint) || authData == null ||
+                (isBlank(authData.getIdToken()) && isBlank(authData.getClientId()))) {
+            return null;
+        }
+        StringBuilder logoutUrl = new StringBuilder(logoutEndpoint).append('?');
+        if (!isBlank(authData.getIdToken())) {
+            appendQueryParameter(logoutUrl, "id_token_hint", authData.getIdToken());
+        } else {
+            appendQueryParameter(logoutUrl, "client_id", authData.getClientId());
+        }
+        if (!isBlank(postLogoutRedirectUri)) {
+            logoutUrl.append('&');
+            appendQueryParameter(logoutUrl, "post_logout_redirect_uri", postLogoutRedirectUri);
+        }
+        return logoutUrl.toString();
+    }
+
+    private static void appendQueryParameter(StringBuilder url, String name, String value) {
+        url.append(name).append('=').append(URLEncoder.encode(value, StandardCharsets.UTF_8));
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
+    private static void removeCookie(String cookieName, String path, HttpServletResponse response) {
         Cookie cookie = new Cookie(cookieName, "");
         cookie.setPath(path);
         cookie.setValue(null);

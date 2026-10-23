@@ -21,6 +21,10 @@ package io.entgra.device.mgt.core.ui.request.interceptor;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.entgra.device.mgt.core.ui.request.interceptor.beans.AuthData;
 import io.entgra.device.mgt.core.ui.request.interceptor.beans.ProxyResponse;
+import io.entgra.device.mgt.core.ui.request.interceptor.oidc.bean.OidcSessionRegistration;
+import io.entgra.device.mgt.core.ui.request.interceptor.oidc.exception.OidcSessionManagementException;
+import io.entgra.device.mgt.core.ui.request.interceptor.oidc.service.OidcSessionManagementService;
+import io.entgra.device.mgt.core.ui.request.interceptor.oidc.util.OidcSessionRegistry;
 import io.entgra.device.mgt.core.ui.request.interceptor.util.HandlerConstants;
 import io.entgra.device.mgt.core.ui.request.interceptor.util.HandlerUtil;
 import org.apache.commons.logging.Log;
@@ -97,8 +101,40 @@ public class SsoLoginCallbackHandler extends HttpServlet {
             authData.setAccessToken(jsonNode.get("access_token").textValue());
             authData.setRefreshToken(jsonNode.get("refresh_token").textValue());
             authData.setScope(jsonNode.get("scope"));
-            session.setAttribute(HandlerConstants.SESSION_AUTH_DATA_KEY, authData);
-            resp.sendRedirect(session.getAttribute("redirectUrl").toString());
+            JsonNode idTokenNode = jsonNode.get(HandlerConstants.ID_TOKEN_KEY);
+            if (idTokenNode != null && !idTokenNode.isNull()) {
+                authData.setIdToken(idTokenNode.textValue());
+            }
+            OidcSessionManagementService oidcService = OidcSessionRegistry.service();
+            try {
+                if (oidcService == null) {
+                    String msg = "OIDC session management service is unavailable";
+                    log.error(msg);
+                    throw new OidcSessionManagementException(msg);
+                }
+                if (oidcService.isEnabled()) {
+                    if (authData.getIdToken() == null) {
+                        String msg = "Token response does not contain an ID token";
+                        throw new OidcSessionManagementException(msg);
+                    }
+                    String applicationName = OidcSessionRegistry.applicationName(req.getContextPath());
+                    oidcService.registerSession(new OidcSessionRegistration(authData.getIdToken(),
+                            authData.getClientId(), applicationName, session.getId(),
+                            session.getMaxInactiveInterval() * 1000L));
+                    session.setAttribute(HandlerConstants.OIDC_MAPPED_SESSION, Boolean.TRUE);
+                    OidcSessionRegistry.add(session);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Established OIDC session mapping after SSO login for application: " +
+                                applicationName);
+                    }
+                }
+                session.setAttribute(HandlerConstants.SESSION_AUTH_DATA_KEY, authData);
+                resp.sendRedirect(session.getAttribute("redirectUrl").toString());
+            } catch (OidcSessionManagementException e) {
+                log.error("OIDC session mapping could not be established", e);
+                session.invalidate();
+                HandlerUtil.handleError(resp, HandlerConstants.INTERNAL_ERROR_CODE);
+            }
         } else {
             log.error("Found empty response for token call.");
             HandlerUtil.handleError(resp, HandlerConstants.INTERNAL_ERROR_CODE);
