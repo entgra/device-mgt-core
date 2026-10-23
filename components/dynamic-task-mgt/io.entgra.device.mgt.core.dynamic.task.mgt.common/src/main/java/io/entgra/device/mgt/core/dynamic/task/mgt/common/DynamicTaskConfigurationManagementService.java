@@ -49,6 +49,20 @@ public interface DynamicTaskConfigurationManagementService {
                                                                     Set<CategorizedDynamicTask> updatedCategorizedDynamicTasks) throws DynamicTaskManagementException;
 
     /**
+     * Add a new categorized dynamic task for specified tenant domain and schedule it.
+     *
+     * @param tenantDomain           Tenant domain to add the new categorized dynamic task.
+     * @param categorizedDynamicTask New {@link CategorizedDynamicTask} to be added.
+     * @return Updated {@link DynamicTaskPlatformConfigurations}
+     * @throws DynamicTaskManagementException Throws when error encountered while adding the categorized dynamic
+     *                                        task, including when a categorized dynamic task already exists for
+     *                                        the given category code.
+     */
+    DynamicTaskPlatformConfigurations addCategorizedDynamicTask(String tenantDomain,
+                                                                CategorizedDynamicTask categorizedDynamicTask)
+            throws DynamicTaskManagementException;
+
+    /**
      * Rest the dynamic task platform configurations to default settings.
      *
      * @param tenantDomain Tenant domain to reset dynamic task platform configurations.

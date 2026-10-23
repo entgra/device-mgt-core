@@ -20,6 +20,7 @@ package io.entgra.device.mgt.core.dynamic.task.mgt.admin.api.spi;
 
 import io.entgra.device.mgt.core.apimgt.annotations.Scope;
 import io.entgra.device.mgt.core.apimgt.annotations.Scopes;
+import io.entgra.device.mgt.core.dynamic.task.mgt.common.bean.CategorizedDynamicTask;
 import io.entgra.device.mgt.core.dynamic.task.mgt.common.bean.DynamicTaskPlatformConfigurations;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -35,6 +36,7 @@ import io.swagger.annotations.Tag;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HttpMethod;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -188,6 +190,58 @@ public interface DynamicTaskManagementAdminService {
                     value = "Categorized dynamic task configurations"
             )
             DynamicTaskPlatformConfigurations dynamicTaskPlatformConfigurations
+    );
+
+    @POST
+    @Path("/tenants/{tenantDomain}/categories")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = HttpMethod.POST,
+            value = "Add a new dynamic task category",
+            notes = "Add a new categorized dynamic task for specified tenant and schedule it",
+            tags = {"device_management"},
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = SCOPE, value = "admin:dynamic-task-configurations:modify")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(code = 201,
+                            message = "Created. \n Successfully added the new categorized dynamic task for " +
+                                    "specified tenant.",
+                            response = Integer.class),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. \n Invalid resource payload received, or the given category " +
+                                    "code already exists for the specified tenant.",
+                            response = Response.class),
+                    @ApiResponse(
+                            code = 404,
+                            message = "Dynamic task configurations are not found for the specified tenant.",
+                            response = Response.class),
+                    @ApiResponse(
+                            code = 406,
+                            message = "Not Acceptable.\n The requested media type is not supported.",
+                            response = Response.class),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. \n Server error occurred while adding the new " +
+                                    "categorized dynamic task.",
+                            response = Response.class)
+            }
+    )
+    Response addCategorizedDynamicTask(
+            @ApiParam(
+                    name = "tenantDomain",
+                    value = "Tenant domain to add the new categorized dynamic task")
+            @PathParam("tenantDomain") String tenantDomain,
+            @ApiParam(
+                    name = "categorizedDynamicTask",
+                    value = "New categorized dynamic task configuration to add"
+            )
+            CategorizedDynamicTask categorizedDynamicTask
     );
 
     @PUT
