@@ -2855,6 +2855,13 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
     }
 
     @Override
+    public void scheduleNotification(String deviceType, int operationId, int enrolmentId)
+            throws OperationManagementException {
+        pluginRepository.getOperationManager(deviceType, this.getTenantId())
+                .scheduleNotification(operationId, enrolmentId);
+    }
+
+    @Override
     public List<? extends Operation> getOperations(DeviceIdentifier deviceId) throws OperationManagementException {
         return pluginRepository.getOperationManager(deviceId.getType(), this.getTenantId()).getOperations(deviceId);
     }
@@ -3115,6 +3122,28 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             return false;
         }
         return deviceManager.updateDeviceProperties(deviceId, properties);
+    }
+
+    @Override
+    public boolean partialUpdateDeviceProperties(DeviceIdentifier deviceId, List<Device.Property> properties)
+            throws DeviceManagementException {
+        if (deviceId == null || properties == null) {
+            String msg = "Received incomplete data for partialUpdateDeviceProperties";
+            log.error(msg);
+            throw new DeviceManagementException(msg);
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("Partially updating device properties of device: " + deviceId.getId());
+        }
+        DeviceManager deviceManager = this.getDeviceManager(deviceId.getType());
+        if (deviceManager == null) {
+            if (log.isDebugEnabled()) {
+                log.debug("Device Manager associated with the device type '" + deviceId.getType() + "' is null. " +
+                        "Therefore, not attempting method 'partialUpdateDeviceProperties'");
+            }
+            return false;
+        }
+        return deviceManager.partialUpdateDeviceProperties(deviceId, properties);
     }
 
     @Override

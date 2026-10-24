@@ -729,6 +729,19 @@ public interface DeviceManagementProviderService {
     void addTaskOperation(String type, List<Device> devices, Operation operation)
             throws OperationManagementException;
 
+    /**
+     * Mark the push notification status of an operation as SCHEDULED so the periodic push
+     * notification scheduler task re-attempts the wake-up call. Used to reschedule a wake-up
+     * call when its asynchronous delivery (e.g. via FCM) fails.
+     *
+     * @param deviceType  device type the operation belongs to
+     * @param operationId ID of the operation whose push notification failed
+     * @param enrolmentId enrolment (device) ID the operation belongs to
+     * @throws OperationManagementException if the push notification status could not be updated
+     */
+    void scheduleNotification(String deviceType, int operationId, int enrolmentId)
+            throws OperationManagementException;
+
     List<? extends Operation> getOperations(DeviceIdentifier deviceId) throws OperationManagementException;
 
     PaginationResult getOperations(DeviceIdentifier deviceId,
@@ -792,6 +805,20 @@ public interface DeviceManagementProviderService {
             throws DeviceManagementException, DeviceNotFoundException, OperationManagementException;
 
     boolean updateProperties(DeviceIdentifier deviceId, List<Device.Property> properties) throws DeviceManagementException;
+
+    /**
+     * Updates only the given, non-null device properties, leaving every other property
+     * untouched. Unlike {@link #updateProperties(DeviceIdentifier, List)}, which replaces the
+     * full property set for the device (nulling out anything not present in {@code properties}),
+     * this writes only the supplied properties whose value is non-null.
+     *
+     * @param deviceId   identifier of the device to update
+     * @param properties properties to write; entries with a null value are skipped entirely
+     * @return true if at least one property was written
+     * @throws DeviceManagementException if the update could not be performed
+     */
+    boolean partialUpdateDeviceProperties(DeviceIdentifier deviceId, List<Device.Property> properties)
+            throws DeviceManagementException;
 
     Operation getOperationByDeviceAndOperationId(DeviceIdentifier deviceId, int operationId)
             throws OperationManagementException;

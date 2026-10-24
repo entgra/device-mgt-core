@@ -158,6 +158,54 @@ public class PropertyBasedPluginDAOImpl implements PluginDAO {
         }
     }
 
+    @Override
+    public boolean partialUpdateDevice(Device device) throws DeviceTypeMgtPluginException {
+        if (device.getProperties() == null) {
+            return false;
+        }
+        Connection conn;
+        PreparedStatement stmt = null;
+        boolean anyUpdatable = false;
+        try {
+            conn = deviceTypeDAOHandler.getConnection();
+            stmt = conn.prepareStatement(
+                    "UPDATE DM_DEVICE_PROPERTIES SET PROPERTY_VALUE = ? WHERE  DEVICE_TYPE_NAME = ? AND "
+                            + "DEVICE_IDENTIFICATION = ? AND PROPERTY_NAME = ? AND TENANT_ID= ?");
+
+            for (Device.Property property : device.getProperties()) {
+                // Skip anything not a declared property, and skip null values entirely rather
+                // than persisting them - a null-valued entry here is "nothing was reported", not
+                // "clear the existing value".
+                if (!deviceProps.contains(property.getName()) || property.getValue() == null) {
+                    continue;
+                }
+                String propValue = property.getValue();
+                if (propValue.length() > 100) {
+                    propValue = "Value too long";
+                }
+                stmt.setString(1, propValue);
+                stmt.setString(2, deviceType);
+                stmt.setString(3, device.getDeviceIdentifier());
+                stmt.setString(4, property.getName());
+                stmt.setInt(5, PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true));
+                stmt.addBatch();
+                anyUpdatable = true;
+            }
+            if (!anyUpdatable) {
+                return false;
+            }
+            stmt.executeBatch();
+            return true;
+        } catch (SQLException e) {
+            String msg = "Error occurred while partially updating the device '" + device.getDeviceIdentifier()
+                    + "' data on" + deviceType;
+            log.error(msg, e);
+            throw new DeviceTypeMgtPluginException(msg, e);
+        } finally {
+            DeviceTypeUtils.cleanupResources(stmt, null);
+        }
+    }
+
     public List<Device> getAllDevices() throws DeviceTypeMgtPluginException {
         Connection conn;
         PreparedStatement stmt = null;

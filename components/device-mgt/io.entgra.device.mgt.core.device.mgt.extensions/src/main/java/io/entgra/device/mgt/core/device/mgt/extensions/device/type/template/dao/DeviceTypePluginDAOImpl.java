@@ -154,6 +154,68 @@ public class DeviceTypePluginDAOImpl implements PluginDAO {
         return status;
     }
 
+    @Override
+    public boolean partialUpdateDevice(Device device) throws DeviceTypeMgtPluginException {
+        List<Device.Property> updatableProperties = new ArrayList<>();
+        if (device.getProperties() != null) {
+            for (Device.Property property : device.getProperties()) {
+                // Skip null values (nothing to persist) and anything not a declared column for
+                // this device type (also closes off SQL injection via an arbitrary column name,
+                // since the column name below is interpolated into the SQL string, not bound).
+                if (property.getValue() != null
+                        && deviceDAODefinition.getColumnNames().contains(property.getName())) {
+                    updatableProperties.add(property);
+                }
+            }
+        }
+        if (updatableProperties.isEmpty()) {
+            if (log.isDebugEnabled()) {
+                log.debug("No non-null, declared properties to partially update for device '"
+                        + device.getDeviceIdentifier() + "' in " + deviceDAODefinition.getDeviceTableName()
+                        + "; skipping update.");
+            }
+            return false;
+        }
+
+        boolean status = false;
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        try {
+            conn = deviceTypeDAOHandler.getConnection();
+            StringBuilder columnAssignments = new StringBuilder();
+            for (int i = 0; i < updatableProperties.size(); i++) {
+                if (i > 0) {
+                    columnAssignments.append(", ");
+                }
+                columnAssignments.append(updatableProperties.get(i).getName()).append(" = ?");
+            }
+            String sql = "UPDATE " + deviceDAODefinition.getDeviceTableName() + " SET " + columnAssignments
+                    + " WHERE " + deviceDAODefinition.getPrimaryKey() + " = ?";
+            stmt = conn.prepareStatement(sql);
+            int columnIndex = 1;
+            for (Device.Property property : updatableProperties) {
+                stmt.setString(columnIndex++, property.getValue());
+            }
+            stmt.setString(columnIndex, device.getDeviceIdentifier());
+            int rows = stmt.executeUpdate();
+            if (rows > 0) {
+                status = true;
+                if (log.isDebugEnabled()) {
+                    log.debug("Partially updated device '" + device.getDeviceIdentifier() + "' columns ["
+                            + columnAssignments + "] in " + deviceDAODefinition.getDeviceTableName());
+                }
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while partially updating the device '" + device.getDeviceIdentifier()
+                    + "' data in " + deviceDAODefinition.getDeviceTableName();
+            log.error(msg, e);
+            throw new DeviceTypeMgtPluginException(msg, e);
+        } finally {
+            DeviceTypeUtils.cleanupResources(stmt, null);
+        }
+        return status;
+    }
+
     public List<Device> getAllDevices() throws DeviceTypeMgtPluginException {
         Connection conn;
         PreparedStatement stmt = null;

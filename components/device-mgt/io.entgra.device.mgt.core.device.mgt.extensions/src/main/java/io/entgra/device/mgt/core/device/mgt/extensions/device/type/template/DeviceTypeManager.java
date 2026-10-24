@@ -510,6 +510,40 @@ public class DeviceTypeManager implements DeviceManager {
     }
 
     @Override
+    public boolean partialUpdateDeviceProperties(DeviceIdentifier deviceId, List<Device.Property> propertyList)
+            throws DeviceManagementException {
+        boolean status = false;
+        if (propertiesExist) {
+            Device updatedDevice = new Device();
+            updatedDevice.setDeviceIdentifier(deviceId.getId());
+            updatedDevice.setProperties(propertyList);
+            try {
+                if (log.isDebugEnabled()) {
+                    log.debug("Partially updating device properties of " + deviceType + " device : '"
+                            + deviceId.getId() + "'");
+                }
+                deviceTypePluginDAOManager.getDeviceTypeDAOHandler().beginTransaction();
+                status = deviceTypePluginDAOManager.getDeviceDAO().partialUpdateDevice(updatedDevice);
+                deviceTypePluginDAOManager.getDeviceTypeDAOHandler().commitTransaction();
+            } catch (DeviceTypeMgtPluginException e) {
+                deviceTypePluginDAOManager.getDeviceTypeDAOHandler().rollbackTransaction();
+                throw new DeviceManagementException(
+                        "Error occurred while partially updating the " + deviceType + " device: '"
+                                + deviceId.getId() + "'", e);
+            } finally {
+                deviceTypePluginDAOManager.getDeviceTypeDAOHandler().closeConnection();
+            }
+            // Intentionally not mirrored to DM_DEVICE_PROPERTIES: nothing currently reads that
+            // store for this device type, and mirroring here would mean one UPDATE per declared
+            // property on every call (PropertyBasedPluginDAOImpl writes one row per property),
+            // which is wasteful for what is meant to be a lightweight, frequent, single/few-field
+            // refresh. Revisit if a consumer of the DM_DEVICE_PROPERTIES mirror for this device
+            // type's refreshed properties emerges.
+        }
+        return status;
+    }
+
+    @Override
     public boolean setOwnership(DeviceIdentifier deviceId, String ownershipType)
             throws DeviceManagementException {
         return true;

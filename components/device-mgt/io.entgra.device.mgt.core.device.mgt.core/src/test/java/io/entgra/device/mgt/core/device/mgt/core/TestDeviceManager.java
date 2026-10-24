@@ -108,6 +108,11 @@ public class TestDeviceManager implements DeviceManager {
         return false;
     }
 
+    @Override public boolean partialUpdateDeviceProperties(DeviceIdentifier deviceId, List<Device.Property> list)
+            throws DeviceManagementException {
+        return false;
+    }
+
     @Override
     public boolean updateDeviceInfo(DeviceIdentifier deviceIdentifier, Device device)
             throws DeviceManagementException {
