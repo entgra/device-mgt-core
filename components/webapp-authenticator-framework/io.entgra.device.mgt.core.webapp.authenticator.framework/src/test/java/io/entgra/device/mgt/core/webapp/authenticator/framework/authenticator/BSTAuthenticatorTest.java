@@ -34,8 +34,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.identity.oauth2.OAuth2TokenValidationService;
-import org.wso2.carbon.identity.oauth2.dto.OAuth2ClientApplicationDTO;
-import org.wso2.carbon.identity.oauth2.dto.OAuth2TokenValidationResponseDTO;
+import org.wso2.carbon.identity.oauth2.dto.OAuth2IntrospectionResponseDTO;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,7 +50,7 @@ public class BSTAuthenticatorTest {
     private Properties properties;
     private Field headersField;
     private OAuth2TokenValidationService oAuth2TokenValidationService;
-    private OAuth2ClientApplicationDTO oAuth2ClientApplicationDTO;
+    private OAuth2IntrospectionResponseDTO introspectionResponse;
 
     @BeforeClass
     public void init() throws NoSuchFieldException {
@@ -61,16 +60,12 @@ public class BSTAuthenticatorTest {
         headersField.setAccessible(true);
         oAuth2TokenValidationService = Mockito
                 .mock(OAuth2TokenValidationService.class, Mockito.CALLS_REAL_METHODS);
-        oAuth2ClientApplicationDTO = Mockito
-                .mock(OAuth2ClientApplicationDTO.class, Mockito.CALLS_REAL_METHODS);
+        introspectionResponse = new OAuth2IntrospectionResponseDTO();
+        introspectionResponse.setActive(true);
+        introspectionResponse.setUsername("admin@" + MultitenantConstants.SUPER_TENANT_DOMAIN_NAME);
 
-        OAuth2TokenValidationResponseDTO authorizedValidationResponse = new OAuth2TokenValidationResponseDTO();
-        authorizedValidationResponse.setValid(true);
-        authorizedValidationResponse.setAuthorizedUser("admin@" + MultitenantConstants.SUPER_TENANT_DOMAIN_NAME);
-
-        Mockito.doReturn(oAuth2ClientApplicationDTO).when(oAuth2TokenValidationService)
-                .findOAuthConsumerIfTokenIsValid(Mockito.any());
-        oAuth2ClientApplicationDTO.setAccessTokenValidationResponse(authorizedValidationResponse);
+        Mockito.doReturn(introspectionResponse).when(oAuth2TokenValidationService)
+                .buildIntrospectionResponse(Mockito.any());
         AuthenticatorFrameworkDataHolder.getInstance().setOAuth2TokenValidationService(oAuth2TokenValidationService);
     }
 
@@ -199,12 +194,10 @@ public class BSTAuthenticatorTest {
                 "Authentication status of authentication info is wrong");
         Assert.assertEquals(authenticationInfo.getUsername(), "admin",
                 "User name in the authentication info is different than original user");
-        OAuth2TokenValidationResponseDTO unAuthorizedValidationRespose = new OAuth2TokenValidationResponseDTO();
-        unAuthorizedValidationRespose.setValid(false);
-        unAuthorizedValidationRespose.setErrorMsg("User is not authorized");
-        Mockito.doReturn(oAuth2ClientApplicationDTO).when(oAuth2TokenValidationService)
-                .findOAuthConsumerIfTokenIsValid(Mockito.any());
-        oAuth2ClientApplicationDTO.setAccessTokenValidationResponse(unAuthorizedValidationRespose);
+        introspectionResponse.setActive(false);
+        introspectionResponse.setError("User is not authorized");
+        Mockito.doReturn(introspectionResponse).when(oAuth2TokenValidationService)
+                .buildIntrospectionResponse(Mockito.any());
         AuthenticatorFrameworkDataHolder.getInstance().setOAuth2TokenValidationService(oAuth2TokenValidationService);
         authenticationInfo = bstAuthenticator.authenticate(request, null);
         Assert.assertEquals(authenticationInfo.getStatus(), WebappAuthenticator.Status.FAILURE,

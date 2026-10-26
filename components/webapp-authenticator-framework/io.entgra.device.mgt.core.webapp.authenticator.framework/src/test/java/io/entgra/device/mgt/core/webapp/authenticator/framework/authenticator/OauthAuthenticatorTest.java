@@ -30,8 +30,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.wso2.carbon.identity.oauth2.stub.OAuth2TokenValidationServiceStub;
-import org.wso2.carbon.identity.oauth2.stub.dto.OAuth2ClientApplicationDTO;
-import org.wso2.carbon.identity.oauth2.stub.dto.OAuth2TokenValidationResponseDTO;
+import org.wso2.carbon.identity.oauth2.stub.dto.OAuth2IntrospectionResponseDTO;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -108,17 +107,13 @@ public class OauthAuthenticatorTest {
         Field stubs = RemoteOAuthValidator.class.getDeclaredField("stubs");
         stubs.setAccessible(true);
         stubs.set(remoteOAuthValidator, genericObjectPool);
-        OAuth2TokenValidationResponseDTO oAuth2TokenValidationResponseDTO = new OAuth2TokenValidationResponseDTO();
-        oAuth2TokenValidationResponseDTO.setValid(true);
-        oAuth2TokenValidationResponseDTO.setAuthorizedUser("admin@carbon.super");
-        OAuth2ClientApplicationDTO oAuth2ClientApplicationDTO = Mockito
-                .mock(OAuth2ClientApplicationDTO.class, Mockito.CALLS_REAL_METHODS);
-        Mockito.doReturn(oAuth2TokenValidationResponseDTO).when(oAuth2ClientApplicationDTO)
-                .getAccessTokenValidationResponse();
+        OAuth2IntrospectionResponseDTO introspectionResponse = new OAuth2IntrospectionResponseDTO();
+        introspectionResponse.setActive(true);
+        introspectionResponse.setUsername("admin@carbon.super");
         OAuth2TokenValidationServiceStub oAuth2TokenValidationServiceStub = Mockito
                 .mock(OAuth2TokenValidationServiceStub.class, Mockito.CALLS_REAL_METHODS);
-        Mockito.doReturn(oAuth2ClientApplicationDTO).when(oAuth2TokenValidationServiceStub)
-                .findOAuthConsumerIfTokenIsValid(Mockito.any());
+        Mockito.doReturn(introspectionResponse).when(oAuth2TokenValidationServiceStub)
+                .buildIntrospectionResponse(Mockito.any());
         Mockito.doReturn(oAuth2TokenValidationServiceStub).when(genericObjectPool).borrowObject();
         oAuthAuthenticator.canHandle(request);
         AuthenticationInfo authenticationInfo = oAuthAuthenticator.authenticate(request, null);
