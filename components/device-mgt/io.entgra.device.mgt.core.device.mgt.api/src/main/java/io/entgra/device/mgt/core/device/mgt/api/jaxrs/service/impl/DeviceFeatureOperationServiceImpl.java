@@ -45,10 +45,12 @@ public class DeviceFeatureOperationServiceImpl implements DeviceFeatureOperation
             @QueryParam("code") String code,
             @QueryParam("name") String name,
             @QueryParam("type") String type,
-            @QueryParam("removeDeduplicateCode") @DefaultValue("false") boolean deduplicate) {
+            @QueryParam("removeDeduplicateCode") @DefaultValue("false") boolean deduplicate,
+            @QueryParam("featureType") String featureType) {
         try {
             List<DeviceFeatureInfo> operationList =
-                    DeviceMgtAPIUtils.getDeviceFeatureOperations().getOperationDetails(code, name, type, deduplicate);
+                    DeviceMgtAPIUtils.getDeviceFeatureOperations()
+                            .getOperationDetails(code, name, type, featureType, deduplicate);
             return Response.ok(operationList).build();
         } catch (DeviceFeatureOperationException e) {
             String msg = "Error occurred while retrieving operation details.";

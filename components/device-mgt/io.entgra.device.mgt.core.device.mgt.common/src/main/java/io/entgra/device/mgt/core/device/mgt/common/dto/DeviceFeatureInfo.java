@@ -25,6 +25,8 @@ public class DeviceFeatureInfo {
     private String operationCode;
     private String name;
     private String description;
+    /** Feature category: {@code operation} or {@code task}. */
+    private String type;
 
     public String getDeviceType() {
         return deviceType;
@@ -64,5 +66,13 @@ public class DeviceFeatureInfo {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }

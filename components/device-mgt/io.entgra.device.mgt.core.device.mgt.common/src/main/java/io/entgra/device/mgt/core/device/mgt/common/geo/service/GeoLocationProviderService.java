@@ -176,4 +176,14 @@ public interface GeoLocationProviderService {
      * @throws GeoLocationBasedServiceException any errors occurred while reading event records to geofence
      */
     int getGeoFenceCount() throws GeoLocationBasedServiceException;
+
+    /**
+     * Count geo fences of the current tenant whose name matches the search text.
+     * Matching uses the same partial comparison as the geo fence list.
+     *
+     * @param fenceName partial fence name to match
+     * @return number of matching geo fences
+     * @throws GeoLocationBasedServiceException any errors occurred while reading the count
+     */
+    int getGeoFenceCount(String fenceName) throws GeoLocationBasedServiceException;
 }

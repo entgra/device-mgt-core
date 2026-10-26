@@ -248,6 +248,14 @@ public class ApplicationManagerImpl implements ApplicationManager {
             log.error(msg, e);
             ApplicationManagementUtil.deleteArtifactIfExist(applicationDTO);
             throw new ApplicationManagementException(msg, e);
+        } catch (ConflictException e) {
+            ConnectionManagerUtil.rollbackDBTransaction();
+            ApplicationManagementUtil.deleteArtifactIfExist(applicationDTO);
+            throw e;
+        } catch (BadRequestException e) {
+            ConnectionManagerUtil.rollbackDBTransaction();
+            ApplicationManagementUtil.deleteArtifactIfExist(applicationDTO);
+            throw e;
         } catch (ApplicationManagementException e) {
             ConnectionManagerUtil.rollbackDBTransaction();
             ApplicationManagementUtil.deleteArtifactIfExist(applicationDTO);

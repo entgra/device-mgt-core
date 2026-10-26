@@ -65,6 +65,19 @@ Assignments are set through the `roles`, `users`, `deviceGroups` and
 `deviceIdentifiers` fields of create / update. There are no separate
 assignment endpoints.
 
+### Resolving device group names on policy load
+
+When policies are loaded for the cache or list APIs,
+`PolicyManagerImpl.getDeviceGroupNames` enriches each `DM_DEVICE_GROUP_POLICY`
+row with the group's current name and owner via
+`GroupManagementProviderService.getGroup(id, false)`.
+
+| Case | Behaviour |
+| --- | --- |
+| Group exists | Name and owner are set; wrapper is kept on the policy |
+| Group missing (`getGroup` returns null) | Wrapper is skipped; a warning is logged; policy load / cache rebuild continues |
+| Effect on create | `POST /policies` re-populates the policy cache after insert; a missing group on any existing policy must not NPE the create request |
+
 ## Lifecycle
 
 1. **Create** (`POST /policies`) — validates the feature list, stores the policy,
