@@ -78,6 +78,13 @@ import javax.ws.rs.core.Response;
                         key = "dm:metadata:remove",
                         roles = {"Internal/devicemgt-user"},
                         permissions = {"/device-mgt/metadata/remove"}
+                ),
+                @Scope(
+                        name = "Search metadata records",
+                        description = "Search metadata records using metaKey",
+                        key = "dm:metadata:search",
+                        roles = {"Internal/devicemgt-user"},
+                        permissions = {"/device-mgt/metadata/search"}
                 )
         }
 )
@@ -335,5 +342,78 @@ public interface MetadataService {
                     required = true)
             @PathParam("metaKey") String metaKey
     );
+
+    @GET
+    @Path("/search/{filter}")
+    @ApiOperation(
+            produces = MediaType.APPLICATION_JSON,
+            httpMethod = HTTPConstants.HEADER_GET,
+            value = "Search metadata using metaKey",
+            notes = "Provides a list of filtered metadata entries",
+            tags = "Device Metadata Management",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = Constants.SCOPE, value = "dm:metadata:search")
+                    })
+            }
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            code = 200,
+                            message = "OK. \n Successfully fetched the list of metadata entries.",
+                            response = MetadataList.class,
+                            responseHeaders = {
+                                    @ResponseHeader(
+                                            name = "Content-Type",
+                                            description = "The content type of the body"),
+                                    @ResponseHeader(
+                                            name = "ETag",
+                                            description = "Entity Tag of the response resource.\n" +
+                                                    "Used by caches, or in conditional requests."),
+                                    @ResponseHeader(
+                                            name = "Last-Modified",
+                                            description = "Date and time the resource was last modified.\n" +
+                                                    "Used by caches, or in conditional requests."),
+                            }),
+                    @ApiResponse(
+                            code = 400,
+                            message = "Bad Request. \n Invalid request or validation error.",
+                            response = ErrorResponse.class),
+                    @ApiResponse(
+                            code = 500,
+                            message = "Internal Server Error. " +
+                                    "\n Server error occurred while fetching the metadata entry list.",
+                            response = ErrorResponse.class)
+            })
+    Response searchMetadata(
+            @ApiParam(
+                    name = "filter",
+                    value = "The filter path parameter is used to filter the metadata entries by metaKey",
+                    required = true)
+            @PathParam("filter")
+            String filter,
+            @ApiParam(
+                    name = "jsonKey",
+                    value = "The jsonKey to do the secondary filtering of the searched metadata by the filter")
+            @QueryParam("jsonKey")
+            String jsonKey,
+            @ApiParam(
+                    name = "value",
+                    value = "The value to be used with the jsonKey to do the secondary filtering of the searched " +
+                            "metadata by the filter")
+            @QueryParam("value")
+            String value,
+            @ApiParam(
+                    name = "offset",
+                    value = "The starting pagination index for the complete list of qualified items.")
+            @QueryParam("offset")
+            int offset,
+            @ApiParam(
+                    name = "limit",
+                    value = "Provide how many metadata entries you require from the starting pagination index/offset.",
+                    defaultValue = "5")
+            @QueryParam("limit")
+            int limit);
 
 }

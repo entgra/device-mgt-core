@@ -18,13 +18,14 @@
 
 package io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.dao.impl;
 
+import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.Metadata;
 import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.dao.MetadataDAO;
 import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.dao.MetadataManagementDAOException;
 import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.dao.MetadataManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.dao.util.MetadataDAOUtil;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.sql.*;
 
@@ -134,6 +135,32 @@ public abstract class AbstractMetadataDAOImpl implements MetadataDAO {
                     "SELECT COUNT(*) AS METADATA_COUNT FROM DM_METADATA WHERE TENANT_ID = ?";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, tenantId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        metadataCount = rs.getInt("METADATA_COUNT");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while counting metadata";
+            log.error(msg, e);
+            throw new MetadataManagementDAOException(msg, e);
+        }
+        return metadataCount;
+    }
+
+    @Override
+    public int getMetadataCountForFilteredResult(PaginationRequest request, int tenantId) throws MetadataManagementDAOException {
+        int metadataCount = 0;
+        try {
+            Connection conn = MetadataManagementDAOFactory.getConnection();
+            String sql = "SELECT COUNT(*) AS METADATA_COUNT " +
+                    "FROM DM_METADATA " +
+                    "WHERE METADATA_KEY LIKE ? AND " +
+                    "TENANT_ID = ? ";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, "%" + request.getFilter() + "%");
+                stmt.setInt(2, tenantId);
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         metadataCount = rs.getInt("METADATA_COUNT");
