@@ -305,8 +305,8 @@ public final class DeviceManagementDAOUtil {
 
     //This method will retrieve most appropriate device information when there are multiple device enrollments for
     //a single device. We'll give the highest priority to active devices.
-    public static Device loadMatchingDevice(ResultSet rs, boolean deviceInfoIncluded) throws SQLException {
-        Device device = loadDevice(rs);
+    public static Device loadMatchingDevice(ResultSet rs, boolean deviceInfoIncluded, boolean isTagsProvided) throws SQLException {
+        Device device = loadDevice(rs, isTagsProvided);
         if (deviceInfoIncluded) {
             device.setDeviceInfo(loadDeviceInfo(rs));
         }

@@ -29,6 +29,7 @@ import org.apache.commons.logging.LogFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 public class SimpleEvaluationImpl implements SimpleEvaluation {
 
@@ -38,36 +39,35 @@ public class SimpleEvaluationImpl implements SimpleEvaluation {
 
     @Override
     public Policy getEffectivePolicy(DeviceIdentifier deviceIdentifier) throws PolicyEvaluationException {
-        Policy policy = new Policy();
-        PolicyAdministratorPoint policyAdministratorPoint;
+        return getEffectivePolicy(deviceIdentifier, null);
+    }
+
+    @Override
+    public synchronized Policy getEffectivePolicy(DeviceIdentifier deviceIdentifier, Set<Integer> policyIds)
+            throws PolicyEvaluationException {
         PolicyInformationPoint policyInformationPoint;
         policyManagerService = getPolicyManagerService();
 
         try {
             if (policyManagerService != null) {
-
                 policyInformationPoint = policyManagerService.getPIP();
                 PIPDevice pipDevice = policyInformationPoint.getDeviceData(deviceIdentifier);
-                policyList = policyInformationPoint.getRelatedPolicies(pipDevice);
-                policyAdministratorPoint = policyManagerService.getPAP();
-                sortPolicies();
-                if(!policyList.isEmpty()) {
-                    policy = policyList.get(0);
-                } else {
-                    policyAdministratorPoint.removePolicyUsed(deviceIdentifier);
-                    return null;
+                List<Policy> applicablePolicies = policyInformationPoint.getRelatedPolicies(pipDevice);
+                policyList = new ArrayList<>();
+                for (Policy policy : applicablePolicies) {
+                    if (policyIds == null || policyIds.contains(policy.getId())) {
+                        policyList.add(policy);
+                    }
                 }
-                //TODO : UNCOMMENT THE FOLLOWING CASE
-                policyAdministratorPoint.setPolicyUsed(deviceIdentifier, policy);
-
+                sortPolicies();
+                return policyList.isEmpty() ? null : policyList.get(0);
             }
-
         } catch (PolicyManagementException e) {
             String msg = "Error occurred when retrieving the policy related data from policy management service.";
             log.error(msg, e);
             throw new PolicyEvaluationException(msg, e);
         }
-        return policy;
+        return null;
     }
 
     @Override

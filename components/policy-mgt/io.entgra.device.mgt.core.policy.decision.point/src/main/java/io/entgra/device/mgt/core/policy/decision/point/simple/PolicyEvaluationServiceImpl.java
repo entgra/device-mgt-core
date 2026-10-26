@@ -23,10 +23,12 @@ import io.entgra.device.mgt.core.device.mgt.common.policy.mgt.Policy;
 import io.entgra.device.mgt.core.device.mgt.common.policy.mgt.ProfileFeature;
 import io.entgra.device.mgt.core.policy.mgt.common.PolicyEvaluationException;
 import io.entgra.device.mgt.core.policy.mgt.common.PolicyEvaluationPoint;
+import io.entgra.device.mgt.core.policy.mgt.common.PolicySelectionEvaluationPoint;
 
 import java.util.List;
+import java.util.Set;
 
-public class PolicyEvaluationServiceImpl implements PolicyEvaluationPoint {
+public class PolicyEvaluationServiceImpl implements PolicySelectionEvaluationPoint {
 
     private SimpleEvaluationImpl evaluation;
     private static final String policyEvaluationPoint = "Simple";
@@ -38,6 +40,12 @@ public class PolicyEvaluationServiceImpl implements PolicyEvaluationPoint {
     @Override
     public Policy getEffectivePolicy(DeviceIdentifier deviceIdentifier) throws PolicyEvaluationException {
         return evaluation.getEffectivePolicy(deviceIdentifier);
+    }
+
+    @Override
+    public Policy getEffectivePolicy(DeviceIdentifier deviceIdentifier, Set<Integer> policyIds)
+            throws PolicyEvaluationException {
+        return evaluation.getEffectivePolicy(deviceIdentifier, policyIds);
     }
 
     @Override

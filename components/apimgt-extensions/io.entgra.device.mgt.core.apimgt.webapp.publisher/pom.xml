@@ -185,7 +185,6 @@
                             io.entgra.device.mgt.core.device.mgt.common.exceptions,
                             io.entgra.device.mgt.core.device.mgt.common.permission.mgt,
                             io.entgra.device.mgt.core.device.mgt.common.metadata.mgt,
-                            io.entgra.device.mgt.core.device.mgt.common.notification.mgt.*;version="${io.entgra.device.mgt.core.version.range}",
                             io.entgra.device.mgt.core.device.mgt.core.config,
                             io.entgra.device.mgt.core.device.mgt.core.config.permission,
                             io.entgra.device.mgt.core.device.mgt.core.permission.mgt;version="${io.entgra.device.mgt.core.version.range}",

@@ -31,7 +31,6 @@
             <ref bean="deviceTypeManagementService"/>
 			<ref bean="configurationManagementService"/>
             <ref bean="activityProviderService"/>
-            <ref bean="notificationManagementService"/>
             <ref bean="reportManagementService"/>
             <ref bean="policyManagementService"/>
             <ref bean="roleManagementService"/>
@@ -85,7 +84,6 @@
     <bean id="deviceTypeManagementService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.DeviceTypeManagementServiceImpl"/>
 	<bean id="configurationManagementService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.ConfigurationServiceImpl"/>
     <bean id="activityProviderService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.ActivityProviderServiceImpl"/>
-    <bean id="notificationManagementService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.NotificationManagementServiceImpl"/>
     <bean id="reportManagementService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.ReportManagementServiceImpl"/>
     <bean id="policyManagementService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.PolicyManagementServiceImpl"/>
     <bean id="roleManagementService" class="io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.impl.RoleManagementServiceImpl"/>

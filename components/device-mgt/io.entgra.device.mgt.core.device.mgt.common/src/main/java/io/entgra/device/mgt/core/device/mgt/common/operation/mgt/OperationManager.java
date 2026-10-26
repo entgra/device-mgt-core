@@ -110,6 +110,17 @@ public interface OperationManager {
 
     void updateOperation(int enrolmentId, Operation operation, DeviceIdentifier deviceId) throws OperationManagementException;
 
+    /**
+     * Updates the status of multiple operations of a device within a single transaction.
+     *
+     * @param device     Device with its active enrolment
+     * @param operations Operations to update, each with id and code
+     * @param status     Status to apply to all given operations
+     * @throws OperationManagementException If updating the operation statuses fails
+     */
+    void updateOperationStatuses(Device device, List<Operation> operations, Operation.Status status)
+            throws OperationManagementException;
+
     Operation getOperationByDeviceAndOperationId(DeviceIdentifier deviceId, int operationId)
             throws OperationManagementException;
 

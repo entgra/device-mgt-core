@@ -57,7 +57,6 @@ import io.entgra.device.mgt.core.device.mgt.common.geo.service.GeofenceData;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.DeviceGroup;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.DeviceGroupConstants;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupManagementException;
-import io.entgra.device.mgt.core.device.mgt.common.notification.mgt.NotificationManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.OperationManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.type.mgt.DeviceTypeMetaDefinition;
 import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
@@ -387,22 +386,6 @@ public final class DeviceManagerUtil {
             } else {
                 throw new OperationManagementException("Device-Mgt configuration has not initialized. Please check the " +
                         "cdm-config.xml file.");
-            }
-        }
-        return paginationRequest;
-    }
-
-    public static PaginationRequest validateNotificationListPageSize(PaginationRequest paginationRequest)
-            throws NotificationManagementException {
-        if (paginationRequest.getRowCount() == 0) {
-            DeviceManagementConfig deviceManagementConfig = DeviceConfigurationManager.getInstance().
-                    getDeviceManagementConfig();
-            if (deviceManagementConfig != null) {
-                paginationRequest.setRowCount(deviceManagementConfig.getPaginationConfiguration().
-                        getNotificationListPageSize());
-            } else {
-                throw new NotificationManagementException("Device-Mgt configuration has not initialized. " +
-                        "Please check the cdm-config.xml file.");
             }
         }
         return paginationRequest;
@@ -1283,5 +1266,48 @@ public final class DeviceManagerUtil {
         DeviceManagementConfig deviceManagementConfig = DeviceConfigurationManager.getInstance().getDeviceManagementConfig();
         WhiteLabelConfiguration whiteLabelConfig = deviceManagementConfig.getMetaDataConfiguration().getWhiteLabelConfiguration();
         return whiteLabelConfig.getDocUrl();
+    }
+
+    /**
+     * Trim leading and trailing whitespace from device name and description.
+     * Internal spaces between words are kept. Null values stay null; trimmed
+     * values are written back onto the device.
+     *
+     * @param device device whose name/description should be normalized
+     */
+    public static void trimDeviceNameAndDescription(Device device) {
+        if (device == null) {
+            return;
+        }
+        if (device.getName() != null) {
+            device.setName(device.getName().trim());
+        }
+        if (device.getDescription() != null) {
+            device.setDescription(device.getDescription().trim());
+        }
+    }
+
+    /**
+     * User-facing device label for task/operation notifications: {@code 'Name' (identifier)}.
+     */
+    public static String formatDeviceNotificationLabel(String name, String identifier) {
+        String deviceName = name != null && !name.isBlank() ? name.trim() : "Unknown";
+        String deviceId = identifier != null && !identifier.isBlank() ? identifier.trim() : "unknown";
+        return "'" + deviceName + "' (" + deviceId + ")";
+    }
+
+    /**
+     * Publishes a task notification for device delete/disenroll outcomes.
+     * Failures are logged only so notification errors do not fail the device operation.
+     */
+    public static void publishDeviceNotification(int tenantId, String taskCode, String message) {
+        try {
+            DeviceManagementDataHolder.getInstance().getNotificationManagementService()
+                    .handleTaskNotificationIfApplicable(tenantId, taskCode, message);
+        } catch (io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementException e) {
+            log.error("Error occurred while publishing device notification [" + taskCode + "]: " + message, e);
+        } catch (Exception e) {
+            log.error("Unexpected error while publishing device notification [" + taskCode + "]: " + message, e);
+        }
     }
 }

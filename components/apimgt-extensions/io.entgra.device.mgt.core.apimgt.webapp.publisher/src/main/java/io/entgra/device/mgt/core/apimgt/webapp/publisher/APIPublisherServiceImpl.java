@@ -741,9 +741,9 @@ public class APIPublisherServiceImpl implements APIPublisherService {
      * @param permissions the list of UI permissions to assign to the role
      */
     private void updatePermissions(String roleName, List<String> permissions) {
-        NotificationManagementService notificationManagementService =
-                APIPublisherDataHolder.getInstance().getNotificationManagementService();
-        if (roleName == null || permissions == null) return;
+        if (roleName == null || permissions == null) {
+            return;
+        }
         try {
             AuthorizationManager authorizationManager = APIPublisherDataHolder.getInstance().getUserRealm()
                     .getAuthorizationManager();
@@ -755,19 +755,30 @@ public class APIPublisherServiceImpl implements APIPublisherService {
                 authorizationManager.authorizeRole(roleName, permission, CarbonConstants.UI_PERMISSION_ACTION);
                 authorizationManager.refreshAllowedRolesForResource(permission);
             }
+            notifyRolePermissionUpdate(roleName, true);
         } catch (UserStoreException e) {
             String errorMsg = "Error occurred when adding permissions to role: " + roleName;
             log.error(errorMsg, e);
-            int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
-            String message = String.format("Role Permission updation was failed for the role %s", roleName);
-            try {
-                notificationManagementService.handleTaskNotificationIfApplicable(
-                        tenantId,
-                        message
-                );
-            } catch (NotificationManagementException error) {
-                log.error("Failed to send notification for role permission update failure", error);
-            }
+            notifyRolePermissionUpdate(roleName, false);
+        }
+    }
+
+    @Override
+    public void notifyRolePermissionUpdate(String roleName, boolean success) {
+        NotificationManagementService notificationManagementService =
+                APIPublisherDataHolder.getInstance().getNotificationManagementService();
+        if (notificationManagementService == null) {
+            return;
+        }
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        String message = success
+                ? String.format("Role permissions were updated successfully for the role '%s'.", roleName)
+                : String.format("Failed to update role permissions for the role '%s'.", roleName);
+        try {
+            notificationManagementService.handleTaskNotificationIfApplicable(
+                    tenantId, "ROLE_PERMISSION_UPDATE", message);
+        } catch (NotificationManagementException error) {
+            log.error("Failed to send notification for role permission update", error);
         }
     }
 

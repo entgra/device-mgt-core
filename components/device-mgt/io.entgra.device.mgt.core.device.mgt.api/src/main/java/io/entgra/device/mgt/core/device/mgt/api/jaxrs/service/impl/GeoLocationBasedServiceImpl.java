@@ -806,16 +806,16 @@ public class GeoLocationBasedServiceImpl implements GeoLocationBasedService {
                 if (!geoFences.isEmpty() && requireEventData) {
                     geoFences = geoService.attachEventObjects(geoFences);
                 }
-                return buildResponse(geoFences);
+                return buildResponse(geoFences, name);
             }
             if (name != null && !name.isEmpty()) {
                 List<GeofenceData> geoFences = geoService.getGeoFences(name);
                 if (requireEventData) {
                     geoFences = geoService.attachEventObjects(geoFences);
                 }
-                return buildResponse(geoFences);
+                return buildResponse(geoFences, name);
             }
-            return buildResponse(geoService.getGeoFences());
+            return buildResponse(geoService.getGeoFences(), null);
         } catch (GeoLocationBasedServiceException e) {
             String msg = "Failed to retrieve geofence data";
             log.error(msg, e);
@@ -825,10 +825,12 @@ public class GeoLocationBasedServiceImpl implements GeoLocationBasedService {
 
     /**
      * Build the response payload from the data retrieved from the database
+     *
      * @param fencesList retrieved geofence data to send in response
+     * @param fenceName partial fence name applied to the query, or null when unfiltered
      * @return HttpResponse object
      */
-    private Response buildResponse(List<GeofenceData> fencesList) {
+    private Response buildResponse(List<GeofenceData> fencesList, String fenceName) {
         List<GeofenceWrapper> geofenceList = new ArrayList<>();
         for (GeofenceData geofenceData : fencesList) {
             geofenceList.add(getMappedResponseBean(geofenceData));
@@ -838,7 +840,12 @@ public class GeoLocationBasedServiceImpl implements GeoLocationBasedService {
         paginationResult.setRecordsTotal(geofenceList.size());
         try {
             GeoLocationProviderService geoService = DeviceMgtAPIUtils.getGeoService();
-            paginationResult.setTotalDeviceCount(geoService.getGeoFenceCount());
+            int totalCount = geoService.getGeoFenceCount();
+            int filteredCount = (fenceName != null && !fenceName.isEmpty())
+                    ? geoService.getGeoFenceCount(fenceName)
+                    : totalCount;
+            paginationResult.setRecordsFiltered(filteredCount);
+            paginationResult.setTotalDeviceCount(totalCount);
         } catch (GeoLocationBasedServiceException e) {
             String msg = "Failed to retrieve geofence data";
             log.error(msg, e);

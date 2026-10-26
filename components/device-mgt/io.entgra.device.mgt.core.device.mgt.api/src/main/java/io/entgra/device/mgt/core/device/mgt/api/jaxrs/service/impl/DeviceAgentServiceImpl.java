@@ -22,6 +22,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.OperationList;
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.SupportedDeviceTypeInfo;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.analytics.Attribute;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.analytics.AttributeType;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.analytics.EventAttributeList;
@@ -29,6 +30,10 @@ import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.DeviceAgentSer
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.Constants;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.DeviceMgtAPIUtils;
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManagerServiceImpl;
+import io.entgra.device.mgt.core.operation.template.exception.OperationTemplateMgtPluginException;
+import io.entgra.device.mgt.core.subtype.mgt.dto.DeviceSubType;
+import io.entgra.device.mgt.core.subtype.mgt.dto.DeviceTypeDefinition;
+import io.entgra.device.mgt.core.subtype.mgt.exception.SubTypeMgtPluginException;
 import org.apache.axis2.AxisFault;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,7 +51,6 @@ import io.entgra.device.mgt.core.device.mgt.common.policy.mgt.monitor.Compliance
 import io.entgra.device.mgt.core.device.mgt.common.policy.mgt.monitor.PolicyComplianceException;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
 import io.entgra.device.mgt.core.identity.jwt.client.extension.exception.JWTClientException;
-import io.entgra.device.mgt.core.policy.mgt.common.PolicyAdministratorPoint;
 import io.entgra.device.mgt.core.policy.mgt.common.PolicyManagementException;
 import org.apache.axis2.AxisFault;
 import org.apache.commons.logging.Log;
@@ -94,10 +98,8 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
             device.getEnrolmentInfo().setDateOfEnrolment(System.currentTimeMillis());
             device.getEnrolmentInfo().setDateOfLastUpdate(System.currentTimeMillis());
             boolean status = dms.enrollDevice(device);
-            PolicyAdministratorPoint pap = DeviceMgtAPIUtils.getPolicyManagementService().getPAP();
             DeviceIdentifier deviceId = new DeviceIdentifier(device.getDeviceIdentifier(), device.getType());
             DeviceMgtAPIUtils.getPolicyManagementService().getEffectivePolicy(deviceId);
-            pap.publishChanges();
             return Response.status(Response.Status.OK).entity(status).build();
         } catch (DeviceManagementException e) {
             String msg = "Error occurred while enrolling the device, which carries the id '" +
@@ -596,6 +598,133 @@ public class DeviceAgentServiceImpl implements DeviceAgentService {
             log.error(errorMessage, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(errorMessage).build();
         }
+    }
+
+    @GET
+    @Path("/supported-devices/{deviceType}/{comModuleSubTypeId}")
+    @Override
+    public Response getSupportedDeviceTypesByModule(@PathParam("deviceType") String deviceType,
+                                                    @PathParam("comModuleSubTypeId") String comModuleSubTypeId) {
+        Response validationResponse = validateDeviceTypeAndSubTypeId(deviceType, comModuleSubTypeId);
+        if (validationResponse != null) {
+            return validationResponse;
+        }
+        int moduleId;
+        try {
+            moduleId = Integer.parseInt(comModuleSubTypeId);
+        } catch (NumberFormatException e) {
+            String errorMessage = "Communication module subtype ID must be a valid integer.";
+            log.error(errorMessage);
+            return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
+        }
+        if (moduleId < 1) {
+            String errorMessage = "Communication module subtype ID must be positive.";
+            log.error(errorMessage);
+            return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
+        }
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        try {
+            List<DeviceSubType> deviceSubTypes = DeviceMgtAPIUtils.getDeviceSubTypeService()
+                    .getDeviceSubTypesByModule(moduleId, tenantId, deviceType);
+            List<SupportedDeviceTypeInfo> response = new ArrayList<>(deviceSubTypes.size());
+            for (DeviceSubType deviceSubType : deviceSubTypes) {
+                response.add(new SupportedDeviceTypeInfo(deviceSubType.getSubTypeId(),
+                        deviceSubType.getDeviceType(), deviceSubType.getSubTypeName()));
+            }
+            return Response.status(Response.Status.OK).entity(response).build();
+        } catch (SubTypeMgtPluginException e) {
+            String errorMessage = "Error occurred while retrieving device types supported by communication module " +
+                    "subtype ID: " + comModuleSubTypeId;
+            log.error(errorMessage, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(errorMessage).build();
+        }
+    }
+
+    @GET
+    @Path("/subtype-definition/{deviceType}/{subTypeId}")
+    @Override
+    public Response getDeviceTypeDefinition(@PathParam("deviceType") String deviceType,
+                                            @PathParam("subTypeId") String subTypeId) {
+        Response validationResponse = validateDeviceTypeAndSubTypeId(deviceType, subTypeId);
+        if (validationResponse != null) {
+            return validationResponse;
+        }
+        try {
+            int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+            DeviceTypeDefinition definition = DeviceMgtAPIUtils.getDeviceSubTypeService()
+                    .getDeviceTypeDefinition(subTypeId, tenantId, deviceType);
+            return Response.status(Response.Status.OK).entity(definition).build();
+        } catch (SubTypeMgtPluginException e) {
+            String errorMessage = "Error occurred while retrieving the type definition for subtype ID: " +
+                    subTypeId + " and device type: " + deviceType;
+            log.error(errorMessage, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(errorMessage).build();
+        }
+    }
+
+    @GET
+    @Path("/grn-list/{operationCode}/{deviceType}/{subTypeId}")
+    @Override
+    public Response getOperationRegisters(@PathParam("operationCode") String operationCode,
+                                          @PathParam("deviceType") String deviceType,
+                                          @PathParam("subTypeId") String subTypeId) {
+        Response validationResponse = validateDeviceTypeAndSubTypeId(deviceType, subTypeId);
+        if (validationResponse != null) {
+            return validationResponse;
+        }
+        if (operationCode == null || operationCode.trim().isEmpty()) {
+            String errorMessage = "Operation code cannot be empty.";
+            log.error(errorMessage);
+            return Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build();
+        }
+        try {
+            List<String> registers = DeviceMgtAPIUtils.getOperationTemplateService()
+                    .getOperationRegisters(deviceType, subTypeId, operationCode);
+            if (registers == null) {
+                String errorMessage = "Operation template was not found.";
+                return Response.status(Response.Status.NOT_FOUND).entity(errorMessage).build();
+            }
+            return Response.status(Response.Status.OK).entity(registers).build();
+        } catch (OperationTemplateMgtPluginException e) {
+            String errorMessage = "Error occurred while retrieving registers for operation code: " + operationCode;
+            log.error(errorMessage, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(errorMessage).build();
+        }
+    }
+
+    /**
+     * Validates that the device type is not empty and the subtype ID is a positive integer.
+     *
+     * @param deviceType device type to validate
+     * @param subTypeId device subtype ID to validate
+     * @return a bad request response if validation fails, otherwise null
+     */
+    private Response validateDeviceTypeAndSubTypeId(String deviceType, String subTypeId) {
+        if (deviceType == null || deviceType.trim().isEmpty()
+                || subTypeId == null || subTypeId.trim().isEmpty()) {
+            return badRequest("Device type and subtype ID cannot be empty.");
+        }
+        try {
+            if (Integer.parseInt(subTypeId) <= 0) {
+                return badRequest("Subtype ID must be a positive integer.");
+            }
+        } catch (NumberFormatException e) {
+            return badRequest("Subtype ID must be a positive integer.");
+        }
+        return null;
+    }
+
+    /**
+     * Creates a bad request response with the specified error message.
+     *
+     * @param message error message to include in the response
+     * @return a bad request response containing the error message
+     */
+    private Response badRequest(String message) {
+        log.error(message);
+        return Response.status(Response.Status.BAD_REQUEST)
+                .entity(message)
+                .build();
     }
 
     private static List<ComplianceFeature> getComplianceFeatures(Object compliancePayload) throws

@@ -27,9 +27,9 @@ import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.CommandOperation;
 import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.OperationMgtConstants;
 import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.PolicyOperation;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
-import io.entgra.device.mgt.core.policy.mgt.common.PolicyAdministratorPoint;
 import io.entgra.device.mgt.core.policy.mgt.common.PolicyEvaluationException;
 import io.entgra.device.mgt.core.policy.mgt.common.PolicyManagementException;
+import io.entgra.device.mgt.core.policy.mgt.common.PolicySelectionEvaluationPoint;
 import io.entgra.device.mgt.core.policy.mgt.common.PolicyTransformException;
 import io.entgra.device.mgt.core.policy.mgt.core.PolicyManagerService;
 import io.entgra.device.mgt.core.policy.mgt.core.internal.PolicyManagementDataHolder;
@@ -39,15 +39,16 @@ import org.apache.commons.logging.LogFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class PolicyEnforcementDelegatorImpl implements PolicyEnforcementDelegator{
 
     private static final Log log = LogFactory.getLog(PolicyEnforcementDelegatorImpl.class);
 
     private final List<Device> devices;
-    private final List<Integer> updatedPolicyIds;
+    private final Set<Integer> selectedPolicyIds;
 
-    public PolicyEnforcementDelegatorImpl(List<Device> devices, List<Integer> updatedPolicyIds) {
+    public PolicyEnforcementDelegatorImpl(List<Device> devices, Set<Integer> selectedPolicyIds) {
 
         log.info("Policy re-enforcing stared due to change of the policies.");
 
@@ -58,7 +59,7 @@ public class PolicyEnforcementDelegatorImpl implements PolicyEnforcementDelegato
             }
         }
         this.devices = devices;
-        this.updatedPolicyIds = updatedPolicyIds;
+        this.selectedPolicyIds = selectedPolicyIds;
     }
 
     @Override
@@ -73,21 +74,18 @@ public class PolicyEnforcementDelegatorImpl implements PolicyEnforcementDelegato
             List<DeviceIdentifier> deviceIdentifiers = new ArrayList<>();
             deviceIdentifiers.add(identifier);
             if (policy != null) {
-                 /*
-                We add policy operation for the device if,
-                    1) Device does not have any policy or
-                    2) New Policy or
-                    3) Device existing policy has changed
-                 */
-                if (devicePolicy == null || devicePolicy.getId() != policy.getId() || updatedPolicyIds.contains
-                        (policy.getId())) {
-                    this.markPreviousPolicyBundlesRepeated(device);
+                // A selected winner is always re-applied. This covers edits to a policy with the same ID.
+                this.markPreviousPolicyBundlesRepeated(device);
+                if (devicePolicy != null && devicePolicy.getId() != policy.getId()) {
                     this.addPolicyRevokeOperation(deviceIdentifiers);
-                    this.addPolicyOperation(deviceIdentifiers, policy);
                 }
-            } else {
-                //This means all the applicable policies have been removed from device. Hence calling a policy revoke.
+                this.addPolicyOperation(deviceIdentifiers, policy);
+                this.setAppliedPolicy(identifier, policy);
+            } else if (devicePolicy != null && selectedPolicyIds.contains(devicePolicy.getId())) {
+                // No selected policy applies. Revoke only if the currently assigned policy was selected.
+                this.markPreviousPolicyBundlesRepeated(device);
                 this.addPolicyRevokeOperation(deviceIdentifiers);
+                this.removeAppliedPolicy(identifier);
             }
         }
     }
@@ -97,21 +95,36 @@ public class PolicyEnforcementDelegatorImpl implements PolicyEnforcementDelegato
         try {
             PolicyManagerService policyManagerService = PolicyManagementDataHolder.getInstance()
                     .getPolicyManagerService();
-            PolicyAdministratorPoint policyAdministratorPoint;
-
-            Policy policy = policyManagerService.getPEP().getEffectivePolicy(identifier);
-            policyAdministratorPoint = policyManagerService.getPAP();
-            if (policy != null) {
-                policyAdministratorPoint.setPolicyUsed(identifier, policy);
-            } else {
-                policyAdministratorPoint.removePolicyUsed(identifier);
-                return null;
+            if (!(policyManagerService.getPEP() instanceof PolicySelectionEvaluationPoint)) {
+                throw new PolicyEvaluationException(
+                        "Selected policy evaluation requires the Simple evaluation point");
             }
-            return policy;
+            return ((PolicySelectionEvaluationPoint) policyManagerService.getPEP())
+                    .getEffectivePolicy(identifier, selectedPolicyIds);
         } catch (PolicyEvaluationException | PolicyManagementException e) {
             String msg = "Error occurred while retrieving the effective policy for devices.";
             log.error(msg, e);
             throw new PolicyDelegationException(msg, e);
+        }
+    }
+
+    private void setAppliedPolicy(DeviceIdentifier identifier, Policy policy) throws PolicyDelegationException {
+        try {
+            PolicyManagementDataHolder.getInstance().getPolicyManagerService().getPAP()
+                    .setPolicyUsed(identifier, policy);
+        } catch (PolicyManagementException e) {
+            throw new PolicyDelegationException("Policy operation was queued but the applied-policy record " +
+                    "could not be updated", e);
+        }
+    }
+
+    private void removeAppliedPolicy(DeviceIdentifier identifier) throws PolicyDelegationException {
+        try {
+            PolicyManagementDataHolder.getInstance().getPolicyManagerService().getPAP()
+                    .removePolicyUsed(identifier);
+        } catch (PolicyManagementException e) {
+            throw new PolicyDelegationException("Policy revoke was queued but the applied-policy record " +
+                    "could not be removed", e);
         }
     }
 

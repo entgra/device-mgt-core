@@ -44,7 +44,6 @@ import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupManagementExce
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.WhiteLabelManagementService;
-import io.entgra.device.mgt.core.device.mgt.common.notification.mgt.NotificationManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.OperationManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.OperationManager;
 import io.entgra.device.mgt.core.device.mgt.common.permission.mgt.PermissionManagerService;
@@ -73,8 +72,6 @@ import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.DeviceStatusManage
 import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.MetadataManagementServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.WhiteLabelManagementServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.dao.MetadataManagementDAOFactory;
-import io.entgra.device.mgt.core.device.mgt.core.notification.mgt.NotificationManagementServiceImpl;
-import io.entgra.device.mgt.core.device.mgt.core.notification.mgt.dao.NotificationManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.OperationManagerImpl;
 import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.dao.OperationManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.otp.mgt.dao.OTPManagementDAOFactory;
@@ -175,7 +172,6 @@ public class DeviceManagementServiceComponent {
             DeviceManagementDAOFactory.init(dsConfig);
             GroupManagementDAOFactory.init(dsConfig);
             TrackerManagementDAOFactory.init(dsConfig);
-            NotificationManagementDAOFactory.init(dsConfig);
             OperationManagementDAOFactory.init(dsConfig);
             MetadataManagementDAOFactory.init(dsConfig);
             EventManagementDAOFactory.init(dsConfig);
@@ -286,11 +282,6 @@ public class DeviceManagementServiceComponent {
         DeviceManagementProviderService deviceManagementProvider = new DeviceManagementProviderServiceImpl();
         DeviceManagementDataHolder.getInstance().setDeviceManagementProvider(deviceManagementProvider);
         bundleContext.registerService(DeviceManagementProviderService.class.getName(), deviceManagementProvider, null);
-
-        /* Registering Notification Service */
-        NotificationManagementService notificationManagementService
-                = new NotificationManagementServiceImpl();
-        bundleContext.registerService(NotificationManagementService.class.getName(), notificationManagementService, null);
 
         /* Registering Tenants Observer */
         TenantCreateObserver listener = new TenantCreateObserver();

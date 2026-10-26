@@ -258,8 +258,8 @@ public class ConnectionManagerUtils {
      * @return
      */
     public static String getDatabaseType() {
-        try {
-            return dataSource.getConnection().getMetaData().getDatabaseProductName();
+        try (Connection connection = dataSource.getConnection()) {
+            return connection.getMetaData().getDatabaseProductName();
         } catch (SQLException e) {
             log.error("Error occurred while retrieving config.datasource connection", e);
         }
