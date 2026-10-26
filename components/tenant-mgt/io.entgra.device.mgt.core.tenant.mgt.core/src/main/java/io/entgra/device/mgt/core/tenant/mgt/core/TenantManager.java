@@ -89,12 +89,19 @@ public interface TenantManager {
     void addDefaultNotificationArchivalMetadata(TenantInfoBean tenantInfoBean) throws TenantMgtException;
 
     /**
-     * Adds a role to the bindings of the specified scopes within a tenant.
+     * Updates the bindings of the given role for a tenant by adding it to and/or removing it from
+     * the bindings of the specified scopes.
+     * <p>
+     * Only the scopes explicitly named in {@code addedScopeNames} and {@code removedScopeNames} are
+     * touched; any scope not present in either list is left untouched.
+     * </p>
      *
-     * @param tenantDomain The domain of the tenant.
-     * @param roleName     The name of the role to add to each scope's bindings.
-     * @param scopeNames   The list of scope names whose bindings should be updated.
+     * @param tenantDomain     The domain of the tenant.
+     * @param roleName         The name of the role whose scope bindings should be updated.
+     * @param addedScopeNames  The scope names the role should be added to. May be {@code null} or empty.
+     * @param removedScopeNames The scope names the role should be removed from. May be {@code null} or empty.
      * @throws TenantMgtException If an error occurs while updating the scope bindings.
      */
-    void updateTenantScopeBindings(String tenantDomain, String roleName, java.util.List<String> scopeNames) throws TenantMgtException;
+    void updateTenantScopeBindings(String tenantDomain, String roleName, java.util.List<String> addedScopeNames,
+                                   java.util.List<String> removedScopeNames) throws TenantMgtException;
 }

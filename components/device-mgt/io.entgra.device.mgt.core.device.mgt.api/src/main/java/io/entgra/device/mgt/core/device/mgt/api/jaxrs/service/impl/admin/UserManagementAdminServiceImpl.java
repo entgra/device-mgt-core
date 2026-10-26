@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.PrivacyComplianceException;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.PasswordResetWrapper;
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.RoleScopeBindingUpdateWrapper;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.service.api.admin.UserManagementAdminService;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.CredentialManagementResponseBuilder;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.DeviceMgtAPIUtils;
@@ -43,6 +44,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
 
 @Path("/admin/users")
 @Produces(MediaType.APPLICATION_JSON)
@@ -179,28 +181,50 @@ public class UserManagementAdminServiceImpl implements UserManagementAdminServic
     @Override
     public Response updateTenantScopeBindings(@PathParam("tenantDomain") String tenantDomain,
                                               @PathParam("roleName") String roleName,
-                                              java.util.List<String> scopeNames) {
-        try {
-            if (MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
-                String msg = "You are not allowed to update scope bindings for the super tenant.";
-                log.error(msg);
-                return Response.status(Response.Status.UNAUTHORIZED).entity(msg).build();
-            }
-
-            if (log.isDebugEnabled()) {
-                log.debug("Scope bindings update process has been initiated for tenant: " + tenantDomain
-                        + " and role: " + roleName);
-            }
-
-            TenantManagerAdminService tenantManagerAdminService = DeviceMgtAPIUtils.getTenantManagerAdminService();
-            tenantManagerAdminService.updateTenantScopeBindings(tenantDomain, roleName, scopeNames);
-
-            return Response.status(Response.Status.OK).entity("Scope bindings update process has been completed " +
-                    "successfully for tenant: " + tenantDomain).build();
-        } catch (TenantMgtException e) {
-            String msg = "Error occurred while updating scope bindings for tenant: " + tenantDomain;
-            log.error(msg, e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+                                              RoleScopeBindingUpdateWrapper scopeBindings) {
+        if (MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
+            String msg = "You are not allowed to update scope bindings for the super tenant.";
+            log.error(msg);
+            return Response.status(Response.Status.UNAUTHORIZED).entity(msg).build();
         }
+
+        if (scopeBindings == null) {
+            String msg = "A request body containing the scopes to add and/or remove is required.";
+            log.error(msg);
+            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+        }
+
+        List<String> addedScopes = scopeBindings.getAddedScopes();
+        List<String> removedScopes = scopeBindings.getRemovedScopes();
+        if ((addedScopes == null || addedScopes.isEmpty())
+                && (removedScopes == null || removedScopes.isEmpty())) {
+            String msg = "At least one of 'addedScopes' or 'removedScopes' must be provided.";
+            log.error(msg);
+            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+        }
+
+        if (log.isDebugEnabled()) {
+            log.debug("Scope bindings update process has been initiated for tenant: " + tenantDomain
+                    + " and role: " + roleName);
+        }
+
+        Thread thread = new Thread(() -> {
+            try {
+                TenantManagerAdminService tenantManagerAdminService = DeviceMgtAPIUtils.getTenantManagerAdminService();
+                tenantManagerAdminService.updateTenantScopeBindings(tenantDomain, roleName, addedScopes, removedScopes);
+                if (log.isDebugEnabled()) {
+                    log.debug("Scope bindings update process completed for tenant: " + tenantDomain
+                            + " and role: " + roleName);
+                }
+            } catch (TenantMgtException e) {
+                log.error("Error occurred while updating scope bindings for tenant: " + tenantDomain
+                        + " and role: " + roleName, e);
+            }
+        });
+        thread.setName("scope-binding-update-" + tenantDomain + "-" + roleName);
+        thread.start();
+
+        return Response.status(Response.Status.ACCEPTED).entity("Scope bindings update request has been accepted " +
+                "and is being processed for tenant: " + tenantDomain).build();
     }
 }

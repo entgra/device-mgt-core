@@ -25,5 +25,6 @@ public interface TenantManagerAdminService {
     void deleteTenant(String tenantDomain) throws TenantMgtException;
     int getTenantId(String tenantDomain) throws TenantMgtException;
     void publishScopesToTenant(String tenantDomain) throws TenantMgtException;
-    void updateTenantScopeBindings(String tenantDomain, String roleName, java.util.List<String> scopeNames) throws TenantMgtException;
+    void updateTenantScopeBindings(String tenantDomain, String roleName, java.util.List<String> addedScopeNames,
+                                   java.util.List<String> removedScopeNames) throws TenantMgtException;
 }
