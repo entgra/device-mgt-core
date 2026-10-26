@@ -18,6 +18,8 @@
 
 package io.entgra.device.mgt.core.notification.mgt.common.dto;
 
+import java.util.List;
+
 /**
  * Structured notification payload persisted as JSON in {@code DM_NOTIFICATION.NOTIFICATION_CONTEXT}.
  */
@@ -28,8 +30,10 @@ public class NotificationContext {
     private String operationStatus;
     private String deviceType;
     private Boolean includeDeviceList;
-    /** Plain-text body for task/system notifications (no device linkage). */
+    /** Plain-text body for task/system notifications. */
     private String message;
+    /** User-facing labels: {@code name (identifier)}. Set at publish time for operations. */
+    private List<String> deviceLabels;
 
     public String getOperationCode() {
         return operationCode;
@@ -77,5 +81,13 @@ public class NotificationContext {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public List<String> getDeviceLabels() {
+        return deviceLabels;
+    }
+
+    public void setDeviceLabels(List<String> deviceLabels) {
+        this.deviceLabels = deviceLabels;
     }
 }

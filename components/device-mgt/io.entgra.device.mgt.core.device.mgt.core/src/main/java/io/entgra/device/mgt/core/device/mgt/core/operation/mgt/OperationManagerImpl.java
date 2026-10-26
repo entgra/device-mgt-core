@@ -227,24 +227,26 @@ public class OperationManagerImpl implements OperationManager {
                     Map<Integer, Integer> pendingOperationIDs = operationDAO
                             .getExistingNotExecutedOperationIDs(enrolments.keySet().toArray(new Integer[0]), operationCode);
                     for (Integer enrolmentId : pendingOperationIDs.keySet()) {
-                        operation.setId(pendingOperationIDs.get(enrolmentId));
+                        int operationId = pendingOperationIDs.get(enrolmentId);
+                        Operation notificationOperation = createNotificationOperation(operation, operationId);
                         device = enrolments.get(enrolmentId);
                         if (!shouldSkipImmediateNotification(operation)) {
-                            this.sendNotification(operation, device);
+                            this.sendNotification(notificationOperation, device);
                         }
                         //No need to keep this enrollment as it has a pending operation
                         enrolments.remove(enrolmentId);
                     }
                     if (enrolments.size() == 0) {
                         //No operations to be add. All are repeated.
+                        int existingOperationId = pendingOperationIDs.values().iterator().next();
                         if (log.isDebugEnabled()) {
                             log.debug("All the devices contain a pending operation for the Operation Code: "
                                     + operationCode);
                         }
                         Activity activity = new Activity();
                         activity.setActivityId(DeviceManagementConstants.OperationAttributes.ACTIVITY +
-                                operation.getId());
-                        activity.setOperationId(operation.getId());
+                                existingOperationId);
+                        activity.setOperationId(existingOperationId);
                         activity.setActivityStatus(
                                 this.getActivityStatus(deviceValidationResult, deviceAuthorizationResult));
                         return activity;
@@ -304,10 +306,11 @@ public class OperationManagerImpl implements OperationManager {
                         .getExistingNotExecutedOperationIDs(enrolments.keySet().toArray(new Integer[0]), operationCode);
                 Device device;
                 for (Integer enrolmentId : pendingOperationIDs.keySet()) {
-                    operation.setId(pendingOperationIDs.get(enrolmentId));
+                    Operation notificationOperation = createNotificationOperation(operation,
+                            pendingOperationIDs.get(enrolmentId));
                     device = enrolments.get(enrolmentId);
                     if (!shouldSkipImmediateNotification(operation)) {
-                        this.sendNotification(operation, device);
+                        this.sendNotification(notificationOperation, device);
                     }
                     //No need to keep this enrollment as it has a pending operation
                     enrolments.remove(enrolmentId);
@@ -380,10 +383,11 @@ public class OperationManagerImpl implements OperationManager {
                             .getExistingNotExecutedOperationIDs(enrolments.keySet().toArray(new Integer[0]), operationCode);
                     Device device;
                     for (Integer enrolmentId : pendingOperationIDs.keySet()) {
-                        operation.setId(pendingOperationIDs.get(enrolmentId));
+                        Operation notificationOperation = createNotificationOperation(operation,
+                                pendingOperationIDs.get(enrolmentId));
                         device = enrolments.get(enrolmentId);
                         if (!shouldSkipImmediateNotification(operation)) {
-                            this.sendNotification(operation, device);
+                            this.sendNotification(notificationOperation, device);
                         }
                         //No need to keep this enrollment as it has a pending operation
                         enrolments.remove(enrolmentId);
@@ -495,6 +499,29 @@ public class OperationManagerImpl implements OperationManager {
         }
         return Boolean.parseBoolean(
                 operation.getProperties().getProperty(SKIP_IMMEDIATE_NOTIFICATION_PROPERTY, Boolean.FALSE.toString()));
+    }
+
+    /**
+     * Creates a separate operation instance so an asynchronous notification retains the operation ID assigned to
+     * its device. Other property values are intentionally shared because they are read-only in this flow.
+     */
+    private Operation createNotificationOperation(Operation operation, int operationId) {
+        Operation notificationOperation = new Operation();
+        notificationOperation.setCode(operation.getCode());
+        notificationOperation.setProperties(operation.getProperties());
+        notificationOperation.setType(operation.getType());
+        notificationOperation.setStatus(operation.getStatus());
+        notificationOperation.setControl(operation.getControl());
+        notificationOperation.setReceivedTimeStamp(operation.getReceivedTimeStamp());
+        notificationOperation.setCreatedTimeStamp(operation.getCreatedTimeStamp());
+        notificationOperation.setEnabled(operation.isEnabled());
+        notificationOperation.setPayLoad(operation.getPayLoad());
+        notificationOperation.setOperationResponse(operation.getOperationResponse());
+        notificationOperation.setActivityId(operation.getActivityId());
+        notificationOperation.setInitiatedBy(operation.getInitiatedBy());
+        notificationOperation.setResponses(operation.getResponses());
+        notificationOperation.setId(operationId);
+        return notificationOperation;
     }
 
     private void sendNotification(Operation operation, Device device) {
@@ -1144,6 +1171,65 @@ public class OperationManagerImpl implements OperationManager {
             throw new OperationManagementException(msg, e);
         } finally {
             OperationManagementDAOFactory.closeConnection();
+        }
+    }
+
+    @Override
+    public void updateOperationStatuses(Device device, List<Operation> operations, Operation.Status status)
+            throws OperationManagementException {
+        int enrolmentId = device.getEnrolmentInfo().getId();
+        List<Integer> operationIds = new ArrayList<>();
+        for (Operation operation : operations) {
+            operationIds.add(operation.getId());
+        }
+        try {
+            OperationManagementDAOFactory.beginTransaction();
+            int updatedCount = operationDAO.updateOperationStatuses(enrolmentId, operationIds,
+                    io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.Operation.Status
+                            .valueOf(status.toString()));
+            OperationManagementDAOFactory.commitTransaction();
+            if (updatedCount < operationIds.size()) {
+                log.warn("Updated " + updatedCount + " of " + operationIds.size() +
+                        " operation statuses for enrolment " + enrolmentId);
+            }
+        } catch (OperationManagementDAOException e) {
+            OperationManagementDAOFactory.rollbackTransaction();
+            String msg = "Error occurred while updating operation statuses of enrolment " + enrolmentId;
+            log.error(msg, e);
+            throw new OperationManagementException(msg, e);
+        } catch (TransactionManagementException e) {
+            String msg = "Error occurred while initiating a transaction to update operation statuses of enrolment "
+                    + enrolmentId;
+            log.error(msg, e);
+            throw new OperationManagementException(msg, e);
+        } finally {
+            OperationManagementDAOFactory.closeConnection();
+        }
+        int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
+        for (Operation operation : operations) {
+            try {
+                DeviceManagementDataHolder.getInstance().getNotificationManagementService()
+                        .handleOperationNotificationIfApplicable(operation.getCode(), status.toString(),
+                                device.getType(), Collections.singletonList(device.getId()), tenantId, "postSync");
+            } catch (NotificationManagementException e) {
+                log.error("Error occurred while handling notification for operation " + operation.getId() +
+                        " of enrolment " + enrolmentId, e);
+            }
+        }
+        boolean isPolicyRevokeCompleted = Operation.Status.COMPLETED.equals(status) && operations.stream()
+                .anyMatch(operation -> DeviceManagementConstants.AuthorizationSkippedOperationCodes
+                        .POLICY_REVOKE_OPERATION_CODE.equals(operation.getCode()));
+        if (isPolicyRevokeCompleted &&
+                EnrolmentInfo.Status.DISENROLLMENT_REQUESTED.equals(device.getEnrolmentInfo().getStatus())) {
+            try {
+                DeviceManagementDataHolder.getInstance().getDeviceManagementProvider()
+                        .removeDevice(new DeviceIdentifier(device.getDeviceIdentifier(), device.getType()));
+            } catch (DeviceManagementException e) {
+                String msg = "Error occurred while removing device " + device.getDeviceIdentifier() +
+                        " after policy revoke completion";
+                log.error(msg, e);
+                throw new OperationManagementException(msg, e);
+            }
         }
     }
 

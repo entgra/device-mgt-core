@@ -36,25 +36,15 @@ public interface DeviceFeatureOperations {
     List<DeviceFeatureInfo> getDeviceFeatureOperations() throws DeviceFeatureOperationException;
 
     /**
-     * Retrieves a list of device operation details filtered by operation code, operation name, and/or device type.
-     * This method provides flexible querying by allowing any combination of the parameters.
-     * If a parameter is {@code null} or empty, it will be excluded from the filter criteria.
-     * @param code the operation code to filter by (optional).
-     * @param name the operation name to filter by (optional).
-     * @param type the device type to filter by (optional).
-     * @param removeDeduplicateCode whether to get duplicate operations code from device types or not (optional).
-     * @return a list of {@link DeviceFeatureInfo} objects matching the given filters.
-     * @throws DeviceFeatureOperationException if an error occurs while retrieving data from the underlying data store.
+     * Retrieves feature details filtered by code, name, device type, and feature type (operation/task).
      */
-    List<DeviceFeatureInfo> getOperationDetails(String code, String name, String type, boolean removeDeduplicateCode)
+    List<DeviceFeatureInfo> getOperationDetails(String code, String name, String deviceType,
+                                                String featureType, boolean removeDeduplicateCode)
             throws DeviceFeatureOperationException;
 
     /**
-     * Validates whether the given operation codes exist in the system.
-     *
-     * @param codes Single or multiple operation codes.
-     * @return Map of operation code to boolean indicating existence.
-     * @throws DeviceFeatureOperationException if database access fails.
+     * Validates whether the given codes exist for the given feature type ({@code operation} or {@code task}).
      */
-    Map<String, Boolean> validateOperationCodes(List<String> codes) throws DeviceFeatureOperationException;
+    Map<String, Boolean> validateFeatureCodes(List<String> codes, String featureType)
+            throws DeviceFeatureOperationException;
 }

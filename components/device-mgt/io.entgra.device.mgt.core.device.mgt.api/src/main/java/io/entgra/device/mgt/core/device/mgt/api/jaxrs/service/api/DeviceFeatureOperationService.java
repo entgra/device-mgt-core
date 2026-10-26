@@ -135,7 +135,12 @@ public interface DeviceFeatureOperationService {
                     value = "If true, removes duplicate operations by code when 'type' is not specified.",
                     required = false)
             @DefaultValue("false")
-            @QueryParam("removeDeduplicateCode") boolean deduplicate
+            @QueryParam("removeDeduplicateCode") boolean deduplicate,
+            @ApiParam(
+                    name = "featureType",
+                    value = "Feature category filter: operation or task.",
+                    required = false)
+            @QueryParam("featureType") String featureType
 
     );
 }

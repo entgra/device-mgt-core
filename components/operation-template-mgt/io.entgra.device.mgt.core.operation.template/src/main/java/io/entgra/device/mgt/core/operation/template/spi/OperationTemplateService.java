@@ -37,6 +37,18 @@ public interface OperationTemplateService {
 
     List<OperationTemplate> getAllOperationTemplates(String deviceType) throws OperationTemplateMgtPluginException;
 
+    /**
+     * Retrieves the operation registers associated with the specified device type, subtype, and operation code.
+     *
+     * @param deviceType the type of the device
+     * @param subTypeId the identifier of the device subtype
+     * @param operationCode the code of the operation
+     * @return a list of operation register names
+     * @throws OperationTemplateMgtPluginException if an error occurs while retrieving the operation registers
+     */
+    List<String> getOperationRegisters(String deviceType, String subTypeId, String operationCode)
+            throws OperationTemplateMgtPluginException;
+
     void deleteOperationTemplate(String deviceType, String subTypeId, String operationCode) throws OperationTemplateMgtPluginException;
 
     Set<String> getOperationTemplateCodes(String deviceType, String subTypeId) throws OperationTemplateMgtPluginException;

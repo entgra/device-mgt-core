@@ -38,6 +38,18 @@ public interface OperationTemplateDAO {
 
     List<OperationTemplate> getAllOperationTemplates(String deviceType) throws OperationTemplateManagementDAOException;
 
+    /**
+     * Retrieves the operation registers associated with the specified device type, subtype, and operation code.
+     *
+     * @param deviceType the type of the device
+     * @param subTypeId the identifier of the device subtype
+     * @param operationCode the code of the operation
+     * @return a list of operation register names
+     * @throws OperationTemplateManagementDAOException if an error occurs while retrieving the operation registers
+     */
+    List<String> getOperationRegisters(String deviceType, String subTypeId, String operationCode)
+            throws OperationTemplateManagementDAOException;
+
     boolean deleteOperationTemplate(String deviceType, String subTypeId, String operationCode) throws OperationTemplateManagementDAOException;
 
      Set<String> getOperationTemplateCodes(String deviceType, String subTypeId) throws OperationTemplateManagementDAOException;

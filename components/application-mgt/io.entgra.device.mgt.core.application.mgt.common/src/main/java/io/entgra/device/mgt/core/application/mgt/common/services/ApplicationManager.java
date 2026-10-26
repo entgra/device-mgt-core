@@ -655,4 +655,12 @@ public interface ApplicationManager {
      * @throws ApplicationManagementException Throws when error encountered while searching application releases.
      */
     ReleaseList getApplicationReleases(int appId, ReleaseSearchFilter releaseSearchFilter) throws ApplicationManagementException;
+
+    /**
+     * Validates whether an application release already exists for the given binary file hash in the tenant.
+     *
+     * @param hash MD5 hash of the release binary file
+     * @throws ApplicationManagementException if a release already exists for the hash or validation fails
+     */
+    void validateReleaseBinaryFileHash(String hash) throws ApplicationManagementException;
 }

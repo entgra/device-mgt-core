@@ -73,9 +73,7 @@ public class AbstractNotificationManagementDAOImpl implements NotificationManage
                         notification.setTenantId(resultSet.getInt("TENANT_ID"));
                         notification.setDescription(renderStoredNotification(
                                 resultSet.getString(COL_NOTIFICATION_CONTEXT),
-                                resultSet.getString("TYPE"),
-                                resultSet.getInt("NOTIFICATION_ID"),
-                                connection));
+                                resultSet.getString("TYPE")));
                         notification.setCreatedTimestamp(resultSet.getTimestamp("CREATED_TIMESTAMP"));
                         notifications.add(notification);
                     }
@@ -127,9 +125,7 @@ public class AbstractNotificationManagementDAOImpl implements NotificationManage
                         notification.setNotificationId(resultSet.getInt("NOTIFICATION_ID"));
                         notification.setDescription(renderStoredNotification(
                                 resultSet.getString(COL_NOTIFICATION_CONTEXT),
-                                resultSet.getString("TYPE"),
-                                resultSet.getInt("NOTIFICATION_ID"),
-                                connection));
+                                resultSet.getString("TYPE")));
                         notification.setType(resultSet.getString("TYPE"));
                         notification.setCreatedTimestamp(resultSet.getTimestamp("CREATED_TIMESTAMP"));
                         notifications.add(notification);
@@ -592,16 +588,12 @@ public class AbstractNotificationManagementDAOImpl implements NotificationManage
                     }
                 }
             }
-            Map<Integer, List<Integer>> deviceIdsByNotification =
-                    loadDeviceIdsByNotificationIds(connection, notificationIds);
             for (int i = 0; i < notificationIds.size(); i++) {
                 int notificationId = notificationIds.get(i);
                 NotificationContext context =
                         NotificationMessageRenderer.parseContext(contextJsonList.get(i));
                 String type = typeList.get(i);
-                List<Integer> deviceIds = deviceIdsByNotification.getOrDefault(
-                        notificationId, Collections.emptyList());
-                String description = NotificationMessageRenderer.render(context, deviceIds, type);
+                String description = NotificationMessageRenderer.render(context, type);
                 result.add(new UserNotificationPayload(
                         notificationId,
                         description,
@@ -615,9 +607,6 @@ public class AbstractNotificationManagementDAOImpl implements NotificationManage
             String msg = "Error occurred while retrieving user notifications with status for user: " + username;
             log.error(msg, e);
             throw new NotificationManagementDAOException(msg, e);
-        } catch (NotificationManagementDAOException e) {
-            log.error("Error occurred while loading device data for user notifications for user: " + username, e);
-            throw e;
         }
         return new PaginatedUserNotificationResponse(result, totalCount);
     }
@@ -736,45 +725,8 @@ public class AbstractNotificationManagementDAOImpl implements NotificationManage
         }
     }
 
-    private Map<Integer, List<Integer>> loadDeviceIdsByNotificationIds(
-            Connection connection, List<Integer> notificationIds) throws NotificationManagementDAOException {
-        Map<Integer, List<Integer>> deviceIdsByNotification = new HashMap<>();
-        if (notificationIds == null || notificationIds.isEmpty()) {
-            return deviceIdsByNotification;
-        }
-        String placeholders = notificationIds.stream().map(id -> "?").collect(Collectors.joining(", "));
-        String sql = "SELECT NOTIFICATION_ID, DEVICE_ID " +
-                "FROM DM_NOTIFICATION_DEVICE " +
-                "WHERE NOTIFICATION_ID " +
-                "IN (" + placeholders + ") " +
-                "ORDER BY DEVICE_ID";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            for (int i = 0; i < notificationIds.size(); i++) {
-                stmt.setInt(i + 1, notificationIds.get(i));
-            }
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    int notificationId = rs.getInt("NOTIFICATION_ID");
-                    deviceIdsByNotification
-                            .computeIfAbsent(notificationId, key -> new ArrayList<>())
-                            .add(rs.getInt("DEVICE_ID"));
-                }
-            }
-        } catch (SQLException e) {
-            String msg = "Error loading device ids for notification ids";
-            log.error(msg, e);
-            throw new NotificationManagementDAOException(msg, e);
-        }
-        return deviceIdsByNotification;
-    }
-
-    protected String renderStoredNotification(
-            String notificationContextJson, String type, int notificationId, Connection connection)
-            throws NotificationManagementDAOException {
+    protected String renderStoredNotification(String notificationContextJson, String type) {
         NotificationContext context = NotificationMessageRenderer.parseContext(notificationContextJson);
-        List<Integer> deviceIds = loadDeviceIdsByNotificationIds(
-                connection, Collections.singletonList(notificationId))
-                .getOrDefault(notificationId, Collections.emptyList());
-        return NotificationMessageRenderer.render(context, deviceIds, type);
+        return NotificationMessageRenderer.render(context, type);
     }
 }

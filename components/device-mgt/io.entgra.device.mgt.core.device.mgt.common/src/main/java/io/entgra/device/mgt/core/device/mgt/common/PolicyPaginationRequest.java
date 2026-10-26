@@ -24,7 +24,9 @@ public class PolicyPaginationRequest {
     private String name;
     private String type;
     private String status;
+    private boolean includeUpdated;
     private String deviceType;
+    private int groupId;
 
     public PolicyPaginationRequest(int start, int rowCount) {
         this.startIndex = start;
@@ -71,12 +73,28 @@ public class PolicyPaginationRequest {
         this.status = status;
     }
 
+    public boolean isIncludeUpdated() {
+        return includeUpdated;
+    }
+
+    public void setIncludeUpdated(boolean includeUpdated) {
+        this.includeUpdated = includeUpdated;
+    }
+
     public String getDeviceType() {
         return deviceType;
     }
 
     public void setDeviceType(String deviceType) {
         this.deviceType = deviceType;
+    }
+
+    public int getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(int groupId) {
+        this.groupId = groupId;
     }
 
     @Override

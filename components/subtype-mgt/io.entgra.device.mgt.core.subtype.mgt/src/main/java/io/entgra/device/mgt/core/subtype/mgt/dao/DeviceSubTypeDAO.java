@@ -18,8 +18,9 @@
 
 package io.entgra.device.mgt.core.subtype.mgt.dao;
 
-import io.entgra.device.mgt.core.subtype.mgt.dto.DeviceSubType;
 import io.entgra.device.mgt.core.subtype.mgt.exception.SubTypeMgtDAOException;
+import io.entgra.device.mgt.core.subtype.mgt.dto.DeviceSubType;
+import io.entgra.device.mgt.core.subtype.mgt.dto.DeviceTypeDefinition;
 
 import java.util.List;
 
@@ -32,7 +33,31 @@ public interface DeviceSubTypeDAO {
     DeviceSubType getDeviceSubType(String subTypeId, int tenantId, String deviceType)
             throws SubTypeMgtDAOException;
 
+    /**
+     * Retrieves the device type definition for the specified device subtype and tenant.
+     *
+     * @param subTypeId the identifier of the device subtype
+     * @param tenantId the identifier of the tenant
+     * @param deviceType the type of the device
+     * @return the device type definition
+     * @throws SubTypeMgtDAOException if an error occurs while retrieving the device type definition
+     */
+    DeviceTypeDefinition getDeviceTypeDefinition(String subTypeId, int tenantId, String deviceType)
+            throws SubTypeMgtDAOException;
+
     List<DeviceSubType> getAllDeviceSubTypes(int tenantId, String deviceType)
+            throws SubTypeMgtDAOException;
+
+    /**
+     * Retrieves the device subtypes associated with the specified module, tenant, and device type.
+     *
+     * @param moduleId the identifier of the module
+     * @param tenantId the identifier of the tenant
+     * @param deviceType the type of the device
+     * @return a list of matching device subtypes
+     * @throws SubTypeMgtDAOException if an error occurs while retrieving the device subtypes
+     */
+    List<DeviceSubType> getDeviceSubTypesByModule(int moduleId, int tenantId, String deviceType)
             throws SubTypeMgtDAOException;
 
     int getDeviceSubTypeCount(String deviceType) throws SubTypeMgtDAOException;
@@ -43,4 +68,23 @@ public interface DeviceSubTypeDAO {
     DeviceSubType getDeviceSubTypeByProvider(String subTypeName, int tenantId, String deviceType)
             throws SubTypeMgtDAOException;
 
+    /**
+     * Retrieves the subtype name associated with a given IMEI number.
+     *
+     * <p>This method joins the <b>COMMUNICATION_MODULE</b> and <b>DM_DEVICE_SUB_TYPE</b> tables to find
+     * the corresponding subtype name of the communication module based on the IMEI.
+     *
+     * <p>The SQL query performs the following:
+     * <ul>
+     *     <li>Joins <b>COMMUNICATION_MODULE</b> (<code>c</code>) and <b>DM_DEVICE_SUB_TYPE</b> (<code>d</code>)
+     *         on <code>c.SUB_TYPE_ID = d.SUB_TYPE_ID</code>, with the latter cast to UNSIGNED for type compatibility.</li>
+     *     <li>Filters by <code>c.IMEI = ?</code> to find the specific communication module.</li>
+     *     <li>Retrieves the corresponding <code>SUB_TYPE_NAME</code> from <code>d</code>.</li>
+     * </ul>
+     *
+     * @param imeiNumber the IMEI number of the communication module
+     * @return the subtype name if found; otherwise, null
+     * @throws SubTypeMgtDAOException if a database access error occurs
+     */
+    String getSubTypeNames(String imeiNumber) throws SubTypeMgtDAOException;
 }

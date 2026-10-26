@@ -141,10 +141,6 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
         }
         sql += "LEFT JOIN AP_APP_RELEASE ON "
                 + "AP_APP.ID = AP_APP_RELEASE.AP_APP_ID ";
-        sql += "LEFT JOIN AP_APP_CATEGORY_MAPPING ON "
-                + "AP_APP.ID = AP_APP_CATEGORY_MAPPING.AP_APP_ID "
-                + "LEFT JOIN AP_APP_CATEGORY ON "
-                + "AP_APP_CATEGORY_MAPPING.AP_APP_CATEGORY_ID = AP_APP_CATEGORY.ID ";
         sql += "INNER JOIN (SELECT AP_APP.ID FROM AP_APP "
                 + "LEFT JOIN AP_APP_CATEGORY_MAPPING ON "
                 + "AP_APP.ID = AP_APP_CATEGORY_MAPPING.AP_APP_ID "
@@ -1922,6 +1918,35 @@ public class GenericApplicationDAOImpl extends AbstractDAOImpl implements Applic
         } catch (SQLException e) {
             String msg = "SQL Error occurred while deleting application for application ID: " + appId + " Executed "
                     + "query " + sql;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        }
+    }
+
+    @Override
+    public void deleteAppFavouritesByAppId(int appId, int tenantId) throws ApplicationManagementDAOException {
+        if (log.isDebugEnabled()) {
+            log.debug("Request received in DAO Layer to delete favourites for app id " + appId
+                    + " of tenant id " + tenantId);
+        }
+        String sql = "DELETE FROM AP_APP_FAVOURITES "
+                + "WHERE AP_APP_ID = ? "
+                + "AND TENANT_ID = ?";
+        try {
+            Connection conn = this.getDBConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, appId);
+                stmt.setInt(2, tenantId);
+                stmt.executeUpdate();
+            }
+        } catch (DBConnectionException e) {
+            String msg = "Error occurred while obtaining the DB connection when removing favourites for app id "
+                    + appId;
+            log.error(msg, e);
+            throw new ApplicationManagementDAOException(msg, e);
+        } catch (SQLException e) {
+            String msg = "SQL Error occurred while removing favourites for app id " + appId
+                    + ". Executed Query: " + sql;
             log.error(msg, e);
             throw new ApplicationManagementDAOException(msg, e);
         }

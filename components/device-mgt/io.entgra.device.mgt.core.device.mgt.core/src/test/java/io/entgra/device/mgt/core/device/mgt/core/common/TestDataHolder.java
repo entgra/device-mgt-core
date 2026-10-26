@@ -22,7 +22,6 @@ import io.entgra.device.mgt.core.device.mgt.common.app.mgt.Application;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceData;
 import io.entgra.device.mgt.core.device.mgt.common.device.details.DeviceInfo;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.DeviceGroup;
-import io.entgra.device.mgt.core.device.mgt.common.notification.mgt.Notification;
 import io.entgra.device.mgt.core.device.mgt.common.tag.mgt.Tag;
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceType;
 
@@ -104,20 +103,6 @@ public class TestDataHolder {
         deviceInfo.setAvailableRAMMemory(2.33);
         deviceInfo.setPluggedIn(true);
         return deviceInfo;
-    }
-
-    public static Notification getNotification(int notificationId, String status, String deviceId,
-                                               String description, String deviceName, int operationId,
-                                               String deviceType) {
-        Notification notification = new Notification();
-        notification.setNotificationId(notificationId);
-        notification.setStatus(status);
-        notification.setDeviceIdentifier(deviceId);
-        notification.setDescription(description);
-        notification.setDeviceName(deviceName);
-        notification.setOperationId(operationId);
-        notification.setDeviceType(deviceType);
-        return notification;
     }
 
     public static Device generateDummyDeviceData(String deviceIdentifier, String deviceType,

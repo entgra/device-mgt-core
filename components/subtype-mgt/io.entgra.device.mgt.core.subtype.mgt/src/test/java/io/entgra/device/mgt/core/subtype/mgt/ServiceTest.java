@@ -140,4 +140,33 @@ public class ServiceTest extends BaseDeviceSubTypePluginTest {
         List<DeviceSubType> subTypeActual = deviceSubTypeService.getAllDeviceSubTypes(tenantId, "METER");
         Assert.assertNotNull(subTypeActual);
     }
+
+    @Test
+    public void testGetDeviceSubTypesByModule() throws SubTypeMgtPluginException {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        DeviceSubType deviceSubType = new DeviceSubType() {
+            @Override
+            public <T> DeviceSubType convertToDeviceSubType() {
+                return null;
+            }
+
+            @Override
+            public String parseSubTypeToJson() throws JsonProcessingException {
+                return null;
+            }
+        };
+        deviceSubType.setSubTypeId("91");
+        deviceSubType.setSubTypeName("ModuleSupportedMeter");
+        deviceSubType.setDeviceType("METER");
+        deviceSubType.setTypeDefinition("{\"compatibleComModulesIds\":[7,9]}");
+        deviceSubTypeService.addDeviceSubType(deviceSubType);
+
+        List<DeviceSubType> supportedDeviceSubTypes =
+                deviceSubTypeService.getDeviceSubTypesByModule(7, tenantId, "METER");
+
+        Assert.assertEquals(supportedDeviceSubTypes.size(), 1);
+        Assert.assertEquals(supportedDeviceSubTypes.get(0).getSubTypeId(), "91");
+        Assert.assertEquals(supportedDeviceSubTypes.get(0).getDeviceType(), "METER");
+        Assert.assertEquals(supportedDeviceSubTypes.get(0).getSubTypeName(), "ModuleSupportedMeter");
+    }
 }

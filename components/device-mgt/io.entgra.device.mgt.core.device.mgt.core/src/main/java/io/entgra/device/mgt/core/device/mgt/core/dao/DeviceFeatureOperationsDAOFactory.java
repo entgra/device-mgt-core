@@ -26,10 +26,6 @@ import io.entgra.device.mgt.core.device.mgt.common.exceptions.UnsupportedDatabas
 import io.entgra.device.mgt.core.device.mgt.core.config.datasource.DataSourceConfig;
 import io.entgra.device.mgt.core.device.mgt.core.config.datasource.JNDILookupDefinition;
 import io.entgra.device.mgt.core.device.mgt.core.dao.impl.feature.GenericDeviceFeatureOperationDAOImpl;
-import io.entgra.device.mgt.core.device.mgt.core.dao.impl.feature.OracleDeviceFeatureOperationDAOImpl;
-import io.entgra.device.mgt.core.device.mgt.core.dao.impl.feature.SQLServerDeviceFeatureOperationDAOImpl;
-import io.entgra.device.mgt.core.device.mgt.core.dao.impl.feature.PostgreDeviceFeatureOperationDAOImpl;
-import io.entgra.device.mgt.core.device.mgt.core.dao.impl.feature.H2DeviceFeatureOperationDAOImpl;
 import io.entgra.device.mgt.core.device.mgt.core.dao.util.DeviceManagementDAOUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -48,29 +44,25 @@ public class DeviceFeatureOperationsDAOFactory {
 
 
     public static DeviceFeatureOperationDAO getDeviceFeatureOperationDAO() {
-        if (databaseEngine != null) {
-            switch (databaseEngine) {
-                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_ORACLE:
-                    return new OracleDeviceFeatureOperationDAOImpl();
-                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_MSSQL:
-                    return new SQLServerDeviceFeatureOperationDAOImpl();
-                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_POSTGRESQL:
-                    return new PostgreDeviceFeatureOperationDAOImpl();
-                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_H2:
-                    return new H2DeviceFeatureOperationDAOImpl();
-                case DeviceManagementConstants.DataBaseTypes.DB_TYPE_MYSQL:
-                    return new GenericDeviceFeatureOperationDAOImpl();
-                default:
-                    throw new UnsupportedDatabaseEngineException("Unsupported database engine: " + databaseEngine);
-            }
+        if (databaseEngine == null) {
+            throw new IllegalStateException("Database engine has not initialized properly.");
         }
-        throw new IllegalStateException("Database engine has not initialized properly.");
+        switch (databaseEngine) {
+            case DeviceManagementConstants.DataBaseTypes.DB_TYPE_ORACLE:
+            case DeviceManagementConstants.DataBaseTypes.DB_TYPE_MSSQL:
+            case DeviceManagementConstants.DataBaseTypes.DB_TYPE_POSTGRESQL:
+            case DeviceManagementConstants.DataBaseTypes.DB_TYPE_H2:
+            case DeviceManagementConstants.DataBaseTypes.DB_TYPE_MYSQL:
+                return new GenericDeviceFeatureOperationDAOImpl();
+            default:
+                throw new UnsupportedDatabaseEngineException("Unsupported database engine: " + databaseEngine);
+        }
     }
 
     public static void init(DataSourceConfig config) {
         dataSource = resolveDataSource(config);
-        try {
-            databaseEngine = dataSource.getConnection().getMetaData().getDatabaseProductName();
+        try (Connection connection = dataSource.getConnection()) {
+            databaseEngine = connection.getMetaData().getDatabaseProductName();
         } catch (SQLException e) {
             log.error("Error occurred while retrieving config.datasource connection", e);
         }
@@ -78,8 +70,8 @@ public class DeviceFeatureOperationsDAOFactory {
 
     public static void init(DataSource dtSource) {
         dataSource = dtSource;
-        try {
-            databaseEngine = dataSource.getConnection().getMetaData().getDatabaseProductName();
+        try (Connection connection = dataSource.getConnection()) {
+            databaseEngine = connection.getMetaData().getDatabaseProductName();
         } catch (SQLException e) {
             log.error("Error occurred while retrieving config.datasource connection", e);
         }
@@ -97,6 +89,13 @@ public class DeviceFeatureOperationsDAOFactory {
             conn.setAutoCommit(false);
             currentConnection.set(conn);
         } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException closeError) {
+                    e.addSuppressed(closeError);
+                }
+            }
             throw new TransactionManagementException("Error occurred while retrieving config.datasource connection", e);
         }
     }

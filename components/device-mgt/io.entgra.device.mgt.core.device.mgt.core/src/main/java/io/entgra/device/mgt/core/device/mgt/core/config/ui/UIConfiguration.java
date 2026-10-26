@@ -42,6 +42,8 @@ public class UIConfiguration {
 
     private DeviceStatusConfigurations deviceStatusConfigurations;
 
+    private NotificationTaskFeatures notificationTaskFeatures;
+
     @XmlElement(name = "AppRegistration", required = true)
     public AppRegistration getAppRegistration() {
         return appRegistration;
@@ -122,6 +124,15 @@ public class UIConfiguration {
 
     public void setDeviceStatusConfigurations(DeviceStatusConfigurations deviceStatusConfigurations) {
         this.deviceStatusConfigurations = deviceStatusConfigurations;
+    }
+
+    @XmlElement(name = "NotificationTaskFeatures")
+    public NotificationTaskFeatures getNotificationTaskFeatures() {
+        return notificationTaskFeatures;
+    }
+
+    public void setNotificationTaskFeatures(NotificationTaskFeatures notificationTaskFeatures) {
+        this.notificationTaskFeatures = notificationTaskFeatures;
     }
 
     public String getGatewayUrl() {
