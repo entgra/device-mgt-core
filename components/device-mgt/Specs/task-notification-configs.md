@@ -66,7 +66,7 @@ Code search for the UI uses
 - List/filter API:
   `GET .../notification-configuration?type=task|operation&...`
 - At publish time,
-  `NotificationManagementService.handleTaskNotificationIfApplicable(tenantId, taskCode, message)`
+  `RealtimeNotificationManagementService.handleTaskNotificationIfApplicable(tenantId, taskCode, message)`
   loads the enabled config for that code and notifies its recipients.
   If no enabled task config exists, the notification is skipped (logged at debug).
 

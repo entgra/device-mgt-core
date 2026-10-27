@@ -1,0 +1,133 @@
+/*
+ * Copyright (c) 2018 - 2025, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
+ *
+ * Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package io.entgra.device.mgt.core.realtime.notification.mgt.common.service;
+
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.beans.RealtimeArchivePeriod;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.exception.RealtimeNotificationConfigurationServiceException;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.beans.RealtimeNotificationConfig;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.beans.RealtimeNotificationConfigurationList;
+
+import java.util.List;
+
+public interface RealtimeNotificationConfigService {
+
+    /**
+     * Sets the default notification archival metadata values for all notifications.
+     * This method updates the metadata entry identified by the {@code NOTIFICATION_CONFIG_META_KEY}
+     * to include or overwrite the default archival type and archival period. If the metadata does
+     * not already exist, a new entry will be created. If it exists, the values will be updated
+     * while preserving existing notification configurations.
+     * @param defaultType  The default archival type to set (e.g., "DB", "ELK").
+     * @param defaultAfter The default archival period to set (e.g., "12 months", "6 weeks").
+     * @throws RealtimeNotificationConfigurationServiceException If an error occurs while updating or creating the metadata.
+     */
+    void setDefaultNotificationArchiveMetadata(String defaultType, RealtimeArchivePeriod defaultAfter)
+            throws RealtimeNotificationConfigurationServiceException;
+
+    /**
+     * Seeds default {@code type=task} notification configs for the current tenant from the
+     * task feature catalog ({@code mdm-ui-config.xml} → {@code DM_FEATURE_DETAILS}).
+     * Idempotent: only adds missing task codes. Each seeded config is enabled with
+     * recipient user {@code admin} and catalog {@code deviceType}.
+     * <p>
+     * Intended for new-tenant setup (e.g. {@code TenantManagerImpl.addDefaultNotificationArchivalMetadata}).
+     * Existing tenants should use the migration SQL sample instead of activate-time backfill.
+     *
+     * @throws RealtimeNotificationConfigurationServiceException if catalog load or persistence fails
+     */
+    void ensureDefaultTaskNotificationConfigs() throws RealtimeNotificationConfigurationServiceException;
+
+    /**
+     * Retrieve the  notification configurations for a tenant.
+     *
+     * @return {@link RealtimeNotificationConfigurationList addNotificationConfigContext}
+     * @throws RealtimeNotificationConfigurationServiceException Throws when error occurred while retrieving notifications.
+     */
+    RealtimeNotificationConfigurationList addNotificationConfigContext(RealtimeNotificationConfigurationList configurations)
+            throws RealtimeNotificationConfigurationServiceException;
+
+    /**
+     * Deletes the notification configuration context associated with the given configuration ID.
+     *
+     * @param configID The unique identifier of the notification configuration to be deleted.
+     * @throws RealtimeNotificationConfigurationServiceException If an error occurs during the deletion process.
+     */
+    void deleteNotificationConfigContext(int configID) throws RealtimeNotificationConfigurationServiceException;
+
+    /**
+     * Updates the context of an existing notification configuration.
+     *
+     * @param updatedConfig The updated notification configuration object containing new context information.
+     * @throws RealtimeNotificationConfigurationServiceException If an error occurs while updating the configuration context.
+     */
+    void updateNotificationConfigContext(RealtimeNotificationConfig updatedConfig)
+            throws RealtimeNotificationConfigurationServiceException;
+
+    /**
+     * Delete RealtimeNotification Configurations for a tenant.
+     *
+     * @return {@link Object < RealtimeNotification Configuration>}
+     * @throws RealtimeNotificationConfigurationServiceException Throws when error occurred while retrieving notifications.
+     */
+    void deleteNotificationConfigurations() throws RealtimeNotificationConfigurationServiceException;
+
+    /**
+     * Retrieve the  list of notification configurations for a tenant.
+     *
+     * @return {@link List < RealtimeNotification Configurations>}
+     * @throws RealtimeNotificationConfigurationServiceException Throws when error occurred while retrieving notifications.
+     */
+    RealtimeNotificationConfigurationList getNotificationConfigurations() throws RealtimeNotificationConfigurationServiceException;
+
+    /**
+     * Retrieve a notification Configuration By Config ID for a tenant.
+     *
+     * @return {@link Object < RealtimeNotification Configuration>}
+     * @throws RealtimeNotificationConfigurationServiceException Throws when error occurred while retrieving notifications.
+     */
+    RealtimeNotificationConfig getNotificationConfigByID(int configID) throws RealtimeNotificationConfigurationServiceException;
+
+    /**
+     * Retrieves a filtered and paginated list of notification configurations based on the provided criteria.
+     * This method applies filtering on the name, type, and code of the notification configurations,
+     * and returns a sublist based on the given offset and limit for pagination.
+     *
+     * @param name   Optional filter to match configuration names (case-insensitive with partial match).
+     * @param type   Optional filter to match configuration type (case-insensitive with exact match).
+     * @param code   Optional filter to match configuration codes (case-insensitive with partial match).
+     * @param deviceType   Optional filter to match device type (case-insensitive with partial match).
+     * @param offset The starting index of the paginated result.
+     * @param limit  The maximum number of configurations to return in the result.
+     * @return A {@link RealtimeNotificationConfigurationList} containing the filtered and paginated configurations.
+     * @throws RealtimeNotificationConfigurationServiceException If an error occurs during metadata retrieval or processing.
+     */
+    RealtimeNotificationConfigurationList getFilteredNotificationConfigurations(String name, String type, String code,
+                                                                        String deviceType, int offset, int limit)
+            throws RealtimeNotificationConfigurationServiceException;
+
+    /**
+     * Checks whether a notification configuration exists for the given device type and operation code.
+     *
+     * @param deviceType the type of device (e.g., android, ios, windows).
+     * @param code the operation or task code associated with the notification.
+     * @return {@code true} if a matching notification configuration already exists,
+     *         {@code false} otherwise.
+     * @throws RealtimeNotificationConfigurationServiceException if an error occurs while checking the configuration.
+     */
+    boolean configExists(String deviceType, String code) throws RealtimeNotificationConfigurationServiceException;
+}

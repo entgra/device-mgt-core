@@ -23,7 +23,7 @@ import io.entgra.device.mgt.core.apimgt.webapp.publisher.APIConfig;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.APIPublisherService;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.PostApiPublishingObsever;
-import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationManagementService;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.service.RealtimeNotificationManagementService;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.registry.core.service.RegistryService;
@@ -54,7 +54,7 @@ public class APIPublisherDataHolder {
     private APIApplicationServices apiApplicationServices;
     private PublisherRESTAPIServices publisherRESTAPIServices;
     private MetadataManagementService metadataManagementService;
-    private NotificationManagementService notificationManagementService;
+    private RealtimeNotificationManagementService notificationManagementService;
 
     private static APIPublisherDataHolder thisInstance = new APIPublisherDataHolder();
 
@@ -199,11 +199,11 @@ public class APIPublisherDataHolder {
         this.postApiPublishingObseverList.remove(postApiPublishingObsever);
     }
 
-    public NotificationManagementService getNotificationManagementService() {
+    public RealtimeNotificationManagementService getNotificationManagementService() {
         return notificationManagementService;
     }
 
-    public void setNotificationManagementService(NotificationManagementService notificationManagementService) {
+    public void setNotificationManagementService(RealtimeNotificationManagementService notificationManagementService) {
         this.notificationManagementService = notificationManagementService;
     }
 }

@@ -49,7 +49,7 @@
             <!--<class name="io.entgra.device.mgt.core.device.mgt.core.geo.service.GeoLocationProviderServiceTest"/>-->
             <!--<class name="io.entgra.device.mgt.core.device.mgt.core.operation.ScheduledTaskOperationTests"/>-->
             <!--<class name="io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManagerServiceTest"/>-->
-            <!--<class name="io.entgra.device.mgt.core.device.mgt.core.notification.mgt.NotificationManagementServiceImplTests"/>-->
+            <!--<class name="io.entgra.device.mgt.core.realtime.notification.mgt.core.impl.RealtimeNotificationManagementServiceImplTests"/>-->
             <!--<class name="io.entgra.device.mgt.core.device.mgt.core.push.notification.mgt.task.PushNotificationSchedulerTaskTest"/>-->
             <!--<class name="io.entgra.device.mgt.core.device.mgt.core.task.DeviceTaskManagerServiceTest"/>-->
             <!--<class name="io.entgra.device.mgt.core.device.mgt.core.task.DeviceTaskManagerTest"/>-->

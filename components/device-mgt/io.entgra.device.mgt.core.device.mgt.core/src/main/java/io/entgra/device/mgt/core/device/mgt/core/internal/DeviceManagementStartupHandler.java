@@ -22,7 +22,7 @@ import io.entgra.device.mgt.core.device.mgt.common.exceptions.MetadataManagement
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.TransactionManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.Metadata;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
-import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementException;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.exception.RealtimeNotificationManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
 import io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.DeviceOperationDetails;
 import io.entgra.device.mgt.core.device.mgt.core.operation.change.status.task.dto.OperationConfig;
@@ -161,8 +161,8 @@ public class DeviceManagementStartupHandler implements ServerStartupObserver {
                                     + ", " + "Initial operation status: " + initialOperationStatus + ", Required status:"
                                     + requiredStatusChange;
                             log.error(msg, e);
-                        } catch (NotificationManagementException e) {
-                            String msg = "Notification error occurred while updating the operation status";
+                        } catch (RealtimeNotificationManagementException e) {
+                            String msg = "RealtimeNotification error occurred while updating the operation status";
                             log.error(msg, e);
                         }
                     } catch (TransactionManagementException e) {

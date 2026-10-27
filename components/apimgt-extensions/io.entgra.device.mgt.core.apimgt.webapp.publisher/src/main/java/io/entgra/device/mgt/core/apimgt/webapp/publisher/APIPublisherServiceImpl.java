@@ -41,8 +41,8 @@ import io.entgra.device.mgt.core.apimgt.webapp.publisher.dto.ApiScope;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.dto.ApiUriTemplate;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.exception.APIManagerPublisherException;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.internal.APIPublisherDataHolder;
-import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementException;
-import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationManagementService;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.exception.RealtimeNotificationManagementException;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.service.RealtimeNotificationManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.config.permission.DefaultPermission;
 import io.entgra.device.mgt.core.device.mgt.core.config.permission.ScopeMapping;
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionUtils;
@@ -765,7 +765,7 @@ public class APIPublisherServiceImpl implements APIPublisherService {
 
     @Override
     public void notifyRolePermissionUpdate(String roleName, boolean success) {
-        NotificationManagementService notificationManagementService =
+        RealtimeNotificationManagementService notificationManagementService =
                 APIPublisherDataHolder.getInstance().getNotificationManagementService();
         if (notificationManagementService == null) {
             return;
@@ -777,7 +777,7 @@ public class APIPublisherServiceImpl implements APIPublisherService {
         try {
             notificationManagementService.handleTaskNotificationIfApplicable(
                     tenantId, "ROLE_PERMISSION_UPDATE", message);
-        } catch (NotificationManagementException error) {
+        } catch (RealtimeNotificationManagementException error) {
             log.error("Failed to send notification for role permission update", error);
         }
     }
