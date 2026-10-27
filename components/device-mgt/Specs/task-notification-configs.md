@@ -15,9 +15,12 @@ On Device Task Manager startup,
 2. Loads **notification task** features from
    `mdm-ui-config.xml` → `<NotificationTaskFeatures>`
    (`TYPE = task`). Each feature requires `<DeviceType>` (e.g. `ALL`, `NONE`).
-3. Inserts missing task rows into `DM_FEATURE_DETAILS` (one row per task
-   code). Existing task rows sync `DEVICE_TYPE` / name / description when
-   the catalog changes.
+3. Inserts missing rows into `DM_FEATURE_DETAILS`. Existing task rows sync
+   `DEVICE_TYPE` / name / description when the catalog changes.
+   Upsert skips duplicates already in DB **and** duplicate
+   `(OPERATION_CODE, DEVICE_TYPE, TYPE)` entries within the same in-memory
+   list (otherwise MySQL unique-key failure rolls back the whole batch and
+   the table stays empty).
 
 Task codes used for console device lifecycle (see also
 [device-delete-notifications.md](device-delete-notifications.md)):

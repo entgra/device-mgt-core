@@ -89,14 +89,20 @@ public class GenericDeviceFeatureOperationDAOImpl implements DeviceFeatureOperat
             for (DeviceFeatureInfo featureInfo : featureList) {
                 String featureType = resolveFeatureType(featureInfo.getType());
                 if (FEATURE_TYPE_TASK.equalsIgnoreCase(featureType)) {
-                    if (existingTaskCodeKeys.contains(featureInfo.getOperationCode() + "|" + FEATURE_TYPE_TASK)) {
+                    String taskKey = featureInfo.getOperationCode() + "|" + FEATURE_TYPE_TASK;
+                    if (existingTaskCodeKeys.contains(taskKey)) {
                         tasksToSync.add(featureInfo);
                     } else {
                         toInsert.add(featureInfo);
+                        existingTaskCodeKeys.add(taskKey);
                     }
-                } else if (!existingKeys.contains(featureInfo.getOperationCode()
-                        + "|" + featureInfo.getDeviceType() + "|" + featureType)) {
-                    toInsert.add(featureInfo);
+                } else {
+                    String operationKey = featureInfo.getOperationCode() + "|"
+                            + featureInfo.getDeviceType() + "|" + featureType;
+                    if (!existingKeys.contains(operationKey)) {
+                        toInsert.add(featureInfo);
+                        existingKeys.add(operationKey);
+                    }
                 }
             }
             if (!toInsert.isEmpty()) {
