@@ -18,11 +18,11 @@
 
 package io.entgra.device.mgt.core.ui.request.interceptor;
 
-import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementDAOException;
-import io.entgra.device.mgt.core.notification.mgt.core.util.NotificationEventBroker;
-import io.entgra.device.mgt.core.notification.mgt.core.util.NotificationListener;
-import io.entgra.device.mgt.core.notification.mgt.core.dao.NotificationManagementDAO;
-import io.entgra.device.mgt.core.notification.mgt.core.dao.factory.NotificationManagementDAOFactory;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.exception.RealtimeNotificationManagementDAOException;
+import io.entgra.device.mgt.core.realtime.notification.mgt.core.util.RealtimeNotificationEventBroker;
+import io.entgra.device.mgt.core.realtime.notification.mgt.core.util.RealtimeNotificationListener;
+import io.entgra.device.mgt.core.realtime.notification.mgt.core.dao.RealtimeNotificationManagementDAO;
+import io.entgra.device.mgt.core.realtime.notification.mgt.core.dao.factory.RealtimeNotificationManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.config.DeviceConfigurationManager;
 import io.entgra.device.mgt.core.device.mgt.core.config.DeviceManagementConfig;
 import io.entgra.device.mgt.core.device.mgt.core.config.ui.request.UIRequestConfiguration;
@@ -56,12 +56,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @WebServlet(urlPatterns = {"/ConnectSSE"}, asyncSupported = true)
-public class SSEHandler extends HttpServlet implements NotificationListener {
+public class SSEHandler extends HttpServlet implements RealtimeNotificationListener {
     private static final Log log = LogFactory.getLog(SSEHandler.class);
     // map to store list of AsyncContexts per user
     private static final Map<String, List<AsyncContext>> userStreams = new ConcurrentHashMap<>();
-    private final NotificationManagementDAO notificationDAO =
-            NotificationManagementDAOFactory.getNotificationManagementDAO();
+    private final RealtimeNotificationManagementDAO notificationDAO =
+            RealtimeNotificationManagementDAOFactory.getNotificationManagementDAO();
     private long sseTimeout;
     private int sseKeepAliveInterval;
     private ScheduledExecutorService keepAliveScheduler;
@@ -87,7 +87,7 @@ public class SSEHandler extends HttpServlet implements NotificationListener {
             log.error("Error occurred while reading UIRequestConfiguration. Using default timeout.", e);
         }
         // register as a notification listener
-        NotificationEventBroker.registerListener(this);
+        RealtimeNotificationEventBroker.registerListener(this);
         
         if (this.sseKeepAliveInterval > 0) {
             this.keepAliveScheduler = Executors.newSingleThreadScheduledExecutor();
@@ -126,7 +126,7 @@ public class SSEHandler extends HttpServlet implements NotificationListener {
     }
 
     /**
-     * called by {@link NotificationEventBroker} when a message should be delivered to users.
+     * called by {@link RealtimeNotificationEventBroker} when a message should be delivered to users.
      * for each username, write the event to all active SSE connections tracked in {@link #userStreams}.
      * @param message the message/payload to send
      * @param usernames list of usernames that should receive the message
@@ -243,12 +243,12 @@ public class SSEHandler extends HttpServlet implements NotificationListener {
         try {
             PrintWriter out = ac.getResponse().getWriter();
             try {
-                NotificationManagementDAOFactory.openConnection();
+                RealtimeNotificationManagementDAOFactory.openConnection();
                 int count = notificationDAO.getUnreadNotificationCountForUser(notificationUsername);
                 String initialPayload = String.format(
                         "{\"message\":\"Connected to notification service.\",\"unreadCount\":%d}", count);
                 writeSseData(out, initialPayload);
-            } catch (NotificationManagementDAOException e) {
+            } catch (RealtimeNotificationManagementDAOException e) {
                 String msg = "Error fetching unread notification count for user: " + notificationUsername;
                 log.error(msg, e);
                 closeStream(notificationUsername, ac);
@@ -257,7 +257,7 @@ public class SSEHandler extends HttpServlet implements NotificationListener {
                 log.error(msg, e);
                 closeStream(notificationUsername, ac);
             } finally {
-                NotificationManagementDAOFactory.closeConnection();
+                RealtimeNotificationManagementDAOFactory.closeConnection();
             }
         } catch (IOException e) {
             closeStream(notificationUsername, ac);

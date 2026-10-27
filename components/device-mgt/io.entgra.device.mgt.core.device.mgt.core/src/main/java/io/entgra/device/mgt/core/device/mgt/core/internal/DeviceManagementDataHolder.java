@@ -24,7 +24,7 @@ import io.entgra.device.mgt.core.device.mgt.common.authorization.GroupAccessAuth
 import io.entgra.device.mgt.core.device.mgt.common.device.firmware.model.mgt.DeviceFirmwareModelManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceFeatureOperations;
-import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationManagementService;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.service.RealtimeNotificationManagementService;
 import io.entgra.device.mgt.core.server.bootup.heartbeat.beacon.service.HeartBeatManagementService;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import io.entgra.device.mgt.core.device.mgt.common.DeviceStatusTaskPluginConfig;
@@ -105,7 +105,7 @@ public class DeviceManagementDataHolder {
     private PublisherRESTAPIServices publisherRESTAPIServices;
     private DeviceManagementStartupHandler deviceManagementStartupHandler;
     private DeviceFirmwareModelManagementService deviceFirmwareModelManagementService;
-    private NotificationManagementService notificationManagementService;
+    private RealtimeNotificationManagementService notificationManagementService;
     private DeviceFeatureOperations deviceFeatureOperations;
 
     private final Map<DeviceType, DeviceStatusTaskPluginConfig> deviceStatusTaskPluginConfigs = Collections.synchronizedMap(
@@ -481,11 +481,11 @@ public class DeviceManagementDataHolder {
         return this.deviceFirmwareModelManagementService;
     }
 
-    public NotificationManagementService getNotificationManagementService() {
+    public RealtimeNotificationManagementService getNotificationManagementService() {
         return notificationManagementService;
     }
 
-    public void setNotificationManagementService(NotificationManagementService notificationManagementService) {
+    public void setNotificationManagementService(RealtimeNotificationManagementService notificationManagementService) {
         this.notificationManagementService = notificationManagementService;
     }
 

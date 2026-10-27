@@ -1,0 +1,198 @@
+/*
+ *  Copyright (c) 2018 - 2025, Entgra (Pvt) Ltd. (http://www.entgra.io) All Rights Reserved.
+ *
+ * Entgra (Pvt) Ltd. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ *
+ */
+
+package io.entgra.device.mgt.core.realtime.notification.mgt.common.service;
+
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.beans.RealtimeNotificationConfig;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.dto.RealtimeNotification;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.dto.RealtimePaginatedUserNotificationResponse;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.exception.RealtimeNotificationArchivalException;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.exception.RealtimeNotificationManagementException;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.exception.RealtimeTransactionManagementException;
+import org.wso2.carbon.user.api.UserStoreException;
+
+import java.util.List;
+import java.util.Map;
+
+public interface RealtimeNotificationManagementService {
+    /**
+     * Retrieve the latest notifications for a tenant.
+     *
+     * @return {@link List<RealtimeNotification>}
+     * @throws RealtimeNotificationManagementException Throws when error occurred while retrieving notifications.
+     */
+    List<RealtimeNotification> getAllNotifications(int offset, int limit) throws RealtimeNotificationManagementException;
+
+    /**
+     * Retrieves a paginated list of notifications for a given user along with their read/unread status.
+     * @param username The username of the user whose notifications are to be retrieved.
+     * @param limit    The maximum number of notifications to return.
+     * @param offset   The offset from which to start retrieving notifications (for pagination).
+     * @param isRead   The read/unread status to filter the notifications.
+     * @return A {@link RealtimePaginatedUserNotificationResponse} containing the list of notifications and the total count.
+     * @throws RealtimeNotificationManagementException If an error occurs while accessing the data store.
+     */
+    RealtimePaginatedUserNotificationResponse getUserNotificationsWithStatus(String username, int limit, int offset, Boolean isRead)
+            throws RealtimeNotificationManagementException;
+
+    /**
+     * Updates the action type (e.g., READ or UNREAD) for a list of notifications
+     * for a specific user and pushes the updated unread count.
+     *
+     * @param notificationIds List of notification IDs to update.
+     * @param username        Username for whom the action is to be updated.
+     * @param isRead      Action type to set (e.g., "READ", "UNREAD").
+     * @throws RealtimeNotificationManagementException If an error occurs while processing the update.
+     */
+    void updateNotificationActionForUser(List<Integer> notificationIds, String username, boolean isRead)
+            throws RealtimeNotificationManagementException;
+
+    /**
+     * Updates the action type (e.g., READ or UNREAD) for all notifications
+     * for a specific user and pushes the updated unread count.
+     *
+     * @param username Username for whom the actions are to be updated.
+     * @param isRead   Action type to set (e.g., "READ", "UNREAD").
+     * @throws RealtimeNotificationManagementException If an error occurs while processing the update.
+     */
+    void updateAllNotificationActionForUser(String username, boolean isRead)
+            throws RealtimeNotificationManagementException;
+
+    /**
+     * Retrieves the total number of user notification actions for a specific user,
+     * optionally filtered by notification status.
+     *
+     * @param username the username to filter notification actions by.
+     * @param isRead   (optional) the status of the notification action to filter by
+     *                 (e.g., "READ", "UNREAD"). If null or empty, all statuses are counted.
+     * @return the total count of notification actions for the given user and status.
+     * @throws RealtimeNotificationManagementException if an error occurs while accessing the database.
+     */
+    int getUserNotificationCount(String username, Boolean isRead) throws RealtimeNotificationManagementException;
+
+    /**
+     * Deletes the notifications for a given user.
+     *
+     * @param notificationIds List of notification IDs to delete.
+     * @param username        The username of the user whose notifications are to be deleted.
+     * @return A map containing two entries:
+     *         "deleted" - list of notification IDs that were successfully deleted,
+     *         "invalid" - list of notification IDs that did not exist for the user.
+     * @throws RealtimeNotificationManagementException if an error occurs while deleting notifications at the service level.
+     */
+    Map<String, List<Integer>> deleteUserNotifications(List<Integer> notificationIds, String username)
+            throws RealtimeNotificationManagementException;
+
+    /**
+     * Archives the given notifications for the user.
+     *
+     * @param notificationIds List of notification IDs to archive.
+     * @param username        Username of the user.
+     * @return A map with two entries:
+     *         "archived" - list of notifications successfully archived,
+     *         "invalid"  - list of notification IDs that were not found.
+     * @throws RealtimeNotificationArchivalException if an error occurs while archiving notifications.
+     */
+    Map<String, List<Integer>> archiveUserNotifications(List<Integer> notificationIds, String username)
+            throws RealtimeNotificationArchivalException;
+
+    /**
+     * Deletes all notifications for the given user from the active user notification table.
+     * Optionally filters by read/unread status.
+     *
+     * @param username the username whose notifications should be deleted.
+     * @param isRead   filter by read/unread status; if null, both read and unread notifications are deleted
+     * @throws RealtimeNotificationManagementException if an error occurs during the deletion process.
+     */
+    void deleteAllUserNotifications(String username, Boolean isRead) throws RealtimeNotificationManagementException;
+
+    /**
+     * Archives all notifications for the given user by moving them from the active
+     * user notification table to the archived table.
+     *
+     * @param username the username whose notifications should be archived.
+     * @throws RealtimeNotificationArchivalException if an error occurs during the archival process.
+     */
+    void archiveAllUserNotifications(String username) throws RealtimeNotificationArchivalException;
+
+    /**
+     * Handles the operation notification if applicable based on the provided operation code,
+     * status, device type, and other related details. This method constructs a notification message
+     * and triggers the appropriate notifications to the users based on the configuration.
+     * It checks the device type, the notification trigger point, and the operation's status
+     * before sending notifications.
+     *
+     * @param operationCode The unique code representing the operation (e.g., "POLICY_REVOKE").
+     * @param operationStatus The current status of the operation (e.g., "COMPLETED", "PENDING").
+     * @param deviceType The type of the device associated with the operation (e.g., "android").
+     * @param deviceIds primary keys ({@code DM_DEVICE.ID}).
+     * @param tenantId The tenant ID representing the specific tenant context for which notifications
+     *                 are being sent.
+     * @param notificationTriggerPoint The point in the process at which the notification should be triggered
+     *                                 (e.g., "postSync", "immediate").
+     *
+     * @throws RealtimeNotificationManagementException If an error occurs while handling the notification
+     *                                        (e.g., issues with inserting notifications, user retrieval).
+     */
+    void handleOperationNotificationIfApplicable(String operationCode, String operationStatus,
+                                                 String deviceType, List<Integer> deviceIds,
+                                                 int tenantId, String notificationTriggerPoint)
+            throws RealtimeNotificationManagementException;
+
+    /**
+     * Handles and publishes a batch notification when an operation is executed for multiple devices.
+     *
+     * @param config        The notification configuration corresponding to the operation.
+     * @param deviceIds     The list of device IDs for which the operation was executed.
+     * @param operationStatus The final status of the operation (e.g., COMPLETED, PENDING).
+     * @param deviceType    The type of devices for which the operation was executed.
+     * @param tenantId      The tenant ID under which the operation was performed.
+     * @throws RealtimeNotificationManagementException If an error occurs while managing the notification.
+     * @throws RealtimeTransactionManagementException  If a transaction-related error occurs.
+     * @throws UserStoreException              If an error occurs while accessing the user store.
+     */
+    void handleBatchOperationNotificationIfApplicable(RealtimeNotificationConfig config,
+                                                      List<Integer> deviceIds,
+                                                      String operationStatus,
+                                                      String deviceType,
+                                                      int tenantId)
+            throws RealtimeNotificationManagementException, RealtimeTransactionManagementException, UserStoreException;
+
+    /**
+     * Handles task-based notifications if an enabled notification configuration exists for the given task code.
+     * If no configuration is found or it is disabled, the method exits without sending a notification.
+     *
+     * @param tenantId The tenant ID under which the task is being executed.
+     * @param taskCode Task feature code (e.g. REMOVE_DEVICE, DELETE_DEVICE).
+     * @param message  The message to be sent with the notification.
+     * @throws RealtimeNotificationManagementException If an error occurs while handling the notification.
+     */
+    void handleTaskNotificationIfApplicable(int tenantId, String taskCode, String message)
+            throws RealtimeNotificationManagementException;
+
+    /**
+     * Removes device associations from notifications and deletes notifications that no longer
+     * reference any device. Task notifications without device mappings are not affected.
+     *
+     * @param deviceIds device primary keys ({@code DM_DEVICE.ID})
+     * @param tenantId  tenant id
+     */
+    void purgeNotificationsForDevices(List<Integer> deviceIds, int tenantId)
+            throws RealtimeNotificationManagementException;
+}

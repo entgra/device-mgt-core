@@ -24,7 +24,7 @@ import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.PrivacyComplianceException;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.TransactionManagementException;
-import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementException;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.exception.RealtimeNotificationManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.dao.DeviceManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementDataHolder;
 import io.entgra.device.mgt.core.device.mgt.core.privacy.PrivacyComplianceProvider;
@@ -113,7 +113,7 @@ public class PrivacyComplianceProviderImpl implements PrivacyComplianceProvider 
             String msg = "Database error occurred while deleting the devices and details of the given user";
             log.error(msg, e);
             throw new PrivacyComplianceException(msg, e);
-        } catch (NotificationManagementException e) {
+        } catch (RealtimeNotificationManagementException e) {
             String msg = "An Error occurred while updating handleTaskNotificationIfApplicable";
             log.error(msg, e);
         } finally {
@@ -156,7 +156,7 @@ public class PrivacyComplianceProviderImpl implements PrivacyComplianceProvider 
             String msg = "Error occurred while deleting the device details.";
             log.error(msg, e);
             throw new PrivacyComplianceException(msg, e);
-        } catch (NotificationManagementException e) {
+        } catch (RealtimeNotificationManagementException e) {
             String msg = "An Error occurred while updating handleTaskNotificationIfApplicable";
             log.error(msg, e);
         } finally {
