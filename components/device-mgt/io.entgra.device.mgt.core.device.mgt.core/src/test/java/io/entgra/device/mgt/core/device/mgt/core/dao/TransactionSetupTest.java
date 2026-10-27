@@ -15,7 +15,6 @@ package io.entgra.device.mgt.core.device.mgt.core.dao;
 import io.entgra.device.mgt.core.device.mgt.core.archival.dao.ArchivalDestinationDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.archival.dao.ArchivalSourceDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.dao.MetadataManagementDAOFactory;
-import io.entgra.device.mgt.core.device.mgt.core.notification.mgt.dao.NotificationManagementDAOFactory;
 import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.dao.OperationManagementDAOFactory;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -38,7 +37,7 @@ public class TransactionSetupTest {
         Class<?>[] factories = {DeviceManagementDAOFactory.class, GroupManagementDAOFactory.class,
                 TrackerManagementDAOFactory.class, EventManagementDAOFactory.class,
                 DeviceFeatureOperationsDAOFactory.class, MetadataManagementDAOFactory.class,
-                OperationManagementDAOFactory.class, NotificationManagementDAOFactory.class,
+                OperationManagementDAOFactory.class,
                 ArchivalSourceDAOFactory.class, ArchivalDestinationDAOFactory.class};
         for (Class<?> factory : factories) {
             for (String scenario : new String[]{"success", "acquisition", "setup", "close", "active"}) {

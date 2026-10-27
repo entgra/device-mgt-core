@@ -838,6 +838,11 @@ public class RoleManagementServiceImpl implements RoleManagementService {
                 );
             } catch (APIManagerPublisherException | UserAdminException | UserStoreException e) {
                 log.error("Error occurred while updating role permissions.", e);
+                try {
+                    DeviceMgtAPIUtils.getApiPublisher().notifyRolePermissionUpdate(roleName, false);
+                } catch (Exception notifyError) {
+                    log.error("Failed to publish role permission failure notification.", notifyError);
+                }
             } finally {
                 PrivilegedCarbonContext.endTenantFlow();
             }

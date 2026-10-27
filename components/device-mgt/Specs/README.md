@@ -21,6 +21,9 @@ correct behaviour looks like in the core services and Device Management API.
 | Feature | Spec |
 | --- | --- |
 | Device name and description persistence | [device-name-description.md](device-name-description.md) |
+| Console delete / disenroll task notifications | [device-delete-notifications.md](device-delete-notifications.md) |
+| Task notification configs + `DM_FEATURE_DETAILS` | [task-notification-configs.md](task-notification-configs.md) |
+| Notification-mgt module (API, DAO, SSE, archival) | [../../notification-mgt/Specs/README.md](../../notification-mgt/Specs/README.md) |
 
 ### Operations
 
@@ -37,12 +40,24 @@ correct behaviour looks like in the core services and Device Management API.
 | Policy management (assignment, lifecycle, evaluation, list filters incl. `groupId`) | [policy-mgt.md](policy-mgt.md) |
 | Policy Management REST API contract | [policy_management_api_contract.md](../io.entgra.device.mgt.core.device.mgt.api/Specs/policy_management_api_contract.md) |
 
+### Geo
+
+| Feature | Spec |
+| --- | --- |
+| Geo fences (storage, device push, list pagination) | [geo-fence-list.md](geo-fence-list.md) |
+
+### Tags
+
+| Feature | Spec |
+| --- | --- |
+| Tag create, rename, delete, and device mapping | [tag-management.md](tag-management.md) |
+
 ## Planned feature areas (add specs when touched)
 
 - Device enrollment
 - Device list / search / filters
 - Device details / properties
-- Operations and notifications (partial: status update covered above)
+- Operations and notifications (partial: status update, delete/disenroll task notifications, and task notification configs covered above)
 - Device access authorization
 
 ## Writing rules

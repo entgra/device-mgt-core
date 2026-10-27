@@ -657,4 +657,32 @@ public abstract class AbstractGeofenceDAOImpl implements GeofenceDAO {
         }
     }
 
+    @Override
+    public int getGeofenceCount(int tenantId, String fenceName) throws DeviceManagementDAOException {
+        if (fenceName == null || fenceName.isEmpty()) {
+            return getGeofenceCount(tenantId);
+        }
+        try {
+            Connection conn = this.getConnection();
+            String sql = "SELECT COUNT(*) AS geofence_count " +
+                    "FROM DM_GEOFENCE " +
+                    "WHERE TENANT_ID = ? " +
+                    "AND FENCE_NAME LIKE ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, tenantId);
+                stmt.setString(2, "%" + fenceName + "%");
+                try (ResultSet rst = stmt.executeQuery()) {
+                    if (rst.next()) {
+                        return rst.getInt("geofence_count");
+                    }
+                }
+            }
+            return 0;
+        } catch (SQLException e) {
+            String msg = "Error occurred while retrieving Geofence count of the tenant " + tenantId;
+            log.error(msg, e);
+            throw new DeviceManagementDAOException(msg, e);
+        }
+    }
+
 }

@@ -492,6 +492,7 @@ public class TenantManagerImpl implements TenantManager {
             notificationConfigService.setDefaultNotificationArchiveMetadata(
                     TenantConstants.DEFAULT_NOTIFICATION_ARCHIVE_TYPE,
                     TenantConstants.DEFAULT_NOTIFICATION_ARCHIVE_PERIOD);
+            notificationConfigService.ensureDefaultTaskNotificationConfigs();
         } catch (NotificationConfigurationServiceException e) {
             String msg = "Error occurred while setting default notification archival metadata for tenant " +
                     tenantInfoBean.getTenantId();
@@ -501,6 +502,7 @@ public class TenantManagerImpl implements TenantManager {
             endTenantFlow();
         }
     }
+
     @Override
     public void updateTenantScopeBindings(String tenantDomain, String roleName, List<String> scopeNames) throws TenantMgtException {
         if (MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {

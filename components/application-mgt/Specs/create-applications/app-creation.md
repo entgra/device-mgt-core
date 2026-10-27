@@ -58,6 +58,8 @@ Publisher create*App(wrapper, is-published)
             → uploadReleaseArtifactIfExist(app)   // type-specific artifact branch
             → DB txn: addAppDataIntoDB(...)
             → on failure: rollback + delete uploaded artifacts
+               (`ConflictException` / `BadRequestException` are rethrown as-is;
+                other `ApplicationManagementException`s are wrapped)
   → HTTP 201 + Application entity
 ```
 
