@@ -67,6 +67,16 @@ public interface MetadataManagementService {
      */
     PaginationResult retrieveAllMetadata(PaginationRequest request) throws MetadataManagementException;
 
+
+    /**
+     * Search Metadata entries based on the provided search criteria.
+     *
+     * @param request   {@link PaginationRequest} obtained from the user
+     * @return          {@link PaginationResult} enriched with metadata entries matching the search criteria
+     * @throws MetadataManagementException If a data source related exception occurred
+     */
+    PaginationResult searchMetadata(PaginationRequest request) throws MetadataManagementException;
+
     /**
      * Update the provided Metadata entry.
      * a new entry will be created if the provided Metadata.metaKey is not exist

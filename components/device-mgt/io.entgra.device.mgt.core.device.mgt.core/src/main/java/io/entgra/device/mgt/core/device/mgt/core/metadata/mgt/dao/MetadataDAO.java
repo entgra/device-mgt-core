@@ -92,6 +92,16 @@ public interface MetadataDAO {
     List<Metadata> getAllMetadata(PaginationRequest request, int tenantId) throws MetadataManagementDAOException;
 
     /**
+     * Search Metadata entries based on the provided search criteria in PaginationRequest.
+     *
+     * @param request   {@link PaginationRequest}
+     * @param tenantId  Tenant Id
+     * @return          a list of Metadata entries matching the search criteria
+     * @throws MetadataManagementDAOException might occur while executing database queries
+     */
+    List<Metadata> getFilteredMetadata(PaginationRequest request, int tenantId) throws MetadataManagementDAOException;
+
+    /**
      * Count number of Metadata entries.
      *
      * @param tenantId  Tenant Id
@@ -99,6 +109,16 @@ public interface MetadataDAO {
      * @throws MetadataManagementDAOException might occur while executing database queries
      */
     int getMetadataCount(int tenantId) throws MetadataManagementDAOException;
+
+
+    /**
+     * Count number of Metadata entries matching the search criteria in PaginationRequest.
+     * @param request  {@link PaginationRequest}
+     * @param tenantId Tenant Id
+     * @return         Metadata entry count matching the search criteria of given tenant
+     * @throws MetadataManagementDAOException
+     */
+    int getMetadataCountForFilteredResult(PaginationRequest request, int tenantId) throws MetadataManagementDAOException;
 
     /**
      * Clears the value of a given metadata entry for a tenant by setting its value to NULL,

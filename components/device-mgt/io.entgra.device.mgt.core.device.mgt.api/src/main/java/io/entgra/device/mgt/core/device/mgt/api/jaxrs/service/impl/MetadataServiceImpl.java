@@ -34,6 +34,22 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.ws.rs.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.List;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
@@ -141,6 +157,64 @@ public class MetadataServiceImpl implements MetadataService {
             return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
         } catch (MetadataManagementException e) {
             String msg = "Error occurred while deleting the metadata entry for metaKey:" + metaKey;
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
+    @GET
+    @Override
+    @Path("/search/{filter}")
+    public Response searchMetadata(
+            @PathParam("filter")
+            String filter,
+            @QueryParam("jsonKey")
+            String jsonKey,
+            @QueryParam("value")
+            String value,
+            @QueryParam("offset") int offset,
+            @DefaultValue("5")
+            @QueryParam("limit") int limit) {
+        RequestValidationUtil.validatePaginationParameters(offset, limit);
+        PaginationRequest request = new PaginationRequest(offset, limit);
+        if (filter == null || filter.trim().isEmpty()) {
+            String msg = "Filter parameter is required for searching metadata entries.";
+            log.error(msg);
+            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+        }
+        if (jsonKey != null && !jsonKey.trim().isEmpty() && value != null && !value.trim().isEmpty()) {
+            HashMap<String, String> customProperty = new HashMap<>();
+            customProperty.put(jsonKey, value);
+            request.setCustomProperty(customProperty);
+        }
+        request.setFilter(filter);
+        MetadataList metadataList = new MetadataList();
+        try {
+            MetadataManagementService metadataManagementService = DeviceMgtAPIUtils.getMetadataManagementService();
+            PaginationResult result = metadataManagementService.searchMetadata(request);
+            metadataList.setCount(result.getRecordsTotal());
+            metadataList.setMetadataList((List<Metadata>) result.getData());
+            return Response.status(Response.Status.OK).entity(metadataList).build();
+        } catch (MetadataManagementException e) {
+            String msg = "Error occurred while retrieving metadata list for given parameters [offset:" +
+                    offset + ", limit:" + limit + " ]";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
+        }
+    }
+
+    /**
+     * Useful to send files as application/octet-stream responses
+     */
+    private Response sendFileStream(byte[] content) throws IOException {
+        try (ByteArrayInputStream binaryDuplicate = new ByteArrayInputStream(content)) {
+            Response.ResponseBuilder response = Response
+                    .ok(binaryDuplicate, MediaType.APPLICATION_OCTET_STREAM);
+            response.status(Response.Status.OK);
+            response.header("Content-Length", content.length);
+            return response.build();
+        } catch (IOException e) {
+            String msg = "Error occurred while creating input stream from buffer array. ";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         }
