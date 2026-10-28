@@ -53,7 +53,7 @@ import io.entgra.device.mgt.core.policy.mgt.core.task.MonitoringTask;
 import io.entgra.device.mgt.core.policy.mgt.core.task.TaskScheduleService;
 import io.entgra.device.mgt.core.policy.mgt.core.util.PolicyManagementConstants;
 import io.entgra.device.mgt.core.server.bootup.heartbeat.beacon.service.HeartBeatManagementService;
-import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationManagementService;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.service.RealtimeNotificationManagementService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.mockito.Mockito;
@@ -92,7 +92,7 @@ public class  PolicyManagerServiceImplTest extends BasePolicyManagementDAOTest {
     public void init() throws Exception {
         log.info("Initializing policy tests");
         super.initializeServices();
-        NotificationManagementService notificationService = Mockito.mock(NotificationManagementService.class);
+        RealtimeNotificationManagementService notificationService = Mockito.mock(RealtimeNotificationManagementService.class);
         Mockito.doNothing().when(notificationService).handleOperationNotificationIfApplicable(
                 Mockito.anyString(),
                 Mockito.anyString(),

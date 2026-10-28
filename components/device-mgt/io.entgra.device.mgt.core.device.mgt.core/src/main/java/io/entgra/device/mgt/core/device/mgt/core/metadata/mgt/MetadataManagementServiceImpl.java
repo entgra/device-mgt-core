@@ -18,6 +18,14 @@
 
 package io.entgra.device.mgt.core.device.mgt.core.metadata.mgt;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.base.MultitenantConstants;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationRequest;
 import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.DeviceManagementException;
@@ -38,7 +46,12 @@ import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+import com.google.gson.JsonParser;
 
 /**
  * This class implements the MetadataManagementService.
@@ -472,6 +485,85 @@ public class MetadataManagementServiceImpl implements MetadataManagementService 
         }
     }
 
+    @Override
+    public PaginationResult searchMetadata(PaginationRequest request) throws MetadataManagementException {
+        if (log.isDebugEnabled()) {
+            log.debug("Retrieving filtered list of Metadata entries for given PaginationRequest [rowCount:" +
+                    request.getRowCount() + ", startIndex:" + request.getStartIndex() + ", filter:" + request.getFilter() + " ]");
+        }
+        PaginationResult paginationResult = new PaginationResult();
+        request = DeviceManagerUtil.validateMetadataListPageSize(request);
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId(true);
+        try {
+            MetadataManagementDAOFactory.openConnection();
+            List<Metadata> metadata = metadataDAO.getFilteredMetadata(request, tenantId);
+            int count = metadataDAO.getMetadataCountForFilteredResult(request, tenantId);
+
+            if (request.getCustomProperty() != null && !request.getCustomProperty().isEmpty()) {
+                //If custom property is present, navigate the request into advance filtering
+                if (log.isDebugEnabled()) {
+                    log.debug("Custom property is found in the request. Hence secondary level of filtering required " +
+                            "with json key and value:" + request.getCustomProperty());
+                }
+                metadata = doAdvanceFiltering(metadata, request.getCustomProperty());
+            }
+
+            paginationResult.setData(metadata);
+            paginationResult.setRecordsFiltered(metadata.size());
+            paginationResult.setRecordsTotal(count);
+            return paginationResult;
+        } catch (MetadataManagementDAOException e) {
+            String msg = "Error occurred while retrieving metadata entries for given PaginationRequest [rowCount:" +
+                    request.getRowCount() + ", startIndex:" + request.getStartIndex() + "]";
+            log.error(msg, e);
+            throw new MetadataManagementException(msg, e);
+        } catch (SQLException e) {
+            String msg = "Error occurred while opening a connection to the data source";
+            log.error(msg, e);
+            throw new MetadataManagementException(msg, e);
+        } finally {
+            MetadataManagementDAOFactory.closeConnection();
+        }
+    }
+
+    /**
+     * Applies secondary filtering on metadata entries whose meta value is a JSON array, matching a custom
+     * property key/value pair against each array element's corresponding field.
+     *
+     * @param metaList       the metadata entries to filter, as retrieved from the primary query
+     * @param customProperty a map containing a single JSON key/value pair used to match against elements
+     *                       within each metadata entry's JSON array value
+     * @return a filtered list of metadata entries, with each entry's value replaced by the JSON array
+     *         elements that matched the given custom property
+     */
+    private List<Metadata> doAdvanceFiltering(List<Metadata> metaList, Map<String, String> customProperty) {
+        List <Metadata> filteredMetaList = new ArrayList<>();
+        //since the custom property map always contains one object, the outer loop will only run
+        //one iteration.
+        Gson gson = new Gson();
+        Set<String> jsonKeys = customProperty.keySet();
+        for (String jsonKey : jsonKeys) {
+            String rawValue = String.valueOf(customProperty.get(jsonKey));
+            Pattern regexPattern = Pattern.compile("(?i).*" + Pattern.quote(rawValue) + ".*");
+            String metaPayload = "";
+            for (Metadata metaEntry : metaList) {
+                String metaValue = metaEntry.getMetaValue();
+                JsonElement rootElement = gson.fromJson(metaValue, JsonElement.class);
+                if (rootElement != null && rootElement.isJsonArray()) {
+                    JsonArray jsonArray = rootElement.getAsJsonArray();
+                    for (JsonElement element : jsonArray) {
+                        String value = element.getAsJsonObject().get(jsonKey).getAsString();
+                        if (regexPattern.matcher(value).matches()) {
+                            metaPayload = metaPayload.concat(element.toString());
+                        }
+                    }
+                }
+                metaEntry.setMetaValue(metaPayload);
+                filteredMetaList.add(metaEntry);
+            }
+        }
+        return filteredMetaList;
+    }
     /**
      * Determines whether the given metaKey requires tenant-scoped storage under a specific
      * target tenant rather than the currently active tenant. This applies to per-tenant
@@ -506,5 +598,4 @@ public class MetadataManagementServiceImpl implements MetadataManagementService 
         }
         return metaKey;
     }
-
 }

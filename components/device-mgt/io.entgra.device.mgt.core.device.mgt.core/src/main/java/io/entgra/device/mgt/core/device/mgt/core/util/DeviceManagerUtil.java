@@ -57,6 +57,7 @@ import io.entgra.device.mgt.core.device.mgt.common.geo.service.GeofenceData;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.DeviceGroup;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.DeviceGroupConstants;
 import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupManagementException;
+import io.entgra.device.mgt.core.device.mgt.common.notification.mgt.NotificationManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.OperationManagementException;
 import io.entgra.device.mgt.core.device.mgt.common.type.mgt.DeviceTypeMetaDefinition;
 import io.entgra.device.mgt.core.device.mgt.core.DeviceManagementConstants;
@@ -386,6 +387,22 @@ public final class DeviceManagerUtil {
             } else {
                 throw new OperationManagementException("Device-Mgt configuration has not initialized. Please check the " +
                         "cdm-config.xml file.");
+            }
+        }
+        return paginationRequest;
+    }
+
+    public static PaginationRequest validateNotificationListPageSize(PaginationRequest paginationRequest)
+            throws NotificationManagementException {
+        if (paginationRequest.getRowCount() == 0) {
+            DeviceManagementConfig deviceManagementConfig = DeviceConfigurationManager.getInstance().
+                    getDeviceManagementConfig();
+            if (deviceManagementConfig != null) {
+                paginationRequest.setRowCount(deviceManagementConfig.getPaginationConfiguration().
+                        getNotificationListPageSize());
+            } else {
+                throw new NotificationManagementException("Device-Mgt configuration has not initialized. " +
+                        "Please check the cdm-config.xml file.");
             }
         }
         return paginationRequest;
@@ -1304,7 +1321,7 @@ public final class DeviceManagerUtil {
         try {
             DeviceManagementDataHolder.getInstance().getNotificationManagementService()
                     .handleTaskNotificationIfApplicable(tenantId, taskCode, message);
-        } catch (io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementException e) {
+        } catch (io.entgra.device.mgt.core.realtime.notification.mgt.common.exception.RealtimeNotificationManagementException e) {
             log.error("Error occurred while publishing device notification [" + taskCode + "]: " + message, e);
         } catch (Exception e) {
             log.error("Unexpected error while publishing device notification [" + taskCode + "]: " + message, e);

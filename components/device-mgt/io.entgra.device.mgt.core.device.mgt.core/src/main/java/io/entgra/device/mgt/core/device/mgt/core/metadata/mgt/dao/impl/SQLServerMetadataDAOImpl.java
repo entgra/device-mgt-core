@@ -74,4 +74,38 @@ public class SQLServerMetadataDAOImpl extends AbstractMetadataDAOImpl {
         return metadata;
     }
 
+    @Override
+    public List<Metadata> getFilteredMetadata(PaginationRequest request, int tenantId) throws MetadataManagementDAOException {
+        List<Metadata> metadata;
+        String sql = "SELECT DATA_TYPE, METADATA_KEY, METADATA_VALUE " +
+                "FROM DM_METADATA " +
+                "WHERE METADATA_KEY LIKE ? AND " +
+                "TENANT_ID = ? " +
+                "ORDER BY METADATA_KEY";
+        if (request.getRowCount() != -1) {
+            sql = sql + " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        }
+        try {
+            Connection conn = MetadataManagementDAOFactory.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, "%" + request.getFilter() + "%");
+                stmt.setInt(2, tenantId);
+                if (request.getRowCount() != -1) {
+                    stmt.setInt(3, request.getStartIndex());
+                    stmt.setInt(4, request.getRowCount());
+                }
+                try (ResultSet rs = stmt.executeQuery()) {
+                    metadata = new ArrayList<>();
+                    while (rs.next()) {
+                        metadata.add(MetadataDAOUtil.getMetadata(rs));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            String msg = "Error occurred while retrieving filtered metadata";
+            log.error(msg, e);
+            throw new MetadataManagementDAOException(msg, e);
+        }
+        return metadata;
+    }
 }

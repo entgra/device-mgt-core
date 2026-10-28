@@ -35,7 +35,7 @@ import io.entgra.device.mgt.core.device.mgt.core.status.task.impl.DeviceStatusTa
 import io.entgra.device.mgt.core.device.mgt.core.task.DeviceMgtTaskException;
 import io.entgra.device.mgt.core.device.mgt.core.task.DeviceTaskManagerService;
 import io.entgra.device.mgt.core.device.mgt.core.task.impl.DeviceTaskManagerServiceImpl;
-import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationManagementService;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.service.RealtimeNotificationManagementService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.BundleContext;
@@ -224,20 +224,20 @@ public class DeviceTaskManagerServiceComponent {
 
     @Reference(
             name = "notification.management.service",
-            service = NotificationManagementService.class,
+            service = RealtimeNotificationManagementService.class,
             cardinality = ReferenceCardinality.MANDATORY,
             policy = ReferencePolicy.DYNAMIC,
             unbind = "unsetNotificationManagementService")
-    protected void setNotificationManagementService(NotificationManagementService notificationManagementService) {
+    protected void setNotificationManagementService(RealtimeNotificationManagementService notificationManagementService) {
         if (log.isDebugEnabled()) {
-            log.debug("Setting the NotificationManagementService.");
+            log.debug("Setting the RealtimeNotificationManagementService.");
         }
         DeviceManagementDataHolder.getInstance().setNotificationManagementService(notificationManagementService);
     }
 
-    protected void unsetNotificationManagementService(NotificationManagementService notificationManagementService) {
+    protected void unsetNotificationManagementService(RealtimeNotificationManagementService notificationManagementService) {
         if (log.isDebugEnabled()) {
-            log.debug("Unsetting the NotificationManagementService.");
+            log.debug("Unsetting the RealtimeNotificationManagementService.");
         }
         DeviceManagementDataHolder.getInstance().setNotificationManagementService(null);
     }
