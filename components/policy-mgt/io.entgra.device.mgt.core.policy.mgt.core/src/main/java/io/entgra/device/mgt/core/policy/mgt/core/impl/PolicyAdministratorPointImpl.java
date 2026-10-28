@@ -216,6 +216,17 @@ public class PolicyAdministratorPointImpl implements PolicyAdministratorPoint {
                     }
                 }
             }
+            // The delegation task clears UPDATED only after it finishes talking to devices.
+            // The policies list is reloaded as soon as this method returns, so commit the flag
+            // on this request before the response is sent.
+            policyManager.completePolicyChanges(normalizedPolicyIds);
+            if (policyConfiguration.getCacheEnable()) {
+                try {
+                    PolicyCacheManagerImpl.getInstance().rePopulateCache();
+                } catch (PolicyManagementException e) {
+                    log.error("Error occurred while refreshing the policy cache after applying changes.", e);
+                }
+            }
         } catch (TaskException e) {
             String msg = "Error occurred while creating the policy delegation task for tenant " +
                     PrivilegedCarbonContext.

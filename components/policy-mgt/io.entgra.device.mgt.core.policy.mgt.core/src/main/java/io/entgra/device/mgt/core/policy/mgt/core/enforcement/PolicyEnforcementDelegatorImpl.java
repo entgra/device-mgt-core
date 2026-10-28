@@ -19,6 +19,7 @@ package io.entgra.device.mgt.core.policy.mgt.core.enforcement;
 
 import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.entgra.device.mgt.core.device.mgt.common.DeviceIdentifier;
+import io.entgra.device.mgt.core.device.mgt.common.EnrolmentInfo;
 import io.entgra.device.mgt.core.device.mgt.common.exceptions.InvalidDeviceException;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Operation;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.OperationManagementException;
@@ -64,29 +65,52 @@ public class PolicyEnforcementDelegatorImpl implements PolicyEnforcementDelegato
 
     @Override
     public void delegate() throws PolicyDelegationException {
+        if (devices == null || devices.isEmpty()) {
+            return;
+        }
         for (Device device : devices) {
-            DeviceIdentifier identifier = new DeviceIdentifier();
-            identifier.setId(device.getDeviceIdentifier());
-            identifier.setType(device.getType());
-
-            Policy devicePolicy = this.getAppliedPolicyToDevice(device);
-            Policy policy = this.getEffectivePolicy(identifier);
-            List<DeviceIdentifier> deviceIdentifiers = new ArrayList<>();
-            deviceIdentifiers.add(identifier);
-            if (policy != null) {
-                // A selected winner is always re-applied. This covers edits to a policy with the same ID.
-                this.markPreviousPolicyBundlesRepeated(device);
-                if (devicePolicy != null && devicePolicy.getId() != policy.getId()) {
-                    this.addPolicyRevokeOperation(deviceIdentifiers);
-                }
-                this.addPolicyOperation(deviceIdentifiers, policy);
-                this.setAppliedPolicy(identifier, policy);
-            } else if (devicePolicy != null && selectedPolicyIds.contains(devicePolicy.getId())) {
-                // No selected policy applies. Revoke only if the currently assigned policy was selected.
-                this.markPreviousPolicyBundlesRepeated(device);
-                this.addPolicyRevokeOperation(deviceIdentifiers);
-                this.removeAppliedPolicy(identifier);
+            if (device == null || device.getEnrolmentInfo() == null
+                    || device.getEnrolmentInfo().getStatus() == EnrolmentInfo.Status.REMOVED) {
+                continue;
             }
+            try {
+                applyToDevice(device);
+            } catch (PolicyDelegationException e) {
+                // A device that cannot be reloaded, such as "Device details cannot be null",
+                // must not abort the remaining devices. DelegationTask clears the updated flag
+                // only after this method returns.
+                log.error("Policy apply failed for device '" + device.getType() + "/"
+                        + device.getDeviceIdentifier() + "'. Continuing with the remaining devices.", e);
+            } catch (RuntimeException e) {
+                log.error("Policy apply failed for device '" + device.getType() + "/"
+                        + device.getDeviceIdentifier() + "' after an unexpected error. "
+                        + "Continuing with the remaining devices.", e);
+            }
+        }
+    }
+
+    private void applyToDevice(Device device) throws PolicyDelegationException {
+        DeviceIdentifier identifier = new DeviceIdentifier();
+        identifier.setId(device.getDeviceIdentifier());
+        identifier.setType(device.getType());
+
+        Policy devicePolicy = this.getAppliedPolicyToDevice(device);
+        Policy policy = this.getEffectivePolicy(identifier);
+        List<DeviceIdentifier> deviceIdentifiers = new ArrayList<>();
+        deviceIdentifiers.add(identifier);
+        if (policy != null) {
+            // A selected winner is always re-applied. This covers edits to a policy with the same ID.
+            this.markPreviousPolicyBundlesRepeated(device);
+            if (devicePolicy != null && devicePolicy.getId() != policy.getId()) {
+                this.addPolicyRevokeOperation(deviceIdentifiers);
+            }
+            this.addPolicyOperation(deviceIdentifiers, policy);
+            this.setAppliedPolicy(identifier, policy);
+        } else if (devicePolicy != null && selectedPolicyIds.contains(devicePolicy.getId())) {
+            // No selected policy applies. Revoke only if the currently assigned policy was selected.
+            this.markPreviousPolicyBundlesRepeated(device);
+            this.addPolicyRevokeOperation(deviceIdentifiers);
+            this.removeAppliedPolicy(identifier);
         }
     }
 

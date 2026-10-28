@@ -91,10 +91,11 @@ public class DelegationTask extends DynamicPartitionedScheduleTask {
                             enforcementDelegator.delegate();
                         }
                     } catch (DeviceManagementException e) {
-                        throw new PolicyManagementException("Error occurred while fetching the devices", e);
+                        log.error("Error occurred while fetching devices for device-type : " + deviceType
+                                + ". Policy updated status will still be cleared.", e);
                     } catch (PolicyDelegationException e) {
-                        throw new PolicyManagementException("Error occurred while running the delegation task on " +
-                                                            "device-type : " + deviceType, e);
+                        log.error("Error occurred while running the delegation task on device-type : " + deviceType
+                                + ". Policy updated status will still be cleared.", e);
                     }
                 }
             }
