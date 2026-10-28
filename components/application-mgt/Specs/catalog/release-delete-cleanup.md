@@ -1,5 +1,12 @@
 # Favourites Cleanup On Release Delete Spec
 
+[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md) | [Sources](../source-map.md)
+
+Requirements: [APP-CAT-003/004](catalog.md), [APP-REL-003](../releases/release-management.md).
+
+Clearing all app favourites on any release hard-delete is existing behavior;
+whether to retain it when another usable release exists is APP-GAP-07.
+
 ## Purpose
 
 When a Publisher user deletes an application release, Store favourites for that

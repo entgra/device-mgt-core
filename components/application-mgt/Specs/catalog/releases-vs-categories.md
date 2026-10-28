@@ -1,5 +1,11 @@
 # Application list: releases vs categories
 
+[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md) | [Sources](../source-map.md)
+
+Requirement: [APP-CAT-001](catalog.md).
+Extend this regression
+scenario with role/tenant filtering and pagination/count assertions in Phase 2.
+
 ## Purpose
 
 `getApplications` returns each application release once. Category assignment on

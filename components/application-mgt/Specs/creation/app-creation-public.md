@@ -1,5 +1,12 @@
 # Public App Creation (Backend) Spec
 
+[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md) | [Sources](../source-map.md)
+
+Requirements: [APP-CRT-001/002](creation-workflow.md),
+[APP-REL-001](../releases/release-management.md).
+Package/cardinality
+prechecks do not establish cross-node uniqueness; see APP-GAP-02.
+
 ## Purpose
 
 Public app creation registers a store-linked application (Google Play / App Store /

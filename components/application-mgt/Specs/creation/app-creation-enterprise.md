@@ -1,5 +1,12 @@
 # Enterprise App Creation (Backend) Spec
 
+[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md) | [Sources](../source-map.md)
+
+Requirements: [APP-CRT-001 through APP-CRT-004](creation-workflow.md),
+[APP-REL-002](../releases/release-management.md).
+Remote releases complete asynchronously; synchronous completion and artifact
+cleanup descriptions below must be read with the creation-workflow qualifications.
+
 ## Purpose
 
 Enterprise app creation registers a privately hosted application (APK / IPA / Windows
@@ -91,7 +98,7 @@ treat **409** as the contract, not parse message text for control flow.
 
 Early UI pre-check (same core method): Publisher
 `GET /applications/release-hash/{hash}`. Details:
-[../add-release/release-binary-hash.md](../add-release/release-binary-hash.md).
+[../releases/release-binary-hash.md](../releases/release-binary-hash.md).
 
 ## Lifecycle (`is-published`)
 
@@ -106,6 +113,7 @@ Enterprise apps may receive additional releases later (not limited to a single r
 | --- | --- |
 | **201** | App or release created |
 | **400** | Invalid wrapper / missing fields / invalid OS or Windows payload |
+| **403** | Additional-release endpoint rejects a forbidden publication; do not generalize to initial creation |
 | **409** | Package or binary already exists |
 | **500** | Unexpected persistence / storage failure |
 
@@ -116,7 +124,7 @@ Enterprise apps may receive additional releases later (not limited to a single r
 - [ ] Duplicate active package name returns **409**.
 - [ ] Duplicate binary hash returns **409**.
 - [ ] `is-published=true` advances lifecycle to published as implemented.
-- [ ] Failed create cleans up uploaded artifacts on rollback.
+- [ ] For synchronous failures, inspect attempted artifact compensation and record cleanup failure separately from database rollback; remote worker failures follow APP-CRT-004.
 
 ## Maintenance Rules
 
