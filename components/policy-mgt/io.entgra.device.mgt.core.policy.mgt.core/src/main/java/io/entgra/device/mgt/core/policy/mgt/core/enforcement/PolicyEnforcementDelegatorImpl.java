@@ -74,15 +74,23 @@ public class PolicyEnforcementDelegatorImpl implements PolicyEnforcementDelegato
             List<DeviceIdentifier> deviceIdentifiers = new ArrayList<>();
             deviceIdentifiers.add(identifier);
             if (policy != null) {
-                // A selected winner is always re-applied. This covers edits to a policy with the same ID.
-                this.markPreviousPolicyBundlesRepeated(device);
                 if (devicePolicy != null && devicePolicy.getId() != policy.getId()) {
+                    this.markPreviousPolicyBundlesRepeated(device);
                     this.addPolicyRevokeOperation(deviceIdentifiers);
+                    this.addPolicyOperation(deviceIdentifiers, policy);
+                    this.setAppliedPolicy(identifier, policy);
+                } else if (devicePolicy == null) {
+                    this.markPreviousPolicyBundlesRepeated(device);
+                    this.addPolicyOperation(deviceIdentifiers, policy);
+                    this.setAppliedPolicy(identifier, policy);
+                } else if (selectedPolicyIds.contains(policy.getId())) {
+                    // Re-send an edited policy only when the global winner itself was selected.
+                    this.markPreviousPolicyBundlesRepeated(device);
+                    this.addPolicyOperation(deviceIdentifiers, policy);
+                    this.setAppliedPolicy(identifier, policy);
                 }
-                this.addPolicyOperation(deviceIdentifiers, policy);
-                this.setAppliedPolicy(identifier, policy);
-            } else if (devicePolicy != null && selectedPolicyIds.contains(devicePolicy.getId())) {
-                // No selected policy applies. Revoke only if the currently assigned policy was selected.
+            } else if (devicePolicy != null) {
+                // No policy is applicable after global evaluation, so the previous assignment must be revoked.
                 this.markPreviousPolicyBundlesRepeated(device);
                 this.addPolicyRevokeOperation(deviceIdentifiers);
                 this.removeAppliedPolicy(identifier);
@@ -99,8 +107,7 @@ public class PolicyEnforcementDelegatorImpl implements PolicyEnforcementDelegato
                 throw new PolicyEvaluationException(
                         "Selected policy evaluation requires the Simple evaluation point");
             }
-            return ((PolicySelectionEvaluationPoint) policyManagerService.getPEP())
-                    .getEffectivePolicy(identifier, selectedPolicyIds);
+            return policyManagerService.getPEP().getEffectivePolicy(identifier);
         } catch (PolicyEvaluationException | PolicyManagementException e) {
             String msg = "Error occurred while retrieving the effective policy for devices.";
             log.error(msg, e);
