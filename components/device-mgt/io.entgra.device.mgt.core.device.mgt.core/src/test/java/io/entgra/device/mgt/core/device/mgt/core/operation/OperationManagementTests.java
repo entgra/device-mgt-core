@@ -30,8 +30,8 @@ import io.entgra.device.mgt.core.device.mgt.core.common.TestDataHolder;
 import io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementDataHolder;
 import io.entgra.device.mgt.core.device.mgt.core.operation.mgt.*;
 import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProviderService;
-import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementException;
-import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationManagementService;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.exception.RealtimeNotificationManagementException;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.service.RealtimeNotificationManagementService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.mockito.Mockito;
@@ -105,9 +105,9 @@ public class OperationManagementTests extends BaseDeviceManagementTest {
 
     @Test
     public void addCommandOperation() throws DeviceManagementException, OperationManagementException,
-            InvalidDeviceException, NotificationManagementException {
-        // mock NotificationManagementService and inject into DeviceManagementDataHolder
-        NotificationManagementService notificationService = Mockito.mock(NotificationManagementService.class);
+            InvalidDeviceException, RealtimeNotificationManagementException {
+        // mock RealtimeNotificationManagementService and inject into DeviceManagementDataHolder
+        RealtimeNotificationManagementService notificationService = Mockito.mock(RealtimeNotificationManagementService.class);
         Mockito.doNothing().when(notificationService).handleOperationNotificationIfApplicable(
                 Mockito.anyString(),
                 Mockito.anyString(),

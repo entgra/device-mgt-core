@@ -9,7 +9,7 @@ disenrolled, soft-removed, or permanently deleted from the console.
 
 Console flows use:
 
-`NotificationManagementService.handleTaskNotificationIfApplicable(tenantId, taskCode, message)`
+`RealtimeNotificationManagementService.handleTaskNotificationIfApplicable(tenantId, taskCode, message)`
 
 Publishing is **config-based**. An enabled notification configuration with
 `type=task` and one of these codes must exist; otherwise the notification is
@@ -27,7 +27,7 @@ task catalog, `DM_FEATURE_DETAILS` migration, and config API details.
 - Recipients: from the matching task notification configuration
   (roles/users), resolved to tenant-aware usernames for SSE
 - Usernames: tenant-aware (`admin@test.com`), from thread-local Carbon tenant domain
-  (`getTenantDomain`) so SSE (`ConnectSSE` / `NotificationEventBroker`) matches the UI session.
+  (`getTenantDomain`) so SSE (`ConnectSSE` / `RealtimeNotificationEventBroker`) matches the UI session.
   Do not use `TenantManager` here — this OSGi bundle does not import that class.
 - Notification publish failure is logged only; it must not fail the device operation
   (`publishDeviceNotification` catches `Exception`)
@@ -40,7 +40,7 @@ task catalog, `DM_FEATURE_DETAILS` migration, and config API details.
 | --- | --- |
 | Disenroll / remove / permanent delete | `.../DeviceManagementProviderServiceImpl.java` |
 | Publish helper | `.../util/DeviceManagerUtil.publishDeviceNotification` |
-| Tenant-aware username + SSE | `.../NotificationHelper.toTenantAwareUsernames(usernames, tenantId)` |
+| Tenant-aware username + SSE | `.../RealtimeNotificationHelper.toTenantAwareUsernames(usernames, tenantId)` |
 | Console APIs | `PUT /devices/disenroll`, `PUT /admin/devices/permanent-delete` |
 
 ## Correct Behaviour
