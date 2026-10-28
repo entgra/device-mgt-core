@@ -3808,7 +3808,8 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         try {
             // OSGi shutdown callbacks can run without a tenant context. Preserve an existing
             // caller context; otherwise use the tenant that owns the provider.
-            if (PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId() == -1) {
+            if (PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId()
+                    == MultitenantConstants.INVALID_TENANT_ID) {
                 String tenantDomain = MultitenantConstants.SUPER_TENANT_DOMAIN_NAME;
                 if (!deviceManagementService.getProvisioningConfig().isSharedWithAllTenants()) {
                     tenantDomain = deviceManagementService.getProvisioningConfig().getProviderTenantDomain();

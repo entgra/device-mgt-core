@@ -110,14 +110,24 @@ public class JWTAuthenticator implements WebappAuthenticator {
             String subject = jwsObject.getJWTClaimsSet().getSubject();
             if (subject != null && !subject.isEmpty()) {
                 String subjectTenantDomain = MultitenantUtils.getTenantDomain(subject);
-                if (!MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(subjectTenantDomain)) {
+                if (MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)
+                        && !tenantDomain.equals(subjectTenantDomain)) {
                     // A SaaS application can belong to the super tenant while its access token belongs to a tenant
                     // user. APIM derives the backend JWT's enduser tenant from the application owner in that case,
                     // but preserves the authenticated user's tenant-qualified name in the subject.
+                    if (log.isDebugEnabled()) {
+                        log.debug("Overriding JWT enduser tenant " + tenantDomain + " with subject tenant "
+                                + subjectTenantDomain);
+                    }
                     username = subject;
                     tenantDomain = subjectTenantDomain;
                     tenantId = AuthenticatorFrameworkDataHolder.getInstance().getRealmService().getTenantManager()
                             .getTenantId(tenantDomain);
+                    if (tenantId == MultitenantConstants.INVALID_TENANT_ID) {
+                        authenticationInfo.setStatus(Status.FAILURE);
+                        authenticationInfo.setMessage("Unable to resolve tenant for subject");
+                        return authenticationInfo;
+                    }
                 }
             }
             issuer = jwsObject.getJWTClaimsSet().getIssuer();
