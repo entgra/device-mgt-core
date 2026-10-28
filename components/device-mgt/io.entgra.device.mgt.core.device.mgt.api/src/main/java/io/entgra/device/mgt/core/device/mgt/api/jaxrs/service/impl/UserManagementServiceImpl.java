@@ -91,8 +91,8 @@ import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.nio.file.NoSuchFileException;
 import java.security.SecureRandom;
 import java.text.ParseException;
@@ -205,7 +205,9 @@ public class UserManagementServiceImpl implements UserManagementService {
             }
             userInfoWrapper.setBasicUserInfo(createdUserInfo);
             userInfoWrapper.setMessage(message);
-            return Response.created(new URI(API_BASE_PATH + "/" + URLEncoder.encode(userInfo.getUsername(), "UTF-8").replace("+", "%20"))).entity(userInfoWrapper).build();
+            return Response.created(new URI(API_BASE_PATH + "/"
+                    + URLEncoder.encode(userInfo.getUsername(), "UTF-8").replace("+", "%20")))
+                    .entity(userInfoWrapper).build();
         } catch (UserStoreException e) {
             String msg = "Error occurred while trying to add user '" + userInfo.getUsername() + "' to the " +
                     "underlying user management system";
