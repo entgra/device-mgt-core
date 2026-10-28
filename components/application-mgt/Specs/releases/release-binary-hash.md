@@ -1,5 +1,12 @@
 # Release Binary Hash Uniqueness Spec
 
+[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md) | [Sources](../source-map.md)
+
+Requirement: [APP-REL-002](release-management.md).
+The tenant-wide rule below is the intended invariant. The inspected prechecks
+do not reserve a hash and are not proof of simultaneous-upload safety. APP-GAP-02
+requires concurrent tests and an approved enforcement/error-handling decision.
+
 ## Purpose
 
 A tenant must not store two application releases that share the same installer
@@ -62,8 +69,8 @@ UI skips the pre-check.
 | Conflict | **409** plain string (`ConflictException` message) |
 | Failure | **500** on unexpected `ApplicationManagementException` |
 
-Full HTTP contract:
-`proprietary-commons/.../publisher.api/Specs/api-contract.md` § Artifacts And Uploads.
+Consumer source and pinned revision: [Publisher implementation](../source-map.md#consumers).
+Full endpoint-by-endpoint adapter validation remains APP-GAP-10.
 
 ## Correct Behaviour
 

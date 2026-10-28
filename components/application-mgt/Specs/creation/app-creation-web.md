@@ -1,5 +1,12 @@
 # Web Clip / Web App Creation (Backend) Spec
 
+[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md) | [Sources](../source-map.md)
+
+Requirements: [APP-CRT-001/002](creation-workflow.md),
+[APP-REL-001](../releases/release-management.md).
+Sequential one-release
+checks require separate concurrent-request verification (APP-GAP-02).
+
 ## Purpose
 
 Web create registers a URL-based application (web clip or web app) without a native

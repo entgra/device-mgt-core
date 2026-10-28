@@ -1,5 +1,13 @@
 # Single Installable Release Spec
 
+[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md) | [Sources](../source-map.md)
+
+Requirements: [APP-LC-002/003](../lifecycle/lifecycle.md).
+The guard below is observed, but concurrent-publication safety is unverified.
+The 403/cleanup scenario applies to the synchronous enterprise add-release path;
+do not apply it universally to initial creation or remote background failures.
+Artifact compensation is an attempted separate operation, not JDBC rollback.
+
 ## Purpose
 
 Non-CUSTOM applications allow only one **installable** release (typically
@@ -35,4 +43,4 @@ CUSTOM / firmware skips this installable uniqueness check.
 ## Related
 
 - Publisher UI: `.../publisher.ui/Specs/add-new-release/publish-with-existing-installable.md`
-- Publisher API: `api-contract.md` § Release Create
+- Publisher API: [pinned consumer sources](../source-map.md#consumers)
