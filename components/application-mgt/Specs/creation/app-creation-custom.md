@@ -1,5 +1,12 @@
 # Custom (Firmware) App Creation (Backend) Spec
 
+[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md) | [Sources](../source-map.md)
+
+Requirements: [APP-CRT-001 through APP-CRT-004](creation-workflow.md),
+[APP-FW-001/002](../firmware/firmware.md).
+Remote releases are
+asynchronous; model identity and CUSTOM lifecycle recovery need APP-GAP-05/09 review.
+
 ## Purpose
 
 Custom app creation registers a firmware-style application tied to firmware models. This is

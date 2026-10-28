@@ -1,5 +1,18 @@
 # App Creation (Backend) Spec
 
+[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md) | [Sources](../source-map.md)
+
+Canonical requirements: [APP-CRT-001 through APP-CRT-004](creation-workflow.md).
+
+## Baseline qualification
+
+The pipeline below describes synchronous creation. Remote enterprise/custom
+creation can commit an application before a background thread creates its release;
+initial 201 is not proof of completed release publication. See APP-CRT-004 and
+APP-GAP-03. Cleanup is attempted on caught failures, not an atomic filesystem/DB
+guarantee. Existing HTTP mappings are observed compatibility behavior, not approval
+of every exception mapping or proof that all malformed inputs are handled.
+
 ## Purpose
 
 App creation registers a new application (and optionally its first release) in
@@ -119,7 +132,7 @@ Exact checks are documented per type.
 | Add release to existing app | `POST` | Type-specific `.../{deviceType}/.../{appId}` or `/web-app/{appId}` |
 
 Add-release binary-hash uniqueness and pre-check:
-[../add-release/release-binary-hash.md](../add-release/release-binary-hash.md).
+[../releases/release-binary-hash.md](../releases/release-binary-hash.md).
 
 ## Acceptance Criteria (Shared)
 
