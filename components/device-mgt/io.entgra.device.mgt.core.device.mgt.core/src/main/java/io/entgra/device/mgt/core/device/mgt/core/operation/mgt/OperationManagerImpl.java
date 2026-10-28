@@ -18,7 +18,7 @@
 
 package io.entgra.device.mgt.core.device.mgt.core.operation.mgt;
 
-import io.entgra.device.mgt.core.notification.mgt.common.exception.NotificationManagementException;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.exception.RealtimeNotificationManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.dto.operation.mgt.DeviceOperationDetails;
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManagerServiceImpl;
 import io.entgra.device.mgt.core.device.mgt.extensions.logger.spi.EntgraLogger;
@@ -142,7 +142,7 @@ public class OperationManagerImpl implements OperationManager {
     }
 
     public NotificationStrategy getNotificationStrategy() {
-        // Notification strategy can be set by the platform configurations. Therefore it is needed to
+        // RealtimeNotification strategy can be set by the platform configurations. Therefore it is needed to
         // get tenant specific notification strategy dynamically in the runtime. However since this is
         // a resource intensive retrieval, we are maintaining tenant aware local cache here to keep device
         // type specific notification strategy.
@@ -476,7 +476,7 @@ public class OperationManagerImpl implements OperationManager {
                         .handleOperationNotificationIfApplicable(operationCode, operationStatus,
                                 deviceType, deviceIds, tenantId, "immediate");
             }
-        } catch (NotificationManagementException e) {
+        } catch (RealtimeNotificationManagementException e) {
             String msg = "An Error occurred while updating handleOperationNotificationIfApplicable";
             log.error(msg, e);
         }
@@ -1211,7 +1211,7 @@ public class OperationManagerImpl implements OperationManager {
                 DeviceManagementDataHolder.getInstance().getNotificationManagementService()
                         .handleOperationNotificationIfApplicable(operation.getCode(), status.toString(),
                                 device.getType(), Collections.singletonList(device.getId()), tenantId, "postSync");
-            } catch (NotificationManagementException e) {
+            } catch (RealtimeNotificationManagementException e) {
                 log.error("Error occurred while handling notification for operation " + operation.getId() +
                         " of enrolment " + enrolmentId, e);
             }

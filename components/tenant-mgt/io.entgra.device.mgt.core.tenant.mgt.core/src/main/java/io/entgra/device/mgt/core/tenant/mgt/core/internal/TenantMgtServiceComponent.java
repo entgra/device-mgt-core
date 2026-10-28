@@ -21,7 +21,7 @@ import io.entgra.device.mgt.core.apimgt.extension.rest.api.PublisherRESTAPIServi
 import io.entgra.device.mgt.core.application.mgt.common.services.ApplicationManager;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.WhiteLabelManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
-import io.entgra.device.mgt.core.notification.mgt.common.service.NotificationConfigService;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.service.RealtimeNotificationConfigService;
 import io.entgra.device.mgt.core.tenant.mgt.common.spi.TenantManagerAdminService;
 import io.entgra.device.mgt.core.tenant.mgt.common.spi.TenantManagerService;
 import io.entgra.device.mgt.core.tenant.mgt.core.TenantManager;
@@ -180,20 +180,20 @@ public class TenantMgtServiceComponent {
 
     @Reference(
             name = "notificationConfigService.service",
-            service = io.entgra.device.mgt.core.notification.mgt.common.service.NotificationConfigService.class,
+            service = io.entgra.device.mgt.core.realtime.notification.mgt.common.service.RealtimeNotificationConfigService.class,
             cardinality = ReferenceCardinality.MANDATORY,
             policy = ReferencePolicy.DYNAMIC,
             unbind = "unsetNotificationConfigService")
-    protected void setNotificationConfigService(NotificationConfigService notificationConfigService) {
+    protected void setNotificationConfigService(RealtimeNotificationConfigService notificationConfigService) {
         if(log.isDebugEnabled()) {
-            log.info("Notification Config Service service is binding");
+            log.info("RealtimeNotification Config Service service is binding");
         }
         TenantMgtDataHolder.getInstance().setNotificationConfigService(notificationConfigService);
     }
 
-    protected void unsetNotificationConfigService(NotificationConfigService notificationConfigService) {
+    protected void unsetNotificationConfigService(RealtimeNotificationConfigService notificationConfigService) {
         if(log.isDebugEnabled()) {
-            log.info("Notification Config Service service is unbinding");
+            log.info("RealtimeNotification Config Service service is unbinding");
         }
         TenantMgtDataHolder.getInstance().setNotificationConfigService(null);
     }

@@ -18,14 +18,14 @@
 
 package io.entgra.device.mgt.core.tenant.mgt.core.util;
 
-import io.entgra.device.mgt.core.notification.mgt.common.beans.ArchivePeriod;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.beans.RealtimeArchivePeriod;
 
 public class TenantConstants {
 
 private TenantConstants() {
     }
 
-    public static final ArchivePeriod DEFAULT_NOTIFICATION_ARCHIVE_PERIOD = new ArchivePeriod(12, "months");;
+    public static final RealtimeArchivePeriod DEFAULT_NOTIFICATION_ARCHIVE_PERIOD = new RealtimeArchivePeriod(12, "months");;
     public static final String DEFAULT_NOTIFICATION_ARCHIVE_TYPE = "DB";
 }
 

@@ -62,6 +62,7 @@ import io.entgra.device.mgt.core.device.mgt.common.group.mgt.GroupManagementExce
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.WhiteLabelManagementService;
+import io.entgra.device.mgt.core.device.mgt.common.notification.mgt.NotificationManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.operation.mgt.Operation;
 import io.entgra.device.mgt.core.device.mgt.common.report.mgt.ReportManagementService;
 import io.entgra.device.mgt.core.device.mgt.common.spi.DeviceTypeGeneratorService;
@@ -701,6 +702,17 @@ public class DeviceMgtAPIUtils {
             throw new IllegalStateException("Tenant configuration Management service not initialized.");
         }
         return tenantConfigurationManagementService;
+    }
+
+    public static NotificationManagementService getNotificationManagementService() {
+        NotificationManagementService notificationManagementService;
+        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        notificationManagementService = (NotificationManagementService) ctx.getOSGiService(
+                NotificationManagementService.class, null);
+        if (notificationManagementService == null) {
+            throw new IllegalStateException("Notification Management service not initialized.");
+        }
+        return notificationManagementService;
     }
 
     /**
