@@ -151,6 +151,7 @@ import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceTypeServiceIdentifier
 import io.entgra.device.mgt.core.device.mgt.core.dto.DeviceTypeVersion;
 import io.entgra.device.mgt.core.device.mgt.common.geo.service.GeoCluster;
 import io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementDataHolder;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.exception.RealtimeNotificationManagementException;
 import io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementServiceComponent;
 import io.entgra.device.mgt.core.device.mgt.core.internal.PluginInitializationListener;
 import io.entgra.device.mgt.core.device.mgt.core.metadata.mgt.dao.MetadataDAO;
@@ -980,6 +981,12 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         }
 
         try {
+            try {
+                DeviceManagementDataHolder.getInstance().getRealtimeNotificationManagementService()
+                        .purgeNotificationsForDevices(new ArrayList<>(deviceIds), tenantId);
+            } catch (RealtimeNotificationManagementException e) {
+                log.error("Error occurred while purging realtime notifications for devices: " + deviceIds, e);
+            }
             DeviceManagementDAOFactory.beginTransaction();
             //deleting device from the core
             deviceDAO.deleteDevices(validDeviceIdentifiers, new ArrayList<>(deviceIds), enrollmentIds, validDevices,
@@ -6033,6 +6040,12 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
             tenantDao.deleteDeviceLocationByTenantId(tenantId);
             tenantDao.deleteDeviceInfoByTenantId(tenantId);
             tenantDao.deleteNotificationByTenantId(tenantId);
+            try {
+                DeviceManagementDataHolder.getInstance().getRealtimeNotificationManagementService()
+                        .deleteNotificationsByTenantId(tenantId);
+            } catch (RealtimeNotificationManagementException e) {
+                log.error("Error occurred while deleting realtime notifications for tenant: " + tenantId, e);
+            }
             tenantDao.deleteAppIconsByTenantId(tenantId);
             tenantDao.deleteTraccarUnsyncedDevicesByTenantId(tenantId);
             tenantDao.deleteDeviceEventGroupMappingByTenantId(tenantId);

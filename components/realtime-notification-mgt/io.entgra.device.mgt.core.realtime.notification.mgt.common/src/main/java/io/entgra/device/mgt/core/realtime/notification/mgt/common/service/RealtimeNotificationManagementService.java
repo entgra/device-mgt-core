@@ -156,6 +156,16 @@ public interface RealtimeNotificationManagementService {
             throws RealtimeNotificationManagementException;
 
     /**
+     * Returns whether the current tenant has an enabled realtime notification configuration
+     * for the given operation or task code.
+     *
+     * @param code operation or task feature code
+     * @return {@code true} if an enabled config exists for the tenant
+     * @throws RealtimeNotificationManagementException if config metadata cannot be read
+     */
+    boolean isNotificationConfigAvailable(String code) throws RealtimeNotificationManagementException;
+
+    /**
      * Handles and publishes a batch notification when an operation is executed for multiple devices.
      *
      * @param config        The notification configuration corresponding to the operation.
@@ -195,4 +205,11 @@ public interface RealtimeNotificationManagementService {
      */
     void purgeNotificationsForDevices(List<Integer> deviceIds, int tenantId)
             throws RealtimeNotificationManagementException;
+
+    /**
+     * Deletes all realtime notifications for a tenant (user actions and device mappings CASCADE).
+     *
+     * @param tenantId tenant id
+     */
+    void deleteNotificationsByTenantId(int tenantId) throws RealtimeNotificationManagementException;
 }

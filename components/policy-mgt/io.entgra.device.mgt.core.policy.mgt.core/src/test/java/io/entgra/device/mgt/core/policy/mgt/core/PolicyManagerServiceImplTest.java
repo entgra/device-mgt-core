@@ -101,7 +101,7 @@ public class  PolicyManagerServiceImplTest extends BasePolicyManagementDAOTest {
                 Mockito.anyInt(),
                 Mockito.anyString()
         );
-        DeviceManagementDataHolder.getInstance().setNotificationManagementService(notificationService);
+        DeviceManagementDataHolder.getInstance().setRealtimeNotificationManagementService(notificationService);
     }
 
     @Test

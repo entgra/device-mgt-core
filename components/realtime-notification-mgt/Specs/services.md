@@ -53,6 +53,12 @@ All persistence goes through metadata key `notification-config`.
 
 Impl: `RealtimeNotificationManagementServiceImpl`
 
+### Config availability
+
+| Method | Behaviour |
+| --- | --- |
+| `isNotificationConfigAvailable(code)` | `true` when tenant metadata has an **enabled** config matching the operation/task code (case-insensitive). Used by dual-path callers (Android ERROR notifications, proprietary task flows) to choose realtime vs legacy `DM_NOTIFICATION`. |
+
 ### Inbox / user actions
 
 | Method | Persistence | SSE |
@@ -109,6 +115,16 @@ user actions only; push message payload per recipient. No device mappings.
 
 Removes device mappings for given `DM_DEVICE.ID`s; deletes notifications
 that no longer reference any device. Task rows without mappings remain.
+
+Called from device-mgt **service** layer on permanent device delete
+(`DeviceManagementProviderServiceImpl`, `PrivacyComplianceProviderImpl`).
+Device-mgt DAOs must **not** touch `DM_REALTIME_*` tables.
+
+#### Tenant delete — `deleteNotificationsByTenantId`
+
+Deletes all `DM_REALTIME_NOTIFICATION` rows for a tenant (mappings /
+user actions CASCADE). Called from tenant-mgt / device-mgt tenant cleanup
+alongside legacy `TenantDAO.deleteNotificationByTenantId` (`DM_NOTIFICATION` only).
 
 ---
 
@@ -190,6 +206,20 @@ Helpers:
 
 ---
 
+## Dual-path with legacy notifications
+
+Legacy `NotificationManagementService` / `DM_NOTIFICATION` remains for older consumers.
+
+| Caller | When realtime config available | When not |
+| --- | --- | --- |
+| Open-source Android `updateOperations` (ERROR) | Skip legacy add (core `OperationManager` already called `handleOperationNotificationIfApplicable`) | Legacy `addNotification` |
+| Proprietary `requestChat` (`REQUEST_CHAT`) | `handleTaskNotificationIfApplicable` | Legacy `addNotification` |
+| Siddhi `device:addNotification` | N/A (no operation/task code) | Always legacy |
+| Core `OperationManager` / `DeviceManagerUtil.publishDeviceNotification` | Realtime handlers only (no-op without config) | No legacy write |
+
+Device / tenant delete: legacy purge via device-mgt DAOs (`DM_NOTIFICATION`);
+realtime purge via `RealtimeNotificationManagementService` (`DM_REALTIME_*`).
+
 ## Acceptance criteria
 
 - [ ] Disabled or missing configs cause publish methods to no-op without error (warn/debug as coded).
@@ -197,3 +227,4 @@ Helpers:
 - [ ] Mark/delete/archive refresh unread count over the broker when counts change.
 - [ ] Archival ntask runs daily at 02:00 and uses per-config then default cutoffs.
 - [ ] Role permission updates go through `APIPublisherService.notifyRolePermissionUpdate` → task notification path (not a direct dependency on a removed service).
+- [ ] `isNotificationConfigAvailable` gates legacy ERROR / task fallbacks so both stores are not written for the same event.

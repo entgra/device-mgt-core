@@ -2785,8 +2785,9 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
     }
 
     /**
-     * Removes device links from notifications and deletes notifications that no longer reference any device.
-     * Batch notifications keep their {@code DM_NOTIFICATION} row while other devices remain linked.
+     * Deletes legacy {@code DM_NOTIFICATION} rows for the given devices.
+     * Realtime notification cleanup belongs in realtime-notification-mgt
+     * ({@code RealtimeNotificationManagementService.purgeNotificationsForDevices}).
      *
      * @param conn active connection (same transaction as device delete)
      * @param deviceIds {@link Device} primary keys
@@ -2799,65 +2800,20 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         if (deviceIds == null || deviceIds.isEmpty()) {
             return;
         }
-        String selectNotificationIdsSql =
-                "SELECT DISTINCT nd.NOTIFICATION_ID " +
-                        "FROM DM_NOTIFICATION_DEVICE nd " +
-                        "INNER JOIN DM_NOTIFICATION n " +
-                        "ON nd.NOTIFICATION_ID = n.NOTIFICATION_ID " +
-                        "WHERE nd.DEVICE_ID = ? " +
-                        "AND n.TENANT_ID = ?";
-        String deleteMappingSql =
-                "DELETE FROM DM_NOTIFICATION_DEVICE " +
-                        "WHERE NOTIFICATION_ID = ? " +
-                        "AND DEVICE_ID = ?";
-        String countMappingsSql =
-                "SELECT COUNT(*) " +
-                        "FROM DM_NOTIFICATION_DEVICE " +
-                        "WHERE NOTIFICATION_ID = ?";
-        String deleteNotificationSql =
+        String deleteLegacySql =
                 "DELETE FROM DM_NOTIFICATION " +
-                        "WHERE NOTIFICATION_ID = ? " +
+                        "WHERE DEVICE_ID = ? " +
                         "AND TENANT_ID = ?";
-        try {
+        try (PreparedStatement deleteLegacyStmt = conn.prepareStatement(deleteLegacySql)) {
             for (Integer deviceId : deviceIds) {
                 if (deviceId == null) {
                     continue;
                 }
-                List<Integer> notificationIds = new ArrayList<>();
-                try (PreparedStatement selectStmt = conn.prepareStatement(selectNotificationIdsSql)) {
-                    selectStmt.setInt(1, deviceId);
-                    selectStmt.setInt(2, tenantId);
-                    try (ResultSet rs = selectStmt.executeQuery()) {
-                        while (rs.next()) {
-                            notificationIds.add(rs.getInt("NOTIFICATION_ID"));
-                        }
-                    }
-                }
-                for (Integer notificationId : notificationIds) {
-                    try (PreparedStatement deleteMappingStmt = conn.prepareStatement(deleteMappingSql)) {
-                        deleteMappingStmt.setInt(1, notificationId);
-                        deleteMappingStmt.setInt(2, deviceId);
-                        deleteMappingStmt.executeUpdate();
-                    }
-                    int remainingDeviceCount = 0;
-                    try (PreparedStatement countStmt = conn.prepareStatement(countMappingsSql)) {
-                        countStmt.setInt(1, notificationId);
-                        try (ResultSet countRs = countStmt.executeQuery()) {
-                            if (countRs.next()) {
-                                remainingDeviceCount = countRs.getInt(1);
-                            }
-                        }
-                    }
-                    if (remainingDeviceCount == 0) {
-                        try (PreparedStatement deleteNotificationStmt =
-                                     conn.prepareStatement(deleteNotificationSql)) {
-                            deleteNotificationStmt.setInt(1, notificationId);
-                            deleteNotificationStmt.setInt(2, tenantId);
-                            deleteNotificationStmt.executeUpdate();
-                        }
-                    }
-                }
+                deleteLegacyStmt.setInt(1, deviceId);
+                deleteLegacyStmt.setInt(2, tenantId);
+                deleteLegacyStmt.addBatch();
             }
+            deleteLegacyStmt.executeBatch();
         } catch (SQLException e) {
             String msg = "SQL error occurred while purging notifications for devices with deviceIds : " + deviceIds;
             log.error(msg, e);

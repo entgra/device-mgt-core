@@ -23,7 +23,7 @@ Stored via `MetadataManagementService` as JSON matching
 
 Per-config archive overrides: `settings.archiveType`, `settings.archiveAfter`.
 
-There is **no** `DM_NOTIFICATION_CONFIG` table; configs are metadata-only.
+There is **no** `DM_REALTIME_NOTIFICATION_CONFIG` table; configs are metadata-only.
 
 ---
 
@@ -31,7 +31,24 @@ There is **no** `DM_NOTIFICATION_CONFIG` table; configs are metadata-only.
 
 Scripts: `device-mgt.basics.feature/.../dbscripts/cdm/<db>.sql`
 
-### `DM_NOTIFICATION`
+Legacy inbox (unchanged table name, coexists with realtime):
+
+### `DM_NOTIFICATION` (legacy)
+
+| Column | Notes |
+| --- | --- |
+| `NOTIFICATION_ID` | PK |
+| `DEVICE_ID` | FK → `DM_DEVICE(ID)` |
+| `OPERATION_ID` | Optional |
+| `TENANT_ID` | Tenant |
+| `STATUS` | e.g. `NEW` |
+| `DESCRIPTION` | Free-text |
+| `LAST_UPDATED_TIMESTAMP` | |
+
+Served by device-mgt `NotificationManagementService` / legacy Device Management
+notification API. Realtime tables below are prefixed `DM_REALTIME_*`.
+
+### `DM_REALTIME_NOTIFICATION`
 
 | Column | Notes |
 | --- | --- |
@@ -44,22 +61,22 @@ Scripts: `device-mgt.basics.feature/.../dbscripts/cdm/<db>.sql`
 
 Indexes: config id, tenant id, created timestamp.
 
-### `DM_NOTIFICATION_DEVICE`
+### `DM_REALTIME_NOTIFICATION_DEVICE`
 
 | Column | Notes |
 | --- | --- |
-| `NOTIFICATION_ID` | FK → `DM_NOTIFICATION` ON DELETE CASCADE |
+| `NOTIFICATION_ID` | FK → `DM_REALTIME_NOTIFICATION` ON DELETE CASCADE |
 | `DEVICE_ID` | FK → `DM_DEVICE(ID)` ON DELETE CASCADE |
 | PK | `(NOTIFICATION_ID, DEVICE_ID)` |
 
 Used for **operation** notifications. Task notifications typically have no rows.
 
-### `DM_NOTIFICATION_USER_ACTION`
+### `DM_REALTIME_NOTIFICATION_USER_ACTION`
 
 | Column | Notes |
 | --- | --- |
 | `ACTION_ID` | PK |
-| `NOTIFICATION_ID` | FK → `DM_NOTIFICATION` ON DELETE CASCADE |
+| `NOTIFICATION_ID` | FK → `DM_REALTIME_NOTIFICATION` ON DELETE CASCADE |
 | `USERNAME` | Recipient |
 | `IS_READ` | Default `false` |
 | `ACTION_TIMESTAMP` | Default `CURRENT_TIMESTAMP` |
@@ -74,8 +91,8 @@ Scripts: `.../dbscripts/cdm/archival/<db>.sql`
 
 | Active | Archive |
 | --- | --- |
-| `DM_NOTIFICATION` | `DM_NOTIFICATION_ARCH` |
-| `DM_NOTIFICATION_USER_ACTION` | `DM_NOTIFICATION_USER_ACTION_ARCH` |
+| `DM_REALTIME_NOTIFICATION` | `DM_REALTIME_NOTIFICATION_ARCH` |
+| `DM_REALTIME_NOTIFICATION_USER_ACTION` | `DM_REALTIME_NOTIFICATION_USER_ACTION_ARCH` |
 
 Archive tables mirror the main columns (no device mapping archive table).
 DB names for source/dest come from
@@ -123,9 +140,9 @@ Factory: `RealtimeNotificationManagementDAOFactory`
 
 | Tables | Operations |
 | --- | --- |
-| `DM_NOTIFICATION` | insert, select (paginated / by tenant), delete orphans |
-| `DM_NOTIFICATION_DEVICE` | insert mappings, delete by device, select for purge |
-| `DM_NOTIFICATION_USER_ACTION` | insert, update read flag, delete, unread count, list with status |
+| `DM_REALTIME_NOTIFICATION` | insert, select (paginated / by tenant), delete orphans |
+| `DM_REALTIME_NOTIFICATION_DEVICE` | insert mappings, delete by device, select for purge |
+| `DM_REALTIME_NOTIFICATION_USER_ACTION` | insert, update read flag, delete, unread count, list with status |
 
 Insert notification columns: `NOTIFICATION_CONFIG_ID`, `TENANT_ID`,
 `NOTIFICATION_CONTEXT`, `TYPE` (+ generated id / timestamp).
@@ -158,6 +175,6 @@ realtime-notification-mgt DAOs; see
 
 - [ ] New installs create active notification tables in CDM scripts and arch tables in archival scripts.
 - [ ] Publish writes notification + user actions; operation publish also writes device mappings.
-- [ ] Unread count is derived from `DM_NOTIFICATION_USER_ACTION` where `IS_READ = false`.
+- [ ] Unread count is derived from `DM_REALTIME_NOTIFICATION_USER_ACTION` where `IS_READ = false`.
 - [ ] Scheduled archival moves aged rows to dest and can purge expired archives.
 - [ ] Config changes persist only under metadata key `notification-config`.

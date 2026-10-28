@@ -48,11 +48,9 @@ import io.entgra.device.mgt.core.device.mgt.core.service.DeviceManagementProvide
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.user.api.UserStoreException;
-import org.wso2.carbon.user.api.UserStoreManager;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -60,7 +58,7 @@ import java.util.Map;
 
 public class RealtimeNotificationManagementServiceImpl implements RealtimeNotificationManagementService {
     private static final Log log = LogFactory.getLog(RealtimeNotificationManagementServiceImpl.class);
-    /** Matches {@code DM_NOTIFICATION.NOTIFICATION_CONTEXT} / archive column size in CDM scripts. */
+    /** Matches {@code DM_REALTIME_NOTIFICATION.NOTIFICATION_CONTEXT} / archive column size in CDM scripts. */
     private static final int MAX_NOTIFICATION_CONTEXT_LENGTH = 1000;
     private final RealtimeNotificationManagementDAO notificationDAO;
     private final RealtimeNotificationArchivalDAO notificationArchiveDAO;
@@ -348,6 +346,32 @@ public class RealtimeNotificationManagementServiceImpl implements RealtimeNotifi
         } finally {
             RealtimeNotificationManagementDAOFactory.closeConnection();
         }
+    }
+
+    @Override
+    public void deleteNotificationsByTenantId(int tenantId) throws RealtimeNotificationManagementException {
+        try {
+            RealtimeNotificationManagementDAOFactory.beginTransaction();
+            notificationDAO.deleteNotificationsByTenantId(tenantId);
+            RealtimeNotificationManagementDAOFactory.commitTransaction();
+        } catch (RealtimeNotificationManagementDAOException e) {
+            RealtimeNotificationManagementDAOFactory.rollbackTransaction();
+            String msg = "Error occurred while deleting realtime notifications for tenant: " + tenantId;
+            log.error(msg, e);
+            throw new RealtimeNotificationManagementException(msg, e);
+        } catch (RealtimeTransactionManagementException e) {
+            String msg = "Error occurred while deleting realtime notifications for tenant: " + tenantId;
+            log.error(msg, e);
+            throw new RealtimeNotificationManagementException(msg, e);
+        } finally {
+            RealtimeNotificationManagementDAOFactory.closeConnection();
+        }
+    }
+
+    @Override
+    public boolean isNotificationConfigAvailable(String code) throws RealtimeNotificationManagementException {
+        RealtimeNotificationConfig config = RealtimeNotificationHelper.getNotificationConfigurationByCode(code);
+        return config != null && config.isEnabled();
     }
 
     @Override

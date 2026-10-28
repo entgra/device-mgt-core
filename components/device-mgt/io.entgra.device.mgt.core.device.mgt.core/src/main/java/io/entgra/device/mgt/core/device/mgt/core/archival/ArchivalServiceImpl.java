@@ -136,10 +136,11 @@ public class ArchivalServiceImpl implements ArchivalService {
                 }
             }
 
-            // Notifications are handled by the separate notification archival process.
-            // The legacy notification schema must not block operation archival.
-            // archivalDAO.moveNotifications(currentTime);
-            // commitTransactions();
+            if (log.isDebugEnabled()) {
+                log.debug("## Archiving legacy notifications");
+            }
+            archivalDAO.moveNotifications(currentTime);
+            commitTransactions();
             //Purge the enrolment mappings table, DM_ENROLMENT_OP_MAPPING
             if (log.isDebugEnabled()) {
                 log.debug("## Archiving enrolment mappings");
@@ -239,10 +240,10 @@ public class ArchivalServiceImpl implements ArchivalService {
             }
             dataDeletionDAO.deleteOperationResponses();
 
-//            if (log.isDebugEnabled()) {
-//                log.debug("## Deleting notifications ");
-//            }
-//            dataDeletionDAO.deleteNotifications();
+            if (log.isDebugEnabled()) {
+                log.debug("## Deleting notifications ");
+            }
+            dataDeletionDAO.deleteNotifications();
 
             if (log.isDebugEnabled()) {
                 log.debug("## Deleting enrolment mappings ");

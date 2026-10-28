@@ -137,6 +137,11 @@ public interface RealtimeNotificationManagementDAO {
             throws RealtimeNotificationManagementDAOException;
 
     /**
+     * Deletes all realtime notifications for the tenant. Child rows CASCADE from the parent.
+     */
+    void deleteNotificationsByTenantId(int tenantId) throws RealtimeNotificationManagementDAOException;
+
+    /**
      * Inserts user-specific actions related to a given notification.
      *
      * @param notificationId The ID of the notification for which user actions are being inserted.
