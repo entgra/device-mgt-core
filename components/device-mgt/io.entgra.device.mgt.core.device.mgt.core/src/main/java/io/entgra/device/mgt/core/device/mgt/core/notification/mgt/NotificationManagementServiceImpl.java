@@ -41,7 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Legacy notification management against {@code DM_NOTIFICATION}.
+ * Notification management against {@code DM_NOTIFICATION}.
  */
 public class NotificationManagementServiceImpl implements NotificationManagementService {
 

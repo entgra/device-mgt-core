@@ -2785,7 +2785,7 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
     }
 
     /**
-     * Deletes legacy {@code DM_NOTIFICATION} rows for the given devices.
+     * Deletes {@code DM_NOTIFICATION} rows for the given devices.
      * Realtime notification cleanup belongs in realtime-notification-mgt
      * ({@code RealtimeNotificationManagementService.purgeNotificationsForDevices}).
      *
@@ -2800,20 +2800,20 @@ public abstract class AbstractDeviceDAOImpl implements DeviceDAO {
         if (deviceIds == null || deviceIds.isEmpty()) {
             return;
         }
-        String deleteLegacySql =
+        String deleteNotificationSql =
                 "DELETE FROM DM_NOTIFICATION " +
                         "WHERE DEVICE_ID = ? " +
                         "AND TENANT_ID = ?";
-        try (PreparedStatement deleteLegacyStmt = conn.prepareStatement(deleteLegacySql)) {
+        try (PreparedStatement deleteNotificationStmt = conn.prepareStatement(deleteNotificationSql)) {
             for (Integer deviceId : deviceIds) {
                 if (deviceId == null) {
                     continue;
                 }
-                deleteLegacyStmt.setInt(1, deviceId);
-                deleteLegacyStmt.setInt(2, tenantId);
-                deleteLegacyStmt.addBatch();
+                deleteNotificationStmt.setInt(1, deviceId);
+                deleteNotificationStmt.setInt(2, tenantId);
+                deleteNotificationStmt.addBatch();
             }
-            deleteLegacyStmt.executeBatch();
+            deleteNotificationStmt.executeBatch();
         } catch (SQLException e) {
             String msg = "SQL error occurred while purging notifications for devices with deviceIds : " + deviceIds;
             log.error(msg, e);

@@ -137,7 +137,7 @@ public class ArchivalServiceImpl implements ArchivalService {
             }
 
             if (log.isDebugEnabled()) {
-                log.debug("## Archiving legacy notifications");
+                log.debug("## Archiving notifications");
             }
             archivalDAO.moveNotifications(currentTime);
             commitTransactions();

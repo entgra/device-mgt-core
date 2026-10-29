@@ -57,7 +57,7 @@ Impl: `RealtimeNotificationManagementServiceImpl`
 
 | Method | Behaviour |
 | --- | --- |
-| `isNotificationConfigAvailable(code)` | `true` when tenant metadata has an **enabled** config matching the operation/task code (case-insensitive). Used by dual-path callers (Android ERROR notifications, proprietary task flows) to choose realtime vs legacy `DM_NOTIFICATION`. |
+| `isNotificationConfigAvailable(code)` | `true` when tenant metadata has an **enabled** config matching the operation/task code (case-insensitive). |
 
 ### Inbox / user actions
 
@@ -123,8 +123,7 @@ Device-mgt DAOs must **not** touch `DM_REALTIME_*` tables.
 #### Tenant delete — `deleteNotificationsByTenantId`
 
 Deletes all `DM_REALTIME_NOTIFICATION` rows for a tenant (mappings /
-user actions CASCADE). Called from tenant-mgt / device-mgt tenant cleanup
-alongside legacy `TenantDAO.deleteNotificationByTenantId` (`DM_NOTIFICATION` only).
+user actions CASCADE). Called from tenant-mgt / device-mgt tenant cleanup.
 
 ---
 
@@ -206,20 +205,6 @@ Helpers:
 
 ---
 
-## Dual-path with legacy notifications
-
-Legacy `NotificationManagementService` / `DM_NOTIFICATION` remains for older consumers.
-
-| Caller | When realtime config available | When not |
-| --- | --- | --- |
-| Open-source Android `updateOperations` (ERROR) | Skip legacy add (core `OperationManager` already called `handleOperationNotificationIfApplicable`) | Legacy `addNotification` |
-| Proprietary `requestChat` (`REQUEST_CHAT`) | `handleTaskNotificationIfApplicable` | Legacy `addNotification` |
-| Siddhi `device:addNotification` | N/A (no operation/task code) | Always legacy |
-| Core `OperationManager` / `DeviceManagerUtil.publishDeviceNotification` | Realtime handlers only (no-op without config) | No legacy write |
-
-Device / tenant delete: legacy purge via device-mgt DAOs (`DM_NOTIFICATION`);
-realtime purge via `RealtimeNotificationManagementService` (`DM_REALTIME_*`).
-
 ## Acceptance criteria
 
 - [ ] Disabled or missing configs cause publish methods to no-op without error (warn/debug as coded).
@@ -227,4 +212,3 @@ realtime purge via `RealtimeNotificationManagementService` (`DM_REALTIME_*`).
 - [ ] Mark/delete/archive refresh unread count over the broker when counts change.
 - [ ] Archival ntask runs daily at 02:00 and uses per-config then default cutoffs.
 - [ ] Role permission updates go through `APIPublisherService.notifyRolePermissionUpdate` → task notification path (not a direct dependency on a removed service).
-- [ ] `isNotificationConfigAvailable` gates legacy ERROR / task fallbacks so both stores are not written for the same event.
