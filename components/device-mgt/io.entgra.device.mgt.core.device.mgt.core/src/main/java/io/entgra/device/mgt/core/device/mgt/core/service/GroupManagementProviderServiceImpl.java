@@ -628,6 +628,41 @@ public class GroupManagementProviderServiceImpl implements GroupManagementProvid
             throw new GroupManagementException(msg, e);
         }
 
+        if (request.isIncludeDeviceCount() && rootGroups != null && !rootGroups.isEmpty()) {
+            try {
+                int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
+                GroupManagementDAOFactory.openConnection();
+                List<DeviceGroup> groups = new ArrayList<>();
+                List<DeviceGroup> pending = new ArrayList<>(rootGroups);
+                while (!pending.isEmpty()) {
+                    DeviceGroup group = pending.remove(pending.size() - 1);
+                    groups.add(group);
+                    if (group.getChildrenGroups() != null) {
+                        pending.addAll(group.getChildrenGroups());
+                    }
+                }
+                List<Integer> groupIds = new ArrayList<>(groups.size());
+                for (DeviceGroup group : groups) {
+                    groupIds.add(group.getGroupId());
+                }
+                Map<Integer, Integer> counts = groupDAO.getDeviceCounts(groupIds, tenantId);
+                for (DeviceGroup group : groups) {
+                    group.setDeviceCount(counts.getOrDefault(group.getGroupId(), 0));
+                }
+            } catch (SQLException e) {
+                String msg = "Error occurred while opening a connection to the data source to retrieve device "
+                        + "counts for groups with hierarchy";
+                log.error(msg, e);
+                throw new GroupManagementException(msg, e);
+            } catch (GroupManagementDAOException e) {
+                String msg = "Error occurred while retrieving device counts for groups with hierarchy";
+                log.error(msg, e);
+                throw new GroupManagementException(msg, e);
+            } finally {
+                GroupManagementDAOFactory.closeConnection();
+            }
+        }
+
         PaginationResult groupResult = new PaginationResult();
         groupResult.setData(rootGroups);
         if (StringUtils.isBlank(username)) {
