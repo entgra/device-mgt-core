@@ -24,7 +24,6 @@ import io.entgra.device.mgt.core.device.mgt.common.policy.mgt.Policy;
 import io.entgra.device.mgt.core.device.mgt.common.policy.mgt.Profile;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * This interface defines the policy management which should be implemented by the plugins
@@ -51,7 +50,7 @@ public interface PolicyAdministratorPoint {
 
     boolean deletePolicy(int policyId) throws PolicyManagementException;
 
-    void publishChanges(Set<Integer> policyIds) throws PolicyManagementException;
+    void publishChanges() throws PolicyManagementException;
 
     /**
      * This method adds a policy per device which should be implemented by the related plugins.
@@ -160,8 +159,6 @@ public interface PolicyAdministratorPoint {
     List<Profile> getProfiles() throws PolicyManagementException;
 
     int getPolicyCount() throws PolicyManagementException;
-
-    int getPolicyCount(PolicyPaginationRequest request) throws PolicyManagementException;
 
     /**
      * @param policyType type of the policy

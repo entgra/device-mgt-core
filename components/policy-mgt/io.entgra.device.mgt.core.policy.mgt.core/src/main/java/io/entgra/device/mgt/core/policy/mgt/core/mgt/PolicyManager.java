@@ -26,8 +26,6 @@ import io.entgra.device.mgt.core.policy.mgt.core.mgt.bean.UpdatedPolicyDeviceLis
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public interface PolicyManager {
 
@@ -71,9 +69,7 @@ public interface PolicyManager {
     void addAppliedPolicyFeaturesToDevice(DeviceIdentifier deviceIdentifier, Policy policy)
             throws PolicyManagementException;
 
-    UpdatedPolicyDeviceListBean applyChangesMadeToPolicies(Set<Integer> policyIds) throws PolicyManagementException;
-
-    void completePolicyChanges(Set<Integer> policyIds) throws PolicyManagementException;
+    UpdatedPolicyDeviceListBean applyChangesMadeToPolicies() throws PolicyManagementException;
 
     void addAppliedPolicyToDevice(DeviceIdentifier deviceIdentifier, Policy policy) throws PolicyManagementException;
 
@@ -85,14 +81,10 @@ public interface PolicyManager {
 
     int getPolicyCount() throws PolicyManagementException;
 
-    int getPolicyCount(PolicyPaginationRequest request) throws PolicyManagementException;
-
     @Deprecated
     Policy getAppliedPolicyToDevice(DeviceIdentifier deviceIdentifier) throws PolicyManagementException;
 
     Policy getAppliedPolicyToDevice(Device device) throws PolicyManagementException;
-
-    Map<Integer, Policy> getAppliedPolicies(List<Device> devices) throws PolicyManagementException;
 
     HashMap<Integer, Integer> getAppliedPolicyIdsDeviceIds() throws PolicyManagementException;
 
