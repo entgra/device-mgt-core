@@ -328,6 +328,13 @@ public interface GroupManagementService {
             @QueryParam("requireGroupProps")
                     boolean requireGroupProps,
             @ApiParam(
+                    name = "includeDeviceCount",
+                    value = "When true, each group in the response includes deviceCount " +
+                            "(enrolments with status ACTIVE, INACTIVE, CREATED, or UNREACHABLE).",
+                    defaultValue = "false")
+            @QueryParam("includeDeviceCount")
+                    boolean includeDeviceCount,
+            @ApiParam(
                     name = "depth",
                     value = "Depth of the group hierarchy.")
             @DefaultValue("3")

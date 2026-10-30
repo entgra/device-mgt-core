@@ -94,6 +94,7 @@ public class GroupManagementAdminServiceImpl implements GroupManagementAdminServ
             @QueryParam("owner") String owner,
             @QueryParam("status") String status,
             @QueryParam("requireGroupProps") boolean requireGroupProps,
+            @QueryParam("includeDeviceCount") boolean includeDeviceCount,
             @DefaultValue("3") @QueryParam("depth") int depth,
             @DefaultValue("0") @QueryParam("offset") int offset,
             @DefaultValue("5") @QueryParam("limit") int limit) {
@@ -105,6 +106,7 @@ public class GroupManagementAdminServiceImpl implements GroupManagementAdminServ
             request.setOwner(owner);
             request.setStatus(status);
             request.setDepth(depth);
+            request.setIncludeDeviceCount(includeDeviceCount);
             int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
             UserRealm realmService = DeviceMgtAPIUtils.getRealmService().getTenantUserRealm(tenantId);
             String[] roles = realmService.getUserStoreManager().getRoleListOfUser(currentUser);
