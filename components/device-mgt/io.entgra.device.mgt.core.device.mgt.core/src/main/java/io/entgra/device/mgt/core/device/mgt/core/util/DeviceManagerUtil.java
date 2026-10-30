@@ -1319,7 +1319,7 @@ public final class DeviceManagerUtil {
      */
     public static void publishDeviceNotification(int tenantId, String taskCode, String message) {
         try {
-            DeviceManagementDataHolder.getInstance().getNotificationManagementService()
+            DeviceManagementDataHolder.getInstance().getRealtimeNotificationManagementService()
                     .handleTaskNotificationIfApplicable(tenantId, taskCode, message);
         } catch (io.entgra.device.mgt.core.realtime.notification.mgt.common.exception.RealtimeNotificationManagementException e) {
             log.error("Error occurred while publishing device notification [" + taskCode + "]: " + message, e);

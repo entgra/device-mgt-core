@@ -149,7 +149,7 @@ public class DeviceManagementStartupHandler implements ServerStartupObserver {
                                     String operationCode = parts[0];
                                     String groupedDeviceType = parts[1];
                                     List<Integer> deviceIds = entry.getValue();
-                                    DeviceManagementDataHolder.getInstance().getNotificationManagementService()
+                                    DeviceManagementDataHolder.getInstance().getRealtimeNotificationManagementService()
                                             .handleOperationNotificationIfApplicable(operationCode, requiredStatusChange,
                                                     groupedDeviceType, deviceIds, tenantId, "postSync");
                                 }
