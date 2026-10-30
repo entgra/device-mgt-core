@@ -7,6 +7,12 @@ The tenant-wide rule below is the intended invariant. The inspected prechecks
 do not reserve a hash and are not proof of simultaneous-upload safety. APP-GAP-02
 requires concurrent tests and an approved enforcement/error-handling decision.
 
+This hash query has no lifecycle exclusion: an end-state release can still
+conflict. The separate initial-enterprise package check excludes the configured
+end state and is skipped by additional and remote-initial release paths. Do not
+generalize package rules from hash uniqueness. See the
+[enterprise identity matrix](../creation/app-creation-enterprise.md#validation-and-identity).
+
 ## Purpose
 
 A tenant must not store two application releases that share the same installer

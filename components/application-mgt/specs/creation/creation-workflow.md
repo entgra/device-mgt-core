@@ -16,6 +16,11 @@ visibility and type-specific release fields. Null/blank and wrapper combinations
 still require negative tests; this baseline does not promise all malformed payloads
 already produce a controlled domain exception.
 
+For the complete enterprise branch, including first-entry-only release handling,
+null/empty validation distinctions and caller obligations, use the
+[enterprise contract](app-creation-enterprise.md). Its dependent HTTP mappings do
+not establish installed-product authentication or UI behavior.
+
 For synchronous creation, triggerApplicationCreation uploads/prepares artifacts
 before opening a DB transaction, calls addAppDataIntoDB, and commits. Its caught
 failure branches attempt artifact cleanup; filesystem cleanup is not transactional.
@@ -39,6 +44,10 @@ pipeline diagram and type-specific synchronous success descriptions.
 ## Boundaries and open decisions
 
 APP-X-001/002/003/004 apply. Name/hash checks are not a cross-node guarantee.
+APP-CRT-003 is a proposed guarantee: artifact preparation occurs before the
+transaction try block, and initial enterprise icon-info persistence uses a separate
+device-management transaction. Neither is covered by an APPM rollback guarantee.
+See APP-GAP-19/21 and the enterprise failure matrix.
 Do not invent durable job status, automatic retries or a new 202 response: these
 are APP-GAP-02/03/04 decisions. Detailed UI behavior is owned by proprietary
 commons. Verification is in [matrix](../verification-matrix.md); no tests run here.

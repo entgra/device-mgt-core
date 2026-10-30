@@ -1,8 +1,8 @@
 # Application Management Specification Workflow
 
-Status: Draft baseline; product/component-owner approval pending.
+Status: Draft baseline; collaborative review pending.
 Baseline: core `293d35abfdf57fb461a1b745fbe735b581555be4`; prepared 2026-10-27.
-Accountable owner: Application Management component owner (person to be assigned).
+Review and verification: shared team responsibility.
 
 ## Scope and authority
 
@@ -30,7 +30,7 @@ Track these independently:
 | Implementation | Observed / Partial / Proposed / Unknown |
 | Verification | Mapped-not-run / Planned / Passed-at-commit / Failed-at-commit |
 
-All new documents are Draft. No named owner has approved this baseline. No tests
+All new documents are Draft. Review outcomes must be recorded explicitly. No tests
 were added or executed in Phase 1. Historical successful builds do not establish
 acceptance coverage at this baseline. Existing unchecked checkboxes are not a
 completion counter.
@@ -71,8 +71,8 @@ links, folder indexes, the spec/source registers and verification mappings.
 1. Find the capability and governing requirements in the register.
 2. Inspect current code and evidence; refresh the reviewed commit when relevant.
 3. Propose a spec delta, including compatibility and open decisions.
-4. Obtain component-owner approval for behavior changes; involve security,
-   integration and product owners where affected.
+4. Collaboratively review behavior changes with the relevant security, integration,
+   product, API and deployment perspectives; record the decision and its scope.
 5. In Phase 2, implement tests and approved fixes in separately reviewable changes.
 6. Record test method, command, environment, result and commit before marking Passed.
 
@@ -83,10 +83,11 @@ unrelated defects. No new CI enforcement is claimed by this document.
 
 ## Review responsibilities
 
-Component owner: behavior, architecture and deviations. Product owner: ambiguous
-user-visible rules. QA: acceptance completeness and evidence. Security owner:
-authorization/tenant/credential rules. API and deployment owners: cross-repository
-compatibility and migrations. Named assignments remain an explicit approval gate.
+Review and verification are collaborative responsibilities. Include behavior,
+architecture, product intent, acceptance completeness, security/tenant boundaries,
+API compatibility, integration and deployment implications according to change
+risk. Named reviewer assignments are not prerequisites. Record actual review
+outcomes and unresolved decisions; shared responsibility does not imply approval.
 
 Phase 1 documentation is prepared when S01-S13 artifacts exist and links/IDs are
 consistent. Product approval and execution of Phase 2 remain separate gates; do

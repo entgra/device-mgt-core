@@ -126,6 +126,11 @@ backlog; the presence of a document does not close those gaps.
 
 The B2 expansion adds release search/update detail, retirement, platform artifacts
 and subscription reporting. The [spec register](spec-register.md) records its revision.
+Enterprise creation, release persistence and publication now have detailed
+[enterprise contracts](creation/app-creation-enterprise.md) and
+[verification subcases](verification-matrix.md#enterprise-creation-and-publication-cases).
+Review provenance and remaining decisions are in the existing registers.
+
 There are 42 canonical acceptance requirements (35 original plus 7 additions);
 none were newly runtime-verified by documentation work. Use the
 [operation inventory](operation-coverage.md) to find uncovered branches before

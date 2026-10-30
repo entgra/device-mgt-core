@@ -3,8 +3,10 @@
 ## Authority and maintenance
 
 This is the authoritative review-status, ownership and reviewed-baseline register
-for the feature specifications below. All named assignments and approvals remain
-pending. This consolidation does not approve behavior or add runtime evidence.
+for the feature specifications below. Review and verification are collaborative;
+role labels identify relevant perspectives rather than required named assignments.
+Approval outcomes remain explicit and pending where not recorded. This register
+does not approve behavior or add runtime evidence.
 
 Baseline B1: core `293d35abfdf57fb461a1b745fbe735b581555be4`, reviewed 2026-10-27;
 consumer references use proprietary commons
@@ -17,23 +19,23 @@ baseline here without changing other rows implicitly.
 | --- | --- | --- | --- |
 | [Application Management Architecture Baseline](architecture.md) | Draft, source-observed; approval pending. | Application Management component owner (assignment pending). | B1 |
 | [Cross-Cutting Application Management Requirements](cross-cutting-requirements.md) | Draft; all proposed guarantees require owner approval. | component owner with security and deployment reviewers (assignment pending). | B1 |
-| [Application Creation Workflow](creation/creation-workflow.md) | Draft baseline, owner approval pending. | component owner with Publisher API owner (assignment pending). | B1 |
-| [Release Management Baseline](releases/release-management.md) | Draft, approval pending. | component owner with Publisher/storage owners (assignment pending). | B1 |
-| [Publication and Lifecycle](lifecycle/lifecycle.md) | Draft baseline; product/security approval pending. | component owner with lifecycle permission owner (assignment pending). | B1 |
-| [Artifacts, Transfer and Storage](storage/storage.md) | Draft baseline, approval pending. | component owner with storage/security owner (assignment pending). | B1 |
+| [Application Creation Workflow](creation/creation-workflow.md) | Draft; enterprise contract source-reviewed; collaborative approval and execution pending. | Shared team review, including relevant API, security, data and runtime perspectives. | B3 (enterprise branches only) |
+| [Release Management Baseline](releases/release-management.md) | Draft; enterprise contract source-reviewed; collaborative approval and execution pending. | Shared team review, including relevant API, security, data and runtime perspectives. | B3 (enterprise branches only) |
+| [Publication and Lifecycle](lifecycle/lifecycle.md) | Draft; enterprise contract source-reviewed; collaborative approval and execution pending. | Shared team review, including relevant API, security, data and runtime perspectives. | B3 (enterprise branches only) |
+| [Artifacts, Transfer and Storage](storage/storage.md) | Draft; enterprise contract source-reviewed; collaborative approval and execution pending. | Shared team review, including relevant API, security, data and runtime perspectives. | B3 (enterprise branches only) |
 | [Application Catalog and Organization](catalog/catalog.md) | Draft baseline, approval pending. | component owner with Publisher/Store owners (assignment pending). | B1 |
 | [Subscriptions, Installation and Scheduling](subscriptions/subscriptions.md) | Draft baseline, approval pending. | component owner with device-operation and Store owners (assignment pending). | B1 |
 | [Reviews, Replies and Ratings](reviews/reviews.md) | Draft baseline, approval pending. | component owner with Store/product owners (assignment pending). | B1 |
 | [Firmware Models and Release Availability](firmware/firmware.md) | Draft baseline, approval pending. | component owner with firmware/device-model owner (assignment pending). | B1 |
 | [Identity-Service-Provider and VPP Integrations](integrations/integrations.md) | Draft source baseline; external contract approval pending. | component owner with identity/VPP integration and security owners (assignment pending). | B1 |
 | [Runtime, Deployment and Tenant Cleanup](runtime/runtime.md) | Draft baseline, approval pending. | component owner with platform/deployment owner (assignment pending). | B1 |
-| [App Creation (Backend) Spec](creation/app-creation.md) | Draft source-derived baseline; owner approval pending. | Application Management / Publisher API owners (assignment pending). | B1 |
-| [Enterprise App Creation (Backend) Spec](creation/app-creation-enterprise.md) | Draft source-derived baseline; owner approval pending. | Application Management / Publisher API owners (assignment pending). | B1 |
+| [App Creation (Backend) Spec](creation/app-creation.md) | Draft; enterprise contract source-reviewed; collaborative approval and execution pending. | Shared team review, including relevant API, security, data and runtime perspectives. | B3 (enterprise branches only) |
+| [Enterprise App Creation (Backend) Spec](creation/app-creation-enterprise.md) | Draft; enterprise contract source-reviewed; collaborative approval and execution pending. | Shared team review, including relevant API, security, data and runtime perspectives. | B3 (enterprise branches only) |
 | [Public App Creation (Backend) Spec](creation/app-creation-public.md) | Draft source-derived baseline; owner approval pending. | Application Management / Publisher API owners (assignment pending). | B1 |
 | [Web Clip / Web App Creation (Backend) Spec](creation/app-creation-web.md) | Draft source-derived baseline; owner approval pending. | Application Management / Publisher API owners (assignment pending). | B1 |
 | [Custom (Firmware) App Creation (Backend) Spec](creation/app-creation-custom.md) | Draft source-derived baseline; owner approval pending. | Application Management / firmware / Publisher owners (assignment pending). | B1 |
-| [Release Binary Hash Uniqueness Spec](releases/release-binary-hash.md) | Draft source-derived baseline; owner approval pending. | Application Management / database owner (assignment pending). | B1 |
-| [Single Installable Release Spec](releases/single-installable-release.md) | Draft source-derived baseline; owner approval pending. | Application Management / lifecycle owner (assignment pending). | B1 |
+| [Release Binary Hash Uniqueness Spec](releases/release-binary-hash.md) | Draft; enterprise contract source-reviewed; collaborative approval and execution pending. | Shared team review, including relevant API, security, data and runtime perspectives. | B3 (enterprise branches only) |
+| [Single Installable Release Spec](releases/single-installable-release.md) | Draft; enterprise contract source-reviewed; collaborative approval and execution pending. | Shared team review, including relevant API, security, data and runtime perspectives. | B3 (enterprise branches only) |
 | [Favourites Cleanup On Release Delete Spec](catalog/release-delete-cleanup.md) | Draft source-derived baseline; owner approval pending. | Application Management / Store product owner (assignment pending). | B1 |
 | [Application list: releases vs categories](catalog/releases-vs-categories.md) | Draft source-derived baseline; owner approval pending. | Application Management / Store API owner (assignment pending). | B1 |
 
@@ -72,3 +74,24 @@ decision against its gap. Close implementation or verification gaps only with
 their required evidence; a spec edit alone is insufficient. Record approval by
 name/date and scope in this register when actually supplied. Supporting registers,
 plans and historical handovers retain their own document-level scope/status notes.
+
+## Enterprise contract review
+
+Baseline B3: core `4db344a2a94ed4483c44e56adb7a31c8d0dabb7a`; sampled Publisher
+adapter in commons `875cea5ab95de2e5067b73fdd22e73dc3e935ff8`. Only enterprise
+creation, release persistence and lifecycle-publication branches in the B3 rows
+were re-inspected. Public/web/custom branches and other rows retain their earlier
+review scope. Full deployed API/UI/agent behavior is not established.
+
+The enterprise contract, persistence/lifecycle/storage details, source references,
+gap decisions and verification subcases now describe synchronous initial creation,
+additional releases and remote completion boundaries. Existing requirement IDs
+are retained; E01-E16 are subcases, not new canonical requirements. APP-GAP-19/20/21
+record malformed-input/path distinctions, lifecycle repeat/type/error behavior and
+independent icon persistence. No gap is closed by this source review alone.
+
+Review and verification belong to the collaborating team; no named reviewer
+assignment is required. Proposed guarantees and changes to observed behavior still
+need an explicit decision. Status: source-described, collaborative approval pending,
+runtime verification not executed. This record is contract provenance, not a
+product release/support declaration.
