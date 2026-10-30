@@ -1,7 +1,6 @@
 # Application Management Specification Workflow
 
 Status: Draft baseline; collaborative review pending.
-Baseline: core `293d35abfdf57fb461a1b745fbe735b581555be4`; prepared 2026-10-27.
 Review and verification: shared team responsibility.
 
 ## Scope and authority
@@ -12,13 +11,12 @@ is evidence gathering, not runtime verification. Notification management is a
 separate pilot; its conventions can be compared without changing its specs.
 
 The baseline includes core/common services, persistence, storage, tasks, feature
-packaging and consumer boundaries. Publisher, Store, agent and deployment changes
-require their respective owners. See [source map](source-map.md).
+packaging and consumer boundaries. Changes outside this component require their own explicit scope.
 
 Code is evidence of current behavior, not automatic approval of product intent.
 Existing specs remain compatibility references, subject to the corrections and
 qualifications in the [gap register](gap-register.md). A proposed requirement must
-not silently replace an existing API behavior.
+not silently replace an existing service behavior.
 
 ## Status model
 
@@ -28,7 +26,7 @@ Track these independently:
 | --- | --- |
 | Spec review | Draft / Approved / Deprecated |
 | Implementation | Observed / Partial / Proposed / Unknown |
-| Verification | Mapped-not-run / Planned / Passed-at-commit / Failed-at-commit |
+| Verification | Mapped-not-run / Planned / Passed-with-evidence / Failed-with-evidence |
 
 All new documents are Draft. Review outcomes must be recorded explicitly. No tests
 were added or executed in Phase 1. Historical successful builds do not establish
@@ -46,8 +44,7 @@ Each feature spec must state scope/exclusions, observed behavior, requirements a
 acceptance criteria, tenant/permission boundaries and persistence/failure/concurrency
 semantics. Keep proposed or unresolved behavior labeled where it appears.
 Link to central tracking instead of repeating administrative headers:
-[spec register](spec-register.md) for owner/review status/baseline,
-[source map](source-map.md) for implementation references,
+[spec register](spec-register.md) for review scope and status,
 [gap register](gap-register.md) for decisions/deviations, and
 [verification matrix](verification-matrix.md) for planned checks and results.
 Maintain reciprocal links from those records to affected specs. Shared rules may
@@ -64,17 +61,17 @@ README.md. Keep shared architecture, cross-cutting rules and tracking registers
 at the Specs root. Split documents only for meaningful behavioral boundaries;
 link to canonical requirements instead of duplicating them across folders.
 When moving a spec, preserve requirement IDs and update incoming and outgoing
-links, folder indexes, the spec/source registers and verification mappings.
+links, folder indexes, the spec register and verification mappings.
 
 ## Change workflow
 
 1. Find the capability and governing requirements in the register.
-2. Inspect current code and evidence; refresh the reviewed commit when relevant.
+2. Inspect current code and evidence; inspect affected service boundaries.
 3. Propose a spec delta, including compatibility and open decisions.
 4. Collaboratively review behavior changes with the relevant security, integration,
-   product, API and deployment perspectives; record the decision and its scope.
+   product, service-compatibility and deployment perspectives; record the decision and its scope.
 5. In Phase 2, implement tests and approved fixes in separately reviewable changes.
-6. Record test method, command, environment, result and commit before marking Passed.
+6. Record test method, command, environment, result and report location before marking Passed.
 
 For AI-assisted work: read this file, the relevant feature specs, cross-cutting
 requirements and both constitutions before proposing implementation. Do not infer
@@ -85,7 +82,7 @@ unrelated defects. No new CI enforcement is claimed by this document.
 
 Review and verification are collaborative responsibilities. Include behavior,
 architecture, product intent, acceptance completeness, security/tenant boundaries,
-API compatibility, integration and deployment implications according to change
+Service compatibility, integration and deployment implications according to change
 risk. Named reviewer assignments are not prerequisites. Record actual review
 outcomes and unresolved decisions; shared responsibility does not imply approval.
 
@@ -98,7 +95,7 @@ not describe the entire feature as verified or production-safe on that basis.
 For this established product, observed contracts are the compatibility baseline.
 Do not implement proposed guarantees merely because they appear in an acceptance
 table. The Basis column and gap/decision record distinguish existing behavior from
-future changes. Production deployment revision still needs explicit confirmation.
+future changes. Effective deployment configuration still needs explicit confirmation.
 
 Before implementation, locate the public operation in [operation coverage](operation-coverage.md).
 Read its owning spec, characterize missing branches, record anomalies separately

@@ -1,6 +1,6 @@
 # Runtime, Deployment and Tenant Cleanup
 
-[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md) | [Sources](../source-map.md)
+[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md)
 
 ## Observed baseline
 

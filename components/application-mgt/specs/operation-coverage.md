@@ -2,17 +2,17 @@
 
 ## Scope and interpretation
 
-B2 source inventory: 156 method declarations across 10 interfaces in
+Service inventory: 156 method declarations across 10 interfaces in
 application.mgt.common.services, including overloads. Sources are linked per
 interface. This is an inventory of declared service operations, not every public
-implementation helper, HTTP endpoint, DAO method, configuration branch or device
+implementation helper, consumer behavior, DAO method, configuration branch or device
 agent capability. Those require additional reviews in their owning contracts.
 
 Each row points to the starting specification and related requirements. **Partial**
 means an owning document exists, but complete input/output/security/error coverage
 for this exact signature has not been established. No row is marked fully covered
 merely because its method name appears in a spec. Even the newly detailed contracts
-retain adapter and edge-case work in APP-GAP-14 through APP-GAP-18.
+retain caller-boundary and edge-case work in APP-GAP-14 through APP-GAP-18.
 
 Source line locations and exact signatures are discovery aids. Update this inventory
 when interfaces change; preserve requirement IDs. All acceptance execution remains

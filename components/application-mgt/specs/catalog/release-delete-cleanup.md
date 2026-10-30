@@ -1,44 +1,20 @@
 # Favourites Cleanup On Release Delete Spec
 
-[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md) | [Sources](../source-map.md)
+[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md)
 
 Requirements: [APP-CAT-003/004](catalog.md), [APP-REL-003](../releases/release-management.md).
 
 Clearing all app favourites on any release hard-delete is existing behavior;
 whether to retain it when another usable release exists is APP-GAP-07.
 
-## Purpose
+## Service behavior
 
-When a Publisher user deletes an application release, Store favourites for that
-application must be cleared so Favourites does not keep an entry that opens with
-“no release found”.
-
-## App And Audience
-
-| Concern | Detail |
-| --- | --- |
-| Apps | Application Publisher (delete release) / Application Store (Favourites) |
-| Entry | Publisher deletes a release; Store **Favourites** no longer lists that app |
-| Users | Any Store user who favourited the app |
-| Status | API-backed (core cleanup on delete) |
-
-## Product Rule
-
-Favourites are stored per **application id** (`AP_APP_FAVOURITES`), not per release.
-Store Favourites cards navigate using an installable `applicationReleases[0]`.
-
-**RETIRED** is the lifecycle end state (row still exists). It is **not** a hard delete.
-Hard-deleting a release removes favourite rows so Store does not keep a stale favourite
-that would open with “no release found”.
-
-Listing favourites for Store still filters to the installable release state (see Store
-`favourites.md`); retiring alone does not require deleting favourite rows.
-
-When an application release is **hard-deleted**, all favourite rows for that application
-(all users of the tenant) are deleted in the same DB transaction.
-
-When the entire application is deleted, favourites for that application are
-deleted as part of application cleanup.
+Favourites are application/user/tenant records in AP_APP_FAVOURITES, not
+release-owned records. Hard-deleting a release clears all favourites for its parent
+application in the tenant, even if another release remains. Confirm that policy
+before changing it (APP-GAP-07). Deleting the application also removes its favourites.
+Retirement changes lifecycle/status and is distinct from hard deletion; it does
+not itself require favourite rows to be deleted.
 
 ## Source Files
 
@@ -76,20 +52,20 @@ AND TENANT_ID = ?
 
 | Action | Expected |
 | --- | --- |
-| Delete a release of a favourited app | App disappears from Store → Favourites for all users |
-| Call Favourites after that delete | App is not listed; no “no release found” from stale favourite |
+| Delete a release of a favourited app | All tenant favourite rows for the application are removed |
+| Query favourites after that delete | The removed favourite mappings are not returned |
 | Delete entire application | Favourites for that app are removed |
 | App not favourited | Delete is unchanged; favourite delete is a no-op |
 
 ## Acceptance Criteria
 
 - [ ] Deleting an application release removes that app from `AP_APP_FAVOURITES` for the tenant.
-- [ ] Store Favourites no longer shows the app after release delete + refresh.
+- [ ] Favourite service queries do not return removed mappings after deletion.
 - [ ] Favourite cleanup runs in the same transaction as release delete.
 - [ ] Deleting an application also removes its favourite rows.
 
 ## Maintenance Rules
 
-- Keep favourite cleanup in core `ApplicationManagerImpl` delete paths, not in Store UI.
+- Keep favourite cleanup in core `ApplicationManagerImpl` delete paths.
 - Do not require the deleting user to have been the one who favourited the app.
 - When delete behaviour changes, update this spec in the same change.

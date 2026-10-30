@@ -59,6 +59,6 @@ User subscription/unsubscription totals; these are not installation-success tota
 | APP-SUB-004 | Observed reporting baseline; helper edges partial | Preserve provider selection, device empty/null results, filter/count distinctions and percentage calculation; do not equate subscription counts with installed devices. | AC-APP-SUB-004: each helper type, unsupported/case-variant type, NEW/other statuses, conflicting filter statuses, owner/name/status filtering, zero denominator and count/page comparison. |
 | APP-SUB-005 | Observed history/count and legacy behavior | Preserve UUID validation, operation enrichment, category count meanings and legacy installed-device selection. | AC-APP-SUB-005: blank/unknown/foreign UUID, absent operation details, device-service failure, completed/failed install and uninstall, empty candidates and repeated subscriber categories. |
 
-Sources: SUB reporting methods, provider, helpers and helper util in
-[source map](../source-map.md#baseline-expansion). APP-GAP-10/18 retain full
-adapter scopes, helper membership, response-error and timestamp validation work.
+Sources: SubscriptionManagerImpl reporting methods and subscription-management
+provider/helper implementations. APP-GAP-10/18 retain full
+caller authorization, helper membership, service-error and timestamp validation work.

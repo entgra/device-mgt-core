@@ -1,6 +1,6 @@
 # Artifacts, Transfer and Storage
 
-[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md) | [Sources](../source-map.md)
+[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md)
 
 ## Observed boundaries
 
@@ -12,9 +12,9 @@ path is repository/resources/apps/. FileDownloaderServiceProvider selects the
 download implementation for a URL. Remote creation behavior is specified separately
 in [creation workflow](../creation/creation-workflow.md).
 
-Source-level tenant path parameters are not proof that every HTTP download is
+Tenant path parameters alone are not proof that every artifact read is
 authorized. Upload link lifetime, partial-upload cleanup, path traversal, URL
-fetch policy, maximum sizes and streaming limits require adapter/config review.
+fetch policy, maximum sizes and streaming limits require service/configuration review.
 Do not assume local files exist on all nodes or that MD5 is a security signature.
 
 ## Requirements and acceptance
@@ -27,7 +27,7 @@ Do not assume local files exist on all nodes or that MD5 is a security signature
 
 ## Decisions and compatibility
 
-APP-GAP-03/04/10/11 cover completion signaling, crash recovery, download adapters
+APP-GAP-03/04/10/11 cover completion signaling, crash recovery, artifact-read callers
 and deployment settings. Keep current link formats and download contracts unless
 owners approve a versioned change. No storage migration or security policy is
 implemented in Phase 1. Utility/parser tests map only part of APP-STO-001.

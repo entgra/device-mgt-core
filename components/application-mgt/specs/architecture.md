@@ -1,17 +1,16 @@
 # Application Management Architecture Baseline
 
-[Tracking](spec-register.md) | [Gaps](gap-register.md) | [Verification](verification-matrix.md) | [Sources](source-map.md)
+[Tracking](spec-register.md) | [Gaps](gap-register.md) | [Verification](verification-matrix.md)
 
 ## Boundaries
 
 `application.mgt.common` supplies service interfaces, DTOs, wrappers and exceptions.
 `application.mgt.core` supplies implementations, DAO dialects, storage/transfer,
-lifecycle evaluation, tasks and OSGi activation. Publisher/Store/artifact HTTP
-adapters are in proprietary commons, not children of this component POM. Feature
+lifecycle evaluation, tasks and OSGi activation. Feature
 packaging provides runtime bundles, XML configuration/templates and schema scripts.
 
 ```text
-Publisher / Store / artifact API / trusted internal caller
+Trusted service caller
     -> common service contract
     -> ApplicationManager / SubscriptionManager / ReviewManager / integrations
         -> DAO factory -> ConnectionManagerUtil -> Carbon JNDI datasource
@@ -57,3 +56,14 @@ APP-X-004, [runtime](runtime/runtime.md) for APP-RUN-001 through APP-RUN-003, an
 [gap register](gap-register.md) for unresolved deployment and ownership questions.
 No claim is made that shared storage, cache invalidation or scheduler singleton
 execution is configured in production.
+
+## Architectural references
+
+The [common service contracts](../io.entgra.device.mgt.core.application.mgt.common/src/main/java/io/entgra/device/mgt/core/application/mgt/common/services)
+define the component boundary. The [application configuration](../../../features/application-mgt/io.entgra.device.mgt.core.application.mgt.server.feature/src/main/resources/conf/application-mgt.xml)
+defines packaged extension and lifecycle defaults. The
+[feature module](../../../features/application-mgt/io.entgra.device.mgt.core.application.mgt.server.feature/pom.xml)
+and its [database scripts](../../../features/application-mgt/io.entgra.device.mgt.core.application.mgt.server.feature/src/main/resources/dbscripts/cdm/application-mgt)
+define supplied resources; installed configuration and migrations must be checked
+separately when deployment behavior matters. These references explain ownership
+boundaries without maintaining a class or line-number inventory.

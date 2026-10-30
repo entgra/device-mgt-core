@@ -1,26 +1,30 @@
 # Acceptance Verification Matrix
 
-Status: Phase 1 source mapping only. No tests added, changed or executed.
-Baseline: core `293d35abfd`. Owner: QA with component owner (assignment pending).
+Status: Acceptance planning and candidate evidence only. No tests added, changed or executed.
 
-Enterprise case refinements below use the newer source revision recorded in the
-[spec register](spec-register.md#enterprise-contract-review). Their review and
-verification are collaborative; no named assignment is a prerequisite.
+The [spec register](spec-register.md) describes review scope and remaining work.
+Review and verification are collaborative; no named assignment is a prerequisite.
 
 Each acceptance ID is `AC-` plus the requirement ID. The governing specification
 contains the fixture/action/expected-outcome scenario; the Phase 2 work item supplies
 execution grouping. Existing test references are candidates/partial evidence, never
 Passed. Spec review and runtime verification are separate states.
 
-Test aliases resolve to exact files in [source map / Tests](source-map.md#tests):
-AMT = ApplicationManagementTest; DAOT = ApplicationManagementDAOTest;
-LCT = LifecycleManagementTest; PAR = ArtifactParserTest;
-STU = StorageManagementUtilTest; CFG = ConfigurationTest.
+Existing test aliases below identify candidate evidence, not passed acceptance.
+Check inclusion in the [configured TestNG suite](../io.entgra.device.mgt.core.application.mgt.core/src/test/resources/testng.xml)
+and inspect assertions before relying on a test.
+
+- AMT: [ApplicationManagementTest](../io.entgra.device.mgt.core.application.mgt.core/src/test/java/io/entgra/device/mgt/core/application/mgt/core/management/ApplicationManagementTest.java).
+- DAOT: [ApplicationManagementDAOTest](../io.entgra.device.mgt.core.application.mgt.core/src/test/java/io/entgra/device/mgt/core/application/mgt/core/dao/ApplicationManagementDAOTest.java).
+- LCT: [LifecycleManagementTest](../io.entgra.device.mgt.core.application.mgt.core/src/test/java/io/entgra/device/mgt/core/application/mgt/core/LifecycleManagementTest.java).
+- PAR: [ArtifactParserTest](../io.entgra.device.mgt.core.application.mgt.core/src/test/java/io/entgra/device/mgt/core/application/mgt/core/ArtifactParserTest.java).
+- STU: [StorageManagementUtilTest](../io.entgra.device.mgt.core.application.mgt.core/src/test/java/io/entgra/device/mgt/core/application/mgt/core/StorageManagementUtilTest.java).
+- CFG: [ConfigurationTest](../io.entgra.device.mgt.core.application.mgt.core/src/test/java/io/entgra/device/mgt/core/application/mgt/core/ConfigurationTest.java).
 
 | Requirement / acceptance suffix | Governing spec | Existing evidence (not run) | Required verification | Phase 2 |
 | --- | --- | --- | --- | --- |
 | APP-CRT-001 | [Creation](creation/creation-workflow.md) | AMT.createApplication partial enterprise fixture; DAOT.testAddApplication insertion only | Unit validation by type + service/DB fixtures | P2-02 |
-| APP-CRT-002 | [Creation](creation/creation-workflow.md) | No mapped adapter assertions | Publisher contract fixtures for all four handlers | P2-03 |
+| APP-CRT-002 | [Creation](creation/creation-workflow.md) | No mapped full service-boundary assertions | Validator/result/exception fixtures for all four wrapper families | P2-03 |
 | APP-CRT-003 | [Creation](creation/creation-workflow.md) | No mapped failure injection | DB/storage fault injection | P2-04 |
 | APP-CRT-004 | [Creation](creation/creation-workflow.md) | No mapped async completion assertions | Controlled downloader/worker + restart integration | P2-04 |
 | APP-REL-001 | [Release](releases/release-management.md) | No mapped cardinality/race assertions | Unit type checks + competing DB transactions | P2-05 |
@@ -50,7 +54,7 @@ STU = StorageManagementUtilTest; CFG = ConfigurationTest.
 | APP-RUN-001 | [Runtime](runtime/runtime.md) | CFG partial configuration fixtures | OSGi activation/deactivation/missing-dependency smoke | P2-12 |
 | APP-RUN-002 | [Runtime](runtime/runtime.md) | LCT/CFG use fixtures, not installed product | Java 11 + deployment/schema/topology matrix | P2-12 |
 | APP-RUN-003 | [Runtime](runtime/runtime.md) | No mapped cleanup evidence | Two-tenant data/artifact interrupted-cleanup integration | P2-12 |
-| APP-X-001 | [Cross-cutting](cross-cutting-requirements.md) | No full boundary matrix mapped | Tenant/role checks across service and adapters | P2-03 |
+| APP-X-001 | [Cross-cutting](cross-cutting-requirements.md) | No full boundary matrix mapped | Tenant/role checks across service entry points | P2-03 |
 | APP-X-002 | [Cross-cutting](cross-cutting-requirements.md) | No mapped transaction fault assertions | Mock connection faults + real-pool leak assertions | P2-01 |
 | APP-X-003 | [Cross-cutting](cross-cutting-requirements.md) | No mapped multi-node evidence | Independent DB transactions and two JVMs | P2-05, P2-09 |
 | APP-X-004 | [Cross-cutting](cross-cutting-requirements.md) | No full compatibility/security evidence | Contract snapshots + storage/provider boundary faults | P2-03, P2-07, P2-11 |
@@ -62,13 +66,13 @@ authority to change compatibility behavior or repair identified anomalies.
 
 | Requirement | Governing spec | Evidence status | Phase 2 |
 | --- | --- | --- | --- |
-| APP-REL-005 | [Release search](releases/release-search.md) | Source mapped; runtime not run | P2-14 |
-| APP-REL-006 | [Release update compatibility](releases/release-updates.md) | Source mapped; runtime not run | P2-14 |
-| APP-STO-004 | [Platform artifacts](storage/platform-artifacts.md) | Source mapped; runtime not run | P2-15 |
-| APP-STO-005 | [Platform artifacts](storage/platform-artifacts.md) | Source mapped; runtime not run | P2-15 |
-| APP-CAT-005 | [Retirement](catalog/retirement.md) | Source mapped; runtime not run | P2-14 |
-| APP-SUB-004 | [Subscription reporting](subscriptions/reporting.md) | Source mapped; runtime not run | P2-16 |
-| APP-SUB-005 | [Subscription reporting](subscriptions/reporting.md) | Source mapped; runtime not run | P2-16 |
+| APP-REL-005 | [Release search](releases/release-search.md) | Behavior described; verification not run | P2-14 |
+| APP-REL-006 | [Release update compatibility](releases/release-updates.md) | Behavior described; verification not run | P2-14 |
+| APP-STO-004 | [Platform artifacts](storage/platform-artifacts.md) | Behavior described; verification not run | P2-15 |
+| APP-STO-005 | [Platform artifacts](storage/platform-artifacts.md) | Behavior described; verification not run | P2-15 |
+| APP-CAT-005 | [Retirement](catalog/retirement.md) | Behavior described; verification not run | P2-14 |
+| APP-SUB-004 | [Subscription reporting](subscriptions/reporting.md) | Behavior described; verification not run | P2-16 |
+| APP-SUB-005 | [Subscription reporting](subscriptions/reporting.md) | Behavior described; verification not run | P2-16 |
 
 ## Execution requirements for Phase 2
 
@@ -103,13 +107,13 @@ icon repository, returned entity/exception and connection ownership as applicabl
 
 | Case | Requirement / governing contract | Action and expected observation | Follow-up |
 | --- | --- | --- | --- |
-| E01 | APP-CRT-001, [enterprise](creation/app-creation-enterprise.md#validation-and-identity) | Empty release list with publication off/on: one enterprise app and category/role/tag mappings as supplied; no release/history. Single valid release: one release. Multiple entries: characterize first-only processing; null list/element: capture exception and absence/presence of side effects without assuming 400. | P2-02; GAP-19 |
+| E01 | APP-CRT-001, [enterprise](creation/app-creation-enterprise.md#validation-and-identity) | Empty release list with publication off/on: one enterprise app and category/role/tag mappings as supplied; no release/history. Single valid release: one release. Multiple entries: characterize first-only processing; null list/element: capture exception and absence/presence of side effects without assuming a controlled validation exception. | P2-02; GAP-19 |
 | E02 | APP-CRT-001/002, [enterprise validation](creation/app-creation-enterprise.md#validation-and-identity) | Name null/empty, 20/21 characters, padded/whitespace-only and duplicate names; null/empty/unknown categories; no registered categories; valid/invalid roles and membership. Assert BadRequest versus broad management failures where documented; characterize unchecked/normalization cases. | P2-02/03; GAP-19 |
 | E03 | APP-CRT-001, APP-STO-001, [enterprise validation](creation/app-creation-enterprise.md#validation-and-identity) | Registered OS endpoints, upper ALL, unknown endpoint, missing delimiter, reversed/extra endpoints; Windows null/empty identity and allowed/invalid extension; valid/malformed APK/IPA. Assert parsed identity overrides non-Windows wrapper values; do not infer semantic range ordering. | P2-02/07; GAP-19 |
-| E04 | APP-REL-002, [hash](releases/release-binary-hash.md) | Same binary across same/different apps in A is rejected sequentially, including an end-state hash; B's hash alone does not conflict in A. Active-package initial create conflicts; end-state package and additional/remote initial path follow their distinct checks. Assert exceptions before claiming HTTP mapping. | P2-05; GAP-02/19 |
+| E04 | APP-REL-002, [hash](releases/release-binary-hash.md) | Same binary across same/different apps in A is rejected sequentially, including an end-state hash; B's hash alone does not conflict in A. Active-package initial create conflicts; end-state package and additional/remote initial path follow their distinct checks. Assert propagated/wrapped service exceptions. | P2-05; GAP-02/19 |
 | E05 | APP-CRT-001, APP-LC-003, [persistence](releases/release-management.md#enterprise-release-persistence) | Synchronous first release without publication: tenant-owned application/release and one initial history row. With packaged default publication: PUBLISHED and four total history rows, correct previous/current state, actor and generated reasons. Inspect committed data rather than response alone. | P2-02/05 |
-| E06 | APP-REL-001, [persistence](releases/release-management.md#enterprise-release-persistence) | Add enterprise release: existing app retained, new release/history, other release unchanged. Non-enterprise parent rejects type. Verify independent initial/additional icon-info behavior. Path deviceType different from parent is characterized at adapter/core boundaries. | P2-02/03/05; GAP-19/21 |
-| E07 | APP-CRT-004, [remote flow](creation/app-creation-enterprise.md#remote-enterprise-release) | Pause downloader: initial app persists without release and response remains that app snapshot; extra remote release returns empty release entity. Resume/fail: inspect later release/history, tenant/user flow and logs. Unknown app/hash conflict after additional dispatch must not be inferred from initial 201. | P2-04; GAP-03 |
+| E06 | APP-REL-001, [persistence](releases/release-management.md#enterprise-release-persistence) | Add enterprise release: existing app retained, new release/history, other release unchanged. Non-enterprise parent rejects type. Verify independent initial/additional icon-info behavior. Validate caller-supplied device type separately from the parent-derived execution type. | P2-02/03/05; GAP-19/21 |
+| E07 | APP-CRT-004, [remote flow](creation/app-creation-enterprise.md#remote-enterprise-release) | Pause downloader: initial app persists without release and response remains that app snapshot; extra remote release returns empty release entity. Resume/fail: inspect later release/history, tenant/user flow and logs. Unknown app/hash conflict after additional dispatch must not be inferred from the initial service result. | P2-04; GAP-03 |
 | E08 | APP-CRT-004, APP-X-001/004, [remote flow](creation/app-creation-enterprise.md#remote-enterprise-release) | Interrupt worker/restart and repeat creation/addition. Record surviving app/files and duplicate-name/hash outcomes. No durable replay, bounded retry or exactly-once completion is assumed; required recovery result awaits decision. | P2-04; GAP-02/03/04 |
 | E09 | APP-LC-001, [transition contract](lifecycle/lifecycle.md#enterprise-transition-contract) | Allowed/disallowed graph edges; authorized/denied/missing realm; missing permission/state; null/empty changer/action; missing/foreign release. Distinguish BadRequest, NotFound, broad management/lifecycle failure and installable Forbidden. Assert no unauthorized successful state change. | P2-03/05; GAP-01/20 |
 | E10 | APP-LC-001/002, [transition contract](lifecycle/lifecycle.md#enterprise-transition-contract) | Same-state request in noninstallable state versus PUBLISHED; mixed-case actions; configured cross-type edges. Record history addition or self-match Forbidden rather than assert universal idempotency/type enforcement. | P2-05; GAP-05/20 |
@@ -118,8 +122,8 @@ icon repository, returned entity/exception and connection ownership as applicabl
 | E13 | APP-CRT-003, APP-STO-002, APP-X-002/004, [failure boundaries](creation/app-creation-enterprise.md#failure-boundaries) | Fail download/parse/upload before transaction; acquisition/auto-commit; application/mapping/release/history writes; commit/rollback/close; artifact compensation. Inspect residual files/rows and primary exception. No false-success/no-leak/no-orphan guarantees are claimed until approved and verified. | P2-01/04; GAP-01/04 |
 | E14 | APP-CRT-003, APP-STO-002, [storage](storage/storage.md#enterprise-creation-boundaries) | Fail initial icon write, then fail APPM after successful icon commit; compare initial versus additional release and both repositories. Record independently committed icon data and agreed reconciliation expectation. | P2-04; GAP-21 |
 | E15 | APP-X-001/003, APP-REL-002, APP-LC-002, [transactions](releases/release-management.md#transaction-and-retry-acceptance) | Barrier-controlled two-connection/two-JVM hash and publication races plus competing transitions on one release. Inspect invariant, history and surviving files. Test duplicate/imported UUIDs across A/B separately; ordinary tenant lookups must not access B. Final concurrency/identity oracle requires decisions. | P2-03/05; GAP-02/20 |
-| E16 | APP-CRT-002, APP-X-004, [adapter compatibility](creation/app-creation-enterprise.md#dependent-publisher-api-compatibility) | Execute create/add/lifecycle adapter fixtures with real exception types: compare synchronous and remote entities and explicit status/body mappings. Test null/unchecked cases and platform auth separately; do not substitute Swagger status lists for actual results. | P2-03; GAP-10/19/20 |
+| E16 | APP-CRT-002, APP-X-004, [service entry points](creation/app-creation-enterprise.md#entry-points-and-caller-obligations) | Invoke initial creation, additional release and lifecycle services with real exception types: compare synchronous/remote result shapes, validator invocation, propagated/wrapped exceptions and null/unchecked inputs. Assert behavior at each service entry point. | P2-03; GAP-10/19/20 |
 
-Before marking a case passed, record test methods, command, source/consumer commits,
+Before marking a case passed, record test methods, command, fixture configuration,
 Java/Maven, DB/isolation/configuration, timestamp, result and report location. Unit
-stubs cannot close real-pool, filesystem, two-JVM or installed-adapter requirements.
+stubs cannot close real-pool, filesystem, two-JVM or runtime service-wiring requirements.

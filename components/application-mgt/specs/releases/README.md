@@ -11,12 +11,6 @@ Release creation, updates, deletion and uniqueness rules.
 [All application-management specs](../README.md) | [Tracking](../spec-register.md)
 | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md)
 
-Publisher API contract:
-`proprietary-commons/.../application.mgt.publisher.api/Specs/api-contract.md`
-
-Publisher UI:
-`proprietary-commons/.../application.mgt.publisher.ui/Specs/add-new-release/`
-
 - [Release search](release-search.md)
 
 - [Release update compatibility](release-updates.md)

@@ -26,4 +26,4 @@ retirement safety. APP-GAP-01/02/17 retain the failure/race questions.
 | APP-CAT-005 | Observed compatibility baseline | Reject retirement with any non-end-state release; eligible retirement marks app status rather than physically deleting its data/artifacts. | AC-APP-CAT-005: no releases, all end-state, mixed states, unknown/foreign app, repeated request and concurrent release transition; inspect status, list/detail visibility and retained rows/files. |
 
 Sources: AM.retireApplication; GenericApplicationDAOImpl.retireApplication and
-list/count queries in [source map](../source-map.md#baseline-expansion).
+list/count queries. Inspect these paths when modifying retirement behavior.

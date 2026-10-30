@@ -23,7 +23,7 @@ the application's releases.
 
 The generic DAO has LIMIT/OFFSET but no ORDER BY in this query. Stable ordering
 across pages is not an established guarantee. Do not invent service-side range
-validation or universal HTTP errors: adapter validation and dialect behavior need
+validation or uniform exception types: caller validation and dialect behavior need
 separate evidence. This is release search, not the catalog's application list.
 
 ## Requirement and acceptance
@@ -33,5 +33,4 @@ separate evidence. This is release search, not the catalog's application list.
 | APP-REL-005 | Observed compatibility baseline | Preserve role/type selection, lifecycle exclusions, filter semantics and normal versus early-empty pagination shapes. | AC-APP-REL-005: test both role states with omitted/TEST/PRODUCTION/invalid type; package/version match modes; end-state releases; normal and empty pages; record ordering rather than assume it. |
 
 Sources: AM.getApplicationReleases; ReleaseSearchFilter;
-GenericApplicationReleaseDAOImpl.getReleases/getReleasesCount, indexed in
-[source map](../source-map.md#baseline-expansion). APP-GAP-15 tracks unresolved ordering/error contracts.
+GenericApplicationReleaseDAOImpl.getReleases/getReleasesCount. APP-GAP-15 tracks unresolved ordering/error contracts.
