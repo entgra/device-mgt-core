@@ -34,7 +34,7 @@ public interface RealtimeNotificationArchivalService {
 
     /**
      * Deletes archived notifications and their associated user actions from the archive tables
-     * (DM_NOTIFICATION_ARCH and DM_NOTIFICATION_USER_ACTION_ARCH) that are older than the
+     * (DM_REALTIME_NOTIFICATION_ARCH and DM_REALTIME_NOTIFICATION_USER_ACTION_ARCH) that are older than the
      * configured {@code DEFAULT_ARCHIVE_DELETE_PERIOD}.
      *
      * @param tenantId relevant tenant id.

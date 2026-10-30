@@ -165,6 +165,12 @@ public class TenantManagerImpl implements TenantManager {
             tenantDao.deleteDeviceLocationByTenantId(tenantId);
             tenantDao.deleteDeviceInfoByTenantId(tenantId);
             tenantDao.deleteNotificationByTenantId(tenantId);
+            try {
+                TenantMgtDataHolder.getInstance().getRealtimeNotificationManagementService()
+                        .deleteNotificationsByTenantId(tenantId);
+            } catch (io.entgra.device.mgt.core.realtime.notification.mgt.common.exception.RealtimeNotificationManagementException e) {
+                log.error("Error occurred while deleting realtime notifications for tenant: " + tenantId, e);
+            }
             tenantDao.deleteAppIconsByTenantId(tenantId);
             tenantDao.deleteTraccarUnsyncedDevicesByTenantId(tenantId);
             tenantDao.deleteDeviceEventGroupMappingByTenantId(tenantId);

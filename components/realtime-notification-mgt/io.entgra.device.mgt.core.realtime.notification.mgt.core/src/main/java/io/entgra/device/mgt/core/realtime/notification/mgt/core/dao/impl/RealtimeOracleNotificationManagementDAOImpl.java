@@ -48,7 +48,7 @@ public class RealtimeOracleNotificationManagementDAOImpl extends RealtimeAbstrac
         String query =
                 "SELECT * FROM ( " +
                         "SELECT t.*, ROWNUM rnum FROM ( " +
-                        "SELECT * FROM DM_NOTIFICATION ORDER BY CREATED_TIMESTAMP DESC " +
+                        "SELECT * FROM DM_REALTIME_NOTIFICATION ORDER BY CREATED_TIMESTAMP DESC " +
                         ") t WHERE ROWNUM <= ? " +
                         ") WHERE rnum > ?";
         try {
@@ -85,7 +85,7 @@ public class RealtimeOracleNotificationManagementDAOImpl extends RealtimeAbstrac
         }
         StringBuilder query = new StringBuilder(
                 "SELECT NOTIFICATION_ID, NOTIFICATION_CONTEXT, TYPE, CREATED_TIMESTAMP " +
-                        "FROM DM_NOTIFICATION " +
+                        "FROM DM_REALTIME_NOTIFICATION " +
                         "WHERE TENANT_ID = ? AND NOTIFICATION_ID IN (");
         for (int i = 0; i < notificationIds.size(); i++) {
             query.append("?");
@@ -129,7 +129,7 @@ public class RealtimeOracleNotificationManagementDAOImpl extends RealtimeAbstrac
                         "NOTIFICATION_ID, " +
                         "ACTION_ID, " +
                         "IS_READ " +
-                        "FROM DM_NOTIFICATION_USER_ACTION " +
+                        "FROM DM_REALTIME_NOTIFICATION_USER_ACTION " +
                         "WHERE USERNAME = ? ");
         if (isRead != null) {
             queryBuilder.append("AND IS_READ = ? ");
@@ -185,7 +185,7 @@ public class RealtimeOracleNotificationManagementDAOImpl extends RealtimeAbstrac
                         "IS_READ, " +
                         "USERNAME, " +
                         "ACTION_TIMESTAMP " +
-                        "FROM DM_NOTIFICATION_USER_ACTION " +
+                        "FROM DM_REALTIME_NOTIFICATION_USER_ACTION " +
                         "ORDER BY ACTION_TIMESTAMP " +
                         "DESC";
         try {
@@ -215,7 +215,7 @@ public class RealtimeOracleNotificationManagementDAOImpl extends RealtimeAbstrac
             throws RealtimeNotificationManagementDAOException {
         StringBuilder query = new StringBuilder(
                 "SELECT COUNT(*) " +
-                        "FROM DM_NOTIFICATION_USER_ACTION " +
+                        "FROM DM_REALTIME_NOTIFICATION_USER_ACTION " +
                         "WHERE USERNAME = ?");
         if (isRead != null) {
             query.append(" AND IS_READ = ?");
@@ -246,7 +246,7 @@ public class RealtimeOracleNotificationManagementDAOImpl extends RealtimeAbstrac
     public int insertNotification(int tenantId, int notificationConfigId, String type, String notificationContext)
             throws RealtimeNotificationManagementDAOException {
         String sql =
-                "INSERT INTO DM_NOTIFICATION " +
+                "INSERT INTO DM_REALTIME_NOTIFICATION " +
                         "(NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
                         "NOTIFICATION_CONTEXT, " +
@@ -273,7 +273,7 @@ public class RealtimeOracleNotificationManagementDAOImpl extends RealtimeAbstrac
     public void insertNotificationUserActions(int notificationId, List<String> usernames)
             throws RealtimeNotificationManagementDAOException {
         String sql =
-                "INSERT INTO DM_NOTIFICATION_USER_ACTION (" +
+                "INSERT INTO DM_REALTIME_NOTIFICATION_USER_ACTION (" +
                         "NOTIFICATION_ID, " +
                         "USERNAME, " +
                         "IS_READ) VALUES (?, ?, ?)";

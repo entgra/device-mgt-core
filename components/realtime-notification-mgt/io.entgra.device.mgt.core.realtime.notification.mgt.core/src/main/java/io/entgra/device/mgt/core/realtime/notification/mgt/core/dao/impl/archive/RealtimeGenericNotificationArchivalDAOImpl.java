@@ -58,11 +58,11 @@ public class RealtimeGenericNotificationArchivalDAOImpl extends RealtimeAbstract
                         "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP " +
-                        "FROM " + SOURCE_DB + ".DM_NOTIFICATION " +
+                        "FROM " + SOURCE_DB + ".DM_REALTIME_NOTIFICATION " +
                         "WHERE CREATED_TIMESTAMP < ? " +
                         "AND TENANT_ID = ?";
         String insertSQL =
-                "INSERT INTO " + DESTINATION_DB + ".DM_NOTIFICATION_ARCH " +
+                "INSERT INTO " + DESTINATION_DB + ".DM_REALTIME_NOTIFICATION_ARCH " +
                         "(NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +

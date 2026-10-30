@@ -36,6 +36,7 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -91,6 +92,12 @@ public class PrivacyComplianceProviderImpl implements PrivacyComplianceProvider 
                     complianceDAO.deleteDeviceLocation(deviceId, enrolmentId);
                     complianceDAO.deleteDeviceEnrollments(deviceId, tenantId);
                 }
+                try {
+                    DeviceManagementDataHolder.getInstance().getRealtimeNotificationManagementService()
+                            .purgeNotificationsForDevices(Collections.singletonList(deviceId), tenantId);
+                } catch (RealtimeNotificationManagementException e) {
+                    log.error("Error occurred while purging realtime notifications for device: " + deviceId, e);
+                }
                 complianceDAO.deleteDevice(deviceId, tenantId);
                 DeviceIdentifier identifier = deviceIdentifiersById.get(deviceId);
                 String deviceLabel = DeviceManagerUtil.formatDeviceNotificationLabel(
@@ -99,7 +106,7 @@ public class PrivacyComplianceProviderImpl implements PrivacyComplianceProvider 
                 String message = String.format(
                         "Device %s was permanently deleted for user %s.",
                         deviceLabel, username);
-                DeviceManagementDataHolder.getInstance().getNotificationManagementService()
+                DeviceManagementDataHolder.getInstance().getRealtimeNotificationManagementService()
                         .handleTaskNotificationIfApplicable(tenantId, "DELETE_DEVICE", message);
             }
             DeviceManagementDAOFactory.commitTransaction();
@@ -139,11 +146,17 @@ public class PrivacyComplianceProviderImpl implements PrivacyComplianceProvider 
             complianceDAO.deleteDeviceProperties(device.getId(), device.getEnrolmentInfo().getId(), tenantId);
             complianceDAO.deleteDeviceLocation(device.getId(), device.getEnrolmentInfo().getId());
             complianceDAO.deleteDeviceEnrollments(device.getId(), tenantId);
+            try {
+                DeviceManagementDataHolder.getInstance().getRealtimeNotificationManagementService()
+                        .purgeNotificationsForDevices(Collections.singletonList(device.getId()), tenantId);
+            } catch (RealtimeNotificationManagementException e) {
+                log.error("Error occurred while purging realtime notifications for device: " + device.getId(), e);
+            }
             complianceDAO.deleteDevice(device.getId(), tenantId);
             String message = String.format("Device %s was permanently deleted.",
                     DeviceManagerUtil.formatDeviceNotificationLabel(
                             device.getName(), device.getDeviceIdentifier()));
-            DeviceManagementDataHolder.getInstance().getNotificationManagementService()
+            DeviceManagementDataHolder.getInstance().getRealtimeNotificationManagementService()
                     .handleTaskNotificationIfApplicable(tenantId, "DELETE_DEVICE", message);
             DeviceManagementDAOFactory.commitTransaction();
         } catch (TransactionManagementException e) {

@@ -54,7 +54,7 @@ public class APIPublisherDataHolder {
     private APIApplicationServices apiApplicationServices;
     private PublisherRESTAPIServices publisherRESTAPIServices;
     private MetadataManagementService metadataManagementService;
-    private RealtimeNotificationManagementService notificationManagementService;
+    private RealtimeNotificationManagementService realtimeNotificationManagementService;
 
     private static APIPublisherDataHolder thisInstance = new APIPublisherDataHolder();
 
@@ -199,11 +199,11 @@ public class APIPublisherDataHolder {
         this.postApiPublishingObseverList.remove(postApiPublishingObsever);
     }
 
-    public RealtimeNotificationManagementService getNotificationManagementService() {
-        return notificationManagementService;
+    public RealtimeNotificationManagementService getRealtimeNotificationManagementService() {
+        return realtimeNotificationManagementService;
     }
 
-    public void setNotificationManagementService(RealtimeNotificationManagementService notificationManagementService) {
-        this.notificationManagementService = notificationManagementService;
+    public void setRealtimeNotificationManagementService(RealtimeNotificationManagementService notificationManagementService) {
+        this.realtimeNotificationManagementService = notificationManagementService;
     }
 }

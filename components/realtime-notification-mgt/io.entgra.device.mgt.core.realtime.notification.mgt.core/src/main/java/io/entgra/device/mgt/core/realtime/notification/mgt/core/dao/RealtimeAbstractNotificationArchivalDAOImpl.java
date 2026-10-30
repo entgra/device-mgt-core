@@ -63,11 +63,11 @@ public class RealtimeAbstractNotificationArchivalDAOImpl implements RealtimeNoti
                         "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP " +
-                        "FROM " + SOURCE_DB + ".DM_NOTIFICATION " +
+                        "FROM " + SOURCE_DB + ".DM_REALTIME_NOTIFICATION " +
                         "WHERE CREATED_TIMESTAMP < ? " +
                         "AND TENANT_ID = ?";
         String insertSQL =
-                "INSERT INTO " + DESTINATION_DB + ".DM_NOTIFICATION_ARCH " +
+                "INSERT INTO " + DESTINATION_DB + ".DM_REALTIME_NOTIFICATION_ARCH " +
                         "(NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
@@ -115,7 +115,7 @@ public class RealtimeAbstractNotificationArchivalDAOImpl implements RealtimeNoti
         if (notificationIds == null || notificationIds.isEmpty()) return;
         String inClause = notificationIds.stream().map(id -> "?").collect(Collectors.joining(","));
         String insertSQL =
-                "INSERT INTO " + DESTINATION_DB + ".DM_NOTIFICATION_USER_ACTION_ARCH " +
+                "INSERT INTO " + DESTINATION_DB + ".DM_REALTIME_NOTIFICATION_USER_ACTION_ARCH " +
                         "(ACTION_ID, " +
                         "NOTIFICATION_ID, " +
                         "USERNAME, " +
@@ -127,11 +127,11 @@ public class RealtimeAbstractNotificationArchivalDAOImpl implements RealtimeNoti
                         "USERNAME, " +
                         "IS_READ, " +
                         "ACTION_TIMESTAMP " +
-                        "FROM " + SOURCE_DB + ".DM_NOTIFICATION_USER_ACTION " +
+                        "FROM " + SOURCE_DB + ".DM_REALTIME_NOTIFICATION_USER_ACTION " +
                         "WHERE NOTIFICATION_ID " +
                         "IN (" + inClause + ")";
         String deleteSQL =
-                "DELETE FROM " + SOURCE_DB + ".DM_NOTIFICATION_USER_ACTION " +
+                "DELETE FROM " + SOURCE_DB + ".DM_REALTIME_NOTIFICATION_USER_ACTION " +
                         "WHERE NOTIFICATION_ID " +
                         "IN (" + inClause + ")";
         try {
@@ -157,7 +157,7 @@ public class RealtimeAbstractNotificationArchivalDAOImpl implements RealtimeNoti
     public int deleteOldNotifications(Timestamp cutoff, int tenantId) throws RealtimeNotificationArchivalDAOException {
         String sql =
                 "DELETE " +
-                        "FROM DM_NOTIFICATION " +
+                        "FROM DM_REALTIME_NOTIFICATION " +
                         "WHERE CREATED_TIMESTAMP < ? " +
                         "AND TENANT_ID = ?";
         try {
@@ -179,7 +179,7 @@ public class RealtimeAbstractNotificationArchivalDAOImpl implements RealtimeNoti
             throws RealtimeNotificationArchivalDAOException {
         List<Integer> movedIds = new ArrayList<>();
         String insertSQL =
-                "INSERT INTO " + DESTINATION_DB + ".DM_NOTIFICATION_ARCH " +
+                "INSERT INTO " + DESTINATION_DB + ".DM_REALTIME_NOTIFICATION_ARCH " +
                         "(NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
@@ -193,13 +193,13 @@ public class RealtimeAbstractNotificationArchivalDAOImpl implements RealtimeNoti
                         "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP " +
-                        "FROM " + SOURCE_DB + ".DM_NOTIFICATION " +
+                        "FROM " + SOURCE_DB + ".DM_REALTIME_NOTIFICATION " +
                         "WHERE TENANT_ID = ? " +
                         "AND NOTIFICATION_CONFIG_ID = ? " +
                         "AND CREATED_TIMESTAMP < ?";
         String selectIdsSQL =
                 "SELECT NOTIFICATION_ID " +
-                        "FROM " + SOURCE_DB + ".DM_NOTIFICATION " +
+                        "FROM " + SOURCE_DB + ".DM_REALTIME_NOTIFICATION " +
                         "WHERE TENANT_ID = ? " +
                         "AND NOTIFICATION_CONFIG_ID = ? " +
                         "AND CREATED_TIMESTAMP < ?";
@@ -240,13 +240,13 @@ public class RealtimeAbstractNotificationArchivalDAOImpl implements RealtimeNoti
         String placeholders = excludedConfigIds.stream().map(id -> "?").collect(Collectors.joining(","));
         String selectIdsSQL =
                 "SELECT NOTIFICATION_ID " +
-                        "FROM " + SOURCE_DB + ".DM_NOTIFICATION " +
+                        "FROM " + SOURCE_DB + ".DM_REALTIME_NOTIFICATION " +
                         "WHERE TENANT_ID = ? " +
                         "AND CREATED_TIMESTAMP < ? " +
                         "AND NOTIFICATION_CONFIG_ID " +
                         "NOT IN (" + placeholders + ")";
         String insertSQL =
-                "INSERT INTO " + DESTINATION_DB + ".DM_NOTIFICATION_ARCH " +
+                "INSERT INTO " + DESTINATION_DB + ".DM_REALTIME_NOTIFICATION_ARCH " +
                         "(NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
@@ -260,11 +260,11 @@ public class RealtimeAbstractNotificationArchivalDAOImpl implements RealtimeNoti
                         "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP " +
-                        "FROM " + SOURCE_DB + ".DM_NOTIFICATION " +
+                        "FROM " + SOURCE_DB + ".DM_REALTIME_NOTIFICATION " +
                         "WHERE NOTIFICATION_ID " +
                         "IN (%s)";
         String deleteSQL =
-                "DELETE FROM " + SOURCE_DB + ".DM_NOTIFICATION " +
+                "DELETE FROM " + SOURCE_DB + ".DM_REALTIME_NOTIFICATION " +
                         "WHERE NOTIFICATION_ID " +
                         "IN (%s)";
         try {
@@ -319,7 +319,7 @@ public class RealtimeAbstractNotificationArchivalDAOImpl implements RealtimeNoti
     public int deleteOldNotificationsByConfig(Timestamp cutoff, int tenantId, int configId)
             throws RealtimeNotificationArchivalDAOException {
         String deleteSQL =
-                "DELETE FROM DM_NOTIFICATION " +
+                "DELETE FROM DM_REALTIME_NOTIFICATION " +
                         "WHERE TENANT_ID = ? " +
                         "AND NOTIFICATION_CONFIG_ID = ? " +
                         "AND CREATED_TIMESTAMP < ?";
@@ -344,14 +344,14 @@ public class RealtimeAbstractNotificationArchivalDAOImpl implements RealtimeNoti
         String deleteSQL;
         if (excludedConfigIds == null || excludedConfigIds.isEmpty()) {
             deleteSQL =
-                    "DELETE FROM DM_NOTIFICATION " +
+                    "DELETE FROM DM_REALTIME_NOTIFICATION " +
                             "WHERE TENANT_ID = ? " +
                             "AND CREATED_TIMESTAMP < ?";
         } else {
             String placeholders =
                     excludedConfigIds.stream().map(id -> "?").collect(Collectors.joining(","));
             deleteSQL =
-                    "DELETE FROM DM_NOTIFICATION " +
+                    "DELETE FROM DM_REALTIME_NOTIFICATION " +
                             "WHERE TENANT_ID = ? " +
                             "AND CREATED_TIMESTAMP < ? " +
                             "AND NOTIFICATION_CONFIG_ID " +
@@ -393,13 +393,13 @@ public class RealtimeAbstractNotificationArchivalDAOImpl implements RealtimeNoti
                         "IS_READ, " +
                         "ACTION_TIMESTAMP " +
                 "FROM " +
-                        SOURCE_DB + ".DM_NOTIFICATION_USER_ACTION " +
+                        SOURCE_DB + ".DM_REALTIME_NOTIFICATION_USER_ACTION " +
                 "WHERE USERNAME = ? " +
                         "AND NOTIFICATION_ID " +
                         "IN (" + placeholders + ")";
         String insertQuery =
                 "INSERT INTO " +
-                        DESTINATION_DB + ".DM_NOTIFICATION_USER_ACTION_ARCH " +
+                        DESTINATION_DB + ".DM_REALTIME_NOTIFICATION_USER_ACTION_ARCH " +
                 "(NOTIFICATION_ID, " +
                         "USERNAME, " +
                         "IS_READ, " +
@@ -407,7 +407,7 @@ public class RealtimeAbstractNotificationArchivalDAOImpl implements RealtimeNoti
                         "VALUES (?, ?, ?, ?)";
         String deleteQuery =
                 "DELETE " +
-                        "FROM " + SOURCE_DB + ".DM_NOTIFICATION_USER_ACTION " +
+                        "FROM " + SOURCE_DB + ".DM_REALTIME_NOTIFICATION_USER_ACTION " +
                 "WHERE USERNAME = ? " +
                         "AND NOTIFICATION_ID " +
                         "IN (" + placeholders + ")";
@@ -474,17 +474,17 @@ public class RealtimeAbstractNotificationArchivalDAOImpl implements RealtimeNoti
                         "USERNAME, " +
                         "IS_READ, " +
                         "ACTION_TIMESTAMP " +
-                        "FROM " + SOURCE_DB + ".DM_NOTIFICATION_USER_ACTION " +
+                        "FROM " + SOURCE_DB + ".DM_REALTIME_NOTIFICATION_USER_ACTION " +
                         "WHERE USERNAME = ?";
         String insertQuery =
-                "INSERT INTO " + DESTINATION_DB + ".DM_NOTIFICATION_USER_ACTION_ARCH " +
+                "INSERT INTO " + DESTINATION_DB + ".DM_REALTIME_NOTIFICATION_USER_ACTION_ARCH " +
                         "(NOTIFICATION_ID, " +
                         "USERNAME, " +
                         "IS_READ, " +
                         "ACTION_TIMESTAMP) " +
                         "VALUES (?, ?, ?, ?)";
         String deleteQuery =
-                "DELETE FROM " + SOURCE_DB + ".DM_NOTIFICATION_USER_ACTION " +
+                "DELETE FROM " + SOURCE_DB + ".DM_REALTIME_NOTIFICATION_USER_ACTION " +
                         "WHERE USERNAME = ?";
         try {
             Connection sourceConn = RealtimeNotificationArchivalSourceDAOFactory.getConnection();
@@ -517,15 +517,15 @@ public class RealtimeAbstractNotificationArchivalDAOImpl implements RealtimeNoti
     public void deleteExpiredArchivedNotifications(Timestamp cutoff, int tenantId)
             throws RealtimeNotificationArchivalDAOException {
         String deleteUserActionsSQL =
-                "DELETE FROM " + DESTINATION_DB + ".DM_NOTIFICATION_USER_ACTION_ARCH " +
+                "DELETE FROM " + DESTINATION_DB + ".DM_REALTIME_NOTIFICATION_USER_ACTION_ARCH " +
                         "WHERE ACTION_TIMESTAMP < ? " +
                         "AND NOTIFICATION_ID IN (" +
                         "SELECT NOTIFICATION_ID " +
-                        "FROM " + DESTINATION_DB + ".DM_NOTIFICATION_ARCH " +
+                        "FROM " + DESTINATION_DB + ".DM_REALTIME_NOTIFICATION_ARCH " +
                         "WHERE CREATED_TIMESTAMP < ? " +
                         "AND TENANT_ID = ?)";
         String deleteNotificationsSQL =
-                "DELETE FROM " + DESTINATION_DB + ".DM_NOTIFICATION_ARCH " +
+                "DELETE FROM " + DESTINATION_DB + ".DM_REALTIME_NOTIFICATION_ARCH " +
                         "WHERE CREATED_TIMESTAMP < ? " +
                         "AND TENANT_ID = ?";
         try {

@@ -46,7 +46,7 @@ public class RealtimePostgreNotificationArchivalDAOImpl extends RealtimeAbstract
     public int deleteOldNotifications(Timestamp cutoff, int tenantId)
             throws RealtimeNotificationArchivalDAOException {
         String deleteSQL =
-                "DELETE FROM " + SOURCE_DB + ".DM_NOTIFICATION "
+                "DELETE FROM " + SOURCE_DB + ".DM_REALTIME_NOTIFICATION "
                         + "WHERE CREATED_TIMESTAMP < ? " +
                         "AND TENANT_ID = ?";
         try {

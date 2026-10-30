@@ -766,7 +766,7 @@ public class APIPublisherServiceImpl implements APIPublisherService {
     @Override
     public void notifyRolePermissionUpdate(String roleName, boolean success) {
         RealtimeNotificationManagementService notificationManagementService =
-                APIPublisherDataHolder.getInstance().getNotificationManagementService();
+                APIPublisherDataHolder.getInstance().getRealtimeNotificationManagementService();
         if (notificationManagementService == null) {
             return;
         }
