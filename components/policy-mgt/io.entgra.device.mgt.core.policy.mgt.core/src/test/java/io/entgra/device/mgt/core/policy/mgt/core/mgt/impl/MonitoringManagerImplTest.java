@@ -64,9 +64,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -154,11 +152,7 @@ public class MonitoringManagerImplTest extends BasePolicyManagementDAOTest{
         policy5.setTenantId(PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId());
         policy5 = policyManager.addPolicy(policy5);
         policyManagerService.getPAP().activatePolicy(policy5.getId());
-        DelegationTask task = new DelegationTask();
-        Map<String, String> properties = new HashMap<>();
-        properties.put(PolicyManagementConstants.POLICY_IDS, String.valueOf(policy5.getId()));
-        task.setProperties(properties);
-        task.execute();
+        new DelegationTask().execute();
     }
 
     @Test(description = "This test case tests checking policy compliance")

@@ -28,7 +28,6 @@
             <class name="io.entgra.device.mgt.core.policy.mgt.core.PolicyDAOTestCase"/>
             <class name="io.entgra.device.mgt.core.policy.mgt.core.MonitoringTestCase" />
             <class name="io.entgra.device.mgt.core.policy.mgt.core.PolicyEvaluationTestCase" />
-            <class name="io.entgra.device.mgt.core.policy.mgt.core.PolicyListUpdatedFilterTest" />
         </classes>
     </test>
     

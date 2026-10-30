@@ -33,7 +33,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Policy related REST-API. This can be used to manipulated policies and associate them with devices, users, roles,
@@ -649,17 +648,11 @@ public interface PolicyManagementService {
                     code = 200,
                     message = "Successfully updated the EMM server with the policy changes."),
             @ApiResponse(
-                    code = 400,
-                    message = "Bad Request. The selected policy IDs are missing or invalid.",
-                    response = ErrorResponse.class),
-            @ApiResponse(
                     code = 500,
                     message = "ErrorResponse in deactivating policies.",
                     response = ErrorResponse.class)
     })
-    Response applyChanges(
-            @ApiParam(name = "policyIds", value = "Non-empty set of policy IDs to apply.", required = true)
-                    Set<Integer> policyIds);
+    Response applyChanges();
 
 
     @PUT
@@ -923,15 +916,6 @@ public interface PolicyManagementService {
                     required = false)
             @QueryParam("status")
                     String status,
-            @ApiParam(
-                    name = "updated",
-                    value = "When true, includes policies with unpublished updates in addition to policies " +
-                            "matching the requested status.",
-                    defaultValue = "false",
-                    required = false)
-            @DefaultValue("false")
-            @QueryParam("updated")
-                    boolean includeUpdated,
             @ApiParam(
                     name = "deviceType",
                     value = "The device type of the policy that needs filtering.",
