@@ -47,14 +47,12 @@ public class PostgreSQLPolicyDAOImpl extends AbstractPolicyDAOImpl {
         String name = request.getName();
         String type = request.getType();
         String status = request.getStatus();
-        boolean includeUpdated = request.isIncludeUpdated();
         String deviceType = request.getDeviceType();
         int groupId = request.getGroupId();
         int statusValue = 0;
         boolean isPolicyNameProvided = false;
         boolean isPolicyTypeProvided = false;
         boolean isPolicyStatusProvided = false;
-        boolean isPolicyUpdatedProvided = false;
         boolean isDeviceTypeProvided = false;
         boolean isGroupIdProvided = false;
 
@@ -79,16 +77,12 @@ public class PostgreSQLPolicyDAOImpl extends AbstractPolicyDAOImpl {
                 if (status.equals("ACTIVE")) {
                     statusValue = 1;
                 }
-                query += includeUpdated ? "AND (P.ACTIVE = ? OR P.UPDATED = ?) " : "AND P.ACTIVE = ? ";
+                query += "AND P.ACTIVE = ? " ;
                 isPolicyStatusProvided = true;
-                isPolicyUpdatedProvided = includeUpdated;
-            } else if (includeUpdated) {
-                query += "AND P.UPDATED = ? ";
-                isPolicyUpdatedProvided = true;
             }
 
             if (deviceType != null && !deviceType.isEmpty()) {
-                query += "AND PR.DEVICE_TYPE = ? ";
+                query += "AND PR.DEVICE_TYPE = ?";
                 isDeviceTypeProvided = true;
             }
 
@@ -113,9 +107,6 @@ public class PostgreSQLPolicyDAOImpl extends AbstractPolicyDAOImpl {
                 }
                 if (isPolicyStatusProvided) {
                     stmt.setInt(paramIdx++, statusValue);
-                }
-                if (isPolicyUpdatedProvided) {
-                    stmt.setInt(paramIdx++, 1);
                 }
                 if (isDeviceTypeProvided) {
                     stmt.setString(paramIdx++, deviceType);
