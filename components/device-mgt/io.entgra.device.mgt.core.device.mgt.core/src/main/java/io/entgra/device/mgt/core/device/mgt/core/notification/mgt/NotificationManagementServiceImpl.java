@@ -41,8 +41,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Notification management against {@code DM_NOTIFICATION}.
+ * Deprecated notification management against {@code DM_NOTIFICATION}.
+ *
+ * @deprecated Use {@code RealtimeNotificationManagementService} instead.
  */
+@Deprecated
 public class NotificationManagementServiceImpl implements NotificationManagementService {
 
     private static final EntgraLogger log = new EntgraDeviceLoggerImpl(NotificationManagementServiceImpl.class);
@@ -53,7 +56,6 @@ public class NotificationManagementServiceImpl implements NotificationManagement
     }
 
     @Override
-    @Deprecated
     public boolean addNotification(DeviceIdentifier deviceId,
                                    Notification notification) throws NotificationManagementException {
         Device device;
