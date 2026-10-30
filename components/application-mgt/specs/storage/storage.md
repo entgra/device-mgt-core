@@ -33,3 +33,25 @@ owners approve a versioned change. No storage migration or security policy is
 implemented in Phase 1. Utility/parser tests map only part of APP-STO-001.
 
 [Platform artifact contracts](platform-artifacts.md) specify MSI metadata and iOS plist generation.
+
+## Enterprise creation boundaries
+
+The link-based enterprise pipeline resolves installer/image URLs through the
+configured downloader before APPM persistence. Installer output is stored under
+the configured root, tenant ID, binary hash and APP_ARTIFACT directory. Release
+UUID and storage hash are distinct identities. Android/iOS package/version are
+parsed from installers; Windows uses the wrapper and filename-extension checks.
+
+Initial creation prepares artifacts before entering its transaction try block.
+Failures during that preparation do not reach the later APPM rollback/compensation
+catches. After preparation, selected initial-creation failures call
+deleteArtifactIfExist; additional enterprise release failures in createRelease are
+caught by triggerEntAppRelease, which attempts hash-directory deletion. These
+helpers can fail; neither owns a demonstrated atomic download/filesystem/DB unit.
+Concurrent identical hashes also require surviving-file ownership assertions.
+
+Initial enterprise creation additionally saves icon information through a separate
+device-management transaction before APPM commits. A successful icon write can
+outlive an APPM failure. Include both repositories in APP-STO-002/APP-X-004 failure
+checks; APP-GAP-21 records the unresolved reconciliation contract. See the
+[enterprise failure matrix](../creation/app-creation-enterprise.md#failure-boundaries).

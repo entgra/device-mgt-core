@@ -6,20 +6,20 @@ Applies to this directory and its descendants, in addition to the repository
 
 ## Start with the specification baseline
 
-Read [the index](Specs/README.md), [workflow](Specs/contributing.md),
-[capability register](Specs/capability-register.md) and relevant feature specs.
-Use [the source map](Specs/source-map.md) to locate implementations and consumers;
+Read [the index](specs/README.md), [workflow](specs/contributing.md),
+[capability register](specs/capability-register.md) and relevant feature specs.
+Use [the source map](specs/source-map.md) to locate implementations and consumers;
 verify references against the current checkout rather than assuming the recorded
 baseline is current.
 
-- [Architecture](Specs/architecture.md) and
-  [cross-cutting requirements](Specs/cross-cutting-requirements.md) define shared concerns.
-- [Gap register](Specs/gap-register.md) records unresolved behavior and risks.
-- [Verification matrix](Specs/verification-matrix.md) separates existing evidence
+- [Architecture](specs/architecture.md) and
+  [cross-cutting requirements](specs/cross-cutting-requirements.md) define shared concerns.
+- [Gap register](specs/gap-register.md) records unresolved behavior and risks.
+- [Verification matrix](specs/verification-matrix.md) separates existing evidence
   from planned acceptance tests.
-- [Phase 2 backlog](Specs/phase-2-backlog.md) proposes tests and fixes; it is not
+- [Phase 2 backlog](specs/phase-2-backlog.md) proposes tests and fixes; it is not
   blanket authorization to implement them.
-- [Content readiness](Specs/product-content-readiness.md) records missing product,
+- [Content readiness](specs/product-content-readiness.md) records missing product,
   documentation, marketing and automation inputs.
 
 Phase 1 was documentation-only. Preserve that restriction for Phase 1 work, not

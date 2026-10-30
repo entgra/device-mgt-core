@@ -96,3 +96,32 @@ Source anchors below support the added contracts; no execution evidence is impli
 - [Reporting helpers](../io.entgra.device.mgt.core.application.mgt.core/src/main/java/io/entgra/device/mgt/core/application/mgt/core/util/subscription/mgt/impl/).
 - [Reporting utility](../io.entgra.device.mgt.core.application.mgt.core/src/main/java/io/entgra/device/mgt/core/application/mgt/core/util/subscription/mgt/SubscriptionManagementHelperUtil.java).
 - [Operation coverage](operation-coverage.md): interface-level inventory and remaining partial contracts.
+
+## Enterprise creation and publication
+
+Source review baseline: core `4db344a2a94ed4483c44e56adb7a31c8d0dabb7a`;
+sampled commons adapter `875cea5ab95de2e5067b73fdd22e73dc3e935ff8`.
+These references support the enterprise contract; they do not refresh unrelated
+specifications or establish installed-product behavior. Method names are lookup
+keys; line locations apply to these revisions.
+
+| Source | Contract evidence |
+| --- | --- |
+| [Application manager](../io.entgra.device.mgt.core.application.mgt.core/src/main/java/io/entgra/device/mgt/core/application/mgt/core/impl/ApplicationManagerImpl.java) | createApplication 183; remote dispatch 197/282/306; synchronous initial 234; additional enterprise 340/380; artifact preparation 593/791/1011; mappings/first release/icon write 1605/1734; createRelease 1754; parent lookup 1836; OS range 1907; UUID/DTO lifecycle 2619/2711; initial history helper 3567; application/release validation 4038/4274 |
+| [Wrapper conversion](../io.entgra.device.mgt.core.application.mgt.core/src/main/java/io/entgra/device/mgt/core/application/mgt/core/util/APIUtil.java) | convertToAppDTO 318; releaseWrapperToReleaseDTO 386; name trimming, type and field conversion |
+| [Application helper](../io.entgra.device.mgt.core.application.mgt.core/src/main/java/io/entgra/device/mgt/core/application/mgt/core/util/ApplicationManagementUtil.java) | Link construction 169; cleanup 275; release/remote selection 289/309; release-list mutation 644 |
+| [Storage implementation](../io.entgra.device.mgt.core.application.mgt.core/src/main/java/io/entgra/device/mgt/core/application/mgt/core/impl/ApplicationStorageManagerImpl.java) | getAppInstallerData 129; uploadReleaseArtifact 157; platform parsing and tenant/hash path |
+| [Release DAO](../io.entgra.device.mgt.core.application.mgt.core/src/main/java/io/entgra/device/mgt/core/application/mgt/core/dao/impl/application/release/GenericApplicationReleaseDAOImpl.java) | createRelease 54; tenant/hash 508; active package 617; installable/self-match/UUID subquery 651 |
+| [Lifecycle manager](../io.entgra.device.mgt.core.application.mgt.core/src/main/java/io/entgra/device/mgt/core/application/mgt/core/lifecycle/LifecycleStateManager.java) | init; isValidStateChange; getInitialState; getInstallableState; permission, case, same-state and type applicability distinctions |
+| [Lifecycle DAO](../io.entgra.device.mgt.core.application.mgt.core/src/main/java/io/entgra/device/mgt/core/application/mgt/core/dao/impl/lifecyclestate/GenericLifecycleStateDAOImpl.java) | addLifecycleState 173 inserts actor/time/reason and tenant/release references; engine variants remain separate verification targets |
+| [Device-management icon service](../../device-mgt/io.entgra.device.mgt.core.device.mgt.core/src/main/java/io/entgra/device/mgt/core/device/mgt/core/service/DeviceManagementProviderServiceImpl.java) | saveApplicationIcon 5820; independent DeviceManagementDAOFactory transaction |
+| [MySQL schema](../../../features/application-mgt/io.entgra.device.mgt.core.application.mgt.server.feature/src/main/resources/dbscripts/cdm/application-mgt/mysql.sql) | AP_APP 4; AP_APP_RELEASE 20; AP_APP_LIFECYCLE_STATE 69; FK and absent uniqueness constraints |
+| [Packaged lifecycle](../../../features/application-mgt/io.entgra.device.mgt.core.application.mgt.server.feature/src/main/resources/conf/application-mgt.xml) | Initial state, permissions, successors and ApplicableTypes; effective deployment overrides are unknown |
+| [Publisher implementation](../../../../proprietary-commons/components/extensions/application-mgt/io.entgra.proprietary.commons.extension.application.mgt.publisher.api/src/main/java/io/entgra/proprietary/commons/extension/application/mgt/publisher/api/impl/ApplicationManagementPublisherAPIImpl.java) | createEntApp 185; createEntAppRelease 281; addLifecycleState 738; validation-before-create 948; exception/status/entity distinctions |
+| [Publisher interface](../../../../proprietary-commons/components/extensions/application-mgt/io.entgra.proprietary.commons.extension.application.mgt.publisher.api/src/main/java/io/entgra/proprietary/commons/extension/application/mgt/publisher/api/ApplicationManagementPublisherAPI.java) | createEntApp/createEntAppRelease/addLifecycleState route and scope declarations; distinct from core destination-state permissions |
+
+Existing configured tests remain listed in [Tests](#tests). In particular,
+LifecycleManagementTest checks flags and successor membership, not the complete
+isValidStateChange permission predicate, state/history writes or race behavior.
+New [enterprise cases](verification-matrix.md#enterprise-creation-and-publication-cases)
+have source mappings and planned fixtures; no execution result is inferred here.

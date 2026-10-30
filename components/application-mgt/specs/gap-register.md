@@ -3,7 +3,9 @@
 Status: Draft handover; no issue below is fixed or accepted by Phase 1.
 Baseline: core `293d35abfd`, proprietary commons `79b2891a67`.
 Source keys resolve through [source map](source-map.md). Priority is recommended,
-not a production incident attribution. Named assignees and approval dates are pending.
+not a production incident attribution. Review and verification are collaborative;
+role labels identify relevant perspectives, not mandatory named assignments.
+Behavior decisions and verification evidence still require explicit records.
 
 | ID | Classification / priority | Evidence and gap | Decision or next action | Accountable role |
 | --- | --- | --- | --- | --- |
@@ -17,7 +19,7 @@ not a production incident attribution. Named assignees and approval dates are pe
 | APP-GAP-08 | Source-observed async/range gaps / P1 | REVIEW.addReview guards rating > 0; duplicate policy is a precheck. updateReview dispatches rating recalculation before updateReviewInDB; add/delete also use threads. | Verify adapter upper bound; approve range, multi-review semantics and convergence/recovery behavior. Test concurrent/failed updates before claiming aggregate accuracy. | Review/product owner |
 | APP-GAP-09 | Identity/version semantics unknown / P1 | AM firmware availability updates device version before APPM lookup. MySQL firmware model mapping is globally unique by model ID. | Confirm model-ID scope, version ordering, fallback policy and partial-failure implications with device-model owner. Do not presume semantic versions or per-tenant model IDs. | Firmware owner |
 | APP-GAP-10 | Cross-repository contract coverage / P0 | Publisher creation/release handlers were sampled; full Store/admin/artifact endpoint and deployed-scope matrix was not exhaustively traced. Some older spec paths are abbreviated. | Inventory exact verbs/routes/scopes/DTO/error shapes for all consumers at pinned commits; authorize adapter work separately. UI behavior and runtime auth remain unverified. | API/security owners |
-| APP-GAP-11 | Deployment/approval unknown / P0 | Production DB/isolation, applied migrations, storage topology, lifecycle overrides and nTask configuration are not supplied. No named spec approvers assigned. | Supply supported matrix and named reviewers; approve specs/deviations; obtain installed-product evidence in Phase 2. | Platform/component owner |
+| APP-GAP-11 | Deployment/approval unknown / P0 | Production DB/isolation, applied migrations, storage topology, lifecycle overrides and nTask configuration are not supplied. Spec review outcomes remain pending. | Supply relevant supported matrix; collaboratively review specs/deviations; obtain installed-product evidence in Phase 2. A complete product matrix is not a prerequisite for source-level core specification work. | Platform/component perspectives |
 | APP-GAP-12 | External integration contracts unknown / P1 | SP and VPP entry points/local persistence inventoried; no live provider validation or exhaustive credential/error-path audit performed. | Pin provider versions, auth/secret policy, rate limits, timeouts, retries and reconciliation contracts; stub before live verification. | Integration/security owner |
 | APP-GAP-13 | Confirmed test-evidence gap / P0 | ApplicationManagementTest has disabled empty methods; testAddApplication exercises DAO, not the full API. Lifecycle predicates and parser/storage utilities are only partial evidence. | Implement assertion-rich tests for acceptance criteria in Phase 2. Do not count named placeholders or a green build as acceptance coverage. | QA/component owner |
 
@@ -67,6 +69,24 @@ For each approved decision append: gap ID, selected behavior, alternatives rejec
 compatibility/migration impact, approver, date and implementing/verifying commit.
 Current decision records: none. Documentation preparation is complete only as a
 draft handover; owner sign-off cannot be supplied by an AI agent.
+
+## Enterprise creation and publication decisions
+
+Sources and reviewed revision: [enterprise source references](source-map.md#enterprise-creation-and-publication).
+All items below are open source observations/verification questions, not reproduced
+production incidents or approved new behavior. They refine existing requirement IDs.
+
+| ID | Requirements / priority | Observed boundary | Decision and closure evidence |
+| --- | --- | --- | --- |
+| APP-GAP-19 | APP-CRT-001/002, APP-REL-001/002, APP-X-004 / P1 | Initial list validation/persistence uses first release; explicit null lists/elements and multiple entries lack a complete error contract. Name validation precedes trimming; OS parsing assumes two elements and checks endpoint existence rather than ordering. Windows checks null identity, not blank. Additional adapter validates path deviceType while core uses parent type. Remote initial release skips the synchronous initial package check. | Characterize each branch and current HTTP result. Collaboratively decide malformed-input, package identity, normalization and type-mismatch policies before fixes; retain client compatibility or explicitly version changes. |
+| APP-GAP-20 | APP-LC-001/002/003, APP-X-001/002/003 / P1 | State predicate allows permitted same-state requests, but installable query includes the current release. Permission/graph rejection raises a broad management failure, while missing state permission raises lifecycle failure. Transition predicate does not generally enforce ApplicableTypes. UUID subquery lacks tenant predicate; MySQL UUID has no unique constraint. Broad lifecycle failures do not all have explicit rollback catches. | Specify intended repeat/permission/type behavior and UUID identity assumptions. Characterize manual/auto paths, duplicate UUID fixtures, competing transitions and partial-history failures; coordinate GAP-01/02/05. Do not silently change status codes or assume an exploitable cross-tenant path. |
+| APP-GAP-21 | APP-CRT-003, APP-STO-002, APP-X-002/004 / P1 | Initial enterprise persistence calls persistAppIconInfo before APPM commit; device-management saveApplicationIcon uses an independent DAO transaction. Additional createRelease does not call it. | Decide icon ownership and recovery after APPM failure. Inject icon failure and APPM failure after successful icon commit; inspect both stores and artifacts. Document or implement separately approved reconciliation; one JDBC rollback does not undo both stores. |
+
+APP-GAP-03 remains open: the initial remote response is now precisely documented,
+but completion visibility, retry and restart recovery are not newly implemented.
+APP-GAP-10 remains open beyond sampled enterprise/lifecycle adapters. APP-GAP-13
+remains open until the [acceptance cases](verification-matrix.md#enterprise-creation-and-publication-cases)
+are executed with meaningful assertions and recorded evidence.
 
 ## Implementation-alignment findings
 

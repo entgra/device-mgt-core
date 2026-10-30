@@ -12,6 +12,11 @@ initial 201 is not proof of completed release publication. See APP-CRT-004 and
 APP-GAP-03. Cleanup is attempted on caught failures, not an atomic filesystem/DB
 guarantee. Existing HTTP mappings are observed compatibility behavior, not approval
 of every exception mapping or proof that all malformed inputs are handled.
+The [enterprise contract](app-creation-enterprise.md) specifies exact null/empty,
+first-release, package-check and completion distinctions. Invalid role names or
+an empty registered category catalog can raise broad management failures rather
+than 400. Artifact preparation runs before the transaction try block, and initial
+icon-info persistence crosses an independent device-management transaction.
 
 ## Purpose
 
@@ -70,7 +75,7 @@ Publisher create*App(wrapper, is-published)
        → triggerApplicationCreation(...)
             → uploadReleaseArtifactIfExist(app)   // type-specific artifact branch
             → DB txn: addAppDataIntoDB(...)
-            → on failure: rollback + delete uploaded artifacts
+            → on selected caught failures: attempt rollback + artifact deletion
                (`ConflictException` / `BadRequestException` are rethrown as-is;
                 other `ApplicationManagementException`s are wrapped)
   → HTTP 201 + Application entity
@@ -140,7 +145,8 @@ Add-release binary-hash uniqueness and pre-check:
 - [ ] Successful create returns **201** with an `Application` entity.
 - [ ] Invalid payload returns **400**.
 - [ ] Package / binary conflicts return **409** via `ConflictException`.
-- [ ] Failed create after artifact upload cleans up artifacts (rollback path).
+- [ ] Failed create after artifact upload meets the approved compensation/recovery
+      outcome; verify attempted cleanup separately from JDBC rollback (APP-CRT-003).
 - [ ] Type-specific rules remain documented in the matching type spec.
 
 ## Maintenance Rules

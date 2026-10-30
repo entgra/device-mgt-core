@@ -40,3 +40,12 @@ cross-node items. No checkboxes in this backlog are pre-marked complete.
 | P2-14 | Release filter/type/role fixtures, per-type update payloads and retirement states; APP-GAP-14/15/17 decisions before behavior changes | Characterize APP-REL-005/006 and APP-CAT-005, including anomalies, pagination, missing IDs and transaction/file failures |
 | P2-15 | Windows MSI metadata arrays and plist XML fixtures, adapter auth setup; APP-GAP-16 | Characterize APP-STO-004/005, including blank/invalid/duplicate metadata and XML-sensitive values |
 | P2-16 | Four subscription helper types, controlled device service, count/history and status fixtures; APP-GAP-18 | Characterize APP-SUB-004/005, explicitly retaining empty/null results and legacy/new dispatch differences unless approved otherwise |
+
+## Enterprise contract verification detail
+
+Use [E01-E16](verification-matrix.md#enterprise-creation-and-publication-cases) to
+refine existing P2-01 through P2-05/P2-07, rather than creating a parallel execution
+backlog. APP-GAP-19/20/21 add decisions before changing malformed-input, repeat
+publication, type/error or independent-icon behavior. Characterization may record
+current anomalies before those decisions; proposed stronger guarantees must not
+be marked passed without both an agreed oracle and execution evidence.

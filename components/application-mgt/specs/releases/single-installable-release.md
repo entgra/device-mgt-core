@@ -31,7 +31,7 @@ CUSTOM / firmware skips this installable uniqueness check.
 | Case | Expected |
 | --- | --- |
 | Create release with `isPublished=false` while one is PUBLISHED | **201**, new release in initial state |
-| Create release with `isPublished=true` while one is PUBLISHED | **403** `ForbiddenException` (DB transaction rolled back; stored binary cleaned up because upload runs before `createRelease`) |
+| Create release with `isPublished=true` while one is PUBLISHED | **403** `ForbiddenException` on synchronous enterprise add-release; release transaction rollback and stored-binary deletion are attempted; cleanup failure is separate |
 | Create release with `isPublished=true` and no installable release | **201**, new release ends PUBLISHED |
 
 ## Acceptance Criteria
@@ -39,6 +39,13 @@ CUSTOM / firmware skips this installable uniqueness check.
 - [ ] Forbidden case returns **403** from Publisher create-release (not **500**).
 - [ ] Failed publish-on-create rolls back the release transaction.
 - [ ] Artifact cleanup still runs for the failed create path.
+
+The current DAO tests for any release in the application's installable state; it
+does not exclude the supplied release UUID. A manual PUBLISHED->PUBLISHED request
+can therefore reject itself even though the lifecycle predicate permits a
+permission-authorized same-state transition. APP-GAP-20 records the intended
+idempotency decision. This is distinct from publishing a new release while
+another one is installable; see [lifecycle details](../lifecycle/lifecycle.md#enterprise-transition-contract).
 
 ## Related
 
