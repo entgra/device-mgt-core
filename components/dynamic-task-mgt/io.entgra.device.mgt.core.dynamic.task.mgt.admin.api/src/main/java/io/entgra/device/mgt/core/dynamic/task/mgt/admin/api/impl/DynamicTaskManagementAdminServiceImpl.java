@@ -62,45 +62,53 @@ public class DynamicTaskManagementAdminServiceImpl implements DynamicTaskManagem
                 throw new BadRequestException(msg);
             }
 
-            if (existingConfigurations.contains(incomingCategorizedDynamicTask)) {
-                if (incomingCategorizedDynamicTask.getFrequency() <= 0) {
-                    String msg = "Encountered an invalid setting for categorized dynamic task frequency. " +
-                            "Frequency must be a positive value, but was [" +
-                            incomingCategorizedDynamicTask.getFrequency() + "].";
-                    log.error(msg);
-                    throw new BadRequestException(msg);
-                }
-
-                Set<String> configurableDeviceTypes =
-                        validateOperationCodesAndGetConfigurableDeviceTypes(incomingCategorizedDynamicTask);
-
-                if (incomingCategorizedDynamicTask.getDeviceTypes() == null ||
-                        incomingCategorizedDynamicTask.getDeviceTypes().isEmpty()) {
-                    String msg = "Encountered an invalid setting for categorized dynamic task [" +
-                            incomingCategorizedDynamicTask.getCategoryCode() + "]. deviceTypes can not be null or " +
-                            "empty.";
-                    log.error(msg);
-                    throw new BadRequestException(msg);
-                }
-                for (String incomingDeviceType : incomingCategorizedDynamicTask.getDeviceTypes()) {
-                    if (!configurableDeviceTypes.contains(incomingDeviceType)) {
-                        String msg =
-                                "Encountered an invalid device type [" + incomingDeviceType + "] in " +
-                                        "categorized dynamic task [" +
-                                        incomingCategorizedDynamicTask.getCategoryCode() + "].";
-                        log.error(msg);
-                        throw new BadRequestException(msg);
-                    }
-                }
-
-            } else {
+            if (!existingConfigurations.contains(incomingCategorizedDynamicTask)) {
                 String msg =
                         "Encountered an invalid categorized dynamic task [" +
                                 incomingCategorizedDynamicTask.getCategoryCode() +
                                 "].";
                 log.error(msg);
                 throw new BadRequestException(msg);
+            }
 
+            validateCategorySettings(incomingCategorizedDynamicTask);
+        }
+    }
+
+    /**
+     * Validate the settings shared by both newly added and updated categorized dynamic tasks, i.e. frequency,
+     * operation codes and device types.
+     *
+     * @param categorizedDynamicTask {@link CategorizedDynamicTask} to be validated.
+     * @throws BadRequestException Throws when the frequency, operation codes or device types are invalid.
+     */
+    private static void validateCategorySettings(CategorizedDynamicTask categorizedDynamicTask)
+            throws BadRequestException {
+        if (categorizedDynamicTask.getFrequency() <= 0) {
+            String msg = "Encountered an invalid setting for categorized dynamic task [" +
+                    categorizedDynamicTask.getCategoryCode() + "]. Frequency must be a positive value, but was [" +
+                    categorizedDynamicTask.getFrequency() + "].";
+            log.error(msg);
+            throw new BadRequestException(msg);
+        }
+
+        Set<String> configurableDeviceTypes =
+                validateOperationCodesAndGetConfigurableDeviceTypes(categorizedDynamicTask);
+
+        if (categorizedDynamicTask.getDeviceTypes() == null || categorizedDynamicTask.getDeviceTypes().isEmpty()) {
+            String msg = "Encountered an invalid setting for categorized dynamic task [" +
+                    categorizedDynamicTask.getCategoryCode() + "]. deviceTypes can not be null or empty.";
+            log.error(msg);
+            throw new BadRequestException(msg);
+        }
+        for (String deviceType : categorizedDynamicTask.getDeviceTypes()) {
+            if (!configurableDeviceTypes.contains(deviceType)) {
+                String msg =
+                        "Encountered an invalid device type [" + deviceType + "] in categorized dynamic task [" +
+                                categorizedDynamicTask.getCategoryCode() + "]. Device types must be a subset of " +
+                                "the device types supported by the given operation codes.";
+                log.error(msg);
+                throw new BadRequestException(msg);
             }
         }
     }
@@ -127,6 +135,12 @@ public class DynamicTaskManagementAdminServiceImpl implements DynamicTaskManagem
 
         Set<String> configurableDeviceTypes = new HashSet<>();
         for (OperationCode operationCode : categorizedDynamicTask.getOperationCodes()) {
+            if (operationCode == null) {
+                String msg = "Encountered an invalid operation code entry in categorized dynamic task [" +
+                        categorizedDynamicTask.getCategoryCode() + "]. operationCode entry can not be null.";
+                log.error(msg);
+                throw new BadRequestException(msg);
+            }
             if (StringUtils.isBlank(operationCode.getOperationCode())) {
                 String msg = "Encountered an invalid operation code entry in categorized dynamic task [" +
                         categorizedDynamicTask.getCategoryCode() + "]. operationCode can not be blank.";
@@ -154,14 +168,13 @@ public class DynamicTaskManagementAdminServiceImpl implements DynamicTaskManagem
     }
 
     /**
-     * Validate an incoming new categorized dynamic task payload against the existing configurations.
+     * Validate an incoming new categorized dynamic task payload. Checks against the existing configurations
+     * (duplicate category code or name) are done by the service layer under the tenant configuration lock.
      *
      * @param incomingCategorizedDynamicTask New {@link CategorizedDynamicTask} to be added.
-     * @param existingConfigurations         List of {@link CategorizedDynamicTask} existing configurations.
-     * @throws BadRequestException Throws when the payload is missing, malformed, or the category already exists.
+     * @throws BadRequestException Throws when the payload is missing or malformed.
      */
-    private static void validateNewCategoryPayload(CategorizedDynamicTask incomingCategorizedDynamicTask,
-                                                   List<CategorizedDynamicTask> existingConfigurations)
+    private static void validateNewCategoryPayload(CategorizedDynamicTask incomingCategorizedDynamicTask)
             throws BadRequestException {
         if (incomingCategorizedDynamicTask == null) {
             String msg = "Encountered an invalid configuration object. Incoming categorized dynamic task can not " +
@@ -177,41 +190,15 @@ public class DynamicTaskManagementAdminServiceImpl implements DynamicTaskManagem
             throw new BadRequestException(msg);
         }
 
-        if (existingConfigurations.contains(incomingCategorizedDynamicTask)) {
-            String msg =
-                    "Categorized dynamic task [" + incomingCategorizedDynamicTask.getCategoryCode() + "] already " +
-                            "exists. Use the update endpoint to modify an existing categorized dynamic task.";
-            log.error(msg);
-            throw new BadRequestException(msg);
-        }
-
-        if (incomingCategorizedDynamicTask.getFrequency() <= 0) {
-            String msg = "Encountered an invalid setting for categorized dynamic task frequency. Frequency must " +
-                    "be a positive value, but was [" + incomingCategorizedDynamicTask.getFrequency() + "].";
-            log.error(msg);
-            throw new BadRequestException(msg);
-        }
-
-        Set<String> configurableDeviceTypes =
-                validateOperationCodesAndGetConfigurableDeviceTypes(incomingCategorizedDynamicTask);
-
-        if (incomingCategorizedDynamicTask.getDeviceTypes() == null ||
-                incomingCategorizedDynamicTask.getDeviceTypes().isEmpty()) {
+        // The UI identifies categories by name, hence the name must be present.
+        if (StringUtils.isBlank(incomingCategorizedDynamicTask.getName())) {
             String msg = "Encountered an invalid setting for categorized dynamic task [" +
-                    incomingCategorizedDynamicTask.getCategoryCode() + "]. deviceTypes can not be null or empty.";
+                    incomingCategorizedDynamicTask.getCategoryCode() + "]. name can not be blank.";
             log.error(msg);
             throw new BadRequestException(msg);
         }
-        for (String incomingDeviceType : incomingCategorizedDynamicTask.getDeviceTypes()) {
-            if (!configurableDeviceTypes.contains(incomingDeviceType)) {
-                String msg =
-                        "Encountered an invalid device type [" + incomingDeviceType + "] in categorized dynamic " +
-                                "task [" + incomingCategorizedDynamicTask.getCategoryCode() + "]. Device types must " +
-                                "be a subset of the device types supported by the given operation codes.";
-                log.error(msg);
-                throw new BadRequestException(msg);
-            }
-        }
+
+        validateCategorySettings(incomingCategorizedDynamicTask);
     }
 
     /**
@@ -313,10 +300,9 @@ public class DynamicTaskManagementAdminServiceImpl implements DynamicTaskManagem
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(msg).build();
         } catch (BadRequestException e) {
-            String msg = "Encountered an malformed configuration settings while processing the dynamic task updating " +
-                    "request for tenant domain [" + tenantDomain + "]";
-            log.error(msg);
-            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+            log.error("Encountered an malformed configuration settings while processing the dynamic task updating " +
+                    "request for tenant domain [" + tenantDomain + "]");
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         } catch (DynamicTaskManagementException e) {
             String msg =
                     "Error encountered while updating dynamic task configurations in tenant domain [" + tenantDomain +
@@ -330,11 +316,7 @@ public class DynamicTaskManagementAdminServiceImpl implements DynamicTaskManagem
     public Response addCategorizedDynamicTask(String tenantDomain, CategorizedDynamicTask categorizedDynamicTask) {
         try {
             checkDomainValidity();
-            DynamicTaskPlatformConfigurations existingDynamicTaskPlatformConfigurations =
-                    APIUtils.getDynamicTaskConfigurationManagementService()
-                            .getDynamicTaskPlatformConfigurations(tenantDomain);
-            validateNewCategoryPayload(categorizedDynamicTask,
-                    new ArrayList<>(existingDynamicTaskPlatformConfigurations.getCategorizedDynamicTasks()));
+            validateNewCategoryPayload(categorizedDynamicTask);
             DynamicTaskPlatformConfigurations updatedDynamicTaskPlatformConfigurations =
                     APIUtils.getDynamicTaskConfigurationManagementService().addCategorizedDynamicTask(tenantDomain,
                             categorizedDynamicTask);
@@ -348,10 +330,9 @@ public class DynamicTaskManagementAdminServiceImpl implements DynamicTaskManagem
             log.error(msg, e);
             return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
         } catch (BadRequestException e) {
-            String msg = "Encountered an malformed configuration settings while processing the new dynamic task " +
-                    "category request for tenant domain [" + tenantDomain + "]";
-            log.error(msg);
-            return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+            log.error("Encountered an malformed configuration settings while processing the new dynamic task " +
+                    "category request for tenant domain [" + tenantDomain + "]");
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         } catch (DynamicTaskManagementException e) {
             String msg =
                     "Error encountered while adding a new dynamic task category in tenant domain [" + tenantDomain +

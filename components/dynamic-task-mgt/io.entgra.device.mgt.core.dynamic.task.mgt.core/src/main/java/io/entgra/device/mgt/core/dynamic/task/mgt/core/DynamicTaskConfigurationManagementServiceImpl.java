@@ -26,6 +26,7 @@ import io.entgra.device.mgt.core.dynamic.task.mgt.common.bean.CategorizedDynamic
 import io.entgra.device.mgt.core.dynamic.task.mgt.common.bean.DynamicTaskPlatformConfigurations;
 import io.entgra.device.mgt.core.dynamic.task.mgt.common.exception.DynamicTaskManagementException;
 import io.entgra.device.mgt.core.dynamic.task.mgt.common.exception.DynamicTaskScheduleException;
+import io.entgra.device.mgt.core.dynamic.task.mgt.common.exception.api.BadRequestException;
 import io.entgra.device.mgt.core.dynamic.task.mgt.common.exception.api.NotFoundException;
 import io.entgra.device.mgt.core.dynamic.task.mgt.core.constant.Constants;
 import io.entgra.device.mgt.core.dynamic.task.mgt.core.internal.DynamicTaskManagementExtensionServiceDataHolder;
@@ -34,6 +35,7 @@ import io.entgra.device.mgt.core.dynamic.task.mgt.core.util.DynamicTaskManagemen
 import io.entgra.device.mgt.core.dynamic.task.mgt.core.util.DynamicTaskPatch;
 import io.entgra.device.mgt.core.dynamic.task.mgt.core.util.DynamicTaskSchedulerUtil;
 import io.entgra.device.mgt.core.task.mgt.common.bean.DynamicTask;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
@@ -156,20 +158,11 @@ public class DynamicTaskConfigurationManagementServiceImpl implements DynamicTas
     @Override
     public DynamicTaskPlatformConfigurations addCategorizedDynamicTask(String tenantDomain,
                                                                        CategorizedDynamicTask newCategorizedDynamicTask)
-            throws DynamicTaskManagementException {
+            throws NotFoundException, BadRequestException, DynamicTaskManagementException {
         synchronized (getTenantConfigurationLock(tenantDomain)) {
-            List<CategorizedDynamicTask> existingCategorizedDynamicTasks;
-            try {
-                existingCategorizedDynamicTasks =
-                        new ArrayList<>(DynamicTaskManagementUtil.getDynamicTaskPlatformConfigurations(tenantDomain)
-                                .getCategorizedDynamicTasks());
-            } catch (NotFoundException e) {
-                String msg =
-                        "Failed to locate categorized dynamic task configuration for tenant domain [" + tenantDomain +
-                                "].";
-                log.error(msg, e);
-                throw new DynamicTaskManagementException(msg, e);
-            }
+            List<CategorizedDynamicTask> existingCategorizedDynamicTasks =
+                    new ArrayList<>(DynamicTaskManagementUtil.getDynamicTaskPlatformConfigurations(tenantDomain)
+                            .getCategorizedDynamicTasks());
 
             if (existingCategorizedDynamicTasks.contains(newCategorizedDynamicTask)) {
                 String msg =
@@ -177,7 +170,20 @@ public class DynamicTaskConfigurationManagementServiceImpl implements DynamicTas
                                 "] already exists " +
                                 "for tenant domain [" + tenantDomain + "].";
                 log.error(msg);
-                throw new DynamicTaskManagementException(msg);
+                throw new BadRequestException(msg);
+            }
+
+            // The UI identifies categories by name, hence names must be unique across categories.
+            for (CategorizedDynamicTask existingCategorizedDynamicTask : existingCategorizedDynamicTasks) {
+                if (StringUtils.equalsIgnoreCase(StringUtils.trim(existingCategorizedDynamicTask.getName()),
+                        StringUtils.trim(newCategorizedDynamicTask.getName()))) {
+                    String msg = "Categorized dynamic task name [" + newCategorizedDynamicTask.getName() + "] is " +
+                            "already used by categorized dynamic task [" +
+                            existingCategorizedDynamicTask.getCategoryCode() + "] for tenant domain [" +
+                            tenantDomain + "].";
+                    log.error(msg);
+                    throw new BadRequestException(msg);
+                }
             }
 
             existingCategorizedDynamicTasks.add(newCategorizedDynamicTask);

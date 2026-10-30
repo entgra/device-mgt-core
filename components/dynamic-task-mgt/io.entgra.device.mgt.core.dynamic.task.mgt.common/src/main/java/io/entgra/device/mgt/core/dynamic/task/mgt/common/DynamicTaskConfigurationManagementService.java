@@ -21,6 +21,7 @@ package io.entgra.device.mgt.core.dynamic.task.mgt.common;
 import io.entgra.device.mgt.core.dynamic.task.mgt.common.bean.CategorizedDynamicTask;
 import io.entgra.device.mgt.core.dynamic.task.mgt.common.bean.DynamicTaskPlatformConfigurations;
 import io.entgra.device.mgt.core.dynamic.task.mgt.common.exception.DynamicTaskManagementException;
+import io.entgra.device.mgt.core.dynamic.task.mgt.common.exception.api.BadRequestException;
 import io.entgra.device.mgt.core.dynamic.task.mgt.common.exception.api.NotFoundException;
 
 import java.util.Set;
@@ -54,13 +55,15 @@ public interface DynamicTaskConfigurationManagementService {
      * @param tenantDomain           Tenant domain to add the new categorized dynamic task.
      * @param categorizedDynamicTask New {@link CategorizedDynamicTask} to be added.
      * @return Updated {@link DynamicTaskPlatformConfigurations}
+     * @throws NotFoundException              Throws if dynamic task configuration is not available for the tenant.
+     * @throws BadRequestException           Throws when a categorized dynamic task already exists for the given
+     *                                        category code or name.
      * @throws DynamicTaskManagementException Throws when error encountered while adding the categorized dynamic
-     *                                        task, including when a categorized dynamic task already exists for
-     *                                        the given category code.
+     *                                        task.
      */
     DynamicTaskPlatformConfigurations addCategorizedDynamicTask(String tenantDomain,
                                                                 CategorizedDynamicTask categorizedDynamicTask)
-            throws DynamicTaskManagementException;
+            throws NotFoundException, BadRequestException, DynamicTaskManagementException;
 
     /**
      * Rest the dynamic task platform configurations to default settings.
