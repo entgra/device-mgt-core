@@ -629,8 +629,8 @@ public class GroupManagementProviderServiceImpl implements GroupManagementProvid
         }
 
         if (request.isIncludeDeviceCount() && rootGroups != null && !rootGroups.isEmpty()) {
+            int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
             try {
-                int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
                 GroupManagementDAOFactory.openConnection();
                 List<DeviceGroup> groups = new ArrayList<>();
                 List<DeviceGroup> pending = new ArrayList<>(rootGroups);
