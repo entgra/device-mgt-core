@@ -30,23 +30,18 @@ import org.apache.commons.logging.LogFactory;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 public class
-SimplePolicyEvaluationTest implements PolicySelectionEvaluationPoint {
+SimplePolicyEvaluationTest implements PolicyEvaluationPoint {
 
     private static final Log log = LogFactory.getLog(SimplePolicyEvaluationTest.class);
     public static final String DEVICE2 = "device2"; // assuming this device does not have valid policy
 
     @Override
     public Policy getEffectivePolicy(DeviceIdentifier deviceIdentifier) throws PolicyEvaluationException {
-        return getEffectivePolicy(deviceIdentifier, null);
-    }
-
-    @Override
-    public Policy getEffectivePolicy(DeviceIdentifier deviceIdentifier, Set<Integer> policyIds)
-            throws PolicyEvaluationException {
+        Policy policy = new Policy();
         List<Policy> policyList;
+        PolicyAdministratorPoint policyAdministratorPoint;
         PolicyInformationPoint policyInformationPoint;
         PolicyManagerService policyManagerService = new PolicyManagerServiceImpl();
         try {
@@ -55,17 +50,19 @@ SimplePolicyEvaluationTest implements PolicySelectionEvaluationPoint {
                 policyInformationPoint = policyManagerService.getPIP();
                 PIPDevice pipDevice = policyInformationPoint.getDeviceData(deviceIdentifier);
                 policyList = policyInformationPoint.getRelatedPolicies(pipDevice);
-                if (policyIds != null) {
-                    policyList.removeIf(policy -> !policyIds.contains(policy.getId()));
-                }
+                policyAdministratorPoint = policyManagerService.getPAP();
                 for(Policy pol : policyList) {
                     log.debug("Policy used in evaluation -  Name  : " + pol.getPolicyName() );
                 }
 
                 sortPolicies(policyList);
                 if(!policyList.isEmpty()) {
-                    return policyList.get(0);
+                    policy = policyList.get(0);
+                } else {
+                    policyAdministratorPoint.removePolicyUsed(deviceIdentifier);
+                    return null;
                 }
+                policyAdministratorPoint.setPolicyUsed(deviceIdentifier, policy);
             }
 
         } catch (PolicyManagementException e) {
@@ -73,7 +70,7 @@ SimplePolicyEvaluationTest implements PolicySelectionEvaluationPoint {
             log.error(msg, e);
             throw new PolicyEvaluationException(msg, e);
         }
-        return null;
+        return policy;
     }
 
     @Override

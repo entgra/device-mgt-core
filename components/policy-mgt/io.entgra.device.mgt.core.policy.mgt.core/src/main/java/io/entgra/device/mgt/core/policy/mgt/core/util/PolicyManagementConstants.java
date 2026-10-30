@@ -26,7 +26,6 @@ public final class PolicyManagementConstants {
     public static final String MONITOR_POLICY_BUNDLE = "MONITOR_POLICY_BUNDLE";
 
     public static final String TENANT_ID = "TENANT_ID";
-    public static final String POLICY_IDS = "POLICY_IDS";
 
     // public static final String MONITOR = "MONITOR";
     public static final String ENFORCE = "ENFORCE";

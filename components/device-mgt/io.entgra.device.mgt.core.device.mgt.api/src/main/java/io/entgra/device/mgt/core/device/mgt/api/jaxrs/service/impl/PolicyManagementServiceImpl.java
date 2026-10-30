@@ -37,7 +37,6 @@ import io.entgra.device.mgt.core.device.mgt.common.policy.mgt.Policy;
 import io.entgra.device.mgt.core.device.mgt.core.internal.DeviceManagementDataHolder;
 import io.entgra.device.mgt.core.device.mgt.core.permission.mgt.PermissionManagerServiceImpl;
 import io.entgra.device.mgt.core.policy.mgt.common.PolicyAdministratorPoint;
-import io.entgra.device.mgt.core.policy.mgt.common.InvalidPolicySelectionException;
 import io.entgra.device.mgt.core.policy.mgt.common.PolicyManagementException;
 import io.entgra.device.mgt.core.policy.mgt.core.PolicyManagerService;
 import org.apache.commons.logging.Log;
@@ -46,7 +45,6 @@ import org.wso2.carbon.context.PrivilegedCarbonContext;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -61,7 +59,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 @Path("/policies")
 @Produces(MediaType.APPLICATION_JSON)
@@ -365,20 +362,11 @@ public class PolicyManagementServiceImpl implements PolicyManagementService {
     @PUT
     @Produces("application/json")
     @Path("apply-changes")
-    public Response applyChanges(Set<Integer> policyIds) {
-        if (policyIds == null || policyIds.isEmpty() || policyIds.contains(null) ||
-                policyIds.stream().anyMatch(policyId -> policyId <= 0)) {
-            String msg = "A non-empty set of positive policy IDs is required.";
-            return Response.status(Response.Status.BAD_REQUEST).entity(
-                    new ErrorResponse.ErrorResponseBuilder().setCode(400L).setMessage(msg).build()).build();
-        }
+    public Response applyChanges() {
         try {
             PolicyManagerService policyManagementService = DeviceMgtAPIUtils.getPolicyManagementService();
             PolicyAdministratorPoint pap = policyManagementService.getPAP();
-            pap.publishChanges(policyIds);
-        } catch (InvalidPolicySelectionException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(
-                    new ErrorResponse.ErrorResponseBuilder().setCode(400L).setMessage(e.getMessage()).build()).build();
+            pap.publishChanges();
         } catch (PolicyManagementException e) {
             String msg = "Exception in applying changes.";
             log.error(msg, e);
@@ -507,7 +495,6 @@ public class PolicyManagementServiceImpl implements PolicyManagementService {
             @QueryParam("name") String name,
             @QueryParam("type") String type,
             @QueryParam("status") String status,
-            @DefaultValue("false") @QueryParam("updated") boolean includeUpdated,
             @QueryParam("deviceType") String deviceType,
             @QueryParam("groupId") int groupId,
             @HeaderParam("If-Modified-Since") String ifModifiedSince,
@@ -527,7 +514,6 @@ public class PolicyManagementServiceImpl implements PolicyManagementService {
         if (status != null) {
             request.setStatus(status);
         }
-        request.setIncludeUpdated(includeUpdated);
         if (deviceType != null) {
             request.setDeviceType(deviceType);
         }
@@ -537,7 +523,7 @@ public class PolicyManagementServiceImpl implements PolicyManagementService {
         try {
             PolicyAdministratorPoint policyAdministratorPoint = policyManagementService.getPAP();
             policies = policyAdministratorPoint.getPolicyList(request);
-            targetPolicies.setCount(policyAdministratorPoint.getPolicyCount(request));
+            targetPolicies.setCount(policyAdministratorPoint.getPolicyCount());
             targetPolicies.setList(policies);
         } catch (PolicyManagementException e) {
             String msg = "Error occurred while retrieving all available policies";
