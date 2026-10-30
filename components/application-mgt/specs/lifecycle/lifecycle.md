@@ -1,6 +1,6 @@
 # Publication and Lifecycle
 
-[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md) | [Sources](../source-map.md)
+[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md)
 
 ## Configured graph
 
@@ -79,7 +79,7 @@ three transitions. isPublished=true with no release writes no lifecycle history.
 Auto-publication requires permission at every destination; it does not bypass
 review/approval permission merely because creation was authorized. No permission
 check for the initial CREATED->CREATED insert is performed by the state-change
-predicate. Adapter scopes and effective platform access remain separate checks.
+predicate. Effective caller authentication remains a separate trust boundary.
 
 For manual transitions, the manager assigns the caller's action to the DTO and
 retains the supplied reason. The generic release/history DAOs uppercase persisted

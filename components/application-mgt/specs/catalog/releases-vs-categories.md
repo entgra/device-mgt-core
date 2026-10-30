@@ -1,6 +1,6 @@
 # Application list: releases vs categories
 
-[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md) | [Sources](../source-map.md)
+[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md)
 
 Requirement: [APP-CAT-001](catalog.md).
 Extend this regression
@@ -9,8 +9,7 @@ scenario with role/tenant filtering and pagination/count assertions in Phase 2.
 ## Purpose
 
 `getApplications` returns each application release once. Category assignment on
-an app does not change how many releases are returned in the list or Publisher
-drawer.
+an app does not change how many releases are returned in the service result.
 
 ## Behaviour
 

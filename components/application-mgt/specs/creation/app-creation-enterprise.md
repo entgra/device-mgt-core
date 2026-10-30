@@ -1,6 +1,6 @@
 # Enterprise Application Creation
 
-[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md) | [Sources](../source-map.md#enterprise-creation-and-publication)
+[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md)
 
 ## Scope and authority
 
@@ -16,9 +16,8 @@ and concurrency guarantees remain decisions in the gap register. Review and
 verification are collaborative; documenting a branch does not approve an anomaly
 or establish that acceptance has passed.
 
-PUBLIC, WEB_CLIP/WEB_APP and CUSTOM creation are separate contracts. Browser upload,
-Publisher/Store UI behavior, installed-product authentication, device installation
-and subscription status reporting are outside this core contract. Publication
+PUBLIC, WEB_CLIP/WEB_APP and CUSTOM creation are separate contracts. Device
+installation and subscription status reporting are outside this contract. Publication
 means lifecycle state/history persistence, not deployment to a device.
 
 ## Entry points and caller obligations
@@ -35,8 +34,8 @@ Callers establish authenticated tenant/user context and invoke the applicable
 validator before creation. Core methods have different validation responsibilities;
 calling createRelease with arbitrary DTOs is not equivalent to using the validated
 enterprise pipeline. getApplication resolves the parent under the current tenant,
-but its lookup does not itself enforce unrestricted-role visibility. Full adapter
-scope enforcement is a separate trust boundary (APP-GAP-10).
+but its lookup does not itself enforce unrestricted-role visibility. Caller-side
+authorization is a separate trust boundary (APP-GAP-10).
 
 The wrapper classes are the field/schema reference; do not infer enforcement from
 @NotNull annotations alone. In this link-based pipeline artifactLink, iconLink,
@@ -109,7 +108,7 @@ can precede even detection of an unknown app or conflicting binary. Caught worke
 management/resource failures are logged rather than returned to the initial caller.
 No durable completion record, restart replay or bounded retry is established by this
 path. Retrying initial creation can encounter the already-created application name.
-Do not invent a 202 response, job API or automatic retry policy (APP-GAP-03).
+Do not invent durable completion tracking or automatic retry policy (APP-GAP-03).
 
 ## Failure boundaries
 
@@ -118,32 +117,10 @@ Do not invent a 202 response, job API or automatic retry policy (APP-GAP-03).
 | Artifact preparation before APPM transaction | Runs outside triggerApplicationCreation's try/finally | Do not promise its transaction catch blocks clean partial downloads/uploads |
 | Initial APPM creation | Selected failures attempt rollback and artifact deletion; management exceptions are wrapped | Cleanup can fail or mask the primary exception; no filesystem/JDBC atomicity |
 | Additional release persistence | Forbidden/DAO/history failures explicitly roll back; some broader lifecycle/management failures reach close without an explicit rollback branch | Assert actual cleanup and pool behavior; do not infer universal rollback from finally |
-| Publication permission/graph | Rejected predicate produces ApplicationManagementException; installable guard produces ForbiddenException | Authorization denial is not uniformly ForbiddenException/HTTP 403 |
+| Publication permission/graph | Rejected predicate produces ApplicationManagementException; installable guard produces ForbiddenException | Authorization denial is not uniformly ForbiddenException |
 | Initial icon-info write | Device-management transaction can commit before APPM commit | APPM rollback cannot establish icon-info rollback; APP-GAP-21 |
 | Commit/acquisition/cleanup | Existing connection utility can log commit errors and throw on close without a connection | False success, masked errors and ownership remain APP-GAP-01; proposed safe outcomes are not current guarantees |
 | Concurrent/repeated creation | Name/package/hash/installable checks are ordinary reads before writes | No cross-node uniqueness, idempotency key or exactly-once guarantee is established |
-
-## Dependent Publisher API compatibility
-
-The inspected downstream adapter calls the validators above. Paths are relative to
-its applications resource; effective deployment/authentication must be verified in
-that repository. Core exceptions are not HTTP contracts by themselves.
-
-| Adapter operation | Observed success | Explicit exception mapping |
-| --- | --- | --- |
-| POST /applications/ent-app | 201 + Application, including remote initial dispatch | BadRequestException/RequestValidatingException -> 400; ConflictException -> 409; other ApplicationManagementException -> 500 |
-| POST /applications/{deviceType}/ent-app/{appId} | 201 + ApplicationRelease, possibly empty after remote dispatch | Validation/BadRequest -> 400; conflict -> 409; ForbiddenException -> 403; other management failures, including uncaught NotFoundException subtype -> 500 |
-| POST /applications/life-cycle/{uuid} | 201 + ApplicationRelease | BadRequest -> 400; Forbidden -> 403; NotFound -> 404; other management failures -> 500 |
-
-The additional-release adapter validates against path deviceType, while execution
-uses the stored parent's type. Equality is not explicitly checked in these methods.
-Preserve and characterize this mismatch before deciding a new rejection rule.
-Exception mappings do not cover unchecked exceptions or platform filters/mappers.
-Source-only adapter evidence does not prove deployed permissions or UI behavior.
-The inspected interface declares am:pub:ent-app:update for initial/additional
-enterprise creation and am:pub:app:update for lifecycle mutation. These API scopes
-are separate from destination-state permissions checked by LifecycleStateManager;
-passing one boundary does not establish permission at the other.
 
 ## Acceptance scenarios
 

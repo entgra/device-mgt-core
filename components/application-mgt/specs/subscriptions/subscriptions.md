@@ -1,13 +1,13 @@
 # Subscriptions, Installation and Scheduling
 
-[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md) | [Sources](../source-map.md)
+[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md)
 
 ## Scope and observed flow
 
 performBulkAppOperation validates target/action inputs, resolves the application,
 expands subscribers/devices, filters existing activity, invokes external-store
 subscription work and dispatches device actions. Results include activities,
-ignored devices and error identifiers; a successful API response does not prove
+ignored devices and error identifiers; a successful service return does not prove
 the device installed the application. Enrollment installation has a separate
 installEnrollmentApplications path.
 
@@ -31,7 +31,7 @@ restart replay and stale-owner fencing are not established by this source baseli
 | ID | Basis | Requirement | Acceptance scenario |
 | --- | --- | --- | --- |
 | APP-SUB-001 | Observed | Validate action/target/release, resolve authorized compatible devices and distinguish dispatched, ignored and failed targets; do not equate dispatch with installation. | AC-APP-SUB-001: device/user/role/group inputs, mixed compatibility/authorization, INSTALL/UNINSTALL and enrollment fixtures; inspect activities and eventual reported device state separately. |
-| APP-SUB-002 | Observed sequential filtering; concurrent guarantee proposed | Define repeat-request and retry semantics so duplicate operations are prevented or explicitly reconciled for the same target/action/release. | AC-APP-SUB-002: repeat while pending/in-progress, race two nodes, and retry after a dispatch timeout; count operations and subscription rows, not only HTTP success. |
+| APP-SUB-002 | Observed sequential filtering; concurrent guarantee proposed | Define repeat-request and retry semantics so duplicate operations are prevented or explicitly reconciled for the same target/action/release. | AC-APP-SUB-002: repeat while pending/in-progress, race two nodes, and retry after a dispatch timeout; count operations and subscription rows, not only service return. |
 | APP-SUB-003 | Observed two-step sync; recovery proposed | Keep subscription and device-operation status reconcilable when either update fails; define terminal/out-of-order response handling. | AC-APP-SUB-003: duplicate, delayed and out-of-order device responses; fail after APPM update before operation update; assert approved recovery and monotonicity policy. |
 | APP-SCH-001 | Observed persisted schedule; ownership proposed | Define schedule identity/tenant/time semantics, claim ownership and restart behavior; expired ownership must not permit conflicting completion. | AC-APP-SCH-001: create/update/cancel-equivalent behavior as supported, two executors at due time, owner crash/restart and cleanup during execution; inspect one logical scheduled result or documented idempotent recovery. |
 
@@ -39,7 +39,7 @@ restart replay and stale-owner fencing are not established by this source baseli
 
 APP-GAP-06 must settle replay, retry limits, cancellation support, terminal-state
 precedence, task-name tenant uniqueness and timezone semantics. Do not invent an
-unsupported cancel API or promise singleton execution. APP-X-001/002/003/004 apply;
+unsupported cancellation operation or promise singleton execution. APP-X-001/002/003/004 apply;
 planned tests are in [verification matrix](../verification-matrix.md).
 
 [Reporting contracts](reporting.md) specify helper dispatch, response differences and history/count semantics.

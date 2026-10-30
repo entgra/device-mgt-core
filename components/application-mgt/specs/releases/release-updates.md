@@ -5,7 +5,7 @@
 ## Scope
 
 This supplements APP-REL-004 with the type-specific update methods' observed
-behavior. It does not specify a uniform PATCH API or authorize fixing anomalies.
+behavior. It does not define uniform partial-update semantics or authorize fixing anomalies.
 Artifacts are resolved before the transaction; filesystem work and JDBC are not atomic.
 
 ## Field and validation matrix
@@ -40,4 +40,4 @@ risks, not intended guarantees; APP-GAP-01/04/14 require characterization and de
 | APP-REL-006 | Observed compatibility baseline with anomalies | Preserve the documented per-type field/guard behavior unless an explicit approved change supersedes it; keep anomalies visible rather than silently normalizing them. | AC-APP-REL-006: omitted/null/empty/nonempty fields for each wrapper; metadata-only versus binary/package/URL update in noneditable state; WEB_APP versus WEB_CLIP; missing UUID; same/changed hash; null DAO result and failure between file/DB updates. |
 
 Sources: AM.updateEntAppRelease/updatePubAppRelease/updateWebAppRelease/
-updateCustomAppRelease and validateAppReleaseUpdating in [source map](../source-map.md).
+updateCustomAppRelease and validateAppReleaseUpdating.

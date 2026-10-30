@@ -1,6 +1,6 @@
 # Web Clip / Web App Creation (Backend) Spec
 
-[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md) | [Sources](../source-map.md)
+[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md)
 
 Requirements: [APP-CRT-001/002](creation-workflow.md),
 [APP-REL-001](../releases/release-management.md).
@@ -10,37 +10,16 @@ checks require separate concurrent-request verification (APP-GAP-02).
 ## Purpose
 
 Web create registers a URL-based application (web clip or web app) without a native
-installer binary. This is the backend contract used by the Publisher **Web Clip** create
-wizard (`POST /applications/web-app`).
+installer binary. The service accepts WebAppWrapper and WebAppReleaseWrapper.
 
 See also the shared pipeline: [app-creation.md](app-creation.md).
-
-## App And Audience
-
-| Concern | Detail |
-| --- | --- |
-| UI flow | Publisher → Add New App → Web Clip |
-| Persisted types | `WEB_CLIP` or `WEB_APP` (from wrapper `type`) |
-| Users | Publisher users with web-app create/update scopes |
-| Status | API-backed |
 
 ## Source Files
 
 | Area | Path |
 | --- | --- |
-| Publisher create | `ApplicationManagementPublisherAPIImpl` web-app create (`/web-app`) |
-| Release create | `POST /applications/web-app/{appId}` |
 | Core | `ApplicationManagerImpl` web upload / release create paths |
 | Wrapper | `WebAppWrapper`, `WebAppReleaseWrapper` |
-
-## API
-
-| Action | Method | Path | Body | Query |
-| --- | --- | --- | --- | --- |
-| Create app (+ optional first release) | `POST` | `/applications/web-app` | `WebAppWrapper` | `is-published={true\|false}` |
-| Create release | `POST` | `/applications/web-app/{appId}` | `WebAppReleaseWrapper` | `is-published={true\|false}` |
-
-Success: **201 Created**.
 
 ## Request Shape
 
@@ -58,17 +37,17 @@ Device type is not required on the web wrapper the same way as enterprise/public
 
 | Rule | On failure |
 | --- | --- |
-| Name required, max length 20 | **400** |
-| Categories required and valid | **400** |
-| `type` must be `WEB_CLIP` or `WEB_APP` | **400** |
+| Name required, max length 20 | `BadRequestException` |
+| Categories required and valid | `BadRequestException` |
+| `type` must be `WEB_CLIP` or `WEB_APP` | `BadRequestException` |
 
 ### Release
 
 | Rule | On failure |
 | --- | --- |
-| Version required | **400** |
-| URL required | **400** |
-| URL must pass URL validation | **400** |
+| Version required | `BadRequestException` |
+| URL required | `BadRequestException` |
+| URL must pass URL validation | `BadRequestException` |
 
 ## Artifacts And Identity
 
@@ -83,27 +62,18 @@ Device type is not required on the web wrapper the same way as enterprise/public
 ## Release Limit
 
 A web application can have only **one** release. Attempting to add another when one already
-exists returns **400**.
+exists raises `BadRequestException`.
 
-## Lifecycle (`is-published`)
+## Lifecycle (isPublished)
 
-When `is-published=true`, the release is advanced to **PUBLISHED**.
-
-## HTTP Status Summary
-
-| Status | Meaning |
-| --- | --- |
-| **201** | App or release created |
-| **400** | Invalid type / URL / version / second release not allowed |
-| **409** | Not used for normal web URL create package checks |
-| **500** | Unexpected failure |
+When `isPublished=true`, the release is advanced to **PUBLISHED**.
 
 ## Acceptance Criteria
 
-- [ ] `POST /applications/web-app` creates a web application (`WEB_CLIP` or `WEB_APP`) and returns **201**.
-- [ ] Invalid or missing URL / version / type returns **400**.
-- [ ] Second release for the same web app returns **400**.
-- [ ] `is-published=true` advances lifecycle to published as implemented.
+- [ ] The service creates the expected WEB_CLIP or WEB_APP application and returns its domain result.
+- [ ] Invalid or missing URL / version / type raises `BadRequestException`.
+- [ ] Second release for the same web app raises `BadRequestException`.
+- [ ] `isPublished=true` advances lifecycle to published as implemented.
 
 ## Maintenance Rules
 

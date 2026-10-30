@@ -8,9 +8,8 @@ Applies to this directory and its descendants, in addition to the repository
 
 Read [the index](specs/README.md), [workflow](specs/contributing.md),
 [capability register](specs/capability-register.md) and relevant feature specs.
-Use [the source map](specs/source-map.md) to locate implementations and consumers;
-verify references against the current checkout rather than assuming the recorded
-baseline is current.
+Inspect the affected backend implementation and tests directly when changing
+behavior; specifications describe contracts rather than a class/method inventory.
 
 - [Architecture](specs/architecture.md) and
   [cross-cutting requirements](specs/cross-cutting-requirements.md) define shared concerns.
@@ -28,9 +27,20 @@ Draft specs are not approved product requirements. Keep requirement definitions
 canonical, retain APP identifiers and update related evidence/gaps when behavior
 changes. Do not close gaps merely because documentation has been written.
 
+## Specification scope
+
+Specifications here describe backend service inputs/results, business rules,
+domain exceptions, caller obligations, tenant/permission checks, persistence,
+artifacts, lifecycle and asynchronous/failure behavior. Application Management
+APIs and UIs are maintained in `proprietary-commons`. API specifications there own
+routes, HTTP responses and scopes; UI specifications own use cases, user personas
+and user journeys. Keep only the boundary note here. Use source links and method
+names for discovery; do not duplicate commit IDs
+or inspection-baseline ledgers in behavioral specifications.
+
 ## Component-specific checks
 
-- Follow tenant and user context through APIs, services, DAOs and asynchronous work.
+- Follow tenant and user context through callers, services, DAOs and asynchronous work.
 - Identify connection/transaction ownership, including acquisition failures,
   nested callers, commit failures and cleanup. See APP-GAP-01 before copying
   transaction examples from shared constitutions.
@@ -55,7 +65,7 @@ mvn -pl components/application-mgt/io.entgra.device.mgt.core.application.mgt.cor
 
 Inspect [the configured TestNG suite](io.entgra.device.mgt.core.application.mgt.core/src/test/resources/testng.xml)
 and actual assertions. Disabled or empty tests are not acceptance evidence.
-Choose additional API, storage, integration or multi-JVM checks according to the
+Choose additional service-contract, storage, integration or multi-JVM checks according to the
 affected requirements; the focused command alone does not verify those boundaries.
 
 In the handover, list affected requirements, spec/code changes, executed checks

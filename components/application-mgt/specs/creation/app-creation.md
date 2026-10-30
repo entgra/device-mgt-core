@@ -1,158 +1,78 @@
-# App Creation (Backend) Spec
+# Application Creation Service Contract
 
-[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md) | [Sources](../source-map.md)
+[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md)
 
 Canonical requirements: [APP-CRT-001 through APP-CRT-004](creation-workflow.md).
 
-## Baseline qualification
+## Scope and inputs
 
-The pipeline below describes synchronous creation. Remote enterprise/custom
-creation can commit an application before a background thread creates its release;
-initial 201 is not proof of completed release publication. See APP-CRT-004 and
-APP-GAP-03. Cleanup is attempted on caught failures, not an atomic filesystem/DB
-guarantee. Existing HTTP mappings are observed compatibility behavior, not approval
-of every exception mapping or proof that all malformed inputs are handled.
-The [enterprise contract](app-creation-enterprise.md) specifies exact null/empty,
-first-release, package-check and completion distinctions. Invalid role names or
-an empty registered category catalog can raise broad management failures rather
-than 400. Artifact preparation runs before the transaction try block, and initial
-icon-info persistence crosses an independent device-management transaction.
+ApplicationManager creates an application and optionally its first release using
+one of four wrapper families. Callers establish tenant/user context and invoke
+validateAppCreatingRequest before createApplication; creation does not repeat the
+entire validator. Field definitions live in the common wrapper/DTO classes.
 
-## Purpose
-
-App creation registers a new application (and optionally its first release) in
-Application Management. Publisher UI flows (Enterprise, Public, Web Clip, Custom)
-all call into this shared backend pipeline with type-specific wrappers.
-
-This document describes the **shared** create contract. Type-specific rules are in:
-
-- [app-creation-enterprise.md](app-creation-enterprise.md)
-- [app-creation-public.md](app-creation-public.md)
-- [app-creation-web.md](app-creation-web.md)
-- [app-creation-custom.md](app-creation-custom.md)
-
-## Audience And Components
-
-| Concern | Detail |
-| --- | --- |
-| Layer | Publisher API + Application Management core |
-| Consumers | Application Publisher UI (and other Publisher API clients) |
-| Status | API-backed |
-
-## Source Files
-
-| Area | Path |
-| --- | --- |
-| Publisher API | `proprietary-commons/.../publisher.api/.../ApplicationManagementPublisherAPI.java` |
-| Publisher impl | `.../publisher.api.impl/ApplicationManagementPublisherAPIImpl.java` |
-| Manager interface | `application.mgt.common/.../services/ApplicationManager.java` |
-| Manager impl | `application.mgt.core/.../impl/ApplicationManagerImpl.java` |
-| Wrappers | `application.mgt.common/.../wrapper/` |
-| DTO conversion | `application.mgt.core/.../util/APIUtil.java` |
-| Exceptions | `application.mgt.core/.../exception/` (`BadRequestException`, `ConflictException`, …) |
-| App types | `application.mgt.common/.../ApplicationType.java` |
-
-## Application Types (Aligned With Publisher UI)
-
-| Publisher UI flow | Persisted type | Create endpoint |
+| Wrapper | Persisted type | Detailed service contract |
 | --- | --- | --- |
-| Enterprise | `ENTERPRISE` | `POST /applications/ent-app` |
-| Public | `PUBLIC` | `POST /applications/public-app` |
-| Web Clip | `WEB_CLIP` (also accepts `WEB_APP`) | `POST /applications/web-app` |
-| Custom (firmware) | `CUSTOM` | `POST /applications/custom-app` |
+| ApplicationWrapper | ENTERPRISE | [Enterprise](app-creation-enterprise.md) |
+| PublicAppWrapper | PUBLIC | [Public](app-creation-public.md) |
+| WebAppWrapper | WEB_CLIP or WEB_APP | [Web](app-creation-web.md) |
+| CustomAppWrapper | CUSTOM | [Custom](app-creation-custom.md) |
 
-Base Publisher API path (typical):
+## Execution
 
-`/api/application-mgt-publisher/v1.0/applications`
-
-## Shared Create Pipeline
-
-```
-Publisher create*App(wrapper, is-published)
-  → validateAppCreatingRequest(wrapper)
-  → ApplicationManager.createApplication(wrapper, isPublished)
-       → createApplicationBasedOnRemoteStatus(...)
-       → triggerApplicationCreation(...)
-            → uploadReleaseArtifactIfExist(app)   // type-specific artifact branch
-            → DB txn: addAppDataIntoDB(...)
-            → on selected caught failures: attempt rollback + artifact deletion
-               (`ConflictException` / `BadRequestException` are rethrown as-is;
-                other `ApplicationManagementException`s are wrapped)
-  → HTTP 201 + Application entity
+```text
+Caller establishes tenant/user context
+  -> validateAppCreatingRequest(wrapper)
+  -> createApplication(wrapper, isPublished)
+     -> select synchronous or remote path
+     -> prepare artifacts when release is present
+     -> APPM transaction: application, mappings, optional release/history
+     -> optional lifecycle publication
+     -> attempt commit and return Application
 ```
 
-### Query parameter
+For synchronous creation, artifact preparation precedes the transaction try block.
+Selected caught failures attempt rollback and artifact cleanup. Those operations
+are separate resources; neither cleanup nor preservation of the primary exception
+is universally guaranteed. Initial enterprise icon persistence also uses a separate
+device-management transaction. See APP-GAP-01/04/21.
 
-| Param | Meaning |
+For remote enterprise/custom creation, application persistence can complete before
+a background worker creates the release. The initial Application result does not
+prove release completion or publication. See APP-CRT-004 and APP-GAP-03.
+
+## Validation and service failures
+
+| Condition | Observed service outcome |
 | --- | --- |
-| `is-published` | When `true`, advance the initial release lifecycle after create (exact end state is type-specific: typically `PUBLISHED` for store-style apps, `RELEASED` for custom/firmware) |
+| Null/empty or overlength name | BadRequestException; exact normalization edges are type-specific |
+| Null/empty categories or unknown requested category | BadRequestException |
+| No registered tenant categories | ApplicationManagementException |
+| Missing required device type or duplicate display name | BadRequestException on the described validation path |
+| Invalid supplied role names | ApplicationManagementException |
+| Caller lacks required unrestricted-role membership | BadRequestException unless allowed to view all roles |
+| First release present | Type-specific release validation |
+| Package/binary collision where checked | ConflictException |
+| Persistence, storage or configuration failure | Domain management/resource exception, possibly wrapped by caller path |
 
-### Layers
+Null wrappers, null list elements and malformed metadata/ranges need explicit
+characterization; annotations and these examples do not establish controlled
+errors for every malformed input. See the enterprise validation matrix for the
+precise distinctions traced for that type.
 
-| Layer | Responsibility |
-| --- | --- |
-| Publisher APIImpl | Route by type, validate request wrapper, map exceptions to HTTP statuses |
-| ApplicationManagerImpl | Business validation, artifact handling, package/hash checks, DB persistence, lifecycle |
+## Publication and results
 
-## Shared Validation (App Level)
+isPublished controls advancement of a present initial release through the
+configured checks and hard-coded publication sequence. Enterprise/public/web
+normally target PUBLISHED; custom targets RELEASED. An empty release list produces
+an application without lifecycle history even when publication is requested.
 
-Applied by `validateAppCreatingRequest` (with type-specific additions):
+## Acceptance
 
-| Rule | Failure |
-| --- | --- |
-| Name required and length within limit (≤ 20) | `BadRequestException` → **400** |
-| Categories required and registered | `BadRequestException` → **400** |
-| Device type required (non-web types) | `BadRequestException` → **400** |
-| Duplicate application display name for device type | `BadRequestException` → **400** |
-| Caller must belong to at least one unrestricted role (unless “view all”) | `BadRequestException` → **400** |
-| If first release is present | Run type-specific release validation |
-
-## HTTP Status Contract (Create App)
-
-| Status | When |
-| --- | --- |
-| **201 Created** | Application created successfully; response entity is `Application` |
-| **400 Bad Request** | `BadRequestException` or `RequestValidatingException` (invalid payload / missing required fields / artifacts) |
-| **409 Conflict** | `ConflictException` (duplicate package name and/or duplicate release binary hash, depending on type) |
-| **500 Internal Server Error** | Unexpected `ApplicationManagementException` / storage failures; null application result |
-
-Create handlers do not map `ForbiddenException` to **403**; create authorization is enforced by Publisher scopes before the resource (for example `am:pub:ent-app:update` and related scopes).
-
-## Conflict Rules (Overview)
-
-| Conflict | Typical types | Exception | HTTP |
-| --- | --- | --- | --- |
-| Active release already exists for package name | Enterprise (create with installer) | `ConflictException` | **409** |
-| Package name already used (public store package) | Public | `ConflictException` | **409** |
-| Release binary hash (MD5) already exists | Enterprise, Custom (APP_STORE delivery) | `ConflictException` | **409** |
-
-Exact checks are documented per type.
-
-## Related Endpoints (Not Full Specs Yet)
-
-| Action | Method | Path |
-| --- | --- | --- |
-| Pre-create artifact upload links | `POST` | `/applications/upload-links` |
-| App name availability | `GET` | `/applications/device-type/{deviceType}/app-name?appName={name}` |
-| Add release to existing app | `POST` | Type-specific `.../{deviceType}/.../{appId}` or `/web-app/{appId}` |
-
-Add-release binary-hash uniqueness and pre-check:
-[../releases/release-binary-hash.md](../releases/release-binary-hash.md).
-
-## Acceptance Criteria (Shared)
-
-- [ ] Each Publisher create type maps to the correct POST endpoint and wrapper.
-- [ ] Successful create returns **201** with an `Application` entity.
-- [ ] Invalid payload returns **400**.
-- [ ] Package / binary conflicts return **409** via `ConflictException`.
-- [ ] Failed create after artifact upload meets the approved compensation/recovery
-      outcome; verify attempted cleanup separately from JDBC rollback (APP-CRT-003).
-- [ ] Type-specific rules remain documented in the matching type spec.
-
-## Maintenance Rules
-
-- Keep create success as **201**.
-- Keep conflicts as **409 + ConflictException**, not **400**, for package/hash collisions.
-- Keep invalid input as **400 + BadRequestException**.
-- When adding a new creatable type, add a type-specific spec and link it from this overview and `README.md`.
-- Update this spec when the shared pipeline or status mapping changes.
+- [ ] Each wrapper creates the matching persisted type and tenant-owned records.
+- [ ] Callers can distinguish validation, conflicts and management failures by
+      service exception type where the implementation preserves it.
+- [ ] Synchronous results and later remote completion are tested separately.
+- [ ] Failure tests inspect rows, files, independent icon persistence and connection
+      ownership rather than assuming JDBC rollback restores every resource.
+- [ ] Type-specific rules and open decisions remain in their governing contracts.

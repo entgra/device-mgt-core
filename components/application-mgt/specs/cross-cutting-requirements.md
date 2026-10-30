@@ -1,6 +1,6 @@
 # Cross-Cutting Application Management Requirements
 
-[Tracking](spec-register.md) | [Gaps](gap-register.md) | [Verification](verification-matrix.md) | [Sources](source-map.md)
+[Tracking](spec-register.md) | [Gaps](gap-register.md) | [Verification](verification-matrix.md)
 
 ## Observed baseline
 
@@ -15,7 +15,7 @@ Artifact and remote-service side effects do not roll back with APPM JDBC work.
 
 | ID | Basis | Requirement | Acceptance scenario |
 | --- | --- | --- | --- |
-| APP-X-001 | Proposed guarantee; tenant-aware paths observed | Use authenticated tenant/user identity and enforce ownership/visibility for every public capability; explicit cross-tenant operations require trusted authorization. | AC-APP-X-001: create fixtures in tenants A/B with overlapping identifiers; A cannot read, mutate, download or target B's data through each relevant adapter; trusted tenant cleanup is tested separately. |
+| APP-X-001 | Proposed guarantee; tenant-aware paths observed | Use authenticated tenant/user identity and enforce ownership/visibility for every public capability; explicit cross-tenant operations require trusted authorization. | AC-APP-X-001: create fixtures in tenants A/B with overlapping identifiers; A cannot read, mutate, download or target B's data through each relevant service entry point; trusted tenant cleanup is tested separately. |
 | APP-X-002 | Proposed; current deviation APP-GAP-01 | The service owns acquisition/commit/rollback/close; report failure if commit fails, preserve primary errors, and release only its owned connection on every exit. | AC-APP-X-002: inject acquisition, auto-commit, write, commit and cleanup failures; verify no false success, leaked checkout, masked primary exception or damage to an outer caller's connection. |
 | APP-X-003 | Proposed; enforcement unverified | Explicitly enforce each declared uniqueness/state invariant across independent nodes. Define retry/conflict behavior, not merely prechecks. | AC-APP-X-003: two connections synchronize before conflicting writes; assert the approved final invariant and response; retry from fresh state after a classified conflict. |
 | APP-X-004 | Proposed compatibility/security baseline | Preserve documented caller contracts unless approved/versioned; validate untrusted input, protect credentials and define recovery for non-DB side effects. | AC-APP-X-004: compare contract fixtures, deny unauthorized artifact access, inspect client-safe failure responses, and inject a failure between storage/remote work and DB commit. |

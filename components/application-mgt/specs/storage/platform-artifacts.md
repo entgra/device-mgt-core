@@ -28,15 +28,15 @@ by tenant ID, release UUID, APP_ARTIFACT and installer name.
 The implementation substitutes values into an escaped template and unescapes the
 result. No explicit platform/lifecycle authorization or per-value XML escaping is
 performed by this method. Do not infer public download authorization or valid XML
-for arbitrary special characters; adapter access and escaping need verification.
+for arbitrary special characters; service access and escaping need verification.
 
 ## Requirements and acceptance
 
 | ID | Basis | Requirement | Acceptance scenario |
 | --- | --- | --- | --- |
 | APP-STO-004 | Observed MSI behavior | Describe and preserve hash metadata synchronization independently of duplicate checking. | AC-APP-STO-004: Windows MSI add/replacement, other extensions, blank metadata, existing/missing/duplicate hash entries, invalid JSON and non-array input; compare all retained fields and failure outcomes. |
-| APP-STO-005 | Observed plist behavior | Generate the tenant/release-specific installation asset and metadata from the resolved application; retain missing-release failure behavior. | AC-APP-STO-005: known/unknown/foreign release, configured URL base and XML-sensitive package/version/title values; parse generated XML and record deviations; test access through the owning adapter separately. |
+| APP-STO-005 | Observed plist behavior | Generate the tenant/release-specific installation asset and metadata from the resolved application; retain missing-release failure behavior. | AC-APP-STO-005: known/unknown/foreign release, configured URL base and XML-sensitive package/version/title values; parse generated XML and record deviations; test service access and caller-context requirements separately. |
 
 Sources: AM.syncHashInMetadata, addApplicationReleaseArtifacts,
-updateEntAppReleaseArtifact and getPlistArtifact in [source map](../source-map.md).
-APP-GAP-16 tracks malformed metadata/XML and adapter-boundary questions.
+updateEntAppReleaseArtifact and getPlistArtifact.
+APP-GAP-16 tracks malformed metadata/XML and service-boundary questions.

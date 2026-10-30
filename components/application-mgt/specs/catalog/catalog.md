@@ -1,6 +1,6 @@
 # Application Catalog and Organization
 
-[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md) | [Sources](../source-map.md)
+[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md)
 
 ## Observed behavior
 
@@ -26,7 +26,7 @@ cleanup is privileged internal work, covered by runtime requirements.
 | ID | Basis | Requirement | Acceptance scenario |
 | --- | --- | --- | --- |
 | APP-CAT-001 | Observed filtering; count consistency proposed | Lists/details respect tenant, visibility, release state/type and test-role rules; joins do not duplicate releases. Define count as visible matches before paging. | AC-APP-CAT-001: multi-category/multi-release fixture with restricted roles, retired app and CUSTOM TEST release; compare list/detail/count across pages and roles. |
-| APP-CAT-002 | Observed operations; edge contract pending | App metadata, tags and categories remain tenant-scoped and preserve mappings/validation; deletion of in-use categories is rejected. | AC-APP-CAT-002: add/rename/map/remove labels and update app; duplicate/case/foreign-tenant inputs; assert mapping integrity and adapter errors. |
+| APP-CAT-002 | Observed operations; edge contract pending | App metadata, tags and categories remain tenant-scoped and preserve mappings/validation; deletion of in-use categories is rejected. | AC-APP-CAT-002: add/rename/map/remove labels and update app; duplicate/case/foreign-tenant inputs; assert mapping integrity and service exceptions. |
 | APP-CAT-003 | Observed favourite behavior | Add/remove/check/list favourites under the caller identity; preserve existing release/app delete cleanup pending APP-GAP-07 decision. | AC-APP-CAT-003: two users and tenants favourite an app; hard-delete a permitted release and compare favourite rows; retirement is tested separately. |
 | APP-CAT-004 | Observed guards; failure guarantee proposed | Reject deletion when any release is not deletable or has subscription history; do not leave an unrecoverable DB/storage split. | AC-APP-CAT-004: mixed-state app, historical subscription, eligible app and injected storage/commit failure; inspect related records and artifact reachability. |
 

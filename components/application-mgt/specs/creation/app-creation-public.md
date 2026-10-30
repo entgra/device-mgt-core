@@ -1,6 +1,6 @@
 # Public App Creation (Backend) Spec
 
-[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md) | [Sources](../source-map.md)
+[Tracking](../spec-register.md) | [Gaps](../gap-register.md) | [Verification](../verification-matrix.md)
 
 Requirements: [APP-CRT-001/002](creation-workflow.md),
 [APP-REL-001](../releases/release-management.md).
@@ -11,37 +11,16 @@ prechecks do not establish cross-node uniqueness; see APP-GAP-02.
 
 Public app creation registers a store-linked application (Google Play / App Store /
 Microsoft Store) identified by package name / store id, without uploading a private
-installer binary. This is the backend contract used by the Publisher **Public** create
-wizard (`POST /applications/public-app`).
+installer binary. The service accepts PublicAppWrapper and PublicAppReleaseWrapper.
 
 See also the shared pipeline: [app-creation.md](app-creation.md).
-
-## App And Audience
-
-| Concern | Detail |
-| --- | --- |
-| UI flow | Publisher → Add New App → Public |
-| Persisted type | `PUBLIC` |
-| Users | Publisher users with public-app create/update scopes |
-| Status | API-backed |
 
 ## Source Files
 
 | Area | Path |
 | --- | --- |
-| Publisher create | `ApplicationManagementPublisherAPIImpl.createPublicApp` (method naming may vary; path `/public-app`) |
-| Release create | public-app release create on `/{deviceType}/public-app/{appId}` |
 | Core | `ApplicationManagerImpl` public upload / `createPubAppRelease` paths |
 | Wrapper | `PublicAppWrapper`, `PublicAppReleaseWrapper` |
-
-## API
-
-| Action | Method | Path | Body | Query |
-| --- | --- | --- | --- | --- |
-| Create app (+ optional first release) | `POST` | `/applications/public-app` | `PublicAppWrapper` | `is-published={true\|false}` |
-| Create release | `POST` | `/applications/{deviceType}/public-app/{appId}` | `PublicAppReleaseWrapper` | `is-published={true\|false}` |
-
-Success: **201 Created**.
 
 ## Request Shape
 
@@ -67,10 +46,10 @@ duplicate display name, roles).
 
 | Rule | On failure |
 | --- | --- |
-| Supported OS versions required and valid | **400** |
-| Version required | **400** |
-| Package name required | **400** |
-| Package name already used for a public release | **409** (`ConflictException`) |
+| Supported OS versions required and valid | `BadRequestException` |
+| Version required | `BadRequestException` |
+| Package name required | `BadRequestException` |
+| Package name already used for a public release | `ConflictException` |
 
 ## Artifacts And Identity
 
@@ -84,31 +63,22 @@ duplicate display name, roles).
 ## Release Limit
 
 A public application can have only **one** release. Attempting to add another release when
-one already exists returns **400**.
+one already exists raises `BadRequestException`.
 
-## Lifecycle (`is-published`)
+## Lifecycle (isPublished)
 
-When `is-published=true`, the release is advanced to **PUBLISHED**.
-
-## HTTP Status Summary
-
-| Status | Meaning |
-| --- | --- |
-| **201** | App or release created |
-| **400** | Invalid wrapper / missing fields / second release not allowed |
-| **409** | Package name already exists |
-| **500** | Unexpected failure |
+When `isPublished=true`, the release is advanced to **PUBLISHED**.
 
 ## Acceptance Criteria
 
-- [ ] `POST /applications/public-app` creates a `PUBLIC` application and returns **201**.
-- [ ] Missing package name / version / OS versions return **400**.
-- [ ] Duplicate public package name returns **409**.
-- [ ] Second release for the same public app returns **400**.
-- [ ] `is-published=true` advances lifecycle to published as implemented.
+- [ ] The service creates the expected PUBLIC application and returns its domain result.
+- [ ] Missing package name / version / OS versions return `BadRequestException`.
+- [ ] Duplicate public package name raises `ConflictException`.
+- [ ] Second release for the same public app raises `BadRequestException`.
+- [ ] `isPublished=true` advances lifecycle to published as implemented.
 
 ## Maintenance Rules
 
-- Keep public package uniqueness as **409 + ConflictException**.
+- Keep public package uniqueness as `ConflictException`.
 - Do not require private binary upload for public create.
 - Update this spec when public create validation or store-URL construction changes.
