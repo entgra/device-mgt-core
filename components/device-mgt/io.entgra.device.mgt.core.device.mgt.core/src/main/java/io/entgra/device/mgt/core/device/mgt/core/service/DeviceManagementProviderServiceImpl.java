@@ -4080,7 +4080,8 @@ public class DeviceManagementProviderServiceImpl implements DeviceManagementProv
         boolean isValidState;
         try {
             isEnableDeviceStatusCheck = deviceStatusManagementService.getDeviceStatusCheck(tenantId);
-            isValidState = deviceStatusManagementService.isDeviceStatusValid(type, enrolmentInfo.getStatus().name(), tenantId);
+            isValidState = !isEnableDeviceStatusCheck || deviceStatusManagementService
+                    .isDeviceStatusValid(type, enrolmentInfo.getStatus().name(), tenantId);
         } catch (MetadataKeyNotFoundException e) {
             // Device status filter metadata has not been provisioned for this tenant yet, treat as disabled
             if (log.isDebugEnabled()) {
