@@ -154,7 +154,9 @@ public class JWTAuthenticator implements WebappAuthenticator {
                     KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
                     String trustStorePath = serverConfig.getFirstProperty(DEFAULT_TRUST_STORE_LOCATION);
                     String trustStorePassword = serverConfig.getFirstProperty(DEFAULT_TRUST_STORE_PASSWORD);
-                    keyStore.load(new FileInputStream(trustStorePath), trustStorePassword.toCharArray());
+                    try (FileInputStream trustStoreInputStream = new FileInputStream(trustStorePath)) {
+                        keyStore.load(trustStoreInputStream, trustStorePassword.toCharArray());
+                    }
                     java.security.cert.Certificate certificate = keyStore.getCertificate(alias);
                     publicKey = certificate == null ? null : certificate.getPublicKey();
                 } else if (MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
