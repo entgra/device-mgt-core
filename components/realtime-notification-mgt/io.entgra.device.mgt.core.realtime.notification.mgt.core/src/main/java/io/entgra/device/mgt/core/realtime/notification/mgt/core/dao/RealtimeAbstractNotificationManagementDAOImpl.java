@@ -54,7 +54,7 @@ public class RealtimeAbstractNotificationManagementDAOImpl implements RealtimeNo
         List<RealtimeNotification> notifications = new ArrayList<>();
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         String query =
-                "SELECT * FROM DM_NOTIFICATION " +
+                "SELECT * FROM DM_REALTIME_NOTIFICATION " +
                         "WHERE TENANT_ID = ? " +
                         "ORDER BY CREATED_TIMESTAMP DESC " +
                         "LIMIT ? OFFSET ?";
@@ -99,7 +99,7 @@ public class RealtimeAbstractNotificationManagementDAOImpl implements RealtimeNo
                         COL_NOTIFICATION_CONTEXT + ", " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP " +
-                        "FROM DM_NOTIFICATION " +
+                        "FROM DM_REALTIME_NOTIFICATION " +
                         "WHERE TENANT_ID = ? " +
                         "AND NOTIFICATION_ID IN (");
         for (int i = 0; i < notificationIds.size(); i++) {
@@ -146,7 +146,7 @@ public class RealtimeAbstractNotificationManagementDAOImpl implements RealtimeNo
         List<RealtimeUserNotificationAction> userNotificationActions = new ArrayList<>();
         StringBuilder queryBuilder = new StringBuilder(
                 "SELECT NOTIFICATION_ID, ACTION_ID, IS_READ " +
-                        "FROM DM_NOTIFICATION_USER_ACTION " +
+                        "FROM DM_REALTIME_NOTIFICATION_USER_ACTION " +
                         "WHERE USERNAME = ? ");
         if (isRead != null) {
             queryBuilder.append("AND IS_READ = ? ");
@@ -201,13 +201,13 @@ public class RealtimeAbstractNotificationManagementDAOImpl implements RealtimeNo
                 .map(id -> "?")
                 .collect(Collectors.joining(", "));
         String query =
-                "UPDATE DM_NOTIFICATION_USER_ACTION " +
+                "UPDATE DM_REALTIME_NOTIFICATION_USER_ACTION " +
                         "SET IS_READ = ? " +
                         "WHERE USERNAME = ? " +
                         "AND NOTIFICATION_ID " +
                         "IN (" + placeholders + ") " +
                         "AND NOTIFICATION_ID IN " +
-                        "(SELECT NOTIFICATION_ID FROM DM_NOTIFICATION WHERE TENANT_ID = ?)";
+                        "(SELECT NOTIFICATION_ID FROM DM_REALTIME_NOTIFICATION WHERE TENANT_ID = ?)";
         try {
             Connection connection = RealtimeNotificationManagementDAOFactory.getConnection();
             try (PreparedStatement ps = connection.prepareStatement(query)) {
@@ -231,11 +231,11 @@ public class RealtimeAbstractNotificationManagementDAOImpl implements RealtimeNo
             throws RealtimeNotificationManagementDAOException {
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         String query =
-                "UPDATE DM_NOTIFICATION_USER_ACTION " +
+                "UPDATE DM_REALTIME_NOTIFICATION_USER_ACTION " +
                         "SET IS_READ = ? " +
                         "WHERE USERNAME = ? " +
                         "AND NOTIFICATION_ID IN " +
-                        "(SELECT NOTIFICATION_ID FROM DM_NOTIFICATION WHERE TENANT_ID = ?)";
+                        "(SELECT NOTIFICATION_ID FROM DM_REALTIME_NOTIFICATION WHERE TENANT_ID = ?)";
         try {
             Connection connection = RealtimeNotificationManagementDAOFactory.getConnection();
             try (PreparedStatement ps = connection.prepareStatement(query)) {
@@ -260,7 +260,7 @@ public class RealtimeAbstractNotificationManagementDAOImpl implements RealtimeNo
                         "IS_READ, " +
                         "USERNAME, " +
                         "ACTION_TIMESTAMP " +
-                        "FROM DM_NOTIFICATION_USER_ACTION " +
+                        "FROM DM_REALTIME_NOTIFICATION_USER_ACTION " +
                         "ORDER BY ACTION_TIMESTAMP " +
                         "DESC";
         try {
@@ -291,7 +291,7 @@ public class RealtimeAbstractNotificationManagementDAOImpl implements RealtimeNo
             throws RealtimeNotificationManagementDAOException {
         StringBuilder query = new StringBuilder(
                 "SELECT COUNT(*) " +
-                        "FROM DM_NOTIFICATION_USER_ACTION " +
+                        "FROM DM_REALTIME_NOTIFICATION_USER_ACTION " +
                         "WHERE USERNAME = ?");
         if (isRead != null) {
             query.append(" AND IS_READ = ?");
@@ -324,7 +324,7 @@ public class RealtimeAbstractNotificationManagementDAOImpl implements RealtimeNo
         String sql =
                 "SELECT COUNT(*) " +
                         "AS UNREAD_COUNT " +
-                        "FROM DM_NOTIFICATION_USER_ACTION " +
+                        "FROM DM_REALTIME_NOTIFICATION_USER_ACTION " +
                         "WHERE USERNAME = ? " +
                         "AND IS_READ = false";
         try {
@@ -348,7 +348,7 @@ public class RealtimeAbstractNotificationManagementDAOImpl implements RealtimeNo
     public int insertNotification(int tenantId, int notificationConfigId, String type, String notificationContext)
             throws RealtimeNotificationManagementDAOException {
         String sql =
-                "INSERT INTO DM_NOTIFICATION " +
+                "INSERT INTO DM_REALTIME_NOTIFICATION " +
                         "(NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
                         COL_NOTIFICATION_CONTEXT + ", " +
@@ -380,7 +380,7 @@ public class RealtimeAbstractNotificationManagementDAOImpl implements RealtimeNo
     public void insertNotificationUserActions(int notificationId, List<String> usernames)
             throws RealtimeNotificationManagementDAOException {
         String sql =
-                "INSERT INTO DM_NOTIFICATION_USER_ACTION " +
+                "INSERT INTO DM_REALTIME_NOTIFICATION_USER_ACTION " +
                         "(NOTIFICATION_ID, " +
                         "USERNAME, " +
                         "IS_READ) " +
@@ -420,7 +420,7 @@ public class RealtimeAbstractNotificationManagementDAOImpl implements RealtimeNo
                 .collect(Collectors.joining(", "));
         String selectQuery =
                 "SELECT NOTIFICATION_ID " +
-                "FROM DM_NOTIFICATION_USER_ACTION " +
+                "FROM DM_REALTIME_NOTIFICATION_USER_ACTION " +
                 "WHERE USERNAME = ? " +
                         "AND NOTIFICATION_ID " +
                         "IN (" + placeholders + ")";
@@ -451,7 +451,7 @@ public class RealtimeAbstractNotificationManagementDAOImpl implements RealtimeNo
                         .collect(Collectors.joining(", "));
                 String finalDeleteQuery =
                         "DELETE " +
-                                "FROM DM_NOTIFICATION_USER_ACTION " +
+                                "FROM DM_REALTIME_NOTIFICATION_USER_ACTION " +
                         "WHERE USERNAME = ? " +
                                 "AND NOTIFICATION_ID " +
                                 "IN (" + validPlaceholders + ")";
@@ -478,10 +478,10 @@ public class RealtimeAbstractNotificationManagementDAOImpl implements RealtimeNo
         int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
         StringBuilder query = new StringBuilder(
                 "DELETE " +
-                        "FROM DM_NOTIFICATION_USER_ACTION " +
+                        "FROM DM_REALTIME_NOTIFICATION_USER_ACTION " +
                         "WHERE USERNAME = ? " +
                         "AND NOTIFICATION_ID IN " +
-                        "(SELECT NOTIFICATION_ID FROM DM_NOTIFICATION WHERE TENANT_ID = ?)");
+                        "(SELECT NOTIFICATION_ID FROM DM_REALTIME_NOTIFICATION WHERE TENANT_ID = ?)");
 
         if (isRead != null) {
             query.append(" AND IS_READ = ?");
@@ -517,8 +517,8 @@ public class RealtimeAbstractNotificationManagementDAOImpl implements RealtimeNo
             Connection connection = RealtimeNotificationManagementDAOFactory.getConnection();
             StringBuilder countQuery = new StringBuilder(
                     "SELECT COUNT(*) " +
-                            "FROM DM_NOTIFICATION_USER_ACTION ua " +
-                            "JOIN DM_NOTIFICATION n " +
+                            "FROM DM_REALTIME_NOTIFICATION_USER_ACTION ua " +
+                            "JOIN DM_REALTIME_NOTIFICATION n " +
                             "ON ua.NOTIFICATION_ID = n.NOTIFICATION_ID " +
                             "WHERE ua.USERNAME = ? " +
                             "AND n.TENANT_ID = ? "
@@ -547,8 +547,8 @@ public class RealtimeAbstractNotificationManagementDAOImpl implements RealtimeNo
                             "n." + COL_NOTIFICATION_CONTEXT + ", " +
                             "n.TYPE, " +
                             "n.CREATED_TIMESTAMP " +
-                            "FROM DM_NOTIFICATION_USER_ACTION ua " +
-                            "JOIN DM_NOTIFICATION n " +
+                            "FROM DM_REALTIME_NOTIFICATION_USER_ACTION ua " +
+                            "JOIN DM_REALTIME_NOTIFICATION n " +
                             "ON ua.NOTIFICATION_ID = n.NOTIFICATION_ID " +
                             "WHERE ua.USERNAME = ? " +
                             "AND n.TENANT_ID = ? "
@@ -617,7 +617,7 @@ public class RealtimeAbstractNotificationManagementDAOImpl implements RealtimeNo
         if (deviceIds == null || deviceIds.isEmpty()) {
             return;
         }
-        String sql = "INSERT INTO DM_NOTIFICATION_DEVICE " +
+        String sql = "INSERT INTO DM_REALTIME_NOTIFICATION_DEVICE " +
                 "(NOTIFICATION_ID, DEVICE_ID) " +
                 "VALUES (?, ?)";
         try {
@@ -660,6 +660,24 @@ public class RealtimeAbstractNotificationManagementDAOImpl implements RealtimeNo
         }
     }
 
+    @Override
+    public void deleteNotificationsByTenantId(int tenantId) throws RealtimeNotificationManagementDAOException {
+        String sql =
+                "DELETE FROM DM_REALTIME_NOTIFICATION " +
+                        "WHERE TENANT_ID = ?";
+        try {
+            Connection conn = RealtimeNotificationManagementDAOFactory.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, tenantId);
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            String msg = "Error deleting realtime notifications for tenant: " + tenantId;
+            log.error(msg, e);
+            throw new RealtimeNotificationManagementDAOException(msg, e);
+        }
+    }
+
     /**
      * Removes device-notification links and deletes notifications with no remaining devices.
      * Uses the supplied connection only; does not open or close it (caller owns lifecycle).
@@ -668,21 +686,21 @@ public class RealtimeAbstractNotificationManagementDAOImpl implements RealtimeNo
             throws SQLException {
         String selectNotificationIdsSql =
                 "SELECT DISTINCT nd.NOTIFICATION_ID " +
-                        "FROM DM_NOTIFICATION_DEVICE nd " +
-                        "INNER JOIN DM_NOTIFICATION n " +
+                        "FROM DM_REALTIME_NOTIFICATION_DEVICE nd " +
+                        "INNER JOIN DM_REALTIME_NOTIFICATION n " +
                         "ON nd.NOTIFICATION_ID = n.NOTIFICATION_ID " +
                         "WHERE nd.DEVICE_ID = ? " +
                         "AND n.TENANT_ID = ?";
         String deleteMappingSql =
-                "DELETE FROM DM_NOTIFICATION_DEVICE " +
+                "DELETE FROM DM_REALTIME_NOTIFICATION_DEVICE " +
                         "WHERE NOTIFICATION_ID = ? " +
                         "AND DEVICE_ID = ?";
         String countMappingsSql =
                 "SELECT COUNT(*) " +
-                        "FROM DM_NOTIFICATION_DEVICE " +
+                        "FROM DM_REALTIME_NOTIFICATION_DEVICE " +
                         "WHERE NOTIFICATION_ID = ?";
         String deleteNotificationSql =
-                "DELETE FROM DM_NOTIFICATION " +
+                "DELETE FROM DM_REALTIME_NOTIFICATION " +
                         "WHERE NOTIFICATION_ID = ? " +
                         "AND TENANT_ID = ?";
         for (Integer deviceId : deviceIds) {

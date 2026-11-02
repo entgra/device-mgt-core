@@ -43,7 +43,7 @@ public class RealtimeSQLServerNotificationManagementDAOImpl extends RealtimeAbst
     public List<RealtimeNotification> getLatestNotifications(int offset, int limit) throws RealtimeNotificationManagementDAOException {
         List<RealtimeNotification> notifications = new ArrayList<>();
         String query =
-                "SELECT * FROM DM_NOTIFICATION " +
+                "SELECT * FROM DM_REALTIME_NOTIFICATION " +
                         "ORDER BY CREATED_TIMESTAMP DESC " +
                         "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         try {
@@ -75,7 +75,7 @@ public class RealtimeSQLServerNotificationManagementDAOImpl extends RealtimeAbst
     public int insertNotification(int tenantId, int notificationConfigId, String type, String notificationContext)
             throws RealtimeNotificationManagementDAOException {
         String sql =
-                "INSERT INTO DM_NOTIFICATION " +
+                "INSERT INTO DM_REALTIME_NOTIFICATION " +
                         "(NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
                         "NOTIFICATION_CONTEXT, " +

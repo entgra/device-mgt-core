@@ -22,6 +22,7 @@ import io.entgra.device.mgt.core.apimgt.extension.rest.api.PublisherRESTAPIServi
 import io.entgra.device.mgt.core.application.mgt.common.services.ApplicationManager;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.DeviceStatusManagementService;
 import io.entgra.device.mgt.core.realtime.notification.mgt.common.service.RealtimeNotificationConfigService;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.service.RealtimeNotificationManagementService;
 import io.entgra.device.mgt.core.tenant.mgt.core.TenantManager;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.WhiteLabelManagementService;
 import org.wso2.carbon.user.core.service.RealmService;
@@ -43,6 +44,8 @@ public class TenantMgtDataHolder {
     private PublisherRESTAPIServices publisherRESTAPIServices;
 
     private RealtimeNotificationConfigService notificationConfigService;
+
+    private RealtimeNotificationManagementService realtimeNotificationManagementService;
 
     public RealmService getRealmService() {
         if (realmService == null) {
@@ -119,5 +122,14 @@ public class TenantMgtDataHolder {
 
     public void setNotificationConfigService(RealtimeNotificationConfigService notificationConfigService) {
         this.notificationConfigService = notificationConfigService;
+    }
+
+    public RealtimeNotificationManagementService getRealtimeNotificationManagementService() {
+        return realtimeNotificationManagementService;
+    }
+
+    public void setRealtimeNotificationManagementService(
+            RealtimeNotificationManagementService realtimeNotificationManagementService) {
+        this.realtimeNotificationManagementService = realtimeNotificationManagementService;
     }
 }

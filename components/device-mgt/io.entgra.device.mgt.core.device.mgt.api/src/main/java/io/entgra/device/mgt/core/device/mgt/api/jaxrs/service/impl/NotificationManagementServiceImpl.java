@@ -36,6 +36,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 
+/**
+ * Deprecated REST implementation for {@code DM_NOTIFICATION}-backed notifications.
+ *
+ * @deprecated Prefer the realtime notification management API.
+ */
+@Deprecated
 @Path("/notifications")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

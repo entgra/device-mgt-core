@@ -55,7 +55,6 @@ import io.entgra.device.mgt.core.notification.logger.UserMgtLogContext;
 import io.entgra.device.mgt.core.notification.logger.impl.EntgraUserMgtLoggerImpl;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
-import org.eclipse.wst.common.uriresolver.internal.util.URIEncoder;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.identity.claim.metadata.mgt.ClaimMetadataManagementAdminService;
@@ -93,6 +92,7 @@ import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.nio.file.NoSuchFileException;
 import java.security.SecureRandom;
 import java.text.ParseException;
@@ -205,8 +205,9 @@ public class UserManagementServiceImpl implements UserManagementService {
             }
             userInfoWrapper.setBasicUserInfo(createdUserInfo);
             userInfoWrapper.setMessage(message);
-            return Response.created(new URI(API_BASE_PATH + "/" + URIEncoder.encode(userInfo.getUsername(),
-                    "UTF-8"))).entity(userInfoWrapper).build();
+            return Response.created(new URI(API_BASE_PATH + "/"
+                    + URLEncoder.encode(userInfo.getUsername(), "UTF-8").replace("+", "%20")))
+                    .entity(userInfoWrapper).build();
         } catch (UserStoreException e) {
             String msg = "Error occurred while trying to add user '" + userInfo.getUsername() + "' to the " +
                     "underlying user management system";

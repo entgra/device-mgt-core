@@ -46,15 +46,15 @@ public class RealtimeH2NotificationArchivalDAOImpl extends RealtimeAbstractNotif
     public void deleteExpiredArchivedNotifications(Timestamp cutoff, int tenantId)
             throws RealtimeNotificationArchivalDAOException {
         String deleteUserActionsSQL =
-                "DELETE FROM " + DESTINATION_DB + ".DM_NOTIFICATION_USER_ACTION_ARCH " +
+                "DELETE FROM " + DESTINATION_DB + ".DM_REALTIME_NOTIFICATION_USER_ACTION_ARCH " +
                         "WHERE ACTION_TIMESTAMP < ? " +
                         "AND NOTIFICATION_ID IN (" +
                         "SELECT NOTIFICATION_ID " +
-                        "FROM " + DESTINATION_DB + ".DM_NOTIFICATION_ARCH " +
+                        "FROM " + DESTINATION_DB + ".DM_REALTIME_NOTIFICATION_ARCH " +
                         "WHERE CREATED_TIMESTAMP < ? " +
                         "AND TENANT_ID = ?)";
         String deleteNotificationsSQL =
-                "DELETE FROM " + DESTINATION_DB + ".DM_NOTIFICATION_ARCH " +
+                "DELETE FROM " + DESTINATION_DB + ".DM_REALTIME_NOTIFICATION_ARCH " +
                         "WHERE CREATED_TIMESTAMP < ? " +
                         "AND TENANT_ID = ?";
         try {

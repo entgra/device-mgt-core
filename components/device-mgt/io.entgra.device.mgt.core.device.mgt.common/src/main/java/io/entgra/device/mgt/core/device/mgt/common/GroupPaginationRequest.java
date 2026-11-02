@@ -30,6 +30,7 @@ public class GroupPaginationRequest {
     private String status;
     private String parentPath;
     private int depth;
+    private boolean includeDeviceCount;
 
     public GroupPaginationRequest(int start, int rowCount) {
         this.startIndex = start;
@@ -90,6 +91,14 @@ public class GroupPaginationRequest {
 
     public void setDepth(int depth) {
         this.depth = depth;
+    }
+
+    public boolean isIncludeDeviceCount() {
+        return includeDeviceCount;
+    }
+
+    public void setIncludeDeviceCount(boolean includeDeviceCount) {
+        this.includeDeviceCount = includeDeviceCount;
     }
 
     @Override

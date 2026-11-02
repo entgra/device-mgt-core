@@ -61,11 +61,11 @@ public class RealtimeSQLServerNotificationArchivalDAOImpl extends RealtimeAbstra
                         "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP " +
-                        "FROM " + SOURCE_DB + ".DM_NOTIFICATION " +
+                        "FROM " + SOURCE_DB + ".DM_REALTIME_NOTIFICATION " +
                         "WHERE CREATED_TIMESTAMP < ? " +
                         "AND TENANT_ID = ?";
         String insertSQL =
-                "INSERT INTO " + DESTINATION_DB + ".DM_NOTIFICATION_ARCH " +
+                "INSERT INTO " + DESTINATION_DB + ".DM_REALTIME_NOTIFICATION_ARCH " +
                         "(NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
@@ -110,7 +110,7 @@ public class RealtimeSQLServerNotificationArchivalDAOImpl extends RealtimeAbstra
         String placeholders =
                 notificationIds.stream().map(id -> "?").collect(Collectors.joining(","));
         String insertSQL =
-                "INSERT INTO " + DESTINATION_DB + ".DM_NOTIFICATION_USER_ACTION_ARCH " +
+                "INSERT INTO " + DESTINATION_DB + ".DM_REALTIME_NOTIFICATION_USER_ACTION_ARCH " +
                         "(ACTION_ID, " +
                         "NOTIFICATION_ID, " +
                         "USERNAME, " +
@@ -122,11 +122,11 @@ public class RealtimeSQLServerNotificationArchivalDAOImpl extends RealtimeAbstra
                         "USERNAME, " +
                         "IS_READ, " +
                         "ACTION_TIMESTAMP " +
-                        "FROM " + SOURCE_DB + ".DM_NOTIFICATION_USER_ACTION " +
+                        "FROM " + SOURCE_DB + ".DM_REALTIME_NOTIFICATION_USER_ACTION " +
                         "WHERE NOTIFICATION_ID " +
                         "IN (" + placeholders + ")";
         String deleteSQL =
-                "DELETE FROM " + SOURCE_DB + ".DM_NOTIFICATION_USER_ACTION " +
+                "DELETE FROM " + SOURCE_DB + ".DM_REALTIME_NOTIFICATION_USER_ACTION " +
                         "WHERE NOTIFICATION_ID " +
                         "IN (" + placeholders + ")";
         Connection src = RealtimeNotificationArchivalSourceDAOFactory.getConnection();
@@ -151,7 +151,7 @@ public class RealtimeSQLServerNotificationArchivalDAOImpl extends RealtimeAbstra
             throws RealtimeNotificationArchivalDAOException {
         List<Integer> movedIds = new ArrayList<>();
         String insertSQL =
-                "INSERT INTO " + DESTINATION_DB + ".DM_NOTIFICATION_ARCH " +
+                "INSERT INTO " + DESTINATION_DB + ".DM_REALTIME_NOTIFICATION_ARCH " +
                         "(NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
@@ -165,14 +165,14 @@ public class RealtimeSQLServerNotificationArchivalDAOImpl extends RealtimeAbstra
                         "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP " +
-                        "FROM " + SOURCE_DB + ".DM_NOTIFICATION " +
+                        "FROM " + SOURCE_DB + ".DM_REALTIME_NOTIFICATION " +
                         "WHERE TENANT_ID = ? " +
                         "AND NOTIFICATION_CONFIG_ID = ? " +
                         "AND CREATED_TIMESTAMP < ?";
         String selectSQL =
                 "SELECT " +
                         "NOTIFICATION_ID " +
-                        "FROM " + SOURCE_DB + ".DM_NOTIFICATION " +
+                        "FROM " + SOURCE_DB + ".DM_REALTIME_NOTIFICATION " +
                         "WHERE TENANT_ID = ? " +
                         "AND NOTIFICATION_CONFIG_ID = ? " +
                         "AND CREATED_TIMESTAMP < ?";
@@ -214,7 +214,7 @@ public class RealtimeSQLServerNotificationArchivalDAOImpl extends RealtimeAbstra
         String placeholders =
                 excludedConfigIds.stream().map(id -> "?").collect(Collectors.joining(","));
         String insertSQL =
-                "INSERT INTO " + DESTINATION_DB + ".DM_NOTIFICATION_ARCH " +
+                "INSERT INTO " + DESTINATION_DB + ".DM_REALTIME_NOTIFICATION_ARCH " +
                         "(NOTIFICATION_ID, " +
                         "NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
@@ -228,14 +228,14 @@ public class RealtimeSQLServerNotificationArchivalDAOImpl extends RealtimeAbstra
                         "NOTIFICATION_CONTEXT, " +
                         "TYPE, " +
                         "CREATED_TIMESTAMP " +
-                        "FROM " + SOURCE_DB + ".DM_NOTIFICATION " +
+                        "FROM " + SOURCE_DB + ".DM_REALTIME_NOTIFICATION " +
                         "WHERE TENANT_ID = ? " +
                         "AND CREATED_TIMESTAMP < ? " +
                         "AND NOTIFICATION_CONFIG_ID " +
                         "NOT IN (" + placeholders + ")";
         String selectSQL =
                 "SELECT NOTIFICATION_ID " +
-                        "FROM " + SOURCE_DB + ".DM_NOTIFICATION " +
+                        "FROM " + SOURCE_DB + ".DM_REALTIME_NOTIFICATION " +
                         "WHERE TENANT_ID = ? " +
                         "AND CREATED_TIMESTAMP < ? " +
                         "AND NOTIFICATION_CONFIG_ID " +

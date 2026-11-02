@@ -103,4 +103,4 @@ labels leave `versionLabel` unset.
 ## Related Specs
 
 - Publisher UI: `proprietary-commons/.../application.mgt.publisher.ui/Specs/create-applications/supported-os-versions.md`
-- App create validation (ranges): [Application creation specs](../../application-mgt/Specs/creation/README.md)
+- App create validation (ranges): [Application creation specs](../../application-mgt/specs/creation/README.md)

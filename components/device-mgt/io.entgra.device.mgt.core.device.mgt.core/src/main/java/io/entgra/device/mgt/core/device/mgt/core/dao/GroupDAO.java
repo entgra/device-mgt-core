@@ -335,6 +335,19 @@ public interface GroupDAO {
     int getDeviceCount(int groupId, int tenantId) throws GroupManagementDAOException;
 
     /**
+     * Get enrolment-aligned device counts for multiple groups in one query.
+     * Counts enrolments with status ACTIVE, INACTIVE, CREATED, or UNREACHABLE
+     * (same filter as the default devices list for a group).
+     *
+     * @param groupIds group ids to count for; empty/null returns an empty map.
+     * @param tenantId of user's tenant.
+     * @return map of groupId → count (missing groups are filled with 0).
+     * @throws GroupManagementDAOException
+     */
+    Map<Integer, Integer> getDeviceCounts(List<Integer> groupIds, int tenantId)
+            throws GroupManagementDAOException;
+
+    /**
      * Get paginated result of devices of a given tenant and device group.
      *
      * @param groupId of Device Group.

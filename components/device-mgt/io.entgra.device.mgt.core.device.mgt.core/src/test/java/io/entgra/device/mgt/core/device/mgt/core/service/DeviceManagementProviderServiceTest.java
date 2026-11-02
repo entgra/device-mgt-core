@@ -65,6 +65,7 @@ import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 import java.io.File;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -213,6 +214,24 @@ public class DeviceManagementProviderServiceTest extends BaseDeviceManagementTes
             boolean enrollment = deviceMgtService.enrollDevice(device);
             Assert.assertTrue(enrollment);
         }
+    }
+
+    @Test
+    public void testDisabledDeviceStatusCheckSkipsStatusValidation() throws Exception {
+        DeviceStatusManagementService deviceStatusManagementService = Mockito.mock(DeviceStatusManagementService.class);
+        Mockito.when(deviceStatusManagementService.getDeviceStatusCheck(MultitenantConstants.SUPER_TENANT_ID))
+                .thenReturn(false);
+        EnrolmentInfo enrolmentInfo = new EnrolmentInfo();
+        enrolmentInfo.setStatus(EnrolmentInfo.Status.ACTIVE);
+        Method addDeviceStatus = DeviceManagementProviderServiceImpl.class.getDeclaredMethod("addDeviceStatus",
+                DeviceStatusManagementService.class, int.class, int.class, EnrolmentInfo.class, String.class);
+        addDeviceStatus.setAccessible(true);
+
+        addDeviceStatus.invoke(deviceMgtService, deviceStatusManagementService,
+                MultitenantConstants.SUPER_TENANT_ID, 0, enrolmentInfo, DEVICE_TYPE);
+
+        Mockito.verify(deviceStatusManagementService, Mockito.never()).isDeviceStatusValid(
+                Mockito.anyString(), Mockito.anyString(), Mockito.anyInt());
     }
 
     @Test(dependsOnMethods = {"testReEnrollmentofSameDeviceUnderSameUser"})

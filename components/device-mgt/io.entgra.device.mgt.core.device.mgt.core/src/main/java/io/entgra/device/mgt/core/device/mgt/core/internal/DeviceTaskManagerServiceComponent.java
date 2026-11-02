@@ -232,13 +232,13 @@ public class DeviceTaskManagerServiceComponent {
         if (log.isDebugEnabled()) {
             log.debug("Setting the RealtimeNotificationManagementService.");
         }
-        DeviceManagementDataHolder.getInstance().setNotificationManagementService(notificationManagementService);
+        DeviceManagementDataHolder.getInstance().setRealtimeNotificationManagementService(notificationManagementService);
     }
 
     protected void unsetNotificationManagementService(RealtimeNotificationManagementService notificationManagementService) {
         if (log.isDebugEnabled()) {
             log.debug("Unsetting the RealtimeNotificationManagementService.");
         }
-        DeviceManagementDataHolder.getInstance().setNotificationManagementService(null);
+        DeviceManagementDataHolder.getInstance().setRealtimeNotificationManagementService(null);
     }
 }

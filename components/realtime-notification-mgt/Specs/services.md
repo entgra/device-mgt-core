@@ -53,6 +53,12 @@ All persistence goes through metadata key `notification-config`.
 
 Impl: `RealtimeNotificationManagementServiceImpl`
 
+### Config availability
+
+| Method | Behaviour |
+| --- | --- |
+| `isNotificationConfigAvailable(code)` | `true` when tenant metadata has an **enabled** config matching the operation/task code (case-insensitive). |
+
 ### Inbox / user actions
 
 | Method | Persistence | SSE |
@@ -109,6 +115,15 @@ user actions only; push message payload per recipient. No device mappings.
 
 Removes device mappings for given `DM_DEVICE.ID`s; deletes notifications
 that no longer reference any device. Task rows without mappings remain.
+
+Called from device-mgt **service** layer on permanent device delete
+(`DeviceManagementProviderServiceImpl`, `PrivacyComplianceProviderImpl`).
+Device-mgt DAOs must **not** touch `DM_REALTIME_*` tables.
+
+#### Tenant delete — `deleteNotificationsByTenantId`
+
+Deletes all `DM_REALTIME_NOTIFICATION` rows for a tenant (mappings /
+user actions CASCADE). Called from tenant-mgt / device-mgt tenant cleanup.
 
 ---
 

@@ -105,7 +105,7 @@ public class DeviceManagementDataHolder {
     private PublisherRESTAPIServices publisherRESTAPIServices;
     private DeviceManagementStartupHandler deviceManagementStartupHandler;
     private DeviceFirmwareModelManagementService deviceFirmwareModelManagementService;
-    private RealtimeNotificationManagementService notificationManagementService;
+    private RealtimeNotificationManagementService realtimeNotificationManagementService;
     private DeviceFeatureOperations deviceFeatureOperations;
 
     private final Map<DeviceType, DeviceStatusTaskPluginConfig> deviceStatusTaskPluginConfigs = Collections.synchronizedMap(
@@ -481,12 +481,12 @@ public class DeviceManagementDataHolder {
         return this.deviceFirmwareModelManagementService;
     }
 
-    public RealtimeNotificationManagementService getNotificationManagementService() {
-        return notificationManagementService;
+    public RealtimeNotificationManagementService getRealtimeNotificationManagementService() {
+        return realtimeNotificationManagementService;
     }
 
-    public void setNotificationManagementService(RealtimeNotificationManagementService notificationManagementService) {
-        this.notificationManagementService = notificationManagementService;
+    public void setRealtimeNotificationManagementService(RealtimeNotificationManagementService notificationManagementService) {
+        this.realtimeNotificationManagementService = notificationManagementService;
     }
 
     public DeviceFeatureOperations getDeviceFeatureOperations() {

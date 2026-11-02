@@ -54,19 +54,19 @@ public class GenericDeviceFeatureOperationDAOImpl implements DeviceFeatureOperat
                         "FROM DM_FEATURE_DETAILS";
         String insertQuery =
                 "INSERT INTO DM_FEATURE_DETAILS " +
-                "(OPERATION_CODE, " +
+                        "(OPERATION_CODE, " +
                         "OPERATION_NAME, " +
                         "OPERATION_DESCRIPTION, " +
                         "DEVICE_TYPE, " +
                         "TYPE) " +
-                "VALUES (?, ?, ?, ?, ?)";
+                        "VALUES (?, ?, ?, ?, ?)";
         // Task features are one row per code; sync DEVICE_TYPE when catalog changes (e.g. ALL → NONE).
         String syncTaskDeviceTypeQuery =
                 "UPDATE DM_FEATURE_DETAILS " +
                         "SET DEVICE_TYPE = ?, " +
                         "OPERATION_NAME = ?, " +
                         "OPERATION_DESCRIPTION = ? " +
-                "WHERE OPERATION_CODE = ? " +
+                        "WHERE OPERATION_CODE = ? " +
                         "AND TYPE = ?";
         try {
             Connection connection = DeviceFeatureOperationsDAOFactory.getConnection();

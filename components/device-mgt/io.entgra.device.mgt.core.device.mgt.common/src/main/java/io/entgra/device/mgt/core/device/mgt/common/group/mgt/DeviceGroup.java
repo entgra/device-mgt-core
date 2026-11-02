@@ -57,6 +57,11 @@ public class DeviceGroup implements Serializable {
     @ApiModelProperty(name = "childrenGroups", value = "Children groups")
     private List<DeviceGroup> childrenGroups;
 
+    @ApiModelProperty(name = "deviceCount",
+            value = "Number of devices in the group with enrolment status ACTIVE, INACTIVE, CREATED, or UNREACHABLE. " +
+                    "Populated only when includeDeviceCount=true on hierarchy requests.")
+    private Integer deviceCount;
+
     public String getStatus() {
         return status;
     }
@@ -135,5 +140,13 @@ public class DeviceGroup implements Serializable {
 
     public void setChildrenGroups(List<DeviceGroup> childrenGroups) {
         this.childrenGroups = childrenGroups;
+    }
+
+    public Integer getDeviceCount() {
+        return deviceCount;
+    }
+
+    public void setDeviceCount(Integer deviceCount) {
+        this.deviceCount = deviceCount;
     }
 }

@@ -41,7 +41,7 @@ public class RealtimePostgreNotificationManagementDAOImpl extends RealtimeAbstra
     public List<RealtimeNotification> getLatestNotifications(int offset, int limit) throws RealtimeNotificationManagementDAOException {
         List<RealtimeNotification> notifications = new ArrayList<>();
         String query =
-                "SELECT * FROM DM_NOTIFICATION " +
+                "SELECT * FROM DM_REALTIME_NOTIFICATION " +
                         "ORDER BY CREATED_TIMESTAMP " +
                         "DESC LIMIT ? OFFSET ?";
         try {
@@ -73,7 +73,7 @@ public class RealtimePostgreNotificationManagementDAOImpl extends RealtimeAbstra
     public int insertNotification(int tenantId, int notificationConfigId, String type, String notificationContext)
             throws RealtimeNotificationManagementDAOException {
         String sql =
-                "INSERT INTO DM_NOTIFICATION " +
+                "INSERT INTO DM_REALTIME_NOTIFICATION " +
                         "(NOTIFICATION_CONFIG_ID, " +
                         "TENANT_ID, " +
                         "NOTIFICATION_CONTEXT, " +
@@ -103,7 +103,7 @@ public class RealtimePostgreNotificationManagementDAOImpl extends RealtimeAbstra
     public void insertNotificationUserActions(int notificationId, List<String> usernames)
             throws RealtimeNotificationManagementDAOException {
         String sql =
-                "INSERT INTO DM_NOTIFICATION_USER_ACTION (" +
+                "INSERT INTO DM_REALTIME_NOTIFICATION_USER_ACTION (" +
                         "NOTIFICATION_ID, " +
                         "USERNAME, " +
                         "IS_READ) " +

@@ -704,6 +704,11 @@ public class DeviceMgtAPIUtils {
         return tenantConfigurationManagementService;
     }
 
+    /**
+     * @deprecated Prefer realtime notification management. Resolves the deprecated
+     *             {@link NotificationManagementService} ({@code DM_NOTIFICATION}).
+     */
+    @Deprecated
     public static NotificationManagementService getNotificationManagementService() {
         NotificationManagementService notificationManagementService;
         PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();

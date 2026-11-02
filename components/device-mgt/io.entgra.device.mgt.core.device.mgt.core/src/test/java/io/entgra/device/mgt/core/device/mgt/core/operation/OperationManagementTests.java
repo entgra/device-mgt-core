@@ -116,7 +116,7 @@ public class OperationManagementTests extends BaseDeviceManagementTest {
                 Mockito.anyInt(),
                 Mockito.anyString()
         );
-        DeviceManagementDataHolder.getInstance().setNotificationManagementService(notificationService);
+        DeviceManagementDataHolder.getInstance().setRealtimeNotificationManagementService(notificationService);
         OperationManager operationManager = PowerMockito.spy(
                 new OperationManagerImpl(DEVICE_TYPE, deviceManagementService));
         try {

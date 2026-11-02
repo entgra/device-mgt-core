@@ -242,7 +242,9 @@ public class DeviceStatusManagementServiceImpl implements DeviceStatusManagement
             if (metadata == null) {
                 String msg = "Couldn't find the meta data value for meta key: "
                         + MetadataConstants.IS_DEVICE_STATUS_CHECK_META_KEY + " and tenant Id: " + tenantId;
-                log.error(msg);
+                if (log.isDebugEnabled()) {
+                    log.debug(msg);
+                }
                 throw new MetadataKeyNotFoundException(msg);
             }
             String metaValue = metadata.getMetaValue();
@@ -268,7 +270,9 @@ public class DeviceStatusManagementServiceImpl implements DeviceStatusManagement
             if (metadata == null) {
                 String msg = "Couldn't find the meta data value for meta key: "
                         + MetadataConstants.ALLOWED_DEVICE_STATUS_META_KEY + " and tenant Id: " + tenantId;
-                log.error(msg);
+                if (log.isDebugEnabled()) {
+                    log.debug(msg);
+                }
                 throw new MetadataKeyNotFoundException(msg);
             }
 

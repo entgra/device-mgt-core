@@ -6,20 +6,19 @@ Applies to this directory and its descendants, in addition to the repository
 
 ## Start with the specification baseline
 
-Read [the index](Specs/README.md), [workflow](Specs/contributing.md),
-[capability register](Specs/capability-register.md) and relevant feature specs.
-Use [the source map](Specs/source-map.md) to locate implementations and consumers;
-verify references against the current checkout rather than assuming the recorded
-baseline is current.
+Read [the index](specs/README.md), [workflow](specs/contributing.md),
+[capability register](specs/capability-register.md) and relevant feature specs.
+Inspect the affected backend implementation and tests directly when changing
+behavior; specifications describe contracts rather than a class/method inventory.
 
-- [Architecture](Specs/architecture.md) and
-  [cross-cutting requirements](Specs/cross-cutting-requirements.md) define shared concerns.
-- [Gap register](Specs/gap-register.md) records unresolved behavior and risks.
-- [Verification matrix](Specs/verification-matrix.md) separates existing evidence
+- [Architecture](specs/architecture.md) and
+  [cross-cutting requirements](specs/cross-cutting-requirements.md) define shared concerns.
+- [Gap register](specs/gap-register.md) records unresolved behavior and risks.
+- [Verification matrix](specs/verification-matrix.md) separates existing evidence
   from planned acceptance tests.
-- [Phase 2 backlog](Specs/phase-2-backlog.md) proposes tests and fixes; it is not
+- [Phase 2 backlog](specs/phase-2-backlog.md) proposes tests and fixes; it is not
   blanket authorization to implement them.
-- [Content readiness](Specs/product-content-readiness.md) records missing product,
+- [Content readiness](specs/product-content-readiness.md) records missing product,
   documentation, marketing and automation inputs.
 
 Phase 1 was documentation-only. Preserve that restriction for Phase 1 work, not
@@ -28,9 +27,20 @@ Draft specs are not approved product requirements. Keep requirement definitions
 canonical, retain APP identifiers and update related evidence/gaps when behavior
 changes. Do not close gaps merely because documentation has been written.
 
+## Specification scope
+
+Specifications here describe backend service inputs/results, business rules,
+domain exceptions, caller obligations, tenant/permission checks, persistence,
+artifacts, lifecycle and asynchronous/failure behavior. Application Management
+APIs and UIs are maintained in `proprietary-commons`. API specifications there own
+routes, HTTP responses and scopes; UI specifications own use cases, user personas
+and user journeys. Keep only the boundary note here. Use source links and method
+names for discovery; do not duplicate commit IDs
+or inspection-baseline ledgers in behavioral specifications.
+
 ## Component-specific checks
 
-- Follow tenant and user context through APIs, services, DAOs and asynchronous work.
+- Follow tenant and user context through callers, services, DAOs and asynchronous work.
 - Identify connection/transaction ownership, including acquisition failures,
   nested callers, commit failures and cleanup. See APP-GAP-01 before copying
   transaction examples from shared constitutions.
@@ -55,7 +65,7 @@ mvn -pl components/application-mgt/io.entgra.device.mgt.core.application.mgt.cor
 
 Inspect [the configured TestNG suite](io.entgra.device.mgt.core.application.mgt.core/src/test/resources/testng.xml)
 and actual assertions. Disabled or empty tests are not acceptance evidence.
-Choose additional API, storage, integration or multi-JVM checks according to the
+Choose additional service-contract, storage, integration or multi-JVM checks according to the
 affected requirements; the focused command alone does not verify those boundaries.
 
 In the handover, list affected requirements, spec/code changes, executed checks

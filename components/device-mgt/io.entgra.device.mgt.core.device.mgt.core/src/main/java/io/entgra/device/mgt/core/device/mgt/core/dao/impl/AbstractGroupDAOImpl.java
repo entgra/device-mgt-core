@@ -1014,6 +1014,58 @@ public abstract class AbstractGroupDAOImpl implements GroupDAO {
     }
 
     @Override
+    public Map<Integer, Integer> getDeviceCounts(List<Integer> groupIds, int tenantId)
+            throws GroupManagementDAOException {
+        Map<Integer, Integer> counts = new HashMap<>();
+        if (groupIds == null || groupIds.isEmpty()) {
+            return counts;
+        }
+        // align with GET /devices?groupId=… default statuses
+        // (ACTIVE, INACTIVE, CREATED, UNREACHABLE) used by the groups Devices modal.
+        StringJoiner placeholders = new StringJoiner(",");
+        for (int i = 0; i < groupIds.size(); i++) {
+            placeholders.add("?");
+        }
+        String sql =
+                "SELECT dgm.GROUP_ID, COUNT(e.ID) " +
+                        "AS DEVICE_COUNT " +
+                "FROM DM_DEVICE_GROUP_MAP dgm " +
+                "INNER JOIN DM_DEVICE d " +
+                        "ON d.ID = dgm.DEVICE_ID " +
+                        "AND d.TENANT_ID = dgm.TENANT_ID " +
+                "INNER JOIN DM_ENROLMENT e " +
+                        "ON e.DEVICE_ID = d.ID " +
+                        "AND e.TENANT_ID = dgm.TENANT_ID " +
+                "WHERE dgm.TENANT_ID = ? " +
+                        "AND dgm.GROUP_ID " +
+                        "IN (" + placeholders + ") " +
+                "AND e.STATUS " +
+                        "IN ('ACTIVE', 'INACTIVE', 'CREATED', 'UNREACHABLE') " +
+                "GROUP BY dgm.GROUP_ID";
+        try {
+            Connection conn = GroupManagementDAOFactory.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                int index = 1;
+                stmt.setInt(index++, tenantId);
+                for (Integer groupId : groupIds) {
+                    stmt.setInt(index++, groupId);
+                }
+                try (ResultSet resultSet = stmt.executeQuery()) {
+                    while (resultSet.next()) {
+                        counts.put(resultSet.getInt("GROUP_ID"), resultSet.getInt("DEVICE_COUNT"));
+                    }
+                }
+            }
+            for (Integer groupId : groupIds) {
+                counts.putIfAbsent(groupId, 0);
+            }
+            return counts;
+        } catch (SQLException e) {
+            throw new GroupManagementDAOException("Error occurred while getting device counts for groups.", e);
+        }
+    }
+
+    @Override
     public List<String> getRoles(int groupId, int tenantId) throws GroupManagementDAOException {
         PreparedStatement stmt = null;
         ResultSet resultSet = null;

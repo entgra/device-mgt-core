@@ -197,4 +197,29 @@ public class TenantMgtServiceComponent {
         }
         TenantMgtDataHolder.getInstance().setNotificationConfigService(null);
     }
+
+    @Reference(
+            name = "realtimeNotificationManagementService.service",
+            service = io.entgra.device.mgt.core.realtime.notification.mgt.common.service.RealtimeNotificationManagementService.class,
+            cardinality = ReferenceCardinality.OPTIONAL,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetRealtimeNotificationManagementService")
+    protected void setRealtimeNotificationManagementService(
+            io.entgra.device.mgt.core.realtime.notification.mgt.common.service.RealtimeNotificationManagementService
+                    realtimeNotificationManagementService) {
+        if (log.isDebugEnabled()) {
+            log.info("RealtimeNotification Management Service is binding");
+        }
+        TenantMgtDataHolder.getInstance()
+                .setRealtimeNotificationManagementService(realtimeNotificationManagementService);
+    }
+
+    protected void unsetRealtimeNotificationManagementService(
+            io.entgra.device.mgt.core.realtime.notification.mgt.common.service.RealtimeNotificationManagementService
+                    realtimeNotificationManagementService) {
+        if (log.isDebugEnabled()) {
+            log.info("RealtimeNotification Management Service is unbinding");
+        }
+        TenantMgtDataHolder.getInstance().setRealtimeNotificationManagementService(null);
+    }
 }

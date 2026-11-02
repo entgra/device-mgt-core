@@ -31,8 +31,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 /**
- * Notifications related REST-API.
+ * Deprecated device notifications REST API ({@code DM_NOTIFICATION}).
+ *
+ * @deprecated Prefer the realtime notification management API. Kept for compatibility.
  */
+@Deprecated
 
 @SwaggerDefinition(
         info = @Info(

@@ -26,8 +26,12 @@ import io.entgra.device.mgt.core.device.mgt.common.PaginationResult;
 import java.util.List;
 
 /**
- * Defines the contract of NotificationManagementService.
+ * Deprecated notification management contract backed by {@code DM_NOTIFICATION}.
+ *
+ * @deprecated Use {@code RealtimeNotificationManagementService} (realtime-notification-mgt)
+ *             instead. Kept for compatibility with existing consumers of this API.
  */
+@Deprecated
 public interface NotificationManagementService {
 
     /**
@@ -39,7 +43,6 @@ public interface NotificationManagementService {
      * @throws NotificationManagementException
      *          if something goes wrong while adding the Notification.
      */
-    @Deprecated
     boolean addNotification(DeviceIdentifier deviceId,
                             Notification notification) throws NotificationManagementException;
 

@@ -7,13 +7,19 @@ feature packaging. Follow this guidance throughout the repository, plus any
 applicable component-level AGENTS.md. Explicit task scope still governs the work;
 a documentation-only task does not authorize implementation changes.
 
+Assess changes within this repository's core/base responsibilities. Trace affected
+downstream API, UI, plugin, device-agent and product-packaging contracts when needed;
+do not infer complete product behavior or supported deployments from core code,
+packaged defaults or database scripts alone. Use POMs and feature resources for
+artifact, dependency and packaging facts rather than duplicating version inventories.
+
 Before editing, inspect Git status, the relevant implementation, module POMs and
 tests. Preserve unrelated staged, unstaged and untracked work. Discover component
 specifications under `components/<component>/Specs/`; coverage varies, so do not
 assume every component has an approved specification.
 
-- [Application Management specs](components/application-mgt/Specs/README.md)
-- [Notification Management specs](components/notification-mgt/Specs/README.md)
+- [Application Management specs](components/application-mgt/specs/README.md)
+- [Realtime Notification Management specs](components/realtime-notification-mgt/Specs/README.md)
 - [OSGi component constitution](docs/constitutions/OSGI_COMPONENT_CONSTITUTION.md)
 - [CXF webapp constitution](docs/constitutions/CXF_WEBAPP_CONSTITUTION.md)
 

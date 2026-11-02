@@ -21,7 +21,7 @@ package io.entgra.device.mgt.core.realtime.notification.mgt.common.dto;
 import java.util.List;
 
 /**
- * Structured notification payload persisted as JSON in {@code DM_NOTIFICATION.NOTIFICATION_CONTEXT}.
+ * Structured notification payload persisted as JSON in {@code DM_REALTIME_NOTIFICATION.NOTIFICATION_CONTEXT}.
  */
 public class RealtimeNotificationContext {
 

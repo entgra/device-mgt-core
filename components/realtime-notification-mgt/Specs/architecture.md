@@ -58,7 +58,7 @@ persisted, published, read/archived, and pushed live to the console via SSE.
                 │                                  │
                 ▼                                  ▼
         CDM / source DB                      Archival dest DB
-        DM_NOTIFICATION*                     DM_NOTIFICATION*_ARCH
+        DM_REALTIME_NOTIFICATION*                     DM_REALTIME_NOTIFICATION*_ARCH
 ```
 
 ## Configuration model
@@ -97,9 +97,9 @@ creation; existing tenants use migration SQL (see device-mgt
 4. `publishNotification`:
    - Resolve `deviceLabels` only when `includeDeviceList`; omit if JSON would
      exceed `VARCHAR(1000)`
-   - Insert `DM_NOTIFICATION` (`TYPE` from config, usually `operation`)
-   - Insert `DM_NOTIFICATION_DEVICE` mappings
-   - Resolve recipients → insert `DM_NOTIFICATION_USER_ACTION` (`IS_READ=false`)
+   - Insert `DM_REALTIME_NOTIFICATION` (`TYPE` from config, usually `operation`)
+   - Insert `DM_REALTIME_NOTIFICATION_DEVICE` mappings
+   - Resolve recipients → insert `DM_REALTIME_NOTIFICATION_USER_ACTION` (`IS_READ=false`)
    - Render description from context labels → `RealtimeNotificationEventBroker.pushMessage` per user
 5. `SSEHandler.onMessage` writes `data: {...}\n\n` to that user’s open streams.
 
@@ -123,7 +123,7 @@ creation; existing tenants use migration SQL (see device-mgt
 1. UI calls REST under `/notifications` (scopes in [api-contract.md](api-contract.md)).
 2. API impl uses authenticated user (`RealtimeNotificationHelper.getAuthenticatedUser()`);
    body `username` fields are ignored for authorization.
-3. Service updates `DM_NOTIFICATION_USER_ACTION` (or deletes / moves to arch).
+3. Service updates `DM_REALTIME_NOTIFICATION_USER_ACTION` (or deletes / moves to arch).
 4. After mark / delete / archive that changes unread state, service pushes
    unread-count-only payload via the broker.
 
@@ -140,8 +140,8 @@ creation; existing tenants use migration SQL (see device-mgt
 
 When devices are removed from the system,
 `purgeNotificationsForDevices(deviceIds, tenantId)` deletes
-`DM_NOTIFICATION_DEVICE` rows for those devices and removes orphan
-`DM_NOTIFICATION` rows that no longer reference any device.
+`DM_REALTIME_NOTIFICATION_DEVICE` rows for those devices and removes orphan
+`DM_REALTIME_NOTIFICATION` rows that no longer reference any device.
 Task notifications (no device mappings) are unaffected.
 
 ## Persistence summary
@@ -149,8 +149,8 @@ Task notifications (no device mappings) are unaffected.
 | Concern | Store |
 | --- | --- |
 | Config + archive defaults | Metadata `notification-config` |
-| Active notifications | `DM_NOTIFICATION`, `DM_NOTIFICATION_DEVICE`, `DM_NOTIFICATION_USER_ACTION` |
-| Archived | `DM_NOTIFICATION_ARCH`, `DM_NOTIFICATION_USER_ACTION_ARCH` |
+| Active notifications | `DM_REALTIME_NOTIFICATION`, `DM_REALTIME_NOTIFICATION_DEVICE`, `DM_REALTIME_NOTIFICATION_USER_ACTION` |
+| Archived | `DM_REALTIME_NOTIFICATION_ARCH`, `DM_REALTIME_NOTIFICATION_USER_ACTION_ARCH` |
 | Feature catalog (task/operation codes) | `DM_FEATURE_DETAILS` (device-mgt) |
 
 ## Real-time path (SSE)

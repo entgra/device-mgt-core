@@ -472,7 +472,7 @@ public class OperationManagerImpl implements OperationManager {
                 for (Device device : enrolments.values()) {
                     deviceIds.add(device.getId());
                 }
-                DeviceManagementDataHolder.getInstance().getNotificationManagementService()
+                DeviceManagementDataHolder.getInstance().getRealtimeNotificationManagementService()
                         .handleOperationNotificationIfApplicable(operationCode, operationStatus,
                                 deviceType, deviceIds, tenantId, "immediate");
             }
@@ -1022,7 +1022,7 @@ public class OperationManagerImpl implements OperationManager {
                                 String deviceType = previousDeviceOperationDetails.getDeviceType();
                                 int notifiedDeviceId = previousDeviceOperationDetails.getDeviceId();
                                 DeviceManagementDataHolder.getInstance()
-                                        .getNotificationManagementService()
+                                        .getRealtimeNotificationManagementService()
                                         .handleOperationNotificationIfApplicable(
                                                 operationCode,
                                                 operationStatus,
@@ -1208,7 +1208,7 @@ public class OperationManagerImpl implements OperationManager {
         int tenantId = CarbonContext.getThreadLocalCarbonContext().getTenantId();
         for (Operation operation : operations) {
             try {
-                DeviceManagementDataHolder.getInstance().getNotificationManagementService()
+                DeviceManagementDataHolder.getInstance().getRealtimeNotificationManagementService()
                         .handleOperationNotificationIfApplicable(operation.getCode(), status.toString(),
                                 device.getType(), Collections.singletonList(device.getId()), tenantId, "postSync");
             } catch (RealtimeNotificationManagementException e) {

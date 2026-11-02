@@ -21,6 +21,7 @@ import io.entgra.device.mgt.core.apimgt.extension.rest.api.APIApplicationService
 import io.entgra.device.mgt.core.apimgt.extension.rest.api.PublisherRESTAPIServices;
 import io.entgra.device.mgt.core.device.mgt.common.metadata.mgt.MetadataManagementService;
 import io.entgra.device.mgt.core.apimgt.webapp.publisher.PostApiPublishingObsever;
+import io.entgra.device.mgt.core.realtime.notification.mgt.common.service.RealtimeNotificationManagementService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.BundleContext;
@@ -200,4 +201,26 @@ public class APIPublisherServiceComponent {
         APIPublisherDataHolder.getInstance().removePostApiPublishingObseverList(postApiPublishingObsever);
     }
 
+    @Reference(
+            name = "io.entgra.realtime.notification.mgt.service",
+            service = RealtimeNotificationManagementService.class,
+            cardinality = ReferenceCardinality.OPTIONAL,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetRealtimeNotificationManagementService")
+    protected void setRealtimeNotificationManagementService(
+            RealtimeNotificationManagementService realtimeNotificationManagementService) {
+        if (log.isDebugEnabled()) {
+            log.debug("Setting RealtimeNotificationManagementService");
+        }
+        APIPublisherDataHolder.getInstance()
+                .setRealtimeNotificationManagementService(realtimeNotificationManagementService);
+    }
+
+    protected void unsetRealtimeNotificationManagementService(
+            RealtimeNotificationManagementService realtimeNotificationManagementService) {
+        if (log.isDebugEnabled()) {
+            log.debug("Unsetting RealtimeNotificationManagementService");
+        }
+        APIPublisherDataHolder.getInstance().setRealtimeNotificationManagementService(null);
+    }
 }
