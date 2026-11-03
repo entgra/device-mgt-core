@@ -113,6 +113,8 @@ public class SsoLoginHandler extends HttpServlet {
             String loginCallbackUrl = iotSCoreUrl + baseContextPath + HandlerConstants.SSO_LOGIN_CALLBACK;
             persistAuthSessionData(req, oAuthApp.getClientId(), oAuthApp.getClientSecret(),
                     oAuthApp.getEncodedClientApp(), scopesSsoString, state);
+            httpSession.setAttribute(HandlerConstants.OIDC_LOGOUT_ENDPOINT_KEY,
+                    keyManagerUrl + HandlerConstants.OIDC_LOGOUT_ENDPOINT);
             resp.sendRedirect(keyManagerUrl + HandlerConstants.AUTHORIZATION_ENDPOINT +
                     "?response_type=code" +
                     "&state=" + state +
@@ -142,13 +144,16 @@ public class SsoLoginHandler extends HttpServlet {
             ArrayNode tags = (ArrayNode) uiConfigJsonObject.get("appRegistration").get("tags");
             JsonNode scopes = uiConfigJsonObject.get("scopes");
             sessionTimeOut = Integer.parseInt(String.valueOf(uiConfigJsonObject.get("sessionTimeOut")));
+
+            // TODO: Add support for regexp version of URLs and automate backchannel URL configuration
             String callbackUrl = iotSCoreUrl + baseContextPath + HandlerConstants.SSO_LOGIN_CALLBACK;
+            String backchannelLogoutUri = iotSCoreUrl + baseContextPath + HandlerConstants.BACK_CHANNEL_LOGOUT;
 
             String encodedAdminCredentials = Base64.getEncoder()
                     .encodeToString((adminUsername + HandlerConstants.COLON + adminPassword).getBytes());
             ClassicHttpRequest apiRegEndpoint = ClassicRequestBuilder.post(gatewayUrl + HandlerConstants.APP_REG_ENDPOINT)
                     .setEntity(HandlerUtil.constructAppRegPayload(tags, applicationName, adminUsername, adminPassword,
-                            callbackUrl, constructAppGrantTypeUpdateArray(), false))
+                            callbackUrl, constructAppGrantTypeUpdateArray(), false, backchannelLogoutUri, true))
                     .setHeader(org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE,
                             org.apache.hc.core5.http.ContentType.APPLICATION_JSON.toString())
                     .setHeader(org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION, HandlerConstants.BASIC +
@@ -242,5 +247,22 @@ public class SsoLoginHandler extends HttpServlet {
         jsonArray.add(HandlerConstants.PASSWORD_GRANT_TYPE);
         jsonArray.add(HandlerConstants.JWT_BEARER_GRANT_TYPE);
         return jsonArray;
+    }
+
+    /**
+     * Builds the callback URL expression registered for the SSO OAuth application. The exact request-handler
+     * callback is used to complete the authorization-code flow, while the application login pattern allows the
+     * same OAuth application to redirect users back to a UI application's login page.
+     *
+     * @param coreUrl public device-management core URL
+     * @param contextPath request-handler context path
+     * @return callback URL expression accepted by dynamic client registration
+     */
+    static String buildRegistrationCallbackUrl(String coreUrl, String contextPath) {
+        String ssoCallbackUrl = coreUrl + contextPath + HandlerConstants.SSO_LOGIN_CALLBACK;
+        String escapedCoreUrl = coreUrl.replace(HandlerConstants.URI_SEPARATOR,
+                "\\" + HandlerConstants.URI_SEPARATOR);
+        String applicationLoginPattern = escapedCoreUrl + "\\/[^/]+\\/login$";
+        return "regexp=(^" + ssoCallbackUrl + "|" + applicationLoginPattern + ")";
     }
 }

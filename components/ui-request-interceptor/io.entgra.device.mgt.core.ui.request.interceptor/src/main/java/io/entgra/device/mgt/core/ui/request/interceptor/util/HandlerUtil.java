@@ -541,6 +541,15 @@ public class HandlerUtil {
                                                       String callbackUrl, ArrayList<String> supportedGrantTypes,
                                                       boolean isRegisterOnSameTenant) {
 
+        return constructAppRegPayload(tags, appName, username, password, callbackUrl, supportedGrantTypes,
+                isRegisterOnSameTenant, null, false);
+    }
+
+    public static StringEntity constructAppRegPayload(ArrayNode tags, String appName, String username, String password,
+                                                      String callbackUrl, ArrayList<String> supportedGrantTypes,
+                                                      boolean isRegisterOnSameTenant, String backchannelLogoutUri,
+                                                      boolean backchannelLogoutSessionRequired) {
+
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> data = new HashMap<>();
 
@@ -558,6 +567,11 @@ public class HandlerUtil {
         }
         if (isRegisterOnSameTenant) {
             data.put(HandlerConstants.REGISTER_ON_SAME_TENANT, true);
+        }
+        if (backchannelLogoutUri != null) {
+            data.put(HandlerConstants.BACKCHANNEL_LOGOUT_URI_KEY, backchannelLogoutUri);
+            data.put(HandlerConstants.BACKCHANNEL_LOGOUT_SESSION_REQUIRED_KEY,
+                    backchannelLogoutSessionRequired);
         }
 
         return new StringEntity(objectMapper.valueToTree(data).toString(), ContentType.APPLICATION_JSON);
@@ -815,6 +829,8 @@ public class HandlerUtil {
         newAuthData.setClientSecret(authData.getClientSecret());
         newAuthData.setEncodedClientApp(authData.getEncodedClientApp());
         newAuthData.setUsername(authData.getUsername());
+        JsonNode idToken = tokenResult.get(HandlerConstants.ID_TOKEN_KEY);
+        newAuthData.setIdToken(idToken == null || idToken.isNull() ? authData.getIdToken() : idToken.textValue());
         return newAuthData;
     }
 
