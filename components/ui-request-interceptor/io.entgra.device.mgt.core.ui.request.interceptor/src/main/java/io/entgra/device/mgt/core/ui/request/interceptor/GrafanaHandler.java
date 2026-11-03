@@ -62,12 +62,12 @@ import java.nio.charset.StandardCharsets;
 public class GrafanaHandler extends HttpServlet {
     private static final Log log = LogFactory.getLog(GrafanaHandler.class);
     private static final long serialVersionUID = -6508020875358160165L;
-    private static AuthData authData;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
         try {
-            if (validateRequest(req, resp)) {
+            AuthData authData = validateRequest(req, resp);
+            if (authData != null) {
                 ClassicHttpRequest grafanaRequest = ClassicRequestBuilder.get().build();
                 HandlerUtil.copyRequestHeaders(req, grafanaRequest, true);
                 if (!GrafanaUtil.isGrafanaAPI(req.getRequestURI())) {
@@ -77,7 +77,7 @@ public class GrafanaHandler extends HttpServlet {
                 grafanaRequest.setHeader(HttpHeaders.AUTHORIZATION, HandlerConstants.BEARER + authData.getAccessToken());
                 ProxyResponse grafanaAPIResponse = executeGrafanaAPIRequest(grafanaRequest, req);
                 String keyManagerUrl = HandlerUtil.getKeyManagerUrl(req.getScheme());
-                if (HandlerConstants.TOKEN_IS_EXPIRED.equals(grafanaAPIResponse.getExecutorResponse())) {
+                if (HandlerUtil.isTokenRefreshRequired(grafanaAPIResponse)) {
                     grafanaAPIResponse = HandlerUtil.retryRequestWithRefreshedToken(req, grafanaRequest, keyManagerUrl);
                     if (!HandlerUtil.isResponseSuccessful(grafanaAPIResponse)) {
                         HandlerUtil.handleError(resp, grafanaAPIResponse);
@@ -85,17 +85,9 @@ public class GrafanaHandler extends HttpServlet {
                     }
                 }
                 if (grafanaAPIResponse.getExecutorResponse().contains(HandlerConstants.EXECUTOR_EXCEPTION_PREFIX)) {
-                    if (grafanaAPIResponse.getCode() == HttpStatus.SC_UNAUTHORIZED) {
-                        grafanaAPIResponse = HandlerUtil.retryRequestWithRefreshedToken(req, grafanaRequest, keyManagerUrl);
-                        if (!HandlerUtil.isResponseSuccessful(grafanaAPIResponse)) {
-                            HandlerUtil.handleError(resp, grafanaAPIResponse);
-                            return;
-                        }
-                    } else {
-                        log.error("Error occurred while invoking the GET API endpoint.");
-                        HandlerUtil.handleError(resp, grafanaAPIResponse);
-                        return;
-                    }
+                    log.error("Error occurred while invoking the GET API endpoint.");
+                    HandlerUtil.handleError(resp, grafanaAPIResponse);
+                    return;
                 }
                 handleSuccess(resp, grafanaAPIResponse);
             }
@@ -111,7 +103,8 @@ public class GrafanaHandler extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
         try {
-            if (validateRequest(req, resp)) {
+            AuthData authData = validateRequest(req, resp);
+            if (authData != null) {
                 ClassicHttpRequest grafanaRequest = ClassicRequestBuilder.post().build();
                 HandlerUtil.generateRequestEntity(req, grafanaRequest);
                 HandlerUtil.copyRequestHeaders(req, grafanaRequest, true);
@@ -121,7 +114,7 @@ public class GrafanaHandler extends HttpServlet {
                 }
                 grafanaRequest.setHeader(HttpHeaders.AUTHORIZATION, HandlerConstants.BEARER + authData.getAccessToken());
                 ProxyResponse grafanaAPIResponse = executeGrafanaAPIRequest(grafanaRequest, req);
-                if (HandlerConstants.TOKEN_IS_EXPIRED.equals(grafanaAPIResponse.getExecutorResponse())) {
+                if (HandlerUtil.isTokenRefreshRequired(grafanaAPIResponse)) {
                     String keyManagerUrl = HandlerUtil.getKeyManagerUrl(req.getScheme());
                     grafanaAPIResponse = HandlerUtil.retryRequestWithRefreshedToken(req, grafanaRequest, keyManagerUrl);
                     if (!HandlerUtil.isResponseSuccessful(grafanaAPIResponse)) {
@@ -168,23 +161,23 @@ public class GrafanaHandler extends HttpServlet {
      *
      * @param req {@link HttpServletRequest}
      * @param resp {@link HttpServletResponse}
-     * @return If request is a valid one, returns TRUE, otherwise return FALSE
+     * @return authenticated request data, or {@code null} when validation fails
      * @throws IOException If and error occurs while witting error response to client side
      */
-    private boolean validateRequest(HttpServletRequest req, HttpServletResponse resp)
+    private AuthData validateRequest(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
 
         if (req.getMethod() == null) {
             String errMsg = "Bad Request, Request method is empty";
             log.error(errMsg);
             handleError(resp, HttpStatus.SC_BAD_REQUEST, errMsg);
-            return false;
+            return null;
         }
         if (HandlerUtil.isPropertyDefined(HandlerConstants.IOT_REPORTING_WEBAPP_HOST_ENV_VAR)) {
             String errMsg = "Reporting Endpoint is not defined in the iot-server.sh properly.";
             log.error(errMsg);
             resp.sendError(500, errMsg);
-            return false;
+            return null;
         }
 
         HttpSession session = req.getSession(false);
@@ -192,18 +185,18 @@ public class GrafanaHandler extends HttpServlet {
             String errMsg = "Unauthorized, You are not logged in. Please log in to the portal";
             log.error(errMsg);
             handleError(resp, HttpStatus.SC_UNAUTHORIZED, errMsg);
-            return false;
+            return null;
         }
 
-        authData = (AuthData) session.getAttribute(HandlerConstants.SESSION_AUTH_DATA_KEY);
+        AuthData authData = (AuthData) session.getAttribute(HandlerConstants.SESSION_AUTH_DATA_KEY);
         if (authData == null) {
             String errMsg = "Unauthorized, Access token not found in the current session";
             log.error(errMsg);
             handleError(resp, HttpStatus.SC_UNAUTHORIZED, errMsg);
-            return false;
+            return null;
         }
 
-        return true;
+        return authData;
     }
 
     private ProxyResponse executeGrafanaAPIRequest(ClassicHttpRequest requestBase, HttpServletRequest request)
