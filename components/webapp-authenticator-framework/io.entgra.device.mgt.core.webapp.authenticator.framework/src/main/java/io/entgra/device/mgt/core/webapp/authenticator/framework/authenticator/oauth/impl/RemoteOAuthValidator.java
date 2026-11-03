@@ -25,10 +25,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.wso2.carbon.identity.oauth2.stub.OAuth2TokenValidationServiceStub;
+import org.wso2.carbon.identity.oauth2.stub.dto.OAuth2IntrospectionResponseDTO;
 import org.wso2.carbon.identity.oauth2.stub.dto.OAuth2TokenValidationRequestDTO;
 import org.wso2.carbon.identity.oauth2.stub.dto.OAuth2TokenValidationRequestDTO_OAuth2AccessToken;
 import org.wso2.carbon.identity.oauth2.stub.dto.OAuth2TokenValidationRequestDTO_TokenValidationContextParam;
-import org.wso2.carbon.identity.oauth2.stub.dto.OAuth2TokenValidationResponseDTO;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
 import java.rmi.RemoteException;
@@ -51,12 +51,11 @@ public class RemoteOAuthValidator implements OAuth2TokenValidator {
     public OAuthValidationResponse validateToken(String accessToken,
                                                  String resource) throws OAuthTokenValidationException {
         OAuth2TokenValidationServiceStub stub = null;
-        OAuth2TokenValidationResponseDTO validationResponse;
+        OAuth2IntrospectionResponseDTO introspectionResponse;
         try {
             OAuth2TokenValidationRequestDTO validationRequest = createValidationRequest(accessToken, resource);
             stub = (OAuth2TokenValidationServiceStub) this.stubs.borrowObject();
-            validationResponse = stub.findOAuthConsumerIfTokenIsValid(validationRequest)
-                    .getAccessTokenValidationResponse();
+            introspectionResponse = stub.buildIntrospectionResponse(validationRequest);
         } catch (RemoteException e) {
             throw new OAuthTokenValidationException(
                     "Remote Exception occurred while invoking the Remote " + "IS server for OAuth2 token validation.",
@@ -72,22 +71,22 @@ public class RemoteOAuthValidator implements OAuth2TokenValidator {
                         + "stub pool", e);
             }
         }
-        if (validationResponse == null) {
+        if (introspectionResponse == null) {
             if (log.isDebugEnabled()) {
                 log.debug("Response returned by the OAuth token validation service is null");
             }
             return null;
         }
-        boolean isValid = validationResponse.getValid();
+        boolean isValid = introspectionResponse.getActive();
         String tenantDomain;
         String username;
         if (isValid) {
-            username = MultitenantUtils.getTenantAwareUsername(validationResponse.getAuthorizedUser());
-            tenantDomain = MultitenantUtils.getTenantDomain(validationResponse.getAuthorizedUser());
+            username = MultitenantUtils.getTenantAwareUsername(introspectionResponse.getUsername());
+            tenantDomain = MultitenantUtils.getTenantDomain(introspectionResponse.getUsername());
             return new OAuthValidationResponse(username, tenantDomain, true);
         } else {
             OAuthValidationResponse oAuthValidationResponse = new OAuthValidationResponse();
-            oAuthValidationResponse.setErrorMsg(validationResponse.getErrorMsg());
+            oAuthValidationResponse.setErrorMsg(introspectionResponse.getError());
             return oAuthValidationResponse;
         }
     }

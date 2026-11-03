@@ -22,8 +22,8 @@ import io.entgra.device.mgt.core.webapp.authenticator.framework.authenticator.oa
 import io.entgra.device.mgt.core.webapp.authenticator.framework.authenticator.oauth.OAuthTokenValidationException;
 import io.entgra.device.mgt.core.webapp.authenticator.framework.authenticator.oauth.OAuthValidationResponse;
 import io.entgra.device.mgt.core.webapp.authenticator.framework.internal.AuthenticatorFrameworkDataHolder;
+import org.wso2.carbon.identity.oauth2.dto.OAuth2IntrospectionResponseDTO;
 import org.wso2.carbon.identity.oauth2.dto.OAuth2TokenValidationRequestDTO;
-import org.wso2.carbon.identity.oauth2.dto.OAuth2TokenValidationResponseDTO;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
@@ -54,24 +54,23 @@ public class LocalOAuthValidator implements OAuth2TokenValidator {
         tokenValidationContextParams[0] = resourceContextParam;
         validationRequest.setContext(tokenValidationContextParams);
 
-        OAuth2TokenValidationResponseDTO tokenValidationResponse = AuthenticatorFrameworkDataHolder.getInstance().
-                getOAuth2TokenValidationService().findOAuthConsumerIfTokenIsValid(
-                validationRequest).getAccessTokenValidationResponse();
-        boolean isValid = tokenValidationResponse.isValid();
+        OAuth2IntrospectionResponseDTO introspectionResponse = AuthenticatorFrameworkDataHolder.getInstance().
+                getOAuth2TokenValidationService().buildIntrospectionResponse(validationRequest);
+        boolean isValid = introspectionResponse.isActive();
         String userName;
         String tenantDomain;
         if (isValid) {
             userName = MultitenantUtils.getTenantAwareUsername(
-                    tokenValidationResponse.getAuthorizedUser());
+                    introspectionResponse.getUsername());
             tenantDomain =
-                    MultitenantUtils.getTenantDomain(tokenValidationResponse.getAuthorizedUser());
+                    MultitenantUtils.getTenantDomain(introspectionResponse.getUsername());
             if (MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
                 tenantDomain = MultitenantUtils.getTenantDomain(userName);
             }
             return new OAuthValidationResponse(userName, tenantDomain, true);
         } else {
             OAuthValidationResponse oAuthValidationResponse = new OAuthValidationResponse();
-            oAuthValidationResponse.setErrorMsg(tokenValidationResponse.getErrorMsg());
+            oAuthValidationResponse.setErrorMsg(introspectionResponse.getError());
             return oAuthValidationResponse;
         }
     }

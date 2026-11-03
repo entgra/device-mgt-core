@@ -18,8 +18,8 @@
 package io.entgra.device.mgt.core.device.mgt.oauth.extensions.handlers.grant.oauth.validator;
 
 import io.entgra.device.mgt.core.device.mgt.oauth.extensions.handlers.grant.oauth.validator.internal.OAuthAuthenticatorDataHolder;
+import org.wso2.carbon.identity.oauth2.dto.OAuth2IntrospectionResponseDTO;
 import org.wso2.carbon.identity.oauth2.dto.OAuth2TokenValidationRequestDTO;
-import org.wso2.carbon.identity.oauth2.dto.OAuth2TokenValidationResponseDTO;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
 import java.rmi.RemoteException;
@@ -31,8 +31,8 @@ public class LocalOAuthValidator {
     private static final String BEARER_TOKEN_TYPE = "bearer";
 
     /**
-     * This method gets a string accessToken and validates it and generate the OAuth2ClientApplicationDTO
-     * containing the validity and user details if valid.
+     * This method gets a string access token, validates it, and generates an OAuthValidationResponse containing
+     * the validity and user details if valid.
      *
      * @param token which need to be validated.
      * @return OAuthValidationResponse with the validated results.
@@ -44,16 +44,16 @@ public class LocalOAuthValidator {
         accessToken.setTokenType(BEARER_TOKEN_TYPE);
         accessToken.setIdentifier(token);
         validationRequest.setAccessToken(accessToken);
-        OAuth2TokenValidationResponseDTO tokenValidationResponse = OAuthAuthenticatorDataHolder.getInstance().
-                getOAuth2TokenValidationService().findOAuthConsumerIfTokenIsValid(validationRequest).getAccessTokenValidationResponse();
-        boolean isValid = tokenValidationResponse.isValid();
+        OAuth2IntrospectionResponseDTO introspectionResponse = OAuthAuthenticatorDataHolder.getInstance().
+                getOAuth2TokenValidationService().buildIntrospectionResponse(validationRequest);
+        boolean isValid = introspectionResponse.isActive();
         String userName = null;
         String tenantDomain = null;
         if (isValid) {
             userName = MultitenantUtils.getTenantAwareUsername(
-                    tokenValidationResponse.getAuthorizedUser());
+                    introspectionResponse.getUsername());
             tenantDomain =
-                    MultitenantUtils.getTenantDomain(tokenValidationResponse.getAuthorizedUser());
+                    MultitenantUtils.getTenantDomain(introspectionResponse.getUsername());
         }
         return new OAuthValidationResponse(userName, tenantDomain, isValid);
     }
