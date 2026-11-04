@@ -37,6 +37,39 @@
         <SchedulerTaskInitialDelay>60000</SchedulerTaskInitialDelay>
         <SchedulerTaskEnabled>true</SchedulerTaskEnabled>
         {% endif %}
+        {% if device_mgt_conf.push_notification_conf.fcm_conf is defined %}
+        <FCMConfiguration>
+            <DeviceCooldownSeconds>{{device_mgt_conf.push_notification_conf.fcm_conf.device_cooldown_seconds}}</DeviceCooldownSeconds>
+            <UserPoolSize>{{device_mgt_conf.push_notification_conf.fcm_conf.user_pool_size}}</UserPoolSize>
+            <UserQueueCapacity>{{device_mgt_conf.push_notification_conf.fcm_conf.user_queue_capacity}}</UserQueueCapacity>
+            <TaskPoolSize>{{device_mgt_conf.push_notification_conf.fcm_conf.task_pool_size}}</TaskPoolSize>
+            <TaskQueueCapacity>{{device_mgt_conf.push_notification_conf.fcm_conf.task_queue_capacity}}</TaskQueueCapacity>
+            <HttpMaxRequests>{{device_mgt_conf.push_notification_conf.fcm_conf.http_max_requests}}</HttpMaxRequests>
+            <HttpMaxRequestsPerHost>{{device_mgt_conf.push_notification_conf.fcm_conf.http_max_requests_per_host}}</HttpMaxRequestsPerHost>
+            <HttpConnectTimeoutSeconds>{{device_mgt_conf.push_notification_conf.fcm_conf.http_connect_timeout_seconds}}</HttpConnectTimeoutSeconds>
+            <HttpWriteTimeoutSeconds>{{device_mgt_conf.push_notification_conf.fcm_conf.http_write_timeout_seconds}}</HttpWriteTimeoutSeconds>
+            <HttpReadTimeoutSeconds>{{device_mgt_conf.push_notification_conf.fcm_conf.http_read_timeout_seconds}}</HttpReadTimeoutSeconds>
+            <HttpCallTimeoutSeconds>{{device_mgt_conf.push_notification_conf.fcm_conf.http_call_timeout_seconds}}</HttpCallTimeoutSeconds>
+            <HttpConnectionPoolMaxIdle>{{device_mgt_conf.push_notification_conf.fcm_conf.http_connection_pool_max_idle}}</HttpConnectionPoolMaxIdle>
+            <HttpConnectionKeepAliveMinutes>{{device_mgt_conf.push_notification_conf.fcm_conf.http_connection_keep_alive_minutes}}</HttpConnectionKeepAliveMinutes>
+        </FCMConfiguration>
+        {% else %}
+        <FCMConfiguration>
+            <DeviceCooldownSeconds>120</DeviceCooldownSeconds>
+            <UserPoolSize>50</UserPoolSize>
+            <UserQueueCapacity>10000</UserQueueCapacity>
+            <TaskPoolSize>10</TaskPoolSize>
+            <TaskQueueCapacity>20000</TaskQueueCapacity>
+            <HttpMaxRequests>200</HttpMaxRequests>
+            <HttpMaxRequestsPerHost>200</HttpMaxRequestsPerHost>
+            <HttpConnectTimeoutSeconds>10</HttpConnectTimeoutSeconds>
+            <HttpWriteTimeoutSeconds>15</HttpWriteTimeoutSeconds>
+            <HttpReadTimeoutSeconds>30</HttpReadTimeoutSeconds>
+            <HttpCallTimeoutSeconds>60</HttpCallTimeoutSeconds>
+            <HttpConnectionPoolMaxIdle>25</HttpConnectionPoolMaxIdle>
+            <HttpConnectionKeepAliveMinutes>1</HttpConnectionKeepAliveMinutes>
+        </FCMConfiguration>
+        {% endif %}
         <PushNotificationProviders>
             <Provider>io.entgra.device.mgt.core.device.mgt.extensions.push.notification.provider.fcm.FCMBasedPushNotificationProvider</Provider>
             <Provider>io.entgra.device.mgt.core.device.mgt.extensions.push.notification.provider.mqtt.MQTTBasedPushNotificationProvider</Provider>
