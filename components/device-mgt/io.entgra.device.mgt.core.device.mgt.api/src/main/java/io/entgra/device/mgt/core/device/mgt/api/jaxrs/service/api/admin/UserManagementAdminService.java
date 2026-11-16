@@ -21,6 +21,7 @@ import io.entgra.device.mgt.core.apimgt.annotations.Scope;
 import io.entgra.device.mgt.core.apimgt.annotations.Scopes;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.ErrorResponse;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.PasswordResetWrapper;
+import io.entgra.device.mgt.core.device.mgt.api.jaxrs.beans.RoleScopeBindingUpdateWrapper;
 import io.entgra.device.mgt.core.device.mgt.api.jaxrs.util.Constants;
 import io.entgra.device.mgt.core.device.mgt.common.Device;
 import io.swagger.annotations.*;
@@ -365,9 +366,11 @@ public interface UserManagementAdminService {
             consumes = MediaType.APPLICATION_JSON,
             produces = MediaType.APPLICATION_JSON,
             httpMethod = "PUT",
-            value = "Add a role to the bindings of the specified scopes in a tenant.",
-            notes = "This API allows adding a role to the bindings of a list of scopes within a tenant. " +
-                    "Provide the tenant domain, the role name, and a list of scope names whose bindings should be updated.",
+            value = "Add a role to and/or remove it from the bindings of the specified scopes in a tenant.",
+            notes = "This API updates the scope bindings of a role within a tenant. Provide the tenant domain, " +
+                    "the role name, and the scopes the role should be added to (addedScopes) and/or removed from " +
+                    "(removedScopes). Only the scopes explicitly listed are modified; any scope not sent in the " +
+                    "request is left untouched.",
             tags = "Tenant details management",
             extensions = {
                     @Extension(properties = {
@@ -376,7 +379,14 @@ public interface UserManagementAdminService {
             }
     )
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK. \n Role has been added to the specified scope bindings successfully."),
+            @ApiResponse(
+                    code = 202,
+                    message = "Accepted. \n The scope bindings update request has been accepted and is being " +
+                            "processed asynchronously."),
+            @ApiResponse(
+                    code = 400,
+                    message = "Bad Request. \n The request body is missing or neither 'addedScopes' nor " +
+                            "'removedScopes' was provided."),
             @ApiResponse(
                     code = 401,
                     message = "Unauthorized. \n Unauthorized attempt to update scope bindings."),
@@ -394,13 +404,13 @@ public interface UserManagementAdminService {
             String tenantDomain,
             @ApiParam(
                     name = "roleName",
-                    value = "The name of the role to add to the scope bindings.",
+                    value = "The name of the role whose scope bindings should be updated.",
                     required = true)
             @PathParam("roleName")
             String roleName,
             @ApiParam(
-                    name = "scopeNames",
-                    value = "The list of scope names whose bindings should be updated with the given role.",
+                    name = "scopeBindings",
+                    value = "The scopes the role should be added to (addedScopes) and/or removed from (removedScopes).",
                     required = true)
-            java.util.List<String> scopeNames);
+            RoleScopeBindingUpdateWrapper scopeBindings);
 }
