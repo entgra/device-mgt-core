@@ -2860,7 +2860,7 @@ public class GenericOperationDAOImpl implements OperationDAO {
                 sql.append("?) ");
             }
 
-            sql.append("ORDER BY ID ASC limit ? , ? ) eom " +
+            sql.append("ORDER BY CREATED_TIMESTAMP DESC limit ? , ? ) eom " +
                     "LEFT JOIN DM_DEVICE_OPERATION_RESPONSE opr ON eom.ID = opr.EN_OP_MAP_ID");
 
             int index = 1;
